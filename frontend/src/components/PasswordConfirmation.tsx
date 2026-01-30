@@ -84,16 +84,18 @@ const PasswordConfirmationModal: React.FC<Props> = ({
     <Dialog.Dialog open={open} onOpenChange={onOpenChange}>
       <Dialog.Title>{title}</Dialog.Title>
 
-      <Form.Root onSubmit={onSubmit}>
-        <Form.Field name="password">
-          <Form.Label>{t("common.password")}</Form.Label>
-          <Form.PasswordControl autoFocus autoComplete="current-password" />
-        </Form.Field>
+      <Dialog.Description asChild>
+        <Form.Root onSubmit={onSubmit}>
+          <Form.Field name="password">
+            <Form.Label>{t("common.password")}</Form.Label>
+            <Form.PasswordControl autoFocus autoComplete="current-password" />
+          </Form.Field>
 
-        <Button type="submit" kind="primary" destructive={destructive}>
-          {t("action.confirm")}
-        </Button>
-      </Form.Root>
+          <Button type="submit" kind="primary" destructive={destructive}>
+            {t("action.confirm")}
+          </Button>
+        </Form.Root>
+      </Dialog.Description>
 
       <Dialog.Close asChild>
         <Button kind="tertiary">{t("action.cancel")}</Button>

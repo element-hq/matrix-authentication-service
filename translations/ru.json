@@ -74,9 +74,13 @@
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> на <span>%(redirect_uri)s</span> хочет получить доступ к вашей учётной записи.",
+      "continue_to": "Продолжить в <span>%(client_name)s</span>?",
       "heading": "Разрешить доступ к вашей учетной записи?",
       "make_sure_you_trust": "Убедитесь, что вы доверяете <span>%(client_name)s</span>.",
+      "scope_list_preface": "Продолжая, вы разрешаете <span>%(client_name)s</span>:",
       "this_will_allow": "Это позволит <span>%(client_name)s</span>:",
+      "this_will_setup": "Это свяжет %(client_name)s (<span>%(client_uri)s</span>) с вашей учётной записью на <span>%(server_name)s</span>.",
+      "use_another_account": "Использовать другую учётную запись",
       "you_may_be_sharing": "Возможно, вы делитесь конфиденциальной информацией с этим сайтом или приложением."
     },
     "device_card": {
@@ -98,9 +102,12 @@
       "granted": {
         "description": "Вы предоставили доступ для %(client_name)s. Вы можете закрыть это окно.",
         "heading": "Доступ предоставлен"
-      }
+      },
+      "this_will_setup": "Другое устройство пытается связать %(client_name)s (<span>%(client_uri)s</span>) с вашей учётной записью на <span>%(server_name)s</span>. Убедитесь что вы знаете это устройство."
     },
     "device_display_name": {
+      "client_on_device": "%(client_name)s на %(device_name)s",
+      "name_for_platform": "%(name)s для %(platform)s",
       "unknown_device": "Неизвестное устройство"
     },
     "email_in_use": {
@@ -143,6 +150,9 @@
       "username_too_long": "Имя пользователя слишком длинное",
       "username_too_short": "Имя пользователя слишком короткое"
     },
+    "legacy_consent": {
+      "this_will_setup": "Это свяжет <span>%(client_name)s</span> с вашей учётной записью на <span>%(server_name)s</span>"
+    },
     "login": {
       "call_to_register": "Ещё нет аккаунта?",
       "continue_with_provider": "Продолжить с %(provider)s",
@@ -160,7 +170,7 @@
     "navbar": {
       "my_account": "Моя учётная запись",
       "register": "Создать учётную запись",
-      "signed_in_as": "Вы вошли как <span class=\"font-semibold\">%(username)s</span> ."
+      "signed_in_as": "Вы вошли как <span class=\"font-semibold\">%(username)s</span>."
     },
     "not_found": {
       "description": "Страница, которую вы искали, не существует или была перемещена",
@@ -208,6 +218,7 @@
     "register": {
       "call_to_login": "Уже есть аккаунт?",
       "continue_with_email": "Продолжить с адресом электронной почты",
+      "continue_with_password": "Продолжить с паролем",
       "create_account": {
         "description": "Выберите имя пользователя, чтобы продолжить.",
         "heading": "Создать учётную запись"
@@ -215,12 +226,17 @@
       "sign_in_instead": "Вместо этого войдите",
       "terms_of_service": "Я соглашаюсь с <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Правилами и положениями</a>"
     },
+    "registration_token": {
+      "description": "Введите токен регистрации, предоставленный администратором сервера.",
+      "field": "Токен регистрации",
+      "headline": "Токен регистрации"
+    },
     "scope": {
       "edit_profile": "Редактировать профиль и контактную информацию",
       "manage_sessions": "Управлять устройствами и сеансами",
-      "mas_admin": "Администрировать пользователями в matrix-authentication-service",
+      "mas_admin": "Управление пользователями (urn:mas:admin)",
       "send_messages": "Отправлять новые сообщения от вашего имени",
-      "synapse_admin": "Администрировать домашний сервер Synapse",
+      "synapse_admin": "Администрирование сервера (urn:synapse:admin:*)",
       "view_messages": "Просмотравить существующие сообщения и данные",
       "view_profile": "Просматривать информации о вашем профиле и контактных данных"
     },
@@ -230,6 +246,7 @@
       },
       "login_link": {
         "action": "Продолжить",
+        "description": "Для этого имени пользователя (%(username)s) существует учетная запись, она будет связана с этой учетной записью.",
         "heading": "Связать с существующим аккаунтом"
       },
       "register": {

@@ -1,0 +1,94 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT s.user_session_id\n                     , s.created_at            AS \"user_session_created_at\"\n                     , s.finished_at           AS \"user_session_finished_at\"\n                     , s.user_agent            AS \"user_session_user_agent\"\n                     , s.last_active_at        AS \"user_session_last_active_at\"\n                     , s.last_active_ip        AS \"user_session_last_active_ip: IpAddr\"\n                     , u.user_id\n                     , u.username              AS \"user_username\"\n                     , u.created_at            AS \"user_created_at\"\n                     , u.locked_at             AS \"user_locked_at\"\n                     , u.deactivated_at        AS \"user_deactivated_at\"\n                     , u.can_request_admin     AS \"user_can_request_admin\"\n                     , u.is_guest              AS \"user_is_guest\"\n                FROM user_sessions s\n                INNER JOIN users u\n                    USING (user_id)\n                WHERE s.user_session_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_session_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_session_created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_session_finished_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "user_session_user_agent",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "user_session_last_active_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "user_session_last_active_ip: IpAddr",
+        "type_info": "Inet"
+      },
+      {
+        "ordinal": 6,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 7,
+        "name": "user_username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "user_created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "user_locked_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 10,
+        "name": "user_deactivated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "user_can_request_admin",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 12,
+        "name": "user_is_guest",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "572ead41d62cfbe40e6f0c8edf6928e8eebd99036255b62d688ac02b5bd74b40"
+}

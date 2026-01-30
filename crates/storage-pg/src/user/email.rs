@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -7,11 +8,12 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    BrowserSession, Clock, User, UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode,
-    UserRegistration,
+    BrowserSession, Clock, UpstreamOAuthAuthorizationSession, User, UserEmail,
+    UserEmailAuthentication, UserEmailAuthenticationCode, UserRegistration,
 };
 use mas_storage::{
     Page, Pagination,
+    pagination::Node,
     user::{UserEmailFilter, UserEmailRepository},
 };
 use rand::RngCore;
@@ -49,6 +51,12 @@ struct UserEmailLookup {
     user_id: Uuid,
     email: String,
     created_at: DateTime<Utc>,
+}
+
+impl Node<Ulid> for UserEmailLookup {
+    fn cursor(&self) -> Ulid {
+        self.user_email_id.into()
+    }
 }
 
 impl From<UserEmailLookup> for UserEmail {
@@ -661,7 +669,7 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
     }
 
     #[tracing::instrument(
-        name = "db.user_email.complete_email_authentication",
+        name = "db.user_email.complete_email_authentication_with_code",
         skip_all,
         fields(
             db.query.text,
@@ -672,7 +680,7 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
         ),
         err,
     )]
-    async fn complete_authentication(
+    async fn complete_authentication_with_code(
         &mut self,
         clock: &dyn Clock,
         mut user_email_authentication: UserEmailAuthentication,
@@ -704,5 +712,106 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
 
         user_email_authentication.completed_at = Some(completed_at);
         Ok(user_email_authentication)
+    }
+
+    #[tracing::instrument(
+        name = "db.user_email.complete_email_authentication_with_upstream",
+        skip_all,
+        fields(
+            db.query.text,
+            %user_email_authentication.id,
+            %user_email_authentication.email,
+            %upstream_oauth_authorization_session.id,
+        ),
+        err,
+    )]
+    async fn complete_authentication_with_upstream(
+        &mut self,
+        clock: &dyn Clock,
+        mut user_email_authentication: UserEmailAuthentication,
+        upstream_oauth_authorization_session: &UpstreamOAuthAuthorizationSession,
+    ) -> Result<UserEmailAuthentication, Self::Error> {
+        // We technically don't use the upstream_oauth_authorization_session here (other
+        // than recording it in the span), but this is to make sure the caller
+        // has fetched one before calling this
+        let completed_at = clock.now();
+
+        // We'll assume the caller has checked that completed_at is None, so in case
+        // they haven't, the update will not affect any rows, which will raise
+        // an error
+        let res = sqlx::query!(
+            r#"
+                UPDATE user_email_authentications
+                SET completed_at = $2
+                WHERE user_email_authentication_id = $1
+                  AND completed_at IS NULL
+            "#,
+            Uuid::from(user_email_authentication.id),
+            completed_at,
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        user_email_authentication.completed_at = Some(completed_at);
+        Ok(user_email_authentication)
+    }
+
+    #[tracing::instrument(
+        name = "db.user_email.cleanup_authentications",
+        skip_all,
+        fields(
+            db.query.text,
+            since = since.map(tracing::field::display),
+            until = %until,
+            limit = limit,
+        ),
+        err,
+    )]
+    async fn cleanup_authentications(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error> {
+        // Use ULID cursor-based pagination. Since ULIDs contain a timestamp,
+        // we can efficiently delete old authentications without needing an index.
+        // `MAX(uuid)` isn't a thing in Postgres, so we aggregate on the client side.
+        let res = sqlx::query_scalar!(
+            r#"
+                WITH
+                  to_delete AS (
+                    SELECT user_email_authentication_id
+                    FROM user_email_authentications
+                    WHERE ($1::uuid IS NULL OR user_email_authentication_id > $1)
+                      AND user_email_authentication_id <= $2
+                    ORDER BY user_email_authentication_id
+                    LIMIT $3
+                  ),
+                  deleted_codes AS (
+                    DELETE FROM user_email_authentication_codes
+                    USING to_delete
+                    WHERE user_email_authentication_codes.user_email_authentication_id = to_delete.user_email_authentication_id
+                    RETURNING user_email_authentication_codes.user_email_authentication_code_id
+                  )
+                DELETE FROM user_email_authentications
+                USING to_delete
+                WHERE user_email_authentications.user_email_authentication_id = to_delete.user_email_authentication_id
+                RETURNING user_email_authentications.user_email_authentication_id
+            "#,
+            since.map(Uuid::from),
+            Uuid::from(until),
+            i64::try_from(limit).unwrap_or(i64::MAX)
+        )
+        .traced()
+        .fetch_all(&mut *self.conn)
+        .await?;
+
+        let count = res.len();
+        let max_id = res.into_iter().max();
+
+        Ok((count, max_id.map(Ulid::from)))
     }
 }

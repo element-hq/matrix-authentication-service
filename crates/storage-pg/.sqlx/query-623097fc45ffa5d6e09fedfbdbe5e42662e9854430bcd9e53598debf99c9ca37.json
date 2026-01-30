@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                WITH\n                  to_delete AS (\n                    SELECT upstream_oauth_link_id\n                    FROM upstream_oauth_links\n                    WHERE user_id IS NULL\n                    AND ($1::uuid IS NULL OR upstream_oauth_link_id > $1)\n                    AND upstream_oauth_link_id <= $2\n                    ORDER BY upstream_oauth_link_id\n                    LIMIT $3\n                  ),\n                  deleted_sessions AS (\n                    DELETE FROM upstream_oauth_authorization_sessions\n                    USING to_delete\n                    WHERE upstream_oauth_authorization_sessions.upstream_oauth_link_id = to_delete.upstream_oauth_link_id\n                  )\n                DELETE FROM upstream_oauth_links\n                USING to_delete\n                WHERE upstream_oauth_links.upstream_oauth_link_id = to_delete.upstream_oauth_link_id\n                RETURNING upstream_oauth_links.upstream_oauth_link_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "upstream_oauth_link_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "623097fc45ffa5d6e09fedfbdbe5e42662e9854430bcd9e53598debf99c9ca37"
+}

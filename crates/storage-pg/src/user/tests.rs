@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -174,10 +175,23 @@ async fn test_user_repo(pool: PgPool) {
     assert_eq!(repo.user().count(locked).await.unwrap(), 0);
     assert_eq!(repo.user().count(deactivated).await.unwrap(), 1);
 
+    // Test the search filter
+    assert_eq!(
+        repo.user()
+            .count(all.matching_search("alice"))
+            .await
+            .unwrap(),
+        0
+    );
+    assert_eq!(
+        repo.user().count(all.matching_search("JO")).await.unwrap(),
+        1
+    );
+
     // Check the list method
     let list = repo.user().list(all, Pagination::first(10)).await.unwrap();
     assert_eq!(list.edges.len(), 1);
-    assert_eq!(list.edges[0].id, user.id);
+    assert_eq!(list.edges[0].node.id, user.id);
 
     let list = repo
         .user()
@@ -192,7 +206,7 @@ async fn test_user_repo(pool: PgPool) {
         .await
         .unwrap();
     assert_eq!(list.edges.len(), 1);
-    assert_eq!(list.edges[0].id, user.id);
+    assert_eq!(list.edges[0].node.id, user.id);
 
     let list = repo
         .user()
@@ -214,7 +228,7 @@ async fn test_user_repo(pool: PgPool) {
         .await
         .unwrap();
     assert_eq!(list.edges.len(), 1);
-    assert_eq!(list.edges[0].id, user.id);
+    assert_eq!(list.edges[0].node.id, user.id);
 
     repo.save().await.unwrap();
 }
@@ -335,7 +349,7 @@ async fn test_user_email_repo(pool: PgPool) {
         .unwrap();
     assert!(!emails.has_next_page);
     assert_eq!(emails.edges.len(), 1);
-    assert_eq!(emails.edges[0], user_email);
+    assert_eq!(emails.edges[0].node, user_email);
 
     // Listing emails from the email address should work
     let emails = repo
@@ -345,7 +359,7 @@ async fn test_user_email_repo(pool: PgPool) {
         .unwrap();
     assert!(!emails.has_next_page);
     assert_eq!(emails.edges.len(), 1);
-    assert_eq!(emails.edges[0], user_email);
+    assert_eq!(emails.edges[0].node, user_email);
 
     // Filtering on another email should not return anything
     let emails = repo
@@ -475,7 +489,7 @@ async fn test_user_email_repo_authentications(pool: PgPool) {
     // Complete the authentication
     let authentication = repo
         .user_email()
-        .complete_authentication(&clock, authentication, &code)
+        .complete_authentication_with_code(&clock, authentication, &code)
         .await
         .unwrap();
 
@@ -501,7 +515,7 @@ async fn test_user_email_repo_authentications(pool: PgPool) {
     // Completing a second time should fail
     let res = repo
         .user_email()
-        .complete_authentication(&clock, authentication, &code)
+        .complete_authentication_with_code(&clock, authentication, &code)
         .await;
     assert!(res.is_err());
 }
@@ -635,7 +649,7 @@ async fn test_user_session(pool: PgPool) {
         .unwrap();
     assert!(!session_list.has_next_page);
     assert_eq!(session_list.edges.len(), 1);
-    assert_eq!(session_list.edges[0], session);
+    assert_eq!(session_list.edges[0].node, session);
 
     let session_lookup = repo
         .browser_session()
@@ -786,8 +800,8 @@ async fn test_user_session(pool: PgPool) {
     // This will match all authorization sessions, which matches exactly that one
     // authorization session
     let upstream_oauth_session_filter = UpstreamOAuthSessionFilter::new();
-    let filter = BrowserSessionFilter::new()
-        .authenticated_by_upstream_sessions_only(upstream_oauth_session_filter);
+    let filter =
+        BrowserSessionFilter::new().linked_to_upstream_sessions_only(upstream_oauth_session_filter);
 
     // Now try to look it up
     let page = repo
@@ -796,7 +810,7 @@ async fn test_user_session(pool: PgPool) {
         .await
         .unwrap();
     assert_eq!(page.edges.len(), 1);
-    assert_eq!(page.edges[0].id, session.id);
+    assert_eq!(page.edges[0].node.id, session.id);
 
     // Try counting
     assert_eq!(repo.browser_session().count(filter).await.unwrap(), 1);

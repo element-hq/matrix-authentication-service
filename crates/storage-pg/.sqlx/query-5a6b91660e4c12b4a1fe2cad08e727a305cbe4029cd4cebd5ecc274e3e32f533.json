@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE upstream_oauth_authorization_sessions\n                SET consumed_at = $1,\n                    user_session_id = $2\n                WHERE upstream_oauth_authorization_session_id = $3\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5a6b91660e4c12b4a1fe2cad08e727a305cbe4029cd4cebd5ecc274e3e32f533"
+}

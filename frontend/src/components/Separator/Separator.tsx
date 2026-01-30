@@ -5,6 +5,7 @@
 
 // biome-ignore-all lint/a11y/useFocusableInteractive: this is a false positive
 // biome-ignore-all lint/a11y/useAriaPropsForRole: this is a false positive
+// biome-ignore-all lint/a11y/useSemanticElements: I don't want to use an <hr />
 
 import cx from "classnames";
 import { forwardRef } from "react";

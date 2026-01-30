@@ -52,8 +52,16 @@ impl Options {
         )?;
 
         // Load and compile the templates
-        let templates =
-            templates_from_config(&config.templates, &site_config, &url_builder).await?;
+        let templates = templates_from_config(
+            &config.templates,
+            &site_config,
+            &url_builder,
+            // Don't use strict mode on task workers for now
+            false,
+            // Don't stabilise in production
+            false,
+        )
+        .await?;
 
         let mailer = mailer_from_config(&config.email, &templates)?;
         test_mailer_in_background(&mailer, Duration::from_secs(30));

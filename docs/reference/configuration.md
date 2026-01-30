@@ -196,36 +196,8 @@ secrets:
 
   # Signing keys
   keys:
-    # It needs at least an RSA key to work properly
-    - kid: "ahM2bien"
-      key: |
-        -----BEGIN RSA PRIVATE KEY-----
-        MIIEowIBAAKCAQEAuf28zPUp574jDRdX6uN0d7niZCIUpACFo+Po/13FuIGsrpze
-        yMX6CYWVPalgXW9FCrhxL+4toJRy5npjkgsLFsknL5/zXbWKFgt69cMwsWJ9Ra57
-        bonSlI7SoCuHhtw7j+sAlHAlqTOCAVz6P039Y/AGvO6xbC7f+9XftWlbbDcjKFcb
-        pQilkN9qtkdEH7TLayMAFOsgNvBlwF9+oj9w5PIk3veRTdBXI4GlHjhhzqGZKiRp
-        oP9HnycHHveyT+C33vuhQso5a3wcUNuvDVOixSqR4kvSt4UVWNK/KmEQmlWU1/m9
-        ClIwrs8Q79q0xkGaSa0iuG60nvm7tZez9TFkxwIDAQABAoIBAHA5YkppQ7fJSm0D
-        wNDCHeyABNJWng23IuwZAOXVNxB1bjSOAv8yNgS4zaw/Hx5BnW8yi1lYZb+W0x2u
-        i5X7g91j0nkyEi5g88kJdFAGTsM5ok0BUwkHsEBjTUPIACanjGjya48lfBP0OGWK
-        LJU2Acbjda1aeUPFpPDXw/w6bieEthQwroq3DHCMnk6i9bsxgIOXeN04ij9XBmsH
-        KPCP2hAUnZSlx5febYfHK7/W95aJp22qa//eHS8cKQZCJ0+dQuZwLhlGosTFqLUm
-        qhPlt/b1EvPPY0cq5rtUc2W31L0YayVEHVOQx1fQIkH2VIUNbAS+bfVy+o6WCRk6
-        s1XDhsECgYEA30tykVTN5LncY4eQIww2mW8v1j1EG6ngVShN3GuBTuXXaEOB8Duc
-        yT7yJt1ZhmaJwMk4agmZ1/f/ZXBtfLREGVzVvuwqRZ+LHbqIyhi0wQJA0aezPote
-        uTQnFn+IveHGtpQNDYGL/UgkexuCxbc2HOZG51JpunCK0TdtVfO/9OUCgYEA1TuS
-        2WAXzNudRG3xd/4OgtkLD9AvfSvyjw2LkwqCMb3A5UEqw7vubk/xgnRvqrAgJRWo
-        jndgRrRnikHCavDHBO0GAO/kzrFRfw+e+r4jcLl0Yadke8ndCc7VTnx4wQCrMi5H
-        7HEeRwaZONoj5PAPyA5X+N/gT0NNDA7KoQT45DsCgYBt+QWa6A5jaNpPNpPZfwlg
-        9e60cAYcLcUri6cVOOk9h1tYoW7cdy+XueWfGIMf+1460Z90MfhP8ncZaY6yzUGA
-        0EUBO+Tx10q3wIfgKNzU9hwgZZyU4CUtx668mOEqy4iHoVDwZu4gNyiobPsyDzKa
-        dxtSkDc8OHNV6RtzKpJOtQKBgFoRGcwbnLH5KYqX7eDDPRnj15pMU2LJx2DJVeU8
-        ERY1kl7Dke6vWNzbg6WYzPoJ/unrJhFXNyFmXj213QsSvN3FyD1pFvp/R28mB/7d
-        hVa93vzImdb3wxe7d7n5NYBAag9+IP8sIJ/bl6i9619uTxwvgtUqqzKPuOGY9dnh
-        oce1AoGBAKZyZc/NVgqV2KgAnnYlcwNn7sRSkM8dcq0/gBMNuSZkfZSuEd4wwUzR
-        iFlYp23O2nHWggTkzimuBPtD7Kq4jBey3ZkyGye+sAdmnKkOjNILNbpIZlT6gK3z
-        fBaFmJGRJinKA+BJeH79WFpYN6SBZ/c3s5BusAbEU7kE5eInyazP
-        -----END RSA PRIVATE KEY-----
+    # At least one RSA key must be configured
+    - key_file: keys/rsa_key
     - kid: "iv1aShae"
       key: |
         -----BEGIN EC PRIVATE KEY-----
@@ -250,7 +222,7 @@ The secret is not updated when the content of the file changes.
 > Changing the encryption secret afterwards will lead to a loss of all encrypted
 > information in the database.
 
-### `secrets.keys`
+### Signing Keys
 
 The service can use a number of key types for signing.
 The following key types are supported:
@@ -260,18 +232,49 @@ The following key types are supported:
 - ECDSA with the P-384 (`secp384r1`) curve
 - ECDSA with the K-256 (`secp256k1`) curve
 
-Each entry must have a unique `kid`, plus the key itself.
-The `kid` can be any case-sensitive string value as long as it is unique to this list;
-a key’s `kid` value must be stable across restarts.
-The key can either be specified inline (with the `key` property),
-or loaded from a file (with the `key_file` property).
 The following key formats are supported:
 
 - PKCS#1 PEM or DER-encoded RSA private key
 - PKCS#8 PEM or DER-encoded RSA or ECDSA private key, encrypted or not
 - SEC1 PEM or DER-encoded ECDSA private key
 
+The signing keys are used for:
+- signing ID Tokens (as returned in the [Token Endpoint] at `/oauth2/token`);
+- signing the response of the [UserInfo Endpoint] at `/oauth2/userinfo` if the
+  client requests a signed response;
+- (niche) signing a JWT for authenticating to an upstream OAuth provider when
+  the `private_key_jwt` client auth method is configured.
+
+At a minimum, an RSA key must be configured in order to be compliant with the
+[OpenID Connect Core specification][oidc-core-rs256] which specifies the RS256 algorithm
+as mandatory to implement by servers for interoperability reasons.
+
+The keys can be given as a directory path via `secrets.keys_dir`
+or, alternatively, as an inline configuration list via `secrets.keys`.
+
+[Token Endpoint]: https://openid.net/specs/openid-connect-core-1_0.html#TokenEndpoint
+[UserInfo Endpoint]: https://openid.net/specs/openid-connect-core-1_0.html#UserInfo
+[oidc-core-rs256]: https://openid.net/specs/openid-connect-core-1_0.html#ServerMTI
+
+#### `secrets.keys_dir`
+
+Path to the directory containing MAS signing key files.
+Only keys that don’t require a password are supported.
+
+#### `secrets.keys`
+
+Each entry in the list corresponds to one signing key used by MAS.
+The key can either be specified inline (with the `key` property),
+or loaded from a file (with the `key_file` property).
+
+A [JWK Key ID] is automatically derived from each key.
+To override this default, set `kid` to a custom value.
+The `kid` can be any case-sensitive string value as long as it is unique to this list;
+a key’s `kid` value must be stable across restarts.
+
 For PKCS#8 encoded keys, the `password` or `password_file` properties can be used to decrypt the key.
+
+[JWK Key ID]: <https://datatracker.ietf.org/doc/html/rfc7517#section-4.5>
 
 ## `passwords`
 
@@ -318,6 +321,12 @@ account:
   # Defaults to `false`.
   # This has no effect if password login is disabled.
   password_registration_enabled: false
+
+  # Whether self-service registrations require a valid email
+  #
+  # Defaults to `true`
+  # This has no effect if password registration is disabled.
+  password_registration_email_required: true
 
   # Whether users are allowed to change their passwords
   #
@@ -659,7 +668,8 @@ upstream_oauth2:
       # The client secret to use to authenticate to the provider
       # This is only used by the `client_secret_post`, `client_secret_basic`
       # and `client_secret_jwk` authentication methods
-      #client_secret: f4f6bb68a0269264877e9cb23b1856ab
+      client_secret_file: secret
+      # OR client_secret: f4f6bb68a0269264877e9cb23b1856ab
 
       # Which authentication method to use to authenticate to the provider
       # Supported methods are:
@@ -776,17 +786,27 @@ upstream_oauth2:
         subject:
           #template: "{{ user.sub }}"
 
+        # By default, new users will see a screen confirming the attributes they
+        # are about to have on their account.
+        #
+        # Setting this to `true` allows skipping this screen, but requires the
+        # `localpart.action` to be set to `require` and the other attributes
+        # actions to be set to `ignore`, `force` or `require`.
+        #skip_confirmation: false
+
         # The localpart is the local part of the user's Matrix ID.
         # For example, on the `example.com` server, if the localpart is `alice`,
         #  the user's Matrix ID will be `@alice:example.com`.
         localpart:
           #action: force
           #template: "{{ user.preferred_username }}"
-          
+
           # How to handle when localpart already exists.
           # Possible values are (default: fail):
-          # - `add` : Adds the upstream account link to the existing user, regardless of whether there is an existing link or not.
           # - `fail` : Fails the upstream OAuth 2.0 login.
+          # - `add` : Adds the upstream account link to the existing user, regardless of whether there is an existing link or not.
+          # - `replace` : Replace any existing upstream OAuth 2.0 identity link for this provider on the matching user.
+          # - `set` : Adds the upstream account link *only* if there is no existing link for this provider on the matching user.
           #on_conflict: fail
 
         # The display name is the user's display name.
@@ -798,15 +818,6 @@ upstream_oauth2:
         email:
           #action: suggest
           #template: "{{ user.email }}"
-
-          # Whether the email address must be marked as verified.
-          # Possible values are:
-          #  - `import`: mark the email address as verified if the upstream provider
-          #     has marked it as verified, using the `email_verified` claim.
-          #     This is the default.
-          #   - `always`: mark the email address as verified
-          #   - `never`: mark the email address as not verified
-          #set_email_verification: import
 
         # An account name, for display purposes only
         # This helps end user identify what account they are using

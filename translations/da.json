@@ -210,6 +210,7 @@
     "register": {
       "call_to_login": "Har du allerede en konto?",
       "continue_with_email": "Fortsæt med e-mailadresse",
+      "continue_with_password": "Fortsæt med adgangskode",
       "create_account": {
         "description": "Vælg et brugernavn for at fortsætte.",
         "heading": "Opret en konto"

@@ -123,14 +123,14 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
       If you're not signed in to any other devices and you've lost your recovery key, then you'll need to reset your identity to continue using the app.
     </p>
     <ul
-      class="_visual-list_15wzx_8"
+      class="_visual-list_1mgc1_8"
     >
       <li
-        class="_visual-list-item_1ma3e_8"
+        class="_visual-list-item_1nc1y_8"
       >
         <svg
           aria-hidden="true"
-          class="_visual-list-item-icon_1ma3e_17 _visual-list-item-icon-success_1ma3e_22"
+          class="_visual-list-item-icon_1nc1y_17 _visual-list-item-icon-success_1nc1y_22"
           fill="currentColor"
           height="24px"
           viewBox="0 0 24 24"
@@ -144,11 +144,11 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
         Your account details, contacts, preferences, and chat list will be kept
       </li>
       <li
-        class="_visual-list-item_1ma3e_8"
+        class="_visual-list-item_1nc1y_8"
       >
         <svg
           aria-hidden="true"
-          class="_visual-list-item-icon_1ma3e_17"
+          class="_visual-list-item-icon_1nc1y_17"
           fill="currentColor"
           height="24px"
           viewBox="0 0 24 24"
@@ -167,11 +167,11 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
         You will lose any message history that's stored only on the server
       </li>
       <li
-        class="_visual-list-item_1ma3e_8"
+        class="_visual-list-item_1nc1y_8"
       >
         <svg
           aria-hidden="true"
-          class="_visual-list-item-icon_1ma3e_17"
+          class="_visual-list-item-icon_1nc1y_17"
           fill="currentColor"
           height="24px"
           viewBox="0 0 24 24"
@@ -197,7 +197,7 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
     </p>
     <button
       aria-disabled="false"
-      class="_button_vczzf_8 _destructive_vczzf_107"
+      class="_button_13vu4_8 _destructive_13vu4_110"
       data-kind="primary"
       data-size="lg"
       role="button"
@@ -207,7 +207,7 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
     </button>
     <a
       aria-disabled="false"
-      class="_button_vczzf_8 _buttonLink_014cb0"
+      class="_button_13vu4_8 _buttonLink_014cb0"
       data-kind="tertiary"
       data-size="lg"
       href="/reset-cross-signing/cancelled"
@@ -296,7 +296,7 @@ exports[`Reset cross signing > renders the errored page 1`] = `
       This might be a temporary problem, so please try again later. If the problem persists, please contact your server administrator.
     </p>
     <button
-      class="_button_vczzf_8"
+      class="_button_13vu4_8"
       data-kind="tertiary"
       data-size="lg"
       role="button"
@@ -384,14 +384,14 @@ exports[`Reset cross signing > renders the page 1`] = `
       If you're not signed in to any other devices and you've lost your recovery key, then you'll need to reset your identity to continue using the app.
     </p>
     <ul
-      class="_visual-list_15wzx_8"
+      class="_visual-list_1mgc1_8"
     >
       <li
-        class="_visual-list-item_1ma3e_8"
+        class="_visual-list-item_1nc1y_8"
       >
         <svg
           aria-hidden="true"
-          class="_visual-list-item-icon_1ma3e_17 _visual-list-item-icon-success_1ma3e_22"
+          class="_visual-list-item-icon_1nc1y_17 _visual-list-item-icon-success_1nc1y_22"
           fill="currentColor"
           height="24px"
           viewBox="0 0 24 24"
@@ -405,11 +405,11 @@ exports[`Reset cross signing > renders the page 1`] = `
         Your account details, contacts, preferences, and chat list will be kept
       </li>
       <li
-        class="_visual-list-item_1ma3e_8"
+        class="_visual-list-item_1nc1y_8"
       >
         <svg
           aria-hidden="true"
-          class="_visual-list-item-icon_1ma3e_17"
+          class="_visual-list-item-icon_1nc1y_17"
           fill="currentColor"
           height="24px"
           viewBox="0 0 24 24"
@@ -428,11 +428,11 @@ exports[`Reset cross signing > renders the page 1`] = `
         You will lose any message history that's stored only on the server
       </li>
       <li
-        class="_visual-list-item_1ma3e_8"
+        class="_visual-list-item_1nc1y_8"
       >
         <svg
           aria-hidden="true"
-          class="_visual-list-item-icon_1ma3e_17"
+          class="_visual-list-item-icon_1nc1y_17"
           fill="currentColor"
           height="24px"
           viewBox="0 0 24 24"
@@ -458,7 +458,7 @@ exports[`Reset cross signing > renders the page 1`] = `
     </p>
     <button
       aria-disabled="false"
-      class="_button_vczzf_8 _destructive_vczzf_107"
+      class="_button_13vu4_8 _destructive_13vu4_110"
       data-kind="primary"
       data-size="lg"
       role="button"
@@ -468,7 +468,7 @@ exports[`Reset cross signing > renders the page 1`] = `
     </button>
     <a
       aria-disabled="false"
-      class="_button_vczzf_8 _buttonLink_014cb0"
+      class="_button_13vu4_8 _buttonLink_014cb0"
       data-kind="tertiary"
       data-size="lg"
       href="/"

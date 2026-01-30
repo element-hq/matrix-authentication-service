@@ -86,7 +86,7 @@ async fn verify_password_if_needed(
             password,
             user_password.hashed_password,
         )
-        .await;
+        .await?;
 
-    Ok(res.is_ok())
+    Ok(res.is_success())
 }

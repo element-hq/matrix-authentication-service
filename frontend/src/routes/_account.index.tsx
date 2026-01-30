@@ -66,17 +66,29 @@ const query = queryOptions({
 
 const actionSchema = v.variant("action", [
   v.object({
-    action: v.picklist(["profile", "org.matrix.profile"]),
+    action: v.picklist(["org.matrix.profile", "profile"]),
   }),
   v.object({
-    action: v.picklist(["sessions_list", "org.matrix.sessions_list"]),
+    action: v.picklist([
+      "org.matrix.devices_list",
+      "sessions_list",
+      "org.matrix.sessions_list",
+    ]),
   }),
   v.object({
-    action: v.picklist(["session_view", "org.matrix.session_view"]),
+    action: v.picklist([
+      "org.matrix.device_view",
+      "session_view",
+      "org.matrix.session_view",
+    ]),
     device_id: v.optional(v.string()),
   }),
   v.object({
-    action: v.picklist(["session_end", "org.matrix.session_end"]),
+    action: v.picklist([
+      "org.matrix.device_delete",
+      "session_end",
+      "org.matrix.session_end",
+    ]),
     device_id: v.optional(v.string()),
   }),
   v.object({
@@ -97,16 +109,18 @@ export const Route = createFileRoute({
 
   beforeLoad({ search }) {
     switch (search.action) {
-      case "profile":
       case "org.matrix.profile":
+      case "profile": // This is an unspecced alias that can be removed
         throw redirect({ to: "/", search: {} });
 
-      case "sessions_list":
-      case "org.matrix.sessions_list":
+      case "org.matrix.devices_list":
+      case "sessions_list": // This is an unspecced alias that can be removed
+      case "org.matrix.sessions_list": // This is an unstable value from MSC4191 that can be removed once we have enough client adoption of the stable value
         throw redirect({ to: "/sessions" });
 
-      case "session_view":
-      case "org.matrix.session_view":
+      case "org.matrix.device_view":
+      case "session_view": // This is an unspecced alias that can be removed
+      case "org.matrix.session_view": // This is an unstable value from MSC4191 that can be removed once we have enough client adoption of the stable value
         if (search.device_id)
           throw redirect({
             to: "/devices/$",
@@ -114,8 +128,9 @@ export const Route = createFileRoute({
           });
         throw redirect({ to: "/sessions" });
 
-      case "session_end":
-      case "org.matrix.session_end":
+      case "org.matrix.device_delete":
+      case "session_end": // This is the unstable MSC3824 alias for org.matrix.session_end
+      case "org.matrix.session_end": // This is an unstable value from MSC4191 that can be removed once we have enough client adoption of the stable value
         if (search.device_id)
           throw redirect({
             to: "/devices/$",
@@ -129,7 +144,8 @@ export const Route = createFileRoute({
           search: { deepLink: true },
         });
       case "org.matrix.plan_management": {
-        // We don't both checking if the plan management iframe is actually available and
+        // This is an unspecced experimental value
+        // We don't bother checking if the plan management iframe is actually available and
         // instead rely on the plan tab handling it.
         throw redirect({ to: "/plan" });
       }
@@ -159,17 +175,19 @@ const SignOutButton: React.FC<{ id: string }> = ({ id }) => {
     >
       <Dialog.Title>{t("frontend.account.sign_out.dialog")}</Dialog.Title>
 
-      <Button
-        type="button"
-        kind="primary"
-        destructive
-        onClick={() => mutation.mutate()}
-        disabled={mutation.isPending}
-        Icon={mutation.isPending ? undefined : IconSignOut}
-      >
-        {mutation.isPending && <LoadingSpinner inline />}
-        {t("action.sign_out")}
-      </Button>
+      <Dialog.Description asChild>
+        <Button
+          type="button"
+          kind="primary"
+          destructive
+          onClick={() => mutation.mutate()}
+          disabled={mutation.isPending}
+          Icon={mutation.isPending ? undefined : IconSignOut}
+        >
+          {mutation.isPending && <LoadingSpinner inline />}
+          {t("action.sign_out")}
+        </Button>
+      </Dialog.Description>
 
       <Dialog.Close asChild>
         <Button kind="tertiary">{t("action.cancel")}</Button>

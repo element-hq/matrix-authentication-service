@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -141,9 +142,6 @@ pub(crate) enum RouteError {
         refresh_token: Ulid,
     },
 
-    #[error("no access token associated with the refresh token {refresh_token:?}")]
-    NoAccessTokenOnRefreshToken { refresh_token: Ulid },
-
     #[error("device code grant expired")]
     DeviceCodeExpired,
 
@@ -171,7 +169,6 @@ impl IntoResponse for RouteError {
                 | Self::ProvisionDeviceFailed(_)
                 | Self::NoSuchNextRefreshToken { .. }
                 | Self::NoSuchNextAccessToken { .. }
-                | Self::NoAccessTokenOnRefreshToken { .. }
         );
 
         TOKEN_REQUEST_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
@@ -183,8 +180,7 @@ impl IntoResponse for RouteError {
             | Self::NoSuchOAuthSession(_)
             | Self::ProvisionDeviceFailed(_)
             | Self::NoSuchNextRefreshToken { .. }
-            | Self::NoSuchNextAccessToken { .. }
-            | Self::NoAccessTokenOnRefreshToken { .. } => (
+            | Self::NoSuchNextAccessToken { .. } => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ClientError::from(ClientErrorCode::ServerError)),
             ),
@@ -678,28 +674,52 @@ async fn refresh_token_grant(
             return Err(RouteError::RefreshTokenInvalid(next_refresh_token.id));
         }
 
-        // Check if the associated access token was already used
-        let Some(access_token_id) = next_refresh_token.access_token_id else {
-            // This should in theory not happen: this means an access token got cleaned up,
-            // but the refresh token was still valid.
-            return Err(RouteError::NoAccessTokenOnRefreshToken {
-                refresh_token: next_refresh_token.id,
-            });
-        };
+        // Check if the associated access token was already used.
+        //
+        // If the access token is no longer present, we assume it was *not* used.
+        // Tokens can disappear for two main reasons:
+        //
+        //  - revoked access tokens are deleted after 1 hour
+        //  - expired access tokens are deleted after 30 days
+        //
+        // Revoked tokens are not an issue, as the associated refresh token is also
+        // revoked. For expired tokens, however, we are effectively losing the
+        // ability to prevent the client from performing a bad double-refresh.
+        // This measure is intended to enhance security when a refresh token
+        // leaks. However, the primary goal is to ensure that we do not maintain
+        // two active branches of the refresh token tree.
+        //
+        // Consider these two scenarios:
+        //
+        //   - Refresh token A is consumed, issuing refresh token B and access token C.
+        //   - The client uses access token C.
+        //   - Access token C expires after some time.
+        //   - If the client then attempts to use refresh token A again:
+        //      - If access token C is still present, the refresh will be rightfully
+        //        declined, as we have proof that it received the new set of tokens.
+        //      - If access token C was cleaned up, the refresh will succeed, issuing
+        //        new tokens but invalidating refresh token B and the original access
+        //        token C.
+        if let Some(access_token_id) = next_refresh_token.access_token_id {
+            // Load it
+            let next_access_token = repo
+                .oauth2_access_token()
+                .lookup(access_token_id)
+                .await?
+                .ok_or(RouteError::NoSuchNextAccessToken {
+                    access_token: access_token_id,
+                    refresh_token: next_refresh_token_id,
+                })?;
 
-        // Load it
-        let next_access_token = repo
-            .oauth2_access_token()
-            .lookup(access_token_id)
-            .await?
-            .ok_or(RouteError::NoSuchNextAccessToken {
-                access_token: access_token_id,
-                refresh_token: next_refresh_token_id,
-            })?;
+            if next_access_token.is_used() {
+                // XXX: This is a replay, we *may* want to invalidate the session
+                return Err(RouteError::RefreshTokenInvalid(next_refresh_token.id));
+            }
 
-        if next_access_token.is_used() {
-            // XXX: This is a replay, we *may* want to invalidate the session
-            return Err(RouteError::RefreshTokenInvalid(next_refresh_token.id));
+            // This could be a double-refresh, see below
+            repo.oauth2_access_token()
+                .revoke(clock, next_access_token)
+                .await?;
         }
 
         // Looks like it's a double-refresh, client lost their refresh token on
@@ -711,10 +731,6 @@ async fn refresh_token_grant(
             %refresh_token.id,
             "Refresh token already used, but issued refresh and access tokens are unused. Assuming those were lost; revoking those and reissuing new ones."
         );
-
-        repo.oauth2_access_token()
-            .revoke(clock, next_access_token)
-            .await?;
 
         repo.oauth2_refresh_token()
             .revoke(clock, next_refresh_token)
@@ -781,6 +797,7 @@ async fn client_credentials_grant(
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
             user: None,
             client,
+            session_counts: None,
             scope: &scope,
             grant_type: mas_policy::GrantType::ClientCredentials,
             requester: mas_policy::Requester {
@@ -1478,6 +1495,7 @@ mod tests {
 
         let fifth_response = state.request(request).await;
         fifth_response.assert_status(StatusCode::OK);
+        let fifth_response: AccessTokenResponse = fifth_response.json();
 
         // But now, if we re-do with the second_response.refresh_token, it should
         // fail
@@ -1490,6 +1508,48 @@ mod tests {
 
         let sixth_response = state.request(request).await;
         sixth_response.assert_status(StatusCode::BAD_REQUEST);
+
+        // One edge-case scenario: after 30 days, expired access tokens are
+        // deleted, so we can't track accurately if the refresh successful or
+        // not. In this case we chose to allow the refresh to succeed to avoid
+        // spuriously logging out the user.
+
+        // Make sure to mark the fifth access token as used
+        assert!(
+            state
+                .is_access_token_valid(&fifth_response.access_token)
+                .await
+        );
+
+        // Make sure to run all the cleanup tasks
+        // We run the job queue once before advancing the clock to make sure the
+        // scheduled jobs get scheduled to a time before we advanced the clock
+        state.run_jobs_in_queue().await;
+        state.clock.advance(Duration::days(31));
+        state.run_jobs_in_queue().await;
+
+        // We're not supposed to be able to use the fourth refresh token, but here we
+        // are
+        let request =
+            Request::post(mas_router::OAuth2TokenEndpoint::PATH).form(serde_json::json!({
+                "grant_type": "refresh_token",
+                "refresh_token": fourth_response.refresh_token,
+                "client_id": client.client_id,
+            }));
+
+        let seventh_response = state.request(request).await;
+        seventh_response.assert_status(StatusCode::OK);
+
+        // And the refresh token we had on the fifth response should now be invalid
+        let request =
+            Request::post(mas_router::OAuth2TokenEndpoint::PATH).form(serde_json::json!({
+                "grant_type": "refresh_token",
+                "refresh_token": fifth_response.refresh_token,
+                "client_id": client.client_id,
+            }));
+
+        let eighth_response = state.request(request).await;
+        eighth_response.assert_status(StatusCode::BAD_REQUEST);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

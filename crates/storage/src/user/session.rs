@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -42,7 +43,7 @@ pub struct BrowserSessionFilter<'a> {
     state: Option<BrowserSessionState>,
     last_active_before: Option<DateTime<Utc>>,
     last_active_after: Option<DateTime<Utc>>,
-    authenticated_by_upstream_sessions: Option<UpstreamOAuthSessionFilter<'a>>,
+    linked_to_upstream_sessions: Option<UpstreamOAuthSessionFilter<'a>>,
 }
 
 impl<'a> BrowserSessionFilter<'a> {
@@ -115,21 +116,20 @@ impl<'a> BrowserSessionFilter<'a> {
         self.state
     }
 
-    /// Only return browser sessions authenticated by the given upstream OAuth
-    /// sessions
+    /// Only return browser sessions linked to the given upstream OAuth sessions
     #[must_use]
-    pub fn authenticated_by_upstream_sessions_only(
+    pub fn linked_to_upstream_sessions_only(
         mut self,
         filter: UpstreamOAuthSessionFilter<'a>,
     ) -> Self {
-        self.authenticated_by_upstream_sessions = Some(filter);
+        self.linked_to_upstream_sessions = Some(filter);
         self
     }
 
     /// Get the upstream OAuth session filter
     #[must_use]
-    pub fn authenticated_by_upstream_sessions(&self) -> Option<UpstreamOAuthSessionFilter<'a>> {
-        self.authenticated_by_upstream_sessions
+    pub fn linked_to_upstream_sessions(&self) -> Option<UpstreamOAuthSessionFilter<'a>> {
+        self.linked_to_upstream_sessions
     }
 }
 
@@ -328,6 +328,54 @@ pub trait BrowserSessionRepository: Send + Sync {
         &mut self,
         activity: Vec<(Ulid, DateTime<Utc>, Option<IpAddr>)>,
     ) -> Result<(), Self::Error>;
+
+    /// Cleanup finished [`BrowserSession`]s
+    ///
+    /// Deletes sessions finished between `since` and `until`, but only if they
+    /// have no child sessions (`compat_sessions` or `oauth2_sessions`). Returns
+    /// the number of deleted sessions and the timestamp of the last deleted
+    /// session for pagination.
+    ///
+    /// # Parameters
+    ///
+    /// * `since`: The earliest finish time to delete (exclusive). If `None`,
+    ///   starts from the beginning.
+    /// * `until`: The latest finish time to delete (exclusive)
+    /// * `limit`: Maximum number of sessions to delete in this batch
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup_finished(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
+
+    /// Clear IP addresses from sessions inactive since the threshold
+    ///
+    /// Sets `last_active_ip` to `NULL` for sessions where `last_active_at` is
+    /// before the threshold. Returns the number of sessions affected and the
+    /// last `last_active_at` timestamp processed for pagination.
+    ///
+    /// # Parameters
+    ///
+    /// * `since`: Only process sessions with `last_active_at` at or after this
+    ///   timestamp (exclusive). If `None`, starts from the beginning.
+    /// * `threshold`: Clear IPs for sessions with `last_active_at` before this
+    ///   time
+    /// * `limit`: Maximum number of sessions to update in this batch
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup_inactive_ips(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        threshold: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
 }
 
 repository_impl!(BrowserSessionRepository:
@@ -392,4 +440,18 @@ repository_impl!(BrowserSessionRepository:
         &mut self,
         activity: Vec<(Ulid, DateTime<Utc>, Option<IpAddr>)>,
     ) -> Result<(), Self::Error>;
+
+    async fn cleanup_finished(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
+
+    async fn cleanup_inactive_ips(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        threshold: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
 );

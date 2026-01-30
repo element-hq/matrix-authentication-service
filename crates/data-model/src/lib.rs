@@ -11,6 +11,7 @@ use thiserror::Error;
 pub mod clock;
 pub(crate) mod compat;
 pub mod oauth2;
+pub mod personal;
 pub(crate) mod policy_data;
 mod site_config;
 pub(crate) mod tokens;
@@ -18,6 +19,7 @@ pub(crate) mod upstream_oauth2;
 pub(crate) mod user_agent;
 pub(crate) mod users;
 mod utils;
+mod version;
 
 /// Error when an invalid state transition is attempted.
 #[derive(Debug, Error)]
@@ -37,7 +39,9 @@ pub use self::{
         DeviceCodeGrantState, InvalidRedirectUriError, JwksOrJwksUri, Pkce, Session, SessionState,
     },
     policy_data::PolicyData,
-    site_config::{CaptchaConfig, CaptchaService, SessionExpirationConfig, SiteConfig},
+    site_config::{
+        CaptchaConfig, CaptchaService, SessionExpirationConfig, SessionLimitConfig, SiteConfig,
+    },
     tokens::{
         AccessToken, AccessTokenState, RefreshToken, RefreshTokenState, TokenFormatError, TokenType,
     },
@@ -52,10 +56,11 @@ pub use self::{
     },
     user_agent::{DeviceType, UserAgent},
     users::{
-        Authentication, AuthenticationMethod, BrowserSession, Password, User, UserEmail,
-        UserEmailAuthentication, UserEmailAuthenticationCode, UserPasskey, UserPasskeyChallenge,
-        UserRecoverySession, UserRecoveryTicket, UserRegistration, UserRegistrationPassword,
-        UserRegistrationToken,
+        Authentication, AuthenticationMethod, BrowserSession, MatrixUser, Password, User,
+        UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode, UserPasskey,
+        UserPasskeyChallenge, UserRecoverySession, UserRecoveryTicket, UserRegistration,
+        UserRegistrationPassword, UserRegistrationToken,
     },
     utils::{BoxClock, BoxRng},
+    version::AppVersion,
 };

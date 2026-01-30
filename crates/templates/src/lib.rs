@@ -9,7 +9,10 @@
 
 //! Templates rendering
 
-use std::{collections::HashSet, sync::Arc};
+use std::{
+    collections::{BTreeMap, HashSet},
+    sync::Arc,
+};
 
 use anyhow::Context as _;
 use arc_swap::ArcSwap;
@@ -17,7 +20,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use mas_i18n::Translator;
 use mas_router::UrlBuilder;
 use mas_spa::ViteManifest;
-use minijinja::Value;
+use minijinja::{UndefinedBehavior, Value};
 use rand::Rng;
 use serde::Serialize;
 use thiserror::Error;
@@ -34,14 +37,15 @@ mod macros;
 
 pub use self::{
     context::{
-        AccountInactiveContext, ApiDocContext, AppContext, CompatSsoContext, ConsentContext,
-        DeviceConsentContext, DeviceLinkContext, DeviceLinkFormField, DeviceNameContext,
-        EmailRecoveryContext, EmailVerificationContext, EmptyContext, ErrorContext,
-        FormPostContext, IndexContext, LoginContext, LoginFormField, NotFoundContext,
-        PasswordRegisterContext, PolicyViolationContext, PostAuthContext, PostAuthContextInner,
-        RecoveryExpiredContext, RecoveryFinishContext, RecoveryFinishFormField,
-        RecoveryProgressContext, RecoveryStartContext, RecoveryStartFormField, RegisterContext,
-        RegisterFormField, RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
+        AccountInactiveContext, ApiDocContext, AppContext, CompatLoginPolicyViolationContext,
+        CompatSsoContext, ConsentContext, DeviceConsentContext, DeviceLinkContext,
+        DeviceLinkFormField, DeviceNameContext, EmailRecoveryContext, EmailVerificationContext,
+        EmptyContext, ErrorContext, FormPostContext, IndexContext, LoginContext, LoginFormField,
+        NotFoundContext, PasswordRegisterContext, PolicyViolationContext, PostAuthContext,
+        PostAuthContextInner, RecoveryExpiredContext, RecoveryFinishContext,
+        RecoveryFinishFormField, RecoveryProgressContext, RecoveryStartContext,
+        RecoveryStartFormField, RegisterContext, RegisterFormField,
+        RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
         RegisterStepsEmailInUseContext, RegisterStepsRegistrationTokenContext,
         RegisterStepsRegistrationTokenFormField, RegisterStepsVerifyEmailContext,
         RegisterStepsVerifyEmailFormField, SiteBranding, SiteConfigExt, SiteFeatures,
@@ -50,6 +54,7 @@ pub use self::{
     },
     forms::{FieldError, FormError, FormField, FormState, ToFormState},
 };
+use crate::context::SampleIdentifier;
 
 /// Escape the given string for use in HTML
 ///
@@ -68,9 +73,12 @@ pub struct Templates {
     url_builder: UrlBuilder,
     branding: SiteBranding,
     features: SiteFeatures,
-    vite_manifest_path: Utf8PathBuf,
+    vite_manifest_path: Option<Utf8PathBuf>,
     translations_path: Utf8PathBuf,
     path: Utf8PathBuf,
+    /// Whether template rendering is in strict mode (for testing,
+    /// until this can be rolled out in production.)
+    strict: bool,
 }
 
 /// There was an issue while loading the templates
@@ -136,6 +144,11 @@ fn is_hidden(entry: &DirEntry) -> bool {
 impl Templates {
     /// Load the templates from the given config
     ///
+    /// # Parameters
+    ///
+    /// - `vite_manifest_path`: None if we are rendering resources for
+    ///   reproducibility, in which case a dummy Vite manifest will be used.
+    ///
     /// # Errors
     ///
     /// Returns an error if the templates could not be loaded from disk.
@@ -147,18 +160,20 @@ impl Templates {
     pub async fn load(
         path: Utf8PathBuf,
         url_builder: UrlBuilder,
-        vite_manifest_path: Utf8PathBuf,
+        vite_manifest_path: Option<Utf8PathBuf>,
         translations_path: Utf8PathBuf,
         branding: SiteBranding,
         features: SiteFeatures,
+        strict: bool,
     ) -> Result<Self, TemplateLoadingError> {
         let (translator, environment) = Self::load_(
             &path,
             url_builder.clone(),
-            &vite_manifest_path,
+            vite_manifest_path.as_deref(),
             &translations_path,
             branding.clone(),
             features,
+            strict,
         )
         .await?;
         Ok(Self {
@@ -170,28 +185,37 @@ impl Templates {
             translations_path,
             branding,
             features,
+            strict,
         })
     }
 
     async fn load_(
         path: &Utf8Path,
         url_builder: UrlBuilder,
-        vite_manifest_path: &Utf8Path,
+        vite_manifest_path: Option<&Utf8Path>,
         translations_path: &Utf8Path,
         branding: SiteBranding,
         features: SiteFeatures,
+        strict: bool,
     ) -> Result<(Arc<Translator>, Arc<minijinja::Environment<'static>>), TemplateLoadingError> {
         let path = path.to_owned();
         let span = tracing::Span::current();
 
         // Read the assets manifest from disk
-        let vite_manifest = tokio::fs::read(vite_manifest_path)
-            .await
-            .map_err(TemplateLoadingError::ViteManifestIO)?;
+        let vite_manifest = if let Some(vite_manifest_path) = vite_manifest_path {
+            let raw_vite_manifest = tokio::fs::read(vite_manifest_path)
+                .await
+                .map_err(TemplateLoadingError::ViteManifestIO)?;
+
+            Some(
+                serde_json::from_slice::<ViteManifest>(&raw_vite_manifest)
+                    .map_err(TemplateLoadingError::ViteManifest)?,
+            )
+        } else {
+            None
+        };
 
         // Parse it
-        let vite_manifest: ViteManifest =
-            serde_json::from_slice(&vite_manifest).map_err(TemplateLoadingError::ViteManifest)?;
 
         let translations_path = translations_path.to_owned();
         let translator =
@@ -205,6 +229,15 @@ impl Templates {
             span.in_scope(move || {
                 let mut loaded: HashSet<_> = HashSet::new();
                 let mut env = minijinja::Environment::new();
+                // Don't allow use of undefined variables
+                env.set_undefined_behavior(if strict {
+                    UndefinedBehavior::Strict
+                } else {
+                    // For now, allow semi-strict, because we don't have total test coverage of
+                    // tests and some tests rely on if conditions against sometimes-undefined
+                    // variables
+                    UndefinedBehavior::SemiStrict
+                });
                 let root = path.canonicalize_utf8()?;
                 info!(%root, "Loading templates from filesystem");
                 for entry in walkdir::WalkDir::new(&root)
@@ -271,10 +304,11 @@ impl Templates {
         let (translator, environment) = Self::load_(
             &self.path,
             self.url_builder.clone(),
-            &self.vite_manifest_path,
+            self.vite_manifest_path.as_deref(),
             &self.translations_path,
             self.branding.clone(),
             self.features,
+            self.strict,
         )
         .await?;
 
@@ -358,6 +392,9 @@ register_templates! {
     /// Render the policy violation page
     pub fn render_policy_violation(WithLanguage<WithCsrf<WithSession<PolicyViolationContext>>>) { "pages/policy_violation.html" }
 
+    /// Render the compatibility login policy violation page
+    pub fn render_compat_login_policy_violation(WithLanguage<WithCsrf<WithSession<CompatLoginPolicyViolationContext>>>) { "pages/compat_login_policy_violation.html" }
+
     /// Render the legacy SSO login consent page
     pub fn render_sso_login(WithLanguage<WithCsrf<WithSession<CompatSsoContext>>>) { "pages/sso.html" }
 
@@ -383,7 +420,7 @@ register_templates! {
     pub fn render_recovery_disabled(WithLanguage<EmptyContext>) { "pages/recovery/disabled.html" }
 
     /// Render the form used by the `form_post` response mode
-    pub fn render_form_post<T: Serialize>(WithLanguage<FormPostContext<T>>) { "form_post.html" }
+    pub fn render_form_post<#[sample(EmptyContext)] T: Serialize>(WithLanguage<FormPostContext<T>>) { "form_post.html" }
 
     /// Render the HTML error page
     pub fn render_error(ErrorContext) { "pages/error.html" }
@@ -408,9 +445,6 @@ register_templates! {
 
     /// Render the upstream link mismatch message
     pub fn render_upstream_oauth2_link_mismatch(WithLanguage<WithCsrf<WithSession<UpstreamExistingLinkContext>>>) { "pages/upstream_oauth2/link_mismatch.html" }
-
-    /// Render the upstream link match
-    pub fn render_upstream_oauth2_login_link(WithLanguage<WithCsrf<UpstreamExistingLinkContext>>) { "pages/upstream_oauth2/login_link.html" }
 
     /// Render the upstream suggest link message
     pub fn render_upstream_oauth2_suggest_link(WithLanguage<WithCsrf<WithSession<UpstreamSuggestLink>>>) { "pages/upstream_oauth2/suggest_link.html" }
@@ -439,69 +473,37 @@ register_templates! {
 
 impl Templates {
     /// Render all templates with the generated samples to check if they render
-    /// properly
+    /// properly.
+    ///
+    /// Returns the renders in a map whose keys are template names
+    /// and the values are lists of renders (according to the list
+    /// of samples).
+    /// Samples are stable across re-runs and can be used for
+    /// acceptance testing.
     ///
     /// # Errors
     ///
     /// Returns an error if any of the templates fails to render
-    pub fn check_render(
+    pub fn check_render<R: Rng + Clone>(
         &self,
         now: chrono::DateTime<chrono::Utc>,
-        rng: &mut impl Rng,
-    ) -> anyhow::Result<()> {
-        check::render_not_found(self, now, rng)?;
-        check::render_app(self, now, rng)?;
-        check::render_swagger(self, now, rng)?;
-        check::render_swagger_callback(self, now, rng)?;
-        check::render_login(self, now, rng)?;
-        check::render_register(self, now, rng)?;
-        check::render_password_register(self, now, rng)?;
-        check::render_register_steps_verify_email(self, now, rng)?;
-        check::render_register_steps_email_in_use(self, now, rng)?;
-        check::render_register_steps_display_name(self, now, rng)?;
-        check::render_register_steps_registration_token(self, now, rng)?;
-        check::render_consent(self, now, rng)?;
-        check::render_policy_violation(self, now, rng)?;
-        check::render_sso_login(self, now, rng)?;
-        check::render_index(self, now, rng)?;
-        check::render_recovery_start(self, now, rng)?;
-        check::render_recovery_progress(self, now, rng)?;
-        check::render_recovery_finish(self, now, rng)?;
-        check::render_recovery_expired(self, now, rng)?;
-        check::render_recovery_consumed(self, now, rng)?;
-        check::render_recovery_disabled(self, now, rng)?;
-        check::render_form_post::<EmptyContext>(self, now, rng)?;
-        check::render_error(self, now, rng)?;
-        check::render_email_recovery_txt(self, now, rng)?;
-        check::render_email_recovery_html(self, now, rng)?;
-        check::render_email_recovery_subject(self, now, rng)?;
-        check::render_email_verification_txt(self, now, rng)?;
-        check::render_email_verification_html(self, now, rng)?;
-        check::render_email_verification_subject(self, now, rng)?;
-        check::render_upstream_oauth2_link_mismatch(self, now, rng)?;
-        check::render_upstream_oauth2_login_link(self, now, rng)?;
-        check::render_upstream_oauth2_suggest_link(self, now, rng)?;
-        check::render_upstream_oauth2_do_register(self, now, rng)?;
-        check::render_device_link(self, now, rng)?;
-        check::render_device_consent(self, now, rng)?;
-        check::render_account_deactivated(self, now, rng)?;
-        check::render_account_locked(self, now, rng)?;
-        check::render_account_logged_out(self, now, rng)?;
-        check::render_device_name(self, now, rng)?;
-        Ok(())
+        rng: &R,
+    ) -> anyhow::Result<BTreeMap<(&'static str, SampleIdentifier), String>> {
+        check::all(self, now, rng)
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use rand::SeedableRng;
+
     use super::*;
 
     #[tokio::test]
     async fn check_builtin_templates() {
         #[allow(clippy::disallowed_methods)]
         let now = chrono::Utc::now();
-        #[allow(clippy::disallowed_methods)]
-        let mut rng = rand::thread_rng();
+        let rng = rand_chacha::ChaCha8Rng::from_seed([42; 32]);
 
         let path = Utf8Path::new(env!("CARGO_MANIFEST_DIR")).join("../../templates/");
         let url_builder = UrlBuilder::new("https://example.com/".parse().unwrap(), None, None);
@@ -509,6 +511,7 @@ mod tests {
         let features = SiteFeatures {
             password_login: true,
             password_registration: true,
+            password_registration_email_required: true,
             account_recovery: true,
             login_with_email_allowed: true,
             passkeys_enabled: true,
@@ -517,16 +520,28 @@ mod tests {
             Utf8Path::new(env!("CARGO_MANIFEST_DIR")).join("../../frontend/dist/manifest.json");
         let translations_path =
             Utf8Path::new(env!("CARGO_MANIFEST_DIR")).join("../../translations");
-        let templates = Templates::load(
-            path,
-            url_builder,
-            vite_manifest_path,
-            translations_path,
-            branding,
-            features,
-        )
-        .await
-        .unwrap();
-        templates.check_render(now, &mut rng).unwrap();
+
+        for use_real_vite_manifest in [true, false] {
+            let templates = Templates::load(
+                path.clone(),
+                url_builder.clone(),
+                // Check both renders against the real vite manifest and the 'dummy' vite manifest
+                // used for reproducible renders.
+                use_real_vite_manifest.then_some(vite_manifest_path.clone()),
+                translations_path.clone(),
+                branding.clone(),
+                features,
+                // Use strict mode in tests
+                true,
+            )
+            .await
+            .unwrap();
+
+            // Check the renders are deterministic, when given the same rng
+            let render1 = templates.check_render(now, &rng).unwrap();
+            let render2 = templates.check_render(now, &rng).unwrap();
+
+            assert_eq!(render1, render2);
+        }
     }
 }

@@ -23,12 +23,13 @@ Please see LICENSE files in the repository root for full details.
     <meta charset="utf-8">
     <title>{% block title %}{{ _("app.name") }}{% endblock title %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    {{ include_asset('src/shared.css') | indent(4) | safe }}
-    {{ include_asset('src/templates.css') | indent(4) | safe }}
+    {{ include_asset('src/entrypoints/shared.css') | indent(4) | safe }}
+    {{ include_asset('src/entrypoints/templates.css') | indent(4) | safe }}
+    {{ include_asset('src/entrypoints/templates.ts') | indent(4) | safe }}
     {{ captcha.head() }}
   </head>
   <body>
-    <div class="layout-container{% if consent_page %} consent{% endif %}">
+    <div class="layout-container{% if consent_page is defined %} consent{% endif %}">
       {% block content %}{% endblock content %}
       {% include "components/footer.html" %}
     </div>

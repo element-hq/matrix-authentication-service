@@ -9,10 +9,10 @@ mod cookie;
 use std::sync::{Arc, LazyLock};
 
 use axum::{
-    extract::{Form, Query, State},
+    extract::{Form, State},
     response::{Html, IntoResponse, Response},
 };
-use axum_extra::typed_header::TypedHeader;
+use axum_extra::{extract::Query, typed_header::TypedHeader};
 use cookie::UserPasskeyChallenges;
 use hyper::StatusCode;
 use mas_axum_utils::{

@@ -4,6 +4,6 @@
 -- SPDX-License-Identifier: AGPL-3.0-only
 -- Please see LICENSE in the repository root for full details.
 
-CREATE INDEX CONCURRENTLY
+CREATE INDEX CONCURRENTLY IF NOT EXISTS
   oauth2_device_code_grants_session_fk
   ON oauth2_device_code_grant (oauth2_session_id);

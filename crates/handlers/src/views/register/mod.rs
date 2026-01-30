@@ -4,9 +4,10 @@
 // Please see LICENSE files in the repository root for full details.
 
 use axum::{
-    extract::{Query, State},
+    extract::State,
     response::{Html, IntoResponse, Response},
 };
+use axum_extra::extract::Query;
 use mas_axum_utils::{InternalError, SessionInfoExt, cookies::CookieJar, csrf::CsrfExt as _};
 use mas_data_model::{BoxClock, BoxRng, SiteConfig};
 use mas_router::{PasswordRegister, UpstreamOAuth2Authorize, UrlBuilder};
@@ -19,6 +20,8 @@ use crate::{BoundActivityTracker, PreferredLanguage};
 mod cookie;
 pub(crate) mod password;
 pub(crate) mod steps;
+
+pub use self::cookie::UserRegistrationSessions as UserRegistrationSessionsCookie;
 
 #[tracing::instrument(name = "handlers.views.register.get", skip_all)]
 pub(crate) async fn get(

@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -6,7 +7,10 @@
 use std::net::IpAddr;
 
 use async_trait::async_trait;
-use mas_data_model::{Clock, UserEmailAuthentication, UserRegistration, UserRegistrationToken};
+use mas_data_model::{
+    Clock, UpstreamOAuthAuthorizationSession, UserEmailAuthentication, UserRegistration,
+    UserRegistrationToken,
+};
 use rand_core::RngCore;
 use ulid::Ulid;
 use url::Url;
@@ -157,6 +161,27 @@ pub trait UserRegistrationRepository: Send + Sync {
         user_registration_token: &UserRegistrationToken,
     ) -> Result<UserRegistration, Self::Error>;
 
+    /// Set an [`UpstreamOAuthAuthorizationSession`] to associate with a
+    /// [`UserRegistration`]
+    ///
+    /// Returns the updated [`UserRegistration`]
+    ///
+    /// # Parameters
+    ///
+    /// * `user_registration`: The [`UserRegistration`] to update
+    /// * `upstream_oauth_authorization_session`: The
+    ///   [`UpstreamOAuthAuthorizationSession`] to set
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails or if the
+    /// registration is already completed
+    async fn set_upstream_oauth_authorization_session(
+        &mut self,
+        user_registration: UserRegistration,
+        upstream_oauth_authorization_session: &UpstreamOAuthAuthorizationSession,
+    ) -> Result<UserRegistration, Self::Error>;
+
     /// Complete a [`UserRegistration`]
     ///
     /// Returns the updated [`UserRegistration`]
@@ -175,6 +200,27 @@ pub trait UserRegistrationRepository: Send + Sync {
         clock: &dyn Clock,
         user_registration: UserRegistration,
     ) -> Result<UserRegistration, Self::Error>;
+
+    /// Cleanup [`UserRegistration`]s between the given IDs.
+    ///
+    /// Returns the number of registrations deleted, as well as the ID of the
+    /// last registration deleted.
+    ///
+    /// # Parameters
+    ///
+    /// * `since`: An optional ID to start from
+    /// * `until`: The ID until which to clean up registrations
+    /// * `limit`: The maximum number of registrations to clean up
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error>;
 }
 
 repository_impl!(UserRegistrationRepository:
@@ -214,9 +260,20 @@ repository_impl!(UserRegistrationRepository:
         user_registration: UserRegistration,
         user_registration_token: &UserRegistrationToken,
     ) -> Result<UserRegistration, Self::Error>;
+    async fn set_upstream_oauth_authorization_session(
+        &mut self,
+        user_registration: UserRegistration,
+        upstream_oauth_authorization_session: &UpstreamOAuthAuthorizationSession,
+    ) -> Result<UserRegistration, Self::Error>;
     async fn complete(
         &mut self,
         clock: &dyn Clock,
         user_registration: UserRegistration,
     ) -> Result<UserRegistration, Self::Error>;
+    async fn cleanup(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error>;
 );

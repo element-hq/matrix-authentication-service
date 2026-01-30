@@ -478,27 +478,40 @@ impl Route for RegisterFinish {
     }
 }
 
-/// Actions parameters as defined by MSC2965
+/// Actions parameters as defined by MSC4191
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "action")]
 pub enum AccountAction {
     #[serde(rename = "org.matrix.profile")]
     OrgMatrixProfile,
+    /// DEPRECATED: Use `OrgMatrixProfile` instead
     #[serde(rename = "profile")]
     Profile,
 
+    #[serde(rename = "org.matrix.devices_list")]
+    OrgMatrixDevicesList,
+    /// DEPRECATED: Use `OrgMatrixDevicesList` instead
     #[serde(rename = "org.matrix.sessions_list")]
     OrgMatrixSessionsList,
+    /// DEPRECATED: Use `OrgMatrixDevicesList` instead
     #[serde(rename = "sessions_list")]
     SessionsList,
 
+    #[serde(rename = "org.matrix.device_view")]
+    OrgMatrixDeviceView { device_id: String },
+    /// DEPRECATED: Use `OrgMatrixDeviceView` instead
     #[serde(rename = "org.matrix.session_view")]
     OrgMatrixSessionView { device_id: String },
+    /// DEPRECATED: Use `OrgMatrixDeviceView` instead
     #[serde(rename = "session_view")]
     SessionView { device_id: String },
 
+    #[serde(rename = "org.matrix.device_delete")]
+    OrgMatrixDeviceDelete { device_id: String },
+    /// DEPRECATED: Use `OrgMatrixDeviceDelete` instead
     #[serde(rename = "org.matrix.session_end")]
     OrgMatrixSessionEnd { device_id: String },
+    /// DEPRECATED: Use `OrgMatrixDeviceDelete` instead
     #[serde(rename = "session_end")]
     SessionEnd { device_id: String },
 
@@ -619,8 +632,11 @@ pub enum CompatLoginSsoAction {
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub struct CompatLoginSsoActionParams {
-    #[serde(rename = "org.matrix.msc3824.action")]
     action: CompatLoginSsoAction,
+    /// DEPRECATED: Use `action` instead. We will remove this once enough
+    /// clients support the stable name.
+    #[serde(rename = "org.matrix.msc3824.action")]
+    unstable_action: CompatLoginSsoAction,
 }
 
 /// `GET|POST /complete-compat-sso/{id}`
@@ -634,7 +650,10 @@ impl CompatLoginSsoComplete {
     pub fn new(id: Ulid, action: Option<CompatLoginSsoAction>) -> Self {
         Self {
             id,
-            query: action.map(|action| CompatLoginSsoActionParams { action }),
+            query: action.map(|action| CompatLoginSsoActionParams {
+                action,
+                unstable_action: action,
+            }),
         }
     }
 }

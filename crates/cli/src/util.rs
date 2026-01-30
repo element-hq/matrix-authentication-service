@@ -13,7 +13,7 @@ use mas_config::{
     PasswordsConfig, PolicyConfig, TemplatesConfig,
 };
 use mas_context::LogContext;
-use mas_data_model::{SessionExpirationConfig, SiteConfig};
+use mas_data_model::{SessionExpirationConfig, SessionLimitConfig, SiteConfig};
 use mas_email::{MailTransport, Mailer};
 use mas_handlers::{passwords::PasswordManager, webauthn::Webauthn};
 use mas_matrix::{HomeserverConnection, ReadOnlyHomeserverConnection};
@@ -135,6 +135,7 @@ pub fn test_mailer_in_background(mailer: &Mailer, timeout: Duration) {
 pub async fn policy_factory_from_config(
     config: &PolicyConfig,
     matrix_config: &MatrixConfig,
+    experimental_config: &ExperimentalConfig,
 ) -> Result<PolicyFactory, anyhow::Error> {
     let policy_file = tokio::fs::File::open(&config.wasm_module)
         .await
@@ -144,11 +145,21 @@ pub async fn policy_factory_from_config(
         register: config.register_entrypoint.clone(),
         client_registration: config.client_registration_entrypoint.clone(),
         authorization_grant: config.authorization_grant_entrypoint.clone(),
+        compat_login: config.compat_login_entrypoint.clone(),
         email: config.email_entrypoint.clone(),
     };
 
-    let data =
-        mas_policy::Data::new(matrix_config.homeserver.clone()).with_rest(config.data.clone());
+    let session_limit_config =
+        experimental_config
+            .session_limit
+            .as_ref()
+            .map(|c| SessionLimitConfig {
+                soft_limit: c.soft_limit,
+                hard_limit: c.hard_limit,
+            });
+
+    let data = mas_policy::Data::new(matrix_config.homeserver.clone(), session_limit_config)
+        .with_rest(config.data.clone());
 
     PolicyFactory::load(policy_file, data, entrypoints)
         .await
@@ -211,6 +222,7 @@ pub fn site_config_from_config(
         password_login_enabled: password_config.enabled(),
         password_registration_enabled: password_config.enabled()
             && account_config.password_registration_enabled,
+        password_registration_email_required: account_config.password_registration_email_required,
         registration_token_required: account_config.registration_token_required,
         email_change_allowed: account_config.email_change_allowed,
         displayname_change_allowed: account_config.displayname_change_allowed,
@@ -224,6 +236,13 @@ pub fn site_config_from_config(
         session_expiration,
         login_with_email_allowed: account_config.login_with_email_allowed,
         plan_management_iframe_uri: experimental_config.plan_management_iframe_uri.clone(),
+        session_limit: experimental_config
+            .session_limit
+            .as_ref()
+            .map(|c| SessionLimitConfig {
+                soft_limit: c.soft_limit,
+                hard_limit: c.hard_limit,
+            }),
         passkeys_enabled: experimental_config
             .passkeys
             .as_ref()
@@ -235,14 +254,17 @@ pub async fn templates_from_config(
     config: &TemplatesConfig,
     site_config: &SiteConfig,
     url_builder: &UrlBuilder,
+    strict: bool,
+    stabilise: bool,
 ) -> Result<Templates, anyhow::Error> {
     Templates::load(
         config.path.clone(),
         url_builder.clone(),
-        config.assets_manifest.clone(),
+        (!stabilise).then(|| config.assets_manifest.clone()),
         config.translations_path.clone(),
         site_config.templates_branding(),
         site_config.templates_features(),
+        strict,
     )
     .await
     .with_context(|| format!("Failed to load the templates at {}", config.path))

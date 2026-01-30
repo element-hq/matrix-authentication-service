@@ -6,13 +6,13 @@
 
 #![allow(deprecated)]
 
-use std::{borrow::Cow, io::Cursor};
+use std::borrow::Cow;
 
 use anyhow::bail;
 use camino::Utf8PathBuf;
 use ipnetwork::IpNetwork;
 use mas_keystore::PrivateKey;
-use rustls_pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs8KeyDer};
+use rustls_pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs8KeyDer, pem::PemObject};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use url::Url;
@@ -21,19 +21,6 @@ use super::ConfigurationSection;
 
 fn default_public_base() -> Url {
     "http://[::]:8080".parse().unwrap()
-}
-
-fn http_address_example_1() -> &'static str {
-    "[::1]:8080"
-}
-fn http_address_example_2() -> &'static str {
-    "[::]:8080"
-}
-fn http_address_example_3() -> &'static str {
-    "127.0.0.1:8080"
-}
-fn http_address_example_4() -> &'static str {
-    "0.0.0.0:8080"
 }
 
 #[cfg(not(any(feature = "docker", feature = "dist")))]
@@ -111,10 +98,10 @@ pub enum BindConfig {
     Address {
         /// Host and port on which to listen
         #[schemars(
-            example = "http_address_example_1",
-            example = "http_address_example_2",
-            example = "http_address_example_3",
-            example = "http_address_example_4"
+            example = &"[::1]:8080",
+            example = &"[::]:8080",
+            example = &"127.0.0.1:8080",
+            example = &"0.0.0.0:8080",
         )]
         address: String,
     },
@@ -251,10 +238,8 @@ impl TlsConfig {
             (None, Some(path)) => Cow::Owned(std::fs::read_to_string(path)?),
         };
 
-        let mut certificate_chain_reader = Cursor::new(certificate_chain_pem.as_bytes());
-        let certificate_chain: Result<Vec<_>, _> =
-            rustls_pemfile::certs(&mut certificate_chain_reader).collect();
-        let certificate_chain = certificate_chain?;
+        let certificate_chain = CertificateDer::pem_slice_iter(certificate_chain_pem.as_bytes())
+            .collect::<Result<Vec<_>, _>>()?;
 
         if certificate_chain.is_empty() {
             bail!("TLS certificate chain is empty (or invalid)")
@@ -354,6 +339,7 @@ pub struct HttpConfig {
     /// List of trusted reverse proxies that can set the `X-Forwarded-For`
     /// header
     #[serde(default = "default_trusted_proxies")]
+    #[schemars(with = "Vec<String>", inner(ip))]
     pub trusted_proxies: Vec<IpNetwork>,
 
     /// Public URL base from where the authentication service is reachable

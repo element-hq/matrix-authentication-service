@@ -55,7 +55,9 @@ mod priv_ {
     use std::net::IpAddr;
 
     use chrono::{DateTime, Utc};
+    use mas_storage::pagination::Node;
     use sea_query::enum_def;
+    use ulid::Ulid;
     use uuid::Uuid;
 
     #[derive(sqlx::FromRow)]
@@ -76,6 +78,12 @@ mod priv_ {
         pub(super) user_agent: Option<String>,
         pub(super) last_active_at: Option<DateTime<Utc>>,
         pub(super) last_active_ip: Option<IpAddr>,
+    }
+
+    impl Node<Ulid> for AppSessionLookup {
+        fn cursor(&self) -> Ulid {
+            self.cursor.into()
+        }
     }
 }
 
@@ -479,14 +487,15 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
         clock: &dyn Clock,
         user: &User,
         device: &Device,
-    ) -> Result<(), Self::Error> {
+    ) -> Result<bool, Self::Error> {
+        let mut affected = false;
         // TODO need to invoke this from all the oauth2 login sites
         let span = tracing::info_span!(
             "db.app_session.finish_sessions_to_replace_device.compat_sessions",
             { DB_QUERY_TEXT } = tracing::field::Empty,
         );
         let finished_at = clock.now();
-        sqlx::query!(
+        let compat_affected = sqlx::query!(
             "
                 UPDATE compat_sessions SET finished_at = $3 WHERE user_id = $1 AND device_id = $2 AND finished_at IS NULL
             ",
@@ -497,7 +506,9 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
         .record(&span)
         .execute(&mut *self.conn)
         .instrument(span)
-        .await?;
+        .await?
+        .rows_affected();
+        affected |= compat_affected > 0;
 
         if let Ok([stable_device_as_scope_token, unstable_device_as_scope_token]) =
             device.to_scope_token()
@@ -506,7 +517,7 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
                 "db.app_session.finish_sessions_to_replace_device.oauth2_sessions",
                 { DB_QUERY_TEXT } = tracing::field::Empty,
             );
-            sqlx::query!(
+            let oauth2_affected = sqlx::query!(
                 "
                     UPDATE oauth2_sessions
                     SET finished_at = $4
@@ -522,10 +533,12 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
             .record(&span)
             .execute(&mut *self.conn)
             .instrument(span)
-            .await?;
+            .await?
+            .rows_affected();
+            affected |= oauth2_affected > 0;
         }
 
-        Ok(())
+        Ok(affected)
     }
 }
 
@@ -592,13 +605,13 @@ mod tests {
         let full_list = repo.app_session().list(all, pagination).await.unwrap();
         assert_eq!(full_list.edges.len(), 1);
         assert_eq!(
-            full_list.edges[0],
+            full_list.edges[0].node,
             AppSession::Compat(Box::new(compat_session.clone()))
         );
         let active_list = repo.app_session().list(active, pagination).await.unwrap();
         assert_eq!(active_list.edges.len(), 1);
         assert_eq!(
-            active_list.edges[0],
+            active_list.edges[0].node,
             AppSession::Compat(Box::new(compat_session.clone()))
         );
         let finished_list = repo.app_session().list(finished, pagination).await.unwrap();
@@ -618,7 +631,7 @@ mod tests {
         let full_list = repo.app_session().list(all, pagination).await.unwrap();
         assert_eq!(full_list.edges.len(), 1);
         assert_eq!(
-            full_list.edges[0],
+            full_list.edges[0].node,
             AppSession::Compat(Box::new(compat_session.clone()))
         );
         let active_list = repo.app_session().list(active, pagination).await.unwrap();
@@ -626,7 +639,7 @@ mod tests {
         let finished_list = repo.app_session().list(finished, pagination).await.unwrap();
         assert_eq!(finished_list.edges.len(), 1);
         assert_eq!(
-            finished_list.edges[0],
+            finished_list.edges[0].node,
             AppSession::Compat(Box::new(compat_session.clone()))
         );
 
@@ -680,25 +693,25 @@ mod tests {
         let full_list = repo.app_session().list(all, pagination).await.unwrap();
         assert_eq!(full_list.edges.len(), 2);
         assert_eq!(
-            full_list.edges[0],
+            full_list.edges[0].node,
             AppSession::Compat(Box::new(compat_session.clone()))
         );
         assert_eq!(
-            full_list.edges[1],
+            full_list.edges[1].node,
             AppSession::OAuth2(Box::new(oauth_session.clone()))
         );
 
         let active_list = repo.app_session().list(active, pagination).await.unwrap();
         assert_eq!(active_list.edges.len(), 1);
         assert_eq!(
-            active_list.edges[0],
+            active_list.edges[0].node,
             AppSession::OAuth2(Box::new(oauth_session.clone()))
         );
 
         let finished_list = repo.app_session().list(finished, pagination).await.unwrap();
         assert_eq!(finished_list.edges.len(), 1);
         assert_eq!(
-            finished_list.edges[0],
+            finished_list.edges[0].node,
             AppSession::Compat(Box::new(compat_session.clone()))
         );
 
@@ -716,11 +729,11 @@ mod tests {
         let full_list = repo.app_session().list(all, pagination).await.unwrap();
         assert_eq!(full_list.edges.len(), 2);
         assert_eq!(
-            full_list.edges[0],
+            full_list.edges[0].node,
             AppSession::Compat(Box::new(compat_session.clone()))
         );
         assert_eq!(
-            full_list.edges[1],
+            full_list.edges[1].node,
             AppSession::OAuth2(Box::new(oauth_session.clone()))
         );
 
@@ -730,11 +743,11 @@ mod tests {
         let finished_list = repo.app_session().list(finished, pagination).await.unwrap();
         assert_eq!(finished_list.edges.len(), 2);
         assert_eq!(
-            finished_list.edges[0],
+            finished_list.edges[0].node,
             AppSession::Compat(Box::new(compat_session.clone()))
         );
         assert_eq!(
-            full_list.edges[1],
+            full_list.edges[1].node,
             AppSession::OAuth2(Box::new(oauth_session.clone()))
         );
 
@@ -744,7 +757,7 @@ mod tests {
         let list = repo.app_session().list(filter, pagination).await.unwrap();
         assert_eq!(list.edges.len(), 1);
         assert_eq!(
-            list.edges[0],
+            list.edges[0].node,
             AppSession::Compat(Box::new(compat_session.clone()))
         );
 
@@ -753,7 +766,7 @@ mod tests {
         let list = repo.app_session().list(filter, pagination).await.unwrap();
         assert_eq!(list.edges.len(), 1);
         assert_eq!(
-            list.edges[0],
+            list.edges[0].node,
             AppSession::OAuth2(Box::new(oauth_session.clone()))
         );
 

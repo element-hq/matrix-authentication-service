@@ -4,7 +4,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use std::num::NonZeroU64;
+
 use chrono::Duration;
+use serde::Serialize;
 use url::Url;
 
 /// Which Captcha service is being used
@@ -36,6 +39,12 @@ pub struct SessionExpirationConfig {
     pub compat_session_inactivity_ttl: Option<Duration>,
 }
 
+#[derive(Serialize, Debug, Clone)]
+pub struct SessionLimitConfig {
+    pub soft_limit: NonZeroU64,
+    pub hard_limit: NonZeroU64,
+}
+
 /// Random site configuration we want accessible in various places.
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Clone)]
@@ -63,6 +72,9 @@ pub struct SiteConfig {
 
     /// Whether password registration is enabled.
     pub password_registration_enabled: bool,
+
+    /// Whether a valid email address is required for password registrations.
+    pub password_registration_email_required: bool,
 
     /// Whether registration tokens are required for password registrations.
     pub registration_token_required: bool,
@@ -96,6 +108,9 @@ pub struct SiteConfig {
 
     /// The iframe URL to show in the plan tab of the UI
     pub plan_management_iframe_uri: Option<String>,
+
+    /// Limits on the number of application sessions that each user can have
+    pub session_limit: Option<SessionLimitConfig>,
 
     /// Whether passkeys are enabled
     pub passkeys_enabled: bool,

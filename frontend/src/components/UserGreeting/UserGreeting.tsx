@@ -159,51 +159,53 @@ const UserGreeting: React.FC<Props> = ({ user, siteConfig }) => {
             name={data.matrix.displayName || data.matrix.mxid}
           />
 
-          <Form.Root onSubmit={onSubmit}>
-            <div className={styles.dialogForm}>
-              <Form.Field
-                name="displayname"
-                serverInvalid={
-                  setDisplayName.data?.setDisplayName.status === "INVALID"
-                }
-              >
-                <Form.Label>
-                  {t("frontend.account.edit_profile.display_name_label")}
-                </Form.Label>
+          <Dialog.Description asChild>
+            <Form.Root onSubmit={onSubmit}>
+              <div className={styles.dialogForm}>
+                <Form.Field
+                  name="displayname"
+                  serverInvalid={
+                    setDisplayName.data?.setDisplayName.status === "INVALID"
+                  }
+                >
+                  <Form.Label>
+                    {t("frontend.account.edit_profile.display_name_label")}
+                  </Form.Label>
 
-                <Form.ActionControl
-                  type="text"
-                  Icon={IconClose}
-                  autoComplete="name"
-                  defaultValue={data.matrix.displayName || undefined}
-                  actionLabel={t("action.clear")}
-                  ref={fieldRef}
-                  onActionClick={() => {
-                    if (fieldRef.current) {
-                      fieldRef.current.value = "";
-                      fieldRef.current.focus();
-                    }
-                  }}
-                />
+                  <Form.ActionControl
+                    type="text"
+                    Icon={IconClose}
+                    autoComplete="name"
+                    defaultValue={data.matrix.displayName || undefined}
+                    actionLabel={t("action.clear")}
+                    ref={fieldRef}
+                    onActionClick={() => {
+                      if (fieldRef.current) {
+                        fieldRef.current.value = "";
+                        fieldRef.current.focus();
+                      }
+                    }}
+                  />
 
-                <Form.HelpMessage>
-                  {t("frontend.account.edit_profile.display_name_help")}
-                </Form.HelpMessage>
-              </Form.Field>
+                  <Form.HelpMessage>
+                    {t("frontend.account.edit_profile.display_name_help")}
+                  </Form.HelpMessage>
+                </Form.Field>
 
-              <Form.Field name="mxid">
-                <Form.Label>
-                  {t("frontend.account.edit_profile.username_label")}
-                </Form.Label>
-                <Form.TextControl value={data.matrix.mxid} readOnly />
-              </Form.Field>
-            </div>
+                <Form.Field name="mxid">
+                  <Form.Label>
+                    {t("frontend.account.edit_profile.username_label")}
+                  </Form.Label>
+                  <Form.TextControl value={data.matrix.mxid} readOnly />
+                </Form.Field>
+              </div>
 
-            <Form.Submit disabled={setDisplayName.isPending}>
-              {setDisplayName.isPending && <LoadingSpinner inline />}
-              {t("action.save")}
-            </Form.Submit>
-          </Form.Root>
+              <Form.Submit disabled={setDisplayName.isPending}>
+                {setDisplayName.isPending && <LoadingSpinner inline />}
+                {t("action.save")}
+              </Form.Submit>
+            </Form.Root>
+          </Dialog.Description>
 
           <Dialog.Close asChild>
             <Button kind="tertiary">{t("action.cancel")}</Button>

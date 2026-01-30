@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use std::num::NonZeroU64;
+
 use chrono::Duration;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -99,6 +101,13 @@ pub struct ExperimentalConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub plan_management_iframe_uri: Option<String>,
 
+    /// Experimental feature to limit the number of application sessions per
+    /// user.
+    ///
+    /// Disabled by default.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub session_limit: Option<SessionLimitConfig>,
+
     /// Experimental passkey support
     ///
     /// Disabled by default
@@ -113,6 +122,7 @@ impl Default for ExperimentalConfig {
             compat_token_ttl: default_token_ttl(),
             inactive_session_expiration: None,
             plan_management_iframe_uri: None,
+            session_limit: None,
             passkeys: None,
         }
     }
@@ -124,10 +134,18 @@ impl ExperimentalConfig {
             && is_default_token_ttl(&self.compat_token_ttl)
             && self.inactive_session_expiration.is_none()
             && self.plan_management_iframe_uri.is_none()
+            && self.session_limit.is_none()
             && self.passkeys.is_none()
     }
 }
 
 impl ConfigurationSection for ExperimentalConfig {
     const PATH: Option<&'static str> = Some("experimental");
+}
+
+/// Configuration options for the session limit feature
+#[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
+pub struct SessionLimitConfig {
+    pub soft_limit: NonZeroU64,
+    pub hard_limit: NonZeroU64,
 }

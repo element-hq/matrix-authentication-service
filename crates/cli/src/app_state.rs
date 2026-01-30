@@ -9,7 +9,7 @@ use std::{convert::Infallible, net::IpAddr, sync::Arc};
 use axum::extract::{FromRef, FromRequestParts};
 use ipnetwork::IpNetwork;
 use mas_context::LogContext;
-use mas_data_model::{BoxClock, BoxRng, SiteConfig, SystemClock};
+use mas_data_model::{AppVersion, BoxClock, BoxRng, SiteConfig, SystemClock};
 use mas_handlers::{
     ActivityTracker, BoundActivityTracker, CookieManager, ErrorWrapper, GraphQLSchema, Limiter,
     MetadataCache, RequesterFingerprint, passwords::PasswordManager, webauthn::Webauthn,
@@ -27,7 +27,7 @@ use rand::SeedableRng;
 use sqlx::PgPool;
 use tracing::Instrument;
 
-use crate::telemetry::METER;
+use crate::{VERSION, telemetry::METER};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -212,6 +212,12 @@ impl FromRef<AppState> for Arc<PolicyFactory> {
 impl FromRef<AppState> for Arc<dyn HomeserverConnection> {
     fn from_ref(input: &AppState) -> Self {
         Arc::clone(&input.homeserver_connection)
+    }
+}
+
+impl FromRef<AppState> for AppVersion {
+    fn from_ref(_input: &AppState) -> Self {
+        AppVersion(VERSION)
     }
 }
 

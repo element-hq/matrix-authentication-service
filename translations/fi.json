@@ -74,9 +74,13 @@
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> osoitteessa <span>%(redirect_uri)s</span> haluaa päästä tilillesi.",
+      "continue_to": "Jatketaanko <span>%(client_name)s</span> -sovellukseen?",
       "heading": "Sallitaanko pääsy tilillesi?",
       "make_sure_you_trust": "Varmista, että luotat <span>%(client_name)s</span> -sovellukseen.",
+      "scope_list_preface": "Jatkamalla annat <span>%(client_name)s</span> -sovellukselle luvan:",
       "this_will_allow": "Tämä antaa <span>%(client_name)s</span> -sovellukselle luvan:",
+      "this_will_setup": "Tämä yhdistää %(client_name)s (<span>%(client_uri)s</span>) sovelluksen <span>%(server_name)s</span> tiliisi.",
+      "use_another_account": "Käytä toista tiliä",
       "you_may_be_sharing": "Saatat jakaa arkaluonteisia tietoja tämän sivuston tai sovelluksen kanssa."
     },
     "device_card": {
@@ -98,7 +102,8 @@
       "granted": {
         "description": "Annoit pääsyn %(client_name)s -sovellukselle. Voit sulkea tämän ikkunan.",
         "heading": "Pääsy myönnetty"
-      }
+      },
+      "this_will_setup": "Toinen laite haluaa yhdistää %(client_name)s (<span>%(client_uri)s</span>) sovelluksen <span>%(server_name)s</span> tiliisi. Varmista, että tunnistat kyseisen laitteen."
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s %(device_name)s:lla",
@@ -144,6 +149,9 @@
       "username_taken": "Tämä käyttäjänimi on jo käytössä.",
       "username_too_long": "Käyttäjänimi on liian pitkä",
       "username_too_short": "Käyttäjänimi on liian lyhyt"
+    },
+    "legacy_consent": {
+      "this_will_setup": "Tämä yhdistää <span>%(client_name)s</span> -sovelluksen <span>%(server_name)s</span> tiliisi."
     },
     "login": {
       "call_to_register": "Eikö sinulla ole vielä tiliä?",
@@ -210,6 +218,7 @@
     "register": {
       "call_to_login": "Onko sinulla jo tili?",
       "continue_with_email": "Jatka sähköpostiosoitteella",
+      "continue_with_password": "Jatka salasanalla",
       "create_account": {
         "description": "Valitse käyttäjänimi jatkaaksesi.",
         "heading": "Luo tili"
@@ -225,9 +234,9 @@
     "scope": {
       "edit_profile": "Muokata profiiliasi ja yhteystietojasi",
       "manage_sessions": "Hallinnoida laitteitasi ja istuntojasi",
-      "mas_admin": "Hallinnoida mitä tahansa käyttäjää matrix-authentication-servicessä",
+      "mas_admin": "Hallinnoida käyttäjiä (urn:mas:admin)",
       "send_messages": "Lähettää uusia viestejä puolestasi",
-      "synapse_admin": "Hallinnoida Synapse-kotipalvelinta",
+      "synapse_admin": "Hallinnoida palvelinta (urn:synapse:admin:*)",
       "view_messages": "Tarkastella olemassa olevia viestejäsi ja tietojasi",
       "view_profile": "Tarkastella profiilitietojasi ja yhteystietojasi"
     },

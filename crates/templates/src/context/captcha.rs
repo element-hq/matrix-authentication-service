@@ -4,16 +4,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::sync::Arc;
+use std::{collections::BTreeMap, sync::Arc};
 
 use mas_i18n::DataLocale;
 use minijinja::{
     Value,
     value::{Enumerator, Object},
 };
+use rand::Rng;
 use serde::Serialize;
 
-use crate::TemplateContext;
+use crate::{TemplateContext, context::SampleIdentifier};
 
 #[derive(Debug)]
 struct CaptchaConfig(mas_data_model::CaptchaConfig);
@@ -58,18 +59,17 @@ impl<T> WithCaptcha<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithCaptcha<T> {
-    fn sample(
+    fn sample<R: Rng>(
         now: chrono::DateTime<chrono::prelude::Utc>,
-        rng: &mut impl rand::prelude::Rng,
+        rng: &mut R,
         locales: &[DataLocale],
-    ) -> Vec<Self>
+    ) -> BTreeMap<SampleIdentifier, Self>
     where
         Self: Sized,
     {
-        let inner = T::sample(now, rng, locales);
-        inner
+        T::sample(now, rng, locales)
             .into_iter()
-            .map(|inner| Self::new(None, inner))
+            .map(|(k, inner)| (k, Self::new(None, inner)))
             .collect()
     }
 }

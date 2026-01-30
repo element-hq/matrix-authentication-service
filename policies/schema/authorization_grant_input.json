@@ -3,16 +3,24 @@
   "title": "AuthorizationGrantInput",
   "description": "Input for the authorization grant policy.",
   "type": "object",
-  "required": [
-    "client",
-    "grant_type",
-    "requester",
-    "scope"
-  ],
   "properties": {
     "user": {
-      "type": "object",
+      "type": [
+        "object",
+        "null"
+      ],
       "additionalProperties": true
+    },
+    "session_counts": {
+      "description": "How many sessions the user has.\n Not populated if it's not a user logging in.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/SessionCounts"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "client": {
       "type": "object",
@@ -28,7 +36,45 @@
       "$ref": "#/definitions/Requester"
     }
   },
+  "required": [
+    "client",
+    "scope",
+    "grant_type",
+    "requester"
+  ],
   "definitions": {
+    "SessionCounts": {
+      "description": "Information about how many sessions the user has",
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "oauth2": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "compat": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "personal": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "total",
+        "oauth2",
+        "compat",
+        "personal"
+      ]
+    },
     "GrantType": {
       "type": "string",
       "enum": [
@@ -43,12 +89,18 @@
       "properties": {
         "ip_address": {
           "description": "IP address of the entity making the request",
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "ip"
         },
         "user_agent": {
           "description": "User agent of the entity making the request",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }

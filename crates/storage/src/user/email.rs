@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -6,8 +7,8 @@
 
 use async_trait::async_trait;
 use mas_data_model::{
-    BrowserSession, Clock, User, UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode,
-    UserRegistration,
+    BrowserSession, Clock, UpstreamOAuthAuthorizationSession, User, UserEmail,
+    UserEmailAuthentication, UserEmailAuthenticationCode, UserRegistration,
 };
 use rand_core::RngCore;
 use ulid::Ulid;
@@ -306,12 +307,60 @@ pub trait UserEmailRepository: Send + Sync {
     /// # Errors
     ///
     /// Returns an error if the underlying repository fails
-    async fn complete_authentication(
+    async fn complete_authentication_with_code(
         &mut self,
         clock: &dyn Clock,
         authentication: UserEmailAuthentication,
         code: &UserEmailAuthenticationCode,
     ) -> Result<UserEmailAuthentication, Self::Error>;
+
+    /// Complete a [`UserEmailAuthentication`] by using the given upstream oauth
+    /// authorization session
+    ///
+    /// Returns the completed [`UserEmailAuthentication`]
+    ///
+    /// # Parameters
+    ///
+    /// * `clock`: The clock to use to generate timestamps
+    /// * `authentication`: The [`UserEmailAuthentication`] to complete
+    /// * `upstream_oauth_authorization_session`: The
+    ///   [`UpstreamOAuthAuthorizationSession`] to use
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the underlying repository fails
+    async fn complete_authentication_with_upstream(
+        &mut self,
+        clock: &dyn Clock,
+        authentication: UserEmailAuthentication,
+        upstream_oauth_authorization_session: &UpstreamOAuthAuthorizationSession,
+    ) -> Result<UserEmailAuthentication, Self::Error>;
+
+    /// Cleanup old email authentications
+    ///
+    /// This will delete email authentications with IDs up to and including
+    /// `until`. Uses ULID cursor-based pagination for efficiency.
+    /// Authentication codes will cascade-delete automatically.
+    ///
+    /// Returns the number of authentications deleted and the cursor for the
+    /// next batch
+    ///
+    /// # Parameters
+    ///
+    /// * `since`: The cursor to start from (exclusive), or `None` to start from
+    ///   the beginning
+    /// * `until`: The maximum ULID to delete (inclusive upper bound)
+    /// * `limit`: The maximum number of authentications to delete in this batch
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup_authentications(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error>;
 }
 
 repository_impl!(UserEmailRepository:
@@ -374,10 +423,24 @@ repository_impl!(UserEmailRepository:
         code: &str,
     ) -> Result<Option<UserEmailAuthenticationCode>, Self::Error>;
 
-    async fn complete_authentication(
+    async fn complete_authentication_with_code(
         &mut self,
         clock: &dyn Clock,
         authentication: UserEmailAuthentication,
         code: &UserEmailAuthenticationCode,
     ) -> Result<UserEmailAuthentication, Self::Error>;
+
+    async fn complete_authentication_with_upstream(
+        &mut self,
+        clock: &dyn Clock,
+        authentication: UserEmailAuthentication,
+        upstream_oauth_authorization_session: &UpstreamOAuthAuthorizationSession,
+    ) -> Result<UserEmailAuthentication, Self::Error>;
+
+    async fn cleanup_authentications(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error>;
 );

@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -249,14 +250,14 @@ pub(crate) async fn post(
         }
         UpstreamOAuthProviderOnBackchannelLogout::LogoutBrowserOnly => {
             let filter = BrowserSessionFilter::new()
-                .authenticated_by_upstream_sessions_only(auth_session_filter)
+                .linked_to_upstream_sessions_only(auth_session_filter)
                 .active_only();
             let affected = repo.browser_session().finish_bulk(&clock, filter).await?;
             tracing::info!("Finished {affected} browser sessions");
         }
         UpstreamOAuthProviderOnBackchannelLogout::LogoutAll => {
-            let browser_session_filter = BrowserSessionFilter::new()
-                .authenticated_by_upstream_sessions_only(auth_session_filter);
+            let browser_session_filter =
+                BrowserSessionFilter::new().linked_to_upstream_sessions_only(auth_session_filter);
 
             // We need to loop through all the browser sessions to find all the
             // users affected so that we can trigger a device sync job for them
@@ -267,9 +268,9 @@ pub(crate) async fn post(
                     .browser_session()
                     .list(browser_session_filter, cursor)
                     .await?;
-                for browser_session in browser_sessions.edges {
-                    user_ids.insert(browser_session.user.id);
-                    cursor = cursor.after(browser_session.id);
+                for edge in browser_sessions.edges {
+                    user_ids.insert(edge.node.user.id);
+                    cursor = cursor.after(edge.cursor);
                 }
 
                 if !browser_sessions.has_next_page {

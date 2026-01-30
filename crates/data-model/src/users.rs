@@ -14,6 +14,12 @@ use url::Url;
 use webauthn_rp::response::{AuthTransports, CredentialId};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct MatrixUser {
+    pub mxid: String,
+    pub display_name: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct User {
     pub id: Ulid,
     pub username: String,
@@ -22,6 +28,7 @@ pub struct User {
     pub locked_at: Option<DateTime<Utc>>,
     pub deactivated_at: Option<DateTime<Utc>>,
     pub can_request_admin: bool,
+    pub is_guest: bool,
 }
 
 impl User {
@@ -29,6 +36,20 @@ impl User {
     #[must_use]
     pub fn is_valid(&self) -> bool {
         self.locked_at.is_none() && self.deactivated_at.is_none()
+    }
+
+    /// Returns `true` if the user is a valid actor, for example
+    /// of a personal session.
+    ///
+    /// Currently: this is `true` unless the user is deactivated.
+    ///
+    /// This is a weaker form of validity: `is_valid` always implies
+    /// `is_valid_actor`, but some users (currently: locked users)
+    /// can be valid actors for personal sessions but aren't valid
+    /// except through administrative access.
+    #[must_use]
+    pub fn is_valid_actor(&self) -> bool {
+        self.deactivated_at.is_none()
     }
 }
 
@@ -44,6 +65,7 @@ impl User {
             locked_at: None,
             deactivated_at: None,
             can_request_admin: false,
+            is_guest: false,
         }]
     }
 }
@@ -258,6 +280,7 @@ pub struct UserRegistration {
     pub email_authentication_id: Option<Ulid>,
     pub user_registration_token_id: Option<Ulid>,
     pub password: Option<UserRegistrationPassword>,
+    pub upstream_oauth_authorization_session_id: Option<Ulid>,
     pub post_auth_action: Option<serde_json::Value>,
     pub ip_address: Option<IpAddr>,
     pub user_agent: Option<String>,

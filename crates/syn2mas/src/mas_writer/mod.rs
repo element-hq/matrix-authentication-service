@@ -406,19 +406,20 @@ impl WriteBatch for MasNewEmailThreepid {
             created_ats.push(created_at);
         }
 
-        // `confirmed_at` is going to get removed in a future MAS release,
-        // so just populate with `created_at`
         sqlx::query!(
             r#"
-            INSERT INTO syn2mas__user_emails
-            (user_email_id, user_id, email, created_at, confirmed_at)
-            SELECT * FROM UNNEST($1::UUID[], $2::UUID[], $3::TEXT[], $4::TIMESTAMP WITH TIME ZONE[], $4::TIMESTAMP WITH TIME ZONE[])
+                INSERT INTO syn2mas__user_emails
+                (user_email_id, user_id, email, created_at)
+                SELECT * FROM UNNEST($1::UUID[], $2::UUID[], $3::TEXT[], $4::TIMESTAMP WITH TIME ZONE[])
             "#,
             &user_email_ids[..],
             &user_ids[..],
             &emails[..],
             &created_ats[..],
-        ).execute(&mut *conn).await.into_database("writing emails to MAS")?;
+        )
+        .execute(&mut *conn)
+        .await
+        .into_database("writing emails to MAS")?;
 
         Ok(())
     }

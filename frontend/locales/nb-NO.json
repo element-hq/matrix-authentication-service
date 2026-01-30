@@ -43,7 +43,7 @@
         "alert_description": "Denne kontoen vil bli slettet permanent, og du vil ikke lenger ha tilgang til noen av meldingene dine.",
         "alert_title": "Du er i ferd med å miste alle dataene dine",
         "button": "Slett konto",
-        "dialog_description": "<text>Bekreft at du ønsker å slette kontoen din:</text>\n<profile />\n<list>\n<item>Du vil ikke kunne aktivere kontoen din på nytt</item>\n<item>Du vil ikke lenger kunne logge på</item>\n<item>Ingen vil kunne gjenbruke brukernavnet ditt (MXID), heller ikke du</item>\n<item>Du vil forlate alle rom og direktemeldinger du er en del av</item>\n<item>Du vil bli fjernet fra identitetsserveren, og ingen vil kunne finne deg med e-postadressen eller telefonnummeret ditt</item>\n</list>\n<text>Dine gamle meldinger vil fortsatt være synlige for personer som har mottatt dem. Ønsker du å skjule dine sendte meldinger for personer som blir med i rommene i fremtiden?</text>",
+        "dialog_description": "<text>Bekreft at du ønsker å slette kontoen din:</text>\n<profile />\n<list>\n<item>Du vil ikke kunne reaktivere kontoen din</item>\n<item>Du vil ikke lenger kunne logge inn</item>\n<item>Ingen vil kunne gjenbruke brukernavnet ditt (MXID), inkludert deg selv</item>\n<item>Du vil forlate alle rom og direktemeldinger du er i</item>\n<item>Du vil bli fjernet fra identitetsserveren, og ingen vil kunne finne deg med e-postadressen eller telefonnummeret ditt</item>\n</list>\n<text>Dine gamle meldinger vil fortsatt være synlige for personer som har mottatt dem. Vil du skjule dine sendte meldinger for personer som blir med i rommene i fremtiden?</text>",
         "dialog_title": "Slett denne kontoen?",
         "erase_checkbox_label": "Ja, skjul alle meldingene mine for nye medlemmer",
         "incorrect_password": "Feil passord, prøv igjen",
@@ -391,9 +391,9 @@
     "scope": {
       "edit_profile": "Rediger din profil og kontaktdetaljer",
       "manage_sessions": "Administrer enhetene og sesjonene dine",
-      "mas_admin": "Administrer alle brukere på matrix-authentication-service",
+      "mas_admin": "Administrer brukere (urn:mas:admin)",
       "send_messages": "Send nye meldinger på dine vegne",
-      "synapse_admin": "Administrer Synapse-hjemmeserveren",
+      "synapse_admin": "Administrer serveren (urn:synapse:admin:*)",
       "view_messages": "Se dine eksisterende meldinger og data",
       "view_profile": "Se din profilinformasjon og kontaktdetaljer"
     }

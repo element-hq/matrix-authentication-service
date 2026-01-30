@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -77,10 +78,11 @@ impl UserState {
 pub struct UserFilter<'a> {
     state: Option<UserState>,
     can_request_admin: Option<bool>,
-    _phantom: std::marker::PhantomData<&'a ()>,
+    is_guest: Option<bool>,
+    search: Option<&'a str>,
 }
 
-impl UserFilter<'_> {
+impl<'a> UserFilter<'a> {
     /// Create a new [`UserFilter`] with default values
     #[must_use]
     pub fn new() -> Self {
@@ -122,6 +124,27 @@ impl UserFilter<'_> {
         self
     }
 
+    /// Filter for guest users
+    #[must_use]
+    pub fn guest_only(mut self) -> Self {
+        self.is_guest = Some(true);
+        self
+    }
+
+    /// Filter for non-guest users
+    #[must_use]
+    pub fn non_guest_only(mut self) -> Self {
+        self.is_guest = Some(false);
+        self
+    }
+
+    /// Filter for users that match the given search string
+    #[must_use]
+    pub fn matching_search(mut self, search: &'a str) -> Self {
+        self.search = Some(search);
+        self
+    }
+
     /// Get the state filter
     ///
     /// Returns [`None`] if no state filter was set
@@ -136,6 +159,22 @@ impl UserFilter<'_> {
     #[must_use]
     pub fn can_request_admin(&self) -> Option<bool> {
         self.can_request_admin
+    }
+
+    /// Get the is guest filter
+    ///
+    /// Returns [`None`] if no is guest filter was set
+    #[must_use]
+    pub fn is_guest(&self) -> Option<bool> {
+        self.is_guest
+    }
+
+    /// Get the search filter
+    ///
+    /// Returns [`None`] if no search filter was set
+    #[must_use]
+    pub fn search(&self) -> Option<&'a str> {
+        self.search
     }
 }
 
@@ -259,6 +298,24 @@ pub trait UserRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn reactivate(&mut self, user: User) -> Result<User, Self::Error>;
 
+    /// Delete all the unsupported third-party IDs of a [`User`].
+    ///
+    /// Those were imported by syn2mas and kept in case we wanted to support
+    /// them later. They still need to be cleaned up when a user deactivates
+    /// their account.
+    ///
+    /// Returns the number of deleted third-party IDs.
+    ///
+    /// # Parameters
+    ///
+    /// * `user`: The [`User`] whose unsupported third-party IDs should be
+    ///   deleted
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn delete_unsupported_threepids(&mut self, user: &User) -> Result<usize, Self::Error>;
+
     /// Set whether a [`User`] can request admin
     ///
     /// Returns the [`User`] with the new `can_request_admin` value
@@ -331,6 +388,7 @@ repository_impl!(UserRepository:
     async fn unlock(&mut self, user: User) -> Result<User, Self::Error>;
     async fn deactivate(&mut self, clock: &dyn Clock, user: User) -> Result<User, Self::Error>;
     async fn reactivate(&mut self, user: User) -> Result<User, Self::Error>;
+    async fn delete_unsupported_threepids(&mut self, user: &User) -> Result<usize, Self::Error>;
     async fn set_can_request_admin(
         &mut self,
         user: User,

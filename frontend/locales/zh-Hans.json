@@ -273,7 +273,7 @@
         "title": "无法允许加密身份"
       },
       "finish_reset": "完成重置",
-      "heading": "重置加密身份",
+      "heading": "如果你无法通过其它方式确认请重置身份",
       "start_reset": "开始重置",
       "success": {
         "description": "身份重置已获批准，有效时间为 {{minutes}} 分钟。您可以关闭此窗口并返回应用继续操作。",

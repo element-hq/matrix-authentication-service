@@ -8,6 +8,7 @@ use chrono::{DateTime, Duration, Utc};
 use mas_data_model::{BrowserSession, Clock, User, UserPasskey, UserPasskeyChallenge};
 use mas_storage::{
     Page, Pagination,
+    pagination::Node,
     user::{UserPasskeyFilter, UserPasskeyRepository},
 };
 use rand::RngCore;
@@ -52,6 +53,12 @@ struct UserPasskeyLookup {
     metadata: Vec<u8>,
     last_used_at: Option<DateTime<Utc>>,
     created_at: DateTime<Utc>,
+}
+
+impl Node<Ulid> for UserPasskeyLookup {
+    fn cursor(&self) -> Ulid {
+        self.user_passkey_id.into()
+    }
 }
 
 impl TryFrom<UserPasskeyLookup> for UserPasskey {

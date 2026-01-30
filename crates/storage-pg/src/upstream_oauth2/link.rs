@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -9,6 +10,7 @@ use chrono::{DateTime, Utc};
 use mas_data_model::{Clock, UpstreamOAuthLink, UpstreamOAuthProvider, User};
 use mas_storage::{
     Page, Pagination,
+    pagination::Node,
     upstream_oauth2::{UpstreamOAuthLinkFilter, UpstreamOAuthLinkRepository},
 };
 use opentelemetry_semantic_conventions::trace::DB_QUERY_TEXT;
@@ -51,6 +53,12 @@ struct LinkLookup {
     subject: String,
     human_account_name: Option<String>,
     created_at: DateTime<Utc>,
+}
+
+impl Node<Ulid> for LinkLookup {
+    fn cursor(&self) -> Ulid {
+        self.upstream_oauth_link_id.into()
+    }
 }
 
 impl From<LinkLookup> for UpstreamOAuthLink {
@@ -434,5 +442,61 @@ impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
         DatabaseError::ensure_affected_rows(&res, 1)?;
 
         Ok(())
+    }
+
+    #[tracing::instrument(
+        name = "db.upstream_oauth_link.cleanup_orphaned",
+        skip_all,
+        fields(
+            db.query.text,
+            since = since.map(tracing::field::display),
+            until = %until,
+            limit = limit,
+        ),
+        err,
+    )]
+    async fn cleanup_orphaned(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error> {
+        // Use ULID cursor-based pagination for orphaned links only.
+        // We only delete links that have no user associated with them.
+        // `MAX(uuid)` isn't a thing in Postgres, so we aggregate on the client side.
+        let res = sqlx::query_scalar!(
+            r#"
+                WITH
+                  to_delete AS (
+                    SELECT upstream_oauth_link_id
+                    FROM upstream_oauth_links
+                    WHERE user_id IS NULL
+                    AND ($1::uuid IS NULL OR upstream_oauth_link_id > $1)
+                    AND upstream_oauth_link_id <= $2
+                    ORDER BY upstream_oauth_link_id
+                    LIMIT $3
+                  ),
+                  deleted_sessions AS (
+                    DELETE FROM upstream_oauth_authorization_sessions
+                    USING to_delete
+                    WHERE upstream_oauth_authorization_sessions.upstream_oauth_link_id = to_delete.upstream_oauth_link_id
+                  )
+                DELETE FROM upstream_oauth_links
+                USING to_delete
+                WHERE upstream_oauth_links.upstream_oauth_link_id = to_delete.upstream_oauth_link_id
+                RETURNING upstream_oauth_links.upstream_oauth_link_id
+            "#,
+            since.map(Uuid::from),
+            Uuid::from(until),
+            i64::try_from(limit).unwrap_or(i64::MAX)
+        )
+        .traced()
+        .fetch_all(&mut *self.conn)
+        .await?;
+
+        let count = res.len();
+        let max_id = res.into_iter().max();
+
+        Ok((count, max_id.map(Ulid::from)))
     }
 }

@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                WITH to_delete AS (\n                    SELECT user_registration_id\n                    FROM user_registrations\n                    WHERE ($1::uuid IS NULL OR user_registration_id > $1)\n                    AND user_registration_id <= $2\n                    ORDER BY user_registration_id\n                    LIMIT $3\n                )\n                DELETE FROM user_registrations\n                USING to_delete\n                WHERE user_registrations.user_registration_id = to_delete.user_registration_id\n                RETURNING user_registrations.user_registration_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_registration_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "a50eb326c3522f971f6ee7e13dff61efbeb1ec24e2c694e1673347bae993762d"
+}

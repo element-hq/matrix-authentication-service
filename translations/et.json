@@ -74,9 +74,13 @@
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> aadressil <span>%(redirect_uri)s</span> soovib ligipääsu sinu kasutajakontole.",
+      "continue_to": "Kas jätkad kliendis <span>%(client_name)s</span>?",
       "heading": "Kas lubad ligipääsu sinu kasutajakontole?",
       "make_sure_you_trust": "Palun kontrolli, et <span>%(client_name)s</span> on sinu jaoks usaldusväärne teenus.",
+      "scope_list_preface": "Jätkates lubad sa <span>%(client_name)s</span> kliendil:",
       "this_will_allow": "Sellega <span>%(client_name)s</span> saab õigused:",
+      "this_will_setup": "Sellega seadistad %(client_name)s (<span>%(client_uri)s</span>) kliendi kasutama sinu <span>%(server_name)s</span> kontot.",
+      "use_another_account": "Kasuta teist kontot",
       "you_may_be_sharing": "Sa tõenäoliselt jagad privaatset teavet selle veebisaidi või rakendusega."
     },
     "device_card": {
@@ -98,7 +102,8 @@
       "granted": {
         "description": "Sa lubasid seadmele %(client_name)s ligipääsu. Sa võid nüüd selle akna sulgeda.",
         "heading": "Ligipääs on lubatud"
-      }
+      },
+      "this_will_setup": "Üks teine seade tahab seadistada %(client_name)s (<span>%(client_uri)s</span>) klienti kasutama sinu <span>%(server_name)s</span> kontot. Palun kontrolli, et see on õige ja sinule vajalik seade."
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s seadmes %(device_name)s",
@@ -144,6 +149,9 @@
       "username_taken": "Selline kasutajanimi on juba olemas",
       "username_too_long": "Kasutajanimi on liiga pikk",
       "username_too_short": "Kasutajanimi on liiga lühike"
+    },
+    "legacy_consent": {
+      "this_will_setup": "Sellega seadistad <span>%(client_name)s</span> kliendi kasutama oma <span>%(server_name)s</span> kontot."
     },
     "login": {
       "call_to_register": "Sul veel pole kasutajakontot?",
@@ -210,6 +218,7 @@
     "register": {
       "call_to_login": "Sul on kasutajakonto juba olemas?",
       "continue_with_email": "Jätka e-posti aadressiga",
+      "continue_with_password": "Jätka salasõnaga",
       "create_account": {
         "description": "Jätkamiseks vali kasutajanimi.",
         "heading": "Loo kasutajakonto"
@@ -225,9 +234,9 @@
     "scope": {
       "edit_profile": "Muuta sinu kasutajaprofiili ning kontaktandmeid",
       "manage_sessions": "Hallata sinu seadmeid ja sessioone",
-      "mas_admin": "Hallata iga kasutajat teenuses matrix-authentication-service",
+      "mas_admin": "Hallata kasutajaid (urn:mas:admin)",
       "send_messages": "Saata sõnumeid sinu nimel",
-      "synapse_admin": "Hallata seda Synapse koduserverit",
+      "synapse_admin": "Hallata seda Synapse koduserverit (urn:synapse:admin:*)",
       "view_messages": "Vaadata sinu sõnumeid ja andmeid",
       "view_profile": "Vaadata sinu profiili teavet ja kontaktadmeid"
     },

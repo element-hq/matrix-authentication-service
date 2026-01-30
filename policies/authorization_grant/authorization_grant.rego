@@ -98,6 +98,26 @@ uses_stable_scopes if {
 	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:client:")}) > 0
 }
 
+has_device_scope if {
+	scope_list := split(input.scope, " ")
+	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:client:device:")}) > 0
+}
+
+has_device_scope if {
+	scope_list := split(input.scope, " ")
+	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:org.matrix.msc2967.client:device:")}) > 0
+}
+
+has_cs_api_scope if {
+	scope_list := split(input.scope, " ")
+	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:client:api:")}) > 0
+}
+
+has_cs_api_scope if {
+	scope_list := split(input.scope, " ")
+	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:org.matrix.msc2967.client:api:")}) > 0
+}
+
 # METADATA
 # entrypoint: true
 violation contains {"msg": msg} if {
@@ -116,6 +136,12 @@ violation contains {"msg": "only one device scope is allowed at a time"} if {
 	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:client:device:")}) > 1
 }
 
+# Prevent the creation of C-S API devices for sessions that don't have C-S API access.
+violation contains {"msg": "device scopes are only allowed when the client-server API scope is requested"} if {
+	has_device_scope
+	not has_cs_api_scope
+}
+
 violation contains {"msg": "request cannot mix unstable and stable scopes"} if {
 	uses_stable_scopes
 	uses_unstable_scopes
@@ -126,4 +152,21 @@ violation contains {"msg": sprintf(
 	[common.format_requester(input.requester)],
 )} if {
 	common.requester_banned(input.requester, data.requester)
+}
+
+violation contains {
+	"code": "too-many-sessions",
+	"msg": "user has too many active sessions",
+} if {
+	# Only apply if session limits are enabled in the config
+	data.session_limit != null
+
+	# Only apply if it's a user logging in (who therefore has countable sessions)
+	input.session_counts != null
+
+	# For OAuth 2 login, a violation occurs when the soft limit has already been
+	# reached or exceeded.
+	# We use the soft limit because the user will be able to interactively remove
+	# sessions to return under the limit.
+	data.session_limit.soft_limit <= input.session_counts.total
 }

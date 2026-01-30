@@ -23,6 +23,32 @@ $ mas-cli manage add-email <username> <email>
 $ mas-cli manage verify-email <username> <email>
 ```
 
+## `manage promote-admin`
+
+Make a user admin.
+
+```
+$ mas-cli manage promote-admin <username>
+```
+
+**This doesn't make all the users sessions admin, but rather lets the user request admin access in administration tools.**
+
+## `manage demote-admin`
+
+Make a user non-admin.
+
+```
+$ mas-cli manage demote-admin <username>
+```
+
+## `manage list-admin-users`
+
+List all users with admin privileges.
+
+```
+$ mas-cli manage list-admins
+```
+
 ## `manage set-password`
 
 Set a user password.
@@ -52,7 +78,8 @@ Create a new user registration token.
 
 Options:
 - `--token <token>`: Specific token string to use. If not provided, a random token will be generated.
-- `--usage-limit <usage_limit>`: Limit the number of times the token can be used. If not provided, the token can be used an unlimited number of times.
+- `--usage-limit <usage_limit>`: Limit the number of times the token can be used. If not provided, the token can be can be used only once, unless the `--unlimited` flag is set.
+- `--unlimited` Allow the token to be used an unlimited number of times.
 - `--expires-in <expires_in>`: Time in seconds after which the token expires. If not provided, the token never expires.
 
 ```
@@ -93,8 +120,11 @@ $ mas-cli manage lock-user <username> --deactivate
 
 Unlock a user.
 
+Options:
+- `--reactivate`: Whether to reactivate the user.
+
 ```
-$ mas-cli manage unlock-user <username>
+$ mas-cli manage unlock-user <username> --reactivate
 ```
 
 ## `manage register-user`

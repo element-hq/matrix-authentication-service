@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -39,9 +39,9 @@ jobs:
           tool: mdbook
 
       - name: Install Node
-        uses: actions/setup-node@v4.4.0
+        uses: actions/setup-node@v6.1.0
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Build the documentation
         run: sh misc/build-docs.sh

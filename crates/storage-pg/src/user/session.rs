@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -14,6 +15,7 @@ use mas_data_model::{
 };
 use mas_storage::{
     Page, Pagination,
+    pagination::Node,
     user::{BrowserSessionFilter, BrowserSessionRepository},
 };
 use rand::RngCore;
@@ -26,7 +28,7 @@ use uuid::Uuid;
 use crate::{
     DatabaseError, DatabaseInconsistencyError,
     filter::StatementExt,
-    iden::{UpstreamOAuthAuthorizationSessions, UserSessionAuthentications, UserSessions, Users},
+    iden::{UpstreamOAuthAuthorizationSessions, UserSessions, Users},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
 };
@@ -61,6 +63,13 @@ struct SessionLookup {
     user_locked_at: Option<DateTime<Utc>>,
     user_deactivated_at: Option<DateTime<Utc>>,
     user_can_request_admin: bool,
+    user_is_guest: bool,
+}
+
+impl Node<Ulid> for SessionLookup {
+    fn cursor(&self) -> Ulid {
+        self.user_id.into()
+    }
 }
 
 impl TryFrom<SessionLookup> for BrowserSession {
@@ -76,6 +85,7 @@ impl TryFrom<SessionLookup> for BrowserSession {
             locked_at: value.user_locked_at,
             deactivated_at: value.user_deactivated_at,
             can_request_admin: value.user_can_request_admin,
+            is_guest: value.user_is_guest,
         };
 
         Ok(BrowserSession {
@@ -145,26 +155,14 @@ impl crate::filter::Filter for BrowserSessionFilter<'_> {
             .add_option(self.last_active_before().map(|last_active_before| {
                 Expr::col((UserSessions::Table, UserSessions::LastActiveAt)).lt(last_active_before)
             }))
-            .add_option(self.authenticated_by_upstream_sessions().map(|filter| {
-                // For filtering by upstream sessions, we need to hop over the
-                // `user_session_authentications` table
-                let join_expr = Expr::col((
-                    UserSessionAuthentications::Table,
-                    UserSessionAuthentications::UpstreamOAuthAuthorizationSessionId,
-                ))
-                .eq(Expr::col((
-                    UpstreamOAuthAuthorizationSessions::Table,
-                    UpstreamOAuthAuthorizationSessions::UpstreamOAuthAuthorizationSessionId,
-                )));
-
+            .add_option(self.linked_to_upstream_sessions().map(|filter| {
                 Expr::col((UserSessions::Table, UserSessions::UserSessionId)).in_subquery(
                     Query::select()
                         .expr(Expr::col((
-                            UserSessionAuthentications::Table,
-                            UserSessionAuthentications::UserSessionId,
+                            UpstreamOAuthAuthorizationSessions::Table,
+                            UpstreamOAuthAuthorizationSessions::UserSessionId,
                         )))
-                        .from(UserSessionAuthentications::Table)
-                        .inner_join(UpstreamOAuthAuthorizationSessions::Table, join_expr)
+                        .from(UpstreamOAuthAuthorizationSessions::Table)
                         .apply_filter(filter)
                         .take(),
                 )
@@ -201,6 +199,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
                      , u.locked_at             AS "user_locked_at"
                      , u.deactivated_at        AS "user_deactivated_at"
                      , u.can_request_admin     AS "user_can_request_admin"
+                     , u.is_guest              AS "user_is_guest"
                 FROM user_sessions s
                 INNER JOIN users u
                     USING (user_id)
@@ -390,6 +389,10 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             .expr_as(
                 Expr::col((Users::Table, Users::CanRequestAdmin)),
                 SessionLookupIden::UserCanRequestAdmin,
+            )
+            .expr_as(
+                Expr::col((Users::Table, Users::IsGuest)),
+                SessionLookupIden::UserIsGuest,
             )
             .from(UserSessions::Table)
             .inner_join(
@@ -675,5 +678,123 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
         DatabaseError::ensure_affected_rows(&res, ids.len().try_into().unwrap_or(u64::MAX))?;
 
         Ok(())
+    }
+
+    #[tracing::instrument(
+        name = "db.browser_session.cleanup_finished",
+        skip_all,
+        fields(
+            db.query.text,
+            since = since.map(tracing::field::display),
+            until = %until,
+            limit = limit,
+        ),
+        err,
+    )]
+    async fn cleanup_finished(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                WITH
+                    to_delete AS (
+                        SELECT user_session_id, finished_at
+                        FROM user_sessions us
+                        WHERE us.finished_at IS NOT NULL
+                          AND ($1::timestamptz IS NULL OR us.finished_at >= $1)
+                          AND us.finished_at < $2
+                          -- Only delete if no oauth2_sessions reference this user_session
+                          AND NOT EXISTS (
+                              SELECT 1 FROM oauth2_sessions os
+                              WHERE os.user_session_id = us.user_session_id
+                          )
+                          -- Only delete if no compat_sessions reference this user_session
+                          AND NOT EXISTS (
+                              SELECT 1 FROM compat_sessions cs
+                              WHERE cs.user_session_id = us.user_session_id
+                          )
+                        ORDER BY us.finished_at ASC
+                        LIMIT $3
+                        FOR UPDATE OF us
+                    ),
+                    deleted_authentications AS (
+                        DELETE FROM user_session_authentications USING to_delete
+                        WHERE user_session_authentications.user_session_id = to_delete.user_session_id
+                    ),
+                    deleted_sessions AS (
+                        DELETE FROM user_sessions USING to_delete
+                        WHERE user_sessions.user_session_id = to_delete.user_session_id
+                        RETURNING user_sessions.finished_at
+                    )
+                SELECT COUNT(*) as "count!", MAX(finished_at) as last_finished_at FROM deleted_sessions
+            "#,
+            since,
+            until,
+            i64::try_from(limit).unwrap_or(i64::MAX),
+        )
+        .traced()
+        .fetch_one(&mut *self.conn)
+        .await?;
+
+        Ok((
+            res.count.try_into().unwrap_or(usize::MAX),
+            res.last_finished_at,
+        ))
+    }
+
+    #[tracing::instrument(
+        name = "db.browser_session.cleanup_inactive_ips",
+        skip_all,
+        fields(
+            db.query.text,
+            since = since.map(tracing::field::display),
+            threshold = %threshold,
+            limit = limit,
+        ),
+        err,
+    )]
+    async fn cleanup_inactive_ips(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        threshold: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                WITH to_update AS (
+                    SELECT user_session_id, last_active_at
+                    FROM user_sessions
+                    WHERE last_active_ip IS NOT NULL
+                      AND last_active_at IS NOT NULL
+                      AND ($1::timestamptz IS NULL OR last_active_at >= $1)
+                      AND last_active_at < $2
+                    ORDER BY last_active_at ASC
+                    LIMIT $3
+                    FOR UPDATE
+                ),
+                updated AS (
+                    UPDATE user_sessions
+                    SET last_active_ip = NULL
+                    FROM to_update
+                    WHERE user_sessions.user_session_id = to_update.user_session_id
+                    RETURNING user_sessions.last_active_at
+                )
+                SELECT COUNT(*) AS "count!", MAX(last_active_at) AS last_active_at FROM updated
+            "#,
+            since,
+            threshold,
+            i64::try_from(limit).unwrap_or(i64::MAX),
+        )
+        .traced()
+        .fetch_one(&mut *self.conn)
+        .await?;
+
+        Ok((
+            res.count.try_into().unwrap_or(usize::MAX),
+            res.last_active_at,
+        ))
     }
 }

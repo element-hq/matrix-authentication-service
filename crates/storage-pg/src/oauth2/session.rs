@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -12,6 +13,7 @@ use mas_data_model::{BrowserSession, Client, Clock, Session, SessionState, User}
 use mas_storage::{
     Page, Pagination,
     oauth2::{OAuth2SessionFilter, OAuth2SessionRepository},
+    pagination::Node,
 };
 use oauth2_types::scope::{Scope, ScopeToken};
 use rand::RngCore;
@@ -59,6 +61,12 @@ struct OAuthSessionLookup {
     last_active_at: Option<DateTime<Utc>>,
     last_active_ip: Option<IpAddr>,
     human_name: Option<String>,
+}
+
+impl Node<Ulid> for OAuthSessionLookup {
+    fn cursor(&self) -> Ulid {
+        self.oauth2_session_id.into()
+    }
 }
 
 impl TryFrom<OAuthSessionLookup> for Session {
@@ -584,5 +592,117 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
         DatabaseError::ensure_affected_rows(&res, 1)?;
 
         Ok(session)
+    }
+
+    #[tracing::instrument(
+        name = "db.oauth2_session.cleanup_finished",
+        skip_all,
+        fields(
+            db.query.text,
+            since = since.map(tracing::field::display),
+            until = %until,
+            limit = limit,
+        ),
+        err,
+    )]
+    async fn cleanup_finished(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                WITH
+                    to_delete AS (
+                        SELECT oauth2_session_id, finished_at
+                        FROM oauth2_sessions
+                        WHERE finished_at IS NOT NULL
+                          AND ($1::timestamptz IS NULL OR finished_at >= $1)
+                          AND finished_at < $2
+                        ORDER BY finished_at ASC
+                        LIMIT $3
+                        FOR UPDATE
+                    ),
+                    deleted_refresh_tokens AS (
+                        DELETE FROM oauth2_refresh_tokens USING to_delete
+                        WHERE oauth2_refresh_tokens.oauth2_session_id = to_delete.oauth2_session_id
+                    ),
+                    deleted_access_tokens AS (
+                        DELETE FROM oauth2_access_tokens USING to_delete
+                        WHERE oauth2_access_tokens.oauth2_session_id = to_delete.oauth2_session_id
+                    ),
+                    deleted_sessions AS (
+                        DELETE FROM oauth2_sessions USING to_delete
+                        WHERE oauth2_sessions.oauth2_session_id = to_delete.oauth2_session_id
+                        RETURNING oauth2_sessions.finished_at
+                    )
+                SELECT COUNT(*) as "count!", MAX(finished_at) as last_finished_at FROM deleted_sessions
+            "#,
+            since,
+            until,
+            i64::try_from(limit).unwrap_or(i64::MAX),
+        )
+        .traced()
+        .fetch_one(&mut *self.conn)
+        .await?;
+
+        Ok((
+            res.count.try_into().unwrap_or(usize::MAX),
+            res.last_finished_at,
+        ))
+    }
+
+    #[tracing::instrument(
+        name = "db.oauth2_session.cleanup_inactive_ips",
+        skip_all,
+        fields(
+            db.query.text,
+            since = since.map(tracing::field::display),
+            threshold = %threshold,
+            limit = limit,
+        ),
+        err,
+    )]
+    async fn cleanup_inactive_ips(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        threshold: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                WITH to_update AS (
+                    SELECT oauth2_session_id, last_active_at
+                    FROM oauth2_sessions
+                    WHERE last_active_ip IS NOT NULL
+                      AND last_active_at IS NOT NULL
+                      AND ($1::timestamptz IS NULL OR last_active_at >= $1)
+                      AND last_active_at < $2
+                    ORDER BY last_active_at ASC
+                    LIMIT $3
+                    FOR UPDATE
+                ),
+                updated AS (
+                    UPDATE oauth2_sessions
+                    SET last_active_ip = NULL
+                    FROM to_update
+                    WHERE oauth2_sessions.oauth2_session_id = to_update.oauth2_session_id
+                    RETURNING oauth2_sessions.last_active_at
+                )
+                SELECT COUNT(*) AS "count!", MAX(last_active_at) AS last_active_at FROM updated
+            "#,
+            since,
+            threshold,
+            i64::try_from(limit).unwrap_or(i64::MAX),
+        )
+        .traced()
+        .fetch_one(&mut *self.conn)
+        .await?;
+
+        Ok((
+            res.count.try_into().unwrap_or(usize::MAX),
+            res.last_active_at,
+        ))
     }
 }

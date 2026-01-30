@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -317,12 +318,124 @@ impl InsertableJob for SendAccountRecoveryEmailsJob {
     const QUEUE_NAME: &'static str = "send-account-recovery-email";
 }
 
-/// Cleanup expired tokens
+/// Cleanup revoked OAuth 2.0 access tokens
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
-pub struct CleanupExpiredTokensJob;
+pub struct CleanupRevokedOAuthAccessTokensJob;
 
-impl InsertableJob for CleanupExpiredTokensJob {
-    const QUEUE_NAME: &'static str = "cleanup-expired-tokens";
+impl InsertableJob for CleanupRevokedOAuthAccessTokensJob {
+    const QUEUE_NAME: &'static str = "cleanup-revoked-oauth-access-tokens";
+}
+
+/// Cleanup expired OAuth 2.0 access tokens
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupExpiredOAuthAccessTokensJob;
+
+impl InsertableJob for CleanupExpiredOAuthAccessTokensJob {
+    const QUEUE_NAME: &'static str = "cleanup-expired-oauth-access-tokens";
+}
+
+/// Cleanup revoked OAuth 2.0 refresh tokens
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupRevokedOAuthRefreshTokensJob;
+
+impl InsertableJob for CleanupRevokedOAuthRefreshTokensJob {
+    const QUEUE_NAME: &'static str = "cleanup-revoked-oauth-refresh-tokens";
+}
+
+/// Cleanup consumed OAuth 2.0 refresh tokens
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupConsumedOAuthRefreshTokensJob;
+
+impl InsertableJob for CleanupConsumedOAuthRefreshTokensJob {
+    const QUEUE_NAME: &'static str = "cleanup-consumed-oauth-refresh-tokens";
+}
+
+/// Cleanup old user registrations
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupUserRegistrationsJob;
+
+impl InsertableJob for CleanupUserRegistrationsJob {
+    const QUEUE_NAME: &'static str = "cleanup-user-registrations";
+}
+
+/// Cleanup finished compat sessions
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupFinishedCompatSessionsJob;
+
+impl InsertableJob for CleanupFinishedCompatSessionsJob {
+    const QUEUE_NAME: &'static str = "cleanup-finished-compat-sessions";
+}
+
+/// Cleanup finished OAuth 2.0 sessions
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupFinishedOAuth2SessionsJob;
+
+impl InsertableJob for CleanupFinishedOAuth2SessionsJob {
+    const QUEUE_NAME: &'static str = "cleanup-finished-oauth2-sessions";
+}
+
+/// Cleanup finished user/browser sessions
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupFinishedUserSessionsJob;
+
+impl InsertableJob for CleanupFinishedUserSessionsJob {
+    const QUEUE_NAME: &'static str = "cleanup-finished-user-sessions";
+}
+
+/// Cleanup old OAuth 2.0 authorization grants
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupOAuthAuthorizationGrantsJob;
+
+impl InsertableJob for CleanupOAuthAuthorizationGrantsJob {
+    const QUEUE_NAME: &'static str = "cleanup-oauth-authorization-grants";
+}
+
+/// Cleanup old OAuth 2.0 device code grants
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupOAuthDeviceCodeGrantsJob;
+
+impl InsertableJob for CleanupOAuthDeviceCodeGrantsJob {
+    const QUEUE_NAME: &'static str = "cleanup-oauth-device-code-grants";
+}
+
+/// Cleanup old user recovery sessions
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupUserRecoverySessionsJob;
+
+impl InsertableJob for CleanupUserRecoverySessionsJob {
+    const QUEUE_NAME: &'static str = "cleanup-user-recovery-sessions";
+}
+
+/// Cleanup old user email authentications
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupUserEmailAuthenticationsJob;
+
+impl InsertableJob for CleanupUserEmailAuthenticationsJob {
+    const QUEUE_NAME: &'static str = "cleanup-user-email-authentications";
+}
+
+/// Cleanup old pending upstream OAuth authorization sessions
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupUpstreamOAuthSessionsJob;
+
+impl InsertableJob for CleanupUpstreamOAuthSessionsJob {
+    const QUEUE_NAME: &'static str = "cleanup-upstream-oauth-sessions";
+}
+
+/// Cleanup orphaned upstream OAuth links
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupUpstreamOAuthLinksJob;
+
+impl InsertableJob for CleanupUpstreamOAuthLinksJob {
+    const QUEUE_NAME: &'static str = "cleanup-upstream-oauth-links";
+}
+
+/// Cleanup old completed and failed queue jobs
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupQueueJobsJob;
+
+impl InsertableJob for CleanupQueueJobsJob {
+    const QUEUE_NAME: &'static str = "cleanup-queue-jobs";
 }
 
 /// Cleanup old passkey challenges
@@ -392,7 +505,7 @@ impl ExpireInactiveOAuthSessionsJob {
         let last_edge = page.edges.last()?;
         Some(Self {
             threshold: self.threshold,
-            after: Some(last_edge.id),
+            after: Some(last_edge.cursor),
         })
     }
 }
@@ -449,7 +562,7 @@ impl ExpireInactiveCompatSessionsJob {
         let last_edge = page.edges.last()?;
         Some(Self {
             threshold: self.threshold,
-            after: Some(last_edge.id),
+            after: Some(last_edge.cursor),
         })
     }
 }
@@ -506,7 +619,7 @@ impl ExpireInactiveUserSessionsJob {
         let last_edge = page.edges.last()?;
         Some(Self {
             threshold: self.threshold,
-            after: Some(last_edge.id),
+            after: Some(last_edge.cursor),
         })
     }
 }
@@ -521,4 +634,28 @@ pub struct PruneStalePolicyDataJob;
 
 impl InsertableJob for PruneStalePolicyDataJob {
     const QUEUE_NAME: &'static str = "prune-stale-policy-data";
+}
+
+/// Cleanup IP addresses from inactive OAuth 2.0 sessions
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupInactiveOAuth2SessionIpsJob;
+
+impl InsertableJob for CleanupInactiveOAuth2SessionIpsJob {
+    const QUEUE_NAME: &'static str = "cleanup-inactive-oauth2-session-ips";
+}
+
+/// Cleanup IP addresses from inactive compat sessions
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupInactiveCompatSessionIpsJob;
+
+impl InsertableJob for CleanupInactiveCompatSessionIpsJob {
+    const QUEUE_NAME: &'static str = "cleanup-inactive-compat-session-ips";
+}
+
+/// Cleanup IP addresses from inactive user/browser sessions
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupInactiveUserSessionIpsJob;
+
+impl InsertableJob for CleanupInactiveUserSessionIpsJob {
+    const QUEUE_NAME: &'static str = "cleanup-inactive-user-session-ips";
 }

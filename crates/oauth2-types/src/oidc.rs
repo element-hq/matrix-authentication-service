@@ -692,10 +692,6 @@ impl ProviderMetadata {
                 .token_endpoint_auth_signing_alg_values_supported
                 .iter()
                 .flatten(),
-            metadata
-                .token_endpoint_auth_methods_supported
-                .iter()
-                .flatten(),
         )?;
 
         if let Some(url) = &metadata.revocation_endpoint {
@@ -708,33 +704,18 @@ impl ProviderMetadata {
                 .revocation_endpoint_auth_signing_alg_values_supported
                 .iter()
                 .flatten(),
-            metadata
-                .revocation_endpoint_auth_methods_supported
-                .iter()
-                .flatten(),
         )?;
 
         if let Some(url) = &metadata.introspection_endpoint {
             validate_url("introspection_endpoint", url, ExtraUrlRestrictions::None)?;
         }
 
-        // The list can also contain token types so remove them as we don't need to
-        // check them.
-        let introspection_methods = metadata
-            .introspection_endpoint_auth_methods_supported
-            .as_ref()
-            .map(|v| {
-                v.iter()
-                    .filter_map(AuthenticationMethodOrAccessTokenType::authentication_method)
-                    .collect::<Vec<_>>()
-            });
         validate_signing_alg_values_supported(
             "introspection_endpoint",
             metadata
                 .introspection_endpoint_auth_signing_alg_values_supported
                 .iter()
                 .flatten(),
-            introspection_methods.into_iter().flatten(),
         )?;
 
         if let Some(url) = &metadata.userinfo_endpoint {
@@ -1099,12 +1080,6 @@ pub enum ProviderMetadataVerificationError {
     #[error("missing `implicit` grant type")]
     GrantTypesMissingImplicit,
 
-    /// The given endpoint is missing auth signing algorithm values, but they
-    /// are required because it supports at least one of the `client_secret_jwt`
-    /// or `private_key_jwt` authentication methods.
-    #[error("{0} missing auth signing algorithm values")]
-    MissingAuthSigningAlgValues(&'static str),
-
     /// `none` is in the given endpoint's signing algorithm values, but is not
     /// allowed.
     #[error("{0} signing algorithm values contain `none`")]
@@ -1176,32 +1151,14 @@ fn validate_url(
 fn validate_signing_alg_values_supported<'a>(
     endpoint: &'static str,
     values: impl Iterator<Item = &'a JsonWebSignatureAlg>,
-    mut methods: impl Iterator<Item = &'a OAuthClientAuthenticationMethod>,
 ) -> Result<(), ProviderMetadataVerificationError> {
-    let mut no_values = true;
-
     for value in values {
         if *value == JsonWebSignatureAlg::None {
             return Err(ProviderMetadataVerificationError::SigningAlgValuesWithNone(
                 endpoint,
             ));
         }
-
-        no_values = false;
     }
-
-    if no_values
-        && methods.any(|method| {
-            matches!(
-                method,
-                OAuthClientAuthenticationMethod::ClientSecretJwt
-                    | OAuthClientAuthenticationMethod::PrivateKeyJwt
-            )
-        })
-    {
-        return Err(ProviderMetadataVerificationError::MissingAuthSigningAlgValues(endpoint));
-    }
-
     Ok(())
 }
 
@@ -1543,34 +1500,30 @@ mod tests {
             Some(vec![JsonWebSignatureAlg::Rs256, JsonWebSignatureAlg::EdDsa]);
         metadata.clone().validate(&issuer).unwrap();
 
-        // Err - `client_secret_jwt` without signing alg values.
+        // Ok - `client_secret_jwt` with signing alg values.
         metadata.token_endpoint_auth_methods_supported =
             Some(vec![OAuthClientAuthenticationMethod::ClientSecretJwt]);
-        metadata.token_endpoint_auth_signing_alg_values_supported = None;
-        let endpoint = assert_matches!(
-            metadata.clone().validate(&issuer),
-            Err(ProviderMetadataVerificationError::MissingAuthSigningAlgValues(endpoint)) => endpoint
-        );
-        assert_eq!(endpoint, "token_endpoint");
-
-        // Ok - `client_secret_jwt` with signing alg values.
         metadata.token_endpoint_auth_signing_alg_values_supported =
             Some(vec![JsonWebSignatureAlg::Rs256]);
         metadata.clone().validate(&issuer).unwrap();
 
-        // Err - `private_key_jwt` without signing alg values.
+        // Ok - `private_key_jwt` with signing alg values.
+        metadata.token_endpoint_auth_methods_supported =
+            Some(vec![OAuthClientAuthenticationMethod::PrivateKeyJwt]);
+        metadata.token_endpoint_auth_signing_alg_values_supported =
+            Some(vec![JsonWebSignatureAlg::Rs256]);
+        metadata.clone().validate(&issuer).unwrap();
+
+        // Ok - `client_secret_jwt` without signing alg values.
+        metadata.token_endpoint_auth_methods_supported =
+            Some(vec![OAuthClientAuthenticationMethod::ClientSecretJwt]);
+        metadata.token_endpoint_auth_signing_alg_values_supported = None;
+        metadata.clone().validate(&issuer).unwrap();
+
+        // Ok - `private_key_jwt` without signing alg values.
         metadata.token_endpoint_auth_methods_supported =
             Some(vec![OAuthClientAuthenticationMethod::PrivateKeyJwt]);
         metadata.token_endpoint_auth_signing_alg_values_supported = None;
-        let endpoint = assert_matches!(
-            metadata.clone().validate(&issuer),
-            Err(ProviderMetadataVerificationError::MissingAuthSigningAlgValues(endpoint)) => endpoint
-        );
-        assert_eq!(endpoint, "token_endpoint");
-
-        // Ok - `private_key_jwt` with signing alg values.
-        metadata.token_endpoint_auth_signing_alg_values_supported =
-            Some(vec![JsonWebSignatureAlg::Rs256]);
         metadata.clone().validate(&issuer).unwrap();
 
         // Ok - Other auth methods without signing alg values.

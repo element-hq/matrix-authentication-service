@@ -17,7 +17,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// A well-known policy code.
-#[derive(Deserialize, Debug, Clone, Copy, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, JsonSchema, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub enum Code {
     /// The username is too short.
@@ -49,6 +49,9 @@ pub enum Code {
 
     /// The email address is banned.
     EmailBanned,
+
+    /// The user has reached their session limit.
+    TooManySessions,
 }
 
 impl Code {
@@ -66,12 +69,13 @@ impl Code {
             Self::EmailDomainBanned => "email-domain-banned",
             Self::EmailNotAllowed => "email-not-allowed",
             Self::EmailBanned => "email-banned",
+            Self::TooManySessions => "too-many-sessions",
         }
     }
 }
 
 /// A single violation of a policy.
-#[derive(Deserialize, Debug, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, JsonSchema)]
 pub struct Violation {
     pub msg: String,
     pub redirect_uri: Option<String>,
@@ -168,6 +172,10 @@ pub struct AuthorizationGrantInput<'a> {
     #[schemars(with = "Option<std::collections::HashMap<String, serde_json::Value>>")]
     pub user: Option<&'a User>,
 
+    /// How many sessions the user has.
+    /// Not populated if it's not a user logging in.
+    pub session_counts: Option<SessionCounts>,
+
     #[schemars(with = "std::collections::HashMap<String, serde_json::Value>")]
     pub client: &'a Client,
 
@@ -177,6 +185,52 @@ pub struct AuthorizationGrantInput<'a> {
     pub grant_type: GrantType,
 
     pub requester: Requester,
+}
+
+/// Input for the compatibility login policy.
+#[derive(Serialize, Debug, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct CompatLoginInput<'a> {
+    #[schemars(with = "std::collections::HashMap<String, serde_json::Value>")]
+    pub user: &'a User,
+
+    /// How many sessions the user has.
+    pub session_counts: SessionCounts,
+
+    /// Whether a session will be replaced by this login
+    pub session_replaced: bool,
+
+    /// What type of login is being performed.
+    /// This also determines whether the login is interactive.
+    pub login: CompatLogin,
+
+    pub requester: Requester,
+}
+
+#[derive(Serialize, Debug, JsonSchema)]
+#[serde(tag = "type")]
+pub enum CompatLogin {
+    /// Used as the interactive part of SSO login.
+    #[serde(rename = "m.login.sso")]
+    Sso { redirect_uri: String },
+
+    /// Used as the final (non-interactive) stage of SSO login.
+    #[serde(rename = "m.login.token")]
+    Token,
+
+    /// Non-interactive password-over-the-API login.
+    #[serde(rename = "m.login.password")]
+    Password,
+}
+
+/// Information about how many sessions the user has
+#[derive(Serialize, Debug, JsonSchema)]
+pub struct SessionCounts {
+    pub total: u64,
+
+    pub oauth2: u64,
+    pub compat: u64,
+    pub personal: u64,
 }
 
 /// Input for the email add policy.

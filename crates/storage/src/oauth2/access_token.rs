@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -5,7 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
-use chrono::Duration;
+use chrono::{DateTime, Duration, Utc};
 use mas_data_model::{AccessToken, Clock, Session};
 use rand_core::RngCore;
 use ulid::Ulid;
@@ -109,16 +110,47 @@ pub trait OAuth2AccessTokenRepository: Send + Sync {
 
     /// Cleanup revoked access tokens
     ///
-    /// Returns the number of access tokens that were cleaned up
+    /// Returns the number of access tokens that were cleaned up, as well as the
+    /// timestamp of the last access token revoked
     ///
     /// # Parameters
     ///
-    /// * `clock`: The clock used to get the current time
+    /// * `since`: An optional datetime since which to clean up revoked access
+    ///   tokens. This is useful to call this method multiple times in a row
+    /// * `until`: The datetime until which to clean up revoked access tokens
+    /// * `limit`: The maximum number of access tokens to clean up
     ///
     /// # Errors
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
-    async fn cleanup_revoked(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error>;
+    async fn cleanup_revoked(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
+
+    /// Cleanup expired access tokens
+    ///
+    /// Returns the number of access tokens that were cleaned up, as well as the
+    /// timestamp of the last access token expiration
+    ///
+    /// # Parameters
+    ///
+    /// * `since`: An optional datetime since which to clean up expired access
+    ///   tokens. This is useful to call this method multiple times in a row
+    /// * `until`: The datetime until which to clean up expired access tokens
+    /// * `limit`: The maximum number of access tokens to clean up
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup_expired(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
 }
 
 repository_impl!(OAuth2AccessTokenRepository:
@@ -150,5 +182,17 @@ repository_impl!(OAuth2AccessTokenRepository:
         access_token: AccessToken,
     ) -> Result<AccessToken, Self::Error>;
 
-    async fn cleanup_revoked(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error>;
+    async fn cleanup_revoked(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
+
+    async fn cleanup_expired(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+        until: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<(usize, Option<DateTime<Utc>>), Self::Error>;
 );

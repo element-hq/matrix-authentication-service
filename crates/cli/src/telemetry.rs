@@ -4,8 +4,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-mod tokio;
-
 use std::sync::{LazyLock, OnceLock};
 
 use anyhow::Context as _;
@@ -23,18 +21,17 @@ use opentelemetry::{
     trace::TracerProvider as _,
 };
 use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
-use opentelemetry_prometheus::PrometheusExporter;
+use opentelemetry_prometheus_text_exporter::PrometheusExporter;
 use opentelemetry_sdk::{
     Resource,
     metrics::{ManualReader, SdkMeterProvider, periodic_reader_with_async_runtime::PeriodicReader},
     propagation::{BaggagePropagator, TraceContextPropagator},
     trace::{
-        Sampler, SdkTracerProvider, Tracer, span_processor_with_async_runtime::BatchSpanProcessor,
+        IdGenerator, Sampler, SdkTracerProvider, Tracer,
+        span_processor_with_async_runtime::BatchSpanProcessor,
     },
 };
 use opentelemetry_semantic_conventions as semcov;
-use prometheus::Registry;
-use url::Url;
 
 static SCOPE: LazyLock<InstrumentationScope> = LazyLock::new(|| {
     InstrumentationScope::builder(env!("CARGO_PKG_NAME"))
@@ -49,7 +46,7 @@ pub static METER: LazyLock<Meter> =
 pub static TRACER: OnceLock<Tracer> = OnceLock::new();
 static METER_PROVIDER: OnceLock<SdkMeterProvider> = OnceLock::new();
 static TRACER_PROVIDER: OnceLock<SdkTracerProvider> = OnceLock::new();
-static PROMETHEUS_REGISTRY: OnceLock<Registry> = OnceLock::new();
+static PROMETHEUS_EXPORTER: OnceLock<PrometheusExporter> = OnceLock::new();
 
 pub fn setup(config: &TelemetryConfig) -> anyhow::Result<()> {
     let propagator = propagator(&config.tracing.propagators);
@@ -62,8 +59,9 @@ pub fn setup(config: &TelemetryConfig) -> anyhow::Result<()> {
     init_tracer(&config.tracing).context("Failed to configure traces exporter")?;
     init_meter(&config.metrics).context("Failed to configure metrics exporter")?;
 
-    let handle = ::tokio::runtime::Handle::current();
-    self::tokio::observe(handle.metrics());
+    opentelemetry_instrumentation_process::init()
+        .context("Failed to configure process instrumentation")?;
+    opentelemetry_instrumentation_tokio::observe_current_runtime();
 
     Ok(())
 }
@@ -95,50 +93,65 @@ fn propagator(propagators: &[Propagator]) -> TextMapCompositePropagator {
     TextMapCompositePropagator::new(propagators)
 }
 
-fn stdout_tracer_provider() -> SdkTracerProvider {
-    let exporter = opentelemetry_stdout::SpanExporter::default();
-    SdkTracerProvider::builder()
-        .with_simple_exporter(exporter)
-        .build()
+/// An [`IdGenerator`] which always returns an invalid trace ID and span ID
+///
+/// This is used when no exporter is being used, so that we don't log the trace
+/// ID when we're not tracing.
+#[derive(Debug, Clone, Copy)]
+struct InvalidIdGenerator;
+impl IdGenerator for InvalidIdGenerator {
+    fn new_trace_id(&self) -> opentelemetry::TraceId {
+        opentelemetry::TraceId::INVALID
+    }
+    fn new_span_id(&self) -> opentelemetry::SpanId {
+        opentelemetry::SpanId::INVALID
+    }
 }
 
-fn otlp_tracer_provider(
-    endpoint: Option<&Url>,
-    sample_rate: f64,
-) -> anyhow::Result<SdkTracerProvider> {
-    let mut exporter = opentelemetry_otlp::SpanExporter::builder()
-        .with_http()
-        .with_http_client(mas_http::reqwest_client());
-    if let Some(endpoint) = endpoint {
-        exporter = exporter.with_endpoint(endpoint.to_string());
-    }
-    let exporter = exporter
-        .build()
-        .context("Failed to configure OTLP trace exporter")?;
-
-    let batch_processor =
-        BatchSpanProcessor::builder(exporter, opentelemetry_sdk::runtime::Tokio).build();
+fn init_tracer(config: &TracingConfig) -> anyhow::Result<()> {
+    let sample_rate = config.sample_rate.unwrap_or(1.0);
 
     // We sample traces based on the parent if we have one, and if not, we
     // sample a ratio based on the configured sample rate
     let sampler = Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(sample_rate)));
 
-    let tracer_provider = SdkTracerProvider::builder()
-        .with_span_processor(batch_processor)
+    let tracer_provider_builder = SdkTracerProvider::builder()
         .with_resource(resource())
-        .with_sampler(sampler)
-        .build();
+        .with_sampler(sampler);
 
-    Ok(tracer_provider)
-}
-
-fn init_tracer(config: &TracingConfig) -> anyhow::Result<()> {
-    let sample_rate = config.sample_rate.unwrap_or(1.0);
     let tracer_provider = match config.exporter {
-        TracingExporterKind::None => return Ok(()),
-        TracingExporterKind::Stdout => stdout_tracer_provider(),
-        TracingExporterKind::Otlp => otlp_tracer_provider(config.endpoint.as_ref(), sample_rate)?,
+        TracingExporterKind::None => tracer_provider_builder
+            .with_id_generator(InvalidIdGenerator)
+            .with_sampler(Sampler::AlwaysOff)
+            .build(),
+
+        TracingExporterKind::Stdout => {
+            let exporter = opentelemetry_stdout::SpanExporter::default();
+            tracer_provider_builder
+                .with_simple_exporter(exporter)
+                .build()
+        }
+
+        TracingExporterKind::Otlp => {
+            let mut exporter = opentelemetry_otlp::SpanExporter::builder()
+                .with_http()
+                .with_http_client(mas_http::reqwest_client());
+            if let Some(endpoint) = &config.endpoint {
+                exporter = exporter.with_endpoint(endpoint.as_str());
+            }
+            let exporter = exporter
+                .build()
+                .context("Failed to configure OTLP trace exporter")?;
+
+            let batch_processor =
+                BatchSpanProcessor::builder(exporter, opentelemetry_sdk::runtime::Tokio).build();
+
+            tracer_provider_builder
+                .with_span_processor(batch_processor)
+                .build()
+        }
     };
+
     TRACER_PROVIDER
         .set(tracer_provider.clone())
         .map_err(|_| anyhow::anyhow!("TRACER_PROVIDER was set twice"))?;
@@ -180,21 +193,30 @@ type PromServiceFuture =
 
 #[allow(clippy::needless_pass_by_value)]
 fn prometheus_service_fn<T>(_req: T) -> PromServiceFuture {
-    use prometheus::{Encoder, TextEncoder};
+    let response = if let Some(exporter) = PROMETHEUS_EXPORTER.get() {
+        // We'll need some space for this, so we preallocate a bit
+        let mut buffer = Vec::with_capacity(1024);
 
-    let response = if let Some(registry) = PROMETHEUS_REGISTRY.get() {
-        let mut buffer = Vec::new();
-        let encoder = TextEncoder::new();
-        let metric_families = registry.gather();
+        if let Err(err) = exporter.export(&mut buffer) {
+            tracing::error!(
+                error = &err as &dyn std::error::Error,
+                "Failed to export Prometheus metrics"
+            );
 
-        // That shouldn't panic, unless we're constructing invalid labels
-        encoder.encode(&metric_families, &mut buffer).unwrap();
-
-        Response::builder()
-            .status(200)
-            .header(CONTENT_TYPE, encoder.format_type())
-            .body(Full::new(Bytes::from(buffer)))
-            .unwrap()
+            Response::builder()
+                .status(500)
+                .header(CONTENT_TYPE, "text/plain")
+                .body(Full::new(Bytes::from_static(
+                    b"Failed to export Prometheus metrics, see logs for details",
+                )))
+                .unwrap()
+        } else {
+            Response::builder()
+                .status(200)
+                .header(CONTENT_TYPE, "text/plain;version=1.0.0")
+                .body(Full::new(Bytes::from(buffer)))
+                .unwrap()
+        }
     } else {
         Response::builder()
             .status(500)
@@ -209,7 +231,7 @@ fn prometheus_service_fn<T>(_req: T) -> PromServiceFuture {
 }
 
 pub fn prometheus_service<T>() -> tower::util::ServiceFn<fn(T) -> PromServiceFuture> {
-    if PROMETHEUS_REGISTRY.get().is_none() {
+    if PROMETHEUS_EXPORTER.get().is_none() {
         tracing::warn!(
             "A Prometheus resource was mounted on a listener, but the Prometheus exporter was not setup in the config"
         );
@@ -219,16 +241,11 @@ pub fn prometheus_service<T>() -> tower::util::ServiceFn<fn(T) -> PromServiceFut
 }
 
 fn prometheus_metric_reader() -> anyhow::Result<PrometheusExporter> {
-    let registry = Registry::new();
+    let exporter = PrometheusExporter::builder().without_scope_info().build();
 
-    PROMETHEUS_REGISTRY
-        .set(registry.clone())
-        .map_err(|_| anyhow::anyhow!("PROMETHEUS_REGISTRY was set twice"))?;
-
-    let exporter = opentelemetry_prometheus::exporter()
-        .with_registry(registry)
-        .without_scope_info()
-        .build()?;
+    PROMETHEUS_EXPORTER
+        .set(exporter.clone())
+        .map_err(|_| anyhow::anyhow!("PROMETHEUS_EXPORTER was set twice"))?;
 
     Ok(exporter)
 }

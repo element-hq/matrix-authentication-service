@@ -18,12 +18,12 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Node
-        uses: actions/setup-node@v4.4.0
+        uses: actions/setup-node@v6.1.0
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Install Localazy CLI
         run: npm install -g @localazy/cli

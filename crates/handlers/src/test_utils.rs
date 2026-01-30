@@ -28,7 +28,7 @@ use mas_axum_utils::{
     cookies::{CookieJar, CookieManager},
 };
 use mas_config::RateLimitingConfig;
-use mas_data_model::{BoxClock, BoxRng, SiteConfig, clock::MockClock};
+use mas_data_model::{AppVersion, BoxClock, BoxRng, SiteConfig, clock::MockClock};
 use mas_email::{MailTransport, Mailer};
 use mas_i18n::Translator;
 use mas_keystore::{Encrypter, JsonWebKey, JsonWebKeySet, Keystore, PrivateKey};
@@ -83,10 +83,11 @@ pub(crate) async fn policy_factory(
         register: "register/violation".to_owned(),
         client_registration: "client_registration/violation".to_owned(),
         authorization_grant: "authorization_grant/violation".to_owned(),
+        compat_login: "compat_login/violation".to_owned(),
         email: "email/violation".to_owned(),
     };
 
-    let data = mas_policy::Data::new(server_name.to_owned()).with_rest(data);
+    let data = mas_policy::Data::new(server_name.to_owned(), None).with_rest(data);
 
     let policy_factory = PolicyFactory::load(file, data, entrypoints).await?;
     let policy_factory = Arc::new(policy_factory);
@@ -142,6 +143,7 @@ pub fn test_site_config() -> SiteConfig {
         email_change_allowed: true,
         displayname_change_allowed: true,
         password_change_allowed: true,
+        password_registration_email_required: true,
         account_recovery_allowed: true,
         account_deactivation_allowed: true,
         captcha: None,
@@ -149,6 +151,7 @@ pub fn test_site_config() -> SiteConfig {
         session_expiration: None,
         login_with_email_allowed: true,
         plan_management_iframe_uri: None,
+        session_limit: None,
         passkeys_enabled: false,
     }
 }
@@ -174,10 +177,12 @@ impl TestState {
         let templates = Templates::load(
             workspace_root.join("templates"),
             url_builder.clone(),
-            workspace_root.join("frontend/dist/manifest.json"),
+            Some(workspace_root.join("frontend/dist/manifest.json")),
             workspace_root.join("translations"),
             site_config.templates_branding(),
             site_config.templates_features(),
+            // Strict mode in testing
+            true,
         )
         .await?;
 
@@ -584,6 +589,12 @@ impl FromRef<TestState> for Limiter {
 impl FromRef<TestState> for reqwest::Client {
     fn from_ref(input: &TestState) -> Self {
         input.http_client.clone()
+    }
+}
+
+impl FromRef<TestState> for AppVersion {
+    fn from_ref(_input: &TestState) -> Self {
+        AppVersion("v0.0.0-test")
     }
 }
 

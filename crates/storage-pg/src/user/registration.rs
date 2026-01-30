@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -8,8 +9,8 @@ use std::net::IpAddr;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    Clock, UserEmailAuthentication, UserRegistration, UserRegistrationPassword,
-    UserRegistrationToken,
+    Clock, UpstreamOAuthAuthorizationSession, UserEmailAuthentication, UserRegistration,
+    UserRegistrationPassword, UserRegistrationToken,
 };
 use mas_storage::user::UserRegistrationRepository;
 use rand::RngCore;
@@ -46,6 +47,7 @@ struct UserRegistrationLookup {
     user_registration_token_id: Option<Uuid>,
     hashed_password: Option<String>,
     hashed_password_version: Option<i32>,
+    upstream_oauth_authorization_session_id: Option<Uuid>,
     created_at: DateTime<Utc>,
     completed_at: Option<DateTime<Utc>>,
 }
@@ -100,6 +102,9 @@ impl TryFrom<UserRegistrationLookup> for UserRegistration {
             email_authentication_id: value.email_authentication_id.map(Ulid::from),
             user_registration_token_id: value.user_registration_token_id.map(Ulid::from),
             password,
+            upstream_oauth_authorization_session_id: value
+                .upstream_oauth_authorization_session_id
+                .map(Ulid::from),
             created_at: value.created_at,
             completed_at: value.completed_at,
         })
@@ -134,6 +139,7 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
                      , user_registration_token_id
                      , hashed_password
                      , hashed_password_version
+                     , upstream_oauth_authorization_session_id
                      , created_at
                      , completed_at
                 FROM user_registrations
@@ -208,6 +214,7 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
             email_authentication_id: None,
             user_registration_token_id: None,
             password: None,
+            upstream_oauth_authorization_session_id: None,
         })
     }
 
@@ -394,6 +401,42 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
     }
 
     #[tracing::instrument(
+        name = "db.user_registration.set_upstream_oauth_authorization_session",
+        skip_all,
+        fields(
+            db.query.text,
+            %user_registration.id,
+            %upstream_oauth_authorization_session.id,
+        ),
+        err,
+    )]
+    async fn set_upstream_oauth_authorization_session(
+        &mut self,
+        mut user_registration: UserRegistration,
+        upstream_oauth_authorization_session: &UpstreamOAuthAuthorizationSession,
+    ) -> Result<UserRegistration, Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                UPDATE user_registrations
+                SET upstream_oauth_authorization_session_id = $2
+                WHERE user_registration_id = $1 AND completed_at IS NULL
+            "#,
+            Uuid::from(user_registration.id),
+            Uuid::from(upstream_oauth_authorization_session.id),
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        user_registration.upstream_oauth_authorization_session_id =
+            Some(upstream_oauth_authorization_session.id);
+
+        Ok(user_registration)
+    }
+
+    #[tracing::instrument(
         name = "db.user_registration.complete",
         skip_all,
         fields(
@@ -427,13 +470,67 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
 
         Ok(user_registration)
     }
+
+    #[tracing::instrument(
+        name = "db.user_registration.cleanup",
+        skip_all,
+        fields(
+            db.query.text,
+        ),
+        err,
+    )]
+    async fn cleanup(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error> {
+        // `MAX(uuid)` isn't a thing in Postgres, so we can't just re-select the
+        // deleted rows and do a MAX on the `user_registration_id`.
+        // Instead, we do the aggregation on the client side, which is a little
+        // less efficient, but good enough.
+        let res = sqlx::query_scalar!(
+            r#"
+                WITH to_delete AS (
+                    SELECT user_registration_id
+                    FROM user_registrations
+                    WHERE ($1::uuid IS NULL OR user_registration_id > $1)
+                    AND user_registration_id <= $2
+                    ORDER BY user_registration_id
+                    LIMIT $3
+                )
+                DELETE FROM user_registrations
+                USING to_delete
+                WHERE user_registrations.user_registration_id = to_delete.user_registration_id
+                RETURNING user_registrations.user_registration_id
+            "#,
+            since.map(Uuid::from),
+            Uuid::from(until),
+            i64::try_from(limit).unwrap_or(i64::MAX)
+        )
+        .traced()
+        .fetch_all(&mut *self.conn)
+        .await?;
+
+        let count = res.len();
+        let max_id = res.into_iter().max();
+
+        Ok((count, max_id.map(Ulid::from)))
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use std::net::{IpAddr, Ipv4Addr};
 
-    use mas_data_model::{Clock, UserRegistrationPassword, clock::MockClock};
+    use mas_data_model::{
+        Clock, UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
+        UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderPkceMode,
+        UpstreamOAuthProviderTokenAuthMethod, UserRegistrationPassword, clock::MockClock,
+    };
+    use mas_iana::jose::JsonWebSignatureAlg;
+    use mas_storage::upstream_oauth2::UpstreamOAuthProviderParams;
+    use oauth2_types::scope::Scope;
     use rand::SeedableRng;
     use rand_chacha::ChaChaRng;
     use sqlx::PgPool;
@@ -848,6 +945,122 @@ mod tests {
         let res = repo
             .user_registration()
             .set_password(registration, "fakehashedpassword3".to_owned(), 3)
+            .await;
+        assert!(res.is_err());
+    }
+
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_set_upstream_oauth_session(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+
+        let registration = repo
+            .user_registration()
+            .add(&mut rng, &clock, "alice".to_owned(), None, None, None)
+            .await
+            .unwrap();
+
+        assert_eq!(registration.upstream_oauth_authorization_session_id, None);
+
+        let provider = repo
+            .upstream_oauth_provider()
+            .add(
+                &mut rng,
+                &clock,
+                UpstreamOAuthProviderParams {
+                    issuer: Some("https://example.com/".to_owned()),
+                    human_name: Some("Example Ltd.".to_owned()),
+                    brand_name: None,
+                    scope: Scope::from_iter([oauth2_types::scope::OPENID]),
+                    token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
+                    token_endpoint_signing_alg: None,
+                    id_token_signed_response_alg: JsonWebSignatureAlg::Rs256,
+                    client_id: "client".to_owned(),
+                    encrypted_client_secret: None,
+                    claims_imports: UpstreamOAuthProviderClaimsImports::default(),
+                    authorization_endpoint_override: None,
+                    token_endpoint_override: None,
+                    userinfo_endpoint_override: None,
+                    fetch_userinfo: false,
+                    userinfo_signed_response_alg: None,
+                    jwks_uri_override: None,
+                    discovery_mode: UpstreamOAuthProviderDiscoveryMode::Oidc,
+                    pkce_mode: UpstreamOAuthProviderPkceMode::Auto,
+                    response_mode: None,
+                    additional_authorization_parameters: Vec::new(),
+                    forward_login_hint: false,
+                    ui_order: 0,
+                    on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                },
+            )
+            .await
+            .unwrap();
+
+        let session = repo
+            .upstream_oauth_session()
+            .add(&mut rng, &clock, &provider, "state".to_owned(), None, None)
+            .await
+            .unwrap();
+
+        let registration = repo
+            .user_registration()
+            .set_upstream_oauth_authorization_session(registration, &session)
+            .await
+            .unwrap();
+
+        assert_eq!(
+            registration.upstream_oauth_authorization_session_id,
+            Some(session.id)
+        );
+
+        let lookup = repo
+            .user_registration()
+            .lookup(registration.id)
+            .await
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(
+            lookup.upstream_oauth_authorization_session_id,
+            registration.upstream_oauth_authorization_session_id
+        );
+
+        // Setting it again should work
+        let registration = repo
+            .user_registration()
+            .set_upstream_oauth_authorization_session(registration, &session)
+            .await
+            .unwrap();
+
+        assert_eq!(
+            registration.upstream_oauth_authorization_session_id,
+            Some(session.id)
+        );
+
+        let lookup = repo
+            .user_registration()
+            .lookup(registration.id)
+            .await
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(
+            lookup.upstream_oauth_authorization_session_id,
+            registration.upstream_oauth_authorization_session_id
+        );
+
+        // Can't set it once completed
+        let registration = repo
+            .user_registration()
+            .complete(&clock, registration)
+            .await
+            .unwrap();
+
+        let res = repo
+            .user_registration()
+            .set_upstream_oauth_authorization_session(registration, &session)
             .await;
         assert!(res.is_err());
     }

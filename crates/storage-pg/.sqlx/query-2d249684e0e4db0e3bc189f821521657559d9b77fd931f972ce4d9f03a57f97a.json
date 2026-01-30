@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                WITH\n                    to_delete AS (\n                        SELECT oauth2_access_token_id\n                        FROM oauth2_access_tokens\n                        WHERE expires_at IS NOT NULL\n                          AND ($1::timestamptz IS NULL OR expires_at >= $1::timestamptz)\n                          AND expires_at < $2::timestamptz\n                        ORDER BY expires_at ASC\n                        LIMIT $3\n                        FOR UPDATE\n                    ),\n\n                    deleted AS (\n                        DELETE FROM oauth2_access_tokens\n                        USING to_delete\n                        WHERE oauth2_access_tokens.oauth2_access_token_id = to_delete.oauth2_access_token_id\n                        RETURNING oauth2_access_tokens.expires_at\n                    )\n\n                SELECT\n                    COUNT(*) as \"count!\",\n                    MAX(expires_at) as last_expires_at\n                FROM deleted\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "last_expires_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "2d249684e0e4db0e3bc189f821521657559d9b77fd931f972ce4d9f03a57f97a"
+}

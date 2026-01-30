@@ -12,9 +12,9 @@
 use std::path::{Path, PathBuf};
 
 use mas_policy::model::{
-    AuthorizationGrantInput, ClientRegistrationInput, EmailInput, RegisterInput,
+    AuthorizationGrantInput, ClientRegistrationInput, CompatLoginInput, EmailInput, RegisterInput,
 };
-use schemars::{JsonSchema, r#gen::SchemaSettings};
+use schemars::{JsonSchema, generate::SchemaSettings};
 
 fn write_schema<T: JsonSchema>(out_dir: Option<&Path>, file: &str) {
     let mut writer: Box<dyn std::io::Write> = if let Some(out_dir) = out_dir {
@@ -27,11 +27,7 @@ fn write_schema<T: JsonSchema>(out_dir: Option<&Path>, file: &str) {
         Box::new(std::io::stdout())
     };
 
-    let settings = SchemaSettings::draft07().with(|s| {
-        s.option_nullable = false;
-        s.option_add_null_type = false;
-    });
-    let generator = settings.into_generator();
+    let generator = SchemaSettings::draft07().into_generator();
     let schema = generator.into_root_schema_for::<T>();
     serde_json::to_writer_pretty(&mut writer, &schema).expect("Failed to serialize schema");
     writer.flush().expect("Failed to flush writer");
@@ -46,5 +42,6 @@ fn main() {
     write_schema::<RegisterInput>(output_root, "register_input.json");
     write_schema::<ClientRegistrationInput>(output_root, "client_registration_input.json");
     write_schema::<AuthorizationGrantInput>(output_root, "authorization_grant_input.json");
+    write_schema::<CompatLoginInput>(output_root, "compat_login_input.json");
     write_schema::<EmailInput>(output_root, "email_input.json");
 }

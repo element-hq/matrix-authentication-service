@@ -3,8 +3,7 @@ source: crates/syn2mas/src/mas_writer/mod.rs
 expression: db_snapshot
 ---
 user_emails:
-  - confirmed_at: "1970-01-01 00:00:00+00"
-    created_at: "1970-01-01 00:00:00+00"
+  - created_at: "1970-01-01 00:00:00+00"
     email: alice@example.org
     user_email_id: 00000000-0000-0000-0000-000000000002
     user_id: 00000000-0000-0000-0000-000000000001
@@ -14,6 +13,5 @@ users:
     deactivated_at: ~
     is_guest: "false"
     locked_at: ~
-    primary_user_email_id: ~
     user_id: 00000000-0000-0000-0000-000000000001
     username: alice

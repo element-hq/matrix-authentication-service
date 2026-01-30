@@ -10,6 +10,7 @@ use mas_storage::{
     RepositoryAccess,
     compat::CompatSessionFilter,
     oauth2::OAuth2SessionFilter,
+    personal::PersonalSessionFilter,
     queue::{DeactivateUserJob, ReactivateUserJob},
     user::{BrowserSessionFilter, UserEmailFilter, UserRepository},
 };
@@ -80,6 +81,36 @@ impl RunnableJob for DeactivateUserJob {
             .map_err(JobError::retry)?;
         info!(affected = n, "Killed all compatibility sessions for user");
 
+        let n = repo
+            .personal_session()
+            .revoke_bulk(
+                clock,
+                PersonalSessionFilter::new()
+                    .for_actor_user(&user)
+                    .active_only(),
+            )
+            .await
+            .map_err(JobError::retry)?;
+        info!(
+            affected = n,
+            "Killed all compatibility sessions acting as user"
+        );
+
+        let n = repo
+            .personal_session()
+            .revoke_bulk(
+                clock,
+                PersonalSessionFilter::new()
+                    .for_owner_user(&user)
+                    .active_only(),
+            )
+            .await
+            .map_err(JobError::retry)?;
+        info!(
+            affected = n,
+            "Killed all compatibility sessions owned by user"
+        );
+
         // Delete all the email addresses for the user
         let n = repo
             .user_email()
@@ -87,6 +118,17 @@ impl RunnableJob for DeactivateUserJob {
             .await
             .map_err(JobError::retry)?;
         info!(affected = n, "Removed all email addresses for user");
+
+        // Delete all unsupported third-party IDs for the user
+        let n = repo
+            .user()
+            .delete_unsupported_threepids(&user)
+            .await
+            .map_err(JobError::retry)?;
+        info!(
+            affected = n,
+            "Removed all unsupported third-party IDs for user"
+        );
 
         // Before calling back to the homeserver, commit the changes to the database, as
         // we want the user to be locked out as soon as possible

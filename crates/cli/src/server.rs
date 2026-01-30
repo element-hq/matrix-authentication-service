@@ -136,14 +136,24 @@ fn make_http_span<B>(req: &Request<B>) -> Span {
         span.record(USER_AGENT_ORIGINAL, user_agent);
     }
 
-    // Extract the parent span context from the request headers
-    let parent_context = opentelemetry::global::get_text_map_propagator(|propagator| {
-        let extractor = HeaderExtractor(req.headers());
-        let context = opentelemetry::Context::new();
-        propagator.extract_with_context(&context, &extractor)
-    });
+    // In case the span is disabled by any of tracing layers, e.g. if `RUST_LOG`
+    // is set to `warn`, `set_parent` will fail. So we only try to set the
+    // parent context if the span is not disabled.
+    if !span.is_disabled() {
+        // Extract the parent span context from the request headers
+        let parent_context = opentelemetry::global::get_text_map_propagator(|propagator| {
+            let extractor = HeaderExtractor(req.headers());
+            let context = opentelemetry::Context::new();
+            propagator.extract_with_context(&context, &extractor)
+        });
 
-    span.set_parent(parent_context);
+        if let Err(err) = span.set_parent(parent_context) {
+            tracing::error!(
+                error = &err as &dyn std::error::Error,
+                "Failed to set parent context on span"
+            );
+        }
+    }
 
     span
 }
@@ -238,9 +248,9 @@ pub fn build_router(
             mas_config::HttpResource::Assets { path } => {
                 let static_service = ServeDir::new(path)
                     .append_index_html_on_directories(false)
+                    // The vite build pre-compresses assets with brotli and gzip
                     .precompressed_br()
-                    .precompressed_gzip()
-                    .precompressed_deflate();
+                    .precompressed_gzip();
 
                 let add_cache_headers = axum::middleware::map_response(
                     async |mut res: Response<ServeFileSystemResponseBody>| {

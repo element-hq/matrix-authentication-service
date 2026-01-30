@@ -14,6 +14,7 @@ use std::process::ExitCode;
 use anyhow::Context;
 use clap::Parser;
 use figment::Figment;
+use hyper::StatusCode;
 use mas_config::{ConfigurationSection, RootConfig};
 use mas_http::RequestBuilderExt;
 use tracing::{error, info, info_span, warn};
@@ -43,7 +44,7 @@ impl Options {
             r"The homeserver host in the config (`matrix.homeserver`) is not a valid domain.
 See {DOCS_BASE}/setup/homeserver.html",
         )?;
-        let admin_token = config.matrix.secret().await?;
+        let secret = config.matrix.secret().await?;
         let hs_api = config.matrix.endpoint;
 
         if !issuer.starts_with("https://") {
@@ -99,17 +100,14 @@ Make sure that the MAS config contains:
 
   http:
     public_base: {issuer:?}
-    # Or, if the issuer is different from the public base:
-    issuer: {issuer:?}
 
 And in the Synapse config:
 
-  experimental_features:
-    msc3861:
-      enabled: true
-      # This must exactly match:
-      issuer: {issuer:?}
-      # ...
+  matrix_authentication_service:
+    enabled: true
+    # This must point to where MAS is reachable by Synapse
+    endpoint: {issuer:?}
+    # ...
 
 See {DOCS_BASE}/setup/homeserver.html
 "#
@@ -128,11 +126,10 @@ Check the well-known document at "{well_known_uri}"
 Check the well-known document at "{well_known_uri}"
 Make sure Synapse has delegated auth enabled:
 
-  experimental_features:
-    msc3861:
-      enabled: true
-      issuer: {issuer:?}
-      # ...
+  matrix_authentication_service:
+    enabled: true
+    endpoint: {issuer:?}
+    # ...
 
 If it is not Synapse handling the well-known document, update it to include the following:
 
@@ -283,70 +280,50 @@ Error details: {e}
                 ),
             }
 
-            // Try to reach the admin API on an unauthorized endpoint
-            let server_version = hs_api.join("/_synapse/admin/v1/server_version")?;
-            let result = http_client.get(server_version.as_str()).send_traced().await;
-            match result {
-                Ok(response) => {
-                    let status = response.status();
-                    if status.is_success() {
-                        info!(r#"✅ The Synapse admin API is reachable at "{server_version}"."#);
-                    } else {
-                        error!(
-                            r#"❌ A Synapse admin API endpoint at "{server_version}" replied with {status}.
-Make sure MAS can reach the admin API, and that the homeserver is running.
-"#
-                        );
-                    }
-                }
-                Err(e) => error!(
-                    r#"❌ Can't reach the Synapse admin API at "{server_version}".
-Make sure MAS can reach the admin API, and that the homeserver is running.
-
-Error details: {e}
-"#
-                ),
-            }
-
-            // Try to reach an authenticated admin API endpoint
-            let background_updates = hs_api.join("/_synapse/admin/v1/background_updates/status")?;
+            // Try to reach an authenticated MAS API endpoint
+            let mas_api = hs_api.join("/_synapse/mas/is_localpart_available")?;
             let result = http_client
-                .get(background_updates.as_str())
-                .bearer_auth(&admin_token)
+                .get(mas_api.as_str())
+                .bearer_auth(&secret)
                 .send_traced()
                 .await;
             match result {
                 Ok(response) => {
                     let status = response.status();
-                    if status.is_success() {
+                    // We intentionally omit the required 'localpart' parameter
+                    // in this request. If authentication is successful, Synapse
+                    // returns a 400 Bad Request because of the missing
+                    // parameter. If authentication fails, Synapse will return a
+                    // 403 Forbidden. If the MAS integration isn't enabled,
+                    // Synapse will return a 404 Not found.
+                    if status == StatusCode::BAD_REQUEST {
                         info!(
-                            r#"✅ The Synapse admin API is reachable with authentication at "{background_updates}"."#
+                            r#"✅ The Synapse MAS API is reachable with authentication at "{mas_api}"."#
                         );
                     } else {
                         error!(
-                            r#"❌ A Synapse admin API endpoint at "{background_updates}" replied with {status}.
+                            r#"❌ A Synapse MAS API endpoint at "{mas_api}" replied with {status}.
 Make sure the homeserver is running, and that the MAS config has the correct `matrix.secret`.
-It should match the `admin_token` set in the Synapse config.
+It should match the `secret` set in the Synapse config.
 
-  experimental_features:
-    msc3861:
-      enabled: true
-      issuer: {issuer}
-      # This must exactly match the secret in the MAS config:
-      admin_token: {admin_token:?}
+  matrix_authentication_service:
+    enabled: true
+    endpoint: {issuer:?}
+    # This must exactly match the secret in the MAS config:
+    secret: {secret:?}
 
 And in the MAS config:
 
   matrix:
     homeserver: "{matrix_domain}"
     endpoint: "{hs_api}"
-    secret: {admin_token:?}
+    secret: {secret:?}
 "#
                         );
                     }
                 }
                 Err(e) => error!(
-                    r#"❌ Can't reach the Synapse admin API at "{background_updates}".
+                    r#"❌ Can't reach the Synapse MAS API at "{mas_api}".
 Make sure the homeserver is running, and that the MAS config has the correct `matrix.secret`.
 
 Error details: {e}
@@ -378,10 +355,15 @@ Error details: {e}
 
                     let has_compatibility_sso = flows.iter().any(|flow| {
                         flow.get("type").and_then(|t| t.as_str()) == Some("m.login.sso")
-                            && flow
-                                .get("org.matrix.msc3824.delegated_oidc_compatibility")
+                            && (flow
+                                .get("oauth_aware_preferred")
                                 .and_then(serde_json::Value::as_bool)
                                 == Some(true)
+                                // we check for the unstable name too:
+                                || flow
+                                    .get("org.matrix.msc3824.delegated_oidc_compatibility")
+                                    .and_then(serde_json::Value::as_bool)
+                                    == Some(true))
                     });
 
                     if has_compatibility_sso {

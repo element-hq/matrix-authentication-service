@@ -22,7 +22,9 @@ Please see LICENSE files in the repository root for full details.
     <script>
       window.APP_CONFIG = JSON.parse("{{ config | tojson | add_slashes | safe }}");
     </script>
-    {{ include_asset('src/main.tsx') | indent(4) | safe }}
+    {{ include_asset('src/entrypoints/main.tsx') | indent(4) | safe }}
+    {# Pre-load the locale data for the current language #}
+    {{ include_asset('locales/' ~ lang ~ '.json') | indent(4) | safe }}
   </head>
 
   <body>

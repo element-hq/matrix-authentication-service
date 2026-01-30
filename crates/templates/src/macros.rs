@@ -31,7 +31,9 @@ macro_rules! register_templates {
             pub fn $name:ident
                 // Optional list of generics. Taken from
                 // https://newbedev.com/rust-macro-accepting-type-with-generic-parameters
-                $(< $( $lt:tt $( : $clt:tt $(+ $dlt:tt )* )? ),+ >)?
+                // For sample rendering, we also require a 'sample' generic parameter to be provided,
+                // using #[sample(Type)] attribute syntax
+                $(< $( #[sample( $generic_default:tt )] $lt:tt $( : $clt:tt $(+ $dlt:tt )* )? ),+ >)?
                 // Type of context taken by the template
                 ( $param:ty )
             {
@@ -69,28 +71,56 @@ macro_rules! register_templates {
         pub mod check {
             use super::*;
 
+            /// Check and render all templates with all samples.
+            ///
+            /// Returns the sample renders. The keys in the map are the template names.
+            ///
+            /// # Errors
+            ///
+            /// Returns an error if any template fails to render with any of the sample.
+            pub(crate) fn all<R: Rng + Clone>(templates: &Templates, now: chrono::DateTime<chrono::Utc>, rng: &R) -> anyhow::Result<::std::collections::BTreeMap<(&'static str, SampleIdentifier), String>> {
+                let mut out = ::std::collections::BTreeMap::new();
+                // TODO shouldn't the Rng be independent for each render?
+                $(
+                    {
+                        let mut rng = rng.clone();
+                        out.extend(
+                            $name $(::< _ $( , $generic_default ),* >)? (templates, now, &mut rng)?
+                                .into_iter()
+                                .map(|(sample_identifier, rendered)| (($template, sample_identifier), rendered))
+                        );
+                    }
+                )*
+
+                Ok(out)
+            }
+
             $(
                 #[doc = concat!("Render the `", $template, "` template with sample contexts")]
+                ///
+                /// Returns the sample renders.
                 ///
                 /// # Errors
                 ///
                 /// Returns an error if the template fails to render with any of the sample.
                 pub(crate) fn $name
-                    $(< $( $lt $( : $clt $(+ $dlt )* + TemplateContext )? ),+ >)?
-                    (templates: &Templates, now: chrono::DateTime<chrono::Utc>, rng: &mut impl rand::Rng)
-                -> anyhow::Result<()> {
+                    < __R: Rng + Clone $( , $( $lt $( : $clt $(+ $dlt )* + TemplateContext )? ),+ )? >
+                    (templates: &Templates, now: chrono::DateTime<chrono::Utc>, rng: &mut __R)
+                -> anyhow::Result<BTreeMap<SampleIdentifier, String>> {
                     let locales = templates.translator().available_locales();
-                    let samples: Vec< $param > = TemplateContext::sample(now, rng, &locales);
+                    let samples: BTreeMap<SampleIdentifier, $param > = TemplateContext::sample(now, rng, &locales);
 
                     let name = $template;
-                    for sample in samples {
+                    let mut out = BTreeMap::new();
+                    for (sample_identifier, sample) in samples {
                         let context = serde_json::to_value(&sample)?;
                         ::tracing::info!(name, %context, "Rendering template");
-                        templates. $name (&sample)
-                            .with_context(|| format!("Failed to render template {:?} with context {}", name, context))?;
+                        let rendered = templates. $name (&sample)
+                            .with_context(|| format!("Failed to render sample template {name:?}-{sample_identifier:?} with context {context}"))?;
+                        out.insert(sample_identifier, rendered);
                     }
 
-                    Ok(())
+                    Ok(out)
                 }
             )*
         }

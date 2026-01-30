@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -183,6 +184,30 @@ pub trait OAuth2DeviceCodeGrantRepository: Send + Sync {
         device_code_grant: DeviceCodeGrant,
         session: &Session,
     ) -> Result<DeviceCodeGrant, Self::Error>;
+
+    /// Cleanup old device code grants
+    ///
+    /// This will delete device code grants that were created before `until`.
+    /// Uses ULID cursor-based pagination for efficiency.
+    ///
+    /// Returns the number of grants deleted and the cursor for the next batch
+    ///
+    /// # Parameters
+    ///
+    /// * `since`: The cursor to start from (exclusive), or `None` to start from
+    ///   the beginning
+    /// * `until`: The ULID threshold representing 7 days ago
+    /// * `limit`: The maximum number of grants to delete in this batch
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn cleanup(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error>;
 }
 
 repository_impl!(OAuth2DeviceCodeGrantRepository:
@@ -225,4 +250,11 @@ repository_impl!(OAuth2DeviceCodeGrantRepository:
         device_code_grant: DeviceCodeGrant,
         session: &Session,
     ) -> Result<DeviceCodeGrant, Self::Error>;
+
+    async fn cleanup(
+        &mut self,
+        since: Option<Ulid>,
+        until: Ulid,
+        limit: usize,
+    ) -> Result<(usize, Option<Ulid>), Self::Error>;
 );

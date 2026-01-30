@@ -10,4 +10,4 @@
 
 mod vite;
 
-pub use self::vite::Manifest as ViteManifest;
+pub use self::vite::{FileType, Manifest as ViteManifest};

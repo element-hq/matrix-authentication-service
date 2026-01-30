@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                WITH to_update AS (\n                    SELECT user_session_id, last_active_at\n                    FROM user_sessions\n                    WHERE last_active_ip IS NOT NULL\n                      AND last_active_at IS NOT NULL\n                      AND ($1::timestamptz IS NULL OR last_active_at >= $1)\n                      AND last_active_at < $2\n                    ORDER BY last_active_at ASC\n                    LIMIT $3\n                    FOR UPDATE\n                ),\n                updated AS (\n                    UPDATE user_sessions\n                    SET last_active_ip = NULL\n                    FROM to_update\n                    WHERE user_sessions.user_session_id = to_update.user_session_id\n                    RETURNING user_sessions.last_active_at\n                )\n                SELECT COUNT(*) AS \"count!\", MAX(last_active_at) AS last_active_at FROM updated\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "last_active_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "535225206622b9190ccf42f7d66268818dc84c37b168ab45e582e0a727796a06"
+}

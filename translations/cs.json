@@ -74,9 +74,13 @@
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> na adrese <span>%(redirect_uri)s</span> chce získat přístup k vašemu účtu.",
+      "continue_to": "Pokračovat na <span>%(client_name)s</span>?",
       "heading": "Povolit přístup ke svému účtu?",
       "make_sure_you_trust": "Ujistěte se, že důvěřujete aplikaci <span>%(client_name)s</span>.",
+      "scope_list_preface": "Pokračováním dáváte souhlas aplikaci <span>%(client_name)s</span> k:",
       "this_will_allow": "To <span> %(client_name)s </span> umožní:",
+      "this_will_setup": "Tím se nastaví %(client_name)s (<span>%(client_uri)s</span>) s vaším účtem <span>%(server_name)s</span>.",
+      "use_another_account": "Použít jiný účet",
       "you_may_be_sharing": "Je možné, že s tímto webem nebo aplikací sdílíte citlivé informace."
     },
     "device_card": {
@@ -98,7 +102,8 @@
       "granted": {
         "description": "Udělili jste přístup k %(client_name)s. Toto okno můžete zavřít.",
         "heading": "Přístup udělen"
-      }
+      },
+      "this_will_setup": "Jiné zařízení chce nastavit %(client_name)s (<span>%(client_uri)s</span>) s vaším <span>%(server_name)s</span> účtem. Ujistěte se, že dané zařízení poznáváte."
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s na %(device_name)s",
@@ -144,6 +149,9 @@
       "username_taken": "Toto uživatelské jméno je již obsazeno",
       "username_too_long": "Uživatelské jméno je příliš dlouhé",
       "username_too_short": "Uživatelské jméno je příliš krátké"
+    },
+    "legacy_consent": {
+      "this_will_setup": "Tím se nastaví <span>%(client_name)s</span> s vaším účtem <span>%(server_name)s</span>."
     },
     "login": {
       "call_to_register": "Ještě nemáte účet?",
@@ -210,6 +218,7 @@
     "register": {
       "call_to_login": "Máte již účet?",
       "continue_with_email": "Pokračujte e-mailovou adresou",
+      "continue_with_password": "Pokračovat s heslem",
       "create_account": {
         "description": "Pokračujte výběrem uživatelského jména.",
         "heading": "Vytvořte si účet"
@@ -225,9 +234,9 @@
     "scope": {
       "edit_profile": "Upravte svůj profil a kontaktní údaje",
       "manage_sessions": "Spravujte svá zařízení a relace",
-      "mas_admin": "Spravujte libovolného uživatele ve službě matrix-authentication-service",
+      "mas_admin": "Správa uživatelů (urn:mas:admin)",
       "send_messages": "Odesílání nových zpráv vaším jménem",
-      "synapse_admin": "Spravujte domovský server Synapse",
+      "synapse_admin": "Spravovat server (urn:synapse:admin:*)",
       "view_messages": "Zobrazte své stávající zprávy a data",
       "view_profile": "Zobrazení informací o vašem profilu a kontaktních údajů"
     },

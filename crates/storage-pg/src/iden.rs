@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -19,18 +20,6 @@ pub enum UserSessions {
 }
 
 #[derive(sea_query::Iden)]
-#[expect(dead_code)]
-pub enum UserSessionAuthentications {
-    Table,
-    UserSessionAuthenticationId,
-    UserSessionId,
-    CreatedAt,
-    UserPasswordId,
-    #[iden = "upstream_oauth_authorization_session_id"]
-    UpstreamOAuthAuthorizationSessionId,
-}
-
-#[derive(sea_query::Iden)]
 pub enum Users {
     Table,
     UserId,
@@ -39,6 +28,7 @@ pub enum Users {
     LockedAt,
     DeactivatedAt,
     CanRequestAdmin,
+    IsGuest,
 }
 
 #[derive(sea_query::Iden)]
@@ -108,6 +98,35 @@ pub enum OAuth2Clients {
 }
 
 #[derive(sea_query::Iden)]
+#[iden = "personal_sessions"]
+pub enum PersonalSessions {
+    Table,
+    PersonalSessionId,
+    OwnerUserId,
+    #[iden = "owner_oauth2_client_id"]
+    OwnerOAuth2ClientId,
+    ActorUserId,
+    HumanName,
+    ScopeList,
+    CreatedAt,
+    RevokedAt,
+    LastActiveAt,
+    LastActiveIp,
+}
+
+#[derive(sea_query::Iden)]
+#[iden = "personal_access_tokens"]
+pub enum PersonalAccessTokens {
+    Table,
+    PersonalAccessTokenId,
+    PersonalSessionId,
+    // AccessTokenSha256,
+    CreatedAt,
+    ExpiresAt,
+    RevokedAt,
+}
+
+#[derive(sea_query::Iden)]
 #[iden = "upstream_oauth_providers"]
 pub enum UpstreamOAuthProviders {
     Table,
@@ -174,6 +193,7 @@ pub enum UpstreamOAuthAuthorizationSessions {
     CompletedAt,
     ConsumedAt,
     UnlinkedAt,
+    UserSessionId,
 }
 
 #[derive(sea_query::Iden)]

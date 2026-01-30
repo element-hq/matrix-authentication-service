@@ -20,7 +20,7 @@ use axum::{
 use hyper::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use indexmap::IndexMap;
 use mas_axum_utils::InternalError;
-use mas_data_model::BoxRng;
+use mas_data_model::{AppVersion, BoxRng, SiteConfig};
 use mas_http::CorsLayerExt;
 use mas_matrix::HomeserverConnection;
 use mas_policy::PolicyFactory;
@@ -29,6 +29,7 @@ use mas_router::{
     UrlBuilder,
 };
 use mas_templates::{ApiDocContext, Templates};
+use schemars::transform::AddNullable;
 use tower_http::cors::{Any, CorsLayer};
 
 mod call_context;
@@ -43,6 +44,11 @@ use crate::passwords::PasswordManager;
 
 fn finish(t: TransformOpenApi) -> TransformOpenApi {
     t.title("Matrix Authentication Service admin API")
+        .tag(Tag {
+            name: "server".to_owned(),
+            description: Some("Information about the server".to_owned()),
+            ..Tag::default()
+        })
         .tag(Tag {
             name: "compat-session".to_owned(),
             description: Some("Manage compatibility sessions from legacy clients".to_owned()),
@@ -85,6 +91,11 @@ fn finish(t: TransformOpenApi) -> TransformOpenApi {
                     .to_owned(),
             ),
             ..Default::default()
+        })
+        .tag(Tag {
+            name: "upstream-oauth-provider".to_owned(),
+            description: Some("Manage upstream OAuth 2.0 providers".to_owned()),
+            ..Tag::default()
         })
         .security_scheme("oauth2", oauth_security_scheme(None))
         .security_scheme(
@@ -153,14 +164,24 @@ where
     Templates: FromRef<S>,
     UrlBuilder: FromRef<S>,
     Arc<PolicyFactory>: FromRef<S>,
+    SiteConfig: FromRef<S>,
+    AppVersion: FromRef<S>,
 {
     // We *always* want to explicitly set the possible responses, beacuse the
     // infered ones are not necessarily correct
     aide::generate::infer_responses(false);
 
     aide::generate::in_context(|ctx| {
-        ctx.schema =
-            schemars::r#gen::SchemaGenerator::new(schemars::r#gen::SchemaSettings::openapi3());
+        ctx.schema = schemars::generate::SchemaGenerator::new(
+            schemars::generate::SchemaSettings::openapi3().with(|settings| {
+                // Remove the transform which adds nullable fields, as it's not
+                // valid with OpenAPI 3.1. For some reason, aide/schemars output
+                // an OpenAPI 3.1 schema with this nullable transform.
+                settings
+                    .transforms
+                    .retain(|transform| !transform.is::<AddNullable>());
+            }),
+        );
     });
 
     let mut api = OpenApi::default();
