@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -7,10 +8,10 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { I18nextProvider } from "react-i18next";
-import LoadingSpinner from "./components/LoadingSpinner";
-import PasskeyLoginButton from "./components/PasskeyLoginButton";
-import { queryClient } from "./graphql";
-import i18n, { setupI18n } from "./i18n";
+import LoadingSpinner from "../components/LoadingSpinner";
+import PasskeyLoginButton from "../components/PasskeyLoginButton";
+import { queryClient } from "../graphql";
+import i18n, { setupI18n } from "../i18n";
 
 setupI18n();
 

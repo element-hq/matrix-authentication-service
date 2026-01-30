@@ -72,17 +72,8 @@ Please see LICENSE files in the repository root for full details.
 
       {% if features.passkeys_enabled %}
         <div id="passkey-root"></div>
-
-        <div class="hidden">
-          {% call(f) field.field(name="passkey_challenge_id", form_state=form) %}
-            <input {{ field.attributes(f) }} class="cpd-text-control" type="hidden" />
-          {% endcall %}
-
-          {% call(f) field.field(name="passkey_response", form_state=form) %}
-            <input {{ field.attributes(f) }} class="cpd-text-control" type="hidden" />
-          {% endcall %}
-        </div>
-
+        <input name="passkey_challenge_id" type="hidden" />
+        <input name="passkey_response" type="hidden" />
       {% endif %}
 
       {% if (features.password_login or features.passkeys_enabled) and providers %}
@@ -121,6 +112,7 @@ Please see LICENSE files in the repository root for full details.
     <script>
       window.WEBAUTHN_OPTIONS = "{{ webauthn_options | add_slashes | safe }}";
     </script>
-    {{ include_asset('src/template_passkey.tsx') | indent(4) | safe }}
+    {{ include_asset('locales/' ~ lang ~ '.json') | indent(4) | safe }}
+    {{ include_asset('src/entrypoints/passkey.tsx') | indent(4) | safe }}
   {% endif %}
 {% endblock content %}
