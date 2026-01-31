@@ -44,19 +44,21 @@ Please see LICENSE files in the repository root for full details.
 
       <input type="hidden" name="csrf" value="{{ csrf_token }}" />
 
-      {% if features.password_login %}
+      {% if features.password_login or webauthn %}
         {% if features.login_with_email_allowed %}
           {% call(f) field.field(label=_("mas.login.username_or_email"), name="username", form_state=form) %}
-            <input {{ field.attributes(f) }} class="cpd-text-control" type="text" autocomplete="username" autocorrect="off" autocapitalize="off" required />
+            <input {{ field.attributes(f) }} class="cpd-text-control" type="text" autocomplete="username{% if webauthn %} webauthn{% endif %}" autocorrect="off" autocapitalize="off" required />
           {% endcall %}
         {% else %}
           {% call(f) field.field(label=_("common.username"), name="username", form_state=form) %}
-            <input {{ field.attributes(f) }} class="cpd-text-control" type="text" autocomplete="username" autocorrect="off" autocapitalize="off" required />
+            <input {{ field.attributes(f) }} class="cpd-text-control" type="text" autocomplete="username{% if webauthn %} webauthn{% endif %}" autocorrect="off" autocapitalize="off" required />
           {% endcall %}
         {% endif %}
+      {% endif %}
 
+      {% if features.password_login %}
         {% call(f) field.field(label=_("common.password"), name="password", form_state=form) %}
-          <input {{ field.attributes(f) }} class="cpd-text-control" type="password" autocomplete="password" required />
+          <input {{ field.attributes(f) }} class="cpd-text-control" type="password" autocomplete="current-password{% if webauthn %} webauthn{% endif %}" required />
         {% endcall %}
 
         {% if features.account_recovery %}
@@ -70,13 +72,17 @@ Please see LICENSE files in the repository root for full details.
         {{ button.button(text=_("action.continue")) }}
       {% endif %}
 
-      {% if features.passkeys_enabled %}
-        <div id="passkey-root"></div>
-        <input name="passkey_challenge_id" type="hidden" />
-        <input name="passkey_response" type="hidden" />
+      {% if webauthn %}
+        <div
+          class="flex flex-col"
+          id="passkey-root"
+          data-webauthn-options='{{ webauthn.options | tojson }}'
+          data-webauthn-challenge-id="{{ webauthn.challenge_id }}"
+          data-csrf-token="{{ csrf_token }}"></div>
+        {{ include_asset('src/entrypoints/passkey.tsx') | indent(8) | safe }}
       {% endif %}
 
-      {% if (features.password_login or features.passkeys_enabled) and providers %}
+      {% if (features.password_login or webauthn) and providers %}
         {{ field.separator() }}
       {% endif %}
 
@@ -101,18 +107,10 @@ Please see LICENSE files in the repository root for full details.
       </div>
     {% endif %}
 
-    {% if not providers and not features.password_login and not features.passkeys_enabled %}
+    {% if not providers and not features.password_login and not webauthn %}
       <div class="text-center">
         {{ _("mas.login.no_login_methods") }}
       </div>
     {% endif %}
   </form>
-
-  {% if features.passkeys_enabled %}
-    <script>
-      window.WEBAUTHN_OPTIONS = "{{ webauthn_options | add_slashes | safe }}";
-    </script>
-    {{ include_asset('locales/' ~ lang ~ '.json') | indent(4) | safe }}
-    {{ include_asset('src/entrypoints/passkey.tsx') | indent(4) | safe }}
-  {% endif %}
 {% endblock content %}

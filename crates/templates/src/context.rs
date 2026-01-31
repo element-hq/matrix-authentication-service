@@ -474,19 +474,13 @@ pub enum LoginFormField {
 
     /// The password field
     Password,
-
-    /// The passkey challenge
-    PasskeyChallengeId,
-
-    /// The passkey response
-    PasskeyResponse,
 }
 
 impl FormField for LoginFormField {
     fn keep(&self) -> bool {
         match self {
-            Self::Username | Self::PasskeyChallengeId => true,
-            Self::Password | Self::PasskeyResponse => false,
+            Self::Username => true,
+            Self::Password => false,
         }
     }
 }
@@ -547,7 +541,25 @@ pub struct LoginContext {
     form: FormState<LoginFormField>,
     next: Option<PostAuthContext>,
     providers: Vec<UpstreamOAuthProvider>,
-    webauthn_options: String,
+    webauthn: Option<WebAuthnContext>,
+}
+
+/// Context of a `WebAuthn` challenge
+#[derive(Serialize)]
+pub struct WebAuthnContext {
+    options: serde_json::Value,
+    challenge_id: Ulid,
+}
+
+impl WebAuthnContext {
+    /// Create a new context with the given webauthn options and challenge
+    #[must_use]
+    pub fn new(options: serde_json::Value, challenge_id: Ulid) -> Self {
+        Self {
+            options,
+            challenge_id,
+        }
+    }
 }
 
 impl TemplateContext for LoginContext {
@@ -565,13 +577,16 @@ impl TemplateContext for LoginContext {
                 form: FormState::default(),
                 next: None,
                 providers: Vec::new(),
-                webauthn_options: String::new(),
+                webauthn: None,
             },
             LoginContext {
                 form: FormState::default(),
                 next: None,
                 providers: Vec::new(),
-                webauthn_options: String::new(),
+                webauthn: Some(WebAuthnContext {
+                    options: serde_json::json!({}),
+                    challenge_id: Ulid::nil(),
+                }),
             },
             LoginContext {
                 form: FormState::default()
@@ -585,14 +600,14 @@ impl TemplateContext for LoginContext {
                     ),
                 next: None,
                 providers: Vec::new(),
-                webauthn_options: String::new(),
+                webauthn: None,
             },
             LoginContext {
                 form: FormState::default()
                     .with_error_on_field(LoginFormField::Username, FieldError::Exists),
                 next: None,
                 providers: Vec::new(),
-                webauthn_options: String::new(),
+                webauthn: None,
             },
         ])
     }
@@ -625,11 +640,11 @@ impl LoginContext {
         }
     }
 
-    /// Set the webauthn options
+    /// Set the webauthn context
     #[must_use]
-    pub fn with_webauthn_options(self, webauthn_options: String) -> Self {
+    pub fn with_webauthn(self, webauthn: WebAuthnContext) -> Self {
         Self {
-            webauthn_options,
+            webauthn: Some(webauthn),
             ..self
         }
     }

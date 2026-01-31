@@ -19,7 +19,7 @@ static SESSION_MAX_TIME: Duration = Duration::hours(1);
 
 /// The content of the cookie, which stores a list of user passkey challenge IDs
 #[derive(Serialize, Deserialize, Default, Debug)]
-pub struct UserPasskeyChallenges(BTreeSet<Ulid>);
+pub(crate) struct UserPasskeyChallenges(BTreeSet<Ulid>);
 
 impl UserPasskeyChallenges {
     /// Load the user passkey challenges cookie

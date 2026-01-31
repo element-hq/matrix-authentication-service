@@ -117,12 +117,18 @@ export async function performRegistration(options: string): Promise<string> {
   return JSON.stringify(credential);
 }
 
-export async function performAuthentication(options: string): Promise<string> {
-  const publicKey = PublicKeyCredential.parseRequestOptionsFromJSON(
-    JSON.parse(options),
-  );
+export async function performAuthentication(
+  options: PublicKeyCredentialRequestOptionsJSON,
+  mediation: CredentialMediationRequirement,
+  signal?: AbortSignal,
+): Promise<string> {
+  const publicKey = PublicKeyCredential.parseRequestOptionsFromJSON(options);
 
-  const credential = await navigator.credentials.get({ publicKey });
+  const credential = await navigator.credentials.get({
+    mediation,
+    publicKey,
+    signal,
+  });
 
   return JSON.stringify(credential);
 }

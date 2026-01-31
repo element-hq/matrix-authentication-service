@@ -15,9 +15,9 @@ use rand::RngCore;
 use ulid::Ulid;
 use url::Url;
 use webauthn_rp::{
-    AuthenticatedCredential, DiscoverableAuthentication16, DiscoverableAuthenticationServerState,
-    DiscoverableCredentialRequestOptions, PublicKeyCredentialCreationOptions,
-    RegistrationServerState,
+    AuthenticatedCredential, DiscoverableAuthentication16, DiscoverableAuthenticationClientState,
+    DiscoverableAuthenticationServerState, DiscoverableCredentialRequestOptions,
+    PublicKeyCredentialCreationOptions, RegistrationServerState,
     bin::{Decode, Encode},
     request::{
         DomainOrigin, Port, PublicKeyCredentialDescriptor, RpId, Scheme,
@@ -297,7 +297,10 @@ impl Webauthn {
         repo: &mut impl RepositoryAccess,
         rng: &mut (dyn RngCore + Send),
         clock: &impl Clock,
-    ) -> Result<(String, UserPasskeyChallenge)> {
+    ) -> Result<(
+        DiscoverableAuthenticationClientState<'_, 'static>,
+        UserPasskeyChallenge,
+    )> {
         let options = DiscoverableCredentialRequestOptions::passkey(&self.rpid);
 
         let (server_state, client_state) = options.start_ceremony()?;
@@ -307,10 +310,7 @@ impl Webauthn {
             .add_challenge(rng, clock, server_state.encode()?)
             .await?;
 
-        Ok((
-            serde_json::to_string(&client_state)?,
-            user_passkey_challenge,
-        ))
+        Ok((client_state, user_passkey_challenge))
     }
 
     /// Finds the passkey and user based on the challenge response and validates
@@ -336,9 +336,9 @@ impl Webauthn {
     pub async fn discover_credential(
         &self,
         repo: &mut impl RepositoryAccess,
-        response: String,
+        response: &str,
     ) -> Result<(DiscoverableAuthentication16, User, UserPasskey)> {
-        let AuthenticationRelaxed::<16, true>(response) = serde_json::from_str(&response)?;
+        let AuthenticationRelaxed::<16, true>(response) = serde_json::from_str(response)?;
 
         let credential_id: CredentialId<Vec<u8>> = response.raw_id().into();
 
