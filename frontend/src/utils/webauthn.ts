@@ -121,14 +121,17 @@ export async function performAuthentication(
   options: PublicKeyCredentialRequestOptionsJSON,
   mediation: CredentialMediationRequirement,
   signal?: AbortSignal,
-): Promise<string> {
+): Promise<PublicKeyCredential> {
   const publicKey = PublicKeyCredential.parseRequestOptionsFromJSON(options);
 
-  const credential = await navigator.credentials.get({
+  const result = await navigator.credentials.get({
     mediation,
     publicKey,
     signal,
   });
 
-  return JSON.stringify(credential);
+  if (result === null) throw new Error("No credential returned");
+  if (!(result instanceof PublicKeyCredential))
+    throw new Error("Bad credential type");
+  return result;
 }

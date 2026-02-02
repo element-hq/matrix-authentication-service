@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import IconKey from "@vector-im/compound-design-tokens/assets/web/icons/key";
+import CheckIcon from "@vector-im/compound-design-tokens/assets/web/icons/check";
 import { Alert, Button } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 import { checkSupport, performAuthentication } from "../utils/webauthn";
@@ -14,30 +15,37 @@ const PasskeyLoginButton: React.FC<{
   const formRef = useRef<HTMLFormElement>(null);
   const responseRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
+  const abortControllerRef = useRef<AbortController>(null);
 
-  const { mutate, error, isPending } = useMutation({
+  const { mutate, error, isPending, isSuccess } = useMutation({
     throwOnError: false,
     mutationFn: async ({
       options,
       mediation,
-      signal,
     }: {
       options: PublicKeyCredentialRequestOptionsJSON;
       mediation: CredentialMediationRequirement;
-      signal?: AbortSignal;
-    }) => await performAuthentication(options, mediation, signal),
+    }) => {
+      // Cancel any running webauthn flow
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = new AbortController();
+      const signal = abortControllerRef.current.signal;
 
-    onSuccess: (data) => {
-      responseRef.current!.value = data;
+      const data = await performAuthentication(options, mediation, signal);
+      responseRef.current!.value = data.toJSON();
       formRef.current!.submit();
     },
   });
 
-  // Start a conditional mediation if available
   useEffect(() => {
-    // We setup an abort signal to cancel the mediation if the component gets unmounted
-    const abortController = new AbortController();
-    const signal = abortController.signal;
+    // Start a conditional mediation if available and if the regular
+    // user-interactive mediation is not running
+    if (isPending) return;
+
+    // Cancel any running webauthn flow
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
 
     (async () => {
       if (
@@ -55,17 +63,22 @@ const PasskeyLoginButton: React.FC<{
         );
         signal.throwIfAborted();
         if (!responseRef.current || !formRef.current) return;
-        responseRef.current.value = result;
+        responseRef.current.value = result.toJSON();
         formRef.current.submit();
       }
     })().catch((cause) => {
+      // If the conditional mediation fails for any reason, we just log about
+      // it, we don't really need to show a user-facing error for it
       console.error(
         new Error("WebAuthn conditional mediation failed", { cause }),
       );
     });
+  }, [isPending]);
 
+  // When unmounting the component, abort any running webauthn flow
+  useEffect(() => {
     return () => {
-      abortController.abort();
+      abortControllerRef.current?.abort();
     };
   }, []);
 
@@ -86,7 +99,7 @@ const PasskeyLoginButton: React.FC<{
       ref={formRef}
       onSubmit={handleSubmit}
     >
-      {error && error.name !== "NotAllowedError" && (
+      {error && (
         /* TODO: have better errors */
         <Alert type="critical" title={error.toString()} />
       )}
@@ -97,8 +110,8 @@ const PasskeyLoginButton: React.FC<{
         type="submit"
         kind="secondary"
         size="lg"
-        Icon={isPending ? undefined : IconKey}
-        disabled={!support || isPending}
+        Icon={isSuccess ? CheckIcon : isPending ? undefined : IconKey}
+        disabled={!support || isPending || isSuccess}
       >
         {isPending && <LoadingSpinner inline />}
         {t("passkeys.login")}
