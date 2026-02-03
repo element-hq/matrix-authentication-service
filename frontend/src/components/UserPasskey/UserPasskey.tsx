@@ -7,7 +7,7 @@
 import { useMutation } from "@tanstack/react-query";
 import IconDelete from "@vector-im/compound-design-tokens/assets/web/icons/delete";
 import IconEdit from "@vector-im/compound-design-tokens/assets/web/icons/edit";
-import { Button, Form, IconButton, Text } from "@vector-im/compound-web";
+import { Button, Form, Text } from "@vector-im/compound-web";
 import { parseISO } from "date-fns";
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,7 +16,6 @@ import { graphqlRequest } from "../../graphql";
 import { formatReadableDate } from "../DateTime";
 import * as Dialog from "../Dialog";
 import LoadingSpinner from "../LoadingSpinner";
-import styles from "./UserPasskey.module.css";
 
 // Single fragment containing all fields needed by all components
 const FRAGMENT = graphql(/* GraphQL */ `
@@ -42,32 +41,27 @@ const usePasskeyDisplayName = (
   const { t } = useTranslation();
   const data = useFragment(FRAGMENT, passkey);
 
-  if (data.name) {
-    return data.name;
-  }
+  if (data.name) return data.name;
+  if (data.aaguid?.name) return data.aaguid.name;
 
-  if (data.aaguid?.name) {
-    return data.aaguid.name;
-  }
-
-  if (data.transports.includes("INTERNAL")) {
+  if (data.transports.includes("INTERNAL"))
     return t("frontend.account.passkeys.fallback.internal");
-  }
-  if (data.transports.includes("USB")) {
+
+  if (data.transports.includes("USB"))
     return t("frontend.account.passkeys.fallback.usb");
-  }
-  if (data.transports.includes("NFC")) {
+
+  if (data.transports.includes("NFC"))
     return t("frontend.account.passkeys.fallback.nfc");
-  }
-  if (data.transports.includes("BLE")) {
+
+  if (data.transports.includes("BLE"))
     return t("frontend.account.passkeys.fallback.ble");
-  }
-  if (data.transports.includes("HYBRID")) {
+
+  if (data.transports.includes("HYBRID"))
     return t("frontend.account.passkeys.fallback.hybrid");
-  }
-  if (data.transports.includes("SMART_CARD")) {
+
+  if (data.transports.includes("SMART_CARD"))
     return t("frontend.account.passkeys.fallback.smartcard");
-  }
+
   return t("frontend.account.passkeys.fallback.generic");
 };
 
@@ -93,7 +87,7 @@ const PasskeyInfo: React.FC<{ passkey: FragmentType<typeof FRAGMENT> }> = ({
   return (
     <div className="flex flex-col gap-1">
       <Text weight="semibold">{displayName}</Text>
-      <Text size="sm" weight="medium" className="cpd-text-secondary">
+      <Text size="sm" weight="medium" className="text-secondary">
         {data.lastUsedAt
           ? t("frontend.account.passkeys.last_used_message", {
               date: formattedLastUsed,
@@ -158,15 +152,7 @@ const EditButtonWithModal: React.FC<{
 
   return (
     <Dialog.Dialog
-      trigger={
-        <IconButton
-          tooltip={t("frontend.account.passkeys.edit_button_title")}
-          type="button"
-          size="var(--cpd-space-8x)"
-        >
-          <IconEdit />
-        </IconButton>
-      }
+      trigger={<Button Icon={IconEdit} iconOnly kind="tertiary" />}
       open={open}
       onOpenChange={(isOpen) => {
         fieldRef.current?.form?.reset();
@@ -177,32 +163,30 @@ const EditButtonWithModal: React.FC<{
         {t("frontend.account.passkeys.edit_modal.title")}
       </Dialog.Title>
 
-      <Dialog.Description asChild>
-        <Form.Root onSubmit={onSubmit}>
-          <PasskeyInfo passkey={passkey} />
-
-          <Form.Field name="name" className="mt-6">
-            <Form.Label>
-              {t("frontend.account.passkeys.edit_modal.name_label")}
-            </Form.Label>
-            <Form.TextControl
-              type="text"
-              defaultValue={data.name ?? ""}
-              ref={fieldRef}
-            />
-          </Form.Field>
-
-          <div className="flex flex-col gap-4 mt-6">
-            <Form.Submit disabled={isPending}>
-              {isPending && <LoadingSpinner inline />}
-              {t("action.save")}
-            </Form.Submit>
-            <Dialog.Close asChild>
-              <Button kind="tertiary">{t("action.cancel")}</Button>
-            </Dialog.Close>
-          </div>
-        </Form.Root>
+      <Dialog.Description className="p-2 border border-[var(--cpd-color-gray-400)]">
+        <PasskeyInfo passkey={passkey} />
       </Dialog.Description>
+
+      <Form.Root onSubmit={onSubmit}>
+        <Form.Field name="name">
+          <Form.Label>
+            {t("frontend.account.passkeys.edit_modal.name_label")}
+          </Form.Label>
+          <Form.TextControl
+            type="text"
+            defaultValue={data.name ?? ""}
+            ref={fieldRef}
+          />
+        </Form.Field>
+
+        <Form.Submit disabled={isPending}>
+          {isPending && <LoadingSpinner inline />}
+          {t("action.save")}
+        </Form.Submit>
+        <Dialog.Close asChild>
+          <Button kind="tertiary">{t("action.cancel")}</Button>
+        </Dialog.Close>
+      </Form.Root>
     </Dialog.Dialog>
   );
 };
@@ -238,20 +222,13 @@ const DeleteButtonWithConfirmation: React.FC<{
       onOpenChange={setOpen}
       open={open}
       trigger={
-        <IconButton
-          tooltip={t("frontend.account.passkeys.delete_button_title")}
-          type="button"
-          className="m-2"
-          size="var(--cpd-space-8x)"
-        >
-          <IconDelete className={styles.userPasskeyDeleteIcon} />
-        </IconButton>
+        <Button Icon={IconDelete} iconOnly kind="tertiary" destructive />
       }
     >
       <Dialog.Title>
         {t("frontend.account.passkeys.delete_button_confirmation_modal.body")}
       </Dialog.Title>
-      <Dialog.Description className={styles.passkeyModalBox}>
+      <Dialog.Description className="p-2 border border-[var(--cpd-color-gray-400)]">
         <PasskeyInfo passkey={passkey} />
       </Dialog.Description>
       <div className="flex flex-col gap-4">
@@ -284,9 +261,7 @@ const UserPasskey: React.FC<{
       <div className="flex-1">
         <PasskeyInfo passkey={passkey} />
       </div>
-
       <EditButtonWithModal passkey={passkey} />
-
       <DeleteButtonWithConfirmation passkey={passkey} onRemove={onRemove} />
     </div>
   );
