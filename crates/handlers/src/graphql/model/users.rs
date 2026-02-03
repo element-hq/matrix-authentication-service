@@ -22,6 +22,10 @@ use mas_storage::{
         UserPasskeyFilter,
     },
 };
+use webauthn_rp::{
+    bin::Decode,
+    response::register::bin::{AaguidOwned, MetadataOwned},
+};
 
 use super::{
     BrowserSession, CompatSession, Cursor, NodeCursor, NodeType, OAuth2Session,
@@ -950,6 +954,24 @@ impl UserEmailAuthentication {
     }
 }
 
+/// An attestation authority GUID
+#[derive(Description)]
+pub struct Aaguid(AaguidOwned);
+
+#[Object(use_type_description)]
+impl Aaguid {
+    /// The AAGUID as a string
+    pub async fn id(&self) -> String {
+        let id = uuid::Uuid::from_bytes(self.0.0);
+        id.as_hyphenated().to_string()
+    }
+
+    /// A known name for the AAGUID
+    pub async fn name(&self) -> Option<&'static str> {
+        None
+    }
+}
+
 /// A passkey
 #[derive(Description)]
 pub struct UserPasskey(pub mas_data_model::UserPasskey);
@@ -974,5 +996,12 @@ impl UserPasskey {
     /// When the passkey was last used
     pub async fn last_used_at(&self) -> Option<DateTime<Utc>> {
         self.0.last_used_at
+    }
+
+    /// The AAGUID of the passkey
+    pub async fn aaguid(&self) -> Result<Aaguid, async_graphql::Error> {
+        let metadata =
+            MetadataOwned::decode(&self.0.metadata).context("Failed to decode metadata")?;
+        Ok(Aaguid(metadata.aaguid))
     }
 }

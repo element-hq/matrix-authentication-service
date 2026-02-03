@@ -25,6 +25,15 @@ export type Scalars = {
   Url: { input: string; output: string; }
 };
 
+/** An attestation authority GUID */
+export type Aaguid = {
+  __typename?: 'Aaguid';
+  /** The AAGUID as a string */
+  id: Scalars['String']['output'];
+  /** A known name for the AAGUID */
+  name?: Maybe<Scalars['String']['output']>;
+};
+
 /** The input for the `addEmail` mutation */
 export type AddEmailInput = {
   /** The email address to add */
@@ -1789,6 +1798,8 @@ export type UserEmailState =
 /** A passkey */
 export type UserPasskey = {
   __typename?: 'UserPasskey';
+  /** The AAGUID of the passkey */
+  aaguid: Aaguid;
   /** When the object was created. */
   createdAt: Scalars['DateTime']['output'];
   /** ID of the object */
@@ -1980,7 +1991,7 @@ export type SetDisplayNameMutationVariables = Exact<{
 
 export type SetDisplayNameMutation = { __typename?: 'Mutation', setDisplayName: { __typename?: 'SetDisplayNamePayload', status: SetDisplayNameStatus } };
 
-export type UserPasskey_PasskeyFragment = { __typename?: 'UserPasskey', id: string, name: string, lastUsedAt?: string | null, createdAt: string } & { ' $fragmentName'?: 'UserPasskey_PasskeyFragment' };
+export type UserPasskey_PasskeyFragment = { __typename?: 'UserPasskey', id: string, name: string, lastUsedAt?: string | null, createdAt: string, aaguid: { __typename?: 'Aaguid', id: string, name?: string | null } } & { ' $fragmentName'?: 'UserPasskey_PasskeyFragment' };
 
 export type RemovePasskeyMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -2622,6 +2633,10 @@ export const UserPasskey_PasskeyFragmentDoc = new TypedDocumentString(`
   name
   lastUsedAt
   createdAt
+  aaguid {
+    id
+    name
+  }
 }
     `, {"fragmentName":"UserPasskey_passkey"}) as unknown as TypedDocumentString<UserPasskey_PasskeyFragment, unknown>;
 export const AddEmailForm_UserFragmentDoc = new TypedDocumentString(`
@@ -2856,6 +2871,10 @@ export const UserPasskeyListDocument = new TypedDocumentString(`
   name
   lastUsedAt
   createdAt
+  aaguid {
+    id
+    name
+  }
 }`) as unknown as TypedDocumentString<UserPasskeyListQuery, UserPasskeyListQueryVariables>;
 export const UserProfileDocument = new TypedDocumentString(`
     query UserProfile {

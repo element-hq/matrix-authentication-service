@@ -1,4 +1,18 @@
 """
+An attestation authority GUID
+"""
+type Aaguid {
+  """
+  The AAGUID as a string
+  """
+  id: String!
+  """
+  A known name for the AAGUID
+  """
+  name: String
+}
+
+"""
 The input for the `addEmail` mutation
 """
 input AddEmailInput {
@@ -2619,6 +2633,10 @@ type UserPasskey {
   When the passkey was last used
   """
   lastUsedAt: DateTime
+  """
+  The AAGUID of the passkey
+  """
+  aaguid: Aaguid!
 }
 
 type UserPasskeyConnection {

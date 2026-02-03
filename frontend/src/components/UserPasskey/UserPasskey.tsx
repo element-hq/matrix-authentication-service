@@ -28,6 +28,10 @@ const FRAGMENT = graphql(/* GraphQL */ `
     name
     lastUsedAt
     createdAt
+    aaguid {
+      id
+      name
+    }
   }
 `);
 
@@ -203,6 +207,7 @@ const UserPasskey: React.FC<{
 
       <Form.Root>
         <Form.Field name="">
+          <Form.HelpMessage>{data.aaguid.id}</Form.HelpMessage>
           <Form.HelpMessage>
             {data.lastUsedAt
               ? t("frontend.account.passkeys.last_used_message", {

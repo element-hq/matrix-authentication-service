@@ -65,6 +65,7 @@ tower-http.workspace = true
 tower.workspace = true
 tracing.workspace = true
 ulid.workspace = true
+uuid.workspace = true
 url.workspace = true
 webauthn_rp.workspace = true
 zeroize.workspace = true
