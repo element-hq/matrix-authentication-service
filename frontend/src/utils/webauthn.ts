@@ -73,7 +73,7 @@ export async function performRegistration(options: string): Promise<string> {
     ),
   });
   if (result === null) throw new Error("No credential returned");
-  if (result.type != "public-key" || !(result instanceof PublicKeyCredential))
+  if (result.type !== "public-key" || !(result instanceof PublicKeyCredential))
     throw new Error("Bad credential type");
 
   try {
@@ -127,7 +127,7 @@ export async function performAuthentication(
   });
 
   if (result === null) throw new Error("No credential returned");
-  if (result.type != "public-key" || !(result instanceof PublicKeyCredential))
+  if (result.type !== "public-key" || !(result instanceof PublicKeyCredential))
     throw new Error("Bad credential type");
 
   try {

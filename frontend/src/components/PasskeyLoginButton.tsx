@@ -1,10 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
-import IconKey from "@vector-im/compound-design-tokens/assets/web/icons/key";
 import CheckIcon from "@vector-im/compound-design-tokens/assets/web/icons/check";
+import IconKey from "@vector-im/compound-design-tokens/assets/web/icons/key";
 import { Alert, Button } from "@vector-im/compound-web";
+import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { checkSupport, performAuthentication } from "../utils/webauthn";
-import { useCallback, useEffect, useRef } from "react";
 import LoadingSpinner from "./LoadingSpinner";
 
 const PasskeyLoginButton: React.FC<{
@@ -19,21 +19,17 @@ const PasskeyLoginButton: React.FC<{
 
   const { mutate, error, isPending, isSuccess } = useMutation({
     throwOnError: false,
-    mutationFn: async ({
-      options,
-      mediation,
-    }: {
-      options: PublicKeyCredentialRequestOptionsJSON;
-      mediation: CredentialMediationRequirement;
-    }) => {
+    mutationFn: async (options: PublicKeyCredentialRequestOptionsJSON) => {
       // Cancel any running webauthn flow
       abortControllerRef.current?.abort();
       abortControllerRef.current = new AbortController();
       const signal = abortControllerRef.current.signal;
 
-      const data = await performAuthentication(options, mediation, signal);
-      responseRef.current!.value = data;
-      formRef.current!.submit();
+      const data = await performAuthentication(options, "optional", signal);
+      if (!responseRef.current || !formRef.current)
+        throw new Error("Could not find form elements");
+      responseRef.current.value = data;
+      formRef.current.submit();
     },
   });
 
@@ -73,7 +69,7 @@ const PasskeyLoginButton: React.FC<{
         new Error("WebAuthn conditional mediation failed", { cause }),
       );
     });
-  }, [isPending]);
+  }, [isPending, options]);
 
   // When unmounting the component, abort any running webauthn flow
   useEffect(() => {
@@ -85,9 +81,9 @@ const PasskeyLoginButton: React.FC<{
   const handleSubmit = useCallback(
     (e: React.FormEvent<HTMLFormElement>): void => {
       e.preventDefault();
-      mutate({ options, mediation: "optional" });
+      mutate(options);
     },
-    [mutate],
+    [mutate, options],
   );
 
   const support = checkSupport();
