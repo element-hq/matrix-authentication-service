@@ -42,7 +42,7 @@ type Documents = {
     "\n  fragment UserGreeting_user on User {\n    id\n    matrix {\n      mxid\n      displayName\n    }\n  }\n": typeof types.UserGreeting_UserFragmentDoc,
     "\n  fragment UserGreeting_siteConfig on SiteConfig {\n    displayNameChangeAllowed\n  }\n": typeof types.UserGreeting_SiteConfigFragmentDoc,
     "\n  mutation SetDisplayName($userId: ID!, $displayName: String) {\n    setDisplayName(input: { userId: $userId, displayName: $displayName }) {\n      status\n    }\n  }\n": typeof types.SetDisplayNameDocument,
-    "\n  fragment UserPasskey_passkey on UserPasskey {\n    id\n    name\n    lastUsedAt\n    createdAt\n    aaguid {\n      id\n      name\n    }\n  }\n": typeof types.UserPasskey_PasskeyFragmentDoc,
+    "\n  fragment UserPasskey_passkey on UserPasskey {\n    id\n    name\n    lastUsedAt\n    createdAt\n    transports\n    aaguid {\n      name\n    }\n  }\n": typeof types.UserPasskey_PasskeyFragmentDoc,
     "\n  mutation RemovePasskey($id: ID!) {\n    removePasskey(input: { id: $id }) {\n      status\n    }\n  }\n": typeof types.RemovePasskeyDocument,
     "\n  mutation RenamePasskey($id: ID!, $name: String) {\n    renamePasskey(input: { id: $id, name: $name }) {\n      status\n    }\n  }\n": typeof types.RenamePasskeyDocument,
     "\n  fragment AddEmailForm_user on User {\n    hasPassword\n  }\n": typeof types.AddEmailForm_UserFragmentDoc,
@@ -105,7 +105,7 @@ const documents: Documents = {
     "\n  fragment UserGreeting_user on User {\n    id\n    matrix {\n      mxid\n      displayName\n    }\n  }\n": types.UserGreeting_UserFragmentDoc,
     "\n  fragment UserGreeting_siteConfig on SiteConfig {\n    displayNameChangeAllowed\n  }\n": types.UserGreeting_SiteConfigFragmentDoc,
     "\n  mutation SetDisplayName($userId: ID!, $displayName: String) {\n    setDisplayName(input: { userId: $userId, displayName: $displayName }) {\n      status\n    }\n  }\n": types.SetDisplayNameDocument,
-    "\n  fragment UserPasskey_passkey on UserPasskey {\n    id\n    name\n    lastUsedAt\n    createdAt\n    aaguid {\n      id\n      name\n    }\n  }\n": types.UserPasskey_PasskeyFragmentDoc,
+    "\n  fragment UserPasskey_passkey on UserPasskey {\n    id\n    name\n    lastUsedAt\n    createdAt\n    transports\n    aaguid {\n      name\n    }\n  }\n": types.UserPasskey_PasskeyFragmentDoc,
     "\n  mutation RemovePasskey($id: ID!) {\n    removePasskey(input: { id: $id }) {\n      status\n    }\n  }\n": types.RemovePasskeyDocument,
     "\n  mutation RenamePasskey($id: ID!, $name: String) {\n    renamePasskey(input: { id: $id, name: $name }) {\n      status\n    }\n  }\n": types.RenamePasskeyDocument,
     "\n  fragment AddEmailForm_user on User {\n    hasPassword\n  }\n": types.AddEmailForm_UserFragmentDoc,
@@ -252,7 +252,7 @@ export function graphql(source: "\n  mutation SetDisplayName($userId: ID!, $disp
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment UserPasskey_passkey on UserPasskey {\n    id\n    name\n    lastUsedAt\n    createdAt\n    aaguid {\n      id\n      name\n    }\n  }\n"): typeof import('./graphql').UserPasskey_PasskeyFragmentDoc;
+export function graphql(source: "\n  fragment UserPasskey_passkey on UserPasskey {\n    id\n    name\n    lastUsedAt\n    createdAt\n    transports\n    aaguid {\n      name\n    }\n  }\n"): typeof import('./graphql').UserPasskey_PasskeyFragmentDoc;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

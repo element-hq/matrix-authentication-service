@@ -2004,7 +2004,7 @@ export type SetDisplayNameMutationVariables = Exact<{
 
 export type SetDisplayNameMutation = { __typename?: 'Mutation', setDisplayName: { __typename?: 'SetDisplayNamePayload', status: SetDisplayNameStatus } };
 
-export type UserPasskey_PasskeyFragment = { __typename?: 'UserPasskey', id: string, name?: string | null, lastUsedAt?: string | null, createdAt: string, aaguid?: { __typename?: 'Aaguid', id: string, name?: string | null } | null } & { ' $fragmentName'?: 'UserPasskey_PasskeyFragment' };
+export type UserPasskey_PasskeyFragment = { __typename?: 'UserPasskey', id: string, name?: string | null, lastUsedAt?: string | null, createdAt: string, transports: Array<AuthenticatorTransport>, aaguid?: { __typename?: 'Aaguid', name?: string | null } | null } & { ' $fragmentName'?: 'UserPasskey_PasskeyFragment' };
 
 export type RemovePasskeyMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -2645,8 +2645,8 @@ export const UserPasskey_PasskeyFragmentDoc = new TypedDocumentString(`
   name
   lastUsedAt
   createdAt
+  transports
   aaguid {
-    id
     name
   }
 }
@@ -2883,8 +2883,8 @@ export const UserPasskeyListDocument = new TypedDocumentString(`
   name
   lastUsedAt
   createdAt
+  transports
   aaguid {
-    id
     name
   }
 }`) as unknown as TypedDocumentString<UserPasskeyListQuery, UserPasskeyListQueryVariables>;

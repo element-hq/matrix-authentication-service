@@ -64,7 +64,21 @@
           "body": "Delete this passkey?"
         },
         "delete_button_title": "Remove passkey",
+        "edit_button_title": "Edit passkey",
+        "edit_modal": {
+          "name_label": "Name",
+          "title": "Edit passkey"
+        },
         "exists_error": "This passkey already exists.",
+        "fallback": {
+          "ble": "Bluetooth Security Key",
+          "generic": "Passkey",
+          "hybrid": "Cross-Device Passkey",
+          "internal": "Platform Authenticator",
+          "nfc": "NFC Security Key",
+          "smartcard": "Smart Card",
+          "usb": "USB Security Key"
+        },
         "last_used_message": "Last used {{date}}",
         "never_used_message": "Never used",
         "response_invalid_error": "The response from your passkey was invalid: {{error}}",
