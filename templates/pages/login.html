@@ -72,6 +72,10 @@ Please see LICENSE files in the repository root for full details.
         {{ button.button(text=_("action.continue")) }}
       {% endif %}
 
+      {% if  (webauthn) and providers  %}
+        {{ field.separator() }}
+      {% endif %}
+
       {% if webauthn %}
         <div
           class="flex flex-col"
@@ -80,10 +84,6 @@ Please see LICENSE files in the repository root for full details.
           data-webauthn-challenge-id="{{ webauthn.challenge_id }}"
           data-csrf-token="{{ csrf_token }}"></div>
         {{ include_asset('src/entrypoints/passkey.tsx') | indent(8) | safe }}
-      {% endif %}
-
-      {% if (features.password_login or webauthn) and providers %}
-        {{ field.separator() }}
       {% endif %}
 
       {% if providers %}
