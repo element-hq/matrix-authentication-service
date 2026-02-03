@@ -73,7 +73,9 @@ const AddPasskeyForm: React.FC = () => {
       {status === "INVALID_RESPONSE" && (
         <Alert
           type="critical"
-          title={t("frontend.account.passkeys.response_invalid_error")}
+          title={t("frontend.account.passkeys.response_invalid_error", {
+            error: register.data?.completeRegisterPasskey?.error,
+          })}
         />
       )}
       {status === "EXISTS" && (
