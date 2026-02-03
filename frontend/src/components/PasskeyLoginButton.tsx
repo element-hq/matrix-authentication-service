@@ -32,7 +32,7 @@ const PasskeyLoginButton: React.FC<{
       const signal = abortControllerRef.current.signal;
 
       const data = await performAuthentication(options, mediation, signal);
-      responseRef.current!.value = data.toJSON();
+      responseRef.current!.value = JSON.stringify(data.toJSON());
       formRef.current!.submit();
     },
   });
@@ -63,7 +63,7 @@ const PasskeyLoginButton: React.FC<{
         );
         signal.throwIfAborted();
         if (!responseRef.current || !formRef.current) return;
-        responseRef.current.value = result.toJSON();
+        responseRef.current.value = JSON.stringify(result.toJSON());
         formRef.current.submit();
       }
     })().catch((cause) => {

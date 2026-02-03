@@ -49,7 +49,7 @@ type Documents = {
     "\n  fragment AddEmailForm_siteConfig on SiteConfig {\n    passwordLoginEnabled\n  }\n": typeof types.AddEmailForm_SiteConfigFragmentDoc,
     "\n  mutation AddEmail($email: String!, $password: String, $language: String!) {\n    startEmailAuthentication(\n      input: { email: $email, password: $password, language: $language }\n    ) {\n      status\n      violations\n      authentication {\n        id\n      }\n    }\n  }\n": typeof types.AddEmailDocument,
     "\n  mutation StartRegisterPasskey {\n    startRegisterPasskey {\n      id\n      options\n    }\n  }\n": typeof types.StartRegisterPasskeyDocument,
-    "\n  mutation CompleteRegisterPasskey($id: ID!, $name: String!, $response: String!) {\n    completeRegisterPasskey(input: { id: $id, name: $name, response: $response }) {\n      status\n      error\n    }\n  }\n": typeof types.CompleteRegisterPasskeyDocument,
+    "\n  mutation CompleteRegisterPasskey(\n    $id: ID!\n    $name: String!\n    $response: String!\n  ) {\n    completeRegisterPasskey(\n      input: { id: $id, name: $name, response: $response }\n    ) {\n      status\n      error\n    }\n  }\n": typeof types.CompleteRegisterPasskeyDocument,
     "\n  query UserEmailList(\n    $first: Int\n    $after: String\n    $last: Int\n    $before: String\n  ) {\n    viewer {\n      __typename\n      ... on User {\n        emails(first: $first, after: $after, last: $last, before: $before) {\n          edges {\n            cursor\n            node {\n              ...UserEmail_email\n            }\n          }\n          totalCount\n          pageInfo {\n            hasNextPage\n            hasPreviousPage\n            startCursor\n            endCursor\n          }\n        }\n      }\n    }\n  }\n": typeof types.UserEmailListDocument,
     "\n  fragment UserEmailList_user on User {\n    hasPassword\n  }\n": typeof types.UserEmailList_UserFragmentDoc,
     "\n  fragment UserEmailList_siteConfig on SiteConfig {\n    emailChangeAllowed\n    passwordLoginEnabled\n  }\n": typeof types.UserEmailList_SiteConfigFragmentDoc,
@@ -112,7 +112,7 @@ const documents: Documents = {
     "\n  fragment AddEmailForm_siteConfig on SiteConfig {\n    passwordLoginEnabled\n  }\n": types.AddEmailForm_SiteConfigFragmentDoc,
     "\n  mutation AddEmail($email: String!, $password: String, $language: String!) {\n    startEmailAuthentication(\n      input: { email: $email, password: $password, language: $language }\n    ) {\n      status\n      violations\n      authentication {\n        id\n      }\n    }\n  }\n": types.AddEmailDocument,
     "\n  mutation StartRegisterPasskey {\n    startRegisterPasskey {\n      id\n      options\n    }\n  }\n": types.StartRegisterPasskeyDocument,
-    "\n  mutation CompleteRegisterPasskey($id: ID!, $name: String!, $response: String!) {\n    completeRegisterPasskey(input: { id: $id, name: $name, response: $response }) {\n      status\n      error\n    }\n  }\n": types.CompleteRegisterPasskeyDocument,
+    "\n  mutation CompleteRegisterPasskey(\n    $id: ID!\n    $name: String!\n    $response: String!\n  ) {\n    completeRegisterPasskey(\n      input: { id: $id, name: $name, response: $response }\n    ) {\n      status\n      error\n    }\n  }\n": types.CompleteRegisterPasskeyDocument,
     "\n  query UserEmailList(\n    $first: Int\n    $after: String\n    $last: Int\n    $before: String\n  ) {\n    viewer {\n      __typename\n      ... on User {\n        emails(first: $first, after: $after, last: $last, before: $before) {\n          edges {\n            cursor\n            node {\n              ...UserEmail_email\n            }\n          }\n          totalCount\n          pageInfo {\n            hasNextPage\n            hasPreviousPage\n            startCursor\n            endCursor\n          }\n        }\n      }\n    }\n  }\n": types.UserEmailListDocument,
     "\n  fragment UserEmailList_user on User {\n    hasPassword\n  }\n": types.UserEmailList_UserFragmentDoc,
     "\n  fragment UserEmailList_siteConfig on SiteConfig {\n    emailChangeAllowed\n    passwordLoginEnabled\n  }\n": types.UserEmailList_SiteConfigFragmentDoc,
@@ -280,7 +280,7 @@ export function graphql(source: "\n  mutation StartRegisterPasskey {\n    startR
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation CompleteRegisterPasskey($id: ID!, $name: String!, $response: String!) {\n    completeRegisterPasskey(input: { id: $id, name: $name, response: $response }) {\n      status\n      error\n    }\n  }\n"): typeof import('./graphql').CompleteRegisterPasskeyDocument;
+export function graphql(source: "\n  mutation CompleteRegisterPasskey(\n    $id: ID!\n    $name: String!\n    $response: String!\n  ) {\n    completeRegisterPasskey(\n      input: { id: $id, name: $name, response: $response }\n    ) {\n      status\n      error\n    }\n  }\n"): typeof import('./graphql').CompleteRegisterPasskeyDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

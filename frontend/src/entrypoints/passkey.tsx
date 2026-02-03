@@ -85,7 +85,7 @@ const { webauthnChallengeId, webauthnOptions, csrfToken } = v.parse(
   root.dataset,
 );
 
-createRoot(document.getElementById("passkey-root") as HTMLElement).render(
+createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <Suspense fallback={<LoadingSpinner inline />}>

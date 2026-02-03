@@ -25,8 +25,14 @@ const START_REGISTER_PASSKEY_PAYLOAD = graphql(/* GraphQL */ `
 `);
 
 const COMPLETE_REGISTER_PASSKEY_PAYLOAD = graphql(/* GraphQL */ `
-  mutation CompleteRegisterPasskey($id: ID!, $name: String!, $response: String!) {
-    completeRegisterPasskey(input: { id: $id, name: $name, response: $response }) {
+  mutation CompleteRegisterPasskey(
+    $id: ID!
+    $name: String!
+    $response: String!
+  ) {
+    completeRegisterPasskey(
+      input: { id: $id, name: $name, response: $response }
+    ) {
       status
       error
     }
@@ -57,7 +63,8 @@ const AddPasskeyForm: React.FC = () => {
     mutationFn: async (options: string) => {
       try {
         // The error isn't getting caught by the library so instead returning with data
-        return { response: await performRegistration(options) };
+        const response = await performRegistration(options);
+        return { response };
       } catch (e) {
         console.error(e);
         return { error: e as Error };
