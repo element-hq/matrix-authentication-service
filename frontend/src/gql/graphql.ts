@@ -1810,7 +1810,7 @@ export type UserEmailState =
 export type UserPasskey = {
   __typename?: 'UserPasskey';
   /** The AAGUID of the passkey */
-  aaguid: Aaguid;
+  aaguid?: Maybe<Aaguid>;
   /** When the object was created. */
   createdAt: Scalars['DateTime']['output'];
   /** ID of the object */
@@ -2004,7 +2004,7 @@ export type SetDisplayNameMutationVariables = Exact<{
 
 export type SetDisplayNameMutation = { __typename?: 'Mutation', setDisplayName: { __typename?: 'SetDisplayNamePayload', status: SetDisplayNameStatus } };
 
-export type UserPasskey_PasskeyFragment = { __typename?: 'UserPasskey', id: string, name?: string | null, lastUsedAt?: string | null, createdAt: string, aaguid: { __typename?: 'Aaguid', id: string, name?: string | null } } & { ' $fragmentName'?: 'UserPasskey_PasskeyFragment' };
+export type UserPasskey_PasskeyFragment = { __typename?: 'UserPasskey', id: string, name?: string | null, lastUsedAt?: string | null, createdAt: string, aaguid?: { __typename?: 'Aaguid', id: string, name?: string | null } | null } & { ' $fragmentName'?: 'UserPasskey_PasskeyFragment' };
 
 export type RemovePasskeyMutationVariables = Exact<{
   id: Scalars['ID']['input'];

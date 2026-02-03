@@ -1041,10 +1041,16 @@ impl UserPasskey {
     }
 
     /// The AAGUID of the passkey
-    pub async fn aaguid(&self) -> Result<Aaguid, async_graphql::Error> {
+    pub async fn aaguid(&self) -> Result<Option<Aaguid>, async_graphql::Error> {
         let metadata =
             MetadataOwned::decode(&self.0.metadata).context("Failed to decode metadata")?;
-        Ok(Aaguid(metadata.aaguid))
+        // Sometimes we have the 'null' AAGUID, which means we don't have an AAGUID for
+        // this passkey
+        if metadata.aaguid.0 == [0; 16] {
+            return Ok(None);
+        }
+
+        Ok(Some(Aaguid(metadata.aaguid)))
     }
 
     /// The transports supported by this passkey

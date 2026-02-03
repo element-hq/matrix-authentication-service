@@ -2658,7 +2658,7 @@ type UserPasskey {
   """
   The AAGUID of the passkey
   """
-  aaguid: Aaguid!
+  aaguid: Aaguid
   """
   The transports supported by this passkey
   """

@@ -145,7 +145,7 @@ const UserPasskey: React.FC<{
     new Date(),
   );
 
-  const name = data.name ?? data.aaguid.name ?? data.aaguid.id;
+  const name = data.name ?? data.aaguid?.name ?? "Unknown";
 
   return (
     <div className="flex items-center gap-2">
