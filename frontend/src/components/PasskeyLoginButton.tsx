@@ -63,7 +63,7 @@ const PasskeyLoginButton: React.FC<{
         );
         signal.throwIfAborted();
         if (!responseRef.current || !formRef.current) return;
-        responseRef.current.value = JSON.stringify(result.toJSON());
+        responseRef.current.value = result;
         formRef.current.submit();
       }
     })().catch((cause) => {
