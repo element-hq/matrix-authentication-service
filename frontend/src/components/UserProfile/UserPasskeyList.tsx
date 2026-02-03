@@ -48,7 +48,7 @@ const QUERY = graphql(/* GraphQL */ `
   }
 `);
 
-const query = (pagination: AnyPagination = { first: 6 }) =>
+export const query = (pagination: AnyPagination = { first: 6 }) =>
   queryOptions({
     queryKey: ["userPasskeys", pagination],
     queryFn: ({ signal }) =>

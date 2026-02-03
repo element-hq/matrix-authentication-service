@@ -24,7 +24,9 @@ import AddPasskeyForm from "../components/UserProfile/AddPasskeyForm";
 import UserEmailList, {
   query as userEmailListQuery,
 } from "../components/UserProfile/UserEmailList";
-import UserPasskeyList from "../components/UserProfile/UserPasskeyList";
+import UserPasskeyList, {
+  query as userPasskeyListQuery,
+} from "../components/UserProfile/UserPasskeyList";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
 
@@ -152,11 +154,13 @@ export const Route = createFileRoute({
     }
   },
 
-  loader: ({ context }) =>
-    Promise.all([
+  async loader({ context }) {
+    context.queryClient.prefetchQuery(userPasskeyListQuery());
+    await Promise.all([
       context.queryClient.ensureQueryData(userEmailListQuery()),
       context.queryClient.ensureQueryData(query),
-    ]),
+    ]);
+  },
 
   component: Index,
 });
