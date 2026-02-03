@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -293,7 +294,8 @@ pub struct UserPasskey {
     pub id: Ulid,
     pub user_id: Ulid,
     pub credential_id: CredentialId<Vec<u8>>,
-    pub name: String,
+    /// The user-defined name for the passkey, or `None` if not set
+    pub name: Option<String>,
     pub transports: AuthTransports,
     pub static_state: Vec<u8>,
     pub dynamic_state: Vec<u8>,

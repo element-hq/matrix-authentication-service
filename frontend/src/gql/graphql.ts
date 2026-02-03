@@ -158,6 +158,21 @@ export type Authentication = CreationEvent & Node & {
   id: Scalars['ID']['output'];
 };
 
+/** The transport method for a WebAuthn authenticator */
+export type AuthenticatorTransport =
+  /** Bluetooth Low Energy */
+  | 'BLE'
+  /** Hybrid (cross-device, e.g., phone as authenticator) */
+  | 'HYBRID'
+  /** Internal (platform authenticator like Face ID, Touch ID, Windows Hello) */
+  | 'INTERNAL'
+  /** NFC */
+  | 'NFC'
+  /** Smart Card */
+  | 'SMART_CARD'
+  /** USB */
+  | 'USB';
+
 /** A browser session represents a logged in user in a browser. */
 export type BrowserSession = CreationEvent & Node & {
   __typename?: 'BrowserSession';
@@ -369,8 +384,11 @@ export type CompleteEmailAuthenticationStatus =
 export type CompleteRegisterPasskeyInput = {
   /** The ID of the passkey challenge to complete */
   id: Scalars['ID']['input'];
-  /** Name of the passkey */
-  name: Scalars['String']['input'];
+  /**
+   * Name of the passkey. If not provided, a default name will be generated
+   * based on the authenticator's AAGUID or transport type.
+   */
+  name?: InputMaybe<Scalars['String']['input']>;
   /** The response from `navigator.credentials.create()` as a JSON string */
   response: Scalars['String']['input'];
 };
@@ -1807,7 +1825,9 @@ export type UserPasskey = {
   /** When the passkey was last used */
   lastUsedAt?: Maybe<Scalars['DateTime']['output']>;
   /** Name of the passkey */
-  name: Scalars['String']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  /** The transports supported by this passkey */
+  transports: Array<AuthenticatorTransport>;
 };
 
 export type UserPasskeyConnection = {
@@ -1991,7 +2011,7 @@ export type SetDisplayNameMutationVariables = Exact<{
 
 export type SetDisplayNameMutation = { __typename?: 'Mutation', setDisplayName: { __typename?: 'SetDisplayNamePayload', status: SetDisplayNameStatus } };
 
-export type UserPasskey_PasskeyFragment = { __typename?: 'UserPasskey', id: string, name: string, lastUsedAt?: string | null, createdAt: string, aaguid: { __typename?: 'Aaguid', id: string, name?: string | null } } & { ' $fragmentName'?: 'UserPasskey_PasskeyFragment' };
+export type UserPasskey_PasskeyFragment = { __typename?: 'UserPasskey', id: string, name?: string | null, lastUsedAt?: string | null, createdAt: string, aaguid: { __typename?: 'Aaguid', id: string, name?: string | null } } & { ' $fragmentName'?: 'UserPasskey_PasskeyFragment' };
 
 export type RemovePasskeyMutationVariables = Exact<{
   id: Scalars['ID']['input'];

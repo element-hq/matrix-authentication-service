@@ -1,4 +1,4 @@
-// Copyright 2025 New Vector Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
@@ -46,7 +46,7 @@ struct UserPasskeyLookup {
     user_passkey_id: Uuid,
     user_id: Uuid,
     credential_id: String,
-    name: String,
+    name: Option<String>,
     transports: serde_json::Value,
     static_state: Vec<u8>,
     dynamic_state: Vec<u8>,
@@ -357,7 +357,7 @@ impl UserPasskeyRepository for PgUserPasskeyRepository<'_> {
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         user: &User,
-        name: String,
+        name: Option<String>,
         credential_id: CredentialId<Vec<u8>>,
         transports: AuthTransports,
         static_state: Vec<u8>,
@@ -376,7 +376,7 @@ impl UserPasskeyRepository for PgUserPasskeyRepository<'_> {
             Uuid::from(id),
             Uuid::from(user.id),
             serde_json::to_string(&credential_id).map_err(DatabaseError::to_invalid_operation)?,
-            &name,
+            name.as_deref(),
             serde_json::to_value(transports).map_err(DatabaseError::to_invalid_operation)?,
             static_state,
             dynamic_state,
@@ -422,7 +422,7 @@ impl UserPasskeyRepository for PgUserPasskeyRepository<'_> {
                 WHERE user_passkey_id = $1
             "#,
             Uuid::from(user_passkey.id),
-            name,
+            name.as_str(),
         )
         .traced()
         .execute(&mut *self.conn)
@@ -430,7 +430,7 @@ impl UserPasskeyRepository for PgUserPasskeyRepository<'_> {
 
         DatabaseError::ensure_affected_rows(&res, 1)?;
 
-        user_passkey.name = name;
+        user_passkey.name = Some(name);
         Ok(user_passkey)
     }
 

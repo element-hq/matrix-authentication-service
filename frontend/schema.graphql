@@ -210,6 +210,36 @@ type Authentication implements Node & CreationEvent {
 }
 
 """
+The transport method for a WebAuthn authenticator
+"""
+enum AuthenticatorTransport {
+  """
+  Bluetooth Low Energy
+  """
+  BLE
+  """
+  Hybrid (cross-device, e.g., phone as authenticator)
+  """
+  HYBRID
+  """
+  Internal (platform authenticator like Face ID, Touch ID, Windows Hello)
+  """
+  INTERNAL
+  """
+  NFC
+  """
+  NFC
+  """
+  Smart Card
+  """
+  SMART_CARD
+  """
+  USB
+  """
+  USB
+}
+
+"""
 A browser session represents a logged in user in a browser.
 """
 type BrowserSession implements Node & CreationEvent {
@@ -561,9 +591,10 @@ input CompleteRegisterPasskeyInput {
   """
   id: ID!
   """
-  Name of the passkey
+  Name of the passkey. If not provided, a default name will be generated
+  based on the authenticator's AAGUID or transport type.
   """
-  name: String!
+  name: String
   """
   The response from `navigator.credentials.create()` as a JSON string
   """
@@ -2624,7 +2655,7 @@ type UserPasskey {
   """
   Name of the passkey
   """
-  name: String!
+  name: String
   """
   When the object was created.
   """
@@ -2637,6 +2668,10 @@ type UserPasskey {
   The AAGUID of the passkey
   """
   aaguid: Aaguid!
+  """
+  The transports supported by this passkey
+  """
+  transports: [AuthenticatorTransport!]!
 }
 
 type UserPasskeyConnection {

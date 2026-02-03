@@ -25,7 +25,10 @@ use mas_storage::{
 };
 use webauthn_rp::{
     bin::Decode,
-    response::register::bin::{AaguidOwned, MetadataOwned},
+    response::{
+        AuthTransports,
+        register::bin::{AaguidOwned, MetadataOwned},
+    },
 };
 
 use super::{
@@ -974,6 +977,40 @@ impl Aaguid {
     }
 }
 
+/// The transport method for a WebAuthn authenticator
+#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+pub enum AuthenticatorTransport {
+    /// Bluetooth Low Energy
+    Ble,
+    /// Hybrid (cross-device, e.g., phone as authenticator)
+    Hybrid,
+    /// Internal (platform authenticator like Face ID, Touch ID, Windows Hello)
+    Internal,
+    /// NFC
+    Nfc,
+    /// Smart Card
+    SmartCard,
+    /// USB
+    Usb,
+}
+
+impl From<webauthn_rp::response::AuthenticatorTransport> for AuthenticatorTransport {
+    fn from(transport: webauthn_rp::response::AuthenticatorTransport) -> Self {
+        match transport {
+            webauthn_rp::response::AuthenticatorTransport::Ble => Self::Ble,
+            webauthn_rp::response::AuthenticatorTransport::Hybrid => Self::Hybrid,
+            webauthn_rp::response::AuthenticatorTransport::Internal => Self::Internal,
+            webauthn_rp::response::AuthenticatorTransport::Nfc => Self::Nfc,
+            webauthn_rp::response::AuthenticatorTransport::SmartCard => Self::SmartCard,
+            webauthn_rp::response::AuthenticatorTransport::Usb => Self::Usb,
+        }
+    }
+}
+
+fn transports_to_vec(transports: AuthTransports) -> Vec<AuthenticatorTransport> {
+    transports.into_iter().map(AuthenticatorTransport::from).collect()
+}
+
 /// A passkey
 #[derive(Description)]
 pub struct UserPasskey(pub mas_data_model::UserPasskey);
@@ -986,8 +1023,8 @@ impl UserPasskey {
     }
 
     /// Name of the passkey
-    pub async fn name(&self) -> &str {
-        &self.0.name
+    pub async fn name(&self) -> Option<&str> {
+        self.0.name.as_deref()
     }
 
     /// When the object was created.
@@ -1005,5 +1042,10 @@ impl UserPasskey {
         let metadata =
             MetadataOwned::decode(&self.0.metadata).context("Failed to decode metadata")?;
         Ok(Aaguid(metadata.aaguid))
+    }
+
+    /// The transports supported by this passkey
+    pub async fn transports(&self) -> Vec<AuthenticatorTransport> {
+        transports_to_vec(self.0.transports)
     }
 }

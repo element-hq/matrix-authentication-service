@@ -1,4 +1,4 @@
-// Copyright 2025 New Vector Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
@@ -124,7 +124,7 @@ pub trait UserPasskeyRepository: Send + Sync {
     /// * `rng`: The random number generator to use
     /// * `clock`: The clock to use
     /// * `user`: The [`User`] for whom to create the [`UserPasskey`]
-    /// * `name`: The name for the [`UserPasskey`]
+    /// * `name`: The optional name for the [`UserPasskey`]
     /// * `data`: The passkey data of the [`UserPasskey`]
     ///
     /// # Errors
@@ -135,7 +135,7 @@ pub trait UserPasskeyRepository: Send + Sync {
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         user: &User,
-        name: String,
+        name: Option<String>,
         credential_id: CredentialId<Vec<u8>>,
         transports: AuthTransports,
         static_state: Vec<u8>,
@@ -294,7 +294,7 @@ repository_impl!(UserPasskeyRepository:
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         user: &User,
-        name: String,
+        name: Option<String>,
         credential_id: CredentialId<Vec<u8>>,
         transports: AuthTransports,
         static_state: Vec<u8>,

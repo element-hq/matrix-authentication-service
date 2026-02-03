@@ -1,4 +1,4 @@
-// Copyright 2025 New Vector Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only
 // Please see LICENSE in the repository root for full details.
@@ -234,7 +234,7 @@ impl Webauthn {
         user: &User,
         user_passkey_challenge: UserPasskeyChallenge,
         response: String,
-        name: String,
+        name: Option<String>,
     ) -> Result<UserPasskey> {
         let server_state = RegistrationServerState::decode(&user_passkey_challenge.state)?;
 
