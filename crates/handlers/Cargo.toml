@@ -70,6 +70,7 @@ url.workspace = true
 webauthn_rp.workspace = true
 zeroize.workspace = true
 
+mas-aaguid.workspace = true
 mas-axum-utils.workspace = true
 mas-config.workspace = true
 mas-context.workspace = true

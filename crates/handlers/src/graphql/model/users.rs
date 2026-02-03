@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -968,7 +969,8 @@ impl Aaguid {
 
     /// A known name for the AAGUID
     pub async fn name(&self) -> Option<&'static str> {
-        None
+        let uuid = uuid::Uuid::from_bytes(self.0.0);
+        mas_aaguid::lookup(&uuid)
     }
 }
 
