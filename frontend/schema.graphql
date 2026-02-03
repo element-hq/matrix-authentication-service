@@ -210,7 +210,7 @@ type Authentication implements Node & CreationEvent {
 }
 
 """
-The transport method for a WebAuthn authenticator
+The transport method for a `WebAuthn` authenticator
 """
 enum AuthenticatorTransport {
   """
@@ -591,11 +591,6 @@ input CompleteRegisterPasskeyInput {
   """
   id: ID!
   """
-  Name of the passkey. If not provided, a default name will be generated
-  based on the authenticator's AAGUID or transport type.
-  """
-  name: String
-  """
   The response from `navigator.credentials.create()` as a JSON string
   """
   response: String!
@@ -635,10 +630,6 @@ enum CompleteRegisterPasskeyStatus {
   The response was invalid
   """
   INVALID_RESPONSE
-  """
-  The name for the passkey was invalid
-  """
-  INVALID_NAME
   """
   The passkey credential already exists
   """
@@ -1485,9 +1476,9 @@ input RenamePasskeyInput {
   """
   id: ID!
   """
-  new name for the passkey
+  New name for the passkey. If null, the name will be removed
   """
-  name: String!
+  name: String
 }
 
 """

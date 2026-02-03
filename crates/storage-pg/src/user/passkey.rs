@@ -357,7 +357,6 @@ impl UserPasskeyRepository for PgUserPasskeyRepository<'_> {
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         user: &User,
-        name: Option<String>,
         credential_id: CredentialId<Vec<u8>>,
         transports: AuthTransports,
         static_state: Vec<u8>,
@@ -370,13 +369,12 @@ impl UserPasskeyRepository for PgUserPasskeyRepository<'_> {
 
         sqlx::query!(
             r#"
-                INSERT INTO user_passkeys (user_passkey_id, user_id, credential_id, name, transports, static_state, dynamic_state, metadata, created_at)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                INSERT INTO user_passkeys (user_passkey_id, user_id, credential_id, transports, static_state, dynamic_state, metadata, created_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             "#,
             Uuid::from(id),
             Uuid::from(user.id),
             serde_json::to_string(&credential_id).map_err(DatabaseError::to_invalid_operation)?,
-            name.as_deref(),
             serde_json::to_value(transports).map_err(DatabaseError::to_invalid_operation)?,
             static_state,
             dynamic_state,
@@ -391,7 +389,7 @@ impl UserPasskeyRepository for PgUserPasskeyRepository<'_> {
             id,
             user_id: user.id,
             credential_id,
-            name,
+            name: None,
             transports,
             static_state,
             dynamic_state,
@@ -413,7 +411,7 @@ impl UserPasskeyRepository for PgUserPasskeyRepository<'_> {
     async fn rename(
         &mut self,
         mut user_passkey: UserPasskey,
-        name: String,
+        name: Option<String>,
     ) -> Result<UserPasskey, Self::Error> {
         let res = sqlx::query!(
             r#"
@@ -422,7 +420,7 @@ impl UserPasskeyRepository for PgUserPasskeyRepository<'_> {
                 WHERE user_passkey_id = $1
             "#,
             Uuid::from(user_passkey.id),
-            name.as_str(),
+            name.as_deref(),
         )
         .traced()
         .execute(&mut *self.conn)
@@ -430,7 +428,7 @@ impl UserPasskeyRepository for PgUserPasskeyRepository<'_> {
 
         DatabaseError::ensure_affected_rows(&res, 1)?;
 
-        user_passkey.name = Some(name);
+        user_passkey.name = name;
         Ok(user_passkey)
     }
 

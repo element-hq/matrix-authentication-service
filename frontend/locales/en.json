@@ -66,9 +66,6 @@
         "delete_button_title": "Remove passkey",
         "exists_error": "This passkey already exists.",
         "last_used_message": "Last used {{date}}",
-        "name_field_help": "Give your passkey a name you can identify later",
-        "name_field_label": "Name",
-        "name_invalid_error": "The entered name is invalid",
         "never_used_message": "Never used",
         "response_invalid_error": "The response from your passkey was invalid: {{error}}",
         "title": "Passkeys"

@@ -234,7 +234,6 @@ impl Webauthn {
         user: &User,
         user_passkey_challenge: UserPasskeyChallenge,
         response: String,
-        name: Option<String>,
     ) -> Result<UserPasskey> {
         let server_state = RegistrationServerState::decode(&user_passkey_challenge.state)?;
 
@@ -268,7 +267,6 @@ impl Webauthn {
                 rng,
                 clock,
                 user,
-                name,
                 cred_id,
                 credential.transports(),
                 credential.static_state().encode()?,

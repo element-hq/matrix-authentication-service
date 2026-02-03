@@ -124,8 +124,15 @@ pub trait UserPasskeyRepository: Send + Sync {
     /// * `rng`: The random number generator to use
     /// * `clock`: The clock to use
     /// * `user`: The [`User`] for whom to create the [`UserPasskey`]
-    /// * `name`: The optional name for the [`UserPasskey`]
-    /// * `data`: The passkey data of the [`UserPasskey`]
+    /// * `credential_id`: The credential ID of the [`UserPasskey`] encoded as
+    ///   bytes
+    /// * `transports`: The transports of the [`UserPasskey`] encoded as
+    ///   bitflags
+    /// * `static_state`: The static state of the [`UserPasskey`] encoded as
+    ///   bytes
+    /// * `dynamic_state`: The dynamic state of the [`UserPasskey`] encoded as
+    ///   bytes
+    /// * `metadata`: The metadata of the [`UserPasskey`] encoded as bytes
     ///
     /// # Errors
     ///
@@ -135,7 +142,6 @@ pub trait UserPasskeyRepository: Send + Sync {
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         user: &User,
-        name: Option<String>,
         credential_id: CredentialId<Vec<u8>>,
         transports: AuthTransports,
         static_state: Vec<u8>,
@@ -150,7 +156,7 @@ pub trait UserPasskeyRepository: Send + Sync {
     /// # Parameters
     ///
     /// * `user_passkey`: The [`UserPasskey`] to rename
-    /// * `name`: The new name
+    /// * `name`: The new name, or `None` to remove the name
     ///
     /// # Errors
     ///
@@ -158,7 +164,7 @@ pub trait UserPasskeyRepository: Send + Sync {
     async fn rename(
         &mut self,
         user_passkey: UserPasskey,
-        name: String,
+        name: Option<String>,
     ) -> Result<UserPasskey, Self::Error>;
 
     /// Update a [`UserPasskey`]
@@ -294,7 +300,6 @@ repository_impl!(UserPasskeyRepository:
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
         user: &User,
-        name: Option<String>,
         credential_id: CredentialId<Vec<u8>>,
         transports: AuthTransports,
         static_state: Vec<u8>,
@@ -304,7 +309,7 @@ repository_impl!(UserPasskeyRepository:
     async fn rename(
         &mut self,
         user_passkey: UserPasskey,
-        name: String,
+        name: Option<String>,
     ) -> Result<UserPasskey, Self::Error>;
     async fn update(
         &mut self,

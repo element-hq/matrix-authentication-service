@@ -158,7 +158,7 @@ export type Authentication = CreationEvent & Node & {
   id: Scalars['ID']['output'];
 };
 
-/** The transport method for a WebAuthn authenticator */
+/** The transport method for a `WebAuthn` authenticator */
 export type AuthenticatorTransport =
   /** Bluetooth Low Energy */
   | 'BLE'
@@ -384,11 +384,6 @@ export type CompleteEmailAuthenticationStatus =
 export type CompleteRegisterPasskeyInput = {
   /** The ID of the passkey challenge to complete */
   id: Scalars['ID']['input'];
-  /**
-   * Name of the passkey. If not provided, a default name will be generated
-   * based on the authenticator's AAGUID or transport type.
-   */
-  name?: InputMaybe<Scalars['String']['input']>;
   /** The response from `navigator.credentials.create()` as a JSON string */
   response: Scalars['String']['input'];
 };
@@ -412,8 +407,6 @@ export type CompleteRegisterPasskeyStatus =
   | 'EXISTS'
   /** The challenge was invalid */
   | 'INVALID_CHALLENGE'
-  /** The name for the passkey was invalid */
-  | 'INVALID_NAME'
   /** The response was invalid */
   | 'INVALID_RESPONSE';
 
@@ -1140,8 +1133,8 @@ export type RemovePasskeyStatus =
 export type RenamePasskeyInput = {
   /** The ID of the passkey to rename */
   id: Scalars['ID']['input'];
-  /** new name for the passkey */
-  name: Scalars['String']['input'];
+  /** New name for the passkey. If null, the name will be removed */
+  name?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** The payload of the `renamePasskey` mutation */
@@ -2022,7 +2015,7 @@ export type RemovePasskeyMutation = { __typename?: 'Mutation', removePasskey: { 
 
 export type RenamePasskeyMutationVariables = Exact<{
   id: Scalars['ID']['input'];
-  name: Scalars['String']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
@@ -2048,7 +2041,6 @@ export type StartRegisterPasskeyMutation = { __typename?: 'Mutation', startRegis
 
 export type CompleteRegisterPasskeyMutationVariables = Exact<{
   id: Scalars['ID']['input'];
-  name: Scalars['String']['input'];
   response: Scalars['String']['input'];
 }>;
 
@@ -2801,7 +2793,7 @@ export const RemovePasskeyDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<RemovePasskeyMutation, RemovePasskeyMutationVariables>;
 export const RenamePasskeyDocument = new TypedDocumentString(`
-    mutation RenamePasskey($id: ID!, $name: String!) {
+    mutation RenamePasskey($id: ID!, $name: String) {
   renamePasskey(input: {id: $id, name: $name}) {
     status
   }
@@ -2829,8 +2821,8 @@ export const StartRegisterPasskeyDocument = new TypedDocumentString(`
 }
     `) as unknown as TypedDocumentString<StartRegisterPasskeyMutation, StartRegisterPasskeyMutationVariables>;
 export const CompleteRegisterPasskeyDocument = new TypedDocumentString(`
-    mutation CompleteRegisterPasskey($id: ID!, $name: String!, $response: String!) {
-  completeRegisterPasskey(input: {id: $id, name: $name, response: $response}) {
+    mutation CompleteRegisterPasskey($id: ID!, $response: String!) {
+  completeRegisterPasskey(input: {id: $id, response: $response}) {
     status
     error
   }
@@ -3693,7 +3685,7 @@ export const mockStartRegisterPasskeyMutation = (resolver: GraphQLResponseResolv
  * @example
  * mockCompleteRegisterPasskeyMutation(
  *   ({ query, variables }) => {
- *     const { id, name, response } = variables;
+ *     const { id, response } = variables;
  *     return HttpResponse.json({
  *       data: { completeRegisterPasskey }
  *     })

@@ -32,7 +32,7 @@ const PasskeyLoginButton: React.FC<{
       const signal = abortControllerRef.current.signal;
 
       const data = await performAuthentication(options, mediation, signal);
-      responseRef.current!.value = JSON.stringify(data.toJSON());
+      responseRef.current!.value = data;
       formRef.current!.submit();
     },
   });

@@ -977,7 +977,7 @@ impl Aaguid {
     }
 }
 
-/// The transport method for a WebAuthn authenticator
+/// The transport method for a `WebAuthn` authenticator
 #[derive(Enum, Copy, Clone, Eq, PartialEq)]
 pub enum AuthenticatorTransport {
     /// Bluetooth Low Energy
@@ -1008,7 +1008,10 @@ impl From<webauthn_rp::response::AuthenticatorTransport> for AuthenticatorTransp
 }
 
 fn transports_to_vec(transports: AuthTransports) -> Vec<AuthenticatorTransport> {
-    transports.into_iter().map(AuthenticatorTransport::from).collect()
+    transports
+        .into_iter()
+        .map(AuthenticatorTransport::from)
+        .collect()
 }
 
 /// A passkey
