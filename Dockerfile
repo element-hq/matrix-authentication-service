@@ -1,4 +1,4 @@
-# syntax = docker/dockerfile:1.7.1
+# syntax = docker/dockerfile:1.21.0
 # Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
