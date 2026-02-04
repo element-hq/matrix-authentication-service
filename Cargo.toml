@@ -71,7 +71,7 @@ features = ["axum", "axum-extra", "axum-extra-query", "axum-json", "macros"]
 
 # An `Arc` that can be atomically updated
 [workspace.dependencies.arc-swap]
-version = "1.7.1"
+version = "1.8.1"
 
 # GraphQL server
 [workspace.dependencies.async-graphql]
