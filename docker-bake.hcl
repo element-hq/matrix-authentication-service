@@ -7,7 +7,7 @@
 // This is used to set the version reported by the binary through an environment
 // variable. This is mainly useful when building out of a git context, like in
 // CI, where we don't have the full commit history available
-variable "VERGEN_GIT_DESCRIBE" {}
+variable "MAS_VERSION" {}
 
 // This is what is baked by GitHub Actions
 group "default" { targets = ["regular", "debug"] }
@@ -24,8 +24,8 @@ target "base" {
     // present, as we may be infering the version at build time out of it
     BUILDKIT_CONTEXT_KEEP_GIT_DIR = 1
 
-    // Pass down the version from an external git describe source
-    VERGEN_GIT_DESCRIBE = "${VERGEN_GIT_DESCRIBE}"
+    // Pass down the version from an external source
+    MAS_VERSION = "${MAS_VERSION}"
   }
 }
 

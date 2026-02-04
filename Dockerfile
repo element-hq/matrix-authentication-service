@@ -116,8 +116,11 @@ WORKDIR /app
 COPY ./ /app
 ENV SQLX_OFFLINE=true
 
-ARG VERGEN_GIT_DESCRIBE
-ENV VERGEN_GIT_DESCRIBE=${VERGEN_GIT_DESCRIBE}
+ARG MAS_VERSION
+ENV MAS_VERSION=${MAS_VERSION}
+
+# Set the share directory for the Docker build
+ENV MAS_SHARE_DIR=/usr/local/share/mas-cli
 
 ARG TARGETARCH
 
@@ -134,8 +137,6 @@ RUN --network=default \
     --locked \
     --release \
     --bin mas-cli \
-    --no-default-features \
-    --features docker \
     --target "${RUST_TARGET}" \
   && mv "target/${RUST_TARGET}/release/mas-cli" /usr/local/bin/mas-cli
 

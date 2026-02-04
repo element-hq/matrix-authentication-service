@@ -105,7 +105,8 @@ jobs:
           - target: aarch64-unknown-linux-gnu
 
     env:
-      VERGEN_GIT_DESCRIBE: ${{ needs.compute-version.outputs.describe }}
+      MAS_VERSION: ${{ needs.compute-version.outputs.describe }}
+      MAS_SHARE_DIR: ./share
       SOURCE_DATE_EPOCH: ${{ needs.compute-version.outputs.timestamp }}
 
     permissions:
@@ -139,8 +140,6 @@ jobs:
           cargo zigbuild \
             --release \
             --target ${{ matrix.target }}.2.17 \
-            --no-default-features \
-            --features dist \
             -p mas-cli
 
       - name: Upload binary artifact
@@ -222,7 +221,7 @@ jobs:
         arch: [amd64, arm64]
 
     env:
-      VERGEN_GIT_DESCRIBE: ${{ needs.compute-version.outputs.describe }}
+      MAS_VERSION: ${{ needs.compute-version.outputs.describe }}
       SOURCE_DATE_EPOCH: ${{ needs.compute-version.outputs.timestamp }}
 
     steps:
