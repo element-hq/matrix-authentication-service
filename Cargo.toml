@@ -685,7 +685,7 @@ features = ["cors", "fs", "add-extension", "set-header"]
 [workspace.dependencies.tracing]
 version = "0.1.41"
 [workspace.dependencies.tracing-subscriber]
-version = "0.3.20"
+version = "0.3.22"
 features = ["env-filter"]
 [workspace.dependencies.tracing-appender]
 version = "0.2.4"
