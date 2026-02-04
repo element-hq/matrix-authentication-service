@@ -35,6 +35,7 @@ broken_intra_doc_links = "deny"
 
 # Workspace crates
 mas-axum-utils = { path = "./crates/axum-utils/", version = "=1.11.0-rc.0" }
+mas-build-info = { path = "./crates/build-info/", version = "=1.11.0-rc.0" }
 mas-cli = { path = "./crates/cli/", version = "=1.11.0-rc.0" }
 mas-config = { path = "./crates/config/", version = "=1.11.0-rc.0" }
 mas-context = { path = "./crates/context/", version = "=1.11.0-rc.0" }
@@ -712,10 +713,9 @@ version = "1.18.1"
 [workspace.dependencies.v_htmlescape]
 version = "0.15.8"
 
-# Version information generation
-[workspace.dependencies.vergen-gitcl]
-version = "1.0.8"
-features = ["rustc"]
+# Rustc version detection (for build scripts)
+[workspace.dependencies.rustc_version]
+version = "0.4.1"
 
 # Directory traversal
 [workspace.dependencies.walkdir]
