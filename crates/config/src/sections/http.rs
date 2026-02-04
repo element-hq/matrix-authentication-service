@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -23,19 +24,8 @@ fn default_public_base() -> Url {
     "http://[::]:8080".parse().unwrap()
 }
 
-#[cfg(not(any(feature = "docker", feature = "dist")))]
 fn http_listener_assets_path_default() -> Utf8PathBuf {
-    "./frontend/dist/".into()
-}
-
-#[cfg(feature = "docker")]
-fn http_listener_assets_path_default() -> Utf8PathBuf {
-    "/usr/local/share/mas-cli/assets/".into()
-}
-
-#[cfg(feature = "dist")]
-fn http_listener_assets_path_default() -> Utf8PathBuf {
-    "./share/assets/".into()
+    mas_build_info::DEFAULT_ASSETS_PATH.into()
 }
 
 fn is_default_http_listener_assets_path(value: &Utf8PathBuf) -> bool {

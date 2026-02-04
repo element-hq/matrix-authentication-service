@@ -40,13 +40,10 @@ tracing.workspace = true
 ulid.workspace = true
 url.workspace = true
 
+mas-build-info.workspace = true
 mas-jose.workspace = true
 mas-keystore.workspace = true
 mas-iana.workspace = true
-
-[features]
-docker = []
-dist = []
 
 [[bin]]
 name = "schema"

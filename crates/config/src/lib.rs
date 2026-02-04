@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -10,9 +11,6 @@
 #![allow(clippy::str_to_string)]
 
 //! Application configuration logic
-
-#[cfg(all(feature = "docker", feature = "dist"))]
-compile_error!("Only one of the `docker` and `dist` features can be enabled at once");
 
 pub(crate) mod schema;
 mod sections;

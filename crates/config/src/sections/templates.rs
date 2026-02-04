@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -10,57 +11,24 @@ use serde::{Deserialize, Serialize};
 
 use super::ConfigurationSection;
 
-#[cfg(not(any(feature = "docker", feature = "dist")))]
 fn default_path() -> Utf8PathBuf {
-    "./templates/".into()
-}
-
-#[cfg(feature = "docker")]
-fn default_path() -> Utf8PathBuf {
-    "/usr/local/share/mas-cli/templates/".into()
-}
-
-#[cfg(feature = "dist")]
-fn default_path() -> Utf8PathBuf {
-    "./share/templates/".into()
+    mas_build_info::DEFAULT_TEMPLATES_PATH.into()
 }
 
 fn is_default_path(value: &Utf8PathBuf) -> bool {
     *value == default_path()
 }
 
-#[cfg(not(any(feature = "docker", feature = "dist")))]
 fn default_assets_path() -> Utf8PathBuf {
-    "./frontend/dist/manifest.json".into()
-}
-
-#[cfg(feature = "docker")]
-fn default_assets_path() -> Utf8PathBuf {
-    "/usr/local/share/mas-cli/manifest.json".into()
-}
-
-#[cfg(feature = "dist")]
-fn default_assets_path() -> Utf8PathBuf {
-    "./share/manifest.json".into()
+    mas_build_info::DEFAULT_ASSETS_MANIFEST_PATH.into()
 }
 
 fn is_default_assets_path(value: &Utf8PathBuf) -> bool {
     *value == default_assets_path()
 }
 
-#[cfg(not(any(feature = "docker", feature = "dist")))]
 fn default_translations_path() -> Utf8PathBuf {
-    "./translations/".into()
-}
-
-#[cfg(feature = "docker")]
-fn default_translations_path() -> Utf8PathBuf {
-    "/usr/local/share/mas-cli/translations/".into()
-}
-
-#[cfg(feature = "dist")]
-fn default_translations_path() -> Utf8PathBuf {
-    "./share/translations/".into()
+    mas_build_info::DEFAULT_TRANSLATIONS_PATH.into()
 }
 
 fn is_default_translations_path(value: &Utf8PathBuf) -> bool {

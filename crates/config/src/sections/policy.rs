@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -11,19 +12,8 @@ use serde_with::serde_as;
 
 use super::ConfigurationSection;
 
-#[cfg(not(any(feature = "docker", feature = "dist")))]
 fn default_policy_path() -> Utf8PathBuf {
-    "./policies/policy.wasm".into()
-}
-
-#[cfg(feature = "docker")]
-fn default_policy_path() -> Utf8PathBuf {
-    "/usr/local/share/mas-cli/policy.wasm".into()
-}
-
-#[cfg(feature = "dist")]
-fn default_policy_path() -> Utf8PathBuf {
-    "./share/policy.wasm".into()
+    mas_build_info::DEFAULT_POLICY_PATH.into()
 }
 
 fn is_default_policy_path(value: &Utf8PathBuf) -> bool {
