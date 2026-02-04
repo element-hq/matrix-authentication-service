@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -286,7 +287,8 @@ fn resource() -> Resource {
             KeyValue::new(semcov::resource::PROCESS_RUNTIME_NAME, "rust"),
             KeyValue::new(
                 semcov::resource::PROCESS_RUNTIME_VERSION,
-                env!("VERGEN_RUSTC_SEMVER"),
+                // Use rustc version from build.rs, or "unknown" if not available
+                option_env!("MAS_RUSTC_VERSION").unwrap_or("unknown"),
             ),
         ])
         .build()

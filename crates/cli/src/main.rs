@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -27,8 +28,24 @@ mod sync;
 mod telemetry;
 mod util;
 
-/// The application version, as reported by `git describe` at build time
-static VERSION: &str = env!("VERGEN_GIT_DESCRIBE");
+/// The application version.
+///
+/// This is determined at build time using the following fallback chain:
+/// 1. `MAS_VERSION` environment variable (explicit override by packagers)
+/// 2. `MAS_GIT_VERSION` (from `git describe` at build time)
+/// 3. `CARGO_PKG_VERSION` (from Cargo.toml, always available)
+static VERSION: &str = {
+    // Use MAS_VERSION if explicitly set
+    if let Some(v) = option_env!("MAS_VERSION") {
+        v
+    // Otherwise use git version if available
+    } else if let Some(v) = option_env!("MAS_GIT_VERSION") {
+        v
+    // Fall back to Cargo package version
+    } else {
+        env!("CARGO_PKG_VERSION")
+    }
+};
 
 #[derive(Debug)]
 struct SentryTransportFactory {

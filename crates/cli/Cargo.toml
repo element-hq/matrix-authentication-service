@@ -92,12 +92,4 @@ mas-tower.workspace = true
 syn2mas.workspace = true
 
 [build-dependencies]
-anyhow.workspace = true
-vergen-gitcl.workspace = true
-
-[features]
-# Features used for the prebuilt binaries
-dist = ["mas-config/dist"]
-
-# Features used in the Docker image
-docker = ["mas-config/docker"]
+rustc_version.workspace = true
