@@ -105,6 +105,64 @@ Building from the source requires:
    mas-cli --help # Should display the help message
    ```
 
+## Packaging for distributions
+
+When packaging MAS for Linux distributions (e.g., Nix, Debian, RPM), you can configure default paths and version information at build time using environment variables.
+This avoids the need to patch source files.
+
+### Build-time environment variables
+
+#### `MAS_SHARE_DIR`
+
+Sets the base directory for all bundled resources.
+When set, the following paths are derived automatically:
+
+| Resource     | Default path                         |
+|--------------|--------------------------------------|
+| Templates    | `${MAS_SHARE_DIR}/templates/`        |
+| Assets       | `${MAS_SHARE_DIR}/assets/`           |
+| Manifest     | `${MAS_SHARE_DIR}/manifest.json`     |
+| Translations | `${MAS_SHARE_DIR}/translations/`     |
+| Policy       | `${MAS_SHARE_DIR}/policy.wasm`       |
+
+If `MAS_SHARE_DIR` is not set (dev mode), paths default to source tree locations (`./templates/`, `./frontend/dist/`, etc.).
+
+#### `MAS_VERSION`
+
+Overrides the version string reported by `mas-cli --version` and in telemetry.
+If not set, the version is determined from `git describe` (if available) or falls back to the version in `Cargo.toml`.
+
+#### Individual path overrides
+
+For fine-grained control, individual paths can be overridden (these take precedence over `MAS_SHARE_DIR`):
+
+- `MAS_TEMPLATES_PATH`: Path to the templates directory
+- `MAS_ASSETS_PATH`: Path to the assets directory
+- `MAS_ASSETS_MANIFEST_PATH`: Path to the assets manifest file
+- `MAS_TRANSLATIONS_PATH`: Path to the translations directory
+- `MAS_POLICY_PATH`: Path to the policy WASM module
+
+### Example: Building for `/usr/share/mas`
+
+```sh
+# Build frontend and policies first
+(cd frontend && npm ci && npm run build)
+(cd policies && make)
+
+# Build the binary with custom paths
+export MAS_SHARE_DIR=/usr/share/mas
+export MAS_VERSION=1.2.3
+cargo build --release
+
+# Install
+install -Dm755 target/release/mas-cli /usr/bin/mas-cli
+install -Dm644 policies/policy.wasm /usr/share/mas/policy.wasm
+install -Dm644 frontend/dist/manifest.json /usr/share/mas/manifest.json
+cp -r frontend/dist/* /usr/share/mas/assets/
+cp -r templates /usr/share/mas/templates
+cp -r translations /usr/share/mas/translations
+```
+
 ## Next steps
 
 The service needs some configuration to work.
