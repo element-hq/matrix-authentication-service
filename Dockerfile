@@ -1,4 +1,5 @@
 # syntax = docker/dockerfile:1.7.1
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -10,8 +11,8 @@
 # being the platform being built.
 
 # The Debian version and version name must be in sync
-ARG DEBIAN_VERSION=12
-ARG DEBIAN_VERSION_NAME=bookworm
+ARG DEBIAN_VERSION=13
+ARG DEBIAN_VERSION_NAME=trixie
 # Keep in sync with .github/workflows/ci.yaml
 ARG RUSTC_VERSION=1.93.0
 ARG NODEJS_VERSION=24.13.0
