@@ -567,7 +567,7 @@ features = [
 
 # Sentry error tracking
 [workspace.dependencies.sentry]
-version = "0.46.0"
+version = "0.46.2"
 default-features = false
 features = ["backtrace", "contexts", "panic", "tower", "reqwest"]
 
