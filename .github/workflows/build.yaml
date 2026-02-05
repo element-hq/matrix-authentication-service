@@ -372,28 +372,42 @@ jobs:
 
       - name: Create regular manifest
         env:
-          ANNOTATIONS: ${{ steps.meta.outputs.annotations }}
+          META_JSON: ${{ steps.meta.outputs.json }}
         run: |
           REGULAR_AMD64=$(cat /tmp/digests/regular-amd64)
           REGULAR_ARM64=$(cat /tmp/digests/regular-arm64)
-          # Filter index annotations with non-empty values
-          INDEX_ANNOTATIONS=$(echo "$ANNOTATIONS" | grep '^index:' | grep -v "=\$" | sed 's/^index:/--annotation /' | tr '\n' ' ')
+          # Extract index annotations with non-empty values using jq
+          INDEX_ANNOTATIONS=$(jq -r '
+            .annotations
+            | to_entries
+            | map(select(.key | startswith("index:")))
+            | map(select(.value != ""))
+            | map("--annotation " + (.key | sub("^index:"; "")) + "=" + .value)
+            | join(" ")
+          ' <<< "$META_JSON")
           docker buildx imagetools create \
-            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< '${{ steps.meta.outputs.json }}') \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$META_JSON") \
             $INDEX_ANNOTATIONS \
             "${{ env.IMAGE }}@${REGULAR_AMD64}" \
             "${{ env.IMAGE }}@${REGULAR_ARM64}"
 
       - name: Create debug manifest
         env:
-          ANNOTATIONS: ${{ steps.meta-debug.outputs.annotations }}
+          META_DEBUG_JSON: ${{ steps.meta-debug.outputs.json }}
         run: |
           DEBUG_AMD64=$(cat /tmp/digests/debug-amd64)
           DEBUG_ARM64=$(cat /tmp/digests/debug-arm64)
-          # Filter index annotations with non-empty values
-          INDEX_ANNOTATIONS=$(echo "$ANNOTATIONS" | grep '^index:' | grep -v "=\$" | sed 's/^index:/--annotation /' | tr '\n' ' ')
+          # Extract index annotations with non-empty values using jq
+          INDEX_ANNOTATIONS=$(jq -r '
+            .annotations
+            | to_entries
+            | map(select(.key | startswith("index:")))
+            | map(select(.value != ""))
+            | map("--annotation " + (.key | sub("^index:"; "")) + "=" + .value)
+            | join(" ")
+          ' <<< "$META_DEBUG_JSON")
           docker buildx imagetools create \
-            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< '${{ steps.meta-debug.outputs.json }}') \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$META_DEBUG_JSON") \
             $INDEX_ANNOTATIONS \
             "${{ env.IMAGE }}@${DEBUG_AMD64}" \
             "${{ env.IMAGE }}@${DEBUG_ARM64}"
