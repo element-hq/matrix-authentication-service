@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -204,20 +205,21 @@ jobs:
           path: mas-cli-x86_64-linux.tar.gz
 
   build-image:
-    name: Build and push Docker image
+    name: Build Docker image (${{ matrix.arch }})
     if: github.event_name == 'push' || github.event.label.name == 'Z-Build-Workflow'
     runs-on: ubuntu-24.04
-
-    outputs:
-      metadata: ${{ steps.output.outputs.metadata }}
 
     permissions:
       contents: read
       packages: write
-      id-token: write
 
     needs:
       - compute-version
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
 
     env:
       VERGEN_GIT_DESCRIBE: ${{ needs.compute-version.outputs.describe }}
@@ -257,9 +259,6 @@ jobs:
             type=semver,pattern={{major}}
             type=sha
 
-      - name: Setup Cosign
-        uses: sigstore/cosign-installer@v4.0.0
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3.12.0
         with:
@@ -274,27 +273,141 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push by digest
         id: bake
         uses: docker/bake-action@v6.10.0
         with:
           files: |
             ./docker-bake.hcl
-            cwd://${{ steps.meta.outputs.bake-file }}
-            cwd://${{ steps.meta-debug.outputs.bake-file }}
+            cwd://${{ steps.meta.outputs.bake-file-labels }}
+            cwd://${{ steps.meta.outputs.bake-file-annotations }}
+            cwd://${{ steps.meta-debug.outputs.bake-file-labels }}
+            cwd://${{ steps.meta-debug.outputs.bake-file-annotations }}
           set: |
-            base.output=type=image,push=true
-            base.cache-from=type=registry,ref=${{ env.BUILDCACHE }}:buildcache
-            base.cache-to=type=registry,ref=${{ env.BUILDCACHE }}:buildcache,mode=max
+            *.platform=linux/${{ matrix.arch }}
+            *.output=type=image,"name=${{ env.IMAGE }}",push-by-digest=true,name-canonical=true,push=true
+            *.cache-from=type=registry,ref=${{ env.BUILDCACHE }}:buildcache-${{ matrix.arch }}
+            *.cache-to=type=registry,ref=${{ env.BUILDCACHE }}:buildcache-${{ matrix.arch }},mode=max
 
-      - name: Transform bake output
-        # This transforms the ouput to an object which looks like this:
-        # { reguar: { digest: "…", tags: ["…", "…"] }, debug: { digest: "…", tags: ["…"] }, … }
-        id: output
+      - name: Export digests
         run: |
-          echo 'metadata<<EOF' >> $GITHUB_OUTPUT
-          echo '${{ steps.bake.outputs.metadata }}' | jq -c 'with_entries(select(.value | (type == "object" and has("containerimage.digest")))) | map_values({ digest: .["containerimage.digest"], tags: (.["image.name"] | split(",")) })' >> $GITHUB_OUTPUT
-          echo 'EOF' >> $GITHUB_OUTPUT
+          mkdir -p /tmp/digests
+          echo '${{ steps.bake.outputs.metadata }}' | jq -r '.regular["containerimage.digest"]' > /tmp/digests/regular-${{ matrix.arch }}
+          echo '${{ steps.bake.outputs.metadata }}' | jq -r '.debug["containerimage.digest"]' > /tmp/digests/debug-${{ matrix.arch }}
+
+      - name: Upload digests
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: digests-${{ matrix.arch }}
+          path: /tmp/digests/*
+          retention-days: 1
+
+  finalize-image:
+    name: Create multi-arch manifests
+    if: github.event_name == 'push' || github.event.label.name == 'Z-Build-Workflow'
+    runs-on: ubuntu-24.04
+
+    needs:
+      - build-image
+
+    outputs:
+      metadata: ${{ steps.output.outputs.metadata }}
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v7
+        with:
+          pattern: digests-*
+          path: /tmp/digests
+          merge-multiple: true
+
+      - name: Docker meta (for tags)
+        id: meta
+        uses: docker/metadata-action@v5.10.0
+        with:
+          images: "${{ env.IMAGE }}"
+          flavor: |
+            latest=auto
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+
+      - name: Docker meta debug (for tags)
+        id: meta-debug
+        uses: docker/metadata-action@v5.10.0
+        with:
+          images: "${{ env.IMAGE }}"
+          flavor: |
+            latest=auto
+            suffix=-debug,onlatest=true
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+
+      - name: Setup Cosign
+        uses: sigstore/cosign-installer@v4.0.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.12.0
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create regular manifest
+        env:
+          ANNOTATIONS: ${{ steps.meta.outputs.annotations }}
+        run: |
+          REGULAR_AMD64=$(cat /tmp/digests/regular-amd64)
+          REGULAR_ARM64=$(cat /tmp/digests/regular-arm64)
+          # Filter index annotations with non-empty values
+          INDEX_ANNOTATIONS=$(echo "$ANNOTATIONS" | grep '^index:' | grep -v "=\$" | sed 's/^index:/--annotation /' | tr '\n' ' ')
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< '${{ steps.meta.outputs.json }}') \
+            $INDEX_ANNOTATIONS \
+            "${{ env.IMAGE }}@${REGULAR_AMD64}" \
+            "${{ env.IMAGE }}@${REGULAR_ARM64}"
+
+      - name: Create debug manifest
+        env:
+          ANNOTATIONS: ${{ steps.meta-debug.outputs.annotations }}
+        run: |
+          DEBUG_AMD64=$(cat /tmp/digests/debug-amd64)
+          DEBUG_ARM64=$(cat /tmp/digests/debug-arm64)
+          # Filter index annotations with non-empty values
+          INDEX_ANNOTATIONS=$(echo "$ANNOTATIONS" | grep '^index:' | grep -v "=\$" | sed 's/^index:/--annotation /' | tr '\n' ' ')
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< '${{ steps.meta-debug.outputs.json }}') \
+            $INDEX_ANNOTATIONS \
+            "${{ env.IMAGE }}@${DEBUG_AMD64}" \
+            "${{ env.IMAGE }}@${DEBUG_ARM64}"
+
+      - name: Get manifest digests
+        id: manifests
+        run: |
+          # Get the first tag to inspect the manifest digest
+          REGULAR_TAG=$(jq -r '.tags[0]' <<< '${{ steps.meta.outputs.json }}')
+          DEBUG_TAG=$(jq -r '.tags[0]' <<< '${{ steps.meta-debug.outputs.json }}')
+          REGULAR_DIGEST=$(docker buildx imagetools inspect "${REGULAR_TAG}" --format '{{ json . }}' | jq -r '.manifest.digest')
+          DEBUG_DIGEST=$(docker buildx imagetools inspect "${DEBUG_TAG}" --format '{{ json . }}' | jq -r '.manifest.digest')
+          echo "regular=${REGULAR_DIGEST}" >> $GITHUB_OUTPUT
+          echo "debug=${DEBUG_DIGEST}" >> $GITHUB_OUTPUT
 
       - name: Sign the images with GitHub Actions provided token
         # Only sign on tags and on commits on main branch
@@ -303,13 +416,30 @@ jobs:
           && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
 
         env:
-          REGULAR_DIGEST: ${{ steps.output.outputs.metadata && fromJSON(steps.output.outputs.metadata).regular.digest }}
-          DEBUG_DIGEST: ${{ steps.output.outputs.metadata && fromJSON(steps.output.outputs.metadata).debug.digest }}
+          REGULAR_DIGEST: ${{ steps.manifests.outputs.regular }}
+          DEBUG_DIGEST: ${{ steps.manifests.outputs.debug }}
 
         run: |-
           cosign sign --yes \
             "$IMAGE@$REGULAR_DIGEST" \
-            "$IMAGE@$DEBUG_DIGEST" \
+            "$IMAGE@$DEBUG_DIGEST"
+
+      - name: Output metadata
+        id: output
+        env:
+          REGULAR_DIGEST: ${{ steps.manifests.outputs.regular }}
+          DEBUG_DIGEST: ${{ steps.manifests.outputs.debug }}
+          META_JSON: ${{ steps.meta.outputs.json }}
+          META_DEBUG_JSON: ${{ steps.meta-debug.outputs.json }}
+        run: |
+          echo 'metadata<<EOF' >> $GITHUB_OUTPUT
+          jq -nc \
+            --arg regular_digest "$REGULAR_DIGEST" \
+            --arg debug_digest "$DEBUG_DIGEST" \
+            --argjson regular_tags "$(jq '.tags' <<< "$META_JSON")" \
+            --argjson debug_tags "$(jq '.tags' <<< "$META_DEBUG_JSON")" \
+            '{regular: {digest: $regular_digest, tags: $regular_tags}, debug: {digest: $debug_digest, tags: $debug_tags}}' >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
 
   release:
     name: Release
@@ -317,7 +447,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - assemble-archives
-      - build-image
+      - finalize-image
     steps:
       - name: Download the artifacts from the previous job
         uses: actions/download-artifact@v7
@@ -337,11 +467,11 @@ jobs:
 
               - Digest:
                 ```
-                ${{ env.IMAGE }}@${{ fromJSON(needs.build-image.outputs.metadata).regular.digest }}
+                ${{ env.IMAGE }}@${{ fromJSON(needs.finalize-image.outputs.metadata).regular.digest }}
                 ```
               - Tags:
                 ```
-                ${{ join(fromJSON(needs.build-image.outputs.metadata).regular.tags, '
+                ${{ join(fromJSON(needs.finalize-image.outputs.metadata).regular.tags, '
                 ') }}
                 ```
 
@@ -349,11 +479,11 @@ jobs:
 
               - Digest:
                 ```
-                ${{ env.IMAGE }}@${{ fromJSON(needs.build-image.outputs.metadata).debug.digest }}
+                ${{ env.IMAGE }}@${{ fromJSON(needs.finalize-image.outputs.metadata).debug.digest }}
                 ```
               - Tags:
                 ```
-                ${{ join(fromJSON(needs.build-image.outputs.metadata).debug.tags, '
+                ${{ join(fromJSON(needs.finalize-image.outputs.metadata).debug.tags, '
                 ') }}
                 ```
 
@@ -369,7 +499,7 @@ jobs:
 
     needs:
       - assemble-archives
-      - build-image
+      - finalize-image
 
     permissions:
       contents: write
@@ -414,11 +544,11 @@ jobs:
 
               - Digest:
                 ```
-                ${{ env.IMAGE }}@${{ fromJSON(needs.build-image.outputs.metadata).regular.digest }}
+                ${{ env.IMAGE }}@${{ fromJSON(needs.finalize-image.outputs.metadata).regular.digest }}
                 ```
               - Tags:
                 ```
-                ${{ join(fromJSON(needs.build-image.outputs.metadata).regular.tags, '
+                ${{ join(fromJSON(needs.finalize-image.outputs.metadata).regular.tags, '
                 ') }}
                 ```
 
@@ -426,11 +556,11 @@ jobs:
 
               - Digest:
                 ```
-                ${{ env.IMAGE }}@${{ fromJSON(needs.build-image.outputs.metadata).debug.digest }}
+                ${{ env.IMAGE }}@${{ fromJSON(needs.finalize-image.outputs.metadata).debug.digest }}
                 ```
               - Tags:
                 ```
-                ${{ join(fromJSON(needs.build-image.outputs.metadata).debug.tags, '
+                ${{ join(fromJSON(needs.finalize-image.outputs.metadata).debug.tags, '
                 ') }}
                 ```
 
@@ -446,7 +576,7 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.label.name == 'Z-Build-Workflow'
 
     needs:
-      - build-image
+      - finalize-image
 
     permissions:
       contents: read
@@ -462,7 +592,7 @@ jobs:
       - name: Remove label and comment
         uses: actions/github-script@v8.0.0
         env:
-          BUILD_IMAGE_MANIFEST: ${{ needs.build-image.outputs.metadata }}
+          BUILD_IMAGE_MANIFEST: ${{ needs.finalize-image.outputs.metadata }}
         with:
           script: |
             const script = require('./.github/scripts/cleanup-pr.cjs');
