@@ -330,7 +330,7 @@ version = "2.0.6"
 
 # Snapshot testing
 [workspace.dependencies.insta]
-version = "1.43.2"
+version = "1.46.3"
 features = ["yaml", "json"]
 
 # IP network address types
