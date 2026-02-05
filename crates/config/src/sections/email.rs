@@ -14,15 +14,6 @@ use serde::{Deserialize, Serialize, de::Error};
 
 use super::ConfigurationSection;
 
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
-pub struct Credentials {
-    /// Username for use to authenticate when connecting to the SMTP server
-    pub username: String,
-
-    /// Password for use to authenticate when connecting to the SMTP server
-    pub password: String,
-}
-
 /// Encryption mode to use
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "lowercase")]
