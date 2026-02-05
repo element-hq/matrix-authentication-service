@@ -197,9 +197,12 @@ checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
 
 [[package]]
 name = "arc-swap"
-version = "1.7.1"
+version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69f7f8c3906b62b754cd5326047894316021dcfe5a194c8ea52bdd94934a3457"
+checksum = "9ded5f9a03ac8f24d1b8a25101ee812cd32cdc8c50a4c50237de2c4915850e73"
+dependencies = [
+ "rustversion",
+]
 
 [[package]]
 name = "argon2"
@@ -805,9 +808,9 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
 [[package]]
 name = "bytes"
-version = "1.10.1"
+version = "1.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d71b6127be86fdcfddb610f7182ac57211d4b18a3e9c82eb2d17662f2227ad6a"
+checksum = "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33"
 dependencies = [
  "serde",
 ]
@@ -881,6 +884,12 @@ name = "cfg-if"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2fd1289c04a9ea8cb22300a459a72a385d7c73d3259e2ed7dcb2af674838cfa9"
+
+[[package]]
+name = "cfg_aliases"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 
 [[package]]
 name = "chacha20"
@@ -1789,7 +1798,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2838,14 +2847,15 @@ dependencies = [
 
 [[package]]
 name = "insta"
-version = "1.43.2"
+version = "1.46.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "46fdb647ebde000f43b5b53f773c30cf9b0cb4300453208713fa38b2c70935a0"
+checksum = "e82db8c87c7f1ccecb34ce0c24399b8a73081427f3c7c50a5d597925356115e4"
 dependencies = [
  "console",
  "once_cell",
  "serde",
  "similar",
+ "tempfile",
 ]
 
 [[package]]
@@ -3156,14 +3166,14 @@ dependencies = [
 
 [[package]]
 name = "mas-aaguid"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "uuid",
 ]
 
 [[package]]
 name = "mas-aaguid-codegen"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "anyhow",
  "camino",
@@ -3180,7 +3190,7 @@ dependencies = [
 
 [[package]]
 name = "mas-axum-utils"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -3214,7 +3224,7 @@ dependencies = [
 
 [[package]]
 name = "mas-cli"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -3289,7 +3299,7 @@ dependencies = [
 
 [[package]]
 name = "mas-config"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "anyhow",
  "camino",
@@ -3320,7 +3330,7 @@ dependencies = [
 
 [[package]]
 name = "mas-context"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "console",
  "opentelemetry",
@@ -3336,7 +3346,7 @@ dependencies = [
 
 [[package]]
 name = "mas-data-model"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "base64ct",
  "chrono",
@@ -3360,7 +3370,7 @@ dependencies = [
 
 [[package]]
 name = "mas-email"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "async-trait",
  "lettre",
@@ -3371,7 +3381,7 @@ dependencies = [
 
 [[package]]
 name = "mas-handlers"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "aide",
  "anyhow",
@@ -3454,7 +3464,7 @@ dependencies = [
 
 [[package]]
 name = "mas-http"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "futures-util",
  "headers",
@@ -3475,7 +3485,7 @@ dependencies = [
 
 [[package]]
 name = "mas-i18n"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "camino",
  "icu_calendar",
@@ -3497,7 +3507,7 @@ dependencies = [
 
 [[package]]
 name = "mas-i18n-scan"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "camino",
  "clap",
@@ -3511,7 +3521,7 @@ dependencies = [
 
 [[package]]
 name = "mas-iana"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "schemars 0.9.0",
  "serde",
@@ -3519,7 +3529,7 @@ dependencies = [
 
 [[package]]
 name = "mas-iana-codegen"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3536,7 +3546,7 @@ dependencies = [
 
 [[package]]
 name = "mas-jose"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "base64ct",
  "chrono",
@@ -3566,7 +3576,7 @@ dependencies = [
 
 [[package]]
 name = "mas-keystore"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "aead",
  "base64ct",
@@ -3594,7 +3604,7 @@ dependencies = [
 
 [[package]]
 name = "mas-listener"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "anyhow",
  "bytes",
@@ -3618,7 +3628,7 @@ dependencies = [
 
 [[package]]
 name = "mas-matrix"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3628,7 +3638,7 @@ dependencies = [
 
 [[package]]
 name = "mas-matrix-synapse"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3645,7 +3655,7 @@ dependencies = [
 
 [[package]]
 name = "mas-oidc-client"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "assert_matches",
  "async-trait",
@@ -3681,7 +3691,7 @@ dependencies = [
 
 [[package]]
 name = "mas-policy"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -3698,7 +3708,7 @@ dependencies = [
 
 [[package]]
 name = "mas-router"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "axum",
  "serde",
@@ -3709,7 +3719,7 @@ dependencies = [
 
 [[package]]
 name = "mas-spa"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "camino",
  "serde",
@@ -3718,7 +3728,7 @@ dependencies = [
 
 [[package]]
 name = "mas-storage"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3741,7 +3751,7 @@ dependencies = [
 
 [[package]]
 name = "mas-storage-pg"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3772,7 +3782,7 @@ dependencies = [
 
 [[package]]
 name = "mas-tasks"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3804,7 +3814,7 @@ dependencies = [
 
 [[package]]
 name = "mas-templates"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -3836,7 +3846,7 @@ dependencies = [
 
 [[package]]
 name = "mas-tower"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "http",
  "opentelemetry",
@@ -4039,9 +4049,9 @@ dependencies = [
 
 [[package]]
 name = "num-conv"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51d515d32fb182ee37cda2ccdcb92950d6a3c2893aa280e540671c2cd0f3b1d9"
+checksum = "cf97ec579c3c42f953ef76dbf8d55ac91fb219dde70e49aa4a6b7d74e9919050"
 
 [[package]]
 name = "num-integer"
@@ -4105,7 +4115,7 @@ dependencies = [
 
 [[package]]
 name = "oauth2-types"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "assert_matches",
  "base64ct",
@@ -4175,7 +4185,7 @@ dependencies = [
  "sha1",
  "sha2",
  "sprintf",
- "thiserror 1.0.69",
+ "thiserror 2.0.17",
  "tokio",
  "tracing",
  "urlencoding",
@@ -4831,7 +4841,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9120690fafc389a67ba3803df527d0ec9cbbc9cc45e4cc20b332996dfb672425"
 dependencies = [
  "anyhow",
- "itertools 0.13.0",
+ "itertools 0.14.0",
  "proc-macro2",
  "quote",
  "syn",
@@ -5097,9 +5107,9 @@ checksum = "caf4aa5b0f434c91fe5c7f1ecb6a5ece2130b02ad2a590589dda5146df959001"
 
 [[package]]
 name = "reqwest"
-version = "0.12.24"
+version = "0.12.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d0946410b9f7b082a427e4ef5c8ff541a88b357bc6c637c40db3a68ac70a36f"
+checksum = "eddd3ca559203180a307f12d114c268abf583f59b03cb906fd0b3ff8646c1147"
 dependencies = [
  "base64",
  "bytes",
@@ -5276,7 +5286,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5548,10 +5558,11 @@ checksum = "d767eb0aabc880b29956c35734170f26ed551a859dbd361d140cdbeca61ab1e2"
 
 [[package]]
 name = "sentry"
-version = "0.46.0"
+version = "0.46.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9794f69ad475e76c057e326175d3088509649e3aed98473106b9fe94ba59424"
+checksum = "d92d893ba7469d361a6958522fa440e4e2bc8bf4c5803cd1bf40b9af63f8f9a8"
 dependencies = [
+ "cfg_aliases",
  "httpdate",
  "reqwest",
  "sentry-backtrace",
@@ -5565,9 +5576,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-backtrace"
-version = "0.46.0"
+version = "0.46.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e81137ad53b8592bd0935459ad74c0376053c40084aa170451e74eeea8dbc6c3"
+checksum = "5f8784d0a27b5cd4b5f75769ffc84f0b7580e3c35e1af9cd83cb90b612d769cc"
 dependencies = [
  "backtrace",
  "regex",
@@ -5576,9 +5587,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-contexts"
-version = "0.46.0"
+version = "0.46.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfb403c66cc2651a01b9bacda2e7c22cd51f7e8f56f206aa4310147eb3259282"
+checksum = "0e5eb42f4cd4f9fdfec9e3b07b25a4c9769df83d218a7e846658984d5948ad3e"
 dependencies = [
  "hostname",
  "libc",
@@ -5590,9 +5601,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-core"
-version = "0.46.0"
+version = "0.46.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfc409727ae90765ca8ea76fe6c949d6f159a11d02e130b357fa652ee9efcada"
+checksum = "b0b1e7ca40f965db239da279bf278d87b7407469b98835f27f0c8e59ed189b06"
 dependencies = [
  "rand 0.9.2",
  "sentry-types",
@@ -5603,9 +5614,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-panic"
-version = "0.46.0"
+version = "0.46.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3df79f4e1e72b2a8b75a0ebf49e78709ceb9b3f0b451f13adc92a0361b0aaabe"
+checksum = "8906f8be87aea5ac7ef937323fb655d66607427f61007b99b7cb3504dc5a156c"
 dependencies = [
  "sentry-backtrace",
  "sentry-core",
@@ -5613,9 +5624,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-tower"
-version = "0.46.0"
+version = "0.46.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7eec9885bceb8ba374858d015bb6fa39dbb341d94ca088bc8f13bee2e64e2c68"
+checksum = "56aebe376310840b49dad4cca55c7b32d9abdc14946cd071d4158ecb149b63a4"
 dependencies = [
  "axum",
  "http",
@@ -5628,9 +5639,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-tracing"
-version = "0.46.0"
+version = "0.46.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff2046f527fd4b75e0b6ab3bd656c67dce42072f828dc4d03c206d15dca74a93"
+checksum = "5b07eefe04486316c57aba08ab53dd44753c25102d1d3fe05775cc93a13262d9"
 dependencies = [
  "bitflags",
  "sentry-backtrace",
@@ -5641,9 +5652,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-types"
-version = "0.46.0"
+version = "0.46.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7b9b4e4c03a4d3643c18c78b8aa91d2cbee5da047d2fa0ca4bb29bc67e6c55c"
+checksum = "567711f01f86a842057e1fc17779eba33a336004227e1a1e7e6cc2599e22e259"
 dependencies = [
  "debugid",
  "hex",
@@ -6250,7 +6261,7 @@ dependencies = [
 
 [[package]]
 name = "syn2mas"
-version = "1.10.0"
+version = "1.11.0-rc.0"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -6321,7 +6332,7 @@ dependencies = [
  "getrandom 0.3.3",
  "once_cell",
  "rustix",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6406,31 +6417,32 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.43"
+version = "0.3.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83bde6f1ec10e72d583d91623c939f623002284ef622b87de38cfd546cbf2031"
+checksum = "743bd48c283afc0388f9b8827b976905fb217ad9e647fae3a379a9283c4def2c"
 dependencies = [
  "deranged",
+ "itoa",
  "libc",
  "num-conv",
  "num_threads",
  "powerfmt",
- "serde",
+ "serde_core",
  "time-core",
  "time-macros",
 ]
 
 [[package]]
 name = "time-core"
-version = "0.1.6"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "40868e7c1d2f0b8d73e4a8c7f0ff63af4f6d19be117e90bd73eb1d62cf831c6b"
+checksum = "7694e1cfe791f8d31026952abf09c69ca6f6fa4e1a1229e18988f06a04a12dca"
 
 [[package]]
 name = "time-macros"
-version = "0.2.24"
+version = "0.2.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30cfb0125f12d9c277f35663a0a33f8c30190f4e4574868a330595412d34ebf3"
+checksum = "2e70e4c5a0e0a8a4823ad65dfe1a6930e4f4d756dcd9dd7939022b5e8c501215"
 dependencies = [
  "num-conv",
  "time-core",
@@ -6621,9 +6633,9 @@ dependencies = [
 
 [[package]]
 name = "tower-http"
-version = "0.6.6"
+version = "0.6.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "adc82fd73de2a9722ac5da747f12383d2bfdb93591ee6c58486e0097890f05f2"
+checksum = "d4e6559d53cc268e5031cd8429d05415bc4cb4aefc4aa5d6cc35fbf5b924a1f8"
 dependencies = [
  "bitflags",
  "bytes",
@@ -6661,9 +6673,9 @@ checksum = "8df9b6e13f2d32c91b9bd719c00d1958837bc7dec474d94952798cc8e69eeec3"
 
 [[package]]
 name = "tracing"
-version = "0.1.41"
+version = "0.1.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "784e0ac535deb450455cbfa28a6f0df145ea1bb7ae51b821cf5e7927fdcfbdd0"
+checksum = "63e71662fa4b2a2c3a26f570f037eb95bb1f85397f3cd8076caed2f026a6d100"
 dependencies = [
  "log",
  "pin-project-lite",
@@ -6685,9 +6697,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-attributes"
-version = "0.1.30"
+version = "0.1.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81383ab64e72a7a8b8e13130c49e3dab29def6d0c7d76a03087b3cf71c5c6903"
+checksum = "7490cfa5ec963746568740651ac6781f701c9c5ea257c58e057f3ba8cf69e8da"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6696,9 +6708,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-core"
-version = "0.1.34"
+version = "0.1.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9d12581f227e93f094d3af2ae690a574abb8a2b9b7a96e7cfe9647b2b617678"
+checksum = "db97caf9d906fbde555dd62fa95ddba9eecfd14cb388e4f491a66d74cd5fb79a"
 dependencies = [
  "once_cell",
  "valuable",
@@ -6746,9 +6758,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-subscriber"
-version = "0.3.20"
+version = "0.3.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2054a14f5307d601f88daf0553e1cbf472acc4f2c51afab632431cdcd72124d5"
+checksum = "2f30143827ddab0d256fd843b7a66d164e9f271cfa0dde49142c5ca0ca291f1e"
 dependencies = [
  "matchers",
  "nu-ansi-term",
@@ -7487,7 +7499,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

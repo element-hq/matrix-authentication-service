@@ -440,9 +440,9 @@ impl InsertableJob for CleanupQueueJobsJob {
 
 /// Cleanup old passkey challenges
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
-pub struct CleanupOldPasskeyChallenges;
+pub struct CleanupOldPasskeyChallengesJob;
 
-impl InsertableJob for CleanupOldPasskeyChallenges {
+impl InsertableJob for CleanupOldPasskeyChallengesJob {
     const QUEUE_NAME: &'static str = "cleanup-old-passkey-challenges";
 }
 

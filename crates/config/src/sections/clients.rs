@@ -16,19 +16,6 @@ use url::Url;
 
 use super::{ClientSecret, ClientSecretRaw, ConfigurationSection};
 
-#[derive(JsonSchema, Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "snake_case")]
-pub enum JwksOrJwksUri {
-    Jwks(PublicJsonWebKeySet),
-    JwksUri(Url),
-}
-
-impl From<PublicJsonWebKeySet> for JwksOrJwksUri {
-    fn from(jwks: PublicJsonWebKeySet) -> Self {
-        Self::Jwks(jwks)
-    }
-}
-
 /// Authentication method used by clients
 #[derive(JsonSchema, Serialize, Deserialize, Copy, Clone, Debug)]
 #[serde(rename_all = "snake_case")]

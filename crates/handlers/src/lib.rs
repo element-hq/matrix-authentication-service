@@ -64,6 +64,8 @@ pub mod webauthn;
 
 mod activity_tracker;
 mod captcha;
+#[cfg(test)]
+mod cleanup_tests;
 mod preferred_language;
 mod rate_limit;
 mod session;
