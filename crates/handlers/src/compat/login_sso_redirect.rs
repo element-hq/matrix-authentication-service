@@ -13,18 +13,21 @@ use mas_router::{CompatLoginSsoAction, CompatLoginSsoComplete, UrlBuilder};
 use mas_storage::{BoxRepository, compat::CompatSsoLoginRepository};
 use rand::distributions::{Alphanumeric, DistString};
 use serde::Deserialize;
-use serde_with::serde;
+use serde_with::{DefaultOnError, serde, serde_as};
 use thiserror::Error;
 use url::Url;
 
 use crate::impl_from_error_for_route;
 
+#[serde_as]
 #[derive(Debug, Deserialize)]
 pub struct Params {
     #[serde(rename = "redirectUrl")]
     redirect_url: Option<String>,
+    #[serde_as(deserialize_as = "DefaultOnError")]
     action: Option<CompatLoginSsoAction>,
 
+    #[serde_as(deserialize_as = "DefaultOnError")]
     #[serde(rename = "org.matrix.msc3824.action")]
     unstable_action: Option<CompatLoginSsoAction>,
 }
