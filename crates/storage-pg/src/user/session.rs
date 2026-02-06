@@ -11,7 +11,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
     Authentication, AuthenticationMethod, BrowserSession, Clock, Password,
-    UpstreamOAuthAuthorizationSession, User,
+    UpstreamOAuthAuthorizationSession, User, UserPasskey,
 };
 use mas_storage::{
     Page, Pagination,
@@ -538,6 +538,55 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             created_at,
             authentication_method: AuthenticationMethod::UpstreamOAuth2 {
                 upstream_oauth2_session_id: upstream_oauth_session.id,
+            },
+        })
+    }
+
+    #[tracing::instrument(
+        name = "db.browser_session.authenticate_with_passkey",
+        skip_all,
+        fields(
+            db.query.text,
+            %user_session.id,
+            %user_passkey.id,
+            user_session_authentication.id,
+        ),
+        err,
+    )]
+    async fn authenticate_with_passkey(
+        &mut self,
+        rng: &mut (dyn RngCore + Send),
+        clock: &dyn Clock,
+        user_session: &BrowserSession,
+        user_passkey: &UserPasskey,
+    ) -> Result<Authentication, Self::Error> {
+        let created_at = clock.now();
+        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        tracing::Span::current().record(
+            "user_session_authentication.id",
+            tracing::field::display(id),
+        );
+
+        sqlx::query!(
+            r#"
+                INSERT INTO user_session_authentications
+                    (user_session_authentication_id, user_session_id, created_at, user_passkey_id)
+                VALUES ($1, $2, $3, $4)
+            "#,
+            Uuid::from(id),
+            Uuid::from(user_session.id),
+            created_at,
+            Uuid::from(user_passkey.id),
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        Ok(Authentication {
+            id,
+            created_at,
+            authentication_method: AuthenticationMethod::Passkey {
+                user_passkey_id: user_passkey.id,
             },
         })
     }

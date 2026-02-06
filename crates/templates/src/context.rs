@@ -541,6 +541,25 @@ pub struct LoginContext {
     form: FormState<LoginFormField>,
     next: Option<PostAuthContext>,
     providers: Vec<UpstreamOAuthProvider>,
+    webauthn: Option<WebAuthnContext>,
+}
+
+/// Context of a `WebAuthn` challenge
+#[derive(Serialize)]
+pub struct WebAuthnContext {
+    options: serde_json::Value,
+    challenge_id: Ulid,
+}
+
+impl WebAuthnContext {
+    /// Create a new context with the given webauthn options and challenge
+    #[must_use]
+    pub fn new(options: serde_json::Value, challenge_id: Ulid) -> Self {
+        Self {
+            options,
+            challenge_id,
+        }
+    }
 }
 
 impl TemplateContext for LoginContext {
@@ -558,11 +577,16 @@ impl TemplateContext for LoginContext {
                 form: FormState::default(),
                 next: None,
                 providers: Vec::new(),
+                webauthn: None,
             },
             LoginContext {
                 form: FormState::default(),
                 next: None,
                 providers: Vec::new(),
+                webauthn: Some(WebAuthnContext {
+                    options: serde_json::json!({}),
+                    challenge_id: Ulid::nil(),
+                }),
             },
             LoginContext {
                 form: FormState::default()
@@ -576,12 +600,14 @@ impl TemplateContext for LoginContext {
                     ),
                 next: None,
                 providers: Vec::new(),
+                webauthn: None,
             },
             LoginContext {
                 form: FormState::default()
                     .with_error_on_field(LoginFormField::Username, FieldError::Exists),
                 next: None,
                 providers: Vec::new(),
+                webauthn: None,
             },
         ])
     }
@@ -610,6 +636,15 @@ impl LoginContext {
     pub fn with_post_action(self, context: PostAuthContext) -> Self {
         Self {
             next: Some(context),
+            ..self
+        }
+    }
+
+    /// Set the webauthn context
+    #[must_use]
+    pub fn with_webauthn(self, webauthn: WebAuthnContext) -> Self {
+        Self {
+            webauthn: Some(webauthn),
             ..self
         }
     }

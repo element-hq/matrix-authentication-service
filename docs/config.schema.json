@@ -2859,6 +2859,17 @@
               "type": "null"
             }
           ]
+        },
+        "passkeys": {
+          "description": "Experimental passkey support\n\n Disabled by default",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PasskeysConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2912,6 +2923,36 @@
         "soft_limit",
         "hard_limit"
       ]
+    },
+    "PasskeysConfig": {
+      "description": "Configuration options for passkeys",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "description": "Whether passkeys are enabled or not",
+          "type": "boolean",
+          "default": false
+        },
+        "rpid": {
+          "description": "Relying Party Identifier to use\n\n If not set, the host from `public_base` is used",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "allowed_origins": {
+          "description": "Additional allowed origins. `rpid` and `public_base` are already allowed",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "default": null
+        }
+      }
     }
   }
 }

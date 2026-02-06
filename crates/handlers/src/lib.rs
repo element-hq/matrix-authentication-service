@@ -48,6 +48,7 @@ use opentelemetry::metrics::Meter;
 use sqlx::PgPool;
 use tower::util::AndThenLayer;
 use tower_http::cors::{Any, CorsLayer};
+use webauthn::Webauthn;
 
 use self::{graphql::ExtraRouterParameters, passwords::PasswordManager};
 
@@ -59,6 +60,7 @@ mod oauth2;
 pub mod passwords;
 pub mod upstream_oauth2;
 mod views;
+pub mod webauthn;
 
 mod activity_tracker;
 mod captcha;
@@ -350,6 +352,7 @@ where
     Limiter: FromRef<S>,
     reqwest::Client: FromRef<S>,
     Arc<dyn HomeserverConnection>: FromRef<S>,
+    Webauthn: FromRef<S>,
     BoxClock: FromRequestParts<S>,
     BoxRng: FromRequestParts<S>,
     Policy: FromRequestParts<S>,

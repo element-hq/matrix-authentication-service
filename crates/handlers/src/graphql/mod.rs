@@ -55,7 +55,7 @@ use self::{
 };
 use crate::{
     BoundActivityTracker, Limiter, RequesterFingerprint, impl_from_error_for_route,
-    passwords::PasswordManager,
+    passwords::PasswordManager, webauthn::Webauthn,
 };
 
 #[cfg(test)]
@@ -76,6 +76,7 @@ struct GraphQLState {
     password_manager: PasswordManager,
     url_builder: UrlBuilder,
     limiter: Limiter,
+    webauthn: Webauthn,
 }
 
 #[async_trait::async_trait]
@@ -108,6 +109,10 @@ impl state::State for GraphQLState {
         &self.limiter
     }
 
+    fn webauthn(&self) -> &Webauthn {
+        &self.webauthn
+    }
+
     fn clock(&self) -> BoxClock {
         let clock = SystemClock::default();
         Box::new(clock)
@@ -131,6 +136,7 @@ pub fn schema(
     password_manager: PasswordManager,
     url_builder: UrlBuilder,
     limiter: Limiter,
+    webauthn: Webauthn,
 ) -> Schema {
     let state = GraphQLState {
         repository_factory,
@@ -140,6 +146,7 @@ pub fn schema(
         password_manager,
         url_builder,
         limiter,
+        webauthn,
     };
     let state: BoxState = Box::new(state);
 
@@ -515,6 +522,12 @@ impl OwnerId for mas_data_model::CompatSession {
 impl OwnerId for mas_data_model::UpstreamOAuthLink {
     fn owner_id(&self) -> Option<Ulid> {
         self.user_id
+    }
+}
+
+impl OwnerId for mas_data_model::UserPasskey {
+    fn owner_id(&self) -> Option<Ulid> {
+        Some(self.user_id)
     }
 }
 

@@ -34,7 +34,7 @@ pub use self::{
     clients::{ClientAuthMethodConfig, ClientConfig, ClientsConfig},
     database::{DatabaseConfig, PgSslMode},
     email::{EmailConfig, EmailSmtpMode, EmailTransportKind},
-    experimental::ExperimentalConfig,
+    experimental::{ExperimentalConfig, PasskeysConfig},
     http::{
         BindConfig as HttpBindConfig, HttpConfig, ListenerConfig as HttpListenerConfig,
         Resource as HttpResource, TlsConfig as HttpTlsConfig, UnixOrTcp,

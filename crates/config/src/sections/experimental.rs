@@ -47,6 +47,23 @@ pub struct InactiveSessionExpirationConfig {
     pub expire_user_sessions: bool,
 }
 
+/// Configuration options for passkeys
+#[serde_as]
+#[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
+pub struct PasskeysConfig {
+    /// Whether passkeys are enabled or not
+    #[serde(default)]
+    pub enabled: bool,
+    /// Relying Party Identifier to use
+    ///
+    /// If not set, the host from `public_base` is used
+    #[serde(default)]
+    pub rpid: Option<String>,
+    /// Additional allowed origins. `rpid` and `public_base` are already allowed
+    #[serde(default)]
+    pub allowed_origins: Option<Vec<String>>,
+}
+
 /// Configuration sections for experimental options
 ///
 /// Do not change these options unless you know what you are doing.
@@ -90,6 +107,12 @@ pub struct ExperimentalConfig {
     /// Disabled by default.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub session_limit: Option<SessionLimitConfig>,
+
+    /// Experimental passkey support
+    ///
+    /// Disabled by default
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub passkeys: Option<PasskeysConfig>,
 }
 
 impl Default for ExperimentalConfig {
@@ -100,6 +123,7 @@ impl Default for ExperimentalConfig {
             inactive_session_expiration: None,
             plan_management_iframe_uri: None,
             session_limit: None,
+            passkeys: None,
         }
     }
 }
@@ -111,6 +135,7 @@ impl ExperimentalConfig {
             && self.inactive_session_expiration.is_none()
             && self.plan_management_iframe_uri.is_none()
             && self.session_limit.is_none()
+            && self.passkeys.is_none()
     }
 }
 

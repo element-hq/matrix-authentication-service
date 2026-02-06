@@ -111,4 +111,7 @@ pub struct SiteConfig {
 
     /// Limits on the number of application sessions that each user can have
     pub session_limit: Option<SessionLimitConfig>,
+
+    /// Whether passkeys are enabled
+    pub passkeys_enabled: bool,
 }

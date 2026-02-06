@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -17,7 +18,17 @@ use mas_storage::{
     compat::{CompatSessionFilter, CompatSsoLoginFilter, CompatSsoLoginRepository},
     oauth2::{OAuth2SessionFilter, OAuth2SessionRepository},
     upstream_oauth2::{UpstreamOAuthLinkFilter, UpstreamOAuthLinkRepository},
-    user::{BrowserSessionFilter, BrowserSessionRepository, UserEmailFilter, UserEmailRepository},
+    user::{
+        BrowserSessionFilter, BrowserSessionRepository, UserEmailFilter, UserEmailRepository,
+        UserPasskeyFilter,
+    },
+};
+use webauthn_rp::{
+    bin::Decode,
+    response::{
+        AuthTransports,
+        register::bin::{AaguidOwned, MetadataOwned},
+    },
 };
 
 use super::{
@@ -705,6 +716,66 @@ impl User {
         .await
     }
 
+    /// Get the list of passkeys, chronologically sorted
+    async fn passkeys(
+        &self,
+        ctx: &Context<'_>,
+
+        #[graphql(desc = "Returns the elements in the list that come after the cursor.")]
+        after: Option<String>,
+        #[graphql(desc = "Returns the elements in the list that come before the cursor.")]
+        before: Option<String>,
+        #[graphql(desc = "Returns the first *n* elements from the list.")] first: Option<i32>,
+        #[graphql(desc = "Returns the last *n* elements from the list.")] last: Option<i32>,
+    ) -> Result<Connection<Cursor, UserPasskey, PreloadedTotalCount>, async_graphql::Error> {
+        let state = ctx.state();
+        let mut repo = state.repository().await?;
+
+        query(
+            after,
+            before,
+            first,
+            last,
+            async |after, before, first, last| {
+                let after_id = after
+                    .map(|x: OpaqueCursor<NodeCursor>| x.extract_for_type(NodeType::UserPasskey))
+                    .transpose()?;
+                let before_id = before
+                    .map(|x: OpaqueCursor<NodeCursor>| x.extract_for_type(NodeType::UserPasskey))
+                    .transpose()?;
+                let pagination = Pagination::try_new(before_id, after_id, first, last)?;
+
+                let filter = UserPasskeyFilter::new().for_user(&self.0);
+
+                let page = repo.user_passkey().list(filter, pagination).await?;
+
+                // Preload the total count if requested
+                let count = if ctx.look_ahead().field("totalCount").exists() {
+                    Some(repo.user_passkey().count(filter).await?)
+                } else {
+                    None
+                };
+
+                repo.cancel().await?;
+
+                let mut connection = Connection::with_additional_fields(
+                    page.has_previous_page,
+                    page.has_next_page,
+                    PreloadedTotalCount(count),
+                );
+                connection.edges.extend(page.edges.into_iter().map(|u| {
+                    Edge::new(
+                        OpaqueCursor(NodeCursor(NodeType::UserPasskey, u.cursor)),
+                        UserPasskey(u.node),
+                    )
+                }));
+
+                Ok::<_, async_graphql::Error>(connection)
+            },
+        )
+        .await
+    }
+
     /// Check if the user has a password set.
     async fn has_password(&self, ctx: &Context<'_>) -> Result<bool, async_graphql::Error> {
         let state = ctx.state();
@@ -884,5 +955,106 @@ impl UserEmailAuthentication {
     /// The email address associated with this session
     pub async fn email(&self) -> &str {
         &self.0.email
+    }
+}
+
+/// An attestation authority GUID
+#[derive(Description)]
+pub struct Aaguid(AaguidOwned);
+
+#[Object(use_type_description)]
+impl Aaguid {
+    /// The AAGUID as a string
+    pub async fn id(&self) -> String {
+        let id = uuid::Uuid::from_bytes(self.0.0);
+        id.as_hyphenated().to_string()
+    }
+
+    /// A known name for the AAGUID
+    pub async fn name(&self) -> Option<&'static str> {
+        let uuid = uuid::Uuid::from_bytes(self.0.0);
+        mas_aaguid::lookup(&uuid)
+    }
+}
+
+/// The transport method for a `WebAuthn` authenticator
+#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+pub enum AuthenticatorTransport {
+    /// Bluetooth Low Energy
+    Ble,
+    /// Hybrid (cross-device, e.g., phone as authenticator)
+    Hybrid,
+    /// Internal (platform authenticator like Face ID, Touch ID, Windows Hello)
+    Internal,
+    /// NFC
+    Nfc,
+    /// Smart Card
+    SmartCard,
+    /// USB
+    Usb,
+}
+
+impl From<webauthn_rp::response::AuthenticatorTransport> for AuthenticatorTransport {
+    fn from(transport: webauthn_rp::response::AuthenticatorTransport) -> Self {
+        match transport {
+            webauthn_rp::response::AuthenticatorTransport::Ble => Self::Ble,
+            webauthn_rp::response::AuthenticatorTransport::Hybrid => Self::Hybrid,
+            webauthn_rp::response::AuthenticatorTransport::Internal => Self::Internal,
+            webauthn_rp::response::AuthenticatorTransport::Nfc => Self::Nfc,
+            webauthn_rp::response::AuthenticatorTransport::SmartCard => Self::SmartCard,
+            webauthn_rp::response::AuthenticatorTransport::Usb => Self::Usb,
+        }
+    }
+}
+
+fn transports_to_vec(transports: AuthTransports) -> Vec<AuthenticatorTransport> {
+    transports
+        .into_iter()
+        .map(AuthenticatorTransport::from)
+        .collect()
+}
+
+/// A passkey
+#[derive(Description)]
+pub struct UserPasskey(pub mas_data_model::UserPasskey);
+
+#[Object(use_type_description)]
+impl UserPasskey {
+    /// ID of the object
+    pub async fn id(&self) -> ID {
+        NodeType::UserPasskey.id(self.0.id)
+    }
+
+    /// Name of the passkey
+    pub async fn name(&self) -> Option<&str> {
+        self.0.name.as_deref()
+    }
+
+    /// When the object was created.
+    pub async fn created_at(&self) -> DateTime<Utc> {
+        self.0.created_at
+    }
+
+    /// When the passkey was last used
+    pub async fn last_used_at(&self) -> Option<DateTime<Utc>> {
+        self.0.last_used_at
+    }
+
+    /// The AAGUID of the passkey
+    pub async fn aaguid(&self) -> Result<Option<Aaguid>, async_graphql::Error> {
+        let metadata =
+            MetadataOwned::decode(&self.0.metadata).context("Failed to decode metadata")?;
+        // Sometimes we have the 'null' AAGUID, which means we don't have an AAGUID for
+        // this passkey
+        if metadata.aaguid.0 == [0; 16] {
+            return Ok(None);
+        }
+
+        Ok(Some(Aaguid(metadata.aaguid)))
+    }
+
+    /// The transports supported by this passkey
+    pub async fn transports(&self) -> Vec<AuthenticatorTransport> {
+        transports_to_vec(self.0.transports)
     }
 }

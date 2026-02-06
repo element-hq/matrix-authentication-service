@@ -57,8 +57,9 @@ pub use self::{
     user_agent::{DeviceType, UserAgent},
     users::{
         Authentication, AuthenticationMethod, BrowserSession, MatrixUser, Password, User,
-        UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode, UserRecoverySession,
-        UserRecoveryTicket, UserRegistration, UserRegistrationPassword, UserRegistrationToken,
+        UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode, UserPasskey,
+        UserPasskeyChallenge, UserRecoverySession, UserRecoveryTicket, UserRegistration,
+        UserRegistrationPassword, UserRegistrationToken,
     },
     utils::{BoxClock, BoxRng},
     version::AppVersion,

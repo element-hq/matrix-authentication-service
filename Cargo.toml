@@ -34,6 +34,8 @@ broken_intra_doc_links = "deny"
 [workspace.dependencies]
 
 # Workspace crates
+mas-aaguid = { path = "./crates/aaguid/", version = "=1.11.0-rc.0" }
+mas-aaguid-codegen = { path = "./crates/aaguid-codegen/", version = "=1.11.0-rc.0" }
 mas-axum-utils = { path = "./crates/axum-utils/", version = "=1.11.0-rc.0" }
 mas-cli = { path = "./crates/cli/", version = "=1.11.0-rc.0" }
 mas-config = { path = "./crates/config/", version = "=1.11.0-rc.0" }
@@ -707,6 +709,7 @@ features = ["serde", "uuid"]
 # UUID support
 [workspace.dependencies.uuid]
 version = "1.18.1"
+features = ["macro-diagnostics"]
 
 # HTML escaping
 [workspace.dependencies.v_htmlescape]
@@ -720,6 +723,10 @@ features = ["rustc"]
 # Directory traversal
 [workspace.dependencies.walkdir]
 version = "2.5.0"
+
+[workspace.dependencies.webauthn_rp]
+version = "0.3.0"
+features = ["bin", "serde_relaxed", "custom", "serializable_server_state"]
 
 # HTTP mock server
 [workspace.dependencies.wiremock]

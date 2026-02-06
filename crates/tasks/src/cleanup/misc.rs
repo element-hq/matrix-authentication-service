@@ -8,7 +8,9 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
-use mas_storage::queue::{CleanupQueueJobsJob, PruneStalePolicyDataJob};
+use mas_storage::queue::{
+    CleanupOldPasskeyChallengesJob, CleanupQueueJobsJob, PruneStalePolicyDataJob,
+};
 use tracing::{debug, info};
 use ulid::Ulid;
 
@@ -59,6 +61,30 @@ impl RunnableJob for CleanupQueueJobsJob {
 
     fn timeout(&self) -> Option<Duration> {
         Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupOldPasskeyChallengesJob {
+    #[tracing::instrument(name = "job.cleanup_old_passkey_challenges", skip_all)]
+    async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
+        let clock = state.clock();
+        let mut repo = state.repository().await.map_err(JobError::retry)?;
+
+        let count = repo
+            .user_passkey()
+            .cleanup_challenges(clock)
+            .await
+            .map_err(JobError::retry)?;
+        repo.save().await.map_err(JobError::retry)?;
+
+        if count == 0 {
+            debug!("no passkey challenges to clean up");
+        } else {
+            info!(count, "cleaned up old passkey challenges");
+        }
+
+        Ok(())
     }
 }
 
