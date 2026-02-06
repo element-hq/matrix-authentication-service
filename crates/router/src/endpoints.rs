@@ -628,6 +628,16 @@ impl SimpleRoute for CompatLoginSsoRedirectIdp {
 pub enum CompatLoginSsoAction {
     Login,
     Register,
+    #[serde(other)]
+    Unknown,
+}
+
+impl CompatLoginSsoAction {
+    /// Returns true if the action is a known action.
+    #[must_use]
+    pub fn is_known(&self) -> bool {
+        !matches!(self, Self::Unknown)
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
