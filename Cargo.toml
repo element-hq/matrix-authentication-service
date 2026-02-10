@@ -124,7 +124,7 @@ features = ["std"]
 
 # Bcrypt password hashing
 [workspace.dependencies.bcrypt]
-version = "0.17.1"
+version = "0.18.0"
 default-features = true
 
 # Packed bitfields
