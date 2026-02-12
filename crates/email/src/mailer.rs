@@ -53,6 +53,7 @@ impl Mailer {
         Message::builder()
             .from(self.from.clone())
             .reply_to(self.reply_to.clone())
+            .message_id(None)
     }
 
     fn prepare_verification_email(
