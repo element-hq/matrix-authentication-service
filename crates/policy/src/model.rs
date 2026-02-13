@@ -16,10 +16,11 @@ use oauth2_types::{registration::VerifiedClientMetadata, scope::Scope};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-/// A well-known policy code.
+/// Violation variants identified by a well-known policy code (under the `code`
+/// key).
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, JsonSchema, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
-pub enum Code {
+#[serde(tag = "code", rename_all = "kebab-case")]
+pub enum ViolationVariant {
     /// The username is too short.
     UsernameTooShort,
 
@@ -54,7 +55,7 @@ pub enum Code {
     TooManySessions,
 }
 
-impl Code {
+impl ViolationVariant {
     /// Returns the code as a string
     #[must_use]
     pub fn as_str(&self) -> &'static str {
@@ -80,7 +81,9 @@ pub struct Violation {
     pub msg: String,
     pub redirect_uri: Option<String>,
     pub field: Option<String>,
-    pub code: Option<Code>,
+
+    #[serde(flatten)]
+    pub variant: Option<ViolationVariant>,
 }
 
 /// The result of a policy evaluation.

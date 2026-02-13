@@ -16,7 +16,7 @@ use mas_data_model::{
     User,
 };
 use mas_matrix::HomeserverConnection;
-use mas_policy::{Policy, Requester, ViolationCode, model::CompatLogin};
+use mas_policy::{Policy, Requester, ViolationVariant, model::CompatLogin};
 use mas_storage::{
     BoxRepository, BoxRepositoryFactory, RepositoryAccess,
     compat::{
@@ -605,7 +605,7 @@ async fn token_login(
         // that removing a session wouldn't actually unblock the login.
         if res.violations.len() == 1 {
             let violation = &res.violations[0];
-            if violation.code == Some(ViolationCode::TooManySessions) {
+            if violation.variant == Some(ViolationVariant::TooManySessions) {
                 // The only violation is having reached the session limit.
                 return Err(RouteError::PolicyHardSessionLimitReached);
             }
@@ -738,7 +738,7 @@ async fn user_password_login(
         // that removing a session wouldn't actually unblock the login.
         if res.violations.len() == 1 {
             let violation = &res.violations[0];
-            if violation.code == Some(ViolationCode::TooManySessions) {
+            if violation.variant == Some(ViolationVariant::TooManySessions) {
                 // The only violation is having reached the session limit.
                 return Err(RouteError::PolicyHardSessionLimitReached);
             }
