@@ -123,8 +123,8 @@ async fn test_compat_refresh(pool: sqlx::PgPool) {
     assert_eq!(
         second_refresh_response,
         RefreshResponse {
-            access_token: "???".to_owned(),
-            refresh_token: "???".to_owned(),
+            access_token: "mct_Wc6Hx4l9DGzqGtgLoYqtrtBUBcWlE4_ZFyTp2".to_owned(),
+            refresh_token: "mcr_Yp7FM44zJN5qePGMLvvMXC4Ds1A3lC_0YcYCM".to_owned(),
             expires_in_ms: 300_000
         }
     );
@@ -185,8 +185,7 @@ async fn test_refresh_with_consumed_token(pool: sqlx::PgPool) {
     let _first_refresh_response: RefreshResponse = first_refresh_response.json();
 
     // Try to use the same refresh token again - should fail because it's consumed
-    let second_refresh_request =
-        Request::post("/_matrix/client/v3/refresh").json(&refresh_request);
+    let second_refresh_request = Request::post("/_matrix/client/v3/refresh").json(&refresh_request);
 
     let second_refresh_response = state.request(second_refresh_request).await;
     second_refresh_response.assert_status(StatusCode::UNAUTHORIZED);
