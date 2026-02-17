@@ -11,8 +11,22 @@ Cleanup jobs are scheduled tasks that hard-delete old data from the database. Th
 1. **Job struct** in `crates/storage/src/queue/tasks.rs` - Defines the job and queue name
 2. **Storage trait** in `crates/storage/src/{domain}/` - Declares the cleanup method interface
 3. **PostgreSQL implementation** in `crates/storage-pg/src/{domain}/` - Implements the actual cleanup logic
-4. **Job runner** in `crates/tasks/src/database.rs` - Implements the `RunnableJob` trait with batching logic
+4. **Job runner** in `crates/tasks/src/cleanup/` - Implements the `RunnableJob` trait with batching logic
 5. **Registration** in `crates/tasks/src/lib.rs` - Registers the handler and schedules execution
+
+### Module Structure
+
+The cleanup job implementations are organized into submodules by domain:
+
+```
+crates/tasks/src/cleanup/
+├── mod.rs           # Re-exports, shared BATCH_SIZE constant
+├── tokens.rs        # OAuth token cleanup (access and refresh tokens)
+├── sessions.rs      # Session cleanup (compat, OAuth2, user sessions and their IPs)
+├── oauth.rs         # OAuth grants and upstream OAuth cleanup
+├── user.rs          # User-related cleanup (registrations, recovery, email auth)
+└── misc.rs          # Queue jobs, policy data cleanup
+```
 
 ## All Cleanup Jobs
 
@@ -183,7 +197,7 @@ The partial index (`WHERE timestamp_col IS NOT NULL`) makes queries more efficie
 
 ### 5. Implement RunnableJob
 
-In `crates/tasks/src/database.rs`:
+In the appropriate submodule under `crates/tasks/src/cleanup/` (e.g., `tokens.rs`, `sessions.rs`, `oauth.rs`, `user.rs`, or `misc.rs`):
 
 ```rust
 #[async_trait]

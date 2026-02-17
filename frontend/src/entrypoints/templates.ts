@@ -10,7 +10,7 @@
 // Ideally later on we could find a way to hydrate full React components instead
 // of doing this, as this can very quickly get out of hands.
 
-const VALID_USERNAME_RE = /^\s*([a-z0-9.=_/-]+|@[a-z0-9.=_/-]+(:.*)?)\s*$/g;
+const VALID_USERNAME_RE = /^\s*([a-z0-9.=_/+-]+|@[a-z0-9.=_/+-]+(:.*)?)\s*$/g;
 
 /** Grab the nearest error message inserted by the templates by error kind and code */
 function grabErrorMessage(

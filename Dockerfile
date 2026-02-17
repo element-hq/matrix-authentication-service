@@ -1,4 +1,5 @@
-# syntax = docker/dockerfile:1.7.1
+# syntax = docker/dockerfile:1.21.0
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -10,13 +11,14 @@
 # being the platform being built.
 
 # The Debian version and version name must be in sync
-ARG DEBIAN_VERSION=12
-ARG DEBIAN_VERSION_NAME=bookworm
-ARG RUSTC_VERSION=1.89.0
-ARG NODEJS_VERSION=24.11.0
+ARG DEBIAN_VERSION=13
+ARG DEBIAN_VERSION_NAME=trixie
+# Keep in sync with .github/workflows/ci.yaml
+ARG RUSTC_VERSION=1.93.0
+ARG NODEJS_VERSION=24.13.0
 # Keep in sync with .github/actions/build-policies/action.yml and policies/Makefile
-ARG OPA_VERSION=1.8.0 
-ARG CARGO_AUDITABLE_VERSION=0.7.0
+ARG OPA_VERSION=1.13.1
+ARG CARGO_AUDITABLE_VERSION=0.7.2
 
 ##########################################
 ## Build stage that builds the frontend ##

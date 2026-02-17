@@ -437,6 +437,7 @@ mod tests {
     async fn test_refresh_token_repository(pool: PgPool) {
         const ACCESS_TOKEN: &str = "access_token";
         const REFRESH_TOKEN: &str = "refresh_token";
+        const REFRESH_TOKEN2: &str = "refresh_token2";
         let mut rng = ChaChaRng::seed_from_u64(42);
         let clock = MockClock::default();
         let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
@@ -508,16 +509,28 @@ mod tests {
         assert!(refresh_token_lookup.is_valid());
         assert!(!refresh_token_lookup.is_consumed());
 
-        // Consume it
+        // Consume the first token, but to do so we need a 2nd to replace it with
+        let refresh_token2 = repo
+            .compat_refresh_token()
+            .add(
+                &mut rng,
+                &clock,
+                &session,
+                &access_token,
+                REFRESH_TOKEN2.to_owned(),
+            )
+            .await
+            .unwrap();
+
         let refresh_token = repo
             .compat_refresh_token()
-            .consume(&clock, refresh_token)
+            .consume_and_replace(&clock, refresh_token, &refresh_token2)
             .await
             .unwrap();
         assert!(!refresh_token.is_valid());
         assert!(refresh_token.is_consumed());
 
-        // Reload it and check again
+        // Reload the first token and check again
         let refresh_token_lookup = repo
             .compat_refresh_token()
             .find_by_token(REFRESH_TOKEN)
@@ -530,7 +543,7 @@ mod tests {
         // Consuming it again should not work
         assert!(
             repo.compat_refresh_token()
-                .consume(&clock, refresh_token)
+                .consume_and_replace(&clock, refresh_token, &refresh_token2)
                 .await
                 .is_err()
         );

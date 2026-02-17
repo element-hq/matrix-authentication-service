@@ -83,7 +83,7 @@ pub async fn get(
             Some(CompatLoginSsoAction::Register) => {
                 url_builder.redirect(&mas_router::Register::and_continue_compat_sso_login(id))
             }
-            Some(CompatLoginSsoAction::Login) | None => {
+            Some(CompatLoginSsoAction::Login | CompatLoginSsoAction::Unknown) | None => {
                 url_builder.redirect(&mas_router::Login::and_continue_compat_sso_login(id))
             }
         };
@@ -224,7 +224,7 @@ pub async fn post(
             Some(CompatLoginSsoAction::Register) => {
                 url_builder.redirect(&mas_router::Register::and_continue_compat_sso_login(id))
             }
-            Some(CompatLoginSsoAction::Login) | None => {
+            Some(CompatLoginSsoAction::Login | CompatLoginSsoAction::Unknown) | None => {
                 url_builder.redirect(&mas_router::Login::and_continue_compat_sso_login(id))
             }
         };
