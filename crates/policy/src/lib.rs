@@ -20,8 +20,8 @@ use tokio::io::{AsyncRead, AsyncReadExt};
 
 pub use self::model::{
     AuthorizationGrantInput, ClientRegistrationInput, CompatLoginInput, EmailInput,
-    EvaluationResult, GrantType, RegisterInput, RegistrationMethod, Requester, Violation,
-    ViolationVariant,
+    EvaluationResult, GrantType, RegisterInput, RegistrationMethod, Requester,
+    UpstreamProviderInfo, Violation, ViolationVariant,
 };
 
 #[derive(Debug, Error)]
