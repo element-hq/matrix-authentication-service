@@ -800,6 +800,7 @@ async fn client_credentials_grant(
             session_counts: None,
             scope: &scope,
             grant_type: mas_policy::GrantType::ClientCredentials,
+            upstream_provider: None,
             requester: mas_policy::Requester {
                 ip_address: activity_tracker.ip(),
                 user_agent: user_agent.clone(),

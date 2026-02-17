@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -33,6 +34,12 @@ can_request_admin(user) if {
 interactive_grant_type("authorization_code") := true
 
 interactive_grant_type("urn:ietf:params:oauth:grant-type:device_code") := true
+
+# Token exchange is a non-interactive grant type where a client exchanges
+# a MAS access token for an upstream provider's access token.
+# By default, all scopes requested via token exchange are denied.
+# Admins should add allowed_scope rules for token exchange as needed.
+token_exchange_grant_type := "urn:ietf:params:oauth:grant-type:token-exchange"
 
 # Special case to make empty scope work
 allowed_scope("") := true

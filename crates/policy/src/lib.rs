@@ -21,7 +21,7 @@ use tokio::io::{AsyncRead, AsyncReadExt};
 pub use self::model::{
     AuthorizationGrantInput, ClientRegistrationInput, Code as ViolationCode, CompatLoginInput,
     EmailInput, EvaluationResult, GrantType, RegisterInput, RegistrationMethod, Requester,
-    Violation,
+    UpstreamProviderInfo, Violation,
 };
 
 #[derive(Debug, Error)]
