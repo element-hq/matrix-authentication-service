@@ -53,6 +53,8 @@ impl Mailer {
         Message::builder()
             .from(self.from.clone())
             .reply_to(self.reply_to.clone())
+            // By passing `None`, lettre generates a random message ID
+            // with a random UUID and the hostname for us
             .message_id(None)
     }
 
