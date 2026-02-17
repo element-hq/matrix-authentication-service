@@ -27,12 +27,15 @@ use mas_oidc_client::types::scope::ScopeToken;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{
-    BoxRepository, RepositoryAccess,
+    BoxRepository, Pagination, RepositoryAccess,
     oauth2::{
         OAuth2AccessTokenRepository, OAuth2AuthorizationGrantRepository,
         OAuth2RefreshTokenRepository, OAuth2SessionRepository,
     },
-    user::BrowserSessionRepository,
+    upstream_oauth2::{
+        UpstreamOAuthLinkFilter, UpstreamOAuthLinkTokenRepository, UpstreamOAuthProviderRepository,
+    },
+    user::{BrowserSessionRepository, UserRepository},
 };
 use mas_templates::{DeviceNameContext, TemplateContext, Templates};
 use oauth2_types::{
@@ -40,7 +43,7 @@ use oauth2_types::{
     pkce::CodeChallengeError,
     requests::{
         AccessTokenRequest, AccessTokenResponse, AuthorizationCodeGrant, ClientCredentialsGrant,
-        DeviceCodeGrant, GrantType, RefreshTokenGrant,
+        DeviceCodeGrant, GrantType, RefreshTokenGrant, TokenExchangeGrant,
     },
     scope,
 };
@@ -156,6 +159,22 @@ pub(crate) enum RouteError {
 
     #[error("failed to provision device")]
     ProvisionDeviceFailed(#[source] anyhow::Error),
+
+    #[error("subject token is invalid or expired")]
+    SubjectTokenInvalid,
+
+    #[error("upstream provider not found")]
+    UpstreamProviderNotFound,
+
+    #[error("user has no link to the requested upstream provider")]
+    NoUpstreamLink,
+
+    #[error("no stored token for this upstream link")]
+    NoUpstreamToken,
+
+    #[error("failed to refresh upstream token")]
+    #[allow(dead_code)] // Will be used when auto-refresh is implemented
+    UpstreamTokenRefreshFailed(#[source] anyhow::Error),
 }
 
 impl IntoResponse for RouteError {
@@ -169,6 +188,7 @@ impl IntoResponse for RouteError {
                 | Self::ProvisionDeviceFailed(_)
                 | Self::NoSuchNextRefreshToken { .. }
                 | Self::NoSuchNextAccessToken { .. }
+                | Self::UpstreamTokenRefreshFailed(_)
         );
 
         TOKEN_REQUEST_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
@@ -180,7 +200,8 @@ impl IntoResponse for RouteError {
             | Self::NoSuchOAuthSession(_)
             | Self::ProvisionDeviceFailed(_)
             | Self::NoSuchNextRefreshToken { .. }
-            | Self::NoSuchNextAccessToken { .. } => (
+            | Self::NoSuchNextAccessToken { .. }
+            | Self::UpstreamTokenRefreshFailed(_) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ClientError::from(ClientErrorCode::ServerError)),
             ),
@@ -253,6 +274,40 @@ impl IntoResponse for RouteError {
             Self::UnsupportedGrantType => (
                 StatusCode::BAD_REQUEST,
                 Json(ClientError::from(ClientErrorCode::UnsupportedGrantType)),
+            ),
+
+            Self::SubjectTokenInvalid => (
+                StatusCode::BAD_REQUEST,
+                Json(
+                    ClientError::from(ClientErrorCode::InvalidGrant)
+                        .with_description("subject_token is invalid or expired".to_owned()),
+                ),
+            ),
+
+            Self::UpstreamProviderNotFound => (
+                StatusCode::BAD_REQUEST,
+                Json(
+                    ClientError::from(ClientErrorCode::InvalidGrant).with_description(
+                        "no upstream provider found matching the audience".to_owned(),
+                    ),
+                ),
+            ),
+
+            Self::NoUpstreamLink => (
+                StatusCode::BAD_REQUEST,
+                Json(
+                    ClientError::from(ClientErrorCode::InvalidGrant).with_description(
+                        "user has no link to the requested upstream provider".to_owned(),
+                    ),
+                ),
+            ),
+
+            Self::NoUpstreamToken => (
+                StatusCode::BAD_REQUEST,
+                Json(
+                    ClientError::from(ClientErrorCode::InvalidGrant)
+                        .with_description("no stored token for this upstream link".to_owned()),
+                ),
             ),
         };
 
@@ -380,6 +435,19 @@ pub(crate) async fn post(
                 &site_config,
                 repo,
                 &homeserver,
+                user_agent,
+            )
+            .await?
+        }
+        AccessTokenRequest::TokenExchange(grant) => {
+            token_exchange_grant(
+                &clock,
+                &activity_tracker,
+                &grant,
+                &client,
+                &encrypter,
+                repo,
+                policy,
                 user_agent,
             )
             .await?
@@ -993,6 +1061,168 @@ async fn device_code_grant(
     }
 
     Ok((params, repo))
+}
+
+/// The expected `subject_token_type` for RFC 8693 token exchange.
+const ACCESS_TOKEN_TYPE_URN: &str = "urn:ietf:params:oauth:token-type:access_token";
+
+#[tracing::instrument(
+    name = "handlers.oauth2.token.token_exchange",
+    fields(client.id = %client.id),
+    skip_all,
+)]
+async fn token_exchange_grant(
+    clock: &impl Clock,
+    activity_tracker: &BoundActivityTracker,
+    grant: &TokenExchangeGrant,
+    client: &Client,
+    encrypter: &Encrypter,
+    mut repo: BoxRepository,
+    mut policy: Policy,
+    user_agent: Option<String>,
+) -> Result<(AccessTokenResponse, BoxRepository), RouteError> {
+    // 1. Validate subject_token_type
+    if grant.subject_token_type != ACCESS_TOKEN_TYPE_URN {
+        return Err(RouteError::BadRequest);
+    }
+
+    // 2. Parse and validate the subject_token as a MAS access token
+    let token_type =
+        TokenType::check(&grant.subject_token).map_err(|_| RouteError::SubjectTokenInvalid)?;
+
+    if token_type != TokenType::AccessToken {
+        return Err(RouteError::SubjectTokenInvalid);
+    }
+
+    // 3. Look up the access token and its session
+    let access_token = repo
+        .oauth2_access_token()
+        .find_by_token(&grant.subject_token)
+        .await?
+        .ok_or(RouteError::SubjectTokenInvalid)?;
+
+    if !access_token.is_valid(clock.now()) {
+        return Err(RouteError::SubjectTokenInvalid);
+    }
+
+    let session = repo
+        .oauth2_session()
+        .lookup(access_token.session_id)
+        .await?
+        .ok_or(RouteError::NoSuchOAuthSession(access_token.session_id))?;
+
+    if !session.is_valid() {
+        return Err(RouteError::SubjectTokenInvalid);
+    }
+
+    // Token exchange requires a user
+    let user_id = session.user_id.ok_or(RouteError::SubjectTokenInvalid)?;
+    let user = repo
+        .user()
+        .lookup(user_id)
+        .await?
+        .ok_or(RouteError::SubjectTokenInvalid)?;
+
+    if !user.is_valid() {
+        return Err(RouteError::SubjectTokenInvalid);
+    }
+
+    // 4. Resolve the upstream provider from audience
+    let audience = grant
+        .audience
+        .as_deref()
+        .ok_or(RouteError::UpstreamProviderNotFound)?;
+
+    let provider = if let Ok(id) = audience.parse::<Ulid>() {
+        // Try as a ULID
+        repo.upstream_oauth_provider()
+            .lookup(id)
+            .await?
+            .filter(mas_data_model::UpstreamOAuthProvider::enabled)
+    } else {
+        // Try as an issuer URL
+        repo.upstream_oauth_provider()
+            .find_by_issuer(audience)
+            .await?
+    }
+    .ok_or(RouteError::UpstreamProviderNotFound)?;
+
+    // 5. Evaluate policy
+    let scope = grant.scope.clone().unwrap_or_else(|| "".parse().unwrap());
+
+    let provider_id_str = provider.id.to_string();
+    let res = policy
+        .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
+            user: Some(&user),
+            client,
+            session_counts: None,
+            scope: &scope,
+            grant_type: mas_policy::GrantType::TokenExchange,
+            upstream_provider: Some(mas_policy::UpstreamProviderInfo {
+                id: &provider_id_str,
+                issuer: provider.issuer.as_deref(),
+                human_name: provider.human_name.as_deref(),
+            }),
+            requester: mas_policy::Requester {
+                ip_address: activity_tracker.ip(),
+                user_agent,
+            },
+        })
+        .await?;
+
+    if !res.valid() {
+        return Err(RouteError::DeniedByPolicy(res));
+    }
+
+    // 6. Find the upstream link for this user + provider
+    let filter = UpstreamOAuthLinkFilter::new()
+        .for_user(&user)
+        .for_provider(&provider);
+
+    let page = repo
+        .upstream_oauth_link()
+        .list(filter, Pagination::first(1))
+        .await?;
+
+    let link = page
+        .edges
+        .into_iter()
+        .next()
+        .map(|edge| edge.node)
+        .ok_or(RouteError::NoUpstreamLink)?;
+
+    // 7. Find the stored token for this link
+    let link_token = repo
+        .upstream_oauth_link_token()
+        .find_by_link(&link)
+        .await?
+        .ok_or(RouteError::NoUpstreamToken)?;
+
+    // 8. Decrypt the upstream access token
+    let decrypted = encrypter
+        .decrypt_string(&link_token.encrypted_access_token)
+        .map_err(|e| RouteError::Internal(Box::new(e)))?;
+    let upstream_access_token =
+        String::from_utf8(decrypted).map_err(|e| RouteError::Internal(Box::new(e)))?;
+
+    // 9. Build the response
+    let mut response = AccessTokenResponse::new(upstream_access_token);
+    response.issued_token_type = Some(ACCESS_TOKEN_TYPE_URN.to_owned());
+
+    if let Some(expires_at) = link_token.access_token_expires_at {
+        let remaining = expires_at - clock.now();
+        if remaining > Duration::zero() {
+            response = response.with_expires_in(remaining);
+        }
+    }
+
+    if let Some(ref token_scope) = link_token.token_scope
+        && let Ok(parsed_scope) = token_scope.parse()
+    {
+        response = response.with_scope(parsed_scope);
+    }
+
+    Ok((response, repo))
 }
 
 #[cfg(test)]

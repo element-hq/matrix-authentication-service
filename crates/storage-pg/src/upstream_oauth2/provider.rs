@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -980,5 +981,65 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
 
         let res: Result<Vec<_>, _> = res.into_iter().map(TryInto::try_into).collect();
         Ok(res?)
+    }
+
+    #[tracing::instrument(
+        name = "db.upstream_oauth_provider.find_by_issuer",
+        skip_all,
+        fields(
+            db.query.text,
+            upstream_oauth_provider.issuer = issuer,
+        ),
+        err,
+    )]
+    async fn find_by_issuer(
+        &mut self,
+        issuer: &str,
+    ) -> Result<Option<UpstreamOAuthProvider>, Self::Error> {
+        let res = sqlx::query_as!(
+            ProviderLookup,
+            r#"
+                SELECT
+                    upstream_oauth_provider_id,
+                    issuer,
+                    human_name,
+                    brand_name,
+                    scope,
+                    client_id,
+                    encrypted_client_secret,
+                    token_endpoint_signing_alg,
+                    token_endpoint_auth_method,
+                    id_token_signed_response_alg,
+                    fetch_userinfo,
+                    userinfo_signed_response_alg,
+                    created_at,
+                    disabled_at,
+                    claims_imports as "claims_imports: Json<UpstreamOAuthProviderClaimsImports>",
+                    jwks_uri_override,
+                    authorization_endpoint_override,
+                    token_endpoint_override,
+                    userinfo_endpoint_override,
+                    discovery_mode,
+                    pkce_mode,
+                    response_mode,
+                    additional_parameters as "additional_parameters: Json<Vec<(String, String)>>",
+                    forward_login_hint,
+                    on_backchannel_logout
+                FROM upstream_oauth_providers
+                WHERE issuer = $1
+                  AND disabled_at IS NULL
+            "#,
+            issuer,
+        )
+        .traced()
+        .fetch_optional(&mut *self.conn)
+        .await?;
+
+        let res = res
+            .map(UpstreamOAuthProvider::try_from)
+            .transpose()
+            .map_err(DatabaseError::from)?;
+
+        Ok(res)
     }
 }
