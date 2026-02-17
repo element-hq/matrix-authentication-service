@@ -173,7 +173,6 @@ pub(crate) enum RouteError {
     NoUpstreamToken,
 
     #[error("failed to refresh upstream token")]
-    #[allow(dead_code)] // Will be used when auto-refresh is implemented
     UpstreamTokenRefreshFailed(#[source] anyhow::Error),
 }
 
@@ -337,6 +336,7 @@ pub(crate) async fn post(
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
     State(site_config): State<SiteConfig>,
     State(encrypter): State<Encrypter>,
+    State(metadata_cache): State<crate::upstream_oauth2::cache::MetadataCache>,
     State(templates): State<Templates>,
     policy: Policy,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
@@ -441,11 +441,15 @@ pub(crate) async fn post(
         }
         AccessTokenRequest::TokenExchange(grant) => {
             token_exchange_grant(
+                &mut rng,
                 &clock,
                 &activity_tracker,
                 &grant,
                 &client,
                 &encrypter,
+                &http_client,
+                &key_store,
+                &metadata_cache,
                 repo,
                 policy,
                 user_agent,
@@ -1072,11 +1076,15 @@ const ACCESS_TOKEN_TYPE_URN: &str = "urn:ietf:params:oauth:token-type:access_tok
     skip_all,
 )]
 async fn token_exchange_grant(
+    rng: &mut BoxRng,
     clock: &impl Clock,
     activity_tracker: &BoundActivityTracker,
     grant: &TokenExchangeGrant,
     client: &Client,
     encrypter: &Encrypter,
+    http_client: &reqwest::Client,
+    key_store: &Keystore,
+    metadata_cache: &crate::upstream_oauth2::cache::MetadataCache,
     mut repo: BoxRepository,
     mut policy: Policy,
     user_agent: Option<String>,
@@ -1192,20 +1200,92 @@ async fn token_exchange_grant(
         .ok_or(RouteError::NoUpstreamLink)?;
 
     // 7. Find the stored token for this link
-    let link_token = repo
+    let mut link_token = repo
         .upstream_oauth_link_token()
         .find_by_link(&link)
         .await?
         .ok_or(RouteError::NoUpstreamToken)?;
 
-    // 8. Decrypt the upstream access token
+    // 8. If the token is expired and we have a refresh token, auto-refresh
+    if link_token.is_expired(clock.now()) && link_token.has_refresh_token() {
+        let encrypted_refresh_token = link_token
+            .encrypted_refresh_token
+            .as_deref()
+            .expect("refresh token presence already checked");
+        let refresh_token_bytes = encrypter
+            .decrypt_string(encrypted_refresh_token)
+            .map_err(|e| RouteError::Internal(Box::new(e)))?;
+        let refresh_token = String::from_utf8(refresh_token_bytes)
+            .map_err(|e| RouteError::Internal(Box::new(e)))?;
+
+        let mut lazy_metadata = crate::upstream_oauth2::cache::LazyProviderInfos::new(
+            metadata_cache,
+            &provider,
+            http_client,
+        );
+        let token_endpoint = lazy_metadata
+            .token_endpoint()
+            .await
+            .map_err(|e| RouteError::UpstreamTokenRefreshFailed(e.into()))?
+            .clone();
+
+        let client_credentials = crate::upstream_oauth2::client_credentials_for_provider(
+            &provider,
+            &token_endpoint,
+            key_store,
+            encrypter,
+        )
+        .map_err(|e| RouteError::UpstreamTokenRefreshFailed(e.into()))?;
+
+        let (token_response, _id_token) =
+            mas_oidc_client::requests::refresh_token::refresh_access_token(
+                http_client,
+                client_credentials,
+                &token_endpoint,
+                refresh_token,
+                None,
+                None,
+                None,
+                clock.now(),
+                rng,
+            )
+            .await
+            .map_err(|e| RouteError::UpstreamTokenRefreshFailed(e.into()))?;
+
+        // Encrypt and store the new tokens
+        let new_encrypted_access_token = encrypter
+            .encrypt_to_string(token_response.access_token.as_bytes())
+            .map_err(|e| RouteError::Internal(Box::new(e)))?;
+
+        let new_encrypted_refresh_token = token_response
+            .refresh_token
+            .as_deref()
+            .map(|rt| encrypter.encrypt_to_string(rt.as_bytes()))
+            .transpose()
+            .map_err(|e| RouteError::Internal(Box::new(e)))?;
+
+        let new_expires_at = token_response.expires_in.map(|d| clock.now() + d);
+
+        link_token = repo
+            .upstream_oauth_link_token()
+            .update_tokens(
+                clock,
+                link_token,
+                new_encrypted_access_token,
+                new_encrypted_refresh_token,
+                new_expires_at,
+            )
+            .await?;
+    }
+
+    // 9. Decrypt the upstream access token
     let decrypted = encrypter
         .decrypt_string(&link_token.encrypted_access_token)
         .map_err(|e| RouteError::Internal(Box::new(e)))?;
     let upstream_access_token =
         String::from_utf8(decrypted).map_err(|e| RouteError::Internal(Box::new(e)))?;
 
-    // 9. Build the response
+    // 10. Build the response
     let mut response = AccessTokenResponse::new(upstream_access_token);
     response.issued_token_type = Some(ACCESS_TOKEN_TYPE_URN.to_owned());
 
