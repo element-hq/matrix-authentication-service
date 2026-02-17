@@ -614,7 +614,7 @@ version = "2.2.0"
 
 # Low-level socket manipulation
 [workspace.dependencies.socket2]
-version = "0.6.1"
+version = "0.6.2"
 
 # Subject Public Key Info
 [workspace.dependencies.spki]
