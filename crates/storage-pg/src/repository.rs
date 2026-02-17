@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -24,8 +25,8 @@ use mas_storage::{
     policy_data::PolicyDataRepository,
     queue::{QueueJobRepository, QueueScheduleRepository, QueueWorkerRepository},
     upstream_oauth2::{
-        UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository,
-        UpstreamOAuthSessionRepository,
+        UpstreamOAuthLinkRepository, UpstreamOAuthLinkTokenRepository,
+        UpstreamOAuthProviderRepository, UpstreamOAuthSessionRepository,
     },
     user::{
         BrowserSessionRepository, UserEmailRepository, UserPasswordRepository,
@@ -56,8 +57,8 @@ use crate::{
     },
     telemetry::DB_CLIENT_CONNECTIONS_CREATE_TIME_HISTOGRAM,
     upstream_oauth2::{
-        PgUpstreamOAuthLinkRepository, PgUpstreamOAuthProviderRepository,
-        PgUpstreamOAuthSessionRepository,
+        PgUpstreamOAuthLinkRepository, PgUpstreamOAuthLinkTokenRepository,
+        PgUpstreamOAuthProviderRepository, PgUpstreamOAuthSessionRepository,
     },
     user::{
         PgBrowserSessionRepository, PgUserEmailRepository, PgUserPasswordRepository,
@@ -220,6 +221,12 @@ where
         &'c mut self,
     ) -> Box<dyn UpstreamOAuthSessionRepository<Error = Self::Error> + 'c> {
         Box::new(PgUpstreamOAuthSessionRepository::new(self.conn.as_mut()))
+    }
+
+    fn upstream_oauth_link_token<'c>(
+        &'c mut self,
+    ) -> Box<dyn UpstreamOAuthLinkTokenRepository<Error = Self::Error> + 'c> {
+        Box::new(PgUpstreamOAuthLinkTokenRepository::new(self.conn.as_mut()))
     }
 
     fn user<'c>(&'c mut self) -> Box<dyn UserRepository<Error = Self::Error> + 'c> {

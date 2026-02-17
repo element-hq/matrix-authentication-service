@@ -22,8 +22,8 @@ use crate::{
     policy_data::PolicyDataRepository,
     queue::{QueueJobRepository, QueueScheduleRepository, QueueWorkerRepository},
     upstream_oauth2::{
-        UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository,
-        UpstreamOAuthSessionRepository,
+        UpstreamOAuthLinkRepository, UpstreamOAuthLinkTokenRepository,
+        UpstreamOAuthProviderRepository, UpstreamOAuthSessionRepository,
     },
     user::{
         BrowserSessionRepository, UserEmailRepository, UserPasswordRepository,
@@ -130,6 +130,11 @@ pub trait RepositoryAccess: Send {
     fn upstream_oauth_session<'c>(
         &'c mut self,
     ) -> Box<dyn UpstreamOAuthSessionRepository<Error = Self::Error> + 'c>;
+
+    /// Get an [`UpstreamOAuthLinkTokenRepository`]
+    fn upstream_oauth_link_token<'c>(
+        &'c mut self,
+    ) -> Box<dyn UpstreamOAuthLinkTokenRepository<Error = Self::Error> + 'c>;
 
     /// Get an [`UserRepository`]
     fn user<'c>(&'c mut self) -> Box<dyn UserRepository<Error = Self::Error> + 'c>;
@@ -262,8 +267,8 @@ mod impls {
         policy_data::PolicyDataRepository,
         queue::{QueueJobRepository, QueueScheduleRepository, QueueWorkerRepository},
         upstream_oauth2::{
-            UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository,
-            UpstreamOAuthSessionRepository,
+            UpstreamOAuthLinkRepository, UpstreamOAuthLinkTokenRepository,
+            UpstreamOAuthProviderRepository, UpstreamOAuthSessionRepository,
         },
         user::{
             BrowserSessionRepository, UserEmailRepository, UserPasswordRepository,
@@ -334,6 +339,15 @@ mod impls {
         ) -> Box<dyn UpstreamOAuthSessionRepository<Error = Self::Error> + 'c> {
             Box::new(MapErr::new(
                 self.inner.upstream_oauth_session(),
+                &mut self.mapper,
+            ))
+        }
+
+        fn upstream_oauth_link_token<'c>(
+            &'c mut self,
+        ) -> Box<dyn UpstreamOAuthLinkTokenRepository<Error = Self::Error> + 'c> {
+            Box::new(MapErr::new(
+                self.inner.upstream_oauth_link_token(),
                 &mut self.mapper,
             ))
         }
@@ -527,6 +541,12 @@ mod impls {
             &'c mut self,
         ) -> Box<dyn UpstreamOAuthSessionRepository<Error = Self::Error> + 'c> {
             (**self).upstream_oauth_session()
+        }
+
+        fn upstream_oauth_link_token<'c>(
+            &'c mut self,
+        ) -> Box<dyn UpstreamOAuthLinkTokenRepository<Error = Self::Error> + 'c> {
+            (**self).upstream_oauth_link_token()
         }
 
         fn user<'c>(&'c mut self) -> Box<dyn UserRepository<Error = Self::Error> + 'c> {
