@@ -32,6 +32,17 @@
     "grant_type": {
       "$ref": "#/definitions/GrantType"
     },
+    "upstream_provider": {
+      "description": "Information about the upstream provider being targeted.\n Only populated for token exchange grants.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/UpstreamProviderInfo"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "requester": {
       "$ref": "#/definitions/Requester"
     }
@@ -80,7 +91,32 @@
       "enum": [
         "authorization_code",
         "client_credentials",
-        "urn:ietf:params:oauth:grant-type:device_code"
+        "urn:ietf:params:oauth:grant-type:device_code",
+        "urn:ietf:params:oauth:grant-type:token-exchange"
+      ]
+    },
+    "UpstreamProviderInfo": {
+      "description": "Information about an upstream OAuth 2.0 provider.\n Only populated for token exchange grants.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "issuer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "human_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id"
       ]
     },
     "Requester": {
