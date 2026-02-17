@@ -538,6 +538,39 @@ impl fmt::Debug for DeviceCodeGrant {
     }
 }
 
+/// A request to the [Token Endpoint] for the [Token Exchange] grant type.
+///
+/// [Token Endpoint]: https://www.rfc-editor.org/rfc/rfc6749#section-3.2
+/// [Token Exchange]: https://www.rfc-editor.org/rfc/rfc8693
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct TokenExchangeGrant {
+    /// The security token that represents the identity of the party on behalf
+    /// of whom the request is being made.
+    pub subject_token: String,
+
+    /// An identifier for the type of the `subject_token`.
+    pub subject_token_type: String,
+
+    /// The logical name of the target service where the client intends to use
+    /// the requested security token. Can be used to identify the upstream
+    /// provider (by issuer URL or ULID).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub audience: Option<String>,
+
+    /// A URI that indicates the target service or resource where the client
+    /// intends to use the requested security token.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resource: Option<url::Url>,
+
+    /// An identifier for the type of the requested security token.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub requested_token_type: Option<String>,
+
+    /// The scope of the requested security token.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scope: Option<Scope>,
+}
+
 /// All possible values for the `grant_type` parameter.
 #[derive(
     Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, SerializeDisplay, DeserializeFromStr,
@@ -567,6 +600,9 @@ pub enum GrantType {
     /// [`urn:openid:params:grant-type:ciba`](https://openid.net/specs/openid-client-initiated-backchannel-authentication-core-1_0.html)
     ClientInitiatedBackchannelAuthentication,
 
+    /// [`urn:ietf:params:oauth:grant-type:token-exchange`](https://www.rfc-editor.org/rfc/rfc8693)
+    TokenExchange,
+
     /// An unknown value.
     Unknown(String),
 }
@@ -583,6 +619,9 @@ impl core::fmt::Display for GrantType {
             GrantType::JwtBearer => f.write_str("urn:ietf:params:oauth:grant-type:jwt-bearer"),
             GrantType::ClientInitiatedBackchannelAuthentication => {
                 f.write_str("urn:openid:params:grant-type:ciba")
+            }
+            GrantType::TokenExchange => {
+                f.write_str("urn:ietf:params:oauth:grant-type:token-exchange")
             }
             GrantType::Unknown(s) => f.write_str(s),
         }
@@ -604,6 +643,7 @@ impl core::str::FromStr for GrantType {
             "urn:openid:params:grant-type:ciba" => {
                 Ok(GrantType::ClientInitiatedBackchannelAuthentication)
             }
+            "urn:ietf:params:oauth:grant-type:token-exchange" => Ok(GrantType::TokenExchange),
             s => Ok(GrantType::Unknown(s.to_owned())),
         }
     }
@@ -629,6 +669,10 @@ pub enum AccessTokenRequest {
     #[serde(rename = "urn:ietf:params:oauth:grant-type:device_code")]
     DeviceCode(DeviceCodeGrant),
 
+    /// A request in the Token Exchange flow (RFC 8693).
+    #[serde(rename = "urn:ietf:params:oauth:grant-type:token-exchange")]
+    TokenExchange(TokenExchangeGrant),
+
     /// An unsupported request.
     #[serde(skip_serializing, other)]
     Unsupported,
@@ -643,6 +687,7 @@ impl AccessTokenRequest {
             Self::RefreshToken(_) => "refresh_token",
             Self::ClientCredentials(_) => "client_credentials",
             Self::DeviceCode(_) => "urn:ietf:params:oauth:grant-type:device_code",
+            Self::TokenExchange(_) => "urn:ietf:params:oauth:grant-type:token-exchange",
             Self::Unsupported => "unsupported",
         }
     }
@@ -674,6 +719,10 @@ pub struct AccessTokenResponse {
 
     /// The scope of the access token.
     pub scope: Option<Scope>,
+
+    /// The type of the issued security token (RFC 8693 Token Exchange).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub issued_token_type: Option<String>,
 }
 
 impl AccessTokenResponse {
@@ -687,6 +736,7 @@ impl AccessTokenResponse {
             token_type: OAuthAccessTokenType::Bearer,
             expires_in: None,
             scope: None,
+            issued_token_type: None,
         }
     }
 

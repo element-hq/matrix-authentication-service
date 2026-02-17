@@ -77,6 +77,7 @@ async fn pass_access_token_with_client_credentials() {
                 token_type: OAuthAccessTokenType::Bearer,
                 expires_in: None,
                 scope: Some(scope.clone()),
+                issued_token_type: None,
             }),
         )
         .mount(&mock_server)
