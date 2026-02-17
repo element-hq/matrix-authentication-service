@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -24,8 +25,8 @@ use mas_router::UrlBuilder;
 use mas_storage::{
     BoxRepository,
     upstream_oauth2::{
-        UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository,
-        UpstreamOAuthSessionRepository,
+        UpstreamOAuthLinkRepository, UpstreamOAuthLinkTokenRepository,
+        UpstreamOAuthProviderRepository, UpstreamOAuthSessionRepository,
     },
 };
 use mas_templates::{FormPostContext, Templates};
@@ -474,6 +475,17 @@ pub(crate) async fn handler(
             .await?
     };
 
+    // Extract upstream tokens before moving id_token
+    let upstream_access_token = token_response.access_token.clone();
+    let upstream_refresh_token = token_response.refresh_token.clone();
+    let upstream_expires_at = token_response
+        .expires_in
+        .and_then(|d| clock.now().checked_add_signed(d));
+    let upstream_scope = token_response
+        .scope
+        .as_ref()
+        .map(std::string::ToString::to_string);
+
     let session = repo
         .upstream_oauth_session()
         .complete_with_link(
@@ -486,6 +498,42 @@ pub(crate) async fn handler(
             userinfo,
         )
         .await?;
+
+    // Persist upstream provider tokens for later use (e.g., token exchange)
+    let encrypted_access_token = encrypter
+        .encrypt_to_string(upstream_access_token.as_bytes())
+        .map_err(|e| RouteError::Internal(Box::new(e)))?;
+    let encrypted_refresh_token = upstream_refresh_token
+        .as_deref()
+        .map(|rt| encrypter.encrypt_to_string(rt.as_bytes()))
+        .transpose()
+        .map_err(|e| RouteError::Internal(Box::new(e)))?;
+
+    // Upsert: if a token already exists for this link, update it; otherwise create
+    let existing_token = repo.upstream_oauth_link_token().find_by_link(&link).await?;
+    if let Some(existing) = existing_token {
+        repo.upstream_oauth_link_token()
+            .update_tokens(
+                &clock,
+                existing,
+                encrypted_access_token,
+                encrypted_refresh_token,
+                upstream_expires_at,
+            )
+            .await?;
+    } else {
+        repo.upstream_oauth_link_token()
+            .add(
+                &mut rng,
+                &clock,
+                &link,
+                encrypted_access_token,
+                encrypted_refresh_token,
+                upstream_expires_at,
+                upstream_scope,
+            )
+            .await?;
+    }
 
     let cookie_jar = sessions_cookie
         .add_link_to_session(session.id, link.id)?
