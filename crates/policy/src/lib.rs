@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -20,8 +21,8 @@ use tokio::io::{AsyncRead, AsyncReadExt};
 
 pub use self::model::{
     AuthorizationGrantInput, ClientRegistrationInput, CompatLoginInput, EmailInput,
-    EvaluationResult, GrantType, RegisterInput, RegistrationMethod, Requester, Violation,
-    ViolationVariant,
+    EvaluationResult, GrantType, RegisterInput, RegistrationMethod, Requester,
+    UpstreamProviderInfo, Violation, ViolationVariant,
 };
 
 #[derive(Debug, Error)]
