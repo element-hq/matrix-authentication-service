@@ -378,7 +378,7 @@ version = "0.3.17"
 
 # Templates
 [workspace.dependencies.minijinja]
-version = "2.12.0"
+version = "2.15.1"
 features = ["urlencode", "loader", "json", "speedups", "unstable_machinery"]
 
 # Additional filters for minijinja
