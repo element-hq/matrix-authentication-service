@@ -1156,7 +1156,10 @@ async fn token_exchange_grant(
     .ok_or(RouteError::UpstreamProviderNotFound)?;
 
     // 5. Evaluate policy
-    let scope = grant.scope.clone().unwrap_or_else(|| "".parse().unwrap());
+    let scope = grant
+        .scope
+        .clone()
+        .unwrap_or_else(|| std::iter::empty::<scope::ScopeToken>().collect());
 
     let provider_id_str = provider.id.to_string();
     let res = policy
@@ -2226,5 +2229,299 @@ mod tests {
         response.assert_status(StatusCode::BAD_REQUEST);
         let ClientError { error, .. } = response.json();
         assert_eq!(error, ClientErrorCode::UnsupportedGrantType);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_token_exchange_grant(pool: PgPool) {
+        use mas_data_model::{
+            UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
+            UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderTokenAuthMethod,
+        };
+        use mas_iana::jose::JsonWebSignatureAlg;
+        use mas_storage::upstream_oauth2::{
+            UpstreamOAuthLinkRepository, UpstreamOAuthLinkTokenRepository,
+            UpstreamOAuthProviderParams, UpstreamOAuthProviderRepository,
+        };
+
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        // 1. Register a client that supports token exchange
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://example.com/",
+                "token_endpoint_auth_method": "none",
+                "response_types": ["code"],
+                "redirect_uris": ["https://example.com/callback"],
+                "grant_types": ["authorization_code", "urn:ietf:params:oauth:grant-type:token-exchange"],
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+        let ClientRegistrationResponse { client_id, .. } = response.json();
+
+        // 2. Create user, browser session, OAuth session, and access token
+        let mut repo = state.repository().await.unwrap();
+
+        let user = repo
+            .user()
+            .add(&mut state.rng(), &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+
+        let browser_session = repo
+            .browser_session()
+            .add(&mut state.rng(), &state.clock, &user, None)
+            .await
+            .unwrap();
+
+        let client = repo
+            .oauth2_client()
+            .find_by_client_id(&client_id)
+            .await
+            .unwrap()
+            .unwrap();
+
+        let session = repo
+            .oauth2_session()
+            .add_from_browser_session(
+                &mut state.rng(),
+                &state.clock,
+                &client,
+                &browser_session,
+                Scope::from_iter([OPENID]),
+            )
+            .await
+            .unwrap();
+
+        let subject_token_str = TokenType::AccessToken.generate(&mut state.rng());
+        let _access_token = repo
+            .oauth2_access_token()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                &session,
+                subject_token_str.clone(),
+                Some(Duration::try_hours(1).unwrap()),
+            )
+            .await
+            .unwrap();
+
+        // 3. Create an upstream provider
+        let provider = repo
+            .upstream_oauth_provider()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                UpstreamOAuthProviderParams {
+                    issuer: Some("https://upstream.example.com/".to_owned()),
+                    human_name: Some("Test Provider".to_owned()),
+                    brand_name: None,
+                    scope: Scope::from_iter([OPENID]),
+                    token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
+                    token_endpoint_signing_alg: None,
+                    id_token_signed_response_alg: JsonWebSignatureAlg::Rs256,
+                    fetch_userinfo: false,
+                    userinfo_signed_response_alg: None,
+                    client_id: "upstream-client-id".to_owned(),
+                    encrypted_client_secret: None,
+                    claims_imports: UpstreamOAuthProviderClaimsImports::default(),
+                    authorization_endpoint_override: None,
+                    token_endpoint_override: None,
+                    userinfo_endpoint_override: None,
+                    jwks_uri_override: None,
+                    discovery_mode: UpstreamOAuthProviderDiscoveryMode::Disabled,
+                    pkce_mode: mas_data_model::UpstreamOAuthProviderPkceMode::Auto,
+                    response_mode: None,
+                    additional_authorization_parameters: Vec::new(),
+                    forward_login_hint: false,
+                    ui_order: 0,
+                    on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                },
+            )
+            .await
+            .unwrap();
+
+        // 4. Create a link between the user and the upstream provider
+        let link = repo
+            .upstream_oauth_link()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                &provider,
+                "upstream-subject".to_owned(),
+                None,
+            )
+            .await
+            .unwrap();
+
+        repo.upstream_oauth_link()
+            .associate_to_user(&link, &user)
+            .await
+            .unwrap();
+
+        // 5. Store an encrypted upstream token
+        let upstream_access_token = "upstream-access-token-value";
+        let encrypted_access_token = state
+            .encrypter
+            .encrypt_to_string(upstream_access_token.as_bytes())
+            .unwrap();
+
+        let _link_token = repo
+            .upstream_oauth_link_token()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                &link,
+                encrypted_access_token,
+                None,
+                Some(state.clock.now() + Duration::try_hours(1).unwrap()),
+                Some("openid".to_owned()),
+            )
+            .await
+            .unwrap();
+
+        repo.save().await.unwrap();
+
+        // 6. Perform the token exchange
+        let request =
+            Request::post(mas_router::OAuth2TokenEndpoint::PATH).form(serde_json::json!({
+                "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                "subject_token": subject_token_str,
+                "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "audience": provider.id.to_string(),
+                "client_id": client.client_id,
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let token_response: AccessTokenResponse = response.json();
+        assert_eq!(token_response.access_token, upstream_access_token);
+        assert_eq!(
+            token_response.issued_token_type.as_deref(),
+            Some("urn:ietf:params:oauth:token-type:access_token")
+        );
+
+        // 7. Test with issuer as audience (should also work)
+        let request =
+            Request::post(mas_router::OAuth2TokenEndpoint::PATH).form(serde_json::json!({
+                "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                "subject_token": subject_token_str,
+                "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "audience": "https://upstream.example.com/",
+                "client_id": client.client_id,
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let token_response: AccessTokenResponse = response.json();
+        assert_eq!(token_response.access_token, upstream_access_token);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_token_exchange_errors(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        // Register a client
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://example.com/",
+                "token_endpoint_auth_method": "none",
+                "response_types": ["code"],
+                "redirect_uris": ["https://example.com/callback"],
+                "grant_types": ["authorization_code", "urn:ietf:params:oauth:grant-type:token-exchange"],
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+        let ClientRegistrationResponse { client_id, .. } = response.json();
+
+        // Invalid subject_token
+        let request =
+            Request::post(mas_router::OAuth2TokenEndpoint::PATH).form(serde_json::json!({
+                "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                "subject_token": "invalid-token",
+                "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "audience": "https://upstream.example.com/",
+                "client_id": client_id,
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::BAD_REQUEST);
+
+        // Create a valid access token but no upstream link
+        let mut repo = state.repository().await.unwrap();
+
+        let user = repo
+            .user()
+            .add(&mut state.rng(), &state.clock, "bob".to_owned())
+            .await
+            .unwrap();
+
+        let browser_session = repo
+            .browser_session()
+            .add(&mut state.rng(), &state.clock, &user, None)
+            .await
+            .unwrap();
+
+        let client = repo
+            .oauth2_client()
+            .find_by_client_id(&client_id)
+            .await
+            .unwrap()
+            .unwrap();
+
+        let session = repo
+            .oauth2_session()
+            .add_from_browser_session(
+                &mut state.rng(),
+                &state.clock,
+                &client,
+                &browser_session,
+                Scope::from_iter([OPENID]),
+            )
+            .await
+            .unwrap();
+
+        let subject_token_str = TokenType::AccessToken.generate(&mut state.rng());
+        let _access_token = repo
+            .oauth2_access_token()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                &session,
+                subject_token_str.clone(),
+                Some(Duration::try_hours(1).unwrap()),
+            )
+            .await
+            .unwrap();
+
+        repo.save().await.unwrap();
+
+        // No audience → error
+        let request =
+            Request::post(mas_router::OAuth2TokenEndpoint::PATH).form(serde_json::json!({
+                "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                "subject_token": subject_token_str,
+                "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "client_id": client_id,
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::BAD_REQUEST);
+
+        // Unknown audience → error
+        let request =
+            Request::post(mas_router::OAuth2TokenEndpoint::PATH).form(serde_json::json!({
+                "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+                "subject_token": subject_token_str,
+                "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+                "audience": "https://unknown.example.com/",
+                "client_id": client_id,
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::BAD_REQUEST);
     }
 }
