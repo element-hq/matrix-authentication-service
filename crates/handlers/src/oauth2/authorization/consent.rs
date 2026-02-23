@@ -311,21 +311,11 @@ pub(crate) async fn post(
         return Ok((cookie_jar, Html(content)).into_response());
     }
 
-    // All good, let's start the session
-    let session = repo
-        .oauth2_session()
-        .add_from_browser_session(
-            &mut rng,
-            &clock,
-            &client,
-            &browser_session,
-            grant.scope.clone(),
-        )
-        .await?;
-
+    // Fulfill the grant, recording the browser session that consented.
+    // The OAuth2 session is created later, in the token exchange handler.
     let grant = repo
         .oauth2_authorization_grant()
-        .fulfill(&clock, &session, grant)
+        .fulfill(&clock, &browser_session, grant)
         .await?;
 
     let mut params = AuthorizationResponse::default();
@@ -357,10 +347,6 @@ pub(crate) async fn post(
     }
 
     repo.save().await?;
-
-    activity_tracker
-        .record_oauth2_session(&clock, &session)
-        .await;
 
     Ok((
         cookie_jar,
