@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -8,10 +9,10 @@
 
 use std::collections::HashMap;
 
-use axum::response::{Html, IntoResponse, Redirect, Response};
+use axum::response::{Html, IntoResponse, Response};
 use mas_data_model::AuthorizationGrant;
 use mas_i18n::DataLocale;
-use mas_templates::{FormPostContext, Templates};
+use mas_templates::{FormPostContext, RedirectContext, Templates};
 use oauth2_types::requests::ResponseMode;
 use serde::Serialize;
 use thiserror::Error;
@@ -31,6 +32,7 @@ pub struct CallbackDestination {
     mode: CallbackDestinationMode,
     safe_redirect_uri: Url,
     state: Option<String>,
+    client_name: Option<String>,
 }
 
 #[derive(Debug, Error)]
@@ -98,7 +100,14 @@ impl CallbackDestination {
             mode,
             safe_redirect_uri: redirect_uri,
             state,
+            client_name: None,
         })
+    }
+
+    /// Set the client name to display on the redirect interstitial page
+    pub fn with_client_name(mut self, name: String) -> Self {
+        self.client_name = Some(name);
+        self
     }
 
     pub fn go<T: Serialize + Send + Sync>(
@@ -121,6 +130,7 @@ impl CallbackDestination {
 
         let mut redirect_uri = self.safe_redirect_uri;
         let state = self.state;
+        let client_name = self.client_name;
 
         match self.mode {
             CallbackDestinationMode::Query { existing_params } => {
@@ -134,7 +144,12 @@ impl CallbackDestination {
 
                 redirect_uri.set_query(Some(&new_qs));
 
-                Ok(Redirect::to(redirect_uri.as_str()).into_response())
+                let mut ctx = RedirectContext::new(redirect_uri);
+                if let Some(name) = client_name {
+                    ctx = ctx.with_client_name(name);
+                }
+                let rendered = templates.render_redirect(&ctx.with_language(locale))?;
+                Ok(Html(rendered).into_response())
             }
 
             CallbackDestinationMode::Fragment => {
@@ -148,7 +163,12 @@ impl CallbackDestination {
 
                 redirect_uri.set_fragment(Some(&new_qs));
 
-                Ok(Redirect::to(redirect_uri.as_str()).into_response())
+                let mut ctx = RedirectContext::new(redirect_uri);
+                if let Some(name) = client_name {
+                    ctx = ctx.with_client_name(name);
+                }
+                let rendered = templates.render_redirect(&ctx.with_language(locale))?;
+                Ok(Html(rendered).into_response())
             }
 
             CallbackDestinationMode::FormPost => {
@@ -157,8 +177,11 @@ impl CallbackDestination {
                     state,
                     params,
                 };
-                let ctx = FormPostContext::new_for_url(redirect_uri, merged).with_language(locale);
-                let rendered = templates.render_form_post(&ctx)?;
+                let mut ctx = FormPostContext::new_for_url(redirect_uri, merged);
+                if let Some(name) = client_name {
+                    ctx = ctx.with_client_name(name);
+                }
+                let rendered = templates.render_form_post(&ctx.with_language(locale))?;
                 Ok(Html(rendered).into_response())
             }
         }
