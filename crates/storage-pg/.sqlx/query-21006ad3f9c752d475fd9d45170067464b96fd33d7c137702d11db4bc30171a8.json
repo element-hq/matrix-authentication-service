@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT oauth2_authorization_grant_id\n                     , created_at\n                     , cancelled_at\n                     , fulfilled_at\n                     , exchanged_at\n                     , scope\n                     , state\n                     , redirect_uri\n                     , response_mode\n                     , nonce\n                     , oauth2_client_id\n                     , authorization_code\n                     , response_type_code\n                     , response_type_id_token\n                     , code_challenge\n                     , code_challenge_method\n                     , login_hint\n                     , locale\n                     , oauth2_session_id\n                FROM\n                    oauth2_authorization_grants\n\n                WHERE oauth2_authorization_grant_id = $1\n            ",
+  "query": "\n                SELECT oauth2_authorization_grant_id\n                     , created_at\n                     , cancelled_at\n                     , fulfilled_at\n                     , exchanged_at\n                     , scope\n                     , state\n                     , redirect_uri\n                     , response_mode\n                     , nonce\n                     , oauth2_client_id\n                     , authorization_code\n                     , response_type_code\n                     , response_type_id_token\n                     , code_challenge\n                     , code_challenge_method\n                     , login_hint\n                     , locale\n                     , oauth2_session_id\n                     , user_session_id\n                FROM\n                    oauth2_authorization_grants\n\n                WHERE oauth2_authorization_grant_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -97,6 +97,11 @@
         "ordinal": 18,
         "name": "oauth2_session_id",
         "type_info": "Uuid"
+      },
+      {
+        "ordinal": 19,
+        "name": "user_session_id",
+        "type_info": "Uuid"
       }
     ],
     "parameters": {
@@ -123,8 +128,9 @@
       true,
       true,
       true,
+      true,
       true
     ]
   },
-  "hash": "c960f4f5571ee68816c49898125979f3c78c2caca52cb4b8dc9880e669a1f23e"
+  "hash": "21006ad3f9c752d475fd9d45170067464b96fd33d7c137702d11db4bc30171a8"
 }

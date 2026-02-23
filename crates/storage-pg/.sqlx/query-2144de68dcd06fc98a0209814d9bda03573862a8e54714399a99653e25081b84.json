@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE oauth2_authorization_grants\n                SET exchanged_at = $2\n                  , oauth2_session_id = $3\n                WHERE oauth2_authorization_grant_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2144de68dcd06fc98a0209814d9bda03573862a8e54714399a99653e25081b84"
+}
