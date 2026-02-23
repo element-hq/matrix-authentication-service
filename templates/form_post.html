@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 
@@ -11,7 +12,11 @@ Please see LICENSE files in the repository root for full details.
 {% block content %}
   <header class="page-heading">
     <div class="header">
-      <h1 class="title">{{ _("common.loading") }}</h1>
+      {% if client_name %}
+        <h1 class="title">{{ _("mas.redirect.heading", client_name=client_name) }}</h1>
+      {% else %}
+        <h1 class="title">{{ _("common.loading") }}</h1>
+      {% endif %}
     </div>
   </header>
 
