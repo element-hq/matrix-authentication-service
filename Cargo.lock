@@ -91,7 +91,7 @@ checksum = "6966317188cdfe54c58c0900a195d021294afb3ece9b7073d09e4018dbb1e3a2"
 dependencies = [
  "aide-macros",
  "axum",
- "axum-extra",
+ "axum-extra 0.10.3",
  "bytes",
  "cfg-if",
  "http",
@@ -557,9 +557,9 @@ dependencies = [
 
 [[package]]
 name = "axum"
-version = "0.8.6"
+version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a18ed336352031311f4e0b4dd2ff392d4fbb370777c9d18d7fc9d7359f73871"
+checksum = "8b52af3cb4058c895d37317bb27508dccc8e5f2d39454016b297bf4a400597b8"
 dependencies = [
  "axum-core",
  "bytes",
@@ -616,8 +616,34 @@ dependencies = [
  "axum",
  "axum-core",
  "bytes",
+ "form_urlencoded",
+ "futures-util",
+ "http",
+ "http-body",
+ "http-body-util",
+ "mime",
+ "pin-project-lite",
+ "rustversion",
+ "serde_core",
+ "serde_html_form",
+ "serde_path_to_error",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+]
+
+[[package]]
+name = "axum-extra"
+version = "0.12.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fef252edff26ddba56bbcdf2ee3307b8129acb86f5749b68990c168a6fcc9c76"
+dependencies = [
+ "axum",
+ "axum-core",
+ "bytes",
  "cookie",
  "form_urlencoded",
+ "futures-core",
  "futures-util",
  "headers",
  "http",
@@ -625,7 +651,6 @@ dependencies = [
  "http-body-util",
  "mime",
  "pin-project-lite",
- "rustversion",
  "serde_core",
  "serde_html_form",
  "serde_path_to_error",
@@ -1745,7 +1770,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3111,7 +3136,7 @@ version = "1.12.0"
 dependencies = [
  "anyhow",
  "axum",
- "axum-extra",
+ "axum-extra 0.12.5",
  "base64ct",
  "chrono",
  "headers",
@@ -3305,7 +3330,7 @@ dependencies = [
  "async-graphql",
  "async-trait",
  "axum",
- "axum-extra",
+ "axum-extra 0.12.5",
  "axum-macros",
  "base64ct",
  "bcrypt",
@@ -4096,7 +4121,7 @@ dependencies = [
  "sha1",
  "sha2",
  "sprintf",
- "thiserror 1.0.69",
+ "thiserror 2.0.17",
  "tokio",
  "tracing",
  "urlencoding",
@@ -4718,7 +4743,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9120690fafc389a67ba3803df527d0ec9cbbc9cc45e4cc20b332996dfb672425"
 dependencies = [
  "anyhow",
- "itertools 0.13.0",
+ "itertools 0.14.0",
  "proc-macro2",
  "quote",
  "syn",
@@ -5156,7 +5181,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6202,7 +6227,7 @@ dependencies = [
  "getrandom 0.3.3",
  "once_cell",
  "rustix",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7330,7 +7355,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
