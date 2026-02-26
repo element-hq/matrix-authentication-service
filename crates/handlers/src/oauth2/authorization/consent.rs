@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -253,7 +254,7 @@ pub(crate) async fn post(
         .lookup(grant_id)
         .await?
         .ok_or(RouteError::GrantNotFound)?;
-    let callback_destination = CallbackDestination::try_from(&grant)?;
+    let mut callback_destination = CallbackDestination::try_from(&grant)?;
 
     let Some(browser_session) = maybe_session else {
         let next = PostAuthAction::continue_grant(grant_id);
@@ -270,6 +271,14 @@ pub(crate) async fn post(
         .lookup(grant.client_id)
         .await?
         .ok_or(RouteError::NoSuchClient(grant.client_id))?;
+
+    let client_name = client
+        .client_name
+        .clone()
+        .or_else(|| client.client_uri.as_ref().map(ToString::to_string));
+    if let Some(name) = client_name {
+        callback_destination = callback_destination.with_client_name(name);
+    }
 
     if !matches!(grant.stage, AuthorizationGrantStage::Pending) {
         return Err(RouteError::GrantNotPending(grant.id));
@@ -302,21 +311,11 @@ pub(crate) async fn post(
         return Ok((cookie_jar, Html(content)).into_response());
     }
 
-    // All good, let's start the session
-    let session = repo
-        .oauth2_session()
-        .add_from_browser_session(
-            &mut rng,
-            &clock,
-            &client,
-            &browser_session,
-            grant.scope.clone(),
-        )
-        .await?;
-
+    // Fulfill the grant, recording the browser session that consented.
+    // The OAuth2 session is created later, in the token exchange handler.
     let grant = repo
         .oauth2_authorization_grant()
-        .fulfill(&clock, &session, grant)
+        .fulfill(&clock, &browser_session, grant)
         .await?;
 
     let mut params = AuthorizationResponse::default();
@@ -348,10 +347,6 @@ pub(crate) async fn post(
     }
 
     repo.save().await?;
-
-    activity_tracker
-        .record_oauth2_session(&clock, &session)
-        .await;
 
     Ok((
         cookie_jar,
