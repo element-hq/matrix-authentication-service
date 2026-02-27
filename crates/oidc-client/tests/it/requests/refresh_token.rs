@@ -65,6 +65,7 @@ async fn pass_refresh_access_token() {
                 token_type: OAuthAccessTokenType::Bearer,
                 expires_in: None,
                 scope: None,
+                issued_token_type: None,
             }),
         )
         .mount(&mock_server)
