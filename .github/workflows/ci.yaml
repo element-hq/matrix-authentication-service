@@ -257,7 +257,7 @@ jobs:
           SQLX_OFFLINE: "1"
 
       - name: Upload archive to workflow
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: nextest-archive
           path: nextest-archive.tar.zst
