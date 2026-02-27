@@ -278,9 +278,15 @@ pub(crate) async fn get(
                     // Other cases where we don't have a session, ask for a login
                     repo.save().await?;
 
-                    url_builder
-                        .redirect(&mas_router::Login::and_then(continue_grant))
-                        .into_response()
+                    let mut url = mas_router::Login::and_then(continue_grant);
+
+                    url = if let Some(login_hint) = grant.login_hint {
+                        url.with_login_hint(login_hint)
+                    } else {
+                        url
+                    };
+
+                    url_builder.redirect(&url).into_response()
                 }
 
                 Some(user_session) => {

@@ -49,6 +49,7 @@ psl.workspace = true
 rand_chacha.workspace = true
 rand.workspace = true
 reqwest.workspace = true
+ruma-common.workspace = true
 rustls.workspace = true
 schemars.workspace = true
 sentry.workspace = true

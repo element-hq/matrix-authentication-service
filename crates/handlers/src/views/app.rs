@@ -25,6 +25,9 @@ use crate::{
 pub struct Params {
     #[serde(default, flatten)]
     action: Option<mas_router::AccountAction>,
+
+    #[serde(rename = "org.matrix.msc4198.login_hint")]
+    unstable_login_hint: Option<String>,
 }
 
 #[tracing::instrument(name = "handlers.views.app.get", skip_all)]
@@ -33,7 +36,10 @@ pub async fn get(
     State(templates): State<Templates>,
     activity_tracker: BoundActivityTracker,
     State(url_builder): State<UrlBuilder>,
-    Query(Params { action }): Query<Params>,
+    Query(Params {
+        action,
+        unstable_login_hint,
+    }): Query<Params>,
     mut repo: BoxRepository,
     clock: BoxClock,
     mut rng: BoxRng,
@@ -54,13 +60,15 @@ pub async fn get(
 
     // TODO: keep the full path, not just the action
     let Some(session) = maybe_session else {
-        return Ok((
-            cookie_jar,
-            url_builder.redirect(&mas_router::Login::and_then(
-                PostAuthAction::manage_account(action),
-            )),
-        )
-            .into_response());
+        let mut url = mas_router::Login::and_then(PostAuthAction::manage_account(action));
+
+        url = if let Some(login_hint) = unstable_login_hint {
+            url.with_login_hint(login_hint)
+        } else {
+            url
+        };
+
+        return Ok((cookie_jar, url_builder.redirect(&url)).into_response());
     };
 
     activity_tracker
