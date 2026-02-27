@@ -345,7 +345,7 @@ impl ClientSecret {
     /// Returns an error when the client secret could not be read from file.
     pub async fn value(&self) -> anyhow::Result<String> {
         Ok(match self {
-            ClientSecret::File(path) => tokio::fs::read_to_string(path).await?,
+            ClientSecret::File(path) => tokio::fs::read_to_string(path).await?.trim().to_string(),
             ClientSecret::Value(client_secret) => client_secret.clone(),
         })
     }
