@@ -20,7 +20,7 @@ matrix:
   endpoint: "http://localhost:8008"
   secret: "AVeryRandomSecretPleaseUseSomethingSecure"
   # Alternatively, using a file:
-  #secret_path: /path/to/secret.txt
+  #secret_file: /path/to/secret.txt
 ```
 
 ## Configure the homeserver to delegate authentication to the service
