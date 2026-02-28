@@ -823,6 +823,20 @@ upstream_oauth2:
         # This helps end user identify what account they are using
         account_name:
           #template: "@{{ user.preferred_username }}"
+
+      # The ID of the provider that was used by Synapse when doing a
+      # Synapse-to-MAS migration.
+      #
+      # For `oidc_providers` this should be specified as `oidc-` followed by the ID 
+      # that was configured as `idp_id` in one of the `oidc_providers` in the Synapse
+      # configuration.
+      # For example, if Synapse's configuration contained `idp_id: wombat` for
+      # this provider, then specify `oidc-wombat` here.
+      # 
+      # For `oidc_config` (legacy), specify `oidc` here.
+      #
+      # This is safe to remove once the Synapse-to-MAS migration has been done.
+      #synapse_idp_id: oidc
 ```
 
 ## `branding`
