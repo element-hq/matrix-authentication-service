@@ -1,0 +1,401 @@
+{
+  "action": {
+    "back": "Naspäť",
+    "cancel": "Zrušiť",
+    "clear": "Clear",
+    "close": "Close",
+    "collapse": "Collapse",
+    "confirm": "Confirm",
+    "continue": "Pokračovať",
+    "edit": "Edit",
+    "expand": "Expand",
+    "save": "Uložiť",
+    "save_and_continue": "Save and continue",
+    "sign_out": "Odhlásiť sa",
+    "start_over": "Start over"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Link to the service privacy policy",
+      "link": "Privacy Policy"
+    },
+    "terms_and_conditions": {
+      "alt": "Link to the service terms and conditions",
+      "link": "Terms & Conditions"
+    }
+  },
+  "common": {
+    "add": "Pridať",
+    "e2ee": "End-to-end encryption",
+    "error": "Chyba",
+    "loading": "Načítavanie…",
+    "next": "Ďalej",
+    "password": "Heslo",
+    "previous": "Previous",
+    "saved": "Saved",
+    "saving": "Saving…"
+  },
+  "frontend": {
+    "account": {
+      "account_password": "Account password",
+      "contact_info": "Contact info",
+      "delete_account": {
+        "alert_description": "This account will be permanently erased and you’ll no longer have access to any of your messages.",
+        "alert_title": "You’re about to lose all of your data",
+        "button": "Delete account",
+        "dialog_description": "<text>Confirm that you would like to delete your account:</text>\n<profile />\n<list>\n<item>You will not be able to reactivate your account</item>\n<item>You will no longer be able to sign in</item>\n<item>No one will be able to reuse your username (MXID), including you</item>\n<item>You will leave all rooms and direct messages you are in</item>\n<item>You will be removed from the identity server, and no one will be able to find you with your email or phone number</item>\n</list>\n<text>Your old messages will still be visible to people who received them. Would you like to hide your sent messages from people who join rooms in the future?</text>",
+        "dialog_title": "Delete this account?",
+        "erase_checkbox_label": "Yes, hide all my messages from new joiners",
+        "incorrect_password": "Incorrect password, please try again",
+        "mxid_label": "Confirm your Matrix ID ({{ mxid }})",
+        "mxid_mismatch": "This value does not match your Matrix ID",
+        "password_label": "Enter your password to continue"
+      },
+      "edit_profile": {
+        "display_name_help": "This is what others will see wherever you’re signed in.",
+        "display_name_label": "Display name",
+        "title": "Edit profile",
+        "username_label": "Meno používateľa"
+      },
+      "password": {
+        "change": "Zmeniť heslo",
+        "change_disabled": "Password changes are disabled by the administrator.",
+        "label": "Heslo"
+      },
+      "sign_out": {
+        "button": "Sign out of account",
+        "dialog": "Sign out of this account?"
+      },
+      "title": "Your account"
+    },
+    "add_email_form": {
+      "email_denied_alert": {
+        "text": "The entered email is not allowed by the server policy.",
+        "title": "Email denied by policy"
+      },
+      "email_denied_error": "The entered email is not allowed by the server policy",
+      "email_exists_alert": {
+        "text": "The entered email is already added to this account",
+        "title": "Email already exists"
+      },
+      "email_exists_error": "The entered email is already added to this account",
+      "email_field_help": "Add an alternative email you can use to access this account.",
+      "email_field_label": "Add email",
+      "email_in_use_error": "The entered email is already in use",
+      "email_invalid_alert": {
+        "text": "The entered email is invalid",
+        "title": "Invalid email"
+      },
+      "email_invalid_error": "The entered email is invalid",
+      "incorrect_password_error": "Incorrect password, please try again",
+      "password_confirmation": "Confirm your account password to add this email address"
+    },
+    "app_sessions_list": {
+      "error": "Failed to load app sessions",
+      "heading": "Apps"
+    },
+    "browser_session_details": {
+      "current_badge": "Current",
+      "session_details_title": "Session"
+    },
+    "browser_sessions_overview": {
+      "body:one": "{{count}} active session",
+      "body:other": "{{count}} active sessions",
+      "heading": "Browsers",
+      "no_active_sessions": {
+        "default": "You are not signed in to any web browsers.",
+        "inactive_90_days": "All your sessions have been active in the last 90 days."
+      },
+      "view_all_button": "Zobraziť všetky"
+    },
+    "compat_session_detail": {
+      "client_details_title": "Client info",
+      "name": "Názov",
+      "session_details_title": "Session"
+    },
+    "device_type_icon_label": {
+      "desktop": "Desktop",
+      "mobile": "Mobile",
+      "pc": "Computer",
+      "tablet": "Tablet",
+      "unknown": "Unknown device type",
+      "web": "Web"
+    },
+    "email_in_use": {
+      "heading": "The email address {{email}} is already in use."
+    },
+    "end_session_button": {
+      "confirmation_modal_title": "Are you sure you want to end this session?",
+      "text": "Remove device"
+    },
+    "error": {
+      "hideDetails": "Skryť podrobnosti",
+      "showDetails": "Zobraziť podrobnosti",
+      "subtitle": "An unexpected error occurred. Please try again.",
+      "title": "Something went wrong"
+    },
+    "error_boundary_title": "Something went wrong",
+    "errors": {
+      "field_required": "Toto pole je povinné",
+      "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again."
+    },
+    "last_active": {
+      "active_date": "Active {{relativeDate}}",
+      "active_now": "Active now",
+      "inactive_90_days": "Inactive for 90+ days"
+    },
+    "nav": {
+      "devices": "Devices",
+      "plan": "Plan",
+      "profile": "Profil",
+      "sessions": "Relácie",
+      "settings": "Settings"
+    },
+    "not_found_alert_title": "Not found.",
+    "not_logged_in_alert": "You're not logged in.",
+    "oauth2_client_detail": {
+      "details_title": "Client info",
+      "id": "Client ID",
+      "name": "Názov",
+      "policy": "Policy",
+      "terms": "Terms of service"
+    },
+    "oauth2_session_detail": {
+      "client_details_name": "Názov",
+      "client_title": "Client info",
+      "session_details_title": "Session"
+    },
+    "pagination_controls": {
+      "total": "Total: {{totalCount}}"
+    },
+    "password_change": {
+      "current_password_label": "Súčasné heslo",
+      "failure": {
+        "description": {
+          "account_locked": "Your account is locked and can not be recovered at this time. If this is not expected, please contact your server administrator.",
+          "expired_recovery_ticket": "The recovery link has expired. Please start the account recovery process again from the start.",
+          "invalid_new_password": "The new password you chose is invalid; it may not meet the configured security policy.",
+          "no_current_password": "You don't have a current password.",
+          "no_such_recovery_ticket": "The recovery link is invalid. If you copied the link from the recovery e-mail, please check the full link was copied.",
+          "password_changes_disabled": "Password changes are disabled.",
+          "recovery_ticket_already_used": "The recovery link has already been used. It cannot be used again.",
+          "unspecified": "This might be a temporary problem, so please try again later. If the problem persists, please contact your server administrator.",
+          "wrong_password": "The password you supplied as your current password is incorrect. Please try again."
+        },
+        "title": "Failed to update password"
+      },
+      "new_password_again_label": "Enter new password again",
+      "new_password_label": "Nové heslo",
+      "passwords_match": "Passwords match!",
+      "passwords_no_match": "Passwords don't match",
+      "subtitle": "Choose a new password for your account.",
+      "success": {
+        "description": "Your password has been updated successfully.",
+        "title": "Password updated"
+      },
+      "title": "Change your password"
+    },
+    "password_reset": {
+      "consumed": {
+        "subtitle": "To create a new password, start over and select ”Forgot password“.",
+        "title": "The link to reset your password has already been used"
+      },
+      "expired": {
+        "resend_email": "Resend email",
+        "subtitle": "Request a new email that will be sent to: {{email}}",
+        "title": "The link to reset your password has expired"
+      },
+      "subtitle": "Choose a new password for your account.",
+      "title": "Reset your password"
+    },
+    "password_strength": {
+      "placeholder": "Password strength",
+      "score": {
+        "0": "Extremely weak password",
+        "1": "Very weak password",
+        "2": "Weak password",
+        "3": "Strong password",
+        "4": "Very strong password"
+      },
+      "suggestion": {
+        "all_uppercase": "Capitalise some, but not all letters.",
+        "another_word": "Add more words that are less common.",
+        "associated_years": "Avoid years that are associated with you.",
+        "capitalization": "Capitalise more than the first letter.",
+        "dates": "Avoid dates and years that are associated with you.",
+        "l33t": "Avoid predictable letter substitutions like '@' for 'a'.",
+        "longer_keyboard_pattern": "Use longer keyboard patterns and change typing direction multiple times.",
+        "no_need": "You can create strong passwords without using symbols, numbers, or uppercase letters.",
+        "pwned": "If you use this password elsewhere, you should change it.",
+        "recent_years": "Avoid recent years.",
+        "repeated": "Avoid repeated words and characters.",
+        "reverse_words": "Avoid reversed spellings of common words.",
+        "sequences": "Avoid common character sequences.",
+        "use_words": "Use multiple words, but avoid common phrases."
+      },
+      "too_weak": "This password is too weak",
+      "warning": {
+        "common": "This is a commonly used password.",
+        "common_names": "Common names and surnames are easy to guess.",
+        "dates": "Dates are easy to guess.",
+        "extended_repeat": "Repeated character patterns like \"abcabcabc\" are easy to guess.",
+        "key_pattern": "Short keyboard patterns are easy to guess.",
+        "names_by_themselves": "Single names or surnames are easy to guess.",
+        "pwned": "Your password was exposed by a data breach on the Internet.",
+        "recent_years": "Recent years are easy to guess.",
+        "sequences": "Common character sequences like \"abc\" are easy to guess.",
+        "similar_to_common": "This is similar to a commonly used password.",
+        "simple_repeat": "Repeated characters like \"aaa\" are easy to guess.",
+        "straight_row": "Straight rows of keys on your keyboard are easy to guess.",
+        "top_hundred": "This is a frequently used password.",
+        "top_ten": "This is a heavily used password.",
+        "user_inputs": "There should not be any personal or page related data.",
+        "word_by_itself": "Single words are easy to guess."
+      }
+    },
+    "reset_cross_signing": {
+      "button": "Reset identity",
+      "cancelled": {
+        "description_1": "You can close this window and go back to the app to continue.",
+        "description_2": "If you're signed out everywhere and don't remember your recovery code, you'll still need to reset your identity.",
+        "heading": "Identity reset cancelled."
+      },
+      "description": "If you're not signed in to any other devices and you've lost your recovery key, then you'll need to reset your identity to continue using the app.",
+      "effect_list": {
+        "negative_1": "You will lose your existing message history",
+        "negative_2": "You will need to verify all your existing devices and contacts again",
+        "neutral_1": "You will lose any message history that's stored only on the server",
+        "neutral_2": "You will need to verify all your existing devices and contacts again",
+        "positive_1": "Your account details, contacts, preferences, and chat list will be kept"
+      },
+      "failure": {
+        "description": "This might be a temporary problem, so please try again later. If the problem persists, please contact your server administrator.",
+        "heading": "Failed to allow crypto identity reset",
+        "title": "Failed to allow crypto identity"
+      },
+      "finish_reset": "Finish reset",
+      "heading": "Reset your identity in case you can't confirm another way",
+      "start_reset": "Start reset",
+      "success": {
+        "description": "The identity reset has been approved for the next {{minutes}} minutes. You can close this window and go back to the app to continue.",
+        "heading": "Identity reset successfully. Go back to the app to finish the process.",
+        "title": "Crypto identity reset temporarily allowed"
+      },
+      "warning": "Only reset your identity if you don't have access to another signed-in device and you've lost your recovery key."
+    },
+    "selectable_session": {
+      "label": "Select session"
+    },
+    "session": {
+      "client_id_label": "Client ID",
+      "current": "Current",
+      "current_badge": "Current",
+      "device_id_label": "Device ID",
+      "finished_date": "Finished <datetime/>",
+      "finished_label": "Finished",
+      "generic_browser_session": "Browser session",
+      "id_label": "ID",
+      "ip_label": "IP Address",
+      "last_active_label": "Last Active",
+      "last_auth_label": "Last Authentication",
+      "name_for_platform": "{{name}} for {{platform}}",
+      "scopes_label": "Scopes",
+      "set_device_name": {
+        "help": "Set a name that will help you identify this device.",
+        "label": "Device name",
+        "title": "Edit device name"
+      },
+      "signed_in_date": "Signed in <datetime/>",
+      "signed_in_label": "Signed in",
+      "title": "Device details",
+      "unknown_browser": "Unknown browser",
+      "unknown_device": "Unknown device",
+      "uri_label": "Uri",
+      "user_id_label": "User ID",
+      "username_label": "User name"
+    },
+    "session_detail": {
+      "alert": {
+        "button": "Naspäť",
+        "text": "This session does not exist, or is no longer active.",
+        "title": "Cannot find session: {{deviceId}}"
+      }
+    },
+    "unknown_route": "Unknown route {{route}}",
+    "unverified_email_alert": {
+      "button": "Review and verify",
+      "text:one": "You have {{count}} unverified email address.",
+      "text:other": "You have {{count}} unverified email addresses.",
+      "title": "Unverified email"
+    },
+    "user_email": {
+      "cant_delete_primary": "Choose a different primary email to delete this one.",
+      "delete_button_confirmation_modal": {
+        "action": "Delete email",
+        "body": "Delete this email?",
+        "incorrect_password": "Incorrect password, please try again",
+        "password_confirmation": "Confirm your account password to delete this email address"
+      },
+      "delete_button_title": "Remove email address",
+      "email": "Email",
+      "make_primary_button": "Make primary",
+      "not_verified": "Not verified",
+      "primary_email": "Primary email",
+      "retry_button": "Resend code",
+      "unverified": "Neoverené"
+    },
+    "user_email_list": {
+      "heading": "Emails",
+      "no_primary_email_alert": "No primary email address"
+    },
+    "user_greeting": {
+      "error": "Failed to load user"
+    },
+    "user_name": {
+      "display_name_field_label": "Zobrazované meno"
+    },
+    "user_sessions_overview": {
+      "active_sessions:one": "{{count}} active session",
+      "active_sessions:other": "{{count}} active sessions",
+      "heading": "Where you're signed in",
+      "no_active_sessions": {
+        "default": "You are not signed in to any application.",
+        "inactive_90_days": "All your sessions have been active in the last 90 days."
+      }
+    },
+    "verify_email": {
+      "code_expired_alert": {
+        "description": "The code has expired. Please request a new code.",
+        "title": "Code expired"
+      },
+      "code_field_error": "Code not recognised",
+      "code_field_label": "6-digit code",
+      "code_field_wrong_shape": "Code must be 6 digits",
+      "email_sent_alert": {
+        "description": "Enter the new code below.",
+        "title": "New code sent"
+      },
+      "enter_code_prompt": "Enter the 6-digit code sent to: <email>{{email}}</email>",
+      "heading": "Overte svoj e-mail",
+      "invalid_code_alert": {
+        "description": "Check the code sent to your email and update the fields below to continue.",
+        "title": "You entered the wrong code"
+      },
+      "resend_code": "Resend code",
+      "resend_email": "Resend email",
+      "sent": "Sent!",
+      "unknown_email": "Unknown email"
+    }
+  },
+  "mas": {
+    "scope": {
+      "edit_profile": "Upravte si profil a kontaktné údaje",
+      "manage_sessions": "Spravujte svoje zariadenia a prihlásenia.",
+      "mas_admin": "Spravovať ľubovoľného používateľa v matrix-authentication-service",
+      "send_messages": "Odosielať nové správy vo vašom mene",
+      "synapse_admin": "Spravovať domovský server",
+      "view_messages": "Zobraziť existujúce správy a údaje",
+      "view_profile": "Zobraziť informácie o vašom profile a kontaktné údaje"
+    }
+  }
+}

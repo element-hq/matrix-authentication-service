@@ -1,0 +1,132 @@
+{
+  "action": {
+    "cancel": "Bekor qilish",
+    "continue": "Davom etish",
+    "create_account": "Ro'yxatdan o'tish",
+    "sign_in": "Kirish",
+    "sign_out": "Chiqish",
+    "submit": "Yuborish"
+  },
+  "app": {
+    "human_name": "Matrix Authentication Service",
+    "name": "matritsa-autentifikatsiya-xizmati",
+    "technical_description": "OpenID Connect kashfiyot hujjati:<a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>"
+  },
+  "common": {
+    "email_address": "Email manzili",
+    "loading": "Yuklanmoqda…",
+    "password": "Parol",
+    "password_confirm": "Parolni tasdiqlash",
+    "username": "Foydalanuvchi nomi"
+  },
+  "error": {
+    "unexpected": "Kutilmagan xato"
+  },
+  "mas": {
+    "add_email": {
+      "heading": "Email manzilini qo‘shish"
+    },
+    "back_to_homepage": "Bosh sahifaga qaytish",
+    "change_password": {
+      "change": "Parolni o‘zgartirish",
+      "confirm": "Parolni tasdiqlash",
+      "current": "Joriy parol",
+      "heading": "Parolni o‘zgartirish",
+      "new": "Yangi parol"
+    },
+    "emails": {
+      "greeting": "Salom %(username)s ,",
+      "verify": {
+        "body_html": "Ushbu elektron pochta manzilini tasdiqlash uchun tasdiqlash kodingiz: <strong>%(code)s</strong>",
+        "body_text": "Ushbu elektron pochta manzilini tasdiqlash uchun tasdiqlash kodingiz: %(code)s",
+        "subject": "Elektron pochtangizni tasdiqlash kodingiz: %(code)s"
+      }
+    },
+    "errors": {
+      "denied_policy": "Siyosat tomonidan rad etilgan: %(policy)s",
+      "field_required": "Ushbu qator toʻldirilishi shart",
+      "invalid_credentials": "Hisob ma’lumotlari yaroqsiz",
+      "password_mismatch": "Parol maydonlari mos kelmayapti",
+      "username_taken": "Bu foydalanuvchi nomi allaqachon band"
+    },
+    "login": {
+      "call_to_register": "Hali hisobingiz yo‘qmi?",
+      "continue_with_provider": "%(provider)s bilan davom etish",
+      "description": "Davom etish uchun tizimga kiring:",
+      "headline": "Kirish",
+      "link": {
+        "description": "<span class=\"break-keep text-links\">%(provider)s</span> hisobingiz ulanmoqda",
+        "headline": "Havola uchun tizimga kiring"
+      },
+      "no_login_methods": "Kirish usullari mavjud emas.",
+      "separator": "Yoki"
+    },
+    "navbar": {
+      "my_account": "Mening hisobim",
+      "register": "Hisob yaratish",
+      "signed_in_as": "Tizimga kirgan:<span class=\"font-semibold\">%(username)s</span> ."
+    },
+    "not_found": {
+      "description": "Siz qidirayotgan sahifa mavjud emas yoki boshqa joyga ko‘chirilgan.",
+      "heading": "Sahifa topilmadi"
+    },
+    "not_you": "%(username)s emasmi ?",
+    "or_separator": "Yoki",
+    "policy_violation": {
+      "description": "Bu so‘rovni yaratgan mijoz, hozirda tizimga kirgan foydalanuvchi yoki so‘rovning o‘zi bilan bog‘liq bo‘lishi mumkin.",
+      "heading": "Avtorizatsiya so‘rovi ushbu xizmatda amalda bo‘lgan siyosat tufayli rad etildi.",
+      "logged_as": "<span class=\"font-semibold\">%(username)s</span> sifatida kirildi"
+    },
+    "recovery": {
+      "finish": {
+        "new": "Yangi parol"
+      }
+    },
+    "register": {
+      "call_to_login": "Hisobingiz allaqachon bormi?",
+      "create_account": {
+        "description": "Davom etish uchun foydalanuvchi nomini tanlang.",
+        "heading": "Hisob yaratish"
+      },
+      "sign_in_instead": "Buning o‘rniga tizimga kiring"
+    },
+    "scope": {
+      "edit_profile": "Profilingiz va aloqa maʼlumotlaringizni tahrirlang",
+      "manage_sessions": "Qurilmalaringiz va sessiyalaringizni boshqaring",
+      "mas_admin": "Foydalanuvchilarni boshqarish (urn:mas:admin)",
+      "send_messages": "Sizning nomingizdan yangi xabarlar yuborish",
+      "synapse_admin": "Serverni boshqarish (urn:synapse:admin:*)",
+      "view_messages": "Mavjud xabar va ma’lumotlaringizni ko‘rish",
+      "view_profile": "Profilingiz ma’lumotlari va kontakt tafsilotlarini ko‘rish"
+    },
+    "upstream_oauth2": {
+      "link_mismatch": {
+        "heading": "Bu yuqori oqim hisobi allaqachon boshqa hisobga ulangan."
+      },
+      "login_link": {
+        "action": "Davom etish",
+        "heading": "Mavjud hisobingizga havola"
+      },
+      "register": {
+        "choose_username": {
+          "heading": "Foydalanuvchi nomingizni tanlang"
+        },
+        "create_account": "Yangi hisob yaratish",
+        "forced_display_name": "Quyidagi ko‘rsatish nomidan foydalanadi",
+        "forced_email": "Quyidagi elektron pochta manzilidan foydalaniladi",
+        "forced_localpart": "Quyidagi foydalanuvchi nomidan foydalaniladi",
+        "link_existing": "Mavjud hisobga havola",
+        "suggested_display_name": "Ko‘rsatish nomini import qilish",
+        "suggested_email": "Elektron pochta manzilini import qilish"
+      },
+      "suggest_link": {
+        "action": "Havola",
+        "heading": "Mavjud hisobingizga havola"
+      }
+    },
+    "verify_email": {
+      "description": "Yuborilgan 6 xonali kodni kiriting: <em>%(email)s</em>",
+      "headline": "Elektron pochtangizni tasdiqlang"
+    }
+  }
+}
