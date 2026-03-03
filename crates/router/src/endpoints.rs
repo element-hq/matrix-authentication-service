@@ -172,20 +172,23 @@ impl SimpleRoute for Healthcheck {
 }
 
 /// `GET|POST /login`
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Login {
+    #[serde(flatten)]
     post_auth_action: Option<PostAuthAction>,
+
+    login_hint: Option<String>,
 }
 
 impl Route for Login {
-    type Query = PostAuthAction;
+    type Query = Self;
 
     fn route() -> &'static str {
         "/login"
     }
 
     fn query(&self) -> Option<&Self::Query> {
-        self.post_auth_action.as_ref()
+        Some(self)
     }
 }
 
@@ -194,6 +197,7 @@ impl Login {
     pub const fn and_then(action: PostAuthAction) -> Self {
         Self {
             post_auth_action: Some(action),
+            login_hint: None,
         }
     }
 
@@ -201,6 +205,7 @@ impl Login {
     pub const fn and_continue_grant(id: Ulid) -> Self {
         Self {
             post_auth_action: Some(PostAuthAction::continue_grant(id)),
+            login_hint: None,
         }
     }
 
@@ -208,6 +213,7 @@ impl Login {
     pub const fn and_continue_device_code_grant(id: Ulid) -> Self {
         Self {
             post_auth_action: Some(PostAuthAction::continue_device_code_grant(id)),
+            login_hint: None,
         }
     }
 
@@ -215,6 +221,7 @@ impl Login {
     pub const fn and_continue_compat_sso_login(id: Ulid) -> Self {
         Self {
             post_auth_action: Some(PostAuthAction::continue_compat_sso_login(id)),
+            login_hint: None,
         }
     }
 
@@ -222,7 +229,14 @@ impl Login {
     pub const fn and_link_upstream(id: Ulid) -> Self {
         Self {
             post_auth_action: Some(PostAuthAction::link_upstream(id)),
+            login_hint: None,
         }
+    }
+
+    #[must_use]
+    pub fn with_login_hint(mut self, login_hint: String) -> Self {
+        self.login_hint = Some(login_hint);
+        self
     }
 
     /// Get a reference to the login's post auth action.
@@ -241,7 +255,10 @@ impl Login {
 
 impl From<Option<PostAuthAction>> for Login {
     fn from(post_auth_action: Option<PostAuthAction>) -> Self {
-        Self { post_auth_action }
+        Self {
+            post_auth_action,
+            login_hint: None,
+        }
     }
 }
 
