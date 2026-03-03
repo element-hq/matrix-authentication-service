@@ -64,7 +64,7 @@
     "browserslist-to-esbuild": "^2.1.1",
     "graphql": "^16.12.0",
     "happy-dom": "^20.5.0",
-    "i18next-cli": "^1.43.0",
+    "i18next-cli": "^1.44.0",
     "knip": "^5.81.0",
     "msw": "^2.12.8",
     "msw-storybook-addon": "^2.0.6",
