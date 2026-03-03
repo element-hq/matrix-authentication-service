@@ -1,0 +1,102 @@
+{
+  "action": {
+    "back": "Voltar",
+    "cancel": "Cancelar",
+    "continue": "Continuar",
+    "create_account": "Criar Conta",
+    "sign_out": "Sair",
+    "submit": "Enviar"
+  },
+  "common": {
+    "display_name": "Nome e sobrenome",
+    "email_address": "Endereço de e-mail",
+    "loading": "Carregando…",
+    "password": "Senha",
+    "password_confirm": "Confirme a nova senha",
+    "username": "Nome de usuário"
+  },
+  "error": {
+    "unexpected": "Erro inesperado"
+  },
+  "mas": {
+    "back_to_homepage": "Voltar à página inicial",
+    "change_password": {
+      "change": "Alterar a senha",
+      "confirm": "Confirme a nova senha",
+      "current": "Senha atual",
+      "heading": "Alterar minha senha",
+      "new": "Nova senha"
+    },
+    "emails": {
+      "greeting": "Olá, %(username)s,",
+      "verify": {
+        "body_html": "Seu código de verificação para este endereço de e-mail é: <strong>%(code)s</strong>",
+        "body_text": "Seu código de verificação para este endereço de e-mail é: %(code)s",
+        "subject": "Seu código de verificação de e-mail é: %(code)s"
+      }
+    },
+    "errors": {
+      "denied_policy": "Negado de acordo com a norma: %(policy)s",
+      "field_required": "Este campo é obrigatório",
+      "invalid_credentials": "Credenciais inválidas",
+      "password_mismatch": "As senhas digitadas não são iguais",
+      "username_taken": "Este nome de usuário já está em uso"
+    },
+    "login": {
+      "call_to_register": "Ainda não tem uma conta?",
+      "continue_with_provider": "Continuar com %(provider)s",
+      "description": "Faça login para continuar:",
+      "no_login_methods": "Não há métodos de login disponíveis.",
+      "separator": "Ou"
+    },
+    "navbar": {
+      "my_account": "Minha conta",
+      "register": "Criar uma conta",
+      "signed_in_as": "Entrou como <span class=\"font-semibold\">%(username)s</span>."
+    },
+    "not_found": {
+      "description": "A página que você estava procurando não existe ou foi removida.",
+      "heading": "Página não encontrada"
+    },
+    "not_you": "Não é %(username)s?",
+    "or_separator": "Ou",
+    "recovery": {
+      "finish": {
+        "new": "Nova senha"
+      }
+    },
+    "register": {
+      "call_to_login": "Já tem uma conta?",
+      "create_account": {
+        "description": "Escolha um nome de usuário para continuar.",
+        "heading": "Criar uma conta"
+      },
+      "sign_in_instead": "Em vez disso, faça login"
+    },
+    "scope": {
+      "edit_profile": "Edite seu perfil e seus dados de contato.",
+      "manage_sessions": "Gerencie seus dispositivos e sessões",
+      "view_profile": "Veja as informações do seu perfil e os seus dados de contato."
+    },
+    "upstream_oauth2": {
+      "login_link": {
+        "action": "Continuar"
+      },
+      "register": {
+        "choose_username": {
+          "heading": "Escolha seu nome de usuário"
+        },
+        "create_account": "Criar uma nova conta",
+        "suggested_display_name": "Importar nome de exibição",
+        "suggested_email": "Importar endereço de e-mail"
+      },
+      "suggest_link": {
+        "action": "Ligação"
+      }
+    },
+    "verify_email": {
+      "description": "Digite o código de 6 dígitos enviado para <em>%(email)s</em>",
+      "headline": "Verifique seu e-mail"
+    }
+  }
+}
