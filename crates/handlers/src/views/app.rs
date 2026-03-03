@@ -62,11 +62,9 @@ pub async fn get(
     let Some(session) = maybe_session else {
         let mut url = mas_router::Login::and_then(PostAuthAction::manage_account(action));
 
-        url = if let Some(login_hint) = unstable_login_hint {
-            url.with_login_hint(login_hint)
-        } else {
-            url
-        };
+        if let Some(login_hint) = unstable_login_hint {
+            url = url.with_login_hint(login_hint);
+        }
 
         return Ok((cookie_jar, url_builder.redirect(&url)).into_response());
     };
