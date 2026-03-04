@@ -508,6 +508,7 @@ features = [
     "charset",
     "json",
     "socks",
+    "system-proxy",
 ]
 
 # RSA cryptography
