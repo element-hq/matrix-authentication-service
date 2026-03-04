@@ -208,6 +208,7 @@ where
     SiteConfig: FromRef<S>,
     Templates: FromRef<S>,
     Arc<dyn HomeserverConnection>: FromRef<S>,
+    MetadataCache: FromRef<S>,
     BoxClock: FromRequestParts<S>,
     BoxRng: FromRequestParts<S>,
     Policy: FromRequestParts<S>,
