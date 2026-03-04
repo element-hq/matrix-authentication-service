@@ -1,0 +1,30 @@
+{#
+Copyright 2026 Element Creations Ltd.
+
+SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE files in the repository root for full details.
+-#}
+
+{% extends "base.html" %}
+
+{% block content %}
+  <header class="page-heading">
+    <div class="header">
+      {% if client_name %}
+        <h1 class="title">{{ _("mas.redirect.heading", client_name=client_name) }}</h1>
+      {% else %}
+        <h1 class="title">{{ _("common.loading") }}</h1>
+      {% endif %}
+    </div>
+  </header>
+
+  <noscript>
+    <meta http-equiv="refresh" content="0;url={{ redirect_uri }}">
+  </noscript>
+
+  <a href="{{ redirect_uri }}" class="cpd-link" data-kind="primary">{{ _("action.continue") }}</a>
+
+  {# Redirect the user to the client using JavaScript, so that if the browser
+     wants to display the placeholder instead of a blank page, it can #}
+  <script>window.location.replace({{ redirect_uri | tojson }});</script>
+{% endblock %}
