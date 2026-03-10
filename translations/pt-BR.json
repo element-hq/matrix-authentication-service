@@ -4,6 +4,7 @@
     "cancel": "Cancelar",
     "continue": "Continuar",
     "create_account": "Criar Conta",
+    "sign_in": "Entrar",
     "sign_out": "Sair",
     "submit": "Enviar"
   },
@@ -46,6 +47,7 @@
       "call_to_register": "Ainda não tem uma conta?",
       "continue_with_provider": "Continuar com %(provider)s",
       "description": "Faça login para continuar:",
+      "headline": "Entrar",
       "no_login_methods": "Não há métodos de login disponíveis.",
       "separator": "Ou"
     },
