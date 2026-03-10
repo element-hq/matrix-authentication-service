@@ -714,7 +714,7 @@ version = "0.15.8"
 
 # Version information generation
 [workspace.dependencies.vergen-gitcl]
-version = "1.0.8"
+version = "9.1.0"
 features = ["rustc"]
 
 # Directory traversal
