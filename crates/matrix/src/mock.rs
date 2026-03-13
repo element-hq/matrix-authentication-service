@@ -234,7 +234,7 @@ mod tests {
         assert!(conn.upsert_device("test", device, None).await.is_err());
         assert!(conn.delete_device("test", device).await.is_err());
 
-        let request = ProvisionRequest::new("test", "test")
+        let request = ProvisionRequest::new("test", "test", false)
             .set_displayname("Test User".into())
             .set_avatar_url("mxc://example.org/1234567890".into())
             .set_emails(vec!["test@example.org".to_owned()]);
