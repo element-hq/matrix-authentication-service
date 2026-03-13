@@ -4,10 +4,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use aide::{OperationIo, transform::TransformOperation};
+use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
+use mas_data_model::BoxRng;
+use mas_storage::queue::{ProvisionUserJob, QueueJobRepositoryExt};
 use ulid::Ulid;
 
 use crate::{
@@ -69,6 +71,7 @@ pub async fn handler(
     CallContext {
         mut repo, clock, ..
     }: CallContext,
+    NoApi(mut rng): NoApi<BoxRng>,
     id: UlidPathParam,
 ) -> Result<Json<SingleResponse<User>>, RouteError> {
     let id = *id;
@@ -79,6 +82,12 @@ pub async fn handler(
         .ok_or(RouteError::NotFound(id))?;
 
     let user = repo.user().lock(&clock, user).await?;
+
+    // Schedule a job to provision the user so that the lock flag is propagated
+    // to Synapse
+    repo.queue_job()
+        .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&user))
+        .await?;
 
     repo.save().await?;
 
