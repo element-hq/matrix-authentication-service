@@ -166,7 +166,7 @@ pub async fn handler(
     let user = repo.user().add(&mut rng, &clock, params.username).await?;
 
     homeserver
-        .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
+        .provision_user(&ProvisionRequest::new(&user.username, &user.sub, false))
         .await
         .map_err(RouteError::Homeserver)?;
 
