@@ -29,7 +29,7 @@ Please see LICENSE files in the repository root for full details.
 {% macro head() -%}
   {%- if captcha|default(False) -%}
     {%- if captcha.service == "recaptcha_v2" -%}
-      <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+      <script src="https://www.recaptcha.net/recaptcha/api.js" async defer></script>
     {%- elif captcha.service == "cloudflare_turnstile" -%}
       <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     {%- elif captcha.service == "hcaptcha" -%}
