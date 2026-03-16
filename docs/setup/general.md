@@ -53,6 +53,22 @@ To help understand what the resulting configuration looks like after merging all
 mas-cli config dump
 ```
 
+## Setting configuration values using environment variables
+
+Sometimes it is not appropriate to set config values directly (e.g. when keeping the configuration stored in git) or it is easier to obtain the config value from an external source (e.g. when integrating the service in k8s).
+
+For this reason the service fills missing configuration values from environment variables, if they adhere to the right format.
+The variable must start with the prefix `MAS_` followed by the path for the values, with each component separated either by `.` or `_`.
+
+For example a variable `MAS_database_uri` with value `postgresql://...` would be equivalent to the following config snippet:
+
+```yaml
+database:
+  uri: postgresql://...
+```
+
+Just be aware, that for many config values that contain secrets there exists an equivalent version with suffix `_file` that allows reading secret values from files, which is considered more secure.
+
 ## Configuration schema
 
 The configuration file is validated against a JSON schema, which can be found [here](../config.schema.json).
