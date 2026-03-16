@@ -296,6 +296,10 @@ fn database_connect_options_from_config(
             opts = opts.password(password);
         }
 
+        if let Some(password_file) = config.password_file.as_deref() {
+            opts = opts.password(std::fs::read_to_string(password_file)?.as_str());
+        }
+
         if let Some(database) = config.database.as_deref() {
             opts = opts.database(database);
         }

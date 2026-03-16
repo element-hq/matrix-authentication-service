@@ -1111,6 +1111,13 @@
             "null"
           ]
         },
+        "password_file": {
+          "description": "Path to the password to be used if the server demands password\n authentication\n\n This must not be specified if the `password` or `uri` option is\n specified.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "database": {
           "description": "The database name\n\n This must not be specified if `uri` is specified.",
           "type": [
@@ -1551,14 +1558,21 @@
           "maximum": 65535
         },
         "username": {
-          "description": "SMTP transport: Username for use to authenticate when connecting to the\n SMTP server\n\n Must be set if the `password` field is set",
+          "description": "SMTP transport: Username for use to authenticate when connecting to the\n SMTP server\n\n Must be set if the `password` or `password_file` field is set",
           "type": [
             "string",
             "null"
           ]
         },
         "password": {
-          "description": "SMTP transport: Password for use to authenticate when connecting to the\n SMTP server\n\n Must be set if the `username` field is set",
+          "description": "SMTP transport: Password for use to authenticate when connecting to the\n SMTP server\n\n Must be set if the `username` but not `password_file` field is set",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "password_file": {
+          "description": "SMTP transport: Path to the password for use to authenticate when\n connecting to the SMTP server\n\n Must be set if the `username` but not `password` field is set",
           "type": [
             "string",
             "null"
