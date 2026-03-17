@@ -102,7 +102,11 @@ mod tests {
     use chrono::Duration;
     use hyper::{Request, StatusCode};
     use mas_data_model::Clock;
-    use mas_storage::{RepositoryAccess, user::UserRepository};
+    use mas_storage::{
+        RepositoryAccess,
+        queue::{ProvisionUserJob, QueueJobRepositoryExt},
+        user::UserRepository,
+    };
     use sqlx::PgPool;
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
@@ -119,7 +123,24 @@ mod tests {
             .add(&mut state.rng(), &state.clock, "alice".to_owned())
             .await
             .unwrap();
+
+        repo.queue_job()
+            .schedule_job(&mut state.rng(), &state.clock, ProvisionUserJob::new(&user))
+            .await
+            .unwrap();
+
         repo.save().await.unwrap();
+
+        state.run_jobs_in_queue().await;
+        assert!(
+            !state
+                .homeserver_connection
+                .query_user_raw("alice")
+                .await
+                .unwrap()
+                .locked,
+            "User should not be locked at start of test"
+        );
 
         let request = Request::post(format!("/api/admin/v1/users/{}/lock", user.id))
             .bearer(&token)
@@ -132,6 +153,17 @@ mod tests {
         assert_eq!(
             body["data"]["attributes"]["locked_at"],
             serde_json::json!(state.clock.now())
+        );
+
+        state.run_jobs_in_queue().await;
+        assert!(
+            state
+                .homeserver_connection
+                .query_user_raw("alice")
+                .await
+                .unwrap()
+                .locked,
+            "User should be locked"
         );
     }
 

@@ -102,7 +102,11 @@ mod tests {
     use hyper::{Request, StatusCode};
     use mas_data_model::Clock;
     use mas_matrix::{HomeserverConnection, ProvisionRequest};
-    use mas_storage::{RepositoryAccess, user::UserRepository};
+    use mas_storage::{
+        RepositoryAccess,
+        queue::{ProvisionUserJob, QueueJobRepositoryExt},
+        user::UserRepository,
+    };
     use sqlx::PgPool;
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
@@ -120,15 +124,26 @@ mod tests {
             .await
             .unwrap();
         let user = repo.user().lock(&state.clock, user).await.unwrap();
-        repo.save().await.unwrap();
 
         // Also provision the user on the homeserver, because this endpoint will try to
         // reactivate it
-        state
-            .homeserver_connection
-            .provision_user(&ProvisionRequest::new(&user.username, &user.sub, false))
+        repo.queue_job()
+            .schedule_job(&mut state.rng(), &state.clock, ProvisionUserJob::new(&user))
             .await
             .unwrap();
+
+        repo.save().await.unwrap();
+
+        state.run_jobs_in_queue().await;
+        assert!(
+            state
+                .homeserver_connection
+                .query_user_raw("alice")
+                .await
+                .unwrap()
+                .locked,
+            "User should be locked at start of test"
+        );
 
         let request = Request::post(format!("/api/admin/v1/users/{}/unlock", user.id))
             .bearer(&token)
@@ -140,6 +155,17 @@ mod tests {
         assert_eq!(
             body["data"]["attributes"]["locked_at"],
             serde_json::Value::Null
+        );
+
+        state.run_jobs_in_queue().await;
+        assert!(
+            !state
+                .homeserver_connection
+                .query_user_raw("alice")
+                .await
+                .unwrap()
+                .locked,
+            "User should not be locked"
         );
     }
 
