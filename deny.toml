@@ -71,6 +71,8 @@ skip = [
     # cron depends on this old version
     # https://github.com/zslayton/cron/pull/137
     { name = "winnow", version = "0.6.20" },
+    # hyper-util -> system-configuration depends on this old version
+    { name = "core-foundation", version = "0.9.4" },
 
     # We are still mainly using rand 0.8
     { name = "rand", version = "0.8.5" },
