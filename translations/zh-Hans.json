@@ -79,6 +79,7 @@
       "make_sure_you_trust": "请确保你信任 <span>%(client_name)s</span> 。",
       "scope_list_preface": "一旦继续你将允许 <span>%(client_name)s</span>：",
       "this_will_allow": "这将允许 <span>%(client_name)s</span> ：",
+      "this_will_setup": "这将使用你在 <span>%(server_name)s</span> 上的账户配置 %(client_name)s（<span>%(client_uri)s</span>）。",
       "use_another_account": "使用另一账户",
       "you_may_be_sharing": "你可能正在与本网站或 app 分享敏感信息。"
     },
@@ -101,7 +102,8 @@
       "granted": {
         "description": "您已授予 %(client_name)s 访问权限。您可以关闭此窗口。",
         "heading": "已授予访问权限"
-      }
+      },
+      "this_will_setup": "另一设备尝试使用你在上的账户 <span>%(server_name)s</span> 配置 %(client_name)s（<span>%(client_uri)s</span>）。请确保你认识该设备。"
     },
     "device_display_name": {
       "client_on_device": "运行在 %(device_name)s 的 %(client_name)s",

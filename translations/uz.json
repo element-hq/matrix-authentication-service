@@ -1,5 +1,6 @@
 {
   "action": {
+    "back": "Orqaga",
     "cancel": "Bekor qilish",
     "continue": "Davom etish",
     "create_account": "Ro'yxatdan o'tish",
@@ -12,9 +13,21 @@
     "name": "matritsa-autentifikatsiya-xizmati",
     "technical_description": "OpenID Connect kashfiyot hujjati:<a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>"
   },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Xizmat maxfiylik siyosatiga havola",
+      "link": "Maxfiylik siyosati"
+    },
+    "terms_and_conditions": {
+      "alt": "Xizmat ko‘rsatish shartlari va qoidalariga havola",
+      "link": "Foydalanish shartlari"
+    }
+  },
   "common": {
+    "display_name": "Ko'rsatiladigan ism",
     "email_address": "Email manzili",
     "loading": "Yuklanmoqda…",
+    "mxid": "Matrix ID",
     "password": "Parol",
     "password_confirm": "Parolni tasdiqlash",
     "username": "Foydalanuvchi nomi"
@@ -24,6 +37,7 @@
   },
   "mas": {
     "add_email": {
+      "description": "Agar hisobingizga kira olmasangiz, uni tiklash uchun email manzilini kiriting.",
       "heading": "Email manzilini qo‘shish"
     },
     "back_to_homepage": "Bosh sahifaga qaytish",
@@ -31,8 +45,40 @@
       "change": "Parolni o‘zgartirish",
       "confirm": "Parolni tasdiqlash",
       "current": "Joriy parol",
+      "description": "Bunda hisobingizdagi parol o‘zgaradi.",
       "heading": "Parolni o‘zgartirish",
       "new": "Yangi parol"
+    },
+    "consent": {
+      "client_wants_access": "<span>%(client_name)s</span> da <span>%(redirect_uri)s</span> hisobingizga kirmoqchi.",
+      "heading": "Hisobingizga kirishga ruxsat berilsinmi?",
+      "make_sure_you_trust": "<span>%(client_name)s</span>ga ishonch hosil qiling.",
+      "this_will_allow": "Bu <span>%(client_name)s</span>ga quyidagilarga ruxsat beradi:",
+      "you_may_be_sharing": "Bu sayt yoki ilovaga maxfiy axborotlarni ulashayotgan bo‘lishingiz mumkin."
+    },
+    "device_card": {
+      "access_requested": "Ruxsat so‘raldi",
+      "device_code": "Kod",
+      "generic_device": "Qurilma",
+      "ip_address": "IP manzili"
+    },
+    "device_code_link": {
+      "description": "Qurilmani ulang",
+      "headline": "Qurilmangizda chiqqan kodni kiriting"
+    },
+    "device_consent": {
+      "another_device_access": "Boshqa qurilma hisobingizga kirishni xohlamoqda.",
+      "denied": {
+        "description": "Siz %(client_name)s uchun ruxsatni rad etdingiz. Bu oynani yopishingiz mumkin.",
+        "heading": "Ruxsat berilmadi"
+      },
+      "granted": {
+        "description": "Siz %(client_name)s uchun ruxsat berdingiz. Bu oynani yopishingiz mumkin.",
+        "heading": "Ruxsat berildi"
+      }
+    },
+    "device_display_name": {
+      "unknown_device": "Noma’lum qurilma."
     },
     "emails": {
       "greeting": "Salom %(username)s ,",
@@ -78,8 +124,14 @@
       "logged_as": "<span class=\"font-semibold\">%(username)s</span> sifatida kirildi"
     },
     "recovery": {
+      "expired": {
+        "resend_email": "Elektron pochtani qayta yuborish"
+      },
       "finish": {
         "new": "Yangi parol"
+      },
+      "progress": {
+        "resend_email": "Elektron pochtani qayta yuborish"
       }
     },
     "register": {
@@ -88,7 +140,8 @@
         "description": "Davom etish uchun foydalanuvchi nomini tanlang.",
         "heading": "Hisob yaratish"
       },
-      "sign_in_instead": "Buning o‘rniga tizimga kiring"
+      "sign_in_instead": "Buning o‘rniga tizimga kiring",
+      "terms_of_service": "Men roziman <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Foydalanish shartlari</a>"
     },
     "scope": {
       "edit_profile": "Profilingiz va aloqa maʼlumotlaringizni tahrirlang",
@@ -109,15 +162,23 @@
       },
       "register": {
         "choose_username": {
+          "description": "Buni keyin o‘zgartirib bo‘lmaydi.",
           "heading": "Foydalanuvchi nomingizni tanlang"
         },
         "create_account": "Yangi hisob yaratish",
+        "enforced_by_policy": "Server siyosati tomonidan amalga oshiriladi",
         "forced_display_name": "Quyidagi ko‘rsatish nomidan foydalanadi",
         "forced_email": "Quyidagi elektron pochta manzilidan foydalaniladi",
         "forced_localpart": "Quyidagi foydalanuvchi nomidan foydalaniladi",
+        "import_data": {
+          "description": "Yangi %(server_name)s hisobingizga ulanadigan ma’lumotlarni tasdiqlang.",
+          "heading": "Ma’lumotlaringizni import qiling"
+        },
+        "imported_from_upstream": "Yuqori darajadagi hisobingizdan import qilindi",
         "link_existing": "Mavjud hisobga havola",
         "suggested_display_name": "Ko‘rsatish nomini import qilish",
-        "suggested_email": "Elektron pochta manzilini import qilish"
+        "suggested_email": "Elektron pochta manzilini import qilish",
+        "use": "Foydalanish"
       },
       "suggest_link": {
         "action": "Havola",
@@ -125,6 +186,8 @@
       }
     },
     "verify_email": {
+      "6_digit_code": "6 xonali kod",
+      "code": "Kod",
       "description": "Yuborilgan 6 xonali kodni kiriting: <em>%(email)s</em>",
       "headline": "Elektron pochtangizni tasdiqlang"
     }
