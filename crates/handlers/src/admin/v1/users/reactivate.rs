@@ -129,7 +129,7 @@ mod tests {
         // because this endpoint will try to reactivate it
         state
             .homeserver_connection
-            .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub, false))
             .await
             .unwrap();
         state
@@ -181,7 +181,7 @@ mod tests {
         // Provision the user on the homeserver
         state
             .homeserver_connection
-            .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub, false))
             .await
             .unwrap();
 

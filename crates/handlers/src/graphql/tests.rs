@@ -530,7 +530,7 @@ async fn test_oauth2_client_credentials(pool: PgPool) {
     // so we need to do it manually
     state
         .homeserver_connection
-        .provision_user(&ProvisionRequest::new("alice", user_id))
+        .provision_user(&ProvisionRequest::new("alice", user_id, false))
         .await
         .unwrap();
 
