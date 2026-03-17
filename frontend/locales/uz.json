@@ -1,13 +1,13 @@
 {
   "action": {
-    "back": "Back",
+    "back": "Orqaga",
     "cancel": "Bekor qilish",
-    "clear": "Clear",
-    "close": "Close",
+    "clear": "Tozalash",
+    "close": "Yopish",
     "collapse": "Collapse",
     "confirm": "Confirm",
     "continue": "Davom etish",
-    "edit": "Edit",
+    "edit": "Tahrirlash",
     "expand": "Expand",
     "save": "Saqlash",
     "save_and_continue": "Save and continue",
@@ -16,12 +16,12 @@
   },
   "branding": {
     "privacy_policy": {
-      "alt": "Link to the service privacy policy",
-      "link": "Privacy Policy"
+      "alt": "Xizmat maxfiylik siyosatiga havola",
+      "link": "Maxfiylik siyosati"
     },
     "terms_and_conditions": {
-      "alt": "Link to the service terms and conditions",
-      "link": "Terms & Conditions"
+      "alt": "Xizmat ko‘rsatish shartlari va qoidalariga havola",
+      "link": "Foydalanish shartlari"
     }
   },
   "common": {
@@ -52,9 +52,9 @@
         "password_label": "Enter your password to continue"
       },
       "edit_profile": {
-        "display_name_help": "This is what others will see wherever you’re signed in.",
-        "display_name_label": "Display name",
-        "title": "Edit profile",
+        "display_name_help": "Siz tizimga kirgan joyingizda boshqalar buni koʻrishadi.",
+        "display_name_label": "Ko'rsatiladigan ism",
+        "title": "Profilni tahrirlash",
         "username_label": "Foydalanuvchi nomi"
       },
       "password": {
@@ -66,7 +66,7 @@
         "button": "Sign out of account",
         "dialog": "Sign out of this account?"
       },
-      "title": "Your account"
+      "title": "Sizning hisobingiz"
     },
     "add_email_form": {
       "email_denied_alert": {
@@ -79,7 +79,7 @@
         "title": "Elektron pochta allaqachon mavjud"
       },
       "email_exists_error": "Kiritilgan elektron pochta manzili ushbu hisobga allaqachon qo‘shilgan.",
-      "email_field_help": "Add an alternative email you can use to access this account.",
+      "email_field_help": "Bu hisobga kirish uchun ishlatishingiz mumkin bo‘lgan muqobil email manzilini kiriting.",
       "email_field_label": "Email manzilini kiritish",
       "email_in_use_error": "The entered email is already in use",
       "email_invalid_alert": {
@@ -95,7 +95,7 @@
       "heading": "Ilovalar"
     },
     "browser_session_details": {
-      "current_badge": "Current",
+      "current_badge": "Hozirgi",
       "session_details_title": "Seans"
     },
     "browser_sessions_overview": {
@@ -116,8 +116,8 @@
     "device_type_icon_label": {
       "desktop": "Ish stoli",
       "mobile": "Mobil",
-      "pc": "Computer",
-      "tablet": "Tablet",
+      "pc": "Kompyuter",
+      "tablet": "Planshet",
       "unknown": "Noma’lum qurilma turi",
       "web": "Veb"
     },
@@ -129,12 +129,12 @@
       "text": "Qurilmani olib tashlash"
     },
     "error": {
-      "hideDetails": "Hide details",
-      "showDetails": "Show details",
-      "subtitle": "An unexpected error occurred. Please try again.",
-      "title": "Something went wrong"
+      "hideDetails": "Tafsilotlarni yashirish",
+      "showDetails": "Tafsilotlarni koʻrsatish",
+      "subtitle": "Kutilmagan xatolik yuz berdi. Qaytadan urinib koʻring.",
+      "title": "Nimadir xato ketdi"
     },
-    "error_boundary_title": "Something went wrong",
+    "error_boundary_title": "Nimadir xato ketdi",
     "errors": {
       "field_required": "Ushbu qator toʻldirilishi shart",
       "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again."
@@ -145,11 +145,11 @@
       "inactive_90_days": "90+ kun davomida faol emas"
     },
     "nav": {
-      "devices": "Devices",
+      "devices": "Qurilmalar",
       "plan": "Plan",
       "profile": "Profil",
       "sessions": "Seanslar",
-      "settings": "Settings"
+      "settings": "Sozlamalar"
     },
     "not_found_alert_title": "Topilmadi.",
     "not_logged_in_alert": "Hisobingizga kirmagansiz.",
@@ -201,7 +201,7 @@
         "title": "The link to reset your password has already been used"
       },
       "expired": {
-        "resend_email": "Resend email",
+        "resend_email": "Elektron pochtani qayta yuborish",
         "subtitle": "Request a new email that will be sent to: {{email}}",
         "title": "The link to reset your password has expired"
       },
@@ -254,13 +254,13 @@
       }
     },
     "reset_cross_signing": {
-      "button": "Reset identity",
+      "button": "Shaxsni tiklash",
       "cancelled": {
         "description_1": "You can close this window and go back to the app to continue.",
-        "description_2": "If you're signed out everywhere and don't remember your recovery code, you'll still need to reset your identity.",
-        "heading": "Identity reset cancelled."
+        "description_2": "If don’t have access to any other verified devices and you don’t have your recovery key, then you’ll need to reset your digital identity to continue using the app.",
+        "heading": "Digital identity reset cancelled."
       },
-      "description": "If you're not signed in to any other devices and you've lost your recovery key, then you'll need to reset your identity to continue using the app.",
+      "description": "Agar boshqa tasdiqlangan qurilmalarga kirish imkoningiz boʻlmasa va sizda tiklash kaliti boʻlmasa, ilovadan foydalanishda davom etish uchun raqamli identifikatsiyangizni tiklashingiz kerak boʻladi.",
       "effect_list": {
         "negative_1": "You will lose your existing message history",
         "negative_2": "You will need to verify all your existing devices and contacts again",
@@ -270,49 +270,49 @@
       },
       "failure": {
         "description": "This might be a temporary problem, so please try again later. If the problem persists, please contact your server administrator.",
-        "heading": "Failed to allow crypto identity reset",
-        "title": "Failed to allow crypto identity"
+        "heading": "Failed to allow digital identity reset",
+        "title": "Kripto identifikatsiyasiga ruxsat berilmadi"
       },
       "finish_reset": "Finish reset",
-      "heading": "Reset your identity in case you can't confirm another way",
+      "heading": "Boshqa usulda tasdiqlay olmasangiz, raqamli identifikatoringizni asliga qaytaring",
       "start_reset": "Start reset",
       "success": {
-        "description": "The identity reset has been approved for the next {{minutes}} minutes. You can close this window and go back to the app to continue.",
-        "heading": "Identity reset successfully. Go back to the app to finish the process.",
-        "title": "Crypto identity reset temporarily allowed"
+        "description": "Raqamli identifikatorni tiklash keyingi {{minutes}} daqiqa uchun tasdiqlandi. Bu oynani yopib, davom etish uchun ilovaga qaytishingiz mumkin.",
+        "heading": "Digital identity reset successfully. Go back to the app to finish the process.",
+        "title": "Kripto identifikatorini asliga qaytarishga vaqtincha ruxsat berildi"
       },
-      "warning": "Only reset your identity if you don't have access to another signed-in device and you've lost your recovery key."
+      "warning": "Only reset your digital identity if you don't have access to another verified device and you don't have your recovery key."
     },
     "selectable_session": {
       "label": "Sessiyani tanlang"
     },
     "session": {
       "client_id_label": "Mijoz ID raqami",
-      "current": "Current",
-      "current_badge": "Current",
-      "device_id_label": "Device ID",
+      "current": "Hozirgi",
+      "current_badge": "Hozirgi",
+      "device_id_label": "Qurilma ID",
       "finished_date": "Tugadi <datetime/>",
-      "finished_label": "Finished",
+      "finished_label": "Tugadi",
       "generic_browser_session": "Browser session",
       "id_label": "ID",
-      "ip_label": "IP Address",
-      "last_active_label": "Last Active",
-      "last_auth_label": "Last Authentication",
-      "name_for_platform": "{{name}} for {{platform}}",
-      "scopes_label": "Scopes",
+      "ip_label": "IP-manzil",
+      "last_active_label": "Oxirgi faollik",
+      "last_auth_label": "Oxirgi autentifikatsiya",
+      "name_for_platform": "{{platform}} uchun {{name}}",
+      "scopes_label": "Ko‘lamlar",
       "set_device_name": {
         "help": "Set a name that will help you identify this device.",
         "label": "Device name",
         "title": "Edit device name"
       },
       "signed_in_date": "<datetime/> kirildi",
-      "signed_in_label": "Signed in",
-      "title": "Device details",
-      "unknown_browser": "Unknown browser",
-      "unknown_device": "Unknown device",
+      "signed_in_label": "Kirish",
+      "title": "Qurilma tafsilotlari",
+      "unknown_browser": "Noma’lum brauzer",
+      "unknown_device": "Noma’lum qurilma.",
       "uri_label": "Uri",
-      "user_id_label": "User ID",
-      "username_label": "User name"
+      "user_id_label": "Foydalanuvchi ID'si",
+      "username_label": "Foydalanuvchi nomi"
     },
     "session_detail": {
       "alert": {
@@ -324,40 +324,40 @@
     "unknown_route": "Nomaʼlum yoʻnalish {{route}}",
     "unverified_email_alert": {
       "button": "Koʻrib chiqing va tasdiqlang",
-      "text:one": "You have {{count}} unverified email address.",
-      "text:other": "You have {{count}} unverified email addresses.",
+      "text:one": "Sizda {{count}} ta tasdiqlanmagan email manzili bor.",
+      "text:other": "Sizda {{count}} ta tasdiqlanmagan email manzili bor.",
       "title": "Tasdiqlanmagan elektron pochta"
     },
     "user_email": {
-      "cant_delete_primary": "Choose a different primary email to delete this one.",
+      "cant_delete_primary": "Buni oʻchirish uchun boshqa asosiy elektron pochta manzilini tanlang.",
       "delete_button_confirmation_modal": {
-        "action": "Delete email",
-        "body": "Delete this email?",
+        "action": "Elektron pochtani oʻchirish",
+        "body": "Bu email o‘chirib tashlansinmi?",
         "incorrect_password": "Incorrect password, please try again",
         "password_confirmation": "Confirm your account password to delete this email address"
       },
-      "delete_button_title": "Remove email address",
-      "email": "Email",
-      "make_primary_button": "Make primary",
-      "not_verified": "Not verified",
-      "primary_email": "Primary email",
-      "retry_button": "Resend code",
-      "unverified": "Unverified"
+      "delete_button_title": "Elektron pochta manzilini olib tashlash",
+      "email": "Elektron pochta",
+      "make_primary_button": "Asosiy qilish",
+      "not_verified": "Tasdiqlanmagan",
+      "primary_email": "Asosiy elektron pochta",
+      "retry_button": "Kodni qayta yuborish",
+      "unverified": "Tasdiqlanmagan"
     },
     "user_email_list": {
-      "heading": "Emails",
-      "no_primary_email_alert": "No primary email address"
+      "heading": "Elektron pochta xabarlari",
+      "no_primary_email_alert": "Asosiy elektron pochta manzili yo‘q"
     },
     "user_greeting": {
-      "error": "Failed to load user"
+      "error": "Foydalanuvchi yuklanmadi"
     },
     "user_name": {
-      "display_name_field_label": "Display Name"
+      "display_name_field_label": "Ko'rsatiladigan ism"
     },
     "user_sessions_overview": {
       "active_sessions:one": "{{count}} ta faol seans",
       "active_sessions:other": "{{count}} ta faol seans",
-      "heading": "Where you're signed in",
+      "heading": "Qayerda tizimga kirgansiz",
       "no_active_sessions": {
         "default": "You are not signed in to any application.",
         "inactive_90_days": "All your sessions have been active in the last 90 days."
@@ -368,23 +368,23 @@
         "description": "The code has expired. Please request a new code.",
         "title": "Code expired"
       },
-      "code_field_error": "Code not recognised",
-      "code_field_label": "6-digit code",
-      "code_field_wrong_shape": "Code must be 6 digits",
+      "code_field_error": "Kod tan olinmadi",
+      "code_field_label": "6 xonali kod",
+      "code_field_wrong_shape": "Kod 6 xonali bo‘lishi kerak",
       "email_sent_alert": {
-        "description": "Enter the new code below.",
-        "title": "New code sent"
+        "description": "Quyidagi yangi kodni kiriting.",
+        "title": "Yangi kod yuborildi"
       },
-      "enter_code_prompt": "Enter the 6-digit code sent to: <email>{{email}}</email>",
+      "enter_code_prompt": "<email>{{email}}</email> manziliga yuborilgan 6 xonali kodni kiriting",
       "heading": "Elektron pochtangizni tasdiqlang",
       "invalid_code_alert": {
-        "description": "Check the code sent to your email and update the fields below to continue.",
-        "title": "You entered the wrong code"
+        "description": "Davom etish uchun elektron pochtangizga yuborilgan kodni tekshiring va quyidagi maydonlarni yangilang.",
+        "title": "Kodni xato kiritdingiz"
       },
-      "resend_code": "Resend code",
-      "resend_email": "Resend email",
-      "sent": "Sent!",
-      "unknown_email": "Unknown email"
+      "resend_code": "Kodni qayta yuborish",
+      "resend_email": "Elektron pochtani qayta yuborish",
+      "sent": "Yuborildi!",
+      "unknown_email": "Noma’lum email"
     }
   },
   "mas": {
