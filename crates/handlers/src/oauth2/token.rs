@@ -433,7 +433,7 @@ async fn authorization_code_grant(
 
     let now = clock.now();
 
-    let session_id = match authz_grant.stage {
+    let browser_session_id = match authz_grant.stage {
         AuthorizationGrantStage::Cancelled { cancelled_at } => {
             debug!(%cancelled_at, "Authorization grant was cancelled");
             return Err(RouteError::InvalidGrant(authz_grant.id));
@@ -442,6 +442,7 @@ async fn authorization_code_grant(
             exchanged_at,
             fulfilled_at,
             session_id,
+            ..
         } => {
             warn!(%exchanged_at, %fulfilled_at, "Authorization code was already exchanged");
 
@@ -467,7 +468,7 @@ async fn authorization_code_grant(
             return Err(RouteError::InvalidGrant(authz_grant.id));
         }
         AuthorizationGrantStage::Fulfilled {
-            session_id,
+            browser_session_id,
             fulfilled_at,
         } => {
             if now - fulfilled_at > Duration::microseconds(10 * 60 * 1000 * 1000) {
@@ -475,27 +476,9 @@ async fn authorization_code_grant(
                 return Err(RouteError::InvalidGrant(authz_grant.id));
             }
 
-            session_id
+            browser_session_id
         }
     };
-
-    let mut session = repo
-        .oauth2_session()
-        .lookup(session_id)
-        .await?
-        .ok_or(RouteError::NoSuchOAuthSession(session_id))?;
-
-    // Generate a device name
-    let lang: DataLocale = authz_grant.locale.as_deref().unwrap_or("en").parse()?;
-    let ctx = DeviceNameContext::new(client.clone(), user_agent.clone()).with_language(lang);
-    let device_name = templates.render_device_name(&ctx)?;
-
-    if let Some(user_agent) = user_agent {
-        session = repo
-            .oauth2_session()
-            .record_user_agent(session, user_agent)
-            .await?;
-    }
 
     // This should never happen, since we looked up in the database using the code
     let code = authz_grant
@@ -503,10 +486,10 @@ async fn authorization_code_grant(
         .as_ref()
         .ok_or(RouteError::InvalidGrant(authz_grant.id))?;
 
-    if client.id != session.client_id {
+    if client.id != authz_grant.client_id {
         return Err(RouteError::UnexptectedClient {
             was: client.id,
-            expected: session.client_id,
+            expected: authz_grant.client_id,
         });
     }
 
@@ -520,16 +503,48 @@ async fn authorization_code_grant(
         }
     }
 
-    let Some(user_session_id) = session.user_session_id else {
-        tracing::warn!("No user session associated with this OAuth2 session");
-        return Err(RouteError::InvalidGrant(authz_grant.id));
-    };
-
     let browser_session = repo
         .browser_session()
-        .lookup(user_session_id)
+        .lookup(browser_session_id)
         .await?
-        .ok_or(RouteError::NoSuchBrowserSession(user_session_id))?;
+        .ok_or(RouteError::NoSuchBrowserSession(browser_session_id))?;
+
+    // The browser session (and therefore the user) must still be active.
+    // It could have been terminated between consent and code exchange, e.g.
+    // via OIDC back-channel logout or an admin action.
+    if !browser_session.active() {
+        warn!(
+            browser_session.id = %browser_session_id,
+            "Browser session is no longer active, rejecting code exchange"
+        );
+        return Err(RouteError::InvalidGrant(authz_grant.id));
+    }
+
+    // Create the OAuth2 session now that the client has successfully presented
+    // the authorization code. This is the point at which the session becomes
+    // visible to the user.
+    let mut session = repo
+        .oauth2_session()
+        .add_from_browser_session(
+            &mut rng,
+            clock,
+            client,
+            &browser_session,
+            authz_grant.scope.clone(),
+        )
+        .await?;
+
+    // Generate a device name
+    let lang: DataLocale = authz_grant.locale.as_deref().unwrap_or("en").parse()?;
+    let ctx = DeviceNameContext::new(client.clone(), user_agent.clone()).with_language(lang);
+    let device_name = templates.render_device_name(&ctx)?;
+
+    if let Some(user_agent) = user_agent {
+        session = repo
+            .oauth2_session()
+            .record_user_agent(session, user_agent)
+            .await?;
+    }
 
     let last_authentication = repo
         .browser_session()
@@ -585,7 +600,7 @@ async fn authorization_code_grant(
     }
 
     repo.oauth2_authorization_grant()
-        .exchange(clock, authz_grant)
+        .exchange(clock, &session, authz_grant)
         .await?;
 
     // XXX: there is a potential (but unlikely) race here, where the activity for
@@ -1077,22 +1092,10 @@ mod tests {
             .await
             .unwrap();
 
-        let session = repo
-            .oauth2_session()
-            .add_from_browser_session(
-                &mut state.rng(),
-                &state.clock,
-                &client,
-                &browser_session,
-                grant.scope.clone(),
-            )
-            .await
-            .unwrap();
-
-        // And fulfill it
+        // Fulfill the grant with the browser session (no OAuth2 session yet)
         let grant = repo
             .oauth2_authorization_grant()
-            .fulfill(&state.clock, &session, grant)
+            .fulfill(&state.clock, &browser_session, grant)
             .await
             .unwrap();
 
@@ -1177,22 +1180,10 @@ mod tests {
             .await
             .unwrap();
 
-        let session = repo
-            .oauth2_session()
-            .add_from_browser_session(
-                &mut state.rng(),
-                &state.clock,
-                &client,
-                &browser_session,
-                grant.scope.clone(),
-            )
-            .await
-            .unwrap();
-
-        // And fulfill it
+        // Fulfill the grant with the browser session (no OAuth2 session yet)
         let grant = repo
             .oauth2_authorization_grant()
-            .fulfill(&state.clock, &session, grant)
+            .fulfill(&state.clock, &browser_session, grant)
             .await
             .unwrap();
 
