@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -284,6 +285,22 @@ pub trait UpstreamOAuthProviderRepository: Send + Sync {
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn all_enabled(&mut self) -> Result<Vec<UpstreamOAuthProvider>, Self::Error>;
+
+    /// Lookup an enabled upstream OAuth provider by its issuer URL
+    ///
+    /// Returns `None` if no enabled provider with the given issuer was found
+    ///
+    /// # Parameters
+    ///
+    /// * `issuer`: The issuer URL to look up
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn find_by_issuer(
+        &mut self,
+        issuer: &str,
+    ) -> Result<Option<UpstreamOAuthProvider>, Self::Error>;
 }
 
 repository_impl!(UpstreamOAuthProviderRepository:
@@ -325,4 +342,9 @@ repository_impl!(UpstreamOAuthProviderRepository:
     ) -> Result<usize, Self::Error>;
 
     async fn all_enabled(&mut self) -> Result<Vec<UpstreamOAuthProvider>, Self::Error>;
+
+    async fn find_by_issuer(
+        &mut self,
+        issuer: &str,
+    ) -> Result<Option<UpstreamOAuthProvider>, Self::Error>;
 );

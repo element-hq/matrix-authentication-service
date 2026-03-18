@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -163,6 +164,21 @@ pub enum GrantType {
     ClientCredentials,
     #[serde(rename = "urn:ietf:params:oauth:grant-type:device_code")]
     DeviceCode,
+    #[serde(rename = "urn:ietf:params:oauth:grant-type:token-exchange")]
+    TokenExchange,
+}
+
+/// Information about an upstream OAuth 2.0 provider.
+/// Only populated for token exchange grants.
+#[derive(Serialize, Debug, JsonSchema)]
+pub struct UpstreamProviderInfo<'a> {
+    pub id: &'a str,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub issuer: Option<&'a str>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub human_name: Option<&'a str>,
 }
 
 /// Input for the authorization grant policy.
@@ -183,6 +199,11 @@ pub struct AuthorizationGrantInput<'a> {
     pub scope: &'a Scope,
 
     pub grant_type: GrantType,
+
+    /// Information about the upstream provider being targeted.
+    /// Only populated for token exchange grants.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub upstream_provider: Option<UpstreamProviderInfo<'a>>,
 
     pub requester: Requester,
 }

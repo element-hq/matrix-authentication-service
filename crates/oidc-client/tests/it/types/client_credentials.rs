@@ -58,6 +58,7 @@ async fn pass_none() {
                 token_type: OAuthAccessTokenType::Bearer,
                 expires_in: None,
                 scope: None,
+                issued_token_type: None,
             }),
         )
         .mount(&mock_server)
@@ -100,6 +101,7 @@ async fn pass_client_secret_basic() {
                 token_type: OAuthAccessTokenType::Bearer,
                 expires_in: None,
                 scope: None,
+                issued_token_type: None,
             }),
         )
         .mount(&mock_server)
@@ -157,6 +159,7 @@ async fn pass_client_secret_post() {
                 token_type: OAuthAccessTokenType::Bearer,
                 expires_in: None,
                 scope: None,
+                issued_token_type: None,
             }),
         )
         .mount(&mock_server)
@@ -231,6 +234,7 @@ async fn pass_client_secret_jwt() {
                 token_type: OAuthAccessTokenType::Bearer,
                 expires_in: None,
                 scope: None,
+                issued_token_type: None,
             }),
         )
         .mount(&mock_server)
@@ -307,6 +311,7 @@ async fn pass_private_key_jwt() {
                 token_type: OAuthAccessTokenType::Bearer,
                 expires_in: None,
                 scope: None,
+                issued_token_type: None,
             }),
         )
         .mount(&mock_server)
