@@ -19,9 +19,9 @@ use thiserror::Error;
 use tokio::io::{AsyncRead, AsyncReadExt};
 
 pub use self::model::{
-    AuthorizationGrantInput, ClientRegistrationInput, Code as ViolationCode, CompatLoginInput,
-    EmailInput, EvaluationResult, GrantType, RegisterInput, RegistrationMethod, Requester,
-    Violation,
+    AuthorizationGrantInput, ClientRegistrationInput, CompatLoginInput, EmailInput,
+    EvaluationResult, GrantType, RegisterInput, RegistrationMethod, Requester, Violation,
+    ViolationVariant,
 };
 
 #[derive(Debug, Error)]
