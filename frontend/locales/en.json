@@ -102,7 +102,8 @@
       "heading": "The email address {{email}} is already in use."
     },
     "end_session_button": {
-      "confirmation_modal_title": "Are you sure you want to end this session?",
+      "confirmation_modal_title": "Are you sure you want to remove this device?",
+      "confirmation_modal_body_text": "Make sure you always have access to another verified device or your recovery key to avoid losing your encrypted chat history.",
       "text": "Remove device"
     },
     "error": {
