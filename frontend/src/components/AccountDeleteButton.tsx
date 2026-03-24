@@ -109,8 +109,8 @@ const AccountDeleteButton: React.FC<Props> = (props) => {
     setAllowSubmitting(false);
   }, [isMaybeValid]);
 
-  const onPasswordChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onPasswordInput = useCallback(
+    (e: React.InputEvent<HTMLInputElement>) => {
       // We don't know if the password is correct, so we consider the form as
       // valid if the field is not empty
       setIsMaybeValid(e.currentTarget.value !== "");
@@ -118,8 +118,8 @@ const AccountDeleteButton: React.FC<Props> = (props) => {
     [],
   );
 
-  const onMxidChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onMxidInput = useCallback(
+    (e: React.InputEvent<HTMLInputElement>) => {
       setIsMaybeValid(e.currentTarget.value === user.matrix.mxid);
     },
     [user.matrix.mxid],
@@ -208,7 +208,7 @@ const AccountDeleteButton: React.FC<Props> = (props) => {
             <Form.PasswordControl
               autoComplete="current-password"
               required
-              onInput={onPasswordChange}
+              onInput={onPasswordInput}
             />
 
             <Form.ErrorMessage match="valueMissing">
@@ -232,7 +232,7 @@ const AccountDeleteButton: React.FC<Props> = (props) => {
             <Form.TextControl
               required
               placeholder={user.matrix.mxid}
-              onInput={onMxidChange}
+              onInput={onMxidInput}
             />
 
             <Form.ErrorMessage match="valueMissing">

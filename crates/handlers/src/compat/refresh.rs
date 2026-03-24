@@ -156,7 +156,7 @@ pub(crate) async fn post(
         .await?;
 
     repo.compat_refresh_token()
-        .consume(&clock, refresh_token)
+        .consume_and_replace(&clock, refresh_token, &new_refresh_token)
         .await?;
 
     if let Some(access_token) = access_token {

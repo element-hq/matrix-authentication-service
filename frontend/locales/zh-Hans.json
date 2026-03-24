@@ -99,7 +99,7 @@
       "session_details_title": "会话"
     },
     "browser_sessions_overview": {
-      "body:other": "{{count}}活跃会话",
+      "body:other": "{{count}} 个活跃会话",
       "heading": "浏览器",
       "no_active_sessions": {
         "default": "你尚未登录任何 Web 浏览器。",
@@ -145,7 +145,7 @@
     },
     "nav": {
       "devices": "设备",
-      "plan": "Plan",
+      "plan": "配额",
       "profile": "个人资料",
       "sessions": "会话",
       "settings": "设置"
@@ -353,7 +353,7 @@
       "display_name_field_label": "显示名称"
     },
     "user_sessions_overview": {
-      "active_sessions:other": "{{count}}活跃会话",
+      "active_sessions:other": "{{count}} 个活跃会话",
       "heading": "你已登录的位置",
       "no_active_sessions": {
         "default": "你尚未登录任何 app。",
@@ -373,7 +373,7 @@
         "title": "新代码已发送"
       },
       "enter_code_prompt": "输入发送至以下地址的6位数代码：<email>{{email}}</email>",
-      "heading": "验证邮箱",
+      "heading": "验证邮件地址",
       "invalid_code_alert": {
         "description": "检查发送到你的邮件地址中的代码，并更新以下字段以继续。",
         "title": "你输入的代码错误"

@@ -84,7 +84,7 @@ jobs:
           chmod -R u=rwX,go=rX assets-dist/
 
       - name: Upload assets
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: assets
           path: assets-dist
@@ -143,7 +143,7 @@ jobs:
             -p mas-cli
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: binary-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/mas-cli
@@ -162,19 +162,19 @@ jobs:
 
     steps:
       - name: Download assets
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: assets
           path: assets-dist
 
       - name: Download binary x86_64
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: binary-x86_64-unknown-linux-gnu
           path: binary-x86_64
 
       - name: Download binary aarch64
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: binary-aarch64-unknown-linux-gnu
           path: binary-aarch64
@@ -192,13 +192,13 @@ jobs:
           done
 
       - name: Upload aarch64 archive
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: mas-cli-aarch64-linux
           path: mas-cli-aarch64-linux.tar.gz
 
       - name: Upload x86_64 archive
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: mas-cli-x86_64-linux
           path: mas-cli-x86_64-linux.tar.gz
@@ -226,7 +226,7 @@ jobs:
     steps:
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v5.10.0
+        uses: docker/metadata-action@v6.0.0
         with:
           images: "${{ env.IMAGE }}"
           bake-target: docker-metadata-action
@@ -242,7 +242,7 @@ jobs:
 
       - name: Docker meta (debug variant)
         id: meta-debug
-        uses: docker/metadata-action@v5.10.0
+        uses: docker/metadata-action@v6.0.0
         with:
           images: "${{ env.IMAGE }}"
           bake-target: docker-metadata-action-debug
@@ -258,17 +258,17 @@ jobs:
             type=sha
 
       - name: Setup Cosign
-        uses: sigstore/cosign-installer@v4.0.0
+        uses: sigstore/cosign-installer@v4.1.0
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3.12.0
+        uses: docker/setup-buildx-action@v4.0.0
         with:
           buildkitd-config-inline: |
             [registry."docker.io"]
               mirrors = ["mirror.gcr.io"]
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3.6.0
+        uses: docker/login-action@v4.0.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -276,7 +276,7 @@ jobs:
 
       - name: Build and push
         id: bake
-        uses: docker/bake-action@v6.10.0
+        uses: docker/bake-action@v7.0.0
         with:
           files: |
             ./docker-bake.hcl
@@ -320,14 +320,14 @@ jobs:
       - build-image
     steps:
       - name: Download the artifacts from the previous job
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: mas-cli-*
           path: artifacts
           merge-multiple: true
 
       - name: Prepare a release
-        uses: softprops/action-gh-release@v2.5.0
+        uses: softprops/action-gh-release@v2.6.1
         with:
           generate_release_notes: true
           body: |
@@ -382,7 +382,7 @@ jobs:
             .github/scripts
 
       - name: Download the artifacts from the previous job
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: mas-cli-*
           path: artifacts
@@ -396,7 +396,7 @@ jobs:
             await script({ core, github, context });
 
       - name: Update unstable release
-        uses: softprops/action-gh-release@v2.5.0
+        uses: softprops/action-gh-release@v2.6.1
         with:
           name: "Unstable build"
           tag_name: unstable
