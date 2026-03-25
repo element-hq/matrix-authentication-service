@@ -82,6 +82,10 @@ pub struct Violation {
     pub redirect_uri: Option<String>,
     pub field: Option<String>,
 
+    // We flatten as policies expect `code` as another top-level field.
+    //
+    // This also means all of the extra fields from the variant will be splatted at this
+    // level which is fine (arbitrary).
     #[serde(flatten)]
     pub variant: Option<ViolationVariant>,
 }
