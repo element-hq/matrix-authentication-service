@@ -29,7 +29,7 @@ use mas_data_model::{
 };
 use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
-use mas_policy::{Violation, ViolationCode};
+use mas_policy::{Violation, ViolationVariant};
 use mas_router::{Account, GraphQL, PostAuthAction, UrlBuilder};
 use oauth2_types::scope::{OPENID, Scope};
 use rand::{
@@ -890,7 +890,7 @@ impl TemplateContext for CompatLoginPolicyViolationContext {
                     msg: "user has too many active sessions".to_owned(),
                     redirect_uri: None,
                     field: None,
-                    code: Some(ViolationCode::TooManySessions),
+                    variant: Some(ViolationVariant::TooManySessions),
                 }],
             },
         ])
