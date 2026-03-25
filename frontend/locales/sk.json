@@ -125,7 +125,7 @@
       "heading": "The email address {{email}} is already in use."
     },
     "end_session_button": {
-      "confirmation_modal_title": "Are you sure you want to remove this device?",
+      "confirmation_modal_title": "Are you sure you want to end this session?",
       "text": "Remove device"
     },
     "error": {
