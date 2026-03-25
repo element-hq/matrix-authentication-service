@@ -55,6 +55,14 @@ If you need help getting started with git, this is beyond the scope of the docum
   cd ..
   ```
 - Generate the sample config via `cargo run -- config generate > config.yaml`
+- To enable registration, add the following to `config.yaml`:
+  ```yaml
+  account:
+    password_registration_enabled: true
+    # Since no emails are sent by default and we want to be able to create some users for
+    # local dev, remove the email requirement.
+    password_registration_email_required: false
+  ```
 - Run a PostgreSQL database locally
   ```sh
   docker run -p 5432:5432 -e 'POSTGRES_USER=postgres' -e 'POSTGRES_PASSWORD=postgres' -e 'POSTGRES_DATABASE=postgres' postgres
