@@ -44,6 +44,10 @@ const EndSessionButton: React.FC<
         {t("frontend.end_session_button.confirmation_modal_title")}
       </Dialog.Title>
 
+      <Dialog.Description>
+        {t("frontend.end_session_button.confirmation_modal_body_text")}
+      </Dialog.Description>
+
       {children && <Dialog.Description asChild>{children}</Dialog.Description>}
 
       <Button
