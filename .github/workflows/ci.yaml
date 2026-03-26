@@ -361,8 +361,17 @@ jobs:
       - name: Run ESS tests
         run: pytest-ess --test-suite "matrix-authentication-service" --additional-test-values-file ci-values.yml -- -vv
 
-      - uses: element-hq/upload-ess-logs-action@release/v2
+      - name: Collect ESS logs
         if: ${{ failure() }}
+        run: collect-ess-logs
+
+      - name: Upload logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        with:
+          name: ess-helm-logs
+          path: ess-helm-logs
+          retention-days: 1
 
   tests-done:
     name: Tests done
