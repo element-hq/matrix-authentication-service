@@ -317,6 +317,31 @@ jobs:
             --archive-file nextest-archive.tar.zst \
             --partition count:${{ matrix.partition }}/3
 
+  ess:
+    if: "${{ !failure() && !cancelled() }}"
+    needs: [rustfmt, opa-lint, compile-test-artifacts]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install ESS test dependencies
+        uses: element-hq/setup-ess-cluster-action@release/v2
+
+      - name: Build MAS docker image to local registry
+        run: |
+          docker build -t localhost:5000/matrix-authentication-service:ci -f ./Dockerfile .
+          docker push localhost:5000/matrix-authentication-service:ci
+
+      - name: Build Additional values file
+        run: >
+          yq eval -n '.matrixAuthenticationService.image.registry = "localhost:5000" |
+          .matrixAuthenticationService.image.repository = "matrix-authentication-service" |
+          .matrixAuthenticationService.image.tag = "ci"' > ci-values.yml
+
+      - name: Run ESS tests
+        run: pytest-ess --pull-chart --chart-version 26.3.0 --test-suite "matrix-authentication-service" --additional-test-values-file ci-values.yml -- -vv
+
   tests-done:
     name: Tests done
     if: ${{ always() }}
@@ -329,6 +354,7 @@ jobs:
       - cargo-deny
       - clippy
       - check-schema
+      - ess
       - test
     runs-on: ubuntu-24.04
 
