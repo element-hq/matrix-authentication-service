@@ -689,10 +689,11 @@ impl RegisterContext {
 }
 
 /// Context used by the `password_register.html` template
-#[derive(Serialize, Default)]
+#[derive(Serialize)]
 pub struct PasswordRegisterContext {
     form: FormState<RegisterFormField>,
     next: Option<PostAuthContext>,
+    graphql_endpoint: String,
 }
 
 impl TemplateContext for PasswordRegisterContext {
@@ -704,15 +705,24 @@ impl TemplateContext for PasswordRegisterContext {
     where
         Self: Sized,
     {
+        let url_builder = UrlBuilder::new("https://example.com/".parse().unwrap(), None, None);
         // TODO: samples with errors
-        sample_list(vec![PasswordRegisterContext {
-            form: FormState::default(),
-            next: None,
-        }])
+        sample_list(vec![PasswordRegisterContext::new(&url_builder)])
     }
 }
 
 impl PasswordRegisterContext {
+    /// Create a new context, resolving the GraphQL endpoint used by the
+    /// client-side form from the given [`UrlBuilder`]
+    #[must_use]
+    pub fn new(url_builder: &UrlBuilder) -> Self {
+        Self {
+            form: FormState::default(),
+            next: None,
+            graphql_endpoint: url_builder.relative_url_for(&GraphQL),
+        }
+    }
+
     /// Add an error on the registration form
     #[must_use]
     pub fn with_form_state(self, form: FormState<RegisterFormField>) -> Self {
