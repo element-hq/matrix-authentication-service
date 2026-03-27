@@ -232,11 +232,11 @@
       }
     },
     "register": {
-      "token_checking": "Checking token…",
-      "token_invalid": "This token is invalid or has expired",
-      "token_label": "Registration token",
-      "token_not_found": "This token was not recognised",
-      "token_valid": "Token accepted",
+      "token_checking": "Checking invite code…",
+      "token_invalid": "This invite code is invalid or has expired",
+      "token_label": "Invite code",
+      "token_not_found": "This invite code was not recognised",
+      "token_valid": "Invite code accepted",
       "username_available": "{{mxid}} is available!",
       "username_checking": "Checking availability…",
       "username_reserved": "{{mxid}} is not available",
