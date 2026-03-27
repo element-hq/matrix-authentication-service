@@ -886,6 +886,13 @@ export type Query = {
   /** Fetch a user recovery ticket. */
   userRecoveryTicket?: Maybe<UserRecoveryTicket>;
   /**
+   * Check whether a username is available for registration.
+   *
+   * This query is accessible to anonymous users, as it is used during
+   * the registration flow.
+   */
+  usernameAvailable: UsernameAvailability;
+  /**
    * Get a list of users.
    *
    * This is only available to administrators.
@@ -983,6 +990,12 @@ export type QueryUserEmailAuthenticationArgs = {
 /** The query root of the GraphQL interface. */
 export type QueryUserRecoveryTicketArgs = {
   ticket: Scalars['String']['input'];
+};
+
+
+/** The query root of the GraphQL interface. */
+export type QueryUsernameAvailableArgs = {
+  username: Scalars['String']['input'];
 };
 
 
@@ -1688,6 +1701,24 @@ export type UserState =
   /** The user is locked. */
   | 'LOCKED';
 
+/** The result of a username availability check. */
+export type UsernameAvailability = {
+  __typename?: 'UsernameAvailability';
+  /** Whether the username is available for registration. */
+  available: Scalars['Boolean']['output'];
+  /** If the username is not available, the reason why. */
+  reason?: Maybe<UsernameUnavailableReason>;
+  /** The username that was checked. */
+  username: Scalars['String']['output'];
+};
+
+/** Why a username is not available for registration. */
+export type UsernameUnavailableReason =
+  /** The username is reserved by the homeserver. */
+  | 'RESERVED'
+  /** The username is already taken by an existing user. */
+  | 'TAKEN';
+
 /** Represents the current viewer */
 export type Viewer = Anonymous | User;
 
@@ -1849,6 +1880,13 @@ export type UserEmailList_UserFragment = { __typename?: 'User', hasPassword: boo
 export type UserEmailList_SiteConfigFragment = { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean } & { ' $fragmentName'?: 'UserEmailList_SiteConfigFragment' };
 
 export type BrowserSessionsOverview_UserFragment = { __typename?: 'User', id: string, browserSessions: { __typename?: 'BrowserSessionConnection', totalCount: number } } & { ' $fragmentName'?: 'BrowserSessionsOverview_UserFragment' };
+
+export type UsernameAvailableQueryVariables = Exact<{
+  username: Scalars['String']['input'];
+}>;
+
+
+export type UsernameAvailableQuery = { __typename?: 'Query', usernameAvailable: { __typename?: 'UsernameAvailability', username: string, available: boolean, reason?: UsernameUnavailableReason | null } };
 
 export type UserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2563,6 +2601,15 @@ export const UserEmailListDocument = new TypedDocumentString(`
   id
   email
 }`) as unknown as TypedDocumentString<UserEmailListQuery, UserEmailListQueryVariables>;
+export const UsernameAvailableDocument = new TypedDocumentString(`
+    query UsernameAvailable($username: String!) {
+  usernameAvailable(username: $username) {
+    username
+    available
+    reason
+  }
+}
+    `) as unknown as TypedDocumentString<UsernameAvailableQuery, UsernameAvailableQueryVariables>;
 export const UserProfileDocument = new TypedDocumentString(`
     query UserProfile {
   viewerSession {
@@ -3298,6 +3345,28 @@ export const mockAddEmailMutation = (resolver: GraphQLResponseResolver<AddEmailM
 export const mockUserEmailListQuery = (resolver: GraphQLResponseResolver<UserEmailListQuery, UserEmailListQueryVariables>, options?: RequestHandlerOptions) =>
   graphql.query<UserEmailListQuery, UserEmailListQueryVariables>(
     'UserEmailList',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockUsernameAvailableQuery(
+ *   ({ query, variables }) => {
+ *     const { username } = variables;
+ *     return HttpResponse.json({
+ *       data: { usernameAvailable }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockUsernameAvailableQuery = (resolver: GraphQLResponseResolver<UsernameAvailableQuery, UsernameAvailableQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<UsernameAvailableQuery, UsernameAvailableQueryVariables>(
+    'UsernameAvailable',
     resolver,
     options
   )

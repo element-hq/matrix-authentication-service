@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Form, TooltipProvider } from "@vector-im/compound-web";
+import { useDebouncedValue } from "@tanstack/react-pacer";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { Form, InlineSpinner, TooltipProvider } from "@vector-im/compound-web";
 import { StrictMode, Suspense, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { I18nextProvider, Trans, useTranslation } from "react-i18next";
@@ -13,7 +14,8 @@ import { Captcha, type CaptchaHandle } from "../components/Captcha";
 import ErrorBoundary from "../components/ErrorBoundary";
 import LoadingScreen from "../components/LoadingScreen";
 import PasswordCreationDoubleInput from "../components/PasswordCreationDoubleInput";
-import { queryClient } from "../graphql";
+import { graphql } from "../gql";
+import { graphqlRequest, queryClient } from "../graphql";
 import i18n, { setupI18n } from "../i18n";
 import "./shared.css";
 
@@ -56,6 +58,13 @@ const schema = v.object({
     tos_uri: v.optional(v.nullable(v.string())),
     imprint: v.optional(v.nullable(v.string())),
   }),
+  features: v.object({
+    password_registration: v.boolean(),
+    password_registration_email_required: v.boolean(),
+    password_login: v.boolean(),
+    account_recovery: v.boolean(),
+    login_with_email_allowed: v.boolean(),
+  }),
   form: v.object({
     errors: v.array(formErrorSchema),
     fields: v.record(v.string(), fieldStateSchema),
@@ -67,6 +76,16 @@ type FormError = v.InferOutput<typeof formErrorSchema>;
 
 // Valid Matrix localpart: lowercase ascii, digits, and a few special chars
 const VALID_LOCALPART_RE = /^[a-z0-9._=/+-]+$/;
+
+const USERNAME_AVAILABLE_QUERY = graphql(`
+  query UsernameAvailable($username: String!) {
+    usernameAvailable(username: $username) {
+      username
+      available
+      reason
+    }
+  }
+`);
 
 const CaptchaPlaceholder: React.FC = () => (
   <div className="w-full h-[71px] rounded bg-[var(--cpd-color-bg-subtle-secondary)]" />
@@ -120,6 +139,76 @@ const useFormErrorMessage = () => {
   };
 };
 
+type Availability = {
+  username: string;
+  available: boolean;
+  reason?: string | null;
+};
+
+const UsernameHelpMessage: React.FC<{
+  normalized: string;
+  serverName: string;
+  loading: boolean;
+  availability?: Availability;
+}> = ({ normalized, serverName, loading, availability }) => {
+  const { t } = useTranslation();
+  const mxid = `@${normalized || "—"}:${serverName}`;
+
+  if (loading) {
+    return (
+      <Form.HelpMessage>
+        <InlineSpinner />
+        {t("frontend.register.username_checking")}
+      </Form.HelpMessage>
+    );
+  }
+
+  if (availability?.available) {
+    return (
+      <Form.SuccessMessage match="valid" forceMatch>
+        {t("frontend.register.username_available", { mxid })}
+      </Form.SuccessMessage>
+    );
+  }
+
+  if (availability && !availability.available) {
+    return (
+      <Form.ErrorMessage match="badInput" forceMatch>
+        {availability.reason === "RESERVED"
+          ? t("frontend.register.username_reserved", { mxid })
+          : t("frontend.register.username_taken", { mxid })}
+      </Form.ErrorMessage>
+    );
+  }
+
+  return <Form.HelpMessage>{mxid}</Form.HelpMessage>;
+};
+
+/** Normalize a username: trim and lowercase. */
+const normalizeUsername = (value: string) => value.trim().toLocaleLowerCase();
+
+/** Whether a normalized username is valid for a GraphQL availability check. */
+const isUsernameCheckable = (normalized: string) =>
+  normalized.length > 0 && VALID_LOCALPART_RE.test(normalized);
+
+/**
+ * Map server-side field errors to an initial availability state so that both
+ * server POST errors and live GraphQL checks render through the same path.
+ */
+const serverErrorsToAvailability = (
+  username: string,
+  errors: FieldError[],
+): Availability | undefined => {
+  if (errors.length === 0) return undefined;
+  // "exists" from the server means taken
+  const isExists = errors.some((e) => e.kind === "exists");
+  if (isExists) {
+    return { username, available: false, reason: "TAKEN" };
+  }
+  // For other server errors (policy, etc.) we don't map to availability
+  return undefined;
+};
+
 const UsernameField: React.FC<{
   serverName: string;
   defaultValue: string;
@@ -128,9 +217,52 @@ const UsernameField: React.FC<{
   const { t } = useTranslation();
   const fieldErrorMessage = useFieldErrorMessage();
   const [username, setUsername] = useState(defaultValue);
+  // Track whether server errors have been cleared by the user editing
+  const [serverCleared, setServerCleared] = useState(false);
+
+  const normalized = normalizeUsername(username);
+  const [debouncedUsername] = useDebouncedValue(normalized, { wait: 500 });
+
+  // Live availability check — only runs after the user has edited (server cleared)
+  const checkable = isUsernameCheckable(debouncedUsername) && serverCleared;
+  const { data, isFetching } = useQuery({
+    queryKey: ["usernameAvailable", debouncedUsername],
+    queryFn: ({ signal }) =>
+      graphqlRequest({
+        query: USERNAME_AVAILABLE_QUERY,
+        variables: { username: debouncedUsername },
+        signal,
+      }),
+    enabled: checkable,
+  });
+
+  const isStale = normalized !== debouncedUsername;
+  const liveAvailability = !isStale ? data?.usernameAvailable : undefined;
+
+  // Before the user edits, map server errors to an availability result
+  // so both sources render through UsernameHelpMessage.
+  const serverAvailability = !serverCleared
+    ? serverErrorsToAvailability(normalized, serverErrors)
+    : undefined;
+
+  // Merge: server availability before edit, live availability after
+  const availability = serverAvailability ?? liveAvailability;
+
+  // Server errors that don't map to availability (e.g. policy violations)
+  const unmappedServerErrors =
+    !serverCleared && !serverAvailability ? serverErrors : [];
+
+  const isLoading =
+    serverCleared && isUsernameCheckable(normalized) && (isFetching || isStale);
 
   return (
-    <Form.Field name="username" serverInvalid={!!serverErrors.length}>
+    <Form.Field
+      name="username"
+      serverInvalid={
+        unmappedServerErrors.length > 0 ||
+        (availability !== undefined && !availability.available)
+      }
+    >
       <Form.Label>{t("common.username")}</Form.Label>
       <Form.TextControl
         required
@@ -141,28 +273,34 @@ const UsernameField: React.FC<{
         style={{ textTransform: "lowercase" }}
         onChange={(e) => {
           setUsername(e.target.value);
+          if (!serverCleared) setServerCleared(true);
         }}
         onBlur={(e) => {
-          // Normalize the actual value on blur — CSS handles the visual lowercase
-          e.target.value = e.target.value.trim().toLocaleLowerCase();
+          e.target.value = normalizeUsername(e.target.value);
           setUsername(e.target.value);
         }}
       />
-      <Form.HelpMessage>
-        @{username.toLocaleLowerCase().trim() || "—"}:{serverName}
-      </Form.HelpMessage>
+
+      <UsernameHelpMessage
+        normalized={normalized}
+        serverName={serverName}
+        loading={isLoading}
+        availability={availability}
+      />
+
       <Form.ErrorMessage match="valueMissing">
         {t("frontend.errors.field_required")}
       </Form.ErrorMessage>
       <Form.ErrorMessage
         match={(value) => {
-          const normalized = value.trim().toLocaleLowerCase();
-          return normalized.length > 0 && !VALID_LOCALPART_RE.test(normalized);
+          const n = normalizeUsername(value);
+          return n.length > 0 && !VALID_LOCALPART_RE.test(n);
         }}
       >
         {t("frontend.errors.username_invalid")}
       </Form.ErrorMessage>
-      {serverErrors.map((error) => (
+
+      {unmappedServerErrors.map((error) => (
         <Form.ErrorMessage key={error.kind}>
           {fieldErrorMessage(error)}
         </Form.ErrorMessage>
@@ -204,26 +342,28 @@ const PasswordRegisterForm: React.FC = () => {
         serverErrors={fields.username?.errors ?? []}
       />
 
-      <Form.Field name="email" serverInvalid={!!fields.email?.errors.length}>
-        <Form.Label>{t("common.email_address")}</Form.Label>
-        <Form.TextControl
-          type="email"
-          required
-          autoComplete="email"
-          defaultValue={fields.email?.value ?? ""}
-        />
-        <Form.ErrorMessage match="typeMismatch">
-          {t("frontend.errors.invalid_email")}
-        </Form.ErrorMessage>
-        <Form.ErrorMessage match="valueMissing">
-          {t("frontend.errors.field_required")}
-        </Form.ErrorMessage>
-        {fields.email?.errors.map((error) => (
-          <Form.ErrorMessage key={error.kind}>
-            {fieldErrorMessage(error)}
+      {data.features.password_registration_email_required && (
+        <Form.Field name="email" serverInvalid={!!fields.email?.errors.length}>
+          <Form.Label>{t("common.email_address")}</Form.Label>
+          <Form.TextControl
+            type="email"
+            required
+            autoComplete="email"
+            defaultValue={fields.email?.value ?? ""}
+          />
+          <Form.ErrorMessage match="typeMismatch">
+            {t("frontend.errors.invalid_email")}
           </Form.ErrorMessage>
-        ))}
-      </Form.Field>
+          <Form.ErrorMessage match="valueMissing">
+            {t("frontend.errors.field_required")}
+          </Form.ErrorMessage>
+          {fields.email?.errors.map((error) => (
+            <Form.ErrorMessage key={error.kind}>
+              {fieldErrorMessage(error)}
+            </Form.ErrorMessage>
+          ))}
+        </Form.Field>
+      )}
 
       <PasswordCreationDoubleInput
         minimumPasswordComplexity={3}
