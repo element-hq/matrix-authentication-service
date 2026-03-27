@@ -51,6 +51,8 @@ pub(crate) struct RegisterForm {
     password_confirm: String,
     #[serde(default)]
     accept_terms: String,
+    #[serde(default)]
+    token: String,
 
     #[serde(flatten, skip_serializing)]
     captcha: CaptchaForm,
@@ -357,6 +359,24 @@ pub(crate) async fn post(
         repo.user_registration()
             .set_terms_url(registration, tos_uri.clone())
             .await?
+    } else {
+        registration
+    };
+
+    // Attach the registration token if provided
+    let registration = if !form.token.is_empty() {
+        let registration_token = repo
+            .user_registration_token()
+            .find_by_token(&form.token)
+            .await?;
+
+        if let Some(registration_token) = registration_token {
+            repo.user_registration()
+                .set_registration_token(registration, &registration_token)
+                .await?
+        } else {
+            registration
+        }
     } else {
         registration
     };

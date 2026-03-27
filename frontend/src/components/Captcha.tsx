@@ -162,6 +162,7 @@ export const ReCaptchaWidget = forwardRef<CaptchaHandle, { siteKey: string }>(
 
     return (
       <div
+        className="flex flex-col items-center"
         ref={(node) => {
           if (node === null) return;
 
@@ -203,6 +204,7 @@ export const TurnstileWidget = forwardRef<CaptchaHandle, { siteKey: string }>(
 
     return (
       <div
+        className="flex flex-col items-center"
         ref={(node) => {
           if (node === null) return;
 
@@ -244,6 +246,7 @@ export const HCaptchaWidget = forwardRef<CaptchaHandle, { siteKey: string }>(
 
     return (
       <div
+        className="flex flex-col items-center"
         ref={(node) => {
           if (node === null) return;
 
