@@ -26,12 +26,14 @@
   },
   "common": {
     "e2ee": "End-to-end encryption",
+    "email_address": "Email address",
     "loading": "Loading…",
     "next": "Next",
     "password": "Password",
     "previous": "Previous",
     "saved": "Saved",
-    "saving": "Saving…"
+    "saving": "Saving…",
+    "username": "Username"
   },
   "frontend": {
     "account": {
@@ -112,8 +114,13 @@
       "title": "Something went wrong"
     },
     "errors": {
+      "captcha": "CAPTCHA verification failed, please try again",
       "field_required": "This field is required",
-      "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again."
+      "invalid_email": "Please enter a valid email address",
+      "password_mismatch": "Password fields don't match",
+      "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again.",
+      "username_invalid": "Username can only contain lowercase letters, numbers, and the characters . _ - + / = @",
+      "username_taken": "This username is already taken"
     },
     "last_active": {
       "active_date": "Active {{relativeDate}}",
@@ -316,6 +323,9 @@
     }
   },
   "mas": {
+    "register": {
+      "terms_of_service": "I agree to the <a>Terms and Conditions</a>"
+    },
     "scope": {
       "edit_profile": "Edit your profile and contact details",
       "manage_sessions": "Manage your devices and sessions",

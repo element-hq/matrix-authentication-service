@@ -1735,8 +1735,6 @@ export type OAuth2Session_SessionFragment = (
   & { ' $fragmentRefs'?: { 'EndOAuth2SessionButton_SessionFragment': EndOAuth2SessionButton_SessionFragment } }
 ) & { ' $fragmentName'?: 'OAuth2Session_SessionFragment' };
 
-export type PasswordCreationDoubleInput_SiteConfigFragment = { __typename?: 'SiteConfig', id: string, minimumPasswordComplexity: number } & { ' $fragmentName'?: 'PasswordCreationDoubleInput_SiteConfigFragment' };
-
 export type EndBrowserSessionButton_SessionFragment = { __typename?: 'BrowserSession', id: string, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null, deviceType: DeviceType } | null } & { ' $fragmentName'?: 'EndBrowserSessionButton_SessionFragment' };
 
 export type EndBrowserSessionMutationVariables = Exact<{
@@ -2005,10 +2003,7 @@ export type PasswordChangeQueryVariables = Exact<{ [key: string]: never; }>;
 export type PasswordChangeQuery = { __typename?: 'Query', viewer:
     | { __typename: 'Anonymous', id: string }
     | { __typename: 'User', id: string }
-  , siteConfig: (
-    { __typename?: 'SiteConfig' }
-    & { ' $fragmentRefs'?: { 'PasswordCreationDoubleInput_SiteConfigFragment': PasswordCreationDoubleInput_SiteConfigFragment } }
-  ) };
+  , siteConfig: { __typename?: 'SiteConfig', minimumPasswordComplexity: number } };
 
 export type RecoverPasswordMutationVariables = Exact<{
   ticket: Scalars['String']['input'];
@@ -2027,10 +2022,7 @@ export type ResendRecoveryEmailMutation = { __typename?: 'Mutation', resendRecov
 
 export type RecoverPassword_UserRecoveryTicketFragment = { __typename?: 'UserRecoveryTicket', username: string, email: string } & { ' $fragmentName'?: 'RecoverPassword_UserRecoveryTicketFragment' };
 
-export type RecoverPassword_SiteConfigFragment = (
-  { __typename?: 'SiteConfig' }
-  & { ' $fragmentRefs'?: { 'PasswordCreationDoubleInput_SiteConfigFragment': PasswordCreationDoubleInput_SiteConfigFragment } }
-) & { ' $fragmentName'?: 'RecoverPassword_SiteConfigFragment' };
+export type RecoverPassword_SiteConfigFragment = { __typename?: 'SiteConfig', minimumPasswordComplexity: number } & { ' $fragmentName'?: 'RecoverPassword_SiteConfigFragment' };
 
 export type PasswordRecoveryQueryVariables = Exact<{
   ticket: Scalars['String']['input'];
@@ -2441,20 +2433,11 @@ export const RecoverPassword_UserRecoveryTicketFragmentDoc = new TypedDocumentSt
   email
 }
     `, {"fragmentName":"RecoverPassword_userRecoveryTicket"}) as unknown as TypedDocumentString<RecoverPassword_UserRecoveryTicketFragment, unknown>;
-export const PasswordCreationDoubleInput_SiteConfigFragmentDoc = new TypedDocumentString(`
-    fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {
-  id
-  minimumPasswordComplexity
-}
-    `, {"fragmentName":"PasswordCreationDoubleInput_siteConfig"}) as unknown as TypedDocumentString<PasswordCreationDoubleInput_SiteConfigFragment, unknown>;
 export const RecoverPassword_SiteConfigFragmentDoc = new TypedDocumentString(`
     fragment RecoverPassword_siteConfig on SiteConfig {
-  ...PasswordCreationDoubleInput_siteConfig
-}
-    fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {
-  id
   minimumPasswordComplexity
-}`, {"fragmentName":"RecoverPassword_siteConfig"}) as unknown as TypedDocumentString<RecoverPassword_SiteConfigFragment, unknown>;
+}
+    `, {"fragmentName":"RecoverPassword_siteConfig"}) as unknown as TypedDocumentString<RecoverPassword_SiteConfigFragment, unknown>;
 export const DeactivateUserDocument = new TypedDocumentString(`
     mutation DeactivateUser($hsErase: Boolean!, $password: String) {
   deactivateUser(input: {hsErase: $hsErase, password: $password}) {
@@ -2918,13 +2901,10 @@ export const PasswordChangeDocument = new TypedDocumentString(`
     }
   }
   siteConfig {
-    ...PasswordCreationDoubleInput_siteConfig
+    minimumPasswordComplexity
   }
 }
-    fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {
-  id
-  minimumPasswordComplexity
-}`) as unknown as TypedDocumentString<PasswordChangeQuery, PasswordChangeQueryVariables>;
+    `) as unknown as TypedDocumentString<PasswordChangeQuery, PasswordChangeQueryVariables>;
 export const RecoverPasswordDocument = new TypedDocumentString(`
     mutation RecoverPassword($ticket: String!, $newPassword: String!) {
   setPasswordByRecovery(input: {ticket: $ticket, newPassword: $newPassword}) {
@@ -2950,16 +2930,12 @@ export const PasswordRecoveryDocument = new TypedDocumentString(`
     ...RecoverPassword_userRecoveryTicket
   }
 }
-    fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {
-  id
-  minimumPasswordComplexity
-}
-fragment RecoverPassword_userRecoveryTicket on UserRecoveryTicket {
+    fragment RecoverPassword_userRecoveryTicket on UserRecoveryTicket {
   username
   email
 }
 fragment RecoverPassword_siteConfig on SiteConfig {
-  ...PasswordCreationDoubleInput_siteConfig
+  minimumPasswordComplexity
 }`) as unknown as TypedDocumentString<PasswordRecoveryQuery, PasswordRecoveryQueryVariables>;
 export const AllowCrossSigningResetDocument = new TypedDocumentString(`
     mutation AllowCrossSigningReset($userId: ID!) {
