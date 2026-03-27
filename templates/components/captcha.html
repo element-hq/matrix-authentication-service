@@ -7,19 +7,19 @@ Please see LICENSE files in the repository root for full details.
 -#}
 
 {% macro form(class="") -%}
-  {%- if captcha|default(False) -%}
+  {%- if captcha_config|default(False) -%}
     <noscript>
       <div class="captcha-noscript">
         {{ _("mas.captcha.noscript") }}
       </div>
     </noscript>
 
-    {%- if captcha.service == "recaptcha_v2" -%}
-      <div class="g-recaptcha {{ class }}" data-sitekey="{{ captcha.site_key }}"></div>
-    {%- elif captcha.service == "cloudflare_turnstile" -%}
-      <div class="cf-turnstile {{ class }}" data-sitekey="{{ captcha.site_key }}"></div>
-    {%- elif captcha.service == "hcaptcha" -%}
-      <div class="h-captcha {{ class }}" data-sitekey="{{ captcha.site_key }}"></div>
+    {%- if captcha_config.service == "recaptcha_v2" -%}
+      <div class="g-recaptcha {{ class }}" data-sitekey="{{ captcha_config.site_key }}"></div>
+    {%- elif captcha_config.service == "cloudflare_turnstile" -%}
+      <div class="cf-turnstile {{ class }}" data-sitekey="{{ captcha_config.site_key }}"></div>
+    {%- elif captcha_config.service == "hcaptcha" -%}
+      <div class="h-captcha {{ class }}" data-sitekey="{{ captcha_config.site_key }}"></div>
     {%- else -%}
       {{ throw(message="Invalid captcha service setup") }}
     {%- endif %}
@@ -27,12 +27,12 @@ Please see LICENSE files in the repository root for full details.
 {% endmacro %}
 
 {% macro head() -%}
-  {%- if captcha|default(False) -%}
-    {%- if captcha.service == "recaptcha_v2" -%}
+  {%- if captcha_config|default(False) -%}
+    {%- if captcha_config.service == "recaptcha_v2" -%}
       <script src="https://www.recaptcha.net/recaptcha/api.js" async defer></script>
-    {%- elif captcha.service == "cloudflare_turnstile" -%}
+    {%- elif captcha_config.service == "cloudflare_turnstile" -%}
       <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    {%- elif captcha.service == "hcaptcha" -%}
+    {%- elif captcha_config.service == "hcaptcha" -%}
       <script src="https://js.hcaptcha.com/1/api.js?recaptchacompat=off" async defer></script>
     {%- else -%}
       {{ throw(message="Invalid captcha service setup") }}
