@@ -60,6 +60,14 @@ pub struct Request {
 
     /// When the token expires. If not provided, the token never expires.
     expires_at: Option<DateTime<Utc>>,
+
+    /// A username to impose on the registering user. If set, the user cannot
+    /// choose their own username.
+    username: Option<String>,
+
+    /// An email address to impose on the registering user. If set, the user
+    /// cannot choose their own email.
+    email: Option<String>,
 }
 
 pub fn doc(operation: TransformOperation) -> TransformOperation {
@@ -102,6 +110,8 @@ pub async fn handler(
             token,
             params.usage_limit,
             params.expires_at,
+            params.username,
+            params.email,
         )
         .await?;
 

@@ -149,6 +149,8 @@ pub trait UserRegistrationTokenRepository: Send + Sync {
     /// * `token`: The token string
     /// * `usage_limit`: Optional limit on how many times the token can be used
     /// * `expires_at`: Optional expiration time for the token
+    /// * `username`: Optional username to impose on the registering user
+    /// * `email`: Optional email to impose on the registering user
     ///
     /// # Errors
     ///
@@ -160,6 +162,8 @@ pub trait UserRegistrationTokenRepository: Send + Sync {
         token: String,
         usage_limit: Option<u32>,
         expires_at: Option<DateTime<Utc>>,
+        username: Option<String>,
+        email: Option<String>,
     ) -> Result<UserRegistrationToken, Self::Error>;
 
     /// Increment the usage count of a [`UserRegistrationToken`]
@@ -243,6 +247,38 @@ pub trait UserRegistrationTokenRepository: Send + Sync {
         usage_limit: Option<u32>,
     ) -> Result<UserRegistrationToken, Self::Error>;
 
+    /// Set or clear the username imposed by this [`UserRegistrationToken`]
+    ///
+    /// # Parameters
+    ///
+    /// * `token`: The [`UserRegistrationToken`] to update
+    /// * `username`: The new username, or `None` to clear it
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn set_username(
+        &mut self,
+        token: UserRegistrationToken,
+        username: Option<String>,
+    ) -> Result<UserRegistrationToken, Self::Error>;
+
+    /// Set or clear the email imposed by this [`UserRegistrationToken`]
+    ///
+    /// # Parameters
+    ///
+    /// * `token`: The [`UserRegistrationToken`] to update
+    /// * `email`: The new email, or `None` to clear it
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn set_email(
+        &mut self,
+        token: UserRegistrationToken,
+        email: Option<String>,
+    ) -> Result<UserRegistrationToken, Self::Error>;
+
     /// List [`UserRegistrationToken`]s based on the provided filter
     ///
     /// Returns a list of matching [`UserRegistrationToken`]s
@@ -285,6 +321,8 @@ repository_impl!(UserRegistrationTokenRepository:
         token: String,
         usage_limit: Option<u32>,
         expires_at: Option<DateTime<Utc>>,
+        username: Option<String>,
+        email: Option<String>,
     ) -> Result<UserRegistrationToken, Self::Error>;
     async fn use_token(
         &mut self,
@@ -309,6 +347,16 @@ repository_impl!(UserRegistrationTokenRepository:
         &mut self,
         token: UserRegistrationToken,
         usage_limit: Option<u32>,
+    ) -> Result<UserRegistrationToken, Self::Error>;
+    async fn set_username(
+        &mut self,
+        token: UserRegistrationToken,
+        username: Option<String>,
+    ) -> Result<UserRegistrationToken, Self::Error>;
+    async fn set_email(
+        &mut self,
+        token: UserRegistrationToken,
+        email: Option<String>,
     ) -> Result<UserRegistrationToken, Self::Error>;
     async fn list(
         &mut self,

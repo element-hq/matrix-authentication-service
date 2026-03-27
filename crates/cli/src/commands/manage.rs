@@ -507,7 +507,7 @@ impl Options {
                 // Create the token
                 let registration_token = repo
                     .user_registration_token()
-                    .add(&mut rng, &clock, token_str, usage_limit, expires_at)
+                    .add(&mut rng, &clock, token_str, usage_limit, expires_at, None, None)
                     .await?;
 
                 repo.into_inner().commit().await?;
