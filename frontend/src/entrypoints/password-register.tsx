@@ -133,12 +133,16 @@ const useRegistrationToken = (token: string) => {
   });
 
   const isStale = token !== debouncedToken;
-  const tokenInfo: TokenInfo | undefined = !isStale
-    ? (data?.registrationToken ?? undefined)
+  // data is defined once the query has resolved (even if the token was not found)
+  const resolved = !isStale && data !== undefined;
+  const tokenInfo: TokenInfo | undefined = resolved
+    ? (data.registrationToken ?? undefined)
     : undefined;
+  // notFound: the query resolved but the token doesn't exist
+  const notFound = resolved && data.registrationToken === null;
   const loading = enabled && (isFetching || isStale);
 
-  return { tokenInfo, loading };
+  return { tokenInfo, notFound, loading };
 };
 
 const TokenField: React.FC<{
@@ -147,7 +151,7 @@ const TokenField: React.FC<{
 }> = ({ defaultValue, onTokenInfo }) => {
   const { t } = useTranslation();
   const [token, setToken] = useState(defaultValue);
-  const { tokenInfo, loading } = useRegistrationToken(token);
+  const { tokenInfo, notFound, loading } = useRegistrationToken(token);
 
   // Notify parent whenever token info changes
   useEffect(() => {
@@ -157,7 +161,7 @@ const TokenField: React.FC<{
   return (
     <Form.Field
       name="token"
-      serverInvalid={tokenInfo !== undefined && !tokenInfo.valid}
+      serverInvalid={notFound || (tokenInfo !== undefined && !tokenInfo.valid)}
     >
       <Form.Label>{t("frontend.register.token_label")}</Form.Label>
       <Form.TextControl
@@ -178,6 +182,12 @@ const TokenField: React.FC<{
         <Form.SuccessMessage match="valid" forceMatch>
           {t("frontend.register.token_valid")}
         </Form.SuccessMessage>
+      )}
+
+      {notFound && (
+        <Form.ErrorMessage match="badInput" forceMatch>
+          {t("frontend.register.token_not_found")}
+        </Form.ErrorMessage>
       )}
 
       {tokenInfo && !tokenInfo.valid && (

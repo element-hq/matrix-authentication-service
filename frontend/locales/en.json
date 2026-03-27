@@ -235,6 +235,7 @@
       "token_checking": "Checking token…",
       "token_invalid": "This token is invalid or has expired",
       "token_label": "Registration token",
+      "token_not_found": "This token was not recognised",
       "token_valid": "Token accepted",
       "username_available": "{{mxid}} is available!",
       "username_checking": "Checking availability…",
