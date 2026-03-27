@@ -1192,6 +1192,16 @@ type Query {
   """
   usernameAvailable(username: String!): UsernameAvailability!
   """
+  Look up a registration token by its string value.
+
+  Returns public information about the token (validity, imposed
+  username/email). Returns `null` if the token does not exist.
+
+  This query is accessible to anonymous users, as it is used during
+  the registration flow.
+  """
+  registrationToken(token: String!): RegistrationTokenInfo
+  """
   Fetch a user by its username.
   """
   userByUsername(username: String!): User
@@ -1267,6 +1277,25 @@ type Query {
   Get the viewer's session
   """
   viewerSession: ViewerSession!
+}
+
+"""
+Public information about a registration token, returned by anonymous lookup.
+Does not expose admin details like usage counts or expiration.
+"""
+type RegistrationTokenInfo {
+  """
+  Whether the token is currently valid for registration.
+  """
+  valid: Boolean!
+  """
+  A username imposed by this token, if any.
+  """
+  username: String
+  """
+  An email imposed by this token, if any.
+  """
+  email: String
 }
 
 """

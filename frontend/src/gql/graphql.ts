@@ -865,6 +865,16 @@ export type Query = {
   oauth2Client?: Maybe<Oauth2Client>;
   /** Fetch an OAuth 2.0 session by its ID. */
   oauth2Session?: Maybe<Oauth2Session>;
+  /**
+   * Look up a registration token by its string value.
+   *
+   * Returns public information about the token (validity, imposed
+   * username/email). Returns `null` if the token does not exist.
+   *
+   * This query is accessible to anonymous users, as it is used during
+   * the registration flow.
+   */
+  registrationToken?: Maybe<RegistrationTokenInfo>;
   /** Lookup a compat or OAuth 2.0 session */
   session?: Maybe<Session>;
   /** Get the current site configuration */
@@ -932,6 +942,12 @@ export type QueryOauth2ClientArgs = {
 /** The query root of the GraphQL interface. */
 export type QueryOauth2SessionArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+/** The query root of the GraphQL interface. */
+export type QueryRegistrationTokenArgs = {
+  token: Scalars['String']['input'];
 };
 
 
@@ -1007,6 +1023,20 @@ export type QueryUsersArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   state?: InputMaybe<UserState>;
+};
+
+/**
+ * Public information about a registration token, returned by anonymous lookup.
+ * Does not expose admin details like usage counts or expiration.
+ */
+export type RegistrationTokenInfo = {
+  __typename?: 'RegistrationTokenInfo';
+  /** An email imposed by this token, if any. */
+  email?: Maybe<Scalars['String']['output']>;
+  /** A username imposed by this token, if any. */
+  username?: Maybe<Scalars['String']['output']>;
+  /** Whether the token is currently valid for registration. */
+  valid: Scalars['Boolean']['output'];
 };
 
 /** The input for the `removeEmail` mutation */

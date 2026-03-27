@@ -26,6 +26,18 @@ enum UsernameUnavailableReason {
     Reserved,
 }
 
+/// Public information about a registration token, returned by anonymous lookup.
+/// Does not expose admin details like usage counts or expiration.
+#[derive(SimpleObject)]
+struct RegistrationTokenInfo {
+    /// Whether the token is currently valid for registration.
+    valid: bool,
+    /// A username imposed by this token, if any.
+    username: Option<String>,
+    /// An email imposed by this token, if any.
+    email: Option<String>,
+}
+
 /// The result of a username availability check.
 #[derive(SimpleObject)]
 struct UsernameAvailability {
@@ -110,6 +122,35 @@ impl UserQuery {
             available: true,
             reason: None,
         })
+    }
+
+    /// Look up a registration token by its string value.
+    ///
+    /// Returns public information about the token (validity, imposed
+    /// username/email). Returns `null` if the token does not exist.
+    ///
+    /// This query is accessible to anonymous users, as it is used during
+    /// the registration flow.
+    async fn registration_token(
+        &self,
+        ctx: &Context<'_>,
+        token: String,
+    ) -> Result<Option<RegistrationTokenInfo>, async_graphql::Error> {
+        let state = ctx.state();
+        let mut repo = state.repository().await?;
+
+        let registration_token = repo.user_registration_token().find_by_token(&token).await?;
+        repo.cancel().await?;
+
+        let Some(registration_token) = registration_token else {
+            return Ok(None);
+        };
+
+        Ok(Some(RegistrationTokenInfo {
+            valid: registration_token.is_valid(state.clock().now()),
+            username: registration_token.username,
+            email: registration_token.email,
+        }))
     }
 
     /// Fetch a user by its username.
