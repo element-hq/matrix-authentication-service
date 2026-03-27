@@ -46,7 +46,7 @@ $ mas-cli manage demote-admin <username>
 List all users with admin privileges.
 
 ```
-$ mas-cli manage list-admins
+$ mas-cli manage list-admin-users
 ```
 
 ## `manage set-password`
