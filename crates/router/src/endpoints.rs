@@ -399,6 +399,32 @@ impl From<Option<PostAuthAction>> for PasswordRegister {
     }
 }
 
+/// `GET /invite/{token}`
+///
+/// Deep-link to register with a specific registration token.
+#[derive(Debug, Clone)]
+pub struct Invite {
+    token: String,
+}
+
+impl Invite {
+    #[must_use]
+    pub fn new(token: String) -> Self {
+        Self { token }
+    }
+}
+
+impl Route for Invite {
+    type Query = ();
+    fn route() -> &'static str {
+        "/invite/{token}"
+    }
+
+    fn path(&self) -> std::borrow::Cow<'static, str> {
+        format!("/invite/{}", self.token).into()
+    }
+}
+
 /// `GET|POST /register/steps/{id}/token`
 #[derive(Debug, Clone)]
 pub struct RegisterToken {

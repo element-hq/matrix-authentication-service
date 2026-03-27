@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 // Copyright 2025 The Matrix.org Foundation C.I.C.
 //
@@ -5,11 +6,12 @@
 // Please see LICENSE files in the repository root for full details.
 
 use aide::{OperationIo, transform::TransformOperation};
-use axum::{Json, response::IntoResponse};
+use axum::{Json, extract::State, response::IntoResponse};
 use axum_extra::extract::{Query, QueryRejection};
 use axum_macros::FromRequestParts;
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
+use mas_router::UrlBuilder;
 use mas_storage::{Page, user::UserRegistrationTokenFilter};
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -135,6 +137,7 @@ pub async fn handler(
     CallContext {
         mut repo, clock, ..
     }: CallContext,
+    State(url_builder): State<UrlBuilder>,
     Pagination(pagination, include_count): Pagination,
     params: FilterParams,
 ) -> Result<Json<PaginatedResponse<UserRegistrationToken>>, RouteError> {
@@ -165,7 +168,7 @@ pub async fn handler(
                 .user_registration_token()
                 .list(filter, pagination)
                 .await?
-                .map(|token| UserRegistrationToken::new(token, now));
+                .map(|token| UserRegistrationToken::new(token, now, &url_builder));
             let count = repo.user_registration_token().count(filter).await?;
             PaginatedResponse::for_page(page, pagination, Some(count), &base)
         }
@@ -174,7 +177,7 @@ pub async fn handler(
                 .user_registration_token()
                 .list(filter, pagination)
                 .await?
-                .map(|token| UserRegistrationToken::new(token, now));
+                .map(|token| UserRegistrationToken::new(token, now, &url_builder));
             PaginatedResponse::for_page(page, pagination, None, &base)
         }
         IncludeCount::Only => {

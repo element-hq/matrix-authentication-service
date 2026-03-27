@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 // Copyright 2025 The Matrix.org Foundation C.I.C.
 //
@@ -5,10 +6,11 @@
 // Please see LICENSE files in the repository root for full details.
 
 use aide::{OperationIo, transform::TransformOperation};
-use axum::{Json, response::IntoResponse};
+use axum::{Json, extract::State, response::IntoResponse};
 use chrono::{DateTime, Utc};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
+use mas_router::UrlBuilder;
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer};
 use ulid::Ulid;
@@ -103,6 +105,7 @@ pub async fn handler(
     CallContext {
         mut repo, clock, ..
     }: CallContext,
+    State(url_builder): State<UrlBuilder>,
     id: UlidPathParam,
     Json(request): Json<Request>,
 ) -> Result<Json<SingleResponse<UserRegistrationToken>>, RouteError> {
@@ -134,7 +137,7 @@ pub async fn handler(
     repo.save().await?;
 
     Ok(Json(SingleResponse::new(
-        UserRegistrationToken::new(token, clock.now()),
+        UserRegistrationToken::new(token, clock.now(), &url_builder),
         format!("/api/admin/v1/user-registration-tokens/{id}"),
     )))
 }

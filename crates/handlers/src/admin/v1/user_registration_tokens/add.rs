@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 // Copyright 2025 The Matrix.org Foundation C.I.C.
 //
@@ -5,11 +6,12 @@
 // Please see LICENSE files in the repository root for full details.
 
 use aide::{NoApi, OperationIo, transform::TransformOperation};
-use axum::{Json, response::IntoResponse};
+use axum::{Json, extract::State, response::IntoResponse};
 use chrono::{DateTime, Utc};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
 use mas_data_model::BoxRng;
+use mas_router::UrlBuilder;
 use rand::distributions::{Alphanumeric, DistString};
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -88,6 +90,7 @@ pub async fn handler(
     CallContext {
         mut repo, clock, ..
     }: CallContext,
+    State(url_builder): State<UrlBuilder>,
     NoApi(mut rng): NoApi<BoxRng>,
     Json(params): Json<Request>,
 ) -> Result<(StatusCode, Json<SingleResponse<UserRegistrationToken>>), RouteError> {
@@ -122,6 +125,7 @@ pub async fn handler(
         Json(SingleResponse::new_canonical(UserRegistrationToken::new(
             registration_token,
             clock.now(),
+            &url_builder,
         ))),
     ))
 }
