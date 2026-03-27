@@ -81,8 +81,8 @@ const Backend = {
   },
 } satisfies BackendModule;
 
-export const setupI18n = () => {
-  i18n
+export const setupI18n = async () => {
+  await i18n
     .use(Backend)
     .use(LanguageDetector)
     .use(initReactI18next)
