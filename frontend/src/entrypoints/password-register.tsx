@@ -147,8 +147,9 @@ const useRegistrationToken = (token: string) => {
 
 const TokenField: React.FC<{
   defaultValue: string;
+  readOnly?: boolean;
   onTokenInfo: (info: TokenInfo | undefined) => void;
-}> = ({ defaultValue, onTokenInfo }) => {
+}> = ({ defaultValue, readOnly, onTokenInfo }) => {
   const { t } = useTranslation();
   const [token, setToken] = useState(defaultValue);
   const { tokenInfo, notFound, loading } = useRegistrationToken(token);
@@ -166,9 +167,12 @@ const TokenField: React.FC<{
       <Form.Label>{t("frontend.register.token_label")}</Form.Label>
       <Form.TextControl
         required
+        readOnly={readOnly}
         autoComplete="off"
         defaultValue={defaultValue}
-        onChange={(e) => setToken(e.target.value)}
+        onChange={(e) => {
+          if (!readOnly) setToken(e.target.value);
+        }}
       />
 
       {loading && (
@@ -480,6 +484,7 @@ const PasswordRegisterForm: React.FC = () => {
       {showTokenField && (
         <TokenField
           defaultValue={data.token ?? ""}
+          readOnly={!!data.token}
           onTokenInfo={setTokenInfo}
         />
       )}
