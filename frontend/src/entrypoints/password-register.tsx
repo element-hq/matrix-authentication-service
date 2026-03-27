@@ -6,7 +6,14 @@
 import { useDebouncedValue } from "@tanstack/react-pacer";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Form, InlineSpinner, TooltipProvider } from "@vector-im/compound-web";
-import { StrictMode, Suspense, useRef, useState } from "react";
+import {
+  StrictMode,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { createRoot } from "react-dom/client";
 import { I18nextProvider, Trans, useTranslation } from "react-i18next";
 import * as v from "valibot";
@@ -143,11 +150,9 @@ const TokenField: React.FC<{
   const { tokenInfo, loading } = useRegistrationToken(token);
 
   // Notify parent whenever token info changes
-  const lastInfoRef = useRef<TokenInfo | undefined>(undefined);
-  if (tokenInfo !== lastInfoRef.current) {
-    lastInfoRef.current = tokenInfo;
+  useEffect(() => {
     onTokenInfo(tokenInfo);
-  }
+  }, [tokenInfo, onTokenInfo]);
 
   return (
     <Form.Field
@@ -360,7 +365,9 @@ const UsernameField: React.FC<{
     !serverCleared && !serverAvailability ? serverErrors : [];
 
   const isLoading =
-    serverCleared && isUsernameCheckable(normalized) && (isFetching || isStale);
+    (isForced || serverCleared) &&
+    isUsernameCheckable(normalized) &&
+    (isFetching || isStale);
 
   return (
     <Form.Field
@@ -372,12 +379,13 @@ const UsernameField: React.FC<{
     >
       <Form.Label>{t("common.username")}</Form.Label>
       <Form.TextControl
+        key={isForced ? "forced" : "editable"}
         required
         readOnly={isForced}
         autoComplete="username"
         autoCorrect="off"
         autoCapitalize="none"
-        {...(isForced ? { value: forcedUsername } : { defaultValue })}
+        defaultValue={isForced ? forcedUsername : defaultValue}
         style={{ textTransform: "lowercase" }}
         onChange={(e) => {
           if (isForced) return;
