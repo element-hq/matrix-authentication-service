@@ -6,7 +6,14 @@
 import { useDebouncedValue } from "@tanstack/react-pacer";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Form, InlineSpinner, TooltipProvider } from "@vector-im/compound-web";
-import { StrictMode, Suspense, useRef, useState } from "react";
+import {
+  StrictMode,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { createRoot } from "react-dom/client";
 import { I18nextProvider, Trans, useTranslation } from "react-i18next";
 import * as v from "valibot";
@@ -64,7 +71,9 @@ const schema = v.object({
     password_login: v.boolean(),
     account_recovery: v.boolean(),
     login_with_email_allowed: v.boolean(),
+    registration_token_required: v.boolean(),
   }),
+  token: v.optional(v.nullable(v.string())),
   form: v.object({
     errors: v.array(formErrorSchema),
     fields: v.record(v.string(), fieldStateSchema),
@@ -86,6 +95,117 @@ const USERNAME_AVAILABLE_QUERY = graphql(`
     }
   }
 `);
+
+const REGISTRATION_TOKEN_QUERY = graphql(`
+  query RegistrationToken($token: String!) {
+    registrationToken(token: $token) {
+      valid
+      username
+      email
+    }
+  }
+`);
+
+/** Info from a validated registration token, used to drive forced fields. */
+type TokenInfo = {
+  valid: boolean;
+  username?: string | null;
+  email?: string | null;
+};
+
+/**
+ * Hook that validates a registration token via GraphQL.
+ * Returns the token info and loading state.
+ */
+const useRegistrationToken = (token: string) => {
+  const [debouncedToken] = useDebouncedValue(token, { wait: 500 });
+  const enabled = debouncedToken.length > 0;
+
+  const { data, isFetching } = useQuery({
+    queryKey: ["registrationToken", debouncedToken],
+    queryFn: ({ signal }) =>
+      graphqlRequest({
+        query: REGISTRATION_TOKEN_QUERY,
+        variables: { token: debouncedToken },
+        signal,
+      }),
+    enabled,
+  });
+
+  const isStale = token !== debouncedToken;
+  // data is defined once the query has resolved (even if the token was not found)
+  const resolved = !isStale && data !== undefined;
+  const tokenInfo: TokenInfo | undefined = resolved
+    ? (data.registrationToken ?? undefined)
+    : undefined;
+  // notFound: the query resolved but the token doesn't exist
+  const notFound = resolved && data.registrationToken === null;
+  const loading = enabled && (isFetching || isStale);
+
+  return { tokenInfo, notFound, loading };
+};
+
+const TokenField: React.FC<{
+  defaultValue: string;
+  readOnly?: boolean;
+  onTokenInfo: (info: TokenInfo | undefined) => void;
+}> = ({ defaultValue, readOnly, onTokenInfo }) => {
+  const { t } = useTranslation();
+  const [token, setToken] = useState(defaultValue);
+  const { tokenInfo, notFound, loading } = useRegistrationToken(token);
+
+  // Notify parent whenever token info changes
+  useEffect(() => {
+    onTokenInfo(tokenInfo);
+  }, [tokenInfo, onTokenInfo]);
+
+  return (
+    <Form.Field
+      name="token"
+      serverInvalid={notFound || (tokenInfo !== undefined && !tokenInfo.valid)}
+    >
+      <Form.Label>{t("frontend.register.token_label")}</Form.Label>
+      <Form.TextControl
+        required
+        readOnly={readOnly}
+        autoComplete="off"
+        defaultValue={defaultValue}
+        onChange={(e) => {
+          if (!readOnly) setToken(e.target.value);
+        }}
+      />
+
+      {loading && (
+        <Form.HelpMessage>
+          <InlineSpinner />
+          {t("frontend.register.token_checking")}
+        </Form.HelpMessage>
+      )}
+
+      {tokenInfo?.valid && (
+        <Form.SuccessMessage match="valid" forceMatch>
+          {t("frontend.register.token_valid")}
+        </Form.SuccessMessage>
+      )}
+
+      {notFound && (
+        <Form.ErrorMessage match="badInput" forceMatch>
+          {t("frontend.register.token_not_found")}
+        </Form.ErrorMessage>
+      )}
+
+      {tokenInfo && !tokenInfo.valid && (
+        <Form.ErrorMessage match="badInput" forceMatch>
+          {t("frontend.register.token_invalid")}
+        </Form.ErrorMessage>
+      )}
+
+      <Form.ErrorMessage match="valueMissing">
+        {t("frontend.errors.field_required")}
+      </Form.ErrorMessage>
+    </Form.Field>
+  );
+};
 
 const CaptchaPlaceholder: React.FC = () => (
   <div className="w-full h-[71px] rounded bg-[var(--cpd-color-bg-subtle-secondary)]" />
@@ -213,18 +333,24 @@ const UsernameField: React.FC<{
   serverName: string;
   defaultValue: string;
   serverErrors: FieldError[];
-}> = ({ serverName, defaultValue, serverErrors }) => {
+  forcedUsername?: string | null;
+}> = ({ serverName, defaultValue, serverErrors, forcedUsername }) => {
   const { t } = useTranslation();
   const fieldErrorMessage = useFieldErrorMessage();
+  const isForced = !!forcedUsername;
   const [username, setUsername] = useState(defaultValue);
   // Track whether server errors have been cleared by the user editing
   const [serverCleared, setServerCleared] = useState(false);
 
-  const normalized = normalizeUsername(username);
+  // When a forced username arrives from the token, use it
+  const effective = isForced ? forcedUsername : username;
+  const normalized = normalizeUsername(effective);
   const [debouncedUsername] = useDebouncedValue(normalized, { wait: 500 });
 
-  // Live availability check — only runs after the user has edited (server cleared)
-  const checkable = isUsernameCheckable(debouncedUsername) && serverCleared;
+  // Live availability check — runs immediately for forced usernames,
+  // otherwise only after the user has edited (server errors cleared)
+  const checkable =
+    isUsernameCheckable(debouncedUsername) && (isForced || serverCleared);
   const { data, isFetching } = useQuery({
     queryKey: ["usernameAvailable", debouncedUsername],
     queryFn: ({ signal }) =>
@@ -253,7 +379,9 @@ const UsernameField: React.FC<{
     !serverCleared && !serverAvailability ? serverErrors : [];
 
   const isLoading =
-    serverCleared && isUsernameCheckable(normalized) && (isFetching || isStale);
+    (isForced || serverCleared) &&
+    isUsernameCheckable(normalized) &&
+    (isFetching || isStale);
 
   return (
     <Form.Field
@@ -265,17 +393,21 @@ const UsernameField: React.FC<{
     >
       <Form.Label>{t("common.username")}</Form.Label>
       <Form.TextControl
+        key={isForced ? "forced" : "editable"}
         required
+        readOnly={isForced}
         autoComplete="username"
         autoCorrect="off"
         autoCapitalize="none"
-        defaultValue={defaultValue}
+        defaultValue={isForced ? forcedUsername : defaultValue}
         style={{ textTransform: "lowercase" }}
         onChange={(e) => {
+          if (isForced) return;
           setUsername(e.target.value);
           if (!serverCleared) setServerCleared(true);
         }}
         onBlur={(e) => {
+          if (isForced) return;
           e.target.value = normalizeUsername(e.target.value);
           setUsername(e.target.value);
         }}
@@ -315,6 +447,19 @@ const PasswordRegisterForm: React.FC = () => {
   const fieldErrorMessage = useFieldErrorMessage();
   const formErrorMessage = useFormErrorMessage();
   const { fields, errors: formErrors } = data.form;
+  const [tokenInfo, setTokenInfo] = useState<TokenInfo | undefined>(undefined);
+
+  // Show the token field if a token was passed via URL or if tokens are required
+  const showTokenField =
+    data.features.registration_token_required || data.token != null;
+
+  // Forced username/email from a validated token
+  const forcedUsername = tokenInfo?.valid ? tokenInfo.username : undefined;
+  const forcedEmail = tokenInfo?.valid ? tokenInfo.email : undefined;
+
+  // Show email field if required by config OR forced by token
+  const showEmail =
+    data.features.password_registration_email_required || !!forcedEmail;
 
   return (
     <Form.Root
@@ -336,20 +481,30 @@ const PasswordRegisterForm: React.FC = () => {
         ) : null;
       })}
 
+      {showTokenField && (
+        <TokenField
+          defaultValue={data.token ?? ""}
+          readOnly={!!data.token}
+          onTokenInfo={setTokenInfo}
+        />
+      )}
+
       <UsernameField
         serverName={data.branding.server_name}
         defaultValue={fields.username?.value ?? ""}
         serverErrors={fields.username?.errors ?? []}
+        forcedUsername={forcedUsername}
       />
 
-      {data.features.password_registration_email_required && (
+      {showEmail && (
         <Form.Field name="email" serverInvalid={!!fields.email?.errors.length}>
           <Form.Label>{t("common.email_address")}</Form.Label>
           <Form.TextControl
             type="email"
             required
+            readOnly={!!forcedEmail}
             autoComplete="email"
-            defaultValue={fields.email?.value ?? ""}
+            defaultValue={forcedEmail ?? fields.email?.value ?? ""}
           />
           <Form.ErrorMessage match="typeMismatch">
             {t("frontend.errors.invalid_email")}

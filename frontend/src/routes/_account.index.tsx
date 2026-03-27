@@ -241,22 +241,6 @@ function Index(): React.ReactElement {
         </>
       )}
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const data = new FormData(e.currentTarget);
-          const str = new URLSearchParams(
-            Object.fromEntries(data) as Record<string, string>,
-          );
-          console.log(str.toString());
-        }}
-      >
-        <ReCaptchaWidget siteKey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" />
-        <TurnstileWidget siteKey="1x00000000000000000000AA" />
-        <HCaptchaWidget siteKey="10000000-ffff-ffff-ffff-000000000001" />
-        <input type="submit" />
-      </form>
-
       {siteConfig.passwordLoginEnabled && viewerSession.user.hasPassword && (
         <>
           <Collapsible.Section

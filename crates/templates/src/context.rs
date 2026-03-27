@@ -692,6 +692,8 @@ impl RegisterContext {
 pub struct PasswordRegisterContext {
     form: FormState<RegisterFormField>,
     next: Option<PostAuthContext>,
+    /// Pre-filled registration token from query param
+    token: Option<String>,
 }
 
 impl TemplateContext for PasswordRegisterContext {
@@ -707,6 +709,7 @@ impl TemplateContext for PasswordRegisterContext {
         sample_list(vec![PasswordRegisterContext {
             form: FormState::default(),
             next: None,
+            token: None,
         }])
     }
 }
@@ -723,6 +726,15 @@ impl PasswordRegisterContext {
     pub fn with_post_action(self, next: PostAuthContext) -> Self {
         Self {
             next: Some(next),
+            ..self
+        }
+    }
+
+    /// Set a pre-filled registration token
+    #[must_use]
+    pub fn with_token(self, token: String) -> Self {
+        Self {
+            token: Some(token),
             ..self
         }
     }
