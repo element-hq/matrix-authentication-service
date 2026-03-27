@@ -232,6 +232,10 @@
       }
     },
     "register": {
+      "token_checking": "Checking token…",
+      "token_invalid": "This token is invalid or has expired",
+      "token_label": "Registration token",
+      "token_valid": "Token accepted",
       "username_available": "{{mxid}} is available!",
       "username_checking": "Checking availability…",
       "username_reserved": "{{mxid}} is not available",

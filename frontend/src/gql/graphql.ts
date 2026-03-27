@@ -1918,6 +1918,13 @@ export type UsernameAvailableQueryVariables = Exact<{
 
 export type UsernameAvailableQuery = { __typename?: 'Query', usernameAvailable: { __typename?: 'UsernameAvailability', username: string, available: boolean, reason?: UsernameUnavailableReason | null } };
 
+export type RegistrationTokenQueryVariables = Exact<{
+  token: Scalars['String']['input'];
+}>;
+
+
+export type RegistrationTokenQuery = { __typename?: 'Query', registrationToken?: { __typename?: 'RegistrationTokenInfo', valid: boolean, username?: string | null, email?: string | null } | null };
+
 export type UserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -2640,6 +2647,15 @@ export const UsernameAvailableDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<UsernameAvailableQuery, UsernameAvailableQueryVariables>;
+export const RegistrationTokenDocument = new TypedDocumentString(`
+    query RegistrationToken($token: String!) {
+  registrationToken(token: $token) {
+    valid
+    username
+    email
+  }
+}
+    `) as unknown as TypedDocumentString<RegistrationTokenQuery, RegistrationTokenQueryVariables>;
 export const UserProfileDocument = new TypedDocumentString(`
     query UserProfile {
   viewerSession {
@@ -3397,6 +3413,28 @@ export const mockUserEmailListQuery = (resolver: GraphQLResponseResolver<UserEma
 export const mockUsernameAvailableQuery = (resolver: GraphQLResponseResolver<UsernameAvailableQuery, UsernameAvailableQueryVariables>, options?: RequestHandlerOptions) =>
   graphql.query<UsernameAvailableQuery, UsernameAvailableQueryVariables>(
     'UsernameAvailable',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockRegistrationTokenQuery(
+ *   ({ query, variables }) => {
+ *     const { token } = variables;
+ *     return HttpResponse.json({
+ *       data: { registrationToken }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockRegistrationTokenQuery = (resolver: GraphQLResponseResolver<RegistrationTokenQuery, RegistrationTokenQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<RegistrationTokenQuery, RegistrationTokenQueryVariables>(
+    'RegistrationToken',
     resolver,
     options
   )
