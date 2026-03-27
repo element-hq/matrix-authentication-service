@@ -318,13 +318,14 @@ const UsernameField: React.FC<{
 }> = ({ serverName, defaultValue, serverErrors, forcedUsername }) => {
   const { t } = useTranslation();
   const fieldErrorMessage = useFieldErrorMessage();
-  const effectiveDefault = forcedUsername ?? defaultValue;
-  const [username, setUsername] = useState(effectiveDefault);
+  const isForced = !!forcedUsername;
+  const [username, setUsername] = useState(defaultValue);
   // Track whether server errors have been cleared by the user editing
   const [serverCleared, setServerCleared] = useState(false);
-  const isForced = !!forcedUsername;
 
-  const normalized = normalizeUsername(username);
+  // When a forced username arrives from the token, use it
+  const effective = isForced ? forcedUsername : username;
+  const normalized = normalizeUsername(effective);
   const [debouncedUsername] = useDebouncedValue(normalized, { wait: 500 });
 
   // Live availability check — runs immediately for forced usernames,
@@ -376,7 +377,7 @@ const UsernameField: React.FC<{
         autoComplete="username"
         autoCorrect="off"
         autoCapitalize="none"
-        defaultValue={effectiveDefault}
+        {...(isForced ? { value: forcedUsername } : { defaultValue })}
         style={{ textTransform: "lowercase" }}
         onChange={(e) => {
           if (isForced) return;
