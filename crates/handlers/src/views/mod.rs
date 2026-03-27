@@ -6,6 +6,7 @@
 
 pub mod app;
 pub mod index;
+pub mod invite;
 pub mod login;
 pub mod logout;
 pub mod recovery;

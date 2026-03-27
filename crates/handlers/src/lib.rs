@@ -393,6 +393,7 @@ where
             get(self::views::login::get).post(self::views::login::post),
         )
         .route(mas_router::Logout::route(), post(self::views::logout::post))
+        .route(mas_router::Invite::route(), get(self::views::invite::get))
         .route(
             mas_router::Register::route(),
             get(self::views::register::get),

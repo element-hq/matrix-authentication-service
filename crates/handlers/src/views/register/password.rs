@@ -63,6 +63,7 @@ impl ToFormState for RegisterForm {
 #[derive(Deserialize)]
 pub struct QueryParams {
     username: Option<String>,
+    token: Option<String>,
     #[serde(flatten)]
     action: OptionalPostAuthAction,
 }
@@ -97,6 +98,11 @@ pub(crate) async fn get(
     }
 
     let mut ctx = PasswordRegisterContext::default();
+
+    // If we got a token from the query string, pass it to the frontend
+    if let Some(token) = query.token {
+        ctx = ctx.with_token(token);
+    }
 
     // If we got a username from the query string, use it to prefill the form
     if let Some(username) = query.username {
