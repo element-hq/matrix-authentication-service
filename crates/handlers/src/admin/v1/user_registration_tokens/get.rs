@@ -104,6 +104,8 @@ mod tests {
                 "test_token_123".to_owned(),
                 Some(5),
                 None,
+                None,
+                None,
             )
             .await
             .unwrap();
