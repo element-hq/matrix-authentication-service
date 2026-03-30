@@ -51,6 +51,8 @@ pub(crate) struct RegisterForm {
     password_confirm: String,
     #[serde(default)]
     accept_terms: String,
+    #[serde(default)]
+    token: String,
 
     #[serde(flatten, skip_serializing)]
     captcha: CaptchaForm,
@@ -63,6 +65,7 @@ impl ToFormState for RegisterForm {
 #[derive(Deserialize)]
 pub struct QueryParams {
     username: Option<String>,
+    token: Option<String>,
     #[serde(flatten)]
     action: OptionalPostAuthAction,
 }
@@ -97,6 +100,11 @@ pub(crate) async fn get(
     }
 
     let mut ctx = PasswordRegisterContext::default();
+
+    // If we got a token from the query string, pass it to the frontend
+    if let Some(token) = query.token {
+        ctx = ctx.with_token(token);
+    }
 
     // If we got a username from the query string, use it to prefill the form
     if let Some(username) = query.username {
@@ -351,6 +359,24 @@ pub(crate) async fn post(
         repo.user_registration()
             .set_terms_url(registration, tos_uri.clone())
             .await?
+    } else {
+        registration
+    };
+
+    // Attach the registration token if provided
+    let registration = if !form.token.is_empty() {
+        let registration_token = repo
+            .user_registration_token()
+            .find_by_token(&form.token)
+            .await?;
+
+        if let Some(registration_token) = registration_token {
+            repo.user_registration()
+                .set_registration_token(registration, &registration_token)
+                .await?
+        } else {
+            registration
+        }
     } else {
         registration
     };

@@ -11,6 +11,7 @@ type AppConfig = {
 
 interface IWindow {
   APP_CONFIG?: AppConfig;
+  RENDER_DATA?: any;
 }
 
 const config: AppConfig = (typeof window !== "undefined" &&

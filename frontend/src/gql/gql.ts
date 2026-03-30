@@ -25,7 +25,6 @@ type Documents = {
     "\n  fragment Footer_siteConfig on SiteConfig {\n    id\n    imprint\n    tosUri\n    policyUri\n  }\n": typeof types.Footer_SiteConfigFragmentDoc,
     "\n  query Footer {\n    siteConfig {\n      id\n      ...Footer_siteConfig\n    }\n  }\n": typeof types.FooterDocument,
     "\n  fragment OAuth2Session_session on Oauth2Session {\n    id\n    scope\n    createdAt\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n    humanName\n\n    ...EndOAuth2SessionButton_session\n\n    userAgent {\n      name\n      model\n      os\n      deviceType\n    }\n\n    client {\n      id\n      clientId\n      clientName\n      applicationType\n      logoUri\n    }\n  }\n": typeof types.OAuth2Session_SessionFragmentDoc,
-    "\n  fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {\n    id\n    minimumPasswordComplexity\n  }\n": typeof types.PasswordCreationDoubleInput_SiteConfigFragmentDoc,
     "\n  fragment EndBrowserSessionButton_session on BrowserSession {\n    id\n    userAgent {\n      name\n      os\n      model\n      deviceType\n    }\n  }\n": typeof types.EndBrowserSessionButton_SessionFragmentDoc,
     "\n  mutation EndBrowserSession($id: ID!) {\n    endBrowserSession(input: { browserSessionId: $id }) {\n      status\n      browserSession {\n        id\n      }\n    }\n  }\n": typeof types.EndBrowserSessionDocument,
     "\n  fragment EndCompatSessionButton_session on CompatSession {\n    id\n    userAgent {\n      name\n      os\n      model\n      deviceType\n    }\n    ssoLogin {\n      id\n      redirectUri\n    }\n  }\n": typeof types.EndCompatSessionButton_SessionFragmentDoc,
@@ -49,6 +48,8 @@ type Documents = {
     "\n  fragment UserEmailList_user on User {\n    hasPassword\n  }\n": typeof types.UserEmailList_UserFragmentDoc,
     "\n  fragment UserEmailList_siteConfig on SiteConfig {\n    emailChangeAllowed\n    passwordLoginEnabled\n  }\n": typeof types.UserEmailList_SiteConfigFragmentDoc,
     "\n  fragment BrowserSessionsOverview_user on User {\n    id\n\n    browserSessions(first: 0, state: ACTIVE) {\n      totalCount\n    }\n  }\n": typeof types.BrowserSessionsOverview_UserFragmentDoc,
+    "\n  query UsernameAvailable($username: String!) {\n    usernameAvailable(username: $username) {\n      username\n      available\n      reason\n    }\n  }\n": typeof types.UsernameAvailableDocument,
+    "\n  query RegistrationToken($token: String!) {\n    registrationToken(token: $token) {\n      valid\n      username\n      email\n    }\n  }\n": typeof types.RegistrationTokenDocument,
     "\n  query UserProfile {\n    viewerSession {\n      __typename\n      ... on BrowserSession {\n        id\n        user {\n          ...AddEmailForm_user\n          ...UserEmailList_user\n          ...AccountDeleteButton_user\n          hasPassword\n          emails(first: 0) {\n            totalCount\n          }\n        }\n      }\n    }\n\n    siteConfig {\n      emailChangeAllowed\n      passwordLoginEnabled\n      accountDeactivationAllowed\n      ...AddEmailForm_siteConfig\n      ...UserEmailList_siteConfig\n      ...PasswordChange_siteConfig\n      ...AccountDeleteButton_siteConfig\n    }\n  }\n": typeof types.UserProfileDocument,
     "\n  query PlanManagementTab {\n    siteConfig {\n      planManagementIframeUri\n    }\n  }\n": typeof types.PlanManagementTabDocument,
     "\n  query BrowserSessionList(\n    $first: Int\n    $after: String\n    $last: Int\n    $before: String\n    $lastActive: DateFilter\n  ) {\n    viewerSession {\n      __typename\n      ... on BrowserSession {\n        id\n\n        user {\n          id\n\n          browserSessions(\n            first: $first\n            after: $after\n            last: $last\n            before: $before\n            lastActive: $lastActive\n            state: ACTIVE\n          ) {\n            totalCount\n\n            edges {\n              cursor\n              node {\n                id\n                ...BrowserSession_session\n              }\n            }\n\n            pageInfo {\n              hasNextPage\n              hasPreviousPage\n              startCursor\n              endCursor\n            }\n          }\n        }\n      }\n    }\n  }\n": typeof types.BrowserSessionListDocument,
@@ -62,11 +63,11 @@ type Documents = {
     "\n  mutation DoVerifyEmail($id: ID!, $code: String!) {\n    completeEmailAuthentication(input: { id: $id, code: $code }) {\n      status\n    }\n  }\n": typeof types.DoVerifyEmailDocument,
     "\n  mutation ResendEmailAuthenticationCode($id: ID!, $language: String!) {\n    resendEmailAuthenticationCode(input: { id: $id, language: $language }) {\n      status\n    }\n  }\n": typeof types.ResendEmailAuthenticationCodeDocument,
     "\n  mutation ChangePassword(\n    $userId: ID!\n    $oldPassword: String!\n    $newPassword: String!\n  ) {\n    setPassword(\n      input: {\n        userId: $userId\n        currentPassword: $oldPassword\n        newPassword: $newPassword\n      }\n    ) {\n      status\n    }\n  }\n": typeof types.ChangePasswordDocument,
-    "\n  query PasswordChange {\n    viewer {\n      __typename\n      ... on Node {\n        id\n      }\n    }\n\n    siteConfig {\n      ...PasswordCreationDoubleInput_siteConfig\n    }\n  }\n": typeof types.PasswordChangeDocument,
+    "\n  query PasswordChange {\n    viewer {\n      __typename\n      ... on Node {\n        id\n      }\n    }\n\n    siteConfig {\n      minimumPasswordComplexity\n    }\n  }\n": typeof types.PasswordChangeDocument,
     "\n  mutation RecoverPassword($ticket: String!, $newPassword: String!) {\n    setPasswordByRecovery(\n      input: { ticket: $ticket, newPassword: $newPassword }\n    ) {\n      status\n    }\n  }\n": typeof types.RecoverPasswordDocument,
     "\n  mutation ResendRecoveryEmail($ticket: String!) {\n    resendRecoveryEmail(input: { ticket: $ticket }) {\n      status\n      progressUrl\n    }\n  }\n": typeof types.ResendRecoveryEmailDocument,
     "\n  fragment RecoverPassword_userRecoveryTicket on UserRecoveryTicket {\n    username\n    email\n  }\n": typeof types.RecoverPassword_UserRecoveryTicketFragmentDoc,
-    "\n  fragment RecoverPassword_siteConfig on SiteConfig {\n    ...PasswordCreationDoubleInput_siteConfig\n  }\n": typeof types.RecoverPassword_SiteConfigFragmentDoc,
+    "\n  fragment RecoverPassword_siteConfig on SiteConfig {\n    minimumPasswordComplexity\n  }\n": typeof types.RecoverPassword_SiteConfigFragmentDoc,
     "\n  query PasswordRecovery($ticket: String!) {\n    siteConfig {\n      ...RecoverPassword_siteConfig\n    }\n\n    userRecoveryTicket(ticket: $ticket) {\n      status\n      ...RecoverPassword_userRecoveryTicket\n    }\n  }\n": typeof types.PasswordRecoveryDocument,
     "\n  mutation AllowCrossSigningReset($userId: ID!) {\n    allowUserCrossSigningReset(input: { userId: $userId }) {\n      user {\n        id\n      }\n    }\n  }\n": typeof types.AllowCrossSigningResetDocument,
     "\n  query SessionDetail($id: ID!) {\n    viewerSession {\n      ... on Node {\n        id\n      }\n    }\n\n    node(id: $id) {\n      __typename\n      id\n      ...CompatSession_detail\n      ...OAuth2Session_detail\n      ...BrowserSession_detail\n    }\n  }\n": typeof types.SessionDetailDocument,
@@ -82,7 +83,6 @@ const documents: Documents = {
     "\n  fragment Footer_siteConfig on SiteConfig {\n    id\n    imprint\n    tosUri\n    policyUri\n  }\n": types.Footer_SiteConfigFragmentDoc,
     "\n  query Footer {\n    siteConfig {\n      id\n      ...Footer_siteConfig\n    }\n  }\n": types.FooterDocument,
     "\n  fragment OAuth2Session_session on Oauth2Session {\n    id\n    scope\n    createdAt\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n    humanName\n\n    ...EndOAuth2SessionButton_session\n\n    userAgent {\n      name\n      model\n      os\n      deviceType\n    }\n\n    client {\n      id\n      clientId\n      clientName\n      applicationType\n      logoUri\n    }\n  }\n": types.OAuth2Session_SessionFragmentDoc,
-    "\n  fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {\n    id\n    minimumPasswordComplexity\n  }\n": types.PasswordCreationDoubleInput_SiteConfigFragmentDoc,
     "\n  fragment EndBrowserSessionButton_session on BrowserSession {\n    id\n    userAgent {\n      name\n      os\n      model\n      deviceType\n    }\n  }\n": types.EndBrowserSessionButton_SessionFragmentDoc,
     "\n  mutation EndBrowserSession($id: ID!) {\n    endBrowserSession(input: { browserSessionId: $id }) {\n      status\n      browserSession {\n        id\n      }\n    }\n  }\n": types.EndBrowserSessionDocument,
     "\n  fragment EndCompatSessionButton_session on CompatSession {\n    id\n    userAgent {\n      name\n      os\n      model\n      deviceType\n    }\n    ssoLogin {\n      id\n      redirectUri\n    }\n  }\n": types.EndCompatSessionButton_SessionFragmentDoc,
@@ -106,6 +106,8 @@ const documents: Documents = {
     "\n  fragment UserEmailList_user on User {\n    hasPassword\n  }\n": types.UserEmailList_UserFragmentDoc,
     "\n  fragment UserEmailList_siteConfig on SiteConfig {\n    emailChangeAllowed\n    passwordLoginEnabled\n  }\n": types.UserEmailList_SiteConfigFragmentDoc,
     "\n  fragment BrowserSessionsOverview_user on User {\n    id\n\n    browserSessions(first: 0, state: ACTIVE) {\n      totalCount\n    }\n  }\n": types.BrowserSessionsOverview_UserFragmentDoc,
+    "\n  query UsernameAvailable($username: String!) {\n    usernameAvailable(username: $username) {\n      username\n      available\n      reason\n    }\n  }\n": types.UsernameAvailableDocument,
+    "\n  query RegistrationToken($token: String!) {\n    registrationToken(token: $token) {\n      valid\n      username\n      email\n    }\n  }\n": types.RegistrationTokenDocument,
     "\n  query UserProfile {\n    viewerSession {\n      __typename\n      ... on BrowserSession {\n        id\n        user {\n          ...AddEmailForm_user\n          ...UserEmailList_user\n          ...AccountDeleteButton_user\n          hasPassword\n          emails(first: 0) {\n            totalCount\n          }\n        }\n      }\n    }\n\n    siteConfig {\n      emailChangeAllowed\n      passwordLoginEnabled\n      accountDeactivationAllowed\n      ...AddEmailForm_siteConfig\n      ...UserEmailList_siteConfig\n      ...PasswordChange_siteConfig\n      ...AccountDeleteButton_siteConfig\n    }\n  }\n": types.UserProfileDocument,
     "\n  query PlanManagementTab {\n    siteConfig {\n      planManagementIframeUri\n    }\n  }\n": types.PlanManagementTabDocument,
     "\n  query BrowserSessionList(\n    $first: Int\n    $after: String\n    $last: Int\n    $before: String\n    $lastActive: DateFilter\n  ) {\n    viewerSession {\n      __typename\n      ... on BrowserSession {\n        id\n\n        user {\n          id\n\n          browserSessions(\n            first: $first\n            after: $after\n            last: $last\n            before: $before\n            lastActive: $lastActive\n            state: ACTIVE\n          ) {\n            totalCount\n\n            edges {\n              cursor\n              node {\n                id\n                ...BrowserSession_session\n              }\n            }\n\n            pageInfo {\n              hasNextPage\n              hasPreviousPage\n              startCursor\n              endCursor\n            }\n          }\n        }\n      }\n    }\n  }\n": types.BrowserSessionListDocument,
@@ -119,11 +121,11 @@ const documents: Documents = {
     "\n  mutation DoVerifyEmail($id: ID!, $code: String!) {\n    completeEmailAuthentication(input: { id: $id, code: $code }) {\n      status\n    }\n  }\n": types.DoVerifyEmailDocument,
     "\n  mutation ResendEmailAuthenticationCode($id: ID!, $language: String!) {\n    resendEmailAuthenticationCode(input: { id: $id, language: $language }) {\n      status\n    }\n  }\n": types.ResendEmailAuthenticationCodeDocument,
     "\n  mutation ChangePassword(\n    $userId: ID!\n    $oldPassword: String!\n    $newPassword: String!\n  ) {\n    setPassword(\n      input: {\n        userId: $userId\n        currentPassword: $oldPassword\n        newPassword: $newPassword\n      }\n    ) {\n      status\n    }\n  }\n": types.ChangePasswordDocument,
-    "\n  query PasswordChange {\n    viewer {\n      __typename\n      ... on Node {\n        id\n      }\n    }\n\n    siteConfig {\n      ...PasswordCreationDoubleInput_siteConfig\n    }\n  }\n": types.PasswordChangeDocument,
+    "\n  query PasswordChange {\n    viewer {\n      __typename\n      ... on Node {\n        id\n      }\n    }\n\n    siteConfig {\n      minimumPasswordComplexity\n    }\n  }\n": types.PasswordChangeDocument,
     "\n  mutation RecoverPassword($ticket: String!, $newPassword: String!) {\n    setPasswordByRecovery(\n      input: { ticket: $ticket, newPassword: $newPassword }\n    ) {\n      status\n    }\n  }\n": types.RecoverPasswordDocument,
     "\n  mutation ResendRecoveryEmail($ticket: String!) {\n    resendRecoveryEmail(input: { ticket: $ticket }) {\n      status\n      progressUrl\n    }\n  }\n": types.ResendRecoveryEmailDocument,
     "\n  fragment RecoverPassword_userRecoveryTicket on UserRecoveryTicket {\n    username\n    email\n  }\n": types.RecoverPassword_UserRecoveryTicketFragmentDoc,
-    "\n  fragment RecoverPassword_siteConfig on SiteConfig {\n    ...PasswordCreationDoubleInput_siteConfig\n  }\n": types.RecoverPassword_SiteConfigFragmentDoc,
+    "\n  fragment RecoverPassword_siteConfig on SiteConfig {\n    minimumPasswordComplexity\n  }\n": types.RecoverPassword_SiteConfigFragmentDoc,
     "\n  query PasswordRecovery($ticket: String!) {\n    siteConfig {\n      ...RecoverPassword_siteConfig\n    }\n\n    userRecoveryTicket(ticket: $ticket) {\n      status\n      ...RecoverPassword_userRecoveryTicket\n    }\n  }\n": types.PasswordRecoveryDocument,
     "\n  mutation AllowCrossSigningReset($userId: ID!) {\n    allowUserCrossSigningReset(input: { userId: $userId }) {\n      user {\n        id\n      }\n    }\n  }\n": types.AllowCrossSigningResetDocument,
     "\n  query SessionDetail($id: ID!) {\n    viewerSession {\n      ... on Node {\n        id\n      }\n    }\n\n    node(id: $id) {\n      __typename\n      id\n      ...CompatSession_detail\n      ...OAuth2Session_detail\n      ...BrowserSession_detail\n    }\n  }\n": types.SessionDetailDocument,
@@ -169,10 +171,6 @@ export function graphql(source: "\n  query Footer {\n    siteConfig {\n      id\
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  fragment OAuth2Session_session on Oauth2Session {\n    id\n    scope\n    createdAt\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n    humanName\n\n    ...EndOAuth2SessionButton_session\n\n    userAgent {\n      name\n      model\n      os\n      deviceType\n    }\n\n    client {\n      id\n      clientId\n      clientName\n      applicationType\n      logoUri\n    }\n  }\n"): typeof import('./graphql').OAuth2Session_SessionFragmentDoc;
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {\n    id\n    minimumPasswordComplexity\n  }\n"): typeof import('./graphql').PasswordCreationDoubleInput_SiteConfigFragmentDoc;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -268,6 +266,14 @@ export function graphql(source: "\n  fragment BrowserSessionsOverview_user on Us
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  query UsernameAvailable($username: String!) {\n    usernameAvailable(username: $username) {\n      username\n      available\n      reason\n    }\n  }\n"): typeof import('./graphql').UsernameAvailableDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query RegistrationToken($token: String!) {\n    registrationToken(token: $token) {\n      valid\n      username\n      email\n    }\n  }\n"): typeof import('./graphql').RegistrationTokenDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  query UserProfile {\n    viewerSession {\n      __typename\n      ... on BrowserSession {\n        id\n        user {\n          ...AddEmailForm_user\n          ...UserEmailList_user\n          ...AccountDeleteButton_user\n          hasPassword\n          emails(first: 0) {\n            totalCount\n          }\n        }\n      }\n    }\n\n    siteConfig {\n      emailChangeAllowed\n      passwordLoginEnabled\n      accountDeactivationAllowed\n      ...AddEmailForm_siteConfig\n      ...UserEmailList_siteConfig\n      ...PasswordChange_siteConfig\n      ...AccountDeleteButton_siteConfig\n    }\n  }\n"): typeof import('./graphql').UserProfileDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
@@ -320,7 +326,7 @@ export function graphql(source: "\n  mutation ChangePassword(\n    $userId: ID!\
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query PasswordChange {\n    viewer {\n      __typename\n      ... on Node {\n        id\n      }\n    }\n\n    siteConfig {\n      ...PasswordCreationDoubleInput_siteConfig\n    }\n  }\n"): typeof import('./graphql').PasswordChangeDocument;
+export function graphql(source: "\n  query PasswordChange {\n    viewer {\n      __typename\n      ... on Node {\n        id\n      }\n    }\n\n    siteConfig {\n      minimumPasswordComplexity\n    }\n  }\n"): typeof import('./graphql').PasswordChangeDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -336,7 +342,7 @@ export function graphql(source: "\n  fragment RecoverPassword_userRecoveryTicket
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment RecoverPassword_siteConfig on SiteConfig {\n    ...PasswordCreationDoubleInput_siteConfig\n  }\n"): typeof import('./graphql').RecoverPassword_SiteConfigFragmentDoc;
+export function graphql(source: "\n  fragment RecoverPassword_siteConfig on SiteConfig {\n    minimumPasswordComplexity\n  }\n"): typeof import('./graphql').RecoverPassword_SiteConfigFragmentDoc;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

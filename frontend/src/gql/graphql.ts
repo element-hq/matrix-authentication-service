@@ -865,6 +865,16 @@ export type Query = {
   oauth2Client?: Maybe<Oauth2Client>;
   /** Fetch an OAuth 2.0 session by its ID. */
   oauth2Session?: Maybe<Oauth2Session>;
+  /**
+   * Look up a registration token by its string value.
+   *
+   * Returns public information about the token (validity, imposed
+   * username/email). Returns `null` if the token does not exist.
+   *
+   * This query is accessible to anonymous users, as it is used during
+   * the registration flow.
+   */
+  registrationToken?: Maybe<RegistrationTokenInfo>;
   /** Lookup a compat or OAuth 2.0 session */
   session?: Maybe<Session>;
   /** Get the current site configuration */
@@ -885,6 +895,13 @@ export type Query = {
   userEmailAuthentication?: Maybe<UserEmailAuthentication>;
   /** Fetch a user recovery ticket. */
   userRecoveryTicket?: Maybe<UserRecoveryTicket>;
+  /**
+   * Check whether a username is available for registration.
+   *
+   * This query is accessible to anonymous users, as it is used during
+   * the registration flow.
+   */
+  usernameAvailable: UsernameAvailability;
   /**
    * Get a list of users.
    *
@@ -925,6 +942,12 @@ export type QueryOauth2ClientArgs = {
 /** The query root of the GraphQL interface. */
 export type QueryOauth2SessionArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+/** The query root of the GraphQL interface. */
+export type QueryRegistrationTokenArgs = {
+  token: Scalars['String']['input'];
 };
 
 
@@ -987,6 +1010,12 @@ export type QueryUserRecoveryTicketArgs = {
 
 
 /** The query root of the GraphQL interface. */
+export type QueryUsernameAvailableArgs = {
+  username: Scalars['String']['input'];
+};
+
+
+/** The query root of the GraphQL interface. */
 export type QueryUsersArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -994,6 +1023,20 @@ export type QueryUsersArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   state?: InputMaybe<UserState>;
+};
+
+/**
+ * Public information about a registration token, returned by anonymous lookup.
+ * Does not expose admin details like usage counts or expiration.
+ */
+export type RegistrationTokenInfo = {
+  __typename?: 'RegistrationTokenInfo';
+  /** An email imposed by this token, if any. */
+  email?: Maybe<Scalars['String']['output']>;
+  /** A username imposed by this token, if any. */
+  username?: Maybe<Scalars['String']['output']>;
+  /** Whether the token is currently valid for registration. */
+  valid: Scalars['Boolean']['output'];
 };
 
 /** The input for the `removeEmail` mutation */
@@ -1688,6 +1731,24 @@ export type UserState =
   /** The user is locked. */
   | 'LOCKED';
 
+/** The result of a username availability check. */
+export type UsernameAvailability = {
+  __typename?: 'UsernameAvailability';
+  /** Whether the username is available for registration. */
+  available: Scalars['Boolean']['output'];
+  /** If the username is not available, the reason why. */
+  reason?: Maybe<UsernameUnavailableReason>;
+  /** The username that was checked. */
+  username: Scalars['String']['output'];
+};
+
+/** Why a username is not available for registration. */
+export type UsernameUnavailableReason =
+  /** The username is reserved by the homeserver. */
+  | 'RESERVED'
+  /** The username is already taken by an existing user. */
+  | 'TAKEN';
+
 /** Represents the current viewer */
 export type Viewer = Anonymous | User;
 
@@ -1734,8 +1795,6 @@ export type OAuth2Session_SessionFragment = (
   { __typename?: 'Oauth2Session', id: string, scope: string, createdAt: string, finishedAt?: string | null, lastActiveIp?: string | null, lastActiveAt?: string | null, humanName?: string | null, userAgent?: { __typename?: 'UserAgent', name?: string | null, model?: string | null, os?: string | null, deviceType: DeviceType } | null, client: { __typename?: 'Oauth2Client', id: string, clientId: string, clientName?: string | null, applicationType?: Oauth2ApplicationType | null, logoUri?: string | null } }
   & { ' $fragmentRefs'?: { 'EndOAuth2SessionButton_SessionFragment': EndOAuth2SessionButton_SessionFragment } }
 ) & { ' $fragmentName'?: 'OAuth2Session_SessionFragment' };
-
-export type PasswordCreationDoubleInput_SiteConfigFragment = { __typename?: 'SiteConfig', id: string, minimumPasswordComplexity: number } & { ' $fragmentName'?: 'PasswordCreationDoubleInput_SiteConfigFragment' };
 
 export type EndBrowserSessionButton_SessionFragment = { __typename?: 'BrowserSession', id: string, userAgent?: { __typename?: 'UserAgent', name?: string | null, os?: string | null, model?: string | null, deviceType: DeviceType } | null } & { ' $fragmentName'?: 'EndBrowserSessionButton_SessionFragment' };
 
@@ -1851,6 +1910,20 @@ export type UserEmailList_UserFragment = { __typename?: 'User', hasPassword: boo
 export type UserEmailList_SiteConfigFragment = { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean } & { ' $fragmentName'?: 'UserEmailList_SiteConfigFragment' };
 
 export type BrowserSessionsOverview_UserFragment = { __typename?: 'User', id: string, browserSessions: { __typename?: 'BrowserSessionConnection', totalCount: number } } & { ' $fragmentName'?: 'BrowserSessionsOverview_UserFragment' };
+
+export type UsernameAvailableQueryVariables = Exact<{
+  username: Scalars['String']['input'];
+}>;
+
+
+export type UsernameAvailableQuery = { __typename?: 'Query', usernameAvailable: { __typename?: 'UsernameAvailability', username: string, available: boolean, reason?: UsernameUnavailableReason | null } };
+
+export type RegistrationTokenQueryVariables = Exact<{
+  token: Scalars['String']['input'];
+}>;
+
+
+export type RegistrationTokenQuery = { __typename?: 'Query', registrationToken?: { __typename?: 'RegistrationTokenInfo', valid: boolean, username?: string | null, email?: string | null } | null };
 
 export type UserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2005,10 +2078,7 @@ export type PasswordChangeQueryVariables = Exact<{ [key: string]: never; }>;
 export type PasswordChangeQuery = { __typename?: 'Query', viewer:
     | { __typename: 'Anonymous', id: string }
     | { __typename: 'User', id: string }
-  , siteConfig: (
-    { __typename?: 'SiteConfig' }
-    & { ' $fragmentRefs'?: { 'PasswordCreationDoubleInput_SiteConfigFragment': PasswordCreationDoubleInput_SiteConfigFragment } }
-  ) };
+  , siteConfig: { __typename?: 'SiteConfig', minimumPasswordComplexity: number } };
 
 export type RecoverPasswordMutationVariables = Exact<{
   ticket: Scalars['String']['input'];
@@ -2027,10 +2097,7 @@ export type ResendRecoveryEmailMutation = { __typename?: 'Mutation', resendRecov
 
 export type RecoverPassword_UserRecoveryTicketFragment = { __typename?: 'UserRecoveryTicket', username: string, email: string } & { ' $fragmentName'?: 'RecoverPassword_UserRecoveryTicketFragment' };
 
-export type RecoverPassword_SiteConfigFragment = (
-  { __typename?: 'SiteConfig' }
-  & { ' $fragmentRefs'?: { 'PasswordCreationDoubleInput_SiteConfigFragment': PasswordCreationDoubleInput_SiteConfigFragment } }
-) & { ' $fragmentName'?: 'RecoverPassword_SiteConfigFragment' };
+export type RecoverPassword_SiteConfigFragment = { __typename?: 'SiteConfig', minimumPasswordComplexity: number } & { ' $fragmentName'?: 'RecoverPassword_SiteConfigFragment' };
 
 export type PasswordRecoveryQueryVariables = Exact<{
   ticket: Scalars['String']['input'];
@@ -2441,20 +2508,11 @@ export const RecoverPassword_UserRecoveryTicketFragmentDoc = new TypedDocumentSt
   email
 }
     `, {"fragmentName":"RecoverPassword_userRecoveryTicket"}) as unknown as TypedDocumentString<RecoverPassword_UserRecoveryTicketFragment, unknown>;
-export const PasswordCreationDoubleInput_SiteConfigFragmentDoc = new TypedDocumentString(`
-    fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {
-  id
-  minimumPasswordComplexity
-}
-    `, {"fragmentName":"PasswordCreationDoubleInput_siteConfig"}) as unknown as TypedDocumentString<PasswordCreationDoubleInput_SiteConfigFragment, unknown>;
 export const RecoverPassword_SiteConfigFragmentDoc = new TypedDocumentString(`
     fragment RecoverPassword_siteConfig on SiteConfig {
-  ...PasswordCreationDoubleInput_siteConfig
-}
-    fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {
-  id
   minimumPasswordComplexity
-}`, {"fragmentName":"RecoverPassword_siteConfig"}) as unknown as TypedDocumentString<RecoverPassword_SiteConfigFragment, unknown>;
+}
+    `, {"fragmentName":"RecoverPassword_siteConfig"}) as unknown as TypedDocumentString<RecoverPassword_SiteConfigFragment, unknown>;
 export const DeactivateUserDocument = new TypedDocumentString(`
     mutation DeactivateUser($hsErase: Boolean!, $password: String) {
   deactivateUser(input: {hsErase: $hsErase, password: $password}) {
@@ -2580,6 +2638,24 @@ export const UserEmailListDocument = new TypedDocumentString(`
   id
   email
 }`) as unknown as TypedDocumentString<UserEmailListQuery, UserEmailListQueryVariables>;
+export const UsernameAvailableDocument = new TypedDocumentString(`
+    query UsernameAvailable($username: String!) {
+  usernameAvailable(username: $username) {
+    username
+    available
+    reason
+  }
+}
+    `) as unknown as TypedDocumentString<UsernameAvailableQuery, UsernameAvailableQueryVariables>;
+export const RegistrationTokenDocument = new TypedDocumentString(`
+    query RegistrationToken($token: String!) {
+  registrationToken(token: $token) {
+    valid
+    username
+    email
+  }
+}
+    `) as unknown as TypedDocumentString<RegistrationTokenQuery, RegistrationTokenQueryVariables>;
 export const UserProfileDocument = new TypedDocumentString(`
     query UserProfile {
   viewerSession {
@@ -2918,13 +2994,10 @@ export const PasswordChangeDocument = new TypedDocumentString(`
     }
   }
   siteConfig {
-    ...PasswordCreationDoubleInput_siteConfig
+    minimumPasswordComplexity
   }
 }
-    fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {
-  id
-  minimumPasswordComplexity
-}`) as unknown as TypedDocumentString<PasswordChangeQuery, PasswordChangeQueryVariables>;
+    `) as unknown as TypedDocumentString<PasswordChangeQuery, PasswordChangeQueryVariables>;
 export const RecoverPasswordDocument = new TypedDocumentString(`
     mutation RecoverPassword($ticket: String!, $newPassword: String!) {
   setPasswordByRecovery(input: {ticket: $ticket, newPassword: $newPassword}) {
@@ -2950,16 +3023,12 @@ export const PasswordRecoveryDocument = new TypedDocumentString(`
     ...RecoverPassword_userRecoveryTicket
   }
 }
-    fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {
-  id
-  minimumPasswordComplexity
-}
-fragment RecoverPassword_userRecoveryTicket on UserRecoveryTicket {
+    fragment RecoverPassword_userRecoveryTicket on UserRecoveryTicket {
   username
   email
 }
 fragment RecoverPassword_siteConfig on SiteConfig {
-  ...PasswordCreationDoubleInput_siteConfig
+  minimumPasswordComplexity
 }`) as unknown as TypedDocumentString<PasswordRecoveryQuery, PasswordRecoveryQueryVariables>;
 export const AllowCrossSigningResetDocument = new TypedDocumentString(`
     mutation AllowCrossSigningReset($userId: ID!) {
@@ -3322,6 +3391,50 @@ export const mockAddEmailMutation = (resolver: GraphQLResponseResolver<AddEmailM
 export const mockUserEmailListQuery = (resolver: GraphQLResponseResolver<UserEmailListQuery, UserEmailListQueryVariables>, options?: RequestHandlerOptions) =>
   graphql.query<UserEmailListQuery, UserEmailListQueryVariables>(
     'UserEmailList',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockUsernameAvailableQuery(
+ *   ({ query, variables }) => {
+ *     const { username } = variables;
+ *     return HttpResponse.json({
+ *       data: { usernameAvailable }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockUsernameAvailableQuery = (resolver: GraphQLResponseResolver<UsernameAvailableQuery, UsernameAvailableQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<UsernameAvailableQuery, UsernameAvailableQueryVariables>(
+    'UsernameAvailable',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockRegistrationTokenQuery(
+ *   ({ query, variables }) => {
+ *     const { token } = variables;
+ *     return HttpResponse.json({
+ *       data: { registrationToken }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockRegistrationTokenQuery = (resolver: GraphQLResponseResolver<RegistrationTokenQuery, RegistrationTokenQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<RegistrationTokenQuery, RegistrationTokenQueryVariables>(
+    'RegistrationToken',
     resolver,
     options
   )

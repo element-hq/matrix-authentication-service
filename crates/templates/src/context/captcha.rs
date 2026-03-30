@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -42,7 +43,7 @@ impl Object for CaptchaConfig {
 /// Context with an optional CAPTCHA configuration in it
 #[derive(Serialize)]
 pub struct WithCaptcha<T> {
-    captcha: Option<Value>,
+    captcha_config: Option<Value>,
 
     #[serde(flatten)]
     inner: T,
@@ -52,7 +53,7 @@ impl<T> WithCaptcha<T> {
     #[must_use]
     pub(crate) fn new(captcha: Option<mas_data_model::CaptchaConfig>, inner: T) -> Self {
         Self {
-            captcha: captcha.map(|captcha| Value::from_object(CaptchaConfig(captcha))),
+            captcha_config: captcha.map(|captcha| Value::from_object(CaptchaConfig(captcha))),
             inner,
         }
     }

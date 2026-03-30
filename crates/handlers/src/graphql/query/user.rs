@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -5,7 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 
 use async_graphql::{
-    Context, Enum, ID, Object,
+    Context, Enum, ID, Object, SimpleObject,
     connection::{Connection, Edge, OpaqueCursor, query},
 };
 use mas_storage::{Pagination, user::UserFilter};
@@ -15,6 +16,38 @@ use crate::graphql::{
     model::{Cursor, NodeCursor, NodeType, PreloadedTotalCount, User},
     state::ContextExt as _,
 };
+
+/// Why a username is not available for registration.
+#[derive(Enum, Copy, Clone, Eq, PartialEq)]
+enum UsernameUnavailableReason {
+    /// The username is already taken by an existing user.
+    Taken,
+    /// The username is reserved by the homeserver.
+    Reserved,
+}
+
+/// Public information about a registration token, returned by anonymous lookup.
+/// Does not expose admin details like usage counts or expiration.
+#[derive(SimpleObject)]
+struct RegistrationTokenInfo {
+    /// Whether the token is currently valid for registration.
+    valid: bool,
+    /// A username imposed by this token, if any.
+    username: Option<String>,
+    /// An email imposed by this token, if any.
+    email: Option<String>,
+}
+
+/// The result of a username availability check.
+#[derive(SimpleObject)]
+struct UsernameAvailability {
+    /// The username that was checked.
+    username: String,
+    /// Whether the username is available for registration.
+    available: bool,
+    /// If the username is not available, the reason why.
+    reason: Option<UsernameUnavailableReason>,
+}
 
 #[derive(Default)]
 pub struct UserQuery;
@@ -43,6 +76,81 @@ impl UserQuery {
         repo.cancel().await?;
 
         Ok(user.map(User))
+    }
+
+    /// Check whether a username is available for registration.
+    ///
+    /// This query is accessible to anonymous users, as it is used during
+    /// the registration flow.
+    async fn username_available(
+        &self,
+        ctx: &Context<'_>,
+        username: String,
+    ) -> Result<UsernameAvailability, async_graphql::Error> {
+        let state = ctx.state();
+        let mut repo = state.repository().await?;
+
+        // Check if the username exists in the MAS database
+        let exists = repo.user().exists(&username).await?;
+        repo.cancel().await?;
+
+        if exists {
+            return Ok(UsernameAvailability {
+                username,
+                available: false,
+                reason: Some(UsernameUnavailableReason::Taken),
+            });
+        }
+
+        // Check if the username is available on the homeserver
+        let homeserver = state.homeserver_connection();
+        let homeserver_available = homeserver
+            .is_localpart_available(&username)
+            .await
+            .unwrap_or(false);
+
+        if !homeserver_available {
+            return Ok(UsernameAvailability {
+                username,
+                available: false,
+                reason: Some(UsernameUnavailableReason::Reserved),
+            });
+        }
+
+        Ok(UsernameAvailability {
+            username,
+            available: true,
+            reason: None,
+        })
+    }
+
+    /// Look up a registration token by its string value.
+    ///
+    /// Returns public information about the token (validity, imposed
+    /// username/email). Returns `null` if the token does not exist.
+    ///
+    /// This query is accessible to anonymous users, as it is used during
+    /// the registration flow.
+    async fn registration_token(
+        &self,
+        ctx: &Context<'_>,
+        token: String,
+    ) -> Result<Option<RegistrationTokenInfo>, async_graphql::Error> {
+        let state = ctx.state();
+        let mut repo = state.repository().await?;
+
+        let registration_token = repo.user_registration_token().find_by_token(&token).await?;
+        repo.cancel().await?;
+
+        let Some(registration_token) = registration_token else {
+            return Ok(None);
+        };
+
+        Ok(Some(RegistrationTokenInfo {
+            valid: registration_token.is_valid(state.clock().now()),
+            username: registration_token.username,
+            email: registration_token.email,
+        }))
     }
 
     /// Fetch a user by its username.

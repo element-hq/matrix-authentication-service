@@ -49,6 +49,7 @@ impl SiteConfigExt for SiteConfig {
             password_login: self.password_login_enabled,
             account_recovery: self.account_recovery_allowed,
             login_with_email_allowed: self.login_with_email_allowed,
+            registration_token_required: self.registration_token_required,
         }
     }
 }

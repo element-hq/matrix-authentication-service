@@ -24,6 +24,11 @@ import UserEmailList, {
 } from "../components/UserProfile/UserEmailList";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
+import {
+  HCaptchaWidget,
+  ReCaptchaWidget,
+  TurnstileWidget,
+} from "../components/Captcha";
 
 const QUERY = graphql(/* GraphQL */ `
   query UserProfile {

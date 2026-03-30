@@ -3665,12 +3665,15 @@
                       "attributes": {
                         "token": "abc123def456",
                         "valid": true,
+                        "username": null,
+                        "email": null,
                         "usage_limit": 10,
                         "times_used": 5,
                         "created_at": "1970-01-01T00:00:00Z",
                         "last_used_at": "1970-01-01T00:00:00Z",
                         "expires_at": "1970-01-31T00:00:00Z",
-                        "revoked_at": null
+                        "revoked_at": null,
+                        "invite_url": "https://example.com/invite/abc123def456"
                       },
                       "links": {
                         "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
@@ -3687,12 +3690,15 @@
                       "attributes": {
                         "token": "xyz789abc012",
                         "valid": false,
+                        "username": null,
+                        "email": null,
                         "usage_limit": null,
                         "times_used": 0,
                         "created_at": "1970-01-01T00:00:00Z",
                         "last_used_at": null,
                         "expires_at": null,
-                        "revoked_at": "1970-01-01T00:00:00Z"
+                        "revoked_at": "1970-01-01T00:00:00Z",
+                        "invite_url": "https://example.com/invite/xyz789abc012"
                       },
                       "links": {
                         "self": "/api/admin/v1/user-registration-tokens/02081040G2081040G2081040G2"
@@ -3747,12 +3753,15 @@
                     "attributes": {
                       "token": "abc123def456",
                       "valid": true,
+                      "username": null,
+                      "email": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
                       "last_used_at": "1970-01-01T00:00:00Z",
                       "expires_at": "1970-01-31T00:00:00Z",
-                      "revoked_at": null
+                      "revoked_at": null,
+                      "invite_url": "https://example.com/invite/abc123def456"
                     },
                     "links": {
                       "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
@@ -3802,12 +3811,15 @@
                     "attributes": {
                       "token": "abc123def456",
                       "valid": true,
+                      "username": null,
+                      "email": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
                       "last_used_at": "1970-01-01T00:00:00Z",
                       "expires_at": "1970-01-31T00:00:00Z",
-                      "revoked_at": null
+                      "revoked_at": null,
+                      "invite_url": "https://example.com/invite/abc123def456"
                     },
                     "links": {
                       "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
@@ -3883,12 +3895,15 @@
                     "attributes": {
                       "token": "abc123def456",
                       "valid": true,
+                      "username": null,
+                      "email": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
                       "last_used_at": "1970-01-01T00:00:00Z",
                       "expires_at": "1970-01-31T00:00:00Z",
-                      "revoked_at": null
+                      "revoked_at": null,
+                      "invite_url": "https://example.com/invite/abc123def456"
                     },
                     "links": {
                       "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
@@ -3956,12 +3971,15 @@
                     "attributes": {
                       "token": "xyz789abc012",
                       "valid": false,
+                      "username": null,
+                      "email": null,
                       "usage_limit": null,
                       "times_used": 0,
                       "created_at": "1970-01-01T00:00:00Z",
                       "last_used_at": null,
                       "expires_at": null,
-                      "revoked_at": "1970-01-01T00:00:00Z"
+                      "revoked_at": "1970-01-01T00:00:00Z",
+                      "invite_url": "https://example.com/invite/xyz789abc012"
                     },
                     "links": {
                       "self": "/api/admin/v1/user-registration-tokens/02081040G2081040G2081040G2"
@@ -4046,12 +4064,15 @@
                     "attributes": {
                       "token": "abc123def456",
                       "valid": true,
+                      "username": null,
+                      "email": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
                       "last_used_at": "1970-01-01T00:00:00Z",
                       "expires_at": "1970-01-31T00:00:00Z",
-                      "revoked_at": null
+                      "revoked_at": null,
+                      "invite_url": "https://example.com/invite/abc123def456"
                     },
                     "links": {
                       "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
@@ -6886,6 +6907,20 @@
             "description": "Whether the token is valid",
             "type": "boolean"
           },
+          "username": {
+            "description": "A username imposed on the registering user. If null, the user can\n choose their own username.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email": {
+            "description": "An email address imposed on the registering user. If null, the user\n can choose their own email.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "usage_limit": {
             "description": "Maximum number of times this token can be used",
             "type": [
@@ -6929,13 +6964,19 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "invite_url": {
+            "description": "URL to share with the user to register with this token",
+            "type": "string",
+            "format": "uri"
           }
         },
         "required": [
           "token",
           "valid",
           "times_used",
-          "created_at"
+          "created_at",
+          "invite_url"
         ]
       },
       "AddUserRegistrationTokenRequest": {
@@ -6965,6 +7006,20 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "username": {
+            "description": "A username to impose on the registering user. If set, the user cannot\n choose their own username.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email": {
+            "description": "An email address to impose on the registering user. If set, the user\n cannot choose their own email.",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       },

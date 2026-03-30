@@ -15,7 +15,6 @@ Please see LICENSE files in the repository root for full details.
 {% import "components/errors.html" as errors %}
 {% import "components/icon.html" as icon %}
 {% import "components/scope.html" as scope %}
-{% import "components/captcha.html" as captcha %}
 
 <!DOCTYPE html>
 <html lang="{{ lang }}">
@@ -26,7 +25,6 @@ Please see LICENSE files in the repository root for full details.
     {{ include_asset('src/entrypoints/shared.css') | indent(4) | safe }}
     {{ include_asset('src/entrypoints/templates.css') | indent(4) | safe }}
     {{ include_asset('src/entrypoints/templates.ts') | indent(4) | safe }}
-    {{ captcha.head() }}
   </head>
   <body>
     <div class="layout-container{% if consent_page is defined %} consent{% endif %}">

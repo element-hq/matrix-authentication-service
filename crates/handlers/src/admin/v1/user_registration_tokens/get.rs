@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 // Copyright 2025 The Matrix.org Foundation C.I.C.
 //
@@ -5,9 +6,10 @@
 // Please see LICENSE files in the repository root for full details.
 
 use aide::{OperationIo, transform::TransformOperation};
-use axum::{Json, response::IntoResponse};
+use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
+use mas_router::UrlBuilder;
 use ulid::Ulid;
 
 use crate::{
@@ -67,6 +69,7 @@ pub async fn handler(
     CallContext {
         mut repo, clock, ..
     }: CallContext,
+    State(url_builder): State<UrlBuilder>,
     id: UlidPathParam,
 ) -> Result<Json<SingleResponse<UserRegistrationToken>>, RouteError> {
     let token = repo
@@ -76,7 +79,7 @@ pub async fn handler(
         .ok_or(RouteError::NotFound(*id))?;
 
     Ok(Json(SingleResponse::new_canonical(
-        UserRegistrationToken::new(token, clock.now()),
+        UserRegistrationToken::new(token, clock.now(), &url_builder),
     )))
 }
 
@@ -103,6 +106,8 @@ mod tests {
                 &state.clock,
                 "test_token_123".to_owned(),
                 Some(5),
+                None,
+                None,
                 None,
             )
             .await
