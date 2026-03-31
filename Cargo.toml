@@ -410,7 +410,7 @@ version = "0.31.0"
 [workspace.dependencies.opentelemetry-otlp]
 version = "0.31.1"
 default-features = false
-features = ["trace", "metrics", "http-proto"]
+features = ["trace", "metrics", "http-proto", "tls-provider-agnostic"]
 [workspace.dependencies.opentelemetry-prometheus-text-exporter]
 version = "0.2.1"
 [workspace.dependencies.opentelemetry-resource-detectors]
