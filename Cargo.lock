@@ -4124,6 +4124,7 @@ dependencies = [
  "opentelemetry_sdk",
  "prost",
  "thiserror 2.0.17",
+ "tonic",
 ]
 
 [[package]]
@@ -6417,6 +6418,8 @@ dependencies = [
  "percent-encoding",
  "pin-project",
  "sync_wrapper",
+ "tokio",
+ "tokio-rustls",
  "tokio-stream",
  "tower-layer",
  "tower-service",
