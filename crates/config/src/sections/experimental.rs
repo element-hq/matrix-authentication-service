@@ -8,7 +8,7 @@ use std::num::NonZeroU64;
 
 use chrono::Duration;
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize, de::Error as _};
+use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 
 use crate::ConfigurationSection;
@@ -176,20 +176,18 @@ impl ConfigurationSection for SessionLimitConfig {
         figment: &figment::Figment,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         let metadata = figment.find_metadata(Self::PATH.unwrap());
-        let annotate = |mut error: figment::Error| {
+        let error_on_field = |mut error: figment::error::Error, field: &'static str| {
             error.metadata = metadata.cloned();
             error.profile = Some(figment::Profile::Default);
-            error.path = vec![Self::PATH.unwrap().to_owned()];
+            error.path = vec![Self::PATH.unwrap().to_owned(), field.to_owned()];
             error
         };
 
         // See [`hard_limit_eviction`] docstring
         if self.hard_limit_eviction && self.hard_limit.get() < 2 {
-            return Err(figment::error::Error::custom(
-                "Session hard limit must be at-least 2 when automatic `hard_limit_eviction` is set.",
-            )
-            .with_path("experimental.session_limit.hard_limit")
-            .into());
+            return Err(error_on_field(figment::error::Error::from(
+                "Session `hard_limit` must be at-least 2 when automatic `hard_limit_eviction` is set.",
+            ), "hard_limit").into());
         }
 
         Ok(())

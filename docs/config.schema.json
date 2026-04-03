@@ -2910,14 +2910,14 @@
           "minimum": 1
         },
         "hard_limit_eviction": {
-          "description": "Whether we should automatically choose the least recently used devices to remove\n when the [`hard_limit`] is reached; in order to allow the new login to continue.\n\n WARNING: Removing sessions is a potentially damaging operation. Any end-to-end\n encrypted history on the device will be lost and can only be recovered if you\n have another verified active device or have a recovery key setup.\n\n When using [`hard_limit_eviction`], the [`hard_limit`] must be at-least 2 to\n avoid catastropically losing encrypted history and digital identity.\n\n This is most applicable in scenarios where your homeserver has many legacy\n bots/scripts that login over and over (which ideally should be using [personal\n access\n tokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))\n and you want to avoid breaking their operation while maintaining some level of\n sanity with the number of devices that people can have.",
-          "type": "boolean"
+          "description": "Whether we should automatically choose the least recently used devices to remove\n when the [`hard_limit`] is reached; in order to allow the new login to continue.\n\n WARNING: Removing sessions is a potentially damaging operation. Any end-to-end\n encrypted history on the device will be lost and can only be recovered if you\n have another verified active device or have a recovery key setup.\n\n When using [`hard_limit_eviction`], the [`hard_limit`] must be at-least 2 to\n avoid catastropically losing encrypted history and digital identity in\n pathological cases.\n\n This is most applicable in scenarios where your homeserver has many legacy\n bots/scripts that login over and over (which ideally should be using [personal\n access\n tokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))\n and you want to avoid breaking their operation while maintaining some level of\n sanity with the number of devices that people can have.",
+          "type": "boolean",
+          "default": false
         }
       },
       "required": [
         "soft_limit",
-        "hard_limit",
-        "hard_limit_eviction"
+        "hard_limit"
       ]
     }
   }
