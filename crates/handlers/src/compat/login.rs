@@ -12,8 +12,8 @@ use chrono::Duration;
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
 use mas_data_model::{
-    BoxClock, BoxRng, Clock, CompatSession, CompatSsoLoginState, Device, SiteConfig, TokenType,
-    User,
+    BoxClock, BoxRng, Clock, CompatSession, CompatSsoLoginState, Device, SessionLimitConfig,
+    SiteConfig, TokenType, User,
 };
 use mas_matrix::HomeserverConnection;
 use mas_policy::{Policy, Requester, ViolationVariant, model::CompatLogin};
@@ -359,6 +359,7 @@ pub(crate) async fn post(
                     ip_address: activity_tracker.ip(),
                     user_agent: user_agent.clone(),
                 },
+                &site_config.session_limit,
                 username,
                 password,
                 input.device_id, // TODO check for validity
@@ -606,6 +607,8 @@ async fn token_login(
         if res.violations.len() == 1 {
             let violation = &res.violations[0];
             if violation.variant == Some(ViolationVariant::TooManySessions) {
+                // TODO
+
                 // The only violation is having reached the session limit.
                 return Err(RouteError::PolicyHardSessionLimitReached);
             }
@@ -645,6 +648,7 @@ async fn user_password_login(
     repo: &mut BoxRepository,
     policy: &mut Policy,
     policy_requester: Requester,
+    session_limit_config: &Option<SessionLimitConfig>,
     username: &str,
     password: String,
     requested_device_id: Option<String>,
@@ -739,8 +743,16 @@ async fn user_password_login(
         if res.violations.len() == 1 {
             let violation = &res.violations[0];
             if violation.variant == Some(ViolationVariant::TooManySessions) {
-                // The only violation is having reached the session limit.
-                return Err(RouteError::PolicyHardSessionLimitReached);
+                let session_limit_config = session_limit_config.as_ref()
+                    .expect("We should have a session_limit config if we are seeing a `TooManySessions` violation. \
+                    This is most likely a programming error.");
+
+                if session_limit_config.hard_limit_eviction {
+                    // TODO
+                } else {
+                    // The only violation is having reached the session limit.
+                    return Err(RouteError::PolicyHardSessionLimitReached);
+                }
             }
         }
         return Err(RouteError::PolicyRejected);
