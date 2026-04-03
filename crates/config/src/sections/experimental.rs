@@ -150,13 +150,16 @@ pub struct SessionLimitConfig {
     /// Whether we should automatically choose the least recently used devices to remove
     /// when the [`hard_limit`] is reached; in order to allow the new login to continue.
     ///
+    /// Disabled by default
+    ///
     /// WARNING: Removing sessions is a potentially damaging operation. Any end-to-end
     /// encrypted history on the device will be lost and can only be recovered if you
     /// have another verified active device or have a recovery key setup.
     ///
     /// When using [`hard_limit_eviction`], the [`hard_limit`] must be at-least 2 to
     /// avoid catastropically losing encrypted history and digital identity in
-    /// pathological cases.
+    /// pathological cases. Keep in mind this is a bare minimum restriction and you can
+    /// still run into trouble.
     ///
     /// This is most applicable in scenarios where your homeserver has many legacy
     /// bots/scripts that login over and over (which ideally should be using [personal
