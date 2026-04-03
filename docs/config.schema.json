@@ -282,6 +282,11 @@
             "type": "string",
             "format": "uri"
           }
+        },
+        "skip_consent": {
+          "description": "Whether to skip the consent screen for this client",
+          "type": "boolean",
+          "default": false
         }
       },
       "required": [
