@@ -884,6 +884,13 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                 )),
                 ProviderLookupIden::OnBackchannelLogout,
             )
+            .expr_as(
+                Expr::col((
+                    UpstreamOAuthProviders::Table,
+                    UpstreamOAuthProviders::RegistrationTokenRequired,
+                )),
+                ProviderLookupIden::RegistrationTokenRequired,
+            )
             .from(UpstreamOAuthProviders::Table)
             .apply_filter(filter)
             .generate_pagination(

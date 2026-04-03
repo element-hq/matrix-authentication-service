@@ -694,7 +694,7 @@ pub struct Provider {
     #[serde(default, skip_serializing_if = "OnBackchannelLogout::is_default")]
     pub on_backchannel_logout: OnBackchannelLogout,
 
-    /// Whether or not to require a registration token on OAuth2 auth
+    /// Whether or not to require a registration token on `OAuth2` auth
     ///
     /// Defaults to `false`
     #[serde(default)]
