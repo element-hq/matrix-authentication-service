@@ -200,6 +200,7 @@ async fn create_session_hierarchy(
             forward_login_hint: false,
             ui_order: 0,
             on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::LogoutAll,
+            registration_token_required: false,
         };
 
         let provider = repo

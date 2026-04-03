@@ -119,6 +119,7 @@ mod tests {
             forward_login_hint: false,
             on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
             ui_order: 0,
+            registration_token_required: false,
         };
 
         let provider = repo

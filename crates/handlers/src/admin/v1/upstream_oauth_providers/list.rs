@@ -191,6 +191,7 @@ mod tests {
             forward_login_hint: false,
             on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
             ui_order: 0,
+            registration_token_required: false,
         };
 
         repo.upstream_oauth_provider()
@@ -223,6 +224,7 @@ mod tests {
             forward_login_hint: false,
             on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
             ui_order: 1,
+            registration_token_required: false,
         };
 
         let disabled_provider = repo
@@ -262,6 +264,7 @@ mod tests {
             forward_login_hint: false,
             on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
             ui_order: 2,
+            registration_token_required: false,
         };
 
         repo.upstream_oauth_provider()
