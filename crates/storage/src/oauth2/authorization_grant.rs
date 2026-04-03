@@ -6,7 +6,9 @@
 // Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
-use mas_data_model::{AuthorizationCode, AuthorizationGrant, Client, Clock, Session};
+use mas_data_model::{
+    AuthorizationCode, AuthorizationGrant, BrowserSession, Client, Clock, Session,
+};
 use oauth2_types::{requests::ResponseMode, scope::Scope};
 use rand_core::RngCore;
 use ulid::Ulid;
@@ -90,15 +92,15 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
     async fn find_by_code(&mut self, code: &str)
     -> Result<Option<AuthorizationGrant>, Self::Error>;
 
-    /// Fulfill an authorization grant, by giving the [`Session`] that it
-    /// created
+    /// Fulfill an authorization grant, by giving the [`BrowserSession`] that
+    /// approved it
     ///
     /// Returns the updated authorization grant
     ///
     /// # Parameters
     ///
     /// * `clock`: The clock used to generate timestamps
-    /// * `session`: The session that was created using this authorization grant
+    /// * `browser_session`: The browser session that approved this grant
     /// * `authorization_grant`: The authorization grant to fulfill
     ///
     /// # Errors
@@ -107,7 +109,7 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
     async fn fulfill(
         &mut self,
         clock: &dyn Clock,
-        session: &Session,
+        browser_session: &BrowserSession,
         authorization_grant: AuthorizationGrant,
     ) -> Result<AuthorizationGrant, Self::Error>;
 
@@ -119,6 +121,7 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
     ///
     /// * `clock`: The clock used to generate timestamps
     /// * `authorization_grant`: The authorization grant to mark as exchanged
+    /// * `session`: The OAuth2 session created for this grant
     ///
     /// # Errors
     ///
@@ -127,6 +130,7 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
         &mut self,
         clock: &dyn Clock,
         authorization_grant: AuthorizationGrant,
+        session: &Session,
     ) -> Result<AuthorizationGrant, Self::Error>;
 
     /// Cleanup old authorization grants
@@ -179,7 +183,7 @@ repository_impl!(OAuth2AuthorizationGrantRepository:
     async fn fulfill(
         &mut self,
         clock: &dyn Clock,
-        session: &Session,
+        browser_session: &BrowserSession,
         authorization_grant: AuthorizationGrant,
     ) -> Result<AuthorizationGrant, Self::Error>;
 
@@ -187,6 +191,7 @@ repository_impl!(OAuth2AuthorizationGrantRepository:
         &mut self,
         clock: &dyn Clock,
         authorization_grant: AuthorizationGrant,
+        session: &Session,
     ) -> Result<AuthorizationGrant, Self::Error>;
 
     async fn cleanup(
