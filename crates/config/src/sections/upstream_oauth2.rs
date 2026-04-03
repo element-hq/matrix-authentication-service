@@ -695,7 +695,7 @@ pub struct Provider {
     pub on_backchannel_logout: OnBackchannelLogout,
 
     /// Whether or not to require a registration token on OAuth2 auth
-    /// 
+    ///
     /// Defaults to `false`
     #[serde(default)]
     pub registration_token_required: bool,

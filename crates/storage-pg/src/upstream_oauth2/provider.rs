@@ -436,7 +436,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             additional_authorization_parameters: params.additional_authorization_parameters,
             on_backchannel_logout: params.on_backchannel_logout,
             forward_login_hint: params.forward_login_hint,
-            registration_token_required: params.registration_token_required
+            registration_token_required: params.registration_token_required,
         })
     }
 

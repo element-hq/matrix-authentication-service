@@ -120,7 +120,10 @@ pub(crate) async fn get(
         )));
     }
 
-    let token_required = if registration.upstream_oauth_authorization_session_id.is_some() {
+    let token_required = if registration
+        .upstream_oauth_authorization_session_id
+        .is_some()
+    {
         // load provider to let OAuth registrations check its
         // per provider `registration_token_required` flag
         let session_id = registration
