@@ -2898,19 +2898,19 @@
       "type": "object",
       "properties": {
         "soft_limit": {
-          "description": "Upon login in interactive contexts, if the soft limit is reached, it will\n display a policy violation screen (web UI) to remove sessions before creating\n the new session.\n\n This is not enforced in uninteractive contexts (like the legacy compability\n login API). See [`hard_limit`] for enforcement on that side.",
+          "description": "Upon login in interactive contexts, if the soft limit is reached, it will\n display a policy violation screen (web UI) to remove sessions before creating\n the new session.\n\n This is not enforced in uninteractive contexts (like the legacy compability\n login API). See [`hard_limit`] for enforcement on that side.\n\n [`hard_limit`]: Self::hard_limit",
           "type": "integer",
           "format": "uint64",
           "minimum": 1
         },
         "hard_limit": {
-          "description": "Upon login, when `hard_limit_eviction: false`, will refuse the new login (policy\n violation error), otherwise, see [`hard_limit_eviction`].\n\n The hard limit is enforced in all contexts (interactive/uninteractive).",
+          "description": "Upon login, when `hard_limit_eviction: false`, will refuse the new login (policy\n violation error), otherwise, see [`hard_limit_eviction`].\n\n The hard limit is enforced in all contexts (interactive/uninteractive).\n\n [`hard_limit_eviction`]: Self::hard_limit_eviction",
           "type": "integer",
           "format": "uint64",
           "minimum": 1
         },
         "hard_limit_eviction": {
-          "description": "Whether we should automatically choose the least recently used devices to remove\n when the [`hard_limit`] is reached; in order to allow the new login to continue.\n\n Disabled by default\n\n WARNING: Removing sessions is a potentially damaging operation. Any end-to-end\n encrypted history on the device will be lost and can only be recovered if you\n have another verified active device or have a recovery key setup.\n\n When using [`hard_limit_eviction`], the [`hard_limit`] must be at-least 2 to\n avoid catastropically losing encrypted history and digital identity in\n pathological cases. Keep in mind this is a bare minimum restriction and you can\n still run into trouble.\n\n This is most applicable in scenarios where your homeserver has many legacy\n bots/scripts that login over and over (which ideally should be using [personal\n access\n tokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))\n and you want to avoid breaking their operation while maintaining some level of\n sanity with the number of devices that people can have.",
+          "description": "Whether we should automatically choose the least recently used devices to remove\n when the [`Self::hard_limit`] is reached; in order to allow the new login to continue.\n\n Disabled by default\n\n WARNING: Removing sessions is a potentially damaging operation. Any end-to-end\n encrypted history on the device will be lost and can only be recovered if you\n have another verified active device or have a recovery key setup.\n\n When using [`hard_limit_eviction`], the [`hard_limit`] must be\n at-least 2 to avoid catastropically losing encrypted history and digital\n identity in pathological cases. Keep in mind this is a bare minimum restriction\n and you can still run into trouble.\n\n This is most applicable in scenarios where your homeserver has many legacy\n bots/scripts that login over and over (which ideally should be using [personal\n access\n tokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))\n and you want to avoid breaking their operation while maintaining some level of\n sanity with the number of devices that people can have.\n\n [`hard_limit`]: Self::hard_limit\n [`hard_limit_eviction`]: Self::hard_limit_eviction",
           "type": "boolean",
           "default": false
         }

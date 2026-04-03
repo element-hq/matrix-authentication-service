@@ -156,6 +156,7 @@ pub async fn policy_factory_from_config(
             .map(|c| SessionLimitConfig {
                 soft_limit: c.soft_limit,
                 hard_limit: c.hard_limit,
+                hard_limit_eviction: c.hard_limit_eviction,
             });
 
     let data = mas_policy::Data::new(matrix_config.homeserver.clone(), session_limit_config)
@@ -242,6 +243,7 @@ pub fn site_config_from_config(
             .map(|c| SessionLimitConfig {
                 soft_limit: c.soft_limit,
                 hard_limit: c.hard_limit,
+                hard_limit_eviction: c.hard_limit_eviction,
             }),
     })
 }

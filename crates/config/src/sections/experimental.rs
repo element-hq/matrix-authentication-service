@@ -141,14 +141,18 @@ pub struct SessionLimitConfig {
     ///
     /// This is not enforced in uninteractive contexts (like the legacy compability
     /// login API). See [`hard_limit`] for enforcement on that side.
+    ///
+    /// [`hard_limit`]: Self::hard_limit
     pub soft_limit: NonZeroU64,
     /// Upon login, when `hard_limit_eviction: false`, will refuse the new login (policy
     /// violation error), otherwise, see [`hard_limit_eviction`].
     ///
     /// The hard limit is enforced in all contexts (interactive/uninteractive).
+    ///
+    /// [`hard_limit_eviction`]: Self::hard_limit_eviction
     pub hard_limit: NonZeroU64,
     /// Whether we should automatically choose the least recently used devices to remove
-    /// when the [`hard_limit`] is reached; in order to allow the new login to continue.
+    /// when the [`Self::hard_limit`] is reached; in order to allow the new login to continue.
     ///
     /// Disabled by default
     ///
@@ -156,10 +160,10 @@ pub struct SessionLimitConfig {
     /// encrypted history on the device will be lost and can only be recovered if you
     /// have another verified active device or have a recovery key setup.
     ///
-    /// When using [`hard_limit_eviction`], the [`hard_limit`] must be at-least 2 to
-    /// avoid catastropically losing encrypted history and digital identity in
-    /// pathological cases. Keep in mind this is a bare minimum restriction and you can
-    /// still run into trouble.
+    /// When using [`hard_limit_eviction`], the [`hard_limit`] must be
+    /// at-least 2 to avoid catastropically losing encrypted history and digital
+    /// identity in pathological cases. Keep in mind this is a bare minimum restriction
+    /// and you can still run into trouble.
     ///
     /// This is most applicable in scenarios where your homeserver has many legacy
     /// bots/scripts that login over and over (which ideally should be using [personal
@@ -167,6 +171,9 @@ pub struct SessionLimitConfig {
     /// tokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))
     /// and you want to avoid breaking their operation while maintaining some level of
     /// sanity with the number of devices that people can have.
+    ///
+    /// [`hard_limit`]: Self::hard_limit
+    /// [`hard_limit_eviction`]: Self::hard_limit_eviction
     #[serde(default = "default_false")]
     pub hard_limit_eviction: bool,
 }
@@ -186,7 +193,7 @@ impl ConfigurationSection for SessionLimitConfig {
             error
         };
 
-        // See [`hard_limit_eviction`] docstring
+        // See [`SessionLimitConfig::hard_limit_eviction`] docstring
         if self.hard_limit_eviction && self.hard_limit.get() < 2 {
             return Err(error_on_field(figment::error::Error::from(
                 "Session `hard_limit` must be at-least 2 when automatic `hard_limit_eviction` is set.",

@@ -3223,6 +3223,7 @@ dependencies = [
  "base64ct",
  "chrono",
  "crc",
+ "mas-config",
  "mas-iana",
  "mas-jose",
  "oauth2-types",
