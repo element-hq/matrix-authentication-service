@@ -121,7 +121,7 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
     ///
     /// * `clock`: The clock used to generate timestamps
     /// * `authorization_grant`: The authorization grant to mark as exchanged
-    /// * `session`: The OAuth2 session created for this grant
+    /// * `session`: The `OAuth2` session created for this grant
     ///
     /// # Errors
     ///
