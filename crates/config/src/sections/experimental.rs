@@ -8,13 +8,17 @@ use std::num::NonZeroU64;
 
 use chrono::Duration;
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::Error as _};
 use serde_with::serde_as;
 
 use crate::ConfigurationSection;
 
 fn default_true() -> bool {
     true
+}
+
+fn default_false() -> bool {
+    false
 }
 
 fn default_token_ttl() -> Duration {
@@ -116,6 +120,16 @@ impl ExperimentalConfig {
 
 impl ConfigurationSection for ExperimentalConfig {
     const PATH: Option<&'static str> = Some("experimental");
+
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
+        if let Some(session_limit) = &self.session_limit {
+            session_limit.validate(figment)?;
+        }
+        Ok(())
+    }
 }
 
 /// Configuration options for the session limit feature
@@ -141,7 +155,8 @@ pub struct SessionLimitConfig {
     /// have another verified active device or have a recovery key setup.
     ///
     /// When using [`hard_limit_eviction`], the [`hard_limit`] must be at-least 2 to
-    /// avoid catastropically losing encrypted history and digital identity.
+    /// avoid catastropically losing encrypted history and digital identity in
+    /// pathological cases.
     ///
     /// This is most applicable in scenarios where your homeserver has many legacy
     /// bots/scripts that login over and over (which ideally should be using [personal
@@ -149,5 +164,34 @@ pub struct SessionLimitConfig {
     /// tokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))
     /// and you want to avoid breaking their operation while maintaining some level of
     /// sanity with the number of devices that people can have.
+    #[serde(default = "default_false")]
     pub hard_limit_eviction: bool,
+}
+
+impl ConfigurationSection for SessionLimitConfig {
+    const PATH: Option<&'static str> = Some("session_limit");
+
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
+        let metadata = figment.find_metadata(Self::PATH.unwrap());
+        let annotate = |mut error: figment::Error| {
+            error.metadata = metadata.cloned();
+            error.profile = Some(figment::Profile::Default);
+            error.path = vec![Self::PATH.unwrap().to_owned()];
+            error
+        };
+
+        // See [`hard_limit_eviction`] docstring
+        if self.hard_limit_eviction && self.hard_limit.get() < 2 {
+            return Err(figment::error::Error::custom(
+                "Session hard limit must be at-least 2 when automatic `hard_limit_eviction` is set.",
+            )
+            .with_path("experimental.session_limit.hard_limit")
+            .into());
+        }
+
+        Ok(())
+    }
 }
