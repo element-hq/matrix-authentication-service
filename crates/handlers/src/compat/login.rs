@@ -359,7 +359,7 @@ pub(crate) async fn post(
                     ip_address: activity_tracker.ip(),
                     user_agent: user_agent.clone(),
                 },
-                &site_config.session_limit,
+                site_config.session_limit.as_ref(),
                 username,
                 password,
                 input.device_id, // TODO check for validity
@@ -648,7 +648,7 @@ async fn user_password_login(
     repo: &mut BoxRepository,
     policy: &mut Policy,
     policy_requester: Requester,
-    session_limit_config: &Option<SessionLimitConfig>,
+    session_limit_config: Option<&SessionLimitConfig>,
     username: &str,
     password: String,
     requested_device_id: Option<String>,
