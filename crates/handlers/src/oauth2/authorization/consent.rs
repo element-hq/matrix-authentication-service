@@ -91,6 +91,7 @@ pub(crate) async fn get(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
+    State(key_store): State<Keystore>,
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
     mut policy: Policy,
     mut repo: BoxRepository,
@@ -149,9 +150,6 @@ pub(crate) async fn get(
 
     let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
 
-    // We can close the repository early, we don't need it at this point
-    repo.save().await?;
-
     let res = policy
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
             user: Some(&session.user),
@@ -175,6 +173,52 @@ pub(crate) async fn get(
 
         return Ok((cookie_jar, Html(content)).into_response());
     }
+
+    // check if client configured to skip consent. if so, fulfill grant directly
+    if client.skip_consent {
+        let callback_destination = CallbackDestination::try_from(&grant)?;
+
+        let grant = repo
+            .oauth2_authorization_grant()
+            .fulfill(&clock, &session, grant)
+            .await?;
+
+        let mut params = AuthorizationResponse::default();
+
+        if grant.response_type_id_token {
+            let last_authentication = repo
+                .browser_session()
+                .get_last_authentication(&session)
+                .await?;
+
+            params.id_token = Some(generate_id_token(
+                &mut rng,
+                &clock,
+                &url_builder,
+                &key_store,
+                &client,
+                Some(&grant),
+                &session,
+                None,
+                last_authentication.as_ref(),
+            )?);
+        }
+
+        if let Some(code) = grant.code {
+            params.code = Some(code.code);
+        }
+
+        repo.save().await?;
+
+        return Ok((
+            cookie_jar,
+            callback_destination.go(&templates, &locale, params)?,
+        )
+            .into_response());
+    }
+
+    // Close the repository, we don't need it for rendering the consent page
+    repo.save().await?;
 
     // Fetch informations about the user. This is purely cosmetic, so we let it
     // fail and put a 1s timeout to it in case we fail to query it
