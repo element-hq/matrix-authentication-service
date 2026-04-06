@@ -768,6 +768,10 @@ async fn user_password_login(
                     // In the future, it may be nice to avoid sessions with
                     // cryptographic state (what does that mean exactly? keys uploaded
                     // for device?).
+                    //
+                    // FIXME: We could potentially use
+                    // `repo.compat_session().finish_bulk(...)` if it had the ability to
+                    // limit and order.
                     let compat = repo
                         .compat_session()
                         .list(
@@ -785,8 +789,7 @@ async fn user_password_login(
                         let mut sessions_removed = 0;
                         for edge in compat.edges {
                             let (compat_session, _) = edge.node;
-                            let _compat_session =
-                                repo.compat_session().finish(clock, compat_session).await?;
+                            repo.compat_session().finish(clock, compat_session).await?;
                             sessions_removed += 1;
                         }
                         sessions_removed
