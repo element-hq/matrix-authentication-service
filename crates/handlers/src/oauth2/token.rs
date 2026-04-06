@@ -792,10 +792,13 @@ async fn client_credentials_grant(
         .clone()
         .unwrap_or_else(|| std::iter::empty::<ScopeToken>().collect());
 
+    let session_limit_config = site_config.session_limit.as_ref();
+
     // Make the request go through the policy engine
     let res = policy
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
             user: None,
+            session_limit: session_limit_config,
             client,
             session_counts: None,
             scope: &scope,

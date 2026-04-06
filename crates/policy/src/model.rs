@@ -11,7 +11,7 @@
 
 use std::net::IpAddr;
 
-use mas_data_model::{Client, User};
+use mas_data_model::{Client, SessionLimitConfig, User};
 use oauth2_types::{registration::VerifiedClientMetadata, scope::Scope};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -179,6 +179,10 @@ pub struct AuthorizationGrantInput<'a> {
     #[schemars(with = "Option<std::collections::HashMap<String, serde_json::Value>>")]
     pub user: Option<&'a User>,
 
+    /// Limits on the number of application sessions that each user can have
+    #[schemars(with = "std::collections::HashMap<String, serde_json::Value>")]
+    pub session_limit: Option<&'a SessionLimitConfig>,
+
     /// How many sessions the user has.
     /// Not populated if it's not a user logging in.
     pub session_counts: Option<SessionCounts>,
@@ -200,6 +204,10 @@ pub struct AuthorizationGrantInput<'a> {
 pub struct CompatLoginInput<'a> {
     #[schemars(with = "std::collections::HashMap<String, serde_json::Value>")]
     pub user: &'a User,
+
+    /// Limits on the number of application sessions that each user can have
+    #[schemars(with = "std::collections::HashMap<String, serde_json::Value>")]
+    pub session_limit: Option<&'a SessionLimitConfig>,
 
     /// How many sessions the user has.
     pub session_counts: SessionCounts,

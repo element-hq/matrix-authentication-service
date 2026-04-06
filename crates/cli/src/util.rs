@@ -135,7 +135,6 @@ pub fn test_mailer_in_background(mailer: &Mailer, timeout: Duration) {
 pub async fn policy_factory_from_config(
     config: &PolicyConfig,
     matrix_config: &MatrixConfig,
-    experimental_config: &ExperimentalConfig,
 ) -> Result<PolicyFactory, anyhow::Error> {
     let policy_file = tokio::fs::File::open(&config.wasm_module)
         .await
@@ -158,8 +157,8 @@ pub async fn policy_factory_from_config(
                 hard_limit: c.hard_limit,
             });
 
-    let data = mas_policy::Data::new(matrix_config.homeserver.clone(), session_limit_config)
-        .with_rest(config.data.clone());
+    let data =
+        mas_policy::Data::new(matrix_config.homeserver.clone()).with_rest(config.data.clone());
 
     PolicyFactory::load(policy_file, data, entrypoints)
         .await

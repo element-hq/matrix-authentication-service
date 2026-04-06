@@ -30,7 +30,7 @@ violation contains {
 	"msg": "user has too many active sessions (soft limit)",
 } if {
 	# Only apply if session limits are enabled in the config
-	data.session_limit != null
+	input.session_limit != null
 
 	# This is a web-based interactive login
 	is_interactive
@@ -43,7 +43,7 @@ violation contains {
 	# reached or exceeded.
 	# We use the soft limit because the user will be able to interactively remove
 	# sessions to return under the limit.
-	data.session_limit.soft_limit <= input.session_counts.total
+	input.session_limit.soft_limit <= input.session_counts.total
 }
 
 violation contains {
@@ -51,7 +51,7 @@ violation contains {
 	"msg": "user has too many active sessions (hard limit)",
 } if {
 	# Only apply if session limits are enabled in the config
-	data.session_limit != null
+	input.session_limit != null
 
 	# This is not a web-based interactive login
 	not is_interactive
@@ -64,7 +64,7 @@ violation contains {
 	# reached or exceeded.
 	# We don't use the soft limit because the user won't be able to interactively remove
 	# sessions to return under the limit.
-	data.session_limit.hard_limit <= input.session_counts.total
+	input.session_limit.hard_limit <= input.session_counts.total
 }
 
 is_interactive if {
