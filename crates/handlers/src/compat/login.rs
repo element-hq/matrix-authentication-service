@@ -16,7 +16,7 @@ use mas_data_model::{
     SiteConfig, TokenType, User,
 };
 use mas_matrix::HomeserverConnection;
-use mas_policy::{Policy, Requester, ViolationVariant, model::CompatLogin};
+use mas_policy::{Policy, Requester, Violation, ViolationVariant, model::CompatLogin};
 use mas_storage::{
     BoxRepository, BoxRepositoryFactory, Pagination, RepositoryAccess,
     compat::{
@@ -378,6 +378,7 @@ pub(crate) async fn post(
                     ip_address: activity_tracker.ip(),
                     user_agent: user_agent.clone(),
                 },
+                site_config.session_limit.as_ref(),
                 &token,
                 input.device_id,
                 input.initial_device_display_name,
@@ -491,12 +492,101 @@ pub(crate) async fn post(
     }))
 }
 
+/// Given the violations from [`Policy::evaluate_compat_login`], return the appropriate `RouteError` response.
+async fn process_violations_for_compat_login(
+    clock: &dyn Clock,
+    repo: &mut BoxRepository,
+    session_limit_config: Option<&SessionLimitConfig>,
+    user: &User,
+    violations: Vec<Violation>,
+) -> Result<(), RouteError> {
+    match (violations.len(), violations.first()) {
+        // If the only violation is having reached the session limit, we might be
+        // able to resolve the situation.
+        //
+        // We don't trigger this if there was some other violation anyway, since
+        // that means that removing a session wouldn't actually unblock the login.
+        (1, Some(violation)) if violation.variant == Some(ViolationVariant::TooManySessions) => {
+            let session_limit_config = session_limit_config
+                    .expect("We should have a `session_limit` config if we are seeing a `TooManySessions` violation. \
+                    This is most likely a programming error.");
+
+            // TODO: This should come from `ViolationVariant::TooManySessions`
+            let need_to_remove: u32 = 1;
+            let need_to_remove_usize = usize::try_from(need_to_remove).map_err(|err| {
+                RouteError::Internal(
+                    anyhow::anyhow!("Unable to convert `need_to_remove` to usize: {err}").into(),
+                )
+            })?;
+
+            // When logging in with the compatibility API, there is no way for us to
+            // display any web UI for people to remove devices, so we instead
+            // automatically remove their oldest devices (when `hard_limit_eviction`
+            // is configured).
+            if session_limit_config.hard_limit_eviction {
+                // Find the least recently used compat sessions
+                //
+                // In the future, it may be nice to avoid sessions with
+                // cryptographic state (what does that mean exactly? keys uploaded
+                // for device?).
+                //
+                // FIXME: We could potentially use
+                // `repo.compat_session().finish_bulk(...)` if it had the ability to
+                // limit and order.
+                let compat_session_page = repo
+                    .compat_session()
+                    .list(
+                        // TODO: Order by `last_active_at`
+                        CompatSessionFilter::new().for_user(user).active_only(),
+                        Pagination::first(need_to_remove_usize),
+                    )
+                    .await?;
+
+                // For now, we only automatically clean up compatibility sessions.
+                // If there aren't enough sessions that we could clean up, we just
+                // throw an error with an explanation.
+                if compat_session_page.edges.len() < need_to_remove_usize {
+                    return Err(RouteError::PolicyHardSessionLimitReached);
+                }
+
+                // Remove the sessions
+                let sessions_removed = {
+                    let mut sessions_removed = 0;
+                    for edge in compat_session_page.edges {
+                        let (compat_session, _) = edge.node;
+                        repo.compat_session().finish(clock, compat_session).await?;
+                        sessions_removed += 1;
+                    }
+                    sessions_removed
+                };
+
+                // For now, we only automatically clean up compatibility sessions.
+                // If there are still too many sessions, we just throw an error with
+                // an explanation.
+                if sessions_removed < need_to_remove {
+                    return Err(RouteError::PolicyHardSessionLimitReached);
+                }
+            } else {
+                // Tell the user about the limit
+                return Err(RouteError::PolicyHardSessionLimitReached);
+            }
+        }
+        // Just throw an error for any other violation
+        _ => {
+            return Err(RouteError::PolicyRejected);
+        }
+    }
+
+    Ok(())
+}
+
 async fn token_login(
     rng: &mut (dyn RngCore + Send),
     clock: &dyn Clock,
     repo: &mut BoxRepository,
     policy: &mut Policy,
     requester: Requester,
+    session_limit_config: Option<&SessionLimitConfig>,
     token: &str,
     requested_device_id: Option<String>,
     initial_device_display_name: Option<String>,
@@ -599,21 +689,14 @@ async fn token_login(
         })
         .await?;
     if !res.valid() {
-        // If the only violation is that we have too many sessions, then handle that
-        // separately.
-        // In the future, we intend to evict some sessions automatically instead. We
-        // don't trigger this if there was some other violation anyway, since that means
-        // that removing a session wouldn't actually unblock the login.
-        if res.violations.len() == 1 {
-            let violation = &res.violations[0];
-            if violation.variant == Some(ViolationVariant::TooManySessions) {
-                // TODO
-
-                // The only violation is having reached the session limit.
-                return Err(RouteError::PolicyHardSessionLimitReached);
-            }
-        }
-        return Err(RouteError::PolicyRejected);
+        process_violations_for_compat_login(
+            clock,
+            repo,
+            session_limit_config,
+            &browser_session.user,
+            res.violations,
+        )
+        .await?;
     }
 
     // We first create the session in the database, commit the transaction, then
@@ -735,86 +818,14 @@ async fn user_password_login(
         })
         .await?;
     if !res.valid() {
-        match (res.violations.len(), res.violations.first()) {
-            // If the only violation is having reached the session limit, we might be
-            // able to resolve the situation.
-            //
-            // We don't trigger this if there was some other violation anyway, since
-            // that means that removing a session wouldn't actually unblock the login.
-            (1, Some(violation))
-                if violation.variant == Some(ViolationVariant::TooManySessions) =>
-            {
-                let session_limit_config = session_limit_config.as_ref()
-                    .expect("We should have a `session_limit` config if we are seeing a `TooManySessions` violation. \
-                    This is most likely a programming error.");
-
-                // TODO: This should come from `ViolationVariant::TooManySessions`
-                let need_to_remove: u32 = 1;
-
-                // When logging in with the compatibility API, there is no way for us to
-                // display any web UI for people to remove devices, so we instead
-                // automatically remove their oldest devices (when `hard_limit_eviction`
-                // is configured).
-                if session_limit_config.hard_limit_eviction {
-                    // For now, we only automatically clean up compatibility sessions.
-                    // If there aren't enough sessions that we could clean up, we just
-                    // throw an error with an explanation.
-                    if session_counts.compat < need_to_remove.into() {
-                        return Err(RouteError::PolicyHardSessionLimitReached);
-                    }
-
-                    // Find the least recently used compat sessions
-                    //
-                    // In the future, it may be nice to avoid sessions with
-                    // cryptographic state (what does that mean exactly? keys uploaded
-                    // for device?).
-                    //
-                    // FIXME: We could potentially use
-                    // `repo.compat_session().finish_bulk(...)` if it had the ability to
-                    // limit and order.
-                    let compat = repo
-                        .compat_session()
-                        .list(
-                            // TODO: Order by `last_active_at`
-                            CompatSessionFilter::new().for_user(&user).active_only(),
-                            Pagination::first(usize::try_from(need_to_remove).map_err(|err| {
-                                RouteError::Internal(
-                                    anyhow::anyhow!(
-                                        "Unable to convert `need_to_remove` to usize: {err}"
-                                    )
-                                    .into(),
-                                )
-                            })?),
-                        )
-                        .await?;
-
-                    // Remove the sessions
-                    let sessions_removed = {
-                        let mut sessions_removed = 0;
-                        for edge in compat.edges {
-                            let (compat_session, _) = edge.node;
-                            repo.compat_session().finish(clock, compat_session).await?;
-                            sessions_removed += 1;
-                        }
-                        sessions_removed
-                    };
-
-                    // For now, we only automatically clean up compatibility sessions.
-                    // If there are still too many sessions, we just throw an error with
-                    // an explanation.
-                    if sessions_removed < need_to_remove {
-                        return Err(RouteError::PolicyHardSessionLimitReached);
-                    }
-                } else {
-                    // Tell the user about the limit
-                    return Err(RouteError::PolicyHardSessionLimitReached);
-                }
-            }
-            // Just throw an error for any other violation
-            _ => {
-                return Err(RouteError::PolicyRejected);
-            }
-        }
+        process_violations_for_compat_login(
+            clock,
+            repo,
+            session_limit_config,
+            &user,
+            res.violations,
+        )
+        .await?;
     }
 
     let session = repo
