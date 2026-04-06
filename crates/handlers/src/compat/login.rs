@@ -838,6 +838,8 @@ async fn user_password_login(
 
 #[cfg(test)]
 mod tests {
+    use std::num::NonZeroU64;
+
     use hyper::Request;
     use mas_matrix::{HomeserverConnection, ProvisionRequest};
     use rand::distributions::{Alphanumeric, DistString};
@@ -1585,5 +1587,123 @@ mod tests {
         repo.save().await.unwrap();
 
         token
+    }
+
+    /// Test that the `soft_limit` is not enforced for compat login.
+    ///
+    /// `soft_limit` is for when we allow the user to remove devices in interactive
+    /// contexts. With the compatibility login API, there is no opportunity for us to
+    /// present a web UI.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_soft_limit_does_not_affect_compat_login(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                session_limit: Some(SessionLimitConfig {
+                    // Lowest non-zero value so we don't have to login a bunch (lower
+                    // than `hard_limit`)
+                    soft_limit: NonZeroU64::new(1).unwrap(),
+                    // Some arbitrary high value (more than we login)
+                    hard_limit: NonZeroU64::new(5).unwrap(),
+                    hard_limit_eviction: false,
+                }),
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let session_limit_config = state
+            .site_config
+            .session_limit
+            .as_ref()
+            .expect("Expected `session_limit` configured for this test");
+
+        assert!(
+            session_limit_config.soft_limit < session_limit_config.hard_limit,
+            "`soft_limit` should be lower than the `hard_limit` so we don't run into `hard_limit` \
+            (we're testing the `soft_limit`)",
+        );
+
+        let _user = user_with_password(&state, "alice", "password", false).await;
+
+        // Keep logging in to add more sessions, more than the `soft_limit`
+        #[allow(clippy::range_plus_one)]
+        for _ in 0..(session_limit_config.soft_limit.get() + 1) {
+            let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+                "type": "m.login.password",
+                "identifier": {
+                    "type": "m.id.user",
+                    "user": "alice",
+                },
+                "password": "password",
+            }));
+            let response = state.request(request.clone()).await;
+            response.assert_status(StatusCode::OK);
+        }
+    }
+
+    /// Test that the `hard_limit` prevents more sessions
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_hard_limit_compat_login(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                session_limit: Some(SessionLimitConfig {
+                    // Lowest non-zero value so we don't have to login a bunch (lower
+                    // than `hard_limit`)
+                    soft_limit: NonZeroU64::new(1).unwrap(),
+                    hard_limit: NonZeroU64::new(2).unwrap(),
+                    hard_limit_eviction: false,
+                }),
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let session_limit_config = state
+            .site_config
+            .session_limit
+            .as_ref()
+            .expect("Expected `session_limit` configured for this test");
+
+        let _user = user_with_password(&state, "alice", "password", false).await;
+
+        // Keep logging in to add more sessions, up to the `hard_limit`
+        #[allow(clippy::range_plus_one)]
+        for _ in 0..session_limit_config.hard_limit.get() {
+            let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+                "type": "m.login.password",
+                "identifier": {
+                    "type": "m.id.user",
+                    "user": "alice",
+                },
+                "password": "password",
+            }));
+            let response = state.request(request.clone()).await;
+            response.assert_status(StatusCode::OK);
+        }
+
+        // One more login will tip us over the `hard_limit`
+        let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+            "type": "m.login.password",
+            "identifier": {
+                "type": "m.id.user",
+                "user": "alice",
+            },
+            "password": "password",
+        }));
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::FORBIDDEN);
+        let body: serde_json::Value = response.json();
+        assert!(
+            body.get("errcode")
+                .expect("Expected errror response to include an `errcode`")
+                == "M_FORBIDDEN",
+            "Expected `errcode` to be `M_FORBIDDEN`"
+        );
     }
 }
