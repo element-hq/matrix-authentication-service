@@ -764,6 +764,10 @@ async fn user_password_login(
                     }
 
                     // Find the least recently used compat sessions
+                    //
+                    // In the future, it may be nice to avoid sessions with
+                    // cryptographic state (what does that mean exactly? keys uploaded
+                    // for device?).
                     let compat = repo
                         .compat_session()
                         .list(
@@ -791,10 +795,6 @@ async fn user_password_login(
                     // For now, we only automatically clean up compatibility sessions.
                     // If there are still too many sessions, we just throw an error with
                     // an explanation.
-                    //
-                    // In the future, it may be nice to avoid sessions with
-                    // cryptographic state (what does that mean exactly? keys uploaded
-                    // for device?).
                     if sessions_removed < need_to_remove {
                         return Err(RouteError::PolicyHardSessionLimitReached);
                     }
