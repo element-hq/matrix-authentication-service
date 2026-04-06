@@ -594,7 +594,7 @@ async fn token_login(
             user: &browser_session.user,
             login: CompatLogin::Token,
             session_replaced,
-            session_counts,
+            session_counts: &session_counts,
             requester,
         })
         .await?;
@@ -730,7 +730,7 @@ async fn user_password_login(
             user: &user,
             login: CompatLogin::Password,
             session_replaced,
-            session_counts,
+            session_counts: &session_counts,
             requester: policy_requester,
         })
         .await?;
@@ -781,7 +781,7 @@ async fn user_password_login(
                         let mut sessions_removed = 0;
                         for edge in compat.edges {
                             let (compat_session, _) = edge.node;
-                            let compat_session =
+                            let _compat_session =
                                 repo.compat_session().finish(clock, compat_session).await?;
                             sessions_removed += 1;
                         }
