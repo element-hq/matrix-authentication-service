@@ -777,10 +777,14 @@ async fn user_password_login(
                         .list(
                             // TODO: Order by `last_active_at`
                             CompatSessionFilter::new().for_user(&user).active_only(),
-                            Pagination::first(
-                                usize::try_from(need_to_remove)
-                                    .map_err(|err| RouteError::Internal(err.into()))?,
-                            ),
+                            Pagination::first(usize::try_from(need_to_remove).map_err(|err| {
+                                RouteError::Internal(
+                                    anyhow::anyhow!(
+                                        "Unable to convert `need_to_remove` to usize: {err}"
+                                    )
+                                    .into(),
+                                )
+                            })?),
                         )
                         .await?;
 
