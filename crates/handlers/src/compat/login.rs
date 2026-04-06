@@ -571,6 +571,8 @@ async fn process_violations_for_compat_login(
                 return Err(RouteError::PolicyHardSessionLimitReached);
             }
         }
+        // Nothing is wrong
+        (0, None) => return Ok(()),
         // Just throw an error for any other violation
         _ => {
             return Err(RouteError::PolicyRejected);
@@ -688,16 +690,14 @@ async fn token_login(
             requester,
         })
         .await?;
-    if !res.valid() {
-        process_violations_for_compat_login(
-            clock,
-            repo,
-            session_limit_config,
-            &browser_session.user,
-            res.violations,
-        )
-        .await?;
-    }
+    process_violations_for_compat_login(
+        clock,
+        repo,
+        session_limit_config,
+        &browser_session.user,
+        res.violations,
+    )
+    .await?;
 
     // We first create the session in the database, commit the transaction, then
     // create it on the homeserver, scheduling a device sync job afterwards to
@@ -817,16 +817,8 @@ async fn user_password_login(
             requester: policy_requester,
         })
         .await?;
-    if !res.valid() {
-        process_violations_for_compat_login(
-            clock,
-            repo,
-            session_limit_config,
-            &user,
-            res.violations,
-        )
+    process_violations_for_compat_login(clock, repo, session_limit_config, &user, res.violations)
         .await?;
-    }
 
     let session = repo
         .compat_session()
