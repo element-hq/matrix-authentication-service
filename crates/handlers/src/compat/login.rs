@@ -550,20 +550,20 @@ async fn process_violations_for_compat_login(
                 }
 
                 // Remove the sessions
-                let sessions_removed = {
-                    let mut sessions_removed = 0;
+                let num_sessions_removed = {
+                    let mut num_sessions_removed = 0;
                     for edge in compat_session_page.edges {
                         let (compat_session, _) = edge.node;
                         repo.compat_session().finish(clock, compat_session).await?;
-                        sessions_removed += 1;
+                        num_sessions_removed += 1;
                     }
-                    sessions_removed
+                    num_sessions_removed
                 };
 
                 // For now, we only automatically clean up compatibility sessions.
                 // If there are still too many sessions, we just throw an error with
                 // an explanation.
-                if sessions_removed < need_to_remove {
+                if num_sessions_removed < need_to_remove {
                     return Err(RouteError::PolicyHardSessionLimitReached);
                 }
             } else {
