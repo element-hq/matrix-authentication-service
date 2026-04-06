@@ -684,6 +684,7 @@ async fn token_login(
     let res = policy
         .evaluate_compat_login(mas_policy::CompatLoginInput {
             user: &browser_session.user,
+            session_limit: session_limit_config,
             login: CompatLogin::Token,
             session_replaced,
             session_counts,
@@ -811,6 +812,7 @@ async fn user_password_login(
     let res = policy
         .evaluate_compat_login(mas_policy::CompatLoginInput {
             user: &user,
+            session_limit: session_limit_config,
             login: CompatLogin::Password,
             session_replaced,
             session_counts,

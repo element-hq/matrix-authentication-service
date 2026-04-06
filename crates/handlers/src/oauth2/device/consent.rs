@@ -18,7 +18,7 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::{BoxClock, BoxRng, MatrixUser};
+use mas_data_model::{BoxClock, BoxRng, MatrixUser, SiteConfig};
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::UrlBuilder;
@@ -53,6 +53,7 @@ pub(crate) async fn get(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
+    State(site_config): State<SiteConfig>,
     mut repo: BoxRepository,
     mut policy: Policy,
     activity_tracker: BoundActivityTracker,
@@ -107,6 +108,7 @@ pub(crate) async fn get(
         .context("Client not found")
         .map_err(InternalError::from_anyhow)?;
 
+    let session_limit_config = site_config.session_limit.as_ref();
     let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
 
     // We can close the repository early, we don't need it at this point
@@ -117,6 +119,7 @@ pub(crate) async fn get(
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
             grant_type: mas_policy::GrantType::DeviceCode,
             client: &client,
+            session_limit: session_limit_config,
             session_counts: Some(session_counts),
             scope: &grant.scope,
             user: Some(&session.user),
@@ -191,6 +194,7 @@ pub(crate) async fn post(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
+    State(site_config): State<SiteConfig>,
     mut repo: BoxRepository,
     mut policy: Policy,
     activity_tracker: BoundActivityTracker,
@@ -246,6 +250,7 @@ pub(crate) async fn post(
         .context("Client not found")
         .map_err(InternalError::from_anyhow)?;
 
+    let session_limit_config = site_config.session_limit.as_ref();
     let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
 
     // Evaluate the policy
@@ -253,6 +258,7 @@ pub(crate) async fn post(
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
             grant_type: mas_policy::GrantType::DeviceCode,
             client: &client,
+            session_limit: session_limit_config,
             session_counts: Some(session_counts),
             scope: &grant.scope,
             user: Some(&session.user),
