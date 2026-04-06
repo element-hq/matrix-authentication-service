@@ -12,8 +12,8 @@ use chrono::Duration;
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
 use mas_data_model::{
-    BoxClock, BoxRng, Clock, CompatSession, CompatSsoLoginState, Device, SiteConfig, TokenType,
-    User,
+    BoxClock, BoxRng, Clock, CompatSession, CompatSsoLoginState, Device, SessionLimitConfig,
+    SiteConfig, TokenType, User,
 };
 use mas_matrix::HomeserverConnection;
 use mas_policy::{Policy, Requester, ViolationVariant, model::CompatLogin};
@@ -359,6 +359,7 @@ pub(crate) async fn post(
                     ip_address: activity_tracker.ip(),
                     user_agent: user_agent.clone(),
                 },
+                site_config.session_limit.as_ref(),
                 username,
                 password,
                 input.device_id, // TODO check for validity
@@ -377,6 +378,7 @@ pub(crate) async fn post(
                     ip_address: activity_tracker.ip(),
                     user_agent: user_agent.clone(),
                 },
+                site_config.session_limit.as_ref(),
                 &token,
                 input.device_id,
                 input.initial_device_display_name,
@@ -496,6 +498,7 @@ async fn token_login(
     repo: &mut BoxRepository,
     policy: &mut Policy,
     requester: Requester,
+    session_limit_config: Option<&SessionLimitConfig>,
     token: &str,
     requested_device_id: Option<String>,
     initial_device_display_name: Option<String>,
@@ -585,7 +588,6 @@ async fn token_login(
         .app_session()
         .finish_sessions_to_replace_device(clock, &browser_session.user, &device)
         .await?;
-
     let session_counts = count_user_sessions_for_limiting(repo, &browser_session.user).await?;
 
     let res = policy
@@ -646,6 +648,7 @@ async fn user_password_login(
     repo: &mut BoxRepository,
     policy: &mut Policy,
     policy_requester: Requester,
+    session_limit_config: Option<&SessionLimitConfig>,
     username: &str,
     password: String,
     requested_device_id: Option<String>,
