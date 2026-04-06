@@ -135,19 +135,20 @@ impl ConfigurationSection for ExperimentalConfig {
 /// Configuration options for the session limit feature
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 pub struct SessionLimitConfig {
-    /// Upon login in interactive contexts, if the soft limit is reached, it will
-    /// display a policy violation screen (web UI) to remove sessions before creating
-    /// the new session.
+    /// Upon login in interactive contexts (like OAuth 2.0 sessions), if the soft limit
+    /// is reached, it will display a policy violation screen (web UI) to remove
+    /// sessions before creating the new session.
     ///
-    /// This is not enforced in uninteractive contexts (like the legacy compability
-    /// login API). See [`hard_limit`] for enforcement on that side.
+    /// This is not enforced in non-interactive contexts (like the legacy compability
+    /// login API) as there is no opportunity for us to show some UI for people remove
+    /// some sessions. See [`hard_limit`] for enforcement on that side.
     ///
     /// [`hard_limit`]: Self::hard_limit
     pub soft_limit: NonZeroU64,
     /// Upon login, when `hard_limit_eviction: false`, will refuse the new login (policy
     /// violation error), otherwise, see [`hard_limit_eviction`].
     ///
-    /// The hard limit is enforced in all contexts (interactive/uninteractive).
+    /// The hard limit is enforced in all contexts (interactive/non-interactive).
     ///
     /// [`hard_limit_eviction`]: Self::hard_limit_eviction
     pub hard_limit: NonZeroU64,
@@ -196,7 +197,8 @@ impl ConfigurationSection for SessionLimitConfig {
         // See [`SessionLimitConfig::hard_limit_eviction`] docstring
         if self.hard_limit_eviction && self.hard_limit.get() < 2 {
             return Err(error_on_field(figment::error::Error::from(
-                "Session `hard_limit` must be at-least 2 when automatic `hard_limit_eviction` is set.",
+                "Session `hard_limit` must be at-least 2 when automatic `hard_limit_eviction` is set. \
+                See configuration docs for more info.",
             ), "hard_limit").into());
         }
 

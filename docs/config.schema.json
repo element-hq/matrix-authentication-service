@@ -2898,13 +2898,13 @@
       "type": "object",
       "properties": {
         "soft_limit": {
-          "description": "Upon login in interactive contexts, if the soft limit is reached, it will\n display a policy violation screen (web UI) to remove sessions before creating\n the new session.\n\n This is not enforced in uninteractive contexts (like the legacy compability\n login API). See [`hard_limit`] for enforcement on that side.\n\n [`hard_limit`]: Self::hard_limit",
+          "description": "Upon login in interactive contexts (like OAuth 2.0 sessions), if the soft limit\n is reached, it will display a policy violation screen (web UI) to remove\n sessions before creating the new session.\n\n This is not enforced in non-interactive contexts (like the legacy compability\n login API) as there is no opportunity for us to show some UI for people remove\n some sessions. See [`hard_limit`] for enforcement on that side.\n\n [`hard_limit`]: Self::hard_limit",
           "type": "integer",
           "format": "uint64",
           "minimum": 1
         },
         "hard_limit": {
-          "description": "Upon login, when `hard_limit_eviction: false`, will refuse the new login (policy\n violation error), otherwise, see [`hard_limit_eviction`].\n\n The hard limit is enforced in all contexts (interactive/uninteractive).\n\n [`hard_limit_eviction`]: Self::hard_limit_eviction",
+          "description": "Upon login, when `hard_limit_eviction: false`, will refuse the new login (policy\n violation error), otherwise, see [`hard_limit_eviction`].\n\n The hard limit is enforced in all contexts (interactive/non-interactive).\n\n [`hard_limit_eviction`]: Self::hard_limit_eviction",
           "type": "integer",
           "format": "uint64",
           "minimum": 1
