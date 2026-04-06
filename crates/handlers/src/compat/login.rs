@@ -1654,10 +1654,10 @@ mod tests {
             pool,
             SiteConfig {
                 session_limit: Some(SessionLimitConfig {
-                    // Lowest non-zero value so we don't have to login a bunch (lower
-                    // than `hard_limit`)
+                    // (doesn't matter)
                     soft_limit: NonZeroU64::new(1).unwrap(),
-                    hard_limit: NonZeroU64::new(2).unwrap(),
+                    // Lowest non-zero value so we don't have to login a bunch
+                    hard_limit: NonZeroU64::new(1).unwrap(),
                     hard_limit_eviction: false,
                 }),
                 ..test_site_config()
@@ -1706,6 +1706,77 @@ mod tests {
                 .expect("Expected errror response to include an `errcode`")
                 == "M_FORBIDDEN",
             "Expected `errcode` to be `M_FORBIDDEN`"
+        );
+    }
+
+    /// Test that the `hard_limit_eviction` will automatically drop old sessions when we
+    /// go over the limit
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_hard_limit_eviction_compat_login(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                session_limit: Some(SessionLimitConfig {
+                    // (doesn't matter)
+                    soft_limit: NonZeroU64::new(1).unwrap(),
+                    // Must be at-least 2 when `hard_limit_eviction`
+                    hard_limit: NonZeroU64::new(2).unwrap(),
+                    // Option under test
+                    hard_limit_eviction: true,
+                }),
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let session_limit_config = state
+            .site_config
+            .session_limit
+            .as_ref()
+            .expect("Expected `session_limit` configured for this test");
+
+        let user = user_with_password(&state, "alice", "password", false).await;
+
+        // Keep logging in to add more sessions, up to the `hard_limit`
+        #[allow(clippy::range_plus_one)]
+        for _ in 0..session_limit_config.hard_limit.get() {
+            let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+                "type": "m.login.password",
+                "identifier": {
+                    "type": "m.id.user",
+                    "user": "alice",
+                },
+                "password": "password",
+            }));
+            let response = state.request(request.clone()).await;
+            response.assert_status(StatusCode::OK);
+        }
+
+        // One more login will drop one of our old sessions to make room for the new login
+        let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+            "type": "m.login.password",
+            "identifier": {
+                "type": "m.id.user",
+                "user": "alice",
+            },
+            "password": "password",
+        }));
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::OK);
+
+        // Ensure we still only have two sessions (`session_limit_config.hard_limit`)
+        let mut repo = state.repository().await.unwrap();
+        let session_counts = count_user_sessions_for_limiting(&mut repo, &user)
+            .await
+            .unwrap();
+        assert!(
+            session_counts.total == 2,
+            "Must not have more sessions ({}) than allowed by the `hard_limit` ({}). \
+            Expected one of the old sessions to be dropped to make room for the new login",
+            session_counts.total,
+            session_limit_config.hard_limit,
         );
     }
 }
