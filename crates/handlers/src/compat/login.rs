@@ -684,7 +684,7 @@ async fn token_login(
             user: &browser_session.user,
             login: CompatLogin::Token,
             session_replaced,
-            session_counts: &session_counts,
+            session_counts,
             requester,
         })
         .await?;
@@ -813,7 +813,7 @@ async fn user_password_login(
             user: &user,
             login: CompatLogin::Password,
             session_replaced,
-            session_counts: &session_counts,
+            session_counts,
             requester: policy_requester,
         })
         .await?;

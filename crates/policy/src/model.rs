@@ -202,7 +202,7 @@ pub struct CompatLoginInput<'a> {
     pub user: &'a User,
 
     /// How many sessions the user has.
-    pub session_counts: &'a SessionCounts,
+    pub session_counts: SessionCounts,
 
     /// Whether a session will be replaced by this login
     pub session_replaced: bool,
