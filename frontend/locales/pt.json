@@ -125,6 +125,7 @@
       "heading": "O endereço de e-mail {{email}} já está a ser utilizado."
     },
     "end_session_button": {
+      "confirmation_modal_body_text": "Make sure you always have access to another verified device or your recovery key to avoid losing your encrypted chat history.",
       "confirmation_modal_title": "Tem a certeza de que quer terminar esta sessão?",
       "text": "Remover dispositivo"
     },
