@@ -840,6 +840,7 @@ async fn user_password_login(
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
     use std::num::NonZeroU64;
 
     use hyper::Request;
@@ -1701,10 +1702,10 @@ mod tests {
         let response = state.request(request.clone()).await;
         response.assert_status(StatusCode::FORBIDDEN);
         let body: serde_json::Value = response.json();
-        assert!(
+        assert_eq!(
             body.get("errcode")
-                .expect("Expected errror response to include an `errcode`")
-                == "M_FORBIDDEN",
+                .expect("Expected errror response to include an `errcode`"),
+            "M_FORBIDDEN",
             "Expected `errcode` to be `M_FORBIDDEN`"
         );
     }
@@ -1739,9 +1740,11 @@ mod tests {
 
         let user = user_with_password(&state, "alice", "password", false).await;
 
-        // Keep logging in to add more sessions, up to the `hard_limit`
+        let mut login_device_ids: Vec<String> = Vec::new();
+
+        // Keep logging in to add more sessions, up to the `hard_limit`. Then one more login will drop one of our old sessions to make room for the new login
         #[allow(clippy::range_plus_one)]
-        for _ in 0..session_limit_config.hard_limit.get() {
+        for _ in 0..(session_limit_config.hard_limit.get() + 1) {
             let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
                 "type": "m.login.password",
                 "identifier": {
@@ -1752,31 +1755,66 @@ mod tests {
             }));
             let response = state.request(request.clone()).await;
             response.assert_status(StatusCode::OK);
+            let body: serde_json::Value = response.json();
+            let device_id = match body
+                .get("device_id")
+                .expect("Expected successful login response to include `device_id`")
+            {
+                serde_json::value::Value::String(device_id) => device_id.to_owned(),
+                _ => {
+                    panic!("Expected `device_id` to be a string")
+                }
+            };
+            login_device_ids.push(device_id);
         }
-
-        // One more login will drop one of our old sessions to make room for the new login
-        let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
-            "type": "m.login.password",
-            "identifier": {
-                "type": "m.id.user",
-                "user": "alice",
-            },
-            "password": "password",
-        }));
-        let response = state.request(request.clone()).await;
-        response.assert_status(StatusCode::OK);
 
         // Ensure we still only have two sessions (`session_limit_config.hard_limit`)
         let mut repo = state.repository().await.unwrap();
         let session_counts = count_user_sessions_for_limiting(&mut repo, &user)
             .await
             .unwrap();
-        assert!(
-            session_counts.total == 2,
+        assert_eq!(
+            session_counts.total, 2,
             "Must not have more sessions ({}) than allowed by the `hard_limit` ({}). \
             Expected one of the old sessions to be dropped to make room for the new login",
-            session_counts.total,
-            session_limit_config.hard_limit,
+            session_counts.total, session_limit_config.hard_limit,
+        );
+
+        // Also ensure that they are the newest sessions (we dropped the oldest)
+        let compat_session_page = repo
+            .compat_session()
+            .list(
+                CompatSessionFilter::new().for_user(&user).active_only(),
+                Pagination::first(2),
+            )
+            .await
+            .expect("Should be able to list user's compat sessions");
+        let remaining_active_sessions: HashSet<String> = compat_session_page
+            .edges
+            .iter()
+            .map(|a| {
+                a.node
+                    .0
+                    .device
+                    .clone()
+                    .expect("Expected each login should havea a device")
+                    .as_str()
+                    .to_owned()
+            })
+            .collect();
+
+        let most_recent_login_devices: HashSet<String> = login_device_ids
+            .iter()
+            .rev()
+            .take(2)
+            .map(std::borrow::ToOwned::to_owned)
+            .collect();
+
+        assert!(
+            most_recent_login_devices.is_subset(&remaining_active_sessions),
+            "Expected the 2 remaining active sessions ({:?}) to include the 2 most recent logins ({:?})",
+            remaining_active_sessions,
+            most_recent_login_devices
         );
     }
 }
