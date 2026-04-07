@@ -125,6 +125,7 @@
       "heading": "L’adresse e-mail {{email}} est déjà utilisée."
     },
     "end_session_button": {
+      "confirmation_modal_body_text": "Assurez-vous de toujours avoir accès à un autre appareil vérifié ou à votre clé de récupération afin d'éviter de perdre l'historique de vos discussions chiffrées.",
       "confirmation_modal_title": "Êtes-vous sûr de vouloir terminer cette session ?",
       "text": "Supprimer l’appareil"
     },
