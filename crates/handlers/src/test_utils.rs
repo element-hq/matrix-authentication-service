@@ -150,6 +150,7 @@ pub fn test_site_config() -> SiteConfig {
         login_with_email_allowed: true,
         plan_management_iframe_uri: None,
         session_limit: None,
+        device_code_grant_enabled: true,
     }
 }
 

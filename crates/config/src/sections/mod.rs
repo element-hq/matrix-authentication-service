@@ -19,6 +19,7 @@ mod email;
 mod experimental;
 mod http;
 mod matrix;
+mod oauth;
 mod passwords;
 mod policy;
 mod rate_limiting;
@@ -40,6 +41,7 @@ pub use self::{
         Resource as HttpResource, TlsConfig as HttpTlsConfig, UnixOrTcp,
     },
     matrix::{HomeserverKind, MatrixConfig},
+    oauth::OAuthConfig,
     passwords::{
         Algorithm as PasswordAlgorithm, HashingScheme as PasswordHashingScheme, PasswordsConfig,
     },
@@ -126,6 +128,10 @@ pub struct RootConfig {
     #[serde(default, skip_serializing_if = "AccountConfig::is_default")]
     pub account: AccountConfig,
 
+    /// Configuration section for OAuth 2.0 protocol options
+    #[serde(default, skip_serializing_if = "OAuthConfig::is_default")]
+    pub oauth: OAuthConfig,
+
     /// Experimental configuration options
     #[serde(default, skip_serializing_if = "ExperimentalConfig::is_default")]
     pub experimental: ExperimentalConfig,
@@ -151,6 +157,7 @@ impl ConfigurationSection for RootConfig {
         self.branding.validate(figment)?;
         self.captcha.validate(figment)?;
         self.account.validate(figment)?;
+        self.oauth.validate(figment)?;
         self.experimental.validate(figment)?;
 
         Ok(())
@@ -183,6 +190,7 @@ impl RootConfig {
             branding: BrandingConfig::default(),
             captcha: CaptchaConfig::default(),
             account: AccountConfig::default(),
+            oauth: OAuthConfig::default(),
             experimental: ExperimentalConfig::default(),
         })
     }
@@ -206,6 +214,7 @@ impl RootConfig {
             branding: BrandingConfig::default(),
             captcha: CaptchaConfig::default(),
             account: AccountConfig::default(),
+            oauth: OAuthConfig::default(),
             experimental: ExperimentalConfig::default(),
         }
     }
@@ -250,6 +259,9 @@ pub struct AppConfig {
     pub account: AccountConfig,
 
     #[serde(default)]
+    pub oauth: OAuthConfig,
+
+    #[serde(default)]
     pub experimental: ExperimentalConfig,
 }
 
@@ -270,6 +282,7 @@ impl ConfigurationSection for AppConfig {
         self.branding.validate(figment)?;
         self.captcha.validate(figment)?;
         self.account.validate(figment)?;
+        self.oauth.validate(figment)?;
         self.experimental.validate(figment)?;
 
         Ok(())

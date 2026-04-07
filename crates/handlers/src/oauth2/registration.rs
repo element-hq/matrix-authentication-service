@@ -21,6 +21,7 @@ use oauth2_types::{
         ClientMetadata, ClientMetadataVerificationError, ClientRegistrationResponse, Localized,
         VerifiedClientMetadata,
     },
+    requests::GrantType,
 };
 use opentelemetry::{Key, KeyValue, metrics::Counter};
 use psl::Psl;
@@ -31,7 +32,7 @@ use thiserror::Error;
 use tracing::info;
 use url::Url;
 
-use crate::{BoundActivityTracker, METER, impl_from_error_for_route};
+use crate::{BoundActivityTracker, METER, SiteConfig, impl_from_error_for_route};
 
 static REGISTRATION_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
     METER
@@ -58,6 +59,9 @@ pub(crate) enum RouteError {
 
     #[error("client registration denied by the policy: {0}")]
     PolicyDenied(EvaluationResult),
+
+    #[error("the Device Authorization Grant is disabled")]
+    DeviceCodeGrantDisabled,
 }
 
 impl_from_error_for_route!(mas_storage::RepositoryError);
@@ -169,6 +173,16 @@ impl IntoResponse for RouteError {
                 )
                     .into_response()
             }
+
+            Self::DeviceCodeGrantDisabled => (
+                StatusCode::BAD_REQUEST,
+                Json(
+                    ClientError::from(ClientErrorCode::InvalidClientMetadata).with_description(
+                        "The Device Authorization Grant is disabled on this server".to_owned(),
+                    ),
+                ),
+            )
+                .into_response(),
         };
 
         (sentry_event_id, response).into_response()
@@ -222,6 +236,7 @@ pub(crate) async fn post(
     activity_tracker: BoundActivityTracker,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     State(encrypter): State<Encrypter>,
+    State(site_config): State<SiteConfig>,
     body: Result<Json<ClientMetadata>, axum::extract::rejection::JsonRejection>,
 ) -> Result<impl IntoResponse, RouteError> {
     // Propagate any JSON extraction error
@@ -239,6 +254,13 @@ pub(crate) async fn post(
 
     // Validate the body
     let metadata = body.validate()?;
+
+    // Reject if the client requests the device_code grant type and it's disabled
+    if !site_config.device_code_grant_enabled
+        && metadata.grant_types().contains(&GrantType::DeviceCode)
+    {
+        return Err(RouteError::DeviceCodeGrantDisabled);
+    }
 
     // Some extra validation that is hard to do in OPA and not done by the
     // `validate` method either
@@ -383,6 +405,7 @@ pub(crate) async fn post(
 #[cfg(test)]
 mod tests {
     use hyper::{Request, StatusCode};
+    use mas_data_model::SiteConfig;
     use mas_router::SimpleRoute;
     use oauth2_types::{
         errors::{ClientError, ClientErrorCode},
@@ -393,7 +416,7 @@ mod tests {
 
     use crate::{
         oauth2::registration::host_is_public_suffix,
-        test_utils::{RequestBuilderExt, ResponseExt, TestState, setup},
+        test_utils::{RequestBuilderExt, ResponseExt, TestState, setup, test_site_config},
     };
 
     #[test]
@@ -615,5 +638,52 @@ mod tests {
         response.assert_status(StatusCode::CREATED);
         let response: ClientRegistrationResponse = response.json();
         assert_ne!(response.client_id, client_id);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_registration_device_code_grant_disabled(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                device_code_grant_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        // Registering a client that requests device_code grant should be rejected
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://example.com/",
+                "token_endpoint_auth_method": "none",
+                "grant_types": ["urn:ietf:params:oauth:grant-type:device_code"],
+                "response_types": [],
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::BAD_REQUEST);
+        let error: ClientError = response.json();
+        assert_eq!(error.error, ClientErrorCode::InvalidClientMetadata);
+        assert!(
+            error
+                .error_description
+                .unwrap()
+                .contains("Device Authorization Grant is disabled")
+        );
+
+        // Registering a client without device_code grant should still work
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://example.com/",
+                "redirect_uris": ["https://example.com/"],
+                "token_endpoint_auth_method": "none",
+                "response_types": ["code"],
+                "grant_types": ["authorization_code"],
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
     }
 }
