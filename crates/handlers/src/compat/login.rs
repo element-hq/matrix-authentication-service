@@ -492,7 +492,8 @@ pub(crate) async fn post(
     }))
 }
 
-/// Given the violations from [`Policy::evaluate_compat_login`], return the appropriate `RouteError` response.
+/// Given the violations from [`Policy::evaluate_compat_login`], return the
+/// appropriate `RouteError` response.
 async fn process_violations_for_compat_login(
     clock: &dyn Clock,
     repo: &mut BoxRepository,
@@ -840,8 +841,7 @@ async fn user_password_login(
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashSet;
-    use std::num::NonZeroU64;
+    use std::{collections::HashSet, num::NonZeroU64};
 
     use hyper::Request;
     use mas_matrix::{HomeserverConnection, ProvisionRequest};
@@ -1594,9 +1594,9 @@ mod tests {
 
     /// Test that the `soft_limit` is not enforced for compat login.
     ///
-    /// `soft_limit` is for when we allow the user to remove devices in interactive
-    /// contexts. With the compatibility login API, there is no opportunity for us to
-    /// present a web UI.
+    /// `soft_limit` is for when we allow the user to remove devices in
+    /// interactive contexts. With the compatibility login API, there is no
+    /// opportunity for us to present a web UI.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_soft_limit_does_not_affect_compat_login(pool: PgPool) {
         setup();
@@ -1710,8 +1710,8 @@ mod tests {
         );
     }
 
-    /// Test that the `hard_limit_eviction` will automatically drop old sessions when we
-    /// go over the limit
+    /// Test that the `hard_limit_eviction` will automatically drop old sessions
+    /// when we go over the limit
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_hard_limit_eviction_compat_login(pool: PgPool) {
         setup();
@@ -1742,7 +1742,8 @@ mod tests {
 
         let mut login_device_ids: Vec<String> = Vec::new();
 
-        // Keep logging in to add more sessions, up to the `hard_limit`. Then one more login will drop one of our old sessions to make room for the new login
+        // Keep logging in to add more sessions, up to the `hard_limit`. Then one more
+        // login will drop one of our old sessions to make room for the new login
         #[allow(clippy::range_plus_one)]
         for _ in 0..(session_limit_config.hard_limit.get() + 1) {
             let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({

@@ -135,43 +135,47 @@ impl ConfigurationSection for ExperimentalConfig {
 /// Configuration options for the session limit feature
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 pub struct SessionLimitConfig {
-    /// Upon login in interactive contexts (like OAuth 2.0 sessions), if the soft limit
-    /// is reached, it will display a policy violation screen (web UI) to remove
-    /// sessions before creating the new session.
+    /// Upon login in interactive contexts (like OAuth 2.0 sessions), if the
+    /// soft limit is reached, it will display a policy violation screen
+    /// (web UI) to remove sessions before creating the new session.
     ///
-    /// This is not enforced in non-interactive contexts (like the legacy compability
-    /// login API) as there is no opportunity for us to show some UI for people remove
-    /// some sessions. See [`hard_limit`] for enforcement on that side.
+    /// This is not enforced in non-interactive contexts (like the legacy
+    /// compability login API) as there is no opportunity for us to show
+    /// some UI for people remove some sessions. See [`hard_limit`] for
+    /// enforcement on that side.
     ///
     /// [`hard_limit`]: Self::hard_limit
     pub soft_limit: NonZeroU64,
-    /// Upon login, when `hard_limit_eviction: false`, will refuse the new login (policy
-    /// violation error), otherwise, see [`hard_limit_eviction`].
+    /// Upon login, when `hard_limit_eviction: false`, will refuse the new login
+    /// (policy violation error), otherwise, see [`hard_limit_eviction`].
     ///
-    /// The hard limit is enforced in all contexts (interactive/non-interactive).
+    /// The hard limit is enforced in all contexts
+    /// (interactive/non-interactive).
     ///
     /// [`hard_limit_eviction`]: Self::hard_limit_eviction
     pub hard_limit: NonZeroU64,
-    /// Whether we should automatically choose the least recently used devices to remove
-    /// when the [`Self::hard_limit`] is reached; in order to allow the new login to continue.
+    /// Whether we should automatically choose the least recently used devices
+    /// to remove when the [`Self::hard_limit`] is reached; in order to
+    /// allow the new login to continue.
     ///
     /// Disabled by default
     ///
-    /// WARNING: Removing sessions is a potentially damaging operation. Any end-to-end
-    /// encrypted history on the device will be lost and can only be recovered if you
-    /// have another verified active device or have a recovery key setup.
+    /// WARNING: Removing sessions is a potentially damaging operation. Any
+    /// end-to-end encrypted history on the device will be lost and can only
+    /// be recovered if you have another verified active device or have a
+    /// recovery key setup.
     ///
     /// When using [`hard_limit_eviction`], the [`hard_limit`] must be
     /// at-least 2 to avoid catastropically losing encrypted history and digital
-    /// identity in pathological cases. Keep in mind this is a bare minimum restriction
-    /// and you can still run into trouble.
+    /// identity in pathological cases. Keep in mind this is a bare minimum
+    /// restriction and you can still run into trouble.
     ///
-    /// This is most applicable in scenarios where your homeserver has many legacy
-    /// bots/scripts that login over and over (which ideally should be using [personal
-    /// access
+    /// This is most applicable in scenarios where your homeserver has many
+    /// legacy bots/scripts that login over and over (which ideally should
+    /// be using [personal access
     /// tokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))
-    /// and you want to avoid breaking their operation while maintaining some level of
-    /// sanity with the number of devices that people can have.
+    /// and you want to avoid breaking their operation while maintaining some
+    /// level of sanity with the number of devices that people can have.
     ///
     /// [`hard_limit`]: Self::hard_limit
     /// [`hard_limit_eviction`]: Self::hard_limit_eviction
