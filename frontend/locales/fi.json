@@ -125,7 +125,8 @@
       "heading": "Sähköpostiosoite {{email}} on jo käytössä."
     },
     "end_session_button": {
-      "confirmation_modal_title": "Haluatko varmasti lopettaa tämän istunnon?",
+      "confirmation_modal_body_text": "Varmista, että sinulla on toinen vahvistettu laite tai palautusavaimesi käytettävissä, jotta et menetä salattua keskusteluhistoriaasi.",
+      "confirmation_modal_title": "Haluatko varmasti poistaa tämän laitteen?",
       "text": "Poista laite"
     },
     "error": {

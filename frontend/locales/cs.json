@@ -126,7 +126,8 @@
       "heading": "E-mailová adresa {{email}} se již používá."
     },
     "end_session_button": {
-      "confirmation_modal_title": "Opravdu chcete ukončit tuto relaci?",
+      "confirmation_modal_body_text": "Ujistěte se, že máte vždy přístup k jinému ověřenému zařízení nebo klíči pro obnovení, abyste předešli ztrátě šifrované historie chatu.",
+      "confirmation_modal_title": "Opravdu chcete toto zařízení odstranit?",
       "text": "Odstranit zařízení"
     },
     "error": {
