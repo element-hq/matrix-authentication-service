@@ -2898,19 +2898,19 @@
       "type": "object",
       "properties": {
         "soft_limit": {
-          "description": "Upon login in interactive contexts (like OAuth 2.0 sessions), if the soft limit\n is reached, it will display a policy violation screen (web UI) to remove\n sessions before creating the new session.\n\n This is not enforced in non-interactive contexts (like the legacy compability\n login API) as there is no opportunity for us to show some UI for people remove\n some sessions. See [`hard_limit`] for enforcement on that side.\n\n [`hard_limit`]: Self::hard_limit",
+          "description": "Upon login in interactive contexts (like OAuth 2.0 sessions), if the\n soft limit is reached, it will display a policy violation screen\n (web UI) to remove sessions before creating the new session.\n\n This is not enforced in non-interactive contexts (like the legacy\n compability login API) as there is no opportunity for us to show\n some UI for people remove some sessions. See [`hard_limit`] for\n enforcement on that side.\n\n [`hard_limit`]: Self::hard_limit",
           "type": "integer",
           "format": "uint64",
           "minimum": 1
         },
         "hard_limit": {
-          "description": "Upon login, when `hard_limit_eviction: false`, will refuse the new login (policy\n violation error), otherwise, see [`hard_limit_eviction`].\n\n The hard limit is enforced in all contexts (interactive/non-interactive).\n\n [`hard_limit_eviction`]: Self::hard_limit_eviction",
+          "description": "Upon login, when `hard_limit_eviction: false`, will refuse the new login\n (policy violation error), otherwise, see [`hard_limit_eviction`].\n\n The hard limit is enforced in all contexts\n (interactive/non-interactive).\n\n [`hard_limit_eviction`]: Self::hard_limit_eviction",
           "type": "integer",
           "format": "uint64",
           "minimum": 1
         },
         "hard_limit_eviction": {
-          "description": "Whether we should automatically choose the least recently used devices to remove\n when the [`Self::hard_limit`] is reached; in order to allow the new login to continue.\n\n Disabled by default\n\n WARNING: Removing sessions is a potentially damaging operation. Any end-to-end\n encrypted history on the device will be lost and can only be recovered if you\n have another verified active device or have a recovery key setup.\n\n When using [`hard_limit_eviction`], the [`hard_limit`] must be\n at-least 2 to avoid catastropically losing encrypted history and digital\n identity in pathological cases. Keep in mind this is a bare minimum restriction\n and you can still run into trouble.\n\n This is most applicable in scenarios where your homeserver has many legacy\n bots/scripts that login over and over (which ideally should be using [personal\n access\n tokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))\n and you want to avoid breaking their operation while maintaining some level of\n sanity with the number of devices that people can have.\n\n [`hard_limit`]: Self::hard_limit\n [`hard_limit_eviction`]: Self::hard_limit_eviction",
+          "description": "Whether we should automatically choose the least recently used devices\n to remove when the [`Self::hard_limit`] is reached; in order to\n allow the new login to continue.\n\n Disabled by default\n\n WARNING: Removing sessions is a potentially damaging operation. Any\n end-to-end encrypted history on the device will be lost and can only\n be recovered if you have another verified active device or have a\n recovery key setup.\n\n When using [`hard_limit_eviction`], the [`hard_limit`] must be\n at-least 2 to avoid catastropically losing encrypted history and digital\n identity in pathological cases. Keep in mind this is a bare minimum\n restriction and you can still run into trouble.\n\n This is most applicable in scenarios where your homeserver has many\n legacy bots/scripts that login over and over (which ideally should\n be using [personal access\n tokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))\n and you want to avoid breaking their operation while maintaining some\n level of sanity with the number of devices that people can have.\n\n [`hard_limit`]: Self::hard_limit\n [`hard_limit_eviction`]: Self::hard_limit_eviction",
           "type": "boolean",
           "default": false
         }
