@@ -1820,11 +1820,13 @@ mod tests {
 
         // The remaining sessions should be the most recent sessions
         #[allow(clippy::uninlined_format_args)]
-        assert!(
-            most_recent_login_device_ids.is_subset(&remaining_active_compat_session_device_ids),
-            "Expected the 2 remaining active sessions ({:?}) to include the 2 most recent logins ({:?})",
-            remaining_active_compat_session_device_ids,
-            most_recent_login_device_ids
-        );
+        {
+            assert!(
+                most_recent_login_device_ids.is_subset(&remaining_active_compat_session_device_ids),
+                "Expected the 2 remaining active sessions ({:?}) to include the 2 most recent logins ({:?})",
+                remaining_active_compat_session_device_ids,
+                most_recent_login_device_ids
+            );
+        }
     }
 }
