@@ -148,15 +148,6 @@ pub async fn policy_factory_from_config(
         email: config.email_entrypoint.clone(),
     };
 
-    let session_limit_config =
-        experimental_config
-            .session_limit
-            .as_ref()
-            .map(|c| SessionLimitConfig {
-                soft_limit: c.soft_limit,
-                hard_limit: c.hard_limit,
-            });
-
     let data =
         mas_policy::Data::new(matrix_config.homeserver.clone()).with_rest(config.data.clone());
 
