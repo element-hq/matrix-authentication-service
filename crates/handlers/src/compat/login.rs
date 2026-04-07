@@ -1768,7 +1768,8 @@ mod tests {
             login_device_ids.push(device_id);
         }
 
-        // Ensure we still only have two sessions (`session_limit_config.hard_limit`)
+        // Ensure we still only have two sessions (`session_limit_config.hard_limit`).
+        // We're sanity checking across all session types.
         let mut repo = state.repository().await.unwrap();
         let session_counts = count_user_sessions_for_limiting(&mut repo, &user)
             .await
@@ -1780,7 +1781,7 @@ mod tests {
             session_counts.total, session_limit_config.hard_limit,
         );
 
-        // Also ensure that they are the newest sessions (we dropped the oldest)
+        // Also ensure that the newest sessions remain (we dropped the oldest)
         let compat_session_page = repo
             .compat_session()
             .list(
@@ -1789,7 +1790,7 @@ mod tests {
             )
             .await
             .expect("Should be able to list user's compat sessions");
-        let remaining_active_sessions: HashSet<String> = compat_session_page
+        let remaining_active_compat_session_device_ids: HashSet<String> = compat_session_page
             .edges
             .iter()
             .map(|a| {
@@ -1803,18 +1804,26 @@ mod tests {
             })
             .collect();
 
-        let most_recent_login_devices: HashSet<String> = login_device_ids
+        let most_recent_login_device_ids: HashSet<String> = login_device_ids
             .iter()
             .rev()
             .take(2)
             .map(std::borrow::ToOwned::to_owned)
             .collect();
+        // Sanity check our comparison (ensure we're not comparing an empty set)
+        assert_eq!(
+            most_recent_login_device_ids.len(),
+            2,
+            "Expected 2 logins for the next comparison"
+        );
 
+        // The remaining sessions should be the most recent sessions
+        #[allow(clippy::uninlined_format_args)]
         assert!(
-            most_recent_login_devices.is_subset(&remaining_active_sessions),
+            most_recent_login_device_ids.is_subset(&remaining_active_compat_session_device_ids),
             "Expected the 2 remaining active sessions ({:?}) to include the 2 most recent logins ({:?})",
-            remaining_active_sessions,
-            most_recent_login_devices
+            remaining_active_compat_session_device_ids,
+            most_recent_login_device_ids
         );
     }
 }
