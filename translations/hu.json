@@ -102,8 +102,7 @@
       "granted": {
         "description": "Megadta a(z) %(client_name)s hozzáférését. Bezárhatja ezt az ablakot.",
         "heading": "Hozzáférés megadva"
-      },
-      "this_will_setup": "Egy másik eszköz szeretné beállítani a(z) %(client_name)s klienst (<span>%(client_uri)s</span>) a(z) <span>%(server_name)s</span> fiókjával. Győződjön meg arról, hogy felismeri az eszközt."
+      }
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s ezen: %(device_name)s",
