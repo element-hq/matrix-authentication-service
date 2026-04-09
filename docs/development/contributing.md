@@ -108,6 +108,34 @@ If you haven't already, install [Cargo-Nextest](https://nexte.st/docs/installati
   - `make PODMAN=1 test` (runs inside a container; needs Podman installed)
   - `make DOCKER=1 test` (runs inside a container; needs Docker installed)
 
+### Debug policies
+
+When in doubt, rebuild the policies (see the *Build and run MAS* section above). It's
+really easy to make a change to the policies and forget to rebuild them, which can lead
+to maddening debugging sessions.
+
+The policies get a combination of `data` and `input` when they're evaluated.
+
+ - `data`: App-global data. This is a combination of many things:
+    - Static fields defined in `mas_policy::Data`
+    - `mas_policy::DynamicData` is mixed in and is managed with the admin API.
+    - Arbitrary data can be added via configuration (`policy.data`) ([docs](../reference/configuration.md#policy))
+ - `input`: Information passed during evaluation that is derived from each request.
+    - Each policy has its own input schema defined by the types like `CompatLoginInput`, etc.
+
+To debug what the policy template sees, you can add a
+[`print(...)`](https://www.openpolicyagent.org/docs/cheatsheet#print) statement in the
+policy, which will print to the [server
+logs](https://github.com/matrix-org/rust-opa-wasm/blob/17cdd1570448da02f9d37bbe4e89ffad2ffc5e3f/src/policy.rs#L276)
+(FIXME: this currently doesn't work).
+
+Since the way `data` is assembled is a bit complex, you can use
+`RUST_LOG=info,mas_policy=debug` which will show the `tracing::debug!("Instantiating
+policy with data={}", data);` debug logs.
+
+For `input`, you can just log it more directly where you evaluate the policy.
+
+
 ## 8. Submit a pull request
 
 Once you've made changes, you're ready to submit a pull request.
