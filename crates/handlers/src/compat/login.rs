@@ -582,6 +582,7 @@ async fn process_violations_for_compat_login(
         [] => return Ok(()),
         // Just throw an error for any other violation
         _violations => {
+            // FIXME: We should be exposing the violations to the user
             return Err(RouteError::PolicyRejected);
         }
     }
