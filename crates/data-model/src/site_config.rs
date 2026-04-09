@@ -39,7 +39,7 @@ pub struct SessionExpirationConfig {
     pub compat_session_inactivity_ttl: Option<Duration>,
 }
 
-/// See [`mas_config::sections::ExperimentalSessionLimitConfig`]
+/// See [`mas_config::ExperimentalSessionLimitConfig`]
 #[derive(Serialize, Debug, Clone)]
 pub struct SessionLimitConfig {
     pub soft_limit: NonZeroU64,
