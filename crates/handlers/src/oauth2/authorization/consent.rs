@@ -17,7 +17,7 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::{AuthorizationGrantStage, BoxClock, BoxRng, MatrixUser, SiteConfig};
+use mas_data_model::{AuthorizationGrantStage, BoxClock, BoxRng, MatrixUser};
 use mas_keystore::Keystore;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
@@ -91,7 +91,6 @@ pub(crate) async fn get(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
-    State(site_config): State<SiteConfig>,
     mut policy: Policy,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
@@ -146,12 +145,9 @@ pub(crate) async fn get(
     // We can close the repository early, we don't need it at this point
     repo.save().await?;
 
-    let session_limit_config = site_config.session_limit.as_ref();
-
     let res = policy
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
             user: Some(&session.user),
-            session_limit: session_limit_config,
             client: &client,
             session_counts: Some(session_counts),
             scope: &grant.scope,
@@ -224,7 +220,6 @@ pub(crate) async fn post(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(key_store): State<Keystore>,
-    State(site_config): State<SiteConfig>,
     mut policy: Policy,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
@@ -280,13 +275,11 @@ pub(crate) async fn post(
         return Err(RouteError::GrantNotPending(grant.id));
     }
 
-    let session_limit_config = site_config.session_limit.as_ref();
     let session_counts = count_user_sessions_for_limiting(&mut repo, &browser_session.user).await?;
 
     let res = policy
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
             user: Some(&browser_session.user),
-            session_limit: session_limit_config,
             client: &client,
             session_counts: Some(session_counts),
             scope: &grant.scope,

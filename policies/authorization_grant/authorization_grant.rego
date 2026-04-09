@@ -159,7 +159,7 @@ violation contains {
 	"msg": "user has too many active sessions",
 } if {
 	# Only apply if session limits are enabled in the config
-	input.session_limit != null
+	data.session_limit != null
 
 	# Only apply if it's a user logging in (who therefore has countable sessions)
 	input.session_counts != null
@@ -168,5 +168,5 @@ violation contains {
 	# reached or exceeded.
 	# We use the soft limit because the user will be able to interactively remove
 	# sessions to return under the limit.
-	input.session_limit.soft_limit <= input.session_counts.total
+	data.session_limit.soft_limit <= input.session_counts.total
 }

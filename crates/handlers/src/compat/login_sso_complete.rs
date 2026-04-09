@@ -19,7 +19,7 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::{BoxClock, BoxRng, Clock, MatrixUser, SiteConfig};
+use mas_data_model::{BoxClock, BoxRng, Clock, MatrixUser};
 use mas_matrix::HomeserverConnection;
 use mas_policy::{Policy, model::CompatLogin};
 use mas_router::{CompatLoginSsoAction, UrlBuilder};
@@ -53,7 +53,6 @@ pub async fn get(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
-    State(site_config): State<SiteConfig>,
     mut policy: Policy,
     activity_tracker: BoundActivityTracker,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
@@ -115,12 +114,9 @@ pub async fn get(
     // We can close the repository early, we don't need it at this point
     repo.save().await?;
 
-    let session_limit_config = site_config.session_limit.as_ref();
-
     let res = policy
         .evaluate_compat_login(mas_policy::CompatLoginInput {
             user: &session.user,
-            session_limit: session_limit_config,
             login: CompatLogin::Sso {
                 redirect_uri: login.redirect_uri.to_string(),
             },
@@ -197,7 +193,6 @@ pub async fn post(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
-    State(site_config): State<SiteConfig>,
     mut policy: Policy,
     activity_tracker: BoundActivityTracker,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
@@ -267,12 +262,9 @@ pub async fn post(
 
     let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
 
-    let session_limit_config = site_config.session_limit.as_ref();
-
     let res = policy
         .evaluate_compat_login(mas_policy::CompatLoginInput {
             user: &session.user,
-            session_limit: session_limit_config,
             login: CompatLogin::Sso {
                 redirect_uri: login.redirect_uri.to_string(),
             },
