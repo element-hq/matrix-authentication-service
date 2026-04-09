@@ -159,7 +159,10 @@ pub async fn policy_factory_from_config(
                 hard_limit_eviction: c.hard_limit_eviction,
             });
 
-    let data = mas_policy::Data::new(matrix_config.homeserver.clone(), session_limit_config)
+    let data = mas_policy::Data::new(mas_policy::BaseData {
+        server_name: matrix_config.homeserver.clone(),
+        session_limit: session_limit_config
+    })
         .with_rest(config.data.clone());
 
     PolicyFactory::load(policy_file, data, entrypoints)
