@@ -501,13 +501,19 @@ async fn process_violations_for_compat_login(
     user: &User,
     violations: Vec<Violation>,
 ) -> Result<(), RouteError> {
-    match (violations.len(), violations.first()) {
+    // We're using slice syntax here so we can match easily
+    match &violations[..] {
         // If the only violation is having reached the session limit, we might be
         // able to resolve the situation.
         //
         // We don't trigger this if there was some other violation anyway, since
         // that means that removing a session wouldn't actually unblock the login.
-        (1, Some(violation)) if violation.variant == Some(ViolationVariant::TooManySessions) => {
+        [
+            Violation {
+                variant: Some(ViolationVariant::TooManySessions),
+                ..
+            },
+        ] => {
             let session_limit_config = session_limit_config
                     .expect("We should have a `session_limit` config if we are seeing a `TooManySessions` violation. \
                     This is most likely a programming error.");
@@ -573,9 +579,9 @@ async fn process_violations_for_compat_login(
             }
         }
         // Nothing is wrong
-        (0, None) => return Ok(()),
+        [] => return Ok(()),
         // Just throw an error for any other violation
-        _ => {
+        _violations => {
             return Err(RouteError::PolicyRejected);
         }
     }
