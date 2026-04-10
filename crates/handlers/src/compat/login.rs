@@ -1932,8 +1932,8 @@ mod tests {
         }
     }
 
-    /// Test that the `hard_limit_eviction` will automatically drop old sessions
-    /// when we go over the limit
+    /// Test that the `hard_limit_eviction` will automatically drop the oldest sessions
+    /// when we go over the limit even if all of the sessions are recent.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_hard_limit_eviction_recent_compat_login(pool: PgPool) {
         setup();
