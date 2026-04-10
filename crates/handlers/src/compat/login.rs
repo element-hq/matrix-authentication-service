@@ -4,8 +4,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::collections::HashMap;
-use std::sync::{Arc, LazyLock};
+use std::{
+    collections::HashMap,
+    sync::{Arc, LazyLock},
+};
 
 use axum::{Json, extract::State, response::IntoResponse};
 use axum_extra::typed_header::TypedHeader;
@@ -578,10 +580,11 @@ async fn process_violations_for_compat_login(
                         let active_compat_session_page = repo
                             .compat_session()
                             .list(
-                                CompatSessionFilter::new()
-                                    .for_user(user)
-                                    .active_only()
-                                    .with_last_active_after(inactive_threshold_date),
+                                // If we try to use
+                                // `.with_last_active_after(inactive_threshold_date)`
+                                // here, it will exclude all of the rows where
+                                // `last_active_at` is null which we want to include.
+                                CompatSessionFilter::new().for_user(user).active_only(),
                                 // We fetch a minimum of 100 sessions (more than we need in
                                 // normal cases) so we can sort by `last_active_at` after it
                                 // gets back from the database and can get even closer to
@@ -900,7 +903,7 @@ async fn user_password_login(
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::HashSet, num::NonZeroU64};
+    use std::{collections::HashSet, num::NonZeroU64, ops::Sub};
 
     use hyper::Request;
     use mas_matrix::{HomeserverConnection, ProvisionRequest};
@@ -1772,7 +1775,167 @@ mod tests {
     /// Test that the `hard_limit_eviction` will automatically drop old sessions
     /// when we go over the limit
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_hard_limit_eviction_compat_login(pool: PgPool) {
+    async fn test_hard_limit_eviction_old_compat_login(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                session_limit: Some(SessionLimitConfig {
+                    // (doesn't matter)
+                    soft_limit: NonZeroU64::new(1).unwrap(),
+                    // Must be at-least 2 when `hard_limit_eviction`
+                    hard_limit: NonZeroU64::new(2).unwrap(),
+                    // Option under test
+                    hard_limit_eviction: true,
+                }),
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let session_limit_config = state
+            .site_config
+            .session_limit
+            .as_ref()
+            .expect("Expected `session_limit` configured for this test");
+
+        let user = user_with_password(&state, "alice", "password", false).await;
+
+        let mut login_device_ids: Vec<String> = Vec::new();
+
+        // Keep logging in to add more sessions, up to the `hard_limit`. Then `+ 1` for
+        // one more login will drop one of our old sessions to make room for the new
+        // login
+        #[allow(clippy::range_plus_one)]
+        for login_index in 0..(session_limit_config.hard_limit.get() + 1) {
+            let original_time = state.clock.now();
+            // All of the logins except the last one should be in the past
+            if login_index <= session_limit_config.hard_limit.get() {
+                // Rewind time so the logins appear older than our "inactive" threshold (90
+                // days)
+                let login_index_i64: i64 = login_index.try_into().unwrap();
+                state
+                    .clock
+                    // Each login is a day earlier
+                    .advance(Duration::days(-200 + login_index_i64));
+            }
+
+            let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+                "type": "m.login.password",
+                "identifier": {
+                    "type": "m.id.user",
+                    "user": "alice",
+                },
+                "password": "password",
+            }));
+            let response = state.request(request.clone()).await;
+            response.assert_status(StatusCode::OK);
+            let body: serde_json::Value = response.json();
+            let device_id = match body
+                .get("device_id")
+                .expect("Expected successful login response to include `device_id`")
+            {
+                serde_json::value::Value::String(device_id) => device_id.to_owned(),
+                _ => {
+                    panic!("Expected `device_id` to be a string")
+                }
+            };
+            login_device_ids.push(device_id);
+
+            // Restore time
+            state.clock.advance(original_time - state.clock.now());
+        }
+
+        // TODO: How to wait for `last_active_at` to be set?
+
+        // Sanity check that the compat sessions have `last_active_at` set. This is
+        // important as `last_active_at` starts out null.
+        let mut repo = state.repository().await.unwrap();
+        let compat_session_page = repo
+            .compat_session()
+            .list(
+                CompatSessionFilter::new().for_user(&user).active_only(),
+                Pagination::first(session_limit_config.hard_limit.get().try_into().unwrap()),
+            )
+            .await
+            .expect("Should be able to list user's compat sessions");
+        for edge in compat_session_page.edges {
+            let (compat_session, _) = edge.node;
+            let last_active_at = compat_session
+                .last_active_at
+                .expect("We expect compat sessions to have `last_active_at` set for this test");
+            assert!(
+                last_active_at < (state.clock.now().sub(Duration::days(90))),
+                "Expected compat sessions to have a `last_active_at` older than the 90 day 'inactive' threshold"
+            );
+        }
+
+        // Ensure we still only have two sessions (`session_limit_config.hard_limit`).
+        // We're sanity checking across all session types.
+        let session_counts = count_user_sessions_for_limiting(&mut repo, &user)
+            .await
+            .unwrap();
+        assert_eq!(
+            session_counts.total, 2,
+            "Must not have more sessions ({}) than allowed by the `hard_limit` ({}). \
+            Expected one of the old sessions to be dropped to make room for the new login",
+            session_counts.total, session_limit_config.hard_limit,
+        );
+
+        // Also ensure that the newest sessions remain (we dropped the oldest)
+        let compat_session_page = repo
+            .compat_session()
+            .list(
+                CompatSessionFilter::new().for_user(&user).active_only(),
+                Pagination::first(2),
+            )
+            .await
+            .expect("Should be able to list user's compat sessions");
+        let remaining_active_compat_session_device_ids: HashSet<String> = compat_session_page
+            .edges
+            .iter()
+            .map(|a| {
+                a.node
+                    .0
+                    .device
+                    .clone()
+                    .expect("Expected each login should havea a device")
+                    .as_str()
+                    .to_owned()
+            })
+            .collect();
+
+        let most_recent_login_device_ids: HashSet<String> = login_device_ids
+            .iter()
+            .rev()
+            .take(2)
+            .map(std::borrow::ToOwned::to_owned)
+            .collect();
+        // Sanity check our comparison (ensure we're not comparing an empty set)
+        assert_eq!(
+            most_recent_login_device_ids.len(),
+            2,
+            "Expected 2 logins for the next comparison"
+        );
+
+        // The remaining sessions should be the most recent sessions
+        #[allow(clippy::uninlined_format_args)]
+        {
+            assert!(
+                most_recent_login_device_ids.is_subset(&remaining_active_compat_session_device_ids),
+                "Expected the 2 remaining active sessions ({:?}) to include the 2 most recent logins ({:?}). (all logins: {:?})",
+                remaining_active_compat_session_device_ids,
+                most_recent_login_device_ids,
+                login_device_ids,
+            );
+        }
+    }
+
+    /// Test that the `hard_limit_eviction` will automatically drop old sessions
+    /// when we go over the limit
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_hard_limit_eviction_recent_compat_login(pool: PgPool) {
         setup();
         let state = TestState::from_pool_with_site_config(
             pool,
@@ -1882,9 +2045,10 @@ mod tests {
         {
             assert!(
                 most_recent_login_device_ids.is_subset(&remaining_active_compat_session_device_ids),
-                "Expected the 2 remaining active sessions ({:?}) to include the 2 most recent logins ({:?})",
+                "Expected the 2 remaining active sessions ({:?}) to include the 2 most recent logins ({:?}). (all logins: {:?})",
                 remaining_active_compat_session_device_ids,
-                most_recent_login_device_ids
+                most_recent_login_device_ids,
+                login_device_ids,
             );
         }
     }
