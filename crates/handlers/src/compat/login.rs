@@ -513,7 +513,7 @@ async fn process_violations_for_compat_login(
         // that means that removing a session wouldn't actually unblock the login.
         [
             Violation {
-                variant: Some(ViolationVariant::TooManySessions),
+                variant: Some(ViolationVariant::TooManySessions { need_to_remove }),
                 ..
             },
         ] => {
@@ -521,9 +521,7 @@ async fn process_violations_for_compat_login(
                     .expect("We should have a `session_limit` config if we are seeing a `TooManySessions` violation. \
                     This is most likely a programming error.");
 
-            // TODO: This should come from `ViolationVariant::TooManySessions`
-            let need_to_remove: u32 = 1;
-            let need_to_remove_usize = usize::try_from(need_to_remove).map_err(|err| {
+            let need_to_remove_usize = usize::try_from(*need_to_remove).map_err(|err| {
                 RouteError::Internal(
                     anyhow::anyhow!("Unable to convert `need_to_remove` to usize: {err}").into(),
                 )
