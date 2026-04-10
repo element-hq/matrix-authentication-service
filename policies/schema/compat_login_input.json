@@ -8,11 +8,6 @@
       "type": "object",
       "additionalProperties": true
     },
-    "session_limit": {
-      "description": "Limits on the number of application sessions that each user can have",
-      "type": "object",
-      "additionalProperties": true
-    },
     "session_counts": {
       "description": "How many sessions the user has.",
       "allOf": [
@@ -39,7 +34,6 @@
   },
   "required": [
     "user",
-    "session_limit",
     "session_counts",
     "session_replaced",
     "login",

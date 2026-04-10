@@ -11,11 +11,6 @@
       ],
       "additionalProperties": true
     },
-    "session_limit": {
-      "description": "Limits on the number of application sessions that each user can have",
-      "type": "object",
-      "additionalProperties": true
-    },
     "session_counts": {
       "description": "How many sessions the user has.\n Not populated if it's not a user logging in.",
       "anyOf": [
@@ -42,7 +37,6 @@
     }
   },
   "required": [
-    "session_limit",
     "client",
     "scope",
     "grant_type",
