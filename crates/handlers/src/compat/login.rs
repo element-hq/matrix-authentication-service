@@ -521,7 +521,7 @@ async fn process_violations_for_compat_login(
                     .expect("We should have a `session_limit` config if we are seeing a `TooManySessions` violation. \
                     This is most likely a programming error.");
 
-            let need_to_remove_usize = usize::try_from(*need_to_remove).map_err(|err| {
+            let need_to_remove = usize::try_from(*need_to_remove).map_err(|err| {
                 RouteError::Internal(
                     anyhow::anyhow!("Unable to convert `need_to_remove` to usize: {err}").into(),
                 )
@@ -568,13 +568,13 @@ async fn process_violations_for_compat_login(
                             // normal cases) so we can sort by `last_active_at` after it
                             // gets back from the database and can get even closer to
                             // removing the oldest sessions.
-                            Pagination::first(std::cmp::max(need_to_remove_usize, 100)),
+                            Pagination::first(std::cmp::max(need_to_remove, 100)),
                         )
                         .await?;
                     edges_to_consider.extend(inactive_compat_session_page.edges);
 
                     // If there aren't enough "inactive" sessions, supplement with active ones
-                    if edges_to_consider.len() < need_to_remove_usize {
+                    if edges_to_consider.len() < need_to_remove {
                         let active_compat_session_page = repo
                             .compat_session()
                             .list(
@@ -587,7 +587,7 @@ async fn process_violations_for_compat_login(
                                 // normal cases) so we can sort by `last_active_at` after it
                                 // gets back from the database and can get even closer to
                                 // removing the oldest sessions.
-                                Pagination::first(std::cmp::max(need_to_remove_usize, 100)),
+                                Pagination::first(std::cmp::max(need_to_remove, 100)),
                             )
                             .await?;
                         edges_to_consider.extend(active_compat_session_page.edges);
@@ -618,12 +618,12 @@ async fn process_violations_for_compat_login(
                 // For now, we only automatically clean up compatibility sessions.
                 // If there aren't enough sessions that we could clean up, we just
                 // throw an error with an explanation.
-                if lru_compat_sessions.len() < need_to_remove_usize {
+                if lru_compat_sessions.len() < need_to_remove {
                     return Err(RouteError::PolicyHardSessionLimitReached);
                 }
 
                 // Remove the sessions (only as much as necessary, `need_to_remove`)
-                for compat_session in &lru_compat_sessions[0..need_to_remove_usize] {
+                for compat_session in &lru_compat_sessions[0..need_to_remove] {
                     repo.compat_session()
                         .finish(clock, compat_session.to_owned())
                         .await?;
