@@ -89,6 +89,7 @@ impl Entrypoints {
     }
 }
 
+/// Global static data that stays the same for the life of the [`PolicyFactory`]
 #[derive(Debug)]
 pub struct Data {
     base: BaseData,
@@ -195,6 +196,10 @@ fn merge_data_rec(
     Ok(())
 }
 
+/// Global dynamic data
+///
+/// Hint: there is an admin API to manage this, see
+/// `crates/handlers/src/admin/v1/policy_data/set.rs`
 struct DynamicData {
     version: Option<Ulid>,
     merged: serde_json::Value,
@@ -316,6 +321,7 @@ impl PolicyFactory {
         &self,
         data: &serde_json::Value,
     ) -> Result<Policy, InstantiateError> {
+        tracing::debug!("Instantiating policy with data={}", data);
         let mut store = Store::new(&self.engine, ());
         let runtime = Runtime::new(&mut store, &self.module)
             .await
