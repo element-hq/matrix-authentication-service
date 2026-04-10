@@ -52,7 +52,10 @@ pub enum ViolationVariant {
     EmailBanned,
 
     /// The user has reached their session limit.
-    TooManySessions,
+    TooManySessions {
+        /// How many devices to remove
+        need_to_remove: u32,
+    },
 }
 
 impl ViolationVariant {
@@ -70,7 +73,7 @@ impl ViolationVariant {
             Self::EmailDomainBanned => "email-domain-banned",
             Self::EmailNotAllowed => "email-not-allowed",
             Self::EmailBanned => "email-banned",
-            Self::TooManySessions => "too-many-sessions",
+            Self::TooManySessions { need_to_remove: _ } => "too-many-sessions",
         }
     }
 }
