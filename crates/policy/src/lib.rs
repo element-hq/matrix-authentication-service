@@ -30,7 +30,7 @@ pub enum LoadError {
     Read(#[from] tokio::io::Error),
 
     #[error("failed to create WASM engine")]
-    Engine(#[source] anyhow::Error),
+    Engine(#[source] opa_wasm::wasmtime::Error),
 
     #[error("module compilation task crashed")]
     CompilationTask(#[from] tokio::task::JoinError),
@@ -226,7 +226,6 @@ impl PolicyFactory {
         entrypoints: Entrypoints,
     ) -> Result<Self, LoadError> {
         let mut config = Config::default();
-        config.async_support(true);
         config.cranelift_opt_level(OptLevel::SpeedAndSize);
 
         let engine = Engine::new(&config).map_err(LoadError::Engine)?;
