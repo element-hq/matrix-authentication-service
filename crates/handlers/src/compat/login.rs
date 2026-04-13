@@ -1995,6 +1995,12 @@ mod tests {
             };
             login_device_ids.push(device_id);
 
+            // This test doesn't really care if `last_active_at` is filled in. Ideally,
+            // we would explicitly test both scenarios (null and filled in) but either
+            // is fine.
+            //
+            // state.activity_tracker.flush().await;
+
             // Advance time so that each session ID sorts deterministically after each
             // other (ULID includes timestamp). We would have flaky tests without this.
             state
