@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT oauth2_client_id\n                     , metadata_digest\n                     , encrypted_client_secret\n                     , application_type\n                     , redirect_uris\n                     , grant_type_authorization_code\n                     , grant_type_refresh_token\n                     , grant_type_client_credentials\n                     , grant_type_device_code\n                     , client_name\n                     , logo_uri\n                     , client_uri\n                     , policy_uri\n                     , tos_uri\n                     , jwks_uri\n                     , jwks\n                     , id_token_signed_response_alg\n                     , userinfo_signed_response_alg\n                     , token_endpoint_auth_method\n                     , token_endpoint_auth_signing_alg\n                     , initiate_login_uri\n                FROM oauth2_clients c\n                WHERE is_static = TRUE\n            ",
+  "query": "\n                SELECT oauth2_client_id\n                     , metadata_digest\n                     , encrypted_client_secret\n                     , application_type\n                     , redirect_uris\n                     , grant_type_authorization_code\n                     , grant_type_refresh_token\n                     , grant_type_client_credentials\n                     , grant_type_device_code\n                     , client_name\n                     , logo_uri\n                     , client_uri\n                     , policy_uri\n                     , tos_uri\n                     , jwks_uri\n                     , jwks\n                     , id_token_signed_response_alg\n                     , userinfo_signed_response_alg\n                     , token_endpoint_auth_method\n                     , token_endpoint_auth_signing_alg\n                     , initiate_login_uri\n                     , skip_consent\n                FROM oauth2_clients c\n\n                WHERE oauth2_client_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -107,10 +107,17 @@
         "ordinal": 20,
         "name": "initiate_login_uri",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 21,
+        "name": "skip_consent",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Uuid"
+      ]
     },
     "nullable": [
       false,
@@ -133,8 +140,9 @@
       true,
       true,
       true,
-      true
+      true,
+      false
     ]
   },
-  "hash": "fc9925e19000d79c0bb020ea44e13cbb364b3505626d34550e38f6f7397b9d42"
+  "hash": "8b5a624b821936107c99760e1666d0173741cc5f2f5ca49dfd0a3f340112a9b1"
 }

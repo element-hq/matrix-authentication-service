@@ -86,6 +86,9 @@ pub struct Client {
     /// URI using the https scheme that a third party can use to initiate a
     /// login by the RP
     pub initiate_login_uri: Option<Url>,
+
+    /// Whether the consent screen should be skipped for this client
+    pub skip_consent: bool,
 }
 
 #[derive(Debug, Error)]
@@ -201,6 +204,7 @@ impl Client {
                 id_token_signed_response_alg: None,
                 userinfo_signed_response_alg: None,
                 jwks: None,
+                skip_consent: false,
             },
             // Another client without any URIs set
             Self {
@@ -222,6 +226,7 @@ impl Client {
                 id_token_signed_response_alg: None,
                 userinfo_signed_response_alg: None,
                 jwks: None,
+                skip_consent: false,
             },
         ]
     }

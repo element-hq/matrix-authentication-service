@@ -91,6 +91,10 @@ pub struct ClientConfig {
     /// List of allowed redirect URIs
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub redirect_uris: Vec<Url>,
+
+    /// Whether to skip the consent screen for this client
+    #[serde(default)]
+    pub skip_consent: bool,
 }
 
 impl ClientConfig {
