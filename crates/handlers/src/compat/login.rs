@@ -608,7 +608,16 @@ async fn process_violations_for_compat_login(
                         let mut compat_sessions: Vec<mas_data_model::CompatSession> =
                             compat_session_map.into_values().collect();
                         // Sort by `last_active_at` (ascending)
-                        compat_sessions.sort_by_key(|compat_session| compat_session.last_active_at);
+                        compat_sessions.sort_by_key(|compat_session| {
+                            (
+                                // We mainly care about sorting by `last_active_at`
+                                compat_session.last_active_at,
+                                // Tie-break based on `created_at`
+                                compat_session.created_at,
+                                // Tie-break based on `id` for determinism
+                                compat_session.id,
+                            )
+                        });
                         compat_sessions
                     };
 
@@ -1985,6 +1994,13 @@ mod tests {
                 }
             };
             login_device_ids.push(device_id);
+
+            // Advance time so that each session ID sorts deterministically after each
+            // other (ULID includes timestamp). We would have flaky tests without this.
+            state
+                .clock
+                // Each login comes after the next.
+                .advance(Duration::seconds(1));
         }
 
         // Ensure we still only have two sessions (`session_limit_config.hard_limit`).
