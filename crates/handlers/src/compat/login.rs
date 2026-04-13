@@ -1841,11 +1841,12 @@ mod tests {
             };
             login_device_ids.push(device_id);
 
+            // Wait for `last_active_at` to be set
+            state.activity_tracker.flush().await;
+
             // Restore time
             state.clock.advance(original_time - state.clock.now());
         }
-
-        // TODO: How to wait for `last_active_at` to be set?
 
         // Sanity check that the compat sessions have `last_active_at` set. This is
         // important as `last_active_at` starts out null.
