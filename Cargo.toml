@@ -26,9 +26,12 @@ all = { level = "deny", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 # Allowed because it's nice to have temporary semantic names, see
 # https://github.com/rust-lang/rust-clippy/issues/12512#issuecomment-3316736180
-let_and_return = { level = "allow", priority = 1 }
+let_and_return = "allow"
 str_to_string = "deny"
 too_many_lines = "allow"
+# Sometimes variables are long and annoying to inline in the format string.
+# And this lint also complains about aliases, https://github.com/rust-lang/rust-clippy/issues/10247
+uninlined_format_args = "allow"
 
 [workspace.lints.rustdoc]
 broken_intra_doc_links = "deny"
