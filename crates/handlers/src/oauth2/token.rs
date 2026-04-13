@@ -861,6 +861,11 @@ async fn device_code_grant(
     homeserver: &Arc<dyn HomeserverConnection>,
     user_agent: Option<String>,
 ) -> Result<(AccessTokenResponse, BoxRepository), RouteError> {
+    // Check that the Device Authorization Grant is enabled on this server
+    if !site_config.device_code_grant_enabled {
+        return Err(RouteError::UnsupportedGrantType);
+    }
+
     // Check that the client is allowed to use this grant type
     if !client.grant_types.contains(&GrantType::DeviceCode) {
         return Err(RouteError::UnauthorizedClient(client.id));
@@ -1007,7 +1012,7 @@ mod tests {
     use sqlx::PgPool;
 
     use super::*;
-    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup, test_site_config};
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_auth_code_grant(pool: PgPool) {
@@ -1909,6 +1914,49 @@ mod tests {
                 "client_secret": client_secret,
                 "username": "john",
                 "password": "hunter2",
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::BAD_REQUEST);
+        let ClientError { error, .. } = response.json();
+        assert_eq!(error, ClientErrorCode::UnsupportedGrantType);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_device_code_grant_disabled(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                device_code_grant_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        // Provision a client (without device_code grant, since registration rejects it)
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://example.com/",
+                "redirect_uris": ["https://example.com/callback"],
+                "token_endpoint_auth_method": "none",
+                "response_types": ["code"],
+                "grant_types": ["authorization_code"],
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+
+        let response: ClientRegistrationResponse = response.json();
+        let client_id = response.client_id;
+
+        // Attempt to use the device_code grant type at the token endpoint
+        let request =
+            Request::post(mas_router::OAuth2TokenEndpoint::PATH).form(serde_json::json!({
+                "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+                "device_code": "fake-device-code",
+                "client_id": client_id,
             }));
 
         let response = state.request(request).await;

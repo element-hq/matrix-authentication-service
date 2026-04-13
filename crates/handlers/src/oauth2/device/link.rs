@@ -18,7 +18,7 @@ use mas_templates::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::PreferredLanguage;
+use crate::{PreferredLanguage, SiteConfig};
 
 #[derive(Serialize, Deserialize)]
 pub struct Params {
@@ -33,9 +33,15 @@ pub(crate) async fn get(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
+    State(site_config): State<SiteConfig>,
     cookie_jar: CookieJar,
     Query(query): Query<Params>,
 ) -> Result<impl IntoResponse, InternalError> {
+    if !site_config.device_code_grant_enabled {
+        return Err(InternalError::from_anyhow(anyhow::anyhow!(
+            "The Device Authorization Grant is disabled"
+        )));
+    }
     let mut form_state = FormState::from_form(&query);
 
     // If we have a code in query, find it in the database
