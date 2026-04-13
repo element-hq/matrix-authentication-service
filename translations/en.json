@@ -253,9 +253,9 @@
           "context": "pages/device_consent.html:168:29-68"
         }
       },
-      "this_will_setup": "Another device wants to set up %(client_name)s (<span>%(client_uri)s</span>) with your <span>%(server_name)s</span> account. Make sure you recognise that device.",
+      "this_will_setup": "Another device wants to set up %(client_name)s with your <span>%(server_name)s</span> account. Make sure you recognise that device.",
       "@this_will_setup": {
-        "context": "pages/device_consent.html:33:13-166"
+        "context": "pages/device_consent.html:33:13-111"
       }
     },
     "device_display_name": {

@@ -102,8 +102,7 @@
       "granted": {
         "description": "Annoit pääsyn %(client_name)s -sovellukselle. Voit sulkea tämän ikkunan.",
         "heading": "Pääsy myönnetty"
-      },
-      "this_will_setup": "Toinen laite haluaa yhdistää %(client_name)s (<span>%(client_uri)s</span>) sovelluksen <span>%(server_name)s</span> tiliisi. Varmista, että tunnistat kyseisen laitteen."
+      }
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s %(device_name)s:lla",

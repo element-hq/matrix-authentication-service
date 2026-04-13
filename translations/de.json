@@ -102,8 +102,7 @@
       "granted": {
         "description": "Du hast %(client_name)s Zugriff gegeben. Du kannst dieses Fenster jetzt schließen.",
         "heading": "Zugriff gewährt"
-      },
-      "this_will_setup": "Ein anderes Gerät möchte %(client_name)s (<span>%(client_uri)s</span>) mit deinem <span>%(server_name)s</span> Konto einrichten. Stelle sicher, dass du dieses Gerät kennst."
+      }
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s auf %(device_name)s",
