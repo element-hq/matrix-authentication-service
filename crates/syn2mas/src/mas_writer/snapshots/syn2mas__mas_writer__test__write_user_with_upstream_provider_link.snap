@@ -27,6 +27,7 @@ upstream_oauth_providers:
     jwks_uri_override: ~
     on_backchannel_logout: do_nothing
     pkce_mode: auto
+    registration_token_required: "false"
     response_mode: query
     scope: openid
     token_endpoint_auth_method: client_secret_basic

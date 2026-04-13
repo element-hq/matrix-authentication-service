@@ -77,7 +77,7 @@ pub struct SiteConfig {
     pub password_registration_email_required: bool,
 
     /// Whether registration tokens are required for password registrations.
-    pub registration_token_required: bool,
+    pub password_registration_token_required: bool,
 
     /// Whether users can change their email.
     pub email_change_allowed: bool,

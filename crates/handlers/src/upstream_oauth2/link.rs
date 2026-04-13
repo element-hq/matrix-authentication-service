@@ -1345,6 +1345,7 @@ mod tests {
                     ui_order: 0,
                     on_backchannel_logout:
                         mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    registration_token_required: false,
                 },
             )
             .await
@@ -1542,6 +1543,7 @@ mod tests {
                     ui_order: 0,
                     on_backchannel_logout:
                         mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    registration_token_required: false,
                 },
             )
             .await
@@ -1703,6 +1705,7 @@ mod tests {
                     on_backchannel_logout:
                         mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
                     ui_order: 0,
+                    registration_token_required: false,
                 },
             )
             .await
@@ -1819,6 +1822,7 @@ mod tests {
                     on_backchannel_logout:
                         mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
                     ui_order: 0,
+                    registration_token_required: false,
                 },
             )
             .await
@@ -1988,6 +1992,7 @@ mod tests {
                     on_backchannel_logout:
                         mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
                     ui_order: 0,
+                    registration_token_required: false,
                 },
             )
             .await
@@ -2136,6 +2141,7 @@ mod tests {
                     on_backchannel_logout:
                         mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
                     ui_order: 0,
+                    registration_token_required: false,
                 },
             )
             .await
@@ -2255,6 +2261,7 @@ mod tests {
                     on_backchannel_logout:
                         mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
                     ui_order: 0,
+                    registration_token_required: false,
                 },
             )
             .await
