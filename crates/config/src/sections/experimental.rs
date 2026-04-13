@@ -126,7 +126,14 @@ impl ConfigurationSection for ExperimentalConfig {
         figment: &figment::Figment,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
         if let Some(session_limit) = &self.session_limit {
-            session_limit.validate(figment)?;
+            session_limit.validate().map_err(|mut err| {
+                // Save the error location information in the error
+                err.metadata = figment.find_metadata(Self::PATH.unwrap()).cloned();
+                err.profile = Some(figment::Profile::Default);
+                err.path.insert(0, Self::PATH.unwrap().to_owned());
+                err.path.insert(1, "session_limit".to_owned());
+                err
+            })?;
         }
         Ok(())
     }
@@ -183,27 +190,14 @@ pub struct SessionLimitConfig {
     pub hard_limit_eviction: bool,
 }
 
-impl ConfigurationSection for SessionLimitConfig {
-    const PATH: Option<&'static str> = Some("session_limit");
-
-    fn validate(
-        &self,
-        figment: &figment::Figment,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
-        let metadata = figment.find_metadata(Self::PATH.unwrap());
-        let error_on_field = |mut error: figment::error::Error, field: &'static str| {
-            error.metadata = metadata.cloned();
-            error.profile = Some(figment::Profile::Default);
-            error.path = vec![Self::PATH.unwrap().to_owned(), field.to_owned()];
-            error
-        };
-
+impl SessionLimitConfig {
+    fn validate(&self) -> Result<(), Box<figment::error::Error>> {
         // See [`SessionLimitConfig::hard_limit_eviction`] docstring
         if self.hard_limit_eviction && self.hard_limit.get() < 2 {
-            return Err(error_on_field(figment::error::Error::from(
+            return Err(figment::error::Error::from(
                 "Session `hard_limit` must be at-least 2 when automatic `hard_limit_eviction` is set. \
                 See configuration docs for more info.",
-            ), "hard_limit").into());
+            ).with_path("hard_limit").into());
         }
 
         Ok(())
