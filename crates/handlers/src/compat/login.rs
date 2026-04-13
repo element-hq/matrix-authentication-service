@@ -1918,16 +1918,12 @@ mod tests {
         );
 
         // The remaining sessions should be the most recent sessions
-        #[allow(clippy::uninlined_format_args)]
-        {
-            assert!(
-                most_recent_login_device_ids.is_subset(&remaining_active_compat_session_device_ids),
-                "Expected the 2 remaining active sessions ({:?}) to include the 2 most recent logins ({:?}). (all logins: {:?})",
-                remaining_active_compat_session_device_ids,
-                most_recent_login_device_ids,
-                login_device_ids,
-            );
-        }
+        assert!(
+            most_recent_login_device_ids.is_subset(&remaining_active_compat_session_device_ids),
+            "Expected the 2 remaining active sessions ({remaining:?}) to include the 2 most recent logins ({recent:?}). (all logins: {login_device_ids:?})",
+            remaining = remaining_active_compat_session_device_ids,
+            recent = most_recent_login_device_ids,
+        );
     }
 
     /// Test that the `hard_limit_eviction` will automatically drop the oldest
@@ -2040,15 +2036,11 @@ mod tests {
         );
 
         // The remaining sessions should be the most recent sessions
-        #[allow(clippy::uninlined_format_args)]
-        {
-            assert!(
-                most_recent_login_device_ids.is_subset(&remaining_active_compat_session_device_ids),
-                "Expected the 2 remaining active sessions ({:?}) to include the 2 most recent logins ({:?}). (all logins: {:?})",
-                remaining_active_compat_session_device_ids,
-                most_recent_login_device_ids,
-                login_device_ids,
-            );
-        }
+        assert!(
+            most_recent_login_device_ids.is_subset(&remaining_active_compat_session_device_ids),
+            "Expected the 2 remaining active sessions ({remaining:?}) to include the 2 most recent logins ({recent:?}). (all logins: {login_device_ids:?})",
+            remaining = remaining_active_compat_session_device_ids,
+            recent = most_recent_login_device_ids,
+        );
     }
 }
