@@ -35,7 +35,7 @@ violation contains {
 	# Only apply if session limits are enabled in the config
 	data.session_limit != null
 
-	# This is a web-based interactive login
+	# This is a web-based interactive login (like `m.login.sso`)
 	is_interactive
 
 	# Only apply if this login doesn't replace a session
@@ -59,7 +59,7 @@ violation contains {
 	# Only apply if session limits are enabled in the config
 	data.session_limit != null
 
-	# This is not a web-based interactive login
+	# This is *not* a web-based interactive login (like `m.login.password` and `m.login.token`)
 	not is_interactive
 
 	# Only apply if this login doesn't replace a session
