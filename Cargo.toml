@@ -488,7 +488,7 @@ version = "0.12.6"
 
 # Random values
 [workspace.dependencies.rand]
-version = "0.8.5"
+version = "0.9.4"
 [workspace.dependencies.rand_chacha]
 version = "0.3.1"
 [workspace.dependencies.rand_core]
