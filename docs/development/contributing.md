@@ -147,7 +147,7 @@ grant*](../topics/authorization.html#client-credentials-grant) for more info.
 
 #### Compatibility login flows
 
-This is a bit of a [re-hash of the Matrix spec around
+This section is a bit of a [re-hash of the Matrix spec around
 logins](https://spec.matrix.org/v1.18/client-server-api/#legacy-login) but to more
 clearly break-down how to more immediately jump in and test things, here's a quick
 guide.
@@ -157,8 +157,8 @@ the same Matrix API's that a homeserver traditionally provided. See the docs on
 [*Compatibility sessions*](../topics/authorization.html#compatibility-sessions) for more
 info.
 
-You can check the list of available login flows at the `/login` endpoint that MAS has
-available with the following compatibility Matrix endpoint:
+You can check the list of available login flows by calling the
+`/_matrix/client/v3/login` compatibility endpoint exposed by MAS:
 
 `GET http://localhost:8080/_matrix/client/v3/login`
 ```json
@@ -197,24 +197,21 @@ request](https://spec.matrix.org/v1.18/client-server-api/#post_matrixclientv3log
 }
 ```
 
-##### Test compatibility token login (non-interactive)
-
-To generate a token, TODO
-
-`POST http://localhost:8080/_matrix/client/v3/login`
-```json
-{
-  "type": "m.login.token",
-  "token": "<login token>"
-}
-```
-
 ##### Test compatibility SSO login (interactive)
 
 To test the login flow, it's the same process as described in the [Matrix
 spec](https://spec.matrix.org/v1.18/client-server-api/#client-login-via-sso).
 
-Visit http://localhost:8080/_matrix/client/v3/login/sso/redirect?redirectUrl=http%3A%2F%2Ftest-success%2F
+ 1. Visit http://localhost:8080/_matrix/client/v3/login/sso/redirect?redirectUrl=http%3A%2F%2Ftest-success%2F
+ 1. You will be redirected back to a URL like `http://test-success/?loginToken=XXX`.
+ 1. Take the `loginToken` value and use the compatibility token login flow:
+    `POST http://localhost:8080/_matrix/client/v3/login`
+    ```json
+    {
+      "type": "m.login.token",
+      "token": "<loginToken value>"
+    }
+    ```
 
 
 ### Debug policies
