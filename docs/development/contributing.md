@@ -111,8 +111,8 @@ If you haven't already, install [Cargo-Nextest](https://nexte.st/docs/installati
 
 ### Manual testing login flows
 
-To get a better understanding of how MAS works and get a sense of how things behave, you
-may want to test the login flows manually.
+To get a better understanding of how MAS works and how things behave, you may want to
+test the login flows manually.
 
 To register a user to test with, you can use `cargo run -- manage register-user` or if
 you enabled registration as described above, you can simply visit http://localhost:8080/
