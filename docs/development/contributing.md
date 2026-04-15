@@ -219,7 +219,7 @@ request](https://spec.matrix.org/v1.18/client-server-api/#post_matrixclientv3log
 
 ##### Test compatibility SSO login (interactive)
 
-To test the login flow, it's the same process as described in the [Matrix
+To test the SSO login flow, it's the same process as described in the [Matrix
 spec](https://spec.matrix.org/v1.18/client-server-api/#client-login-via-sso).
 
  1. Visit http://localhost:8080/_matrix/client/v3/login/sso/redirect?redirectUrl=http://test-login/
