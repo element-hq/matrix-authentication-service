@@ -109,7 +109,7 @@ If you haven't already, install [Cargo-Nextest](https://nexte.st/docs/installati
   - `make DOCKER=1 test` (runs inside a container; needs Docker installed)
 
 
-### Manual testing login flows
+### Manually testing login flows
 
 To get a better understanding of how MAS works and how things behave, you may want to
 test the login flows manually.
