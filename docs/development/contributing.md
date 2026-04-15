@@ -123,7 +123,7 @@ and create an account.
 This section is all standard OAuth 2.0/OIDC flows but to jump in and test things
 immediately, here's a quick walkthrough.
 
-See the docs on [*OAuth 2.0 sessions*](../topics/authorization.html#oauth-20-sessions)
+See the docs on [*OAuth 2.0 sessions*](../topics/authorization.md#oauth-20-sessions)
 for more info.
 
 ##### Test OAuth authorization code grant (interactive)
@@ -149,21 +149,21 @@ for more info.
     ```
 
 See the docs on [*authorization code
-grant*](../topics/authorization.html#authorization-code-grant) for more info.
+grant*](../topics/authorization.md#authorization-code-grant) for more info.
 
 ##### Test OAuth device authorization grant (interactive)
 
 TODO
 
 See the docs on [*device code
-grant*](../topics/authorization.html#device-authorization-grant) for more info.
+grant*](../topics/authorization.md#device-authorization-grant) for more info.
 
 ##### Test OAuth client credentials grant (non-interactive)
 
 TODO
 
 See the docs on [*client credentials
-grant*](../topics/authorization.html#client-credentials-grant) for more info.
+grant*](../topics/authorization.md#client-credentials-grant) for more info.
 
 
 #### Compatibility login flows
@@ -174,7 +174,7 @@ and test things immediately, here's a quick walkthrough.
 
 For clients that don’t support OAuth 2.0 yet, MAS has a compatibility layer to provide
 the same Matrix API's that a homeserver traditionally provided. See the docs on
-[*Compatibility sessions*](../topics/authorization.html#compatibility-sessions) for more
+[*Compatibility sessions*](../topics/authorization.md#compatibility-sessions) for more
 info.
 
 You can check the list of available login flows by calling the
