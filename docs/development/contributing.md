@@ -120,18 +120,19 @@ and create an account.
 
 #### Test OAuth 2.0 grants
 
-This section is all standard OAuth 2.0/OIDC flows but to more clearly break-down how to
-more immediately jump in and test things, here's a quick walkthrough.
+This section is all standard OAuth 2.0/OIDC flows but to jump in and test things
+immediately, here's a quick walkthrough.
 
 See the docs on [*OAuth 2.0 sessions*](../topics/authorization.html#oauth-20-sessions)
 for more info.
 
-##### Test authorization code grant (interactive)
+##### Test OAuth authorization code grant (interactive)
 
  1. Update your MAS `config.yaml` with a [client](../reference/configuration.md#clients):
     ```
     clients:
       - client_id: 00000000000000000000SEC0ND
+        client_name: "my-test-client"
         client_auth_method: none
         redirect_uris:
           - http://test-login/
@@ -147,30 +148,29 @@ for more info.
     grant_type=authorization_code&code=<code>&redirect_uri=http://test-login/&client_id=00000000000000000000SEC0ND
     ```
 
-See the docs on [*Authorization code
+See the docs on [*authorization code
 grant*](../topics/authorization.html#authorization-code-grant) for more info.
 
-##### Test device authorization grant (interactive)
+##### Test OAuth device authorization grant (interactive)
 
 TODO
 
-See the docs on [*Authorization code
+See the docs on [*device code
 grant*](../topics/authorization.html#device-authorization-grant) for more info.
 
-##### Test client credentials grant (non-interactive)
+##### Test OAuth client credentials grant (non-interactive)
 
 TODO
 
-See the docs on [*Authorization code
+See the docs on [*client credentials
 grant*](../topics/authorization.html#client-credentials-grant) for more info.
 
 
 #### Compatibility login flows
 
-This section is a bit of a [re-hash of the Matrix spec around
-logins](https://spec.matrix.org/v1.18/client-server-api/#legacy-login) but to more
-clearly break-down how to more immediately jump in and test things, here's a quick
-walkthrough.
+This section is a bit of a [rehash of the Matrix spec around
+logins](https://spec.matrix.org/v1.18/client-server-api/#legacy-login) but to jump in
+and test things immediately, here's a quick walkthrough.
 
 For clients that don’t support OAuth 2.0 yet, MAS has a compatibility layer to provide
 the same Matrix API's that a homeserver traditionally provided. See the docs on
