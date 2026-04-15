@@ -120,12 +120,32 @@ and create an account.
 
 #### Test OAuth 2.0 grants
 
+This section is all standard OAuth 2.0/OIDC flows but to more clearly break-down how to
+more immediately jump in and test things, here's a quick walkthrough.
+
 See the docs on [*OAuth 2.0 sessions*](../topics/authorization.html#oauth-20-sessions)
 for more info.
 
 ##### Test authorization code grant (interactive)
 
-TODO
+ 1. Update your MAS `config.yaml` with a [client](../reference/configuration.md#clients):
+    ```
+    clients:
+      - client_id: 00000000000000000000SEC0ND
+        client_auth_method: none
+        redirect_uris:
+          - http://test-login/
+    ```
+ 1. Visit http://localhost:8080/authorize?client_id=00000000000000000000SEC0ND&response_type=code&redirect_uri=http://test-login/&scope=openid%20email&state=xyz123
+ 1. Press **Continue** (or login and continue)
+ 1. You will be redirected back to a URL like `http://test-login/?state=xyz123&code=XXX`.
+ 1. Take the `code` value and exchange it for a token:
+    ```http
+    POST http://localhost:8080/oauth2/token
+    Content-Type: application/x-www-form-urlencoded
+
+    grant_type=authorization_code&code=<code>&redirect_uri=http://test-login/&client_id=00000000000000000000SEC0ND
+    ```
 
 See the docs on [*Authorization code
 grant*](../topics/authorization.html#authorization-code-grant) for more info.
@@ -150,7 +170,7 @@ grant*](../topics/authorization.html#client-credentials-grant) for more info.
 This section is a bit of a [re-hash of the Matrix spec around
 logins](https://spec.matrix.org/v1.18/client-server-api/#legacy-login) but to more
 clearly break-down how to more immediately jump in and test things, here's a quick
-guide.
+walkthrough.
 
 For clients that don’t support OAuth 2.0 yet, MAS has a compatibility layer to provide
 the same Matrix API's that a homeserver traditionally provided. See the docs on
@@ -202,10 +222,12 @@ request](https://spec.matrix.org/v1.18/client-server-api/#post_matrixclientv3log
 To test the login flow, it's the same process as described in the [Matrix
 spec](https://spec.matrix.org/v1.18/client-server-api/#client-login-via-sso).
 
- 1. Visit http://localhost:8080/_matrix/client/v3/login/sso/redirect?redirectUrl=http%3A%2F%2Ftest-success%2F
- 1. You will be redirected back to a URL like `http://test-success/?loginToken=XXX`.
- 1. Take the `loginToken` value and use the compatibility token login flow:
-    `POST http://localhost:8080/_matrix/client/v3/login`
+ 1. Visit http://localhost:8080/_matrix/client/v3/login/sso/redirect?redirectUrl=http://test-login/
+ 1. You will be redirected back to a URL like `http://test-login/?loginToken=XXX`.
+ 1. Take the `loginToken` value and use the compatibility token login flow (must be done
+    within [30
+    seconds](https://github.com/element-hq/matrix-authentication-service/blob/64f90e01da2de8e5a69e41f9031ab9ccf7457b85/crates/handlers/src/compat/login.rs#L523-L525)
+    of the previous step): `POST http://localhost:8080/_matrix/client/v3/login`
     ```json
     {
       "type": "m.login.token",
