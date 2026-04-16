@@ -14,8 +14,10 @@ Please see LICENSE files in the repository root for full details.
   {% set client_name = login.redirect_uri | simplify_url %}
 
   <header class="page-heading">
-    <div class="consent-client-icon generic">
-      {{ icon.web_browser() }}
+    <div class="flex justify-center">
+      <div class="consent-client-icon generic">
+        {{ icon.web_browser() }}
+      </div>
     </div>
 
     <div class="header">
