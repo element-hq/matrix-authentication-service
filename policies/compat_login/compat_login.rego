@@ -59,7 +59,7 @@ violation contains {
 	# Only apply if session limits are enabled in the config
 	data.session_limit != null
 
-	# This is *not* a web-based interactive login (like `m.login.password` and `m.login.token`)
+	# This is *not* a web-based interactive login (like `m.login.password`)
 	not is_interactive
 
 	# Only apply if this login doesn't replace a session
