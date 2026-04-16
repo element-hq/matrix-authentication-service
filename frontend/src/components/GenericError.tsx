@@ -27,7 +27,7 @@ const GenericError: React.FC<{ error: unknown; dontSuspend?: boolean }> = ({
               defaultValue: "Something went wrong",
             })}
             subtitle={t("frontend.error.subtitle", {
-              defaultValue: "An unexpected error occured. Please try again.",
+              defaultValue: "An unexpected error occurred. Please try again.",
             })}
           />
           <Button kind="tertiary" onClick={() => setOpen(!open)}>
