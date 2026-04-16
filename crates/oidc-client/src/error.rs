@@ -158,7 +158,7 @@ pub enum JwksError {
 /// All possible errors when verifying a JWT.
 #[derive(Debug, Error)]
 pub enum JwtVerificationError {
-    /// An error occured decoding the JWT.
+    /// An error occurred decoding the JWT.
     #[error(transparent)]
     JwtDecode(#[from] JwtDecodeError),
 
