@@ -2898,7 +2898,7 @@
       "type": "object",
       "properties": {
         "soft_limit": {
-          "description": "Upon login in interactive contexts (like OAuth 2.0 sessions, or `m.login.sso`\n compability login flow), if the soft limit is reached, it will display a policy\n violation screen (web UI) to remove sessions before creating the new session.\n\n This is not enforced in non-interactive contexts (like `m.login.password` login\n with the compability API) as there is no opportunity for us to show some UI for\n people remove some sessions. See [`hard_limit`] for enforcement on that side.\n\n [`hard_limit`]: Self::hard_limit",
+          "description": "Upon login in interactive contexts (like OAuth 2.0 sessions, or\n `m.login.sso` compability login flow), if the soft limit is reached,\n it will display a policy violation screen (web UI) to remove\n sessions before creating the new session.\n\n This is not enforced in non-interactive contexts (like\n `m.login.password` login with the compability API) as there is no\n opportunity for us to show some UI for people remove some sessions.\n See [`hard_limit`] for enforcement on that side.\n\n [`hard_limit`]: Self::hard_limit",
           "type": "integer",
           "format": "uint64",
           "minimum": 1

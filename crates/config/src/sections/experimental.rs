@@ -142,13 +142,15 @@ impl ConfigurationSection for ExperimentalConfig {
 /// Configuration options for the session limit feature
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 pub struct SessionLimitConfig {
-    /// Upon login in interactive contexts (like OAuth 2.0 sessions, or `m.login.sso`
-    /// compability login flow), if the soft limit is reached, it will display a policy
-    /// violation screen (web UI) to remove sessions before creating the new session.
+    /// Upon login in interactive contexts (like OAuth 2.0 sessions, or
+    /// `m.login.sso` compability login flow), if the soft limit is reached,
+    /// it will display a policy violation screen (web UI) to remove
+    /// sessions before creating the new session.
     ///
-    /// This is not enforced in non-interactive contexts (like `m.login.password` login
-    /// with the compability API) as there is no opportunity for us to show some UI for
-    /// people remove some sessions. See [`hard_limit`] for enforcement on that side.
+    /// This is not enforced in non-interactive contexts (like
+    /// `m.login.password` login with the compability API) as there is no
+    /// opportunity for us to show some UI for people remove some sessions.
+    /// See [`hard_limit`] for enforcement on that side.
     ///
     /// [`hard_limit`]: Self::hard_limit
     pub soft_limit: NonZeroU64,
