@@ -1078,6 +1078,13 @@ export type ResendRecoveryEmailStatus =
 /** A client session, either compat or OAuth 2.0 */
 export type Session = CompatSession | Oauth2Session;
 
+export type SessionLimitConfig = {
+  __typename?: 'SessionLimitConfig';
+  hardLimit: Scalars['Int']['output'];
+  hardLimitEviction: Scalars['Boolean']['output'];
+  softLimit: Scalars['Int']['output'];
+};
+
 /** The state of a session */
 export type SessionState =
   /** The session is active. */
@@ -1302,6 +1309,8 @@ export type SiteConfig = Node & {
   policyUri?: Maybe<Scalars['Url']['output']>;
   /** The server name of the homeserver. */
   serverName: Scalars['String']['output'];
+  /** Limits on the number of application sessions that each user can have */
+  sessionLimit?: Maybe<SessionLimitConfig>;
   /** The URL to the terms of service. */
   tosUri?: Maybe<Scalars['Url']['output']>;
 };
@@ -1899,7 +1908,7 @@ export type SessionsOverviewQuery = { __typename?: 'Query', viewer:
       { __typename: 'User', id: string, unfilteredAppSessions: { __typename?: 'AppSessionConnection', totalCount: number } }
       & { ' $fragmentRefs'?: { 'BrowserSessionsOverview_UserFragment': BrowserSessionsOverview_UserFragment } }
     )
-   };
+  , siteConfig: { __typename?: 'SiteConfig', sessionLimit?: { __typename?: 'SessionLimitConfig', softLimit: number } | null } };
 
 export type AppSessionsListQueryVariables = Exact<{
   before?: InputMaybe<Scalars['String']['input']>;
@@ -2710,6 +2719,11 @@ export const SessionsOverviewDocument = new TypedDocumentString(`
       }
     }
   }
+  siteConfig {
+    sessionLimit {
+      softLimit
+    }
+  }
 }
     fragment BrowserSessionsOverview_user on User {
   id
@@ -3401,7 +3415,7 @@ export const mockBrowserSessionListQuery = (resolver: GraphQLResponseResolver<Br
  * mockSessionsOverviewQuery(
  *   ({ query, variables }) => {
  *     return HttpResponse.json({
- *       data: { viewer }
+ *       data: { viewer, siteConfig }
  *     })
  *   },
  *   requestOptions

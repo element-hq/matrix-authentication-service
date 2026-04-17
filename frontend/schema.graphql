@@ -1402,6 +1402,12 @@ A client session, either compat or OAuth 2.0
 """
 union Session = CompatSession | Oauth2Session
 
+type SessionLimitConfig {
+  softLimit: Int!
+  hardLimit: Int!
+  hardLimitEviction: Boolean!
+}
+
 """
 The state of a session
 """
@@ -1761,6 +1767,10 @@ type SiteConfig implements Node {
   Experimental plan management iframe URI.
   """
   planManagementIframeUri: String
+  """
+  Limits on the number of application sessions that each user can have
+  """
+  sessionLimit: SessionLimitConfig
   """
   The ID of the site configuration.
   """

@@ -43,6 +43,12 @@ const QUERY = graphql(/* GraphQL */ `
         }
       }
     }
+
+    siteConfig {
+      sessionLimit {
+        softLimit
+      }
+    }
   }
 `);
 
@@ -141,9 +147,10 @@ function Sessions(): React.ReactElement {
   const { t } = useTranslation();
   const { inactive, pagination } = Route.useLoaderDeps();
   const {
-    data: { viewer: overviewViewer },
+    data: { viewer: overviewViewer, siteConfig },
   } = useSuspenseQuery(query);
   if (overviewViewer.__typename !== "User") throw notFound();
+  const { sessionLimit } = siteConfig;
 
   const { data } = useSuspenseQuery(listQuery(pagination, inactive));
   if (data.viewer.__typename !== "User") throw notFound();
@@ -159,16 +166,32 @@ function Sessions(): React.ReactElement {
   const edges = [...appSessions.edges].reverse();
 
   // By default, we just show a "X devices" header
-  let deviceHeaderText = t("frontend.user_sessions_overview.num_devices_header", {
-    num_devices: appSessions.totalCount,
-  });
+  let deviceHeaderText = t(
+    "frontend.user_sessions_overview.num_devices_header",
+    {
+      num_devices: appSessions.totalCount,
+    },
+  );
   // But if we're showing a filtered down view, we want to explain how many devices you
   // filtered down to and how many total unfilterd devices there are total.
-  if (overviewViewer.unfilteredAppSessions.totalCount != appSessions.totalCount) {
-    deviceHeaderText = t("frontend.user_sessions_overview.num_devices_filtered_header", {
-      filtered_count: appSessions.totalCount,
-      total_count: overviewViewer.unfilteredAppSessions.totalCount,
-    });
+  if (
+    overviewViewer.unfilteredAppSessions.totalCount != appSessions.totalCount
+  ) {
+    deviceHeaderText = t(
+      "frontend.user_sessions_overview.num_devices_filtered_header",
+      {
+        filtered_count: appSessions.totalCount,
+        total_count: overviewViewer.unfilteredAppSessions.totalCount,
+      },
+    );
+  }
+
+  // TODO
+  let todoSessionLimit = null;
+  if (sessionLimit) {
+    todoSessionLimit = (
+      <div>TODO: Limited to {sessionLimit.softLimit} devices</div>
+    );
   }
 
   return (
@@ -177,6 +200,7 @@ function Sessions(): React.ReactElement {
       <BrowserSessionsOverview user={overviewViewer} />
 
       <H4>{deviceHeaderText}</H4>
+      {todoSessionLimit}
       <Separator kind="section" />
       <div className="flex gap-2 justify-start items-center">
         <Filter
