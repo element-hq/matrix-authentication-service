@@ -6,6 +6,7 @@
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { notFound, Outlet } from "@tanstack/react-router";
+import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import { Heading } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 import Layout from "../components/Layout";
@@ -49,6 +50,10 @@ function Account(): React.ReactElement {
   const { siteConfig } = result.data;
   const { planManagementIframeUri } = siteConfig;
 
+  // We only display an error in the nav bar if they are actually over their limit. No
+  // need to nag somebody about using their allotment.
+  // TODO
+
   return (
     <Layout wide>
       <div className="flex flex-col gap-10">
@@ -61,7 +66,7 @@ function Account(): React.ReactElement {
 
           <NavBar>
             <NavItem to="/">{t("frontend.nav.settings")}</NavItem>
-            <NavItem to="/sessions">{t("frontend.nav.devices")}</NavItem>
+            <NavItem to="/sessions">{t("frontend.nav.devices")} <IconErrorSolid /></NavItem>
             {planManagementIframeUri && (
               <NavItem to="/plan">{t("frontend.nav.plan")}</NavItem>
             )}
