@@ -506,6 +506,11 @@
       "logged_as": "Logged as <span class=\"font-semibold\">%(username)s</span>",
       "@logged_as": {
         "context": "pages/compat_login_policy_violation.html:25:11-86, pages/policy_violation.html:35:11-86"
+      },
+      "too_many_sessions": {
+        "description": "Your account is already signed in on the maximum number of devices. To continue, remove %(num_devices_to_remove)s of your existing devices and sign in again.",
+        "heading": "Device limit reached",
+        "manage_devices": "Manage devices"
       }
     },
     "recovery": {
