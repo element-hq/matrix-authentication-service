@@ -16,6 +16,8 @@ import UserGreeting from "../components/UserGreeting";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
 
+import styles from "./_account.module.css";
+
 const QUERY = graphql(/* GraphQL */ `
   query CurrentUserGreeting {
     viewer {
@@ -66,7 +68,7 @@ function Account(): React.ReactElement {
 
           <NavBar>
             <NavItem to="/">{t("frontend.nav.settings")}</NavItem>
-            <NavItem to="/sessions">{t("frontend.nav.devices")} <IconErrorSolid /></NavItem>
+            <NavItem to="/sessions">{t("frontend.nav.devices")} <IconErrorSolid className={styles.navBarErrorIcon} /></NavItem>
             {planManagementIframeUri && (
               <NavItem to="/plan">{t("frontend.nav.plan")}</NavItem>
             )}
