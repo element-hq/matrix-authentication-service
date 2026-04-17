@@ -68,7 +68,10 @@ function Account(): React.ReactElement {
 
           <NavBar>
             <NavItem to="/">{t("frontend.nav.settings")}</NavItem>
-            <NavItem to="/sessions">{t("frontend.nav.devices")} <IconErrorSolid className={styles.navBarErrorIcon} /></NavItem>
+            <NavItem to="/sessions">
+              {t("frontend.nav.devices")}{" "}
+              <IconErrorSolid className={styles.navBarErrorIcon} />
+            </NavItem>
             {planManagementIframeUri && (
               <NavItem to="/plan">{t("frontend.nav.plan")}</NavItem>
             )}

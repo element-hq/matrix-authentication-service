@@ -1896,7 +1896,7 @@ export type SessionsOverviewQueryVariables = Exact<{ [key: string]: never; }>;
 export type SessionsOverviewQuery = { __typename?: 'Query', viewer:
     | { __typename: 'Anonymous' }
     | (
-      { __typename: 'User', id: string }
+      { __typename: 'User', id: string, unfilteredAppSessions: { __typename?: 'AppSessionConnection', totalCount: number } }
       & { ' $fragmentRefs'?: { 'BrowserSessionsOverview_UserFragment': BrowserSessionsOverview_UserFragment } }
     )
    };
@@ -2705,6 +2705,9 @@ export const SessionsOverviewDocument = new TypedDocumentString(`
     ... on User {
       id
       ...BrowserSessionsOverview_user
+      unfilteredAppSessions: appSessions(first: 1, state: ACTIVE) {
+        totalCount
+      }
     }
   }
 }

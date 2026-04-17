@@ -6,7 +6,7 @@
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { notFound } from "@tanstack/react-router";
-import { H3 } from "@vector-im/compound-web";
+import { H3, H4 } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 import * as v from "valibot";
 import { ButtonLink } from "../components/ButtonLink";
@@ -36,6 +36,11 @@ const QUERY = graphql(/* GraphQL */ `
       ... on User {
         id
         ...BrowserSessionsOverview_user
+
+        # Get the total count of active app sessions before any filtering
+        unfilteredAppSessions: appSessions(first: 1, state: ACTIVE) {
+          totalCount
+        }
       }
     }
   }
@@ -136,9 +141,9 @@ function Sessions(): React.ReactElement {
   const { t } = useTranslation();
   const { inactive, pagination } = Route.useLoaderDeps();
   const {
-    data: { viewer },
+    data: { viewer: overviewViewer },
   } = useSuspenseQuery(query);
-  if (viewer.__typename !== "User") throw notFound();
+  if (overviewViewer.__typename !== "User") throw notFound();
 
   const { data } = useSuspenseQuery(listQuery(pagination, inactive));
   if (data.viewer.__typename !== "User") throw notFound();
@@ -153,10 +158,25 @@ function Sessions(): React.ReactElement {
   // We reverse the list as we are paginating backwards
   const edges = [...appSessions.edges].reverse();
 
+  // By default, we just show a "X devices" header
+  let deviceHeaderText = t("frontend.user_sessions_overview.num_devices_header", {
+    num_devices: appSessions.totalCount,
+  });
+  // But if we're showing a filtered down view, we want to explain how many devices you
+  // filtered down to and how many total unfilterd devices there are total.
+  if (overviewViewer.unfilteredAppSessions.totalCount != appSessions.totalCount) {
+    deviceHeaderText = t("frontend.user_sessions_overview.num_devices_filtered_header", {
+      filtered_count: appSessions.totalCount,
+      total_count: overviewViewer.unfilteredAppSessions.totalCount,
+    });
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <H3>{t("frontend.user_sessions_overview.heading")}</H3>
-      <BrowserSessionsOverview user={viewer} />
+      <BrowserSessionsOverview user={overviewViewer} />
+
+      <H4>{deviceHeaderText}</H4>
       <Separator kind="section" />
       <div className="flex gap-2 justify-start items-center">
         <Filter
