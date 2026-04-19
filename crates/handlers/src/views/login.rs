@@ -38,6 +38,7 @@ use zeroize::Zeroizing;
 use super::shared::{LoginHint, OptionalPostAuthAction, QueryLoginHint};
 use crate::{
     BoundActivityTracker, Limiter, METER, PreferredLanguage, RequesterFingerprint, SiteConfig,
+    normalize_username,
     passwords::{PasswordManager, PasswordVerificationResult},
     session::{SessionOrFallback, load_session_or_fallback},
 };
@@ -160,7 +161,7 @@ pub(crate) async fn post(
     // Validate the form
     let mut form_state = form.to_form_state();
 
-    if form.username.is_empty() {
+    if form.username.is_empty() || normalize_username(&form.username).is_empty() {
         form_state.add_error_on_field(LoginFormField::Username, FieldError::Required);
     }
 
@@ -187,13 +188,17 @@ pub(crate) async fn post(
         .await;
     }
 
-    // Extract the localpart of the MXID, fallback to the bare username
+    // Extract the localpart of the MXID, fallback to the bare username (and
+    // normalize whitespace)
+    let normalized = normalize_username(&form.username);
     let username = homeserver
-        .localpart(&form.username)
-        .unwrap_or(&form.username);
+        .localpart(&normalized)
+        .map_or_else(|| normalized.clone(), std::string::ToString::to_string);
+
+    let username = username.clone();
 
     // First, lookup the user
-    let Some(user) = get_user_by_email_or_by_username(&site_config, &mut repo, username).await?
+    let Some(user) = get_user_by_email_or_by_username(&site_config, &mut repo, &username).await?
     else {
         tracing::warn!(username, "User not found");
         let form_state = form_state.with_error_on_form(FormError::InvalidCredentials);

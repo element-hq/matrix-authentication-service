@@ -22,7 +22,7 @@ use crate::{
         model::User,
         response::{ErrorResponse, SingleResponse},
     },
-    impl_from_error_for_route,
+    impl_from_error_for_route, normalize_username,
 };
 
 fn valid_username_character(c: char) -> bool {
@@ -38,6 +38,7 @@ fn valid_username_character(c: char) -> bool {
 
 // XXX: this should be shared with the graphql handler
 fn username_valid(username: &str) -> bool {
+    let username = normalize_username(username);
     if username.is_empty() || username.len() > 255 {
         return false;
     }

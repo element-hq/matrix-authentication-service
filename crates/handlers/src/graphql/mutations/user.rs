@@ -19,10 +19,13 @@ use url::Url;
 use zeroize::Zeroizing;
 
 use super::verify_password_if_needed;
-use crate::graphql::{
-    UserId,
-    model::{NodeType, User},
-    state::ContextExt,
+use crate::{
+    graphql::{
+        UserId,
+        model::{NodeType, User},
+        state::ContextExt,
+    },
+    normalize_username,
 };
 
 #[derive(Default)]
@@ -452,6 +455,7 @@ fn valid_username_character(c: char) -> bool {
 
 // XXX: this should probably be moved somewhere else
 fn username_valid(username: &str) -> bool {
+    let username = normalize_username(username);
     if username.is_empty() || username.len() > 255 {
         return false;
     }
