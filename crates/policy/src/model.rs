@@ -73,7 +73,7 @@ impl ViolationVariant {
             Self::EmailDomainBanned => "email-domain-banned",
             Self::EmailNotAllowed => "email-not-allowed",
             Self::EmailBanned => "email-banned",
-            Self::TooManySessions { need_to_remove: _ } => "too-many-sessions",
+            Self::TooManySessions { .. } => "too-many-sessions",
         }
     }
 }
