@@ -544,18 +544,19 @@ async fn process_violations_for_compat_login(
                 let lru_compat_sessions = {
                     // TODO: In the future, instead of all of this faff, we can simply order
                     // by `last_active_at`
-                    //
-                    // XXX: Since we can't order by `last_active_at` yet, we instead filter
-                    // the list down to "inactive" sessions (`last_active_at` > 90 days
-                    // ago). And by the nature of
-                    // [`mas_data_model::compat::CompatSession::id`] being a `Ulid`/`Uuid`
-                    // (the query is ordered by `compat_session_id`), the first bytes are a
-                    // timestamp so we'll be getting the 'oldest created' sessions which is
-                    // another good proxy.
 
                     let mut edges_to_consider = Vec::new();
 
                     // First, find the "inactive" sessions
+                    //
+                    // XXX: Since we can't order by `last_active_at` yet, we instead
+                    // filter the list down to "inactive" sessions (`last_active_at` >
+                    // 90 days ago) (this matches the `getNinetyDaysAgo()` used in the
+                    // web UI for "inactive" sessions). And by the nature of
+                    // [`mas_data_model::compat::CompatSession::id`] being a
+                    // `Ulid` (the query is ordered by `compat_session_id`), the
+                    // first bytes are a timestamp so we'll be getting the 'oldest
+                    // created' sessions which is another good proxy.
                     let inactive_threshold_date = clock.now() - Duration::days(90);
                     let inactive_compat_session_page = repo
                         .compat_session()
