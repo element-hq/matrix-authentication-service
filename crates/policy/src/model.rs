@@ -53,7 +53,7 @@ pub enum ViolationVariant {
 
     /// The user has reached their session limit.
     TooManySessions {
-        /// How many devices to remove
+        /// How many devices need to be removed to make room for the new session
         need_to_remove: u32,
     },
 }
