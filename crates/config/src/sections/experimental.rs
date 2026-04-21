@@ -173,7 +173,7 @@ pub struct SessionLimitConfig {
     /// recovery key setup.
     ///
     /// When using [`hard_limit_eviction`], the [`hard_limit`] must be
-    /// at-least 2 to avoid catastropically losing encrypted history and digital
+    /// at-least 2 to avoid catastrophically losing encrypted history and digital
     /// identity in pathological cases. Keep in mind this is a bare minimum
     /// restriction and you can still run into trouble.
     ///
