@@ -634,6 +634,25 @@ async fn process_violations_for_compat_login(
 
                 // Remove the sessions (only as much as necessary, `need_to_remove`)
                 for compat_session in &lru_compat_sessions[0..need_to_remove] {
+                    // Log what's happening so we have some explanation if someone asks
+                    //
+                    // FIXME: In the future, it would probably good to mark the reason
+                    // down in the database for a better paper trail.
+                    tracing::info!(
+                        // So we can easily find logs for a given user
+                        user_id = user.id.to_string(),
+                        username = user.username,
+                        // So we can easily look it up in the MAS database
+                        compat_session_id = compat_session.id.to_string(),
+                        // Make it easier to line up with what the user may be talking about
+                        device_id = compat_session
+                            .device
+                            .as_ref()
+                            .map(mas_data_model::Device::as_str),
+                        "Automatically removing compat session for user (`hard_limit_eviction`)"
+                    );
+
+                    // Remove the session
                     repo.compat_session()
                         .finish(clock, compat_session.to_owned())
                         .await?;
