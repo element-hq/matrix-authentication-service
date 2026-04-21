@@ -84,16 +84,18 @@ test_session_limiting_password if {
 		with data.session_limit as null
 }
 
+# If the session is replacing an existing session, no need to throw any violations about
+# too many sessions
 test_no_session_limiting_upon_replacement if {
-	not compat_login.allow with input.user as user
+	compat_login.allow with input.user as user
 		with input.session_counts as {"total": 65}
 		with input.login as {"type": "m.login.password"}
-		with input.session_replaced as false
+		with input.session_replaced as true
 		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
 
-	not compat_login.allow with input.user as user
+	compat_login.allow with input.user as user
 		with input.session_counts as {"total": 65}
 		with input.login as {"type": "m.login.sso"}
-		with input.session_replaced as false
+		with input.session_replaced as true
 		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
 }
