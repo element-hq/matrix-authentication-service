@@ -1928,7 +1928,7 @@ mod tests {
                     .0
                     .device
                     .clone()
-                    .expect("Expected each login should havea a device")
+                    .expect("Expected each login should have a device")
                     .as_str()
                     .to_owned()
             })
@@ -2059,7 +2059,7 @@ mod tests {
                     .0
                     .device
                     .clone()
-                    .expect("Expected each login should havea a device")
+                    .expect("Expected each login should have a device")
                     .as_str()
                     .to_owned()
             })
