@@ -258,10 +258,10 @@
       "button": "Nollaa identiteetti",
       "cancelled": {
         "description_1": "Voit sulkea tämän ikkunan ja palata sovellukseen jatkaaksesi.",
-        "description_2": "Jos olet kirjautunut ulos kaikkialta etkä muista palautuskoodiasi, sinun on silti nollattava identiteettisi.",
-        "heading": "Identiteetin nollaus peruutettu."
+        "description_2": "Jos sinulla ei ole muita vahvistettuja laitteita eikä palautuskoodiasi käytettävissä, sinun on nollattava digitaalinen identiteettisi, jotta voit jatkaa sovelluksen käyttöä.",
+        "heading": "Digitaalisen identiteetin nollaus peruutettu."
       },
-      "description": "Jos et ole kirjautunut muihin laitteisiin ja olet kadottanut palautusavaimesi, sinun on nollattava identiteettisi, jotta voit jatkaa sovelluksen käyttöä.",
+      "description": "Jos sinulla ei ole muita vahvistettuja laitteita eikä palautuskoodiasi käytettävissä, sinun on nollattava digitaalinen identiteettisi, jotta voit jatkaa sovelluksen käyttöä.",
       "effect_list": {
         "negative_1": "Menetät nykyisen viestihistoriasi",
         "negative_2": "Sinun on vahvistettava kaikki olemassa olevat laitteesi ja yhteystietosi uudelleen",
@@ -271,18 +271,18 @@
       },
       "failure": {
         "description": "Tämä saattaa olla väliaikainen ongelma, joten yritä myöhemmin uudelleen. Jos ongelma jatkuu, ota yhteyttä palvelimen ylläpitäjään.",
-        "heading": "Kryptografisen identiteetin nollauksen salliminen epäonnistui",
-        "title": "Kryptografisen identiteetin nollauksen salliminen epäonnistui"
+        "heading": "Digitaalisen identiteetin nollauksen salliminen epäonnistui",
+        "title": "Digitaalisen identiteetin nollauksen salliminen epäonnistui"
       },
       "finish_reset": "Viimeistele nollaus",
-      "heading": "Nollaa identiteettisi, jos et voi vahvistaa muulla tavalla",
+      "heading": "Nollaa digitaalinen identiteettisi, jos et voi vahvistaa muulla tavalla",
       "start_reset": "Aloita nollaus",
       "success": {
-        "description": "Identiteetin nollaus on hyväksytty seuraavaksi {{minutes}} minuutiksi. Voit sulkea tämän ikkunan ja palata sovellukseen jatkaaksesi.",
-        "heading": "Identiteetin nollaus onnistui. Palaa takaisin sovellukseen viimeistelläksesi prosessin.",
-        "title": "Kryptografisen identiteetin nollaus tilapäisesti sallittu"
+        "description": "Digitaalisen identiteetin nollaus on hyväksytty seuraavaksi {{minutes}} minuutiksi. Voit sulkea tämän ikkunan ja palata sovellukseen jatkaaksesi.",
+        "heading": "Digitaalisen identiteetin nollaus onnistui. Palaa takaisin sovellukseen viimeistelläksesi prosessin.",
+        "title": "Digitaalisen identiteetin nollaus tilapäisesti sallittu"
       },
-      "warning": "Nollaa identiteettisi vain, jos et voi käyttää toista laitetta, johon olet kirjautunut, ja olet kadottanut palautusavaimesi."
+      "warning": "Nollaa digitaalinen identiteettisi vain, jos sinulla ei ole toista vahvistettua laitetta tai palautusavaintasi käytettävissä."
     },
     "selectable_session": {
       "label": "Valitse istunto"
