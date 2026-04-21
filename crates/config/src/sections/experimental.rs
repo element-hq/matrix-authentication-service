@@ -195,7 +195,7 @@ impl SessionLimitConfig {
         // See [`SessionLimitConfig::hard_limit_eviction`] docstring
         if self.hard_limit_eviction && self.hard_limit.get() < 2 {
             return Err(figment::error::Error::from(
-                "Session `hard_limit` must be at-least 2 when automatic `hard_limit_eviction` is set. \
+                "Session `hard_limit` must be at least 2 when automatic `hard_limit_eviction` is set. \
                 See configuration docs for more info.",
             ).with_path("hard_limit").into());
         }
