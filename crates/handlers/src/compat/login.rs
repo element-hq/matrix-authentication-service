@@ -1810,7 +1810,7 @@ mod tests {
                 session_limit: Some(SessionLimitConfig {
                     // (doesn't matter)
                     soft_limit: NonZeroU64::new(1).unwrap(),
-                    // Must be at-least 2 when `hard_limit_eviction`
+                    // Must be at least 2 when `hard_limit_eviction`
                     hard_limit: NonZeroU64::new(2).unwrap(),
                     // Option under test
                     hard_limit_eviction: true,
@@ -1968,7 +1968,7 @@ mod tests {
                 session_limit: Some(SessionLimitConfig {
                     // (doesn't matter)
                     soft_limit: NonZeroU64::new(1).unwrap(),
-                    // Must be at-least 2 when `hard_limit_eviction`
+                    // Must be at least 2 when `hard_limit_eviction`
                     hard_limit: NonZeroU64::new(2).unwrap(),
                     // Option under test
                     hard_limit_eviction: true,

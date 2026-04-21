@@ -83,11 +83,13 @@ test_session_limiting_sso_over_hard_limit if {
 		with input.session_replaced as false
 		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
 	not result.allow
+
 	# Only the `soft_limit` applies to the interactive `m.login.sso` login
 	result.need_to_remove == 34
 }
 
 test_session_limiting_sso_no_limit if {
+	# No limit configured
 	result := {
 		"allow": compat_login.allow,
 		"need_to_remove": get_need_to_remove(compat_login.violation),
@@ -95,7 +97,6 @@ test_session_limiting_sso_no_limit if {
 		with input.session_counts as {"total": 1}
 		with input.login as {"type": "m.login.sso"}
 		with input.session_replaced as false
-		# No limit configured
 		with data.session_limit as null
 	result.allow
 	result.need_to_remove == 0
@@ -157,6 +158,7 @@ test_session_limiting_password_over_hard_limit if {
 }
 
 test_session_limiting_password_no_limit if {
+	# No limit configured
 	result := {
 		"allow": compat_login.allow,
 		"need_to_remove": get_need_to_remove(compat_login.violation),
@@ -164,7 +166,6 @@ test_session_limiting_password_no_limit if {
 		with input.session_counts as {"total": 1}
 		with input.login as {"type": "m.login.password"}
 		with input.session_replaced as false
-		# No limit configured
 		with data.session_limit as null
 	result.allow
 	result.need_to_remove == 0

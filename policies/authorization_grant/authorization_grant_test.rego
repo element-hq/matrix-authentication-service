@@ -286,17 +286,18 @@ test_session_limiting_over_soft_limit if {
 		with input.session_counts as {"total": 65}
 		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
 	not result.allow
+
 	# Only the `soft_limit` applies to the interactive login
 	result.need_to_remove == 34
 }
 
 test_session_limiting_no_limit if {
+	# No limit configured
 	result := {
 		"allow": authorization_grant.allow,
 		"need_to_remove": get_need_to_remove(authorization_grant.violation),
 	} with input.user as user
 		with input.session_counts as {"total": 1}
-		# No limit configured
 		with data.session_limit as null
 	result.allow
 	result.need_to_remove == 0
