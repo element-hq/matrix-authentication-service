@@ -223,34 +223,81 @@ test_mas_scopes if {
 		with input.scope as "urn:mas:admin"
 }
 
-test_session_limiting if {
-	authorization_grant.allow with input.user as user
+# Helper utility to extract the number of sessions that they `need_to_remove`, returns 0
+# if the `too-many-sessions` violation is not found
+get_need_to_remove(violations) := need if {
+	some v in violations
+	v.code == "too-many-sessions"
+	need := v.need_to_remove
+} else := 0
+
+# Tests session limiting when using OAuth 2.0 authorization grants
+# (interactive, therefore `soft_limit` applies)
+# =========================================================================
+test_session_limiting_under_limit if {
+	result := {
+		"allow": authorization_grant.allow,
+		"need_to_remove": get_need_to_remove(authorization_grant.violation),
+	} with input.user as user
 		with input.session_counts as {"total": 1}
 		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
+	result.allow
+	result.need_to_remove == 0
+}
 
-	authorization_grant.allow with input.user as user
+test_session_limiting_under_soft_limit if {
+	result := {
+		"allow": authorization_grant.allow,
+		"need_to_remove": get_need_to_remove(authorization_grant.violation),
+	} with input.user as user
 		with input.session_counts as {"total": 31}
 		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
+	result.allow
+	result.need_to_remove == 0
+}
 
-	not authorization_grant.allow with input.user as user
+test_session_limiting_hit_soft_limit if {
+	result := {
+		"allow": authorization_grant.allow,
+		"need_to_remove": get_need_to_remove(authorization_grant.violation),
+	} with input.user as user
 		with input.session_counts as {"total": 32}
 		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
+	not result.allow
+	result.need_to_remove == 1
+}
 
-	not authorization_grant.allow with input.user as user
+test_session_limiting_over_soft_limit if {
+	result := {
+		"allow": authorization_grant.allow,
+		"need_to_remove": get_need_to_remove(authorization_grant.violation),
+	} with input.user as user
 		with input.session_counts as {"total": 42}
 		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
+	not result.allow
+	result.need_to_remove == 11
+}
 
-	not authorization_grant.allow with input.user as user
+test_session_limiting_over_soft_limit if {
+	result := {
+		"allow": authorization_grant.allow,
+		"need_to_remove": get_need_to_remove(authorization_grant.violation),
+	} with input.user as user
 		with input.session_counts as {"total": 65}
 		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
+	not result.allow
+	# Only the `soft_limit` applies to the interactive login
+	result.need_to_remove == 34
+}
 
-	# No limit configured
-	authorization_grant.allow with input.user as user
+test_session_limiting_no_limit if {
+	result := {
+		"allow": authorization_grant.allow,
+		"need_to_remove": get_need_to_remove(authorization_grant.violation),
+	} with input.user as user
 		with input.session_counts as {"total": 1}
+		# No limit configured
 		with data.session_limit as null
-
-	# Client credentials grant
-	authorization_grant.allow with input.user as user
-		with input.session_counts as null
-		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
+	result.allow
+	result.need_to_remove == 0
 }

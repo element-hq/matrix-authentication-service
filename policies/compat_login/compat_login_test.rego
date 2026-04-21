@@ -83,7 +83,7 @@ test_session_limiting_sso_over_hard_limit if {
 		with input.session_replaced as false
 		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
 	not result.allow
-	# Only the soft-limit applies to the interactive `m.login.sso` login
+	# Only the `soft_limit` applies to the interactive `m.login.sso` login
 	result.need_to_remove == 34
 }
 
