@@ -7,7 +7,7 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { notFound, Outlet } from "@tanstack/react-router";
 import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
-import { Heading } from "@vector-im/compound-web";
+import { Heading, Tooltip } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 import Layout from "../components/Layout";
 import NavBar from "../components/NavBar";
@@ -70,7 +70,9 @@ function Account(): React.ReactElement {
             <NavItem to="/">{t("frontend.nav.settings")}</NavItem>
             <NavItem to="/sessions">
               {t("frontend.nav.devices")}{" "}
-              <IconErrorSolid className={styles.navBarErrorIcon} />
+              <Tooltip label={t("frontend.nav.device_limit_error")}>
+                <IconErrorSolid className={styles.navBarErrorIcon} />
+              </Tooltip>
             </NavItem>
             {planManagementIframeUri && (
               <NavItem to="/plan">{t("frontend.nav.plan")}</NavItem>

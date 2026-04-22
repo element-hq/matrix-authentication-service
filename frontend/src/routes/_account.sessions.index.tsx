@@ -6,7 +6,8 @@
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { notFound } from "@tanstack/react-router";
-import { H3, H4 } from "@vector-im/compound-web";
+import { H3, H4, Tooltip } from "@vector-im/compound-web";
+import IconInfo from "@vector-im/compound-design-tokens/assets/web/icons/info";
 import { useTranslation } from "react-i18next";
 import * as v from "valibot";
 import { ButtonLink } from "../components/ButtonLink";
@@ -186,11 +187,21 @@ function Sessions(): React.ReactElement {
     );
   }
 
-  // TODO
-  let todoSessionLimit = null;
+  // Include a little info icon explaining the session limit (if there is one) (best to
+  // be transparent)
+  let sessionLimitInfo = null;
   if (sessionLimit) {
-    todoSessionLimit = (
-      <div>TODO: Limited to {sessionLimit.softLimit} devices</div>
+    const sessionLimitInfoText = t(
+      "frontend.user_sessions_overview.session_limit_info",
+      {
+        limit: sessionLimit.softLimit,
+        total_count: overviewViewer.unfilteredAppSessions.totalCount,
+      });
+
+    sessionLimitInfo = (
+      <Tooltip label={sessionLimitInfoText}>
+        <IconInfo />
+      </Tooltip>
     );
   }
 
@@ -199,8 +210,10 @@ function Sessions(): React.ReactElement {
       <H3>{t("frontend.user_sessions_overview.heading")}</H3>
       <BrowserSessionsOverview user={overviewViewer} />
 
-      <H4>{deviceHeaderText}</H4>
-      {todoSessionLimit}
+      <H4 className="flex gap-1 items-center">
+        {deviceHeaderText}
+        {sessionLimitInfo}
+      </H4>
       <Separator kind="section" />
       <div className="flex gap-2 justify-start items-center">
         <Filter

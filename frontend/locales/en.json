@@ -123,6 +123,7 @@
     },
     "nav": {
       "devices": "Devices",
+      "device_limit_error": "Device limit reached",
       "plan": "Plan",
       "settings": "Settings"
     },
@@ -295,7 +296,8 @@
         "inactive_90_days": "All your sessions have been active in the last 90 days."
       },
       "num_devices_filtered_header": "{{filtered_count}} devices match your filter ({{total_count}} total)",
-      "num_devices_header": "{{num_devices}} devices"
+      "num_devices_header": "{{num_devices}} devices",
+      "session_limit_info": "Limit: {{limit}} devices max"
     },
     "verify_email": {
       "code_expired_alert": {
