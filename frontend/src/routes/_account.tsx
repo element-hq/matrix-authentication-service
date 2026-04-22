@@ -73,7 +73,7 @@ function Account(): React.ReactElement {
       <Tooltip label={t("frontend.nav.device_limit_error")}>
         <IconErrorSolid className={styles.navBarErrorIcon} />
       </Tooltip>
-    )
+    );
   }
 
   return (

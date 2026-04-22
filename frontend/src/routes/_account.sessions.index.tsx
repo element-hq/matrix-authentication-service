@@ -6,8 +6,8 @@
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { notFound } from "@tanstack/react-router";
-import { Alert, H3, H4, Tooltip } from "@vector-im/compound-web";
 import IconInfo from "@vector-im/compound-design-tokens/assets/web/icons/info";
+import { Alert, H3, H4, Tooltip } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 import * as v from "valibot";
 import { ButtonLink } from "../components/ButtonLink";
@@ -176,7 +176,7 @@ function Sessions(): React.ReactElement {
   // But if we're showing a filtered down view, we want to explain how many devices you
   // filtered down to and how many total unfilterd devices there are total.
   if (
-    overviewViewer.unfilteredAppSessions.totalCount != appSessions.totalCount
+    overviewViewer.unfilteredAppSessions.totalCount !== appSessions.totalCount
   ) {
     deviceHeaderText = t(
       "frontend.user_sessions_overview.num_sessions_filtered_header",

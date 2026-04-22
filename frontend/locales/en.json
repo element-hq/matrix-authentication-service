@@ -122,8 +122,8 @@
       "inactive_90_days": "Inactive for 90+ days"
     },
     "nav": {
-      "devices": "Devices",
       "device_limit_error": "Device limit reached",
+      "devices": "Devices",
       "plan": "Plan",
       "settings": "Settings"
     },
@@ -290,18 +290,18 @@
       "email": "Email"
     },
     "user_sessions_overview": {
+      "approaching_session_limit_warning_description": "You've used {{num_sessions}} of {{limit}} device slots. Once you reach your limit, you'll need to remove an existing device to add another.",
+      "approaching_session_limit_warning_header": "Heads up, you're close to your device limit",
       "heading": "Where you're signed in",
+      "hit_session_limit_warning_description": "You've used {{num_sessions}} of {{limit}} device slots. When you try to sign-in again, you'll need to remove an existing device.",
+      "hit_session_limit_warning_header": "You've hit the device limit",
       "no_active_sessions": {
         "default": "You are not signed in to any application.",
         "inactive_90_days": "All your sessions have been active in the last 90 days."
       },
       "num_sessions_filtered_header": "{{filtered_count}} devices match your filter ({{num_sessions}} total)",
       "num_sessions_header": "{{num_sessions}} devices",
-      "session_limit_info": "You've used {{num_sessions}}/{{limit}} device slots",
-      "approaching_session_limit_warning_header": "Heads up, you're close to your device limit",
-      "approaching_session_limit_warning_description": "You've used {{num_sessions}} of {{limit}} device slots. Once you reach your limit, you'll need to remove an existing device to add another.",
-      "hit_session_limit_warning_header": "You've hit the device limit",
-      "hit_session_limit_warning_description": "You've used {{num_sessions}} of {{limit}} device slots. When you try to sign-in again, you'll need to remove an existing device."
+      "session_limit_info": "You've used {{num_sessions}}/{{limit}} device slots"
     },
     "verify_email": {
       "code_expired_alert": {
