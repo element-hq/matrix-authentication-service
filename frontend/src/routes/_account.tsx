@@ -24,12 +24,20 @@ const QUERY = graphql(/* GraphQL */ `
       __typename
       ... on User {
         ...UserGreeting_user
+
+        # Get the total count of active app sessions before any filtering
+        unfilteredAppSessions: appSessions(first: 1, state: ACTIVE) {
+          totalCount
+        }
       }
     }
 
     siteConfig {
       ...UserGreeting_siteConfig
       planManagementIframeUri
+      sessionLimit {
+        softLimit
+      }
     }
   }
 `);
@@ -50,11 +58,23 @@ function Account(): React.ReactElement {
   const viewer = result.data.viewer;
   if (viewer?.__typename !== "User") throw notFound();
   const { siteConfig } = result.data;
-  const { planManagementIframeUri } = siteConfig;
+  const { planManagementIframeUri, sessionLimit } = siteConfig;
 
-  // We only display an error in the nav bar if they are actually over their limit. No
-  // need to nag somebody about using their allotment.
-  // TODO
+  // We only display an error in the nav bar if they've actually hit the limit. No need
+  // to nag somebody about using their allotment.
+  //
+  // We want to guide their eyes to the area that needs attention
+  let sessionLimitHitIcon = null;
+  if (
+    sessionLimit &&
+    viewer.unfilteredAppSessions.totalCount >= sessionLimit.softLimit
+  ) {
+    sessionLimitHitIcon = (
+      <Tooltip label={t("frontend.nav.device_limit_error")}>
+        <IconErrorSolid className={styles.navBarErrorIcon} />
+      </Tooltip>
+    )
+  }
 
   return (
     <Layout wide>
@@ -69,10 +89,8 @@ function Account(): React.ReactElement {
           <NavBar>
             <NavItem to="/">{t("frontend.nav.settings")}</NavItem>
             <NavItem to="/sessions">
-              {t("frontend.nav.devices")}{" "}
-              <Tooltip label={t("frontend.nav.device_limit_error")}>
-                <IconErrorSolid className={styles.navBarErrorIcon} />
-              </Tooltip>
+              {t("frontend.nav.devices")}
+              {sessionLimitHitIcon}
             </NavItem>
             {planManagementIframeUri && (
               <NavItem to="/plan">{t("frontend.nav.plan")}</NavItem>

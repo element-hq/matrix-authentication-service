@@ -1939,11 +1939,11 @@ export type CurrentUserGreetingQueryVariables = Exact<{ [key: string]: never; }>
 export type CurrentUserGreetingQuery = { __typename?: 'Query', viewer:
     | { __typename: 'Anonymous' }
     | (
-      { __typename: 'User' }
+      { __typename: 'User', unfilteredAppSessions: { __typename?: 'AppSessionConnection', totalCount: number } }
       & { ' $fragmentRefs'?: { 'UserGreeting_UserFragment': UserGreeting_UserFragment } }
     )
   , siteConfig: (
-    { __typename?: 'SiteConfig', planManagementIframeUri?: string | null }
+    { __typename?: 'SiteConfig', planManagementIframeUri?: string | null, sessionLimit?: { __typename?: 'SessionLimitConfig', softLimit: number } | null }
     & { ' $fragmentRefs'?: { 'UserGreeting_SiteConfigFragment': UserGreeting_SiteConfigFragment } }
   ) };
 
@@ -2841,11 +2841,17 @@ export const CurrentUserGreetingDocument = new TypedDocumentString(`
     __typename
     ... on User {
       ...UserGreeting_user
+      unfilteredAppSessions: appSessions(first: 1, state: ACTIVE) {
+        totalCount
+      }
     }
   }
   siteConfig {
     ...UserGreeting_siteConfig
     planManagementIframeUri
+    sessionLimit {
+      softLimit
+    }
   }
 }
     fragment UserGreeting_user on User {
