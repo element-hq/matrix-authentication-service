@@ -6,7 +6,7 @@
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { notFound } from "@tanstack/react-router";
-import { H3, H4, Tooltip } from "@vector-im/compound-web";
+import { Alert, H3, H4, Tooltip } from "@vector-im/compound-web";
 import IconInfo from "@vector-im/compound-design-tokens/assets/web/icons/info";
 import { useTranslation } from "react-i18next";
 import * as v from "valibot";
@@ -168,9 +168,9 @@ function Sessions(): React.ReactElement {
 
   // By default, we just show a "X devices" header
   let deviceHeaderText = t(
-    "frontend.user_sessions_overview.num_devices_header",
+    "frontend.user_sessions_overview.num_sessions_header",
     {
-      num_devices: appSessions.totalCount,
+      num_sessions: appSessions.totalCount,
     },
   );
   // But if we're showing a filtered down view, we want to explain how many devices you
@@ -179,10 +179,10 @@ function Sessions(): React.ReactElement {
     overviewViewer.unfilteredAppSessions.totalCount != appSessions.totalCount
   ) {
     deviceHeaderText = t(
-      "frontend.user_sessions_overview.num_devices_filtered_header",
+      "frontend.user_sessions_overview.num_sessions_filtered_header",
       {
         filtered_count: appSessions.totalCount,
-        total_count: overviewViewer.unfilteredAppSessions.totalCount,
+        num_sessions: overviewViewer.unfilteredAppSessions.totalCount,
       },
     );
   }
@@ -195,13 +195,66 @@ function Sessions(): React.ReactElement {
       "frontend.user_sessions_overview.session_limit_info",
       {
         limit: sessionLimit.softLimit,
-        total_count: overviewViewer.unfilteredAppSessions.totalCount,
-      });
+        num_sessions: overviewViewer.unfilteredAppSessions.totalCount,
+      },
+    );
 
     sessionLimitInfo = (
       <Tooltip label={sessionLimitInfoText}>
         <IconInfo />
       </Tooltip>
+    );
+  }
+
+  // Show an error when they've hit the session limit
+  let sessionLimitWarningError = null;
+  if (
+    sessionLimit &&
+    overviewViewer.unfilteredAppSessions.totalCount >= sessionLimit.softLimit
+  ) {
+    sessionLimitWarningError = (
+      <Alert
+        type="critical"
+        title={t(
+          "frontend.user_sessions_overview.hit_session_limit_warning_header",
+        )}
+      >
+        {t(
+          "frontend.user_sessions_overview.hit_session_limit_warning_description",
+          {
+            limit: sessionLimit.softLimit,
+            num_sessions: overviewViewer.unfilteredAppSessions.totalCount,
+          },
+        )}
+      </Alert>
+    );
+  }
+  // Show a warning when they're approaching the session limit
+  else if (
+    sessionLimit &&
+    // Avoid showing a problem when they don't have any devices yet
+    overviewViewer.unfilteredAppSessions.totalCount > 0 &&
+    // When they're approaching the limit (20% headroom, round up)
+    overviewViewer.unfilteredAppSessions.totalCount +
+      Math.ceil(sessionLimit.softLimit * 0.2) >=
+      sessionLimit.softLimit
+  ) {
+    sessionLimitWarningError = (
+      <Alert
+        // FIXME: there is no warning type yet
+        type="critical"
+        title={t(
+          "frontend.user_sessions_overview.approaching_session_limit_warning_header",
+        )}
+      >
+        {t(
+          "frontend.user_sessions_overview.approaching_session_limit_warning_description",
+          {
+            limit: sessionLimit.softLimit,
+            num_sessions: overviewViewer.unfilteredAppSessions.totalCount,
+          },
+        )}
+      </Alert>
     );
   }
 
@@ -215,6 +268,7 @@ function Sessions(): React.ReactElement {
         {sessionLimitInfo}
       </H4>
       <Separator kind="section" />
+      {sessionLimitWarningError}
       <div className="flex gap-2 justify-start items-center">
         <Filter
           to="/sessions"
