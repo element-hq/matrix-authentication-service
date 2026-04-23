@@ -133,6 +133,20 @@ impl CallbackDestination {
                 let new_qs = serde_urlencoded::to_string(merged)?;
 
                 redirect_uri.set_query(Some(&new_qs));
+                if redirect_uri.fragment().is_none() {
+                    // To avoid the browser carrying over any potential URL fragment, which may
+                    // include sensitive data from an upstream identity provider, across the
+                    // redirect, overwrite the fragment part by setting the
+                    // fragment to `#`.
+                    //
+                    // The browser behaviour is documented as part of
+                    // the 'location URL' algorithm at
+                    // https://fetch.spec.whatwg.org/commit-snapshots/809904366f33a673a9489b81155ee9e3edd29c12/#concept-response-location-url
+                    //
+                    // We don't need to do this if the redirect URI already includes
+                    // a fragment (as that will also overwrite the client's current value).
+                    redirect_uri.set_fragment(Some(""));
+                }
 
                 Ok(Redirect::to(redirect_uri.as_str()).into_response())
             }
@@ -200,6 +214,10 @@ mod tests {
 
     /// Test that checks the content of the `Location` header
     /// in response to an authorization request.
+    ///
+    /// Specifically, we expect to see an empty fragment (`#`)
+    /// at the end of the URL in order to overwrite any fragment
+    /// that the browser might otherwise preserve across the redirect.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_query_mode_location_header(pool: PgPool) {
         setup();
@@ -236,7 +254,7 @@ mod tests {
         // Check the form of the Location redirect
         response.assert_header_value(
             hyper::header::LOCATION,
-            "https://example.com/callback?state=test-state-value&error=login_required&error_description=The+Authorization+Server+requires+End-User+authentication.",
+            "https://example.com/callback?state=test-state-value&error=login_required&error_description=The+Authorization+Server+requires+End-User+authentication.#",
         );
     }
 }
