@@ -5,13 +5,12 @@
 
 // @vitest-environment happy-dom
 
-import { act, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { screen } from "@testing-library/react";
 import { HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import {
-  mockSessionsOverviewQuery,
   mockAppSessionsListQuery,
+  mockSessionsOverviewQuery,
 } from "../../../src/gql/graphql";
 import { renderPage, server } from "../render";
 
