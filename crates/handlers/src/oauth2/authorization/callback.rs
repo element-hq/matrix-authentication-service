@@ -164,3 +164,79 @@ impl CallbackDestination {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use hyper::{Request, StatusCode};
+    use mas_router::SimpleRoute;
+    use oauth2_types::registration::ClientRegistrationResponse;
+    use sqlx::PgPool;
+    use url::Url;
+
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
+
+    /// Helper to build a GET request to the authorization endpoint with query
+    /// parameters.
+    fn authorize_get_request(
+        client_id: &str,
+        redirect_uri: &str,
+        state: &str,
+    ) -> hyper::Request<String> {
+        let mut url = Url::parse("https://example.com/authorize").unwrap();
+        url.query_pairs_mut()
+            .append_pair("response_type", "code")
+            .append_pair("client_id", client_id)
+            .append_pair("redirect_uri", redirect_uri)
+            .append_pair("scope", "openid")
+            .append_pair("state", state)
+            .append_pair("response_mode", "query")
+            .append_pair("prompt", "none");
+
+        let path = url.path();
+        let query = url.query().unwrap_or("");
+        let uri = format!("{path}?{query}");
+        Request::get(uri).empty()
+    }
+
+    /// Test that checks the content of the `Location` header
+    /// in response to an authorization request.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_query_mode_location_header(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        // Register an OAuth2 client
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://example.com/",
+                "redirect_uris": ["https://example.com/callback"],
+                "token_endpoint_auth_method": "none",
+                "response_types": ["code"],
+                "grant_types": ["authorization_code"],
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+
+        let registration: ClientRegistrationResponse = response.json();
+        let client_id = registration.client_id;
+
+        // Send an authorization request with response_mode=query and prompt=none.
+        // prompt=none always fails with login_required since there is no session,
+        // which exercises the CallbackDestinationMode::Query path.
+        let request = authorize_get_request(
+            &client_id,
+            "https://example.com/callback",
+            "test-state-value",
+        );
+        let response = state.request(request).await;
+
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        // Check the form of the Location redirect
+        response.assert_header_value(
+            hyper::header::LOCATION,
+            "https://example.com/callback?state=test-state-value&error=login_required&error_description=The+Authorization+Server+requires+End-User+authentication.",
+        );
+    }
+}
