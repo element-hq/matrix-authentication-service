@@ -151,6 +151,8 @@ pub struct SessionLimitConfig {
     /// some UI for people remove some sessions. See [`hard_limit`] for
     /// enforcement on that side.
     ///
+    /// This is the limit that is displayed in the UI
+    ///
     /// [`hard_limit`]: Self::hard_limit
     pub soft_limit: NonZeroU64,
     /// Upon login, when `hard_limit_eviction: false`, will refuse the new login
@@ -192,6 +194,20 @@ pub struct SessionLimitConfig {
 
 impl SessionLimitConfig {
     fn validate(&self) -> Result<(), Box<figment::error::Error>> {
+        // We assume the `hard_limit` is >= the `soft_limit`
+        //
+        // Why? The UI only shows the soft_limit to users. If hard_limit were smaller
+        // than soft_limit, users could hit the hard_limit without ever reaching the
+        // visible soft_limit threshold — making the actual limit invisible and the
+        // failure confusing.
+        if self.hard_limit < self.soft_limit {
+            return Err(figment::error::Error::from(
+                "Session `hard_limit` must be greater than or equal to the user-facing `soft_limit`.",
+            )
+            .with_path("hard_limit")
+            .into());
+        }
+
         // See [`SessionLimitConfig::hard_limit_eviction`] docstring
         if self.hard_limit_eviction && self.hard_limit.get() < 2 {
             return Err(figment::error::Error::from(

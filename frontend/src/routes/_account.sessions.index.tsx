@@ -6,7 +6,8 @@
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { notFound } from "@tanstack/react-router";
-import { H3 } from "@vector-im/compound-web";
+import IconInfo from "@vector-im/compound-design-tokens/assets/web/icons/info";
+import { Alert, H3, H4, Tooltip } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 import * as v from "valibot";
 import { ButtonLink } from "../components/ButtonLink";
@@ -36,6 +37,17 @@ const QUERY = graphql(/* GraphQL */ `
       ... on User {
         id
         ...BrowserSessionsOverview_user
+
+        # Get the total count of active app sessions before any filtering
+        unfilteredAppSessions: appSessions(first: 1, state: ACTIVE) {
+          totalCount
+        }
+      }
+    }
+
+    siteConfig {
+      sessionLimit {
+        softLimit
       }
     }
   }
@@ -136,9 +148,10 @@ function Sessions(): React.ReactElement {
   const { t } = useTranslation();
   const { inactive, pagination } = Route.useLoaderDeps();
   const {
-    data: { viewer },
+    data: { viewer: overviewViewer, siteConfig },
   } = useSuspenseQuery(query);
-  if (viewer.__typename !== "User") throw notFound();
+  if (overviewViewer.__typename !== "User") throw notFound();
+  const { sessionLimit } = siteConfig;
 
   const { data } = useSuspenseQuery(listQuery(pagination, inactive));
   if (data.viewer.__typename !== "User") throw notFound();
@@ -153,11 +166,111 @@ function Sessions(): React.ReactElement {
   // We reverse the list as we are paginating backwards
   const edges = [...appSessions.edges].reverse();
 
+  // By default, we just show a "X devices" header
+  let deviceHeaderText = t(
+    "frontend.user_sessions_overview.num_sessions_header",
+    {
+      num_sessions: appSessions.totalCount,
+    },
+  );
+  // But if we're showing a filtered down view, we want to explain how many devices you
+  // filtered down to and how many total unfilterd devices there are total.
+  if (
+    overviewViewer.unfilteredAppSessions.totalCount !== appSessions.totalCount
+  ) {
+    deviceHeaderText = t(
+      "frontend.user_sessions_overview.num_sessions_filtered_header",
+      {
+        filtered_count: appSessions.totalCount,
+        num_sessions: overviewViewer.unfilteredAppSessions.totalCount,
+      },
+    );
+  }
+
+  // Include a little info icon explaining the session limit (if there is one) (best to
+  // be transparent)
+  let sessionLimitInfo = null;
+  if (sessionLimit) {
+    const sessionLimitInfoText = t(
+      "frontend.user_sessions_overview.session_limit_info",
+      {
+        limit: sessionLimit.softLimit,
+        num_sessions: overviewViewer.unfilteredAppSessions.totalCount,
+      },
+    );
+
+    sessionLimitInfo = (
+      <Tooltip label={sessionLimitInfoText}>
+        <IconInfo />
+      </Tooltip>
+    );
+  }
+
+  // Show an error when they've hit the session limit
+  let sessionLimitWarningError = null;
+  if (
+    sessionLimit &&
+    overviewViewer.unfilteredAppSessions.totalCount >= sessionLimit.softLimit
+  ) {
+    sessionLimitWarningError = (
+      <Alert
+        type="critical"
+        title={t(
+          "frontend.user_sessions_overview.hit_session_limit_warning_header",
+        )}
+        data-testid="device-limit-error"
+      >
+        {t(
+          "frontend.user_sessions_overview.hit_session_limit_warning_description",
+          {
+            limit: sessionLimit.softLimit,
+            num_sessions: overviewViewer.unfilteredAppSessions.totalCount,
+          },
+        )}
+      </Alert>
+    );
+  }
+  // Show a warning when they're approaching the session limit
+  else if (
+    sessionLimit &&
+    // Avoid showing a problem when they don't have any devices yet
+    overviewViewer.unfilteredAppSessions.totalCount > 0 &&
+    // When they're approaching the limit (20% headroom, round up)
+    overviewViewer.unfilteredAppSessions.totalCount +
+      Math.ceil(sessionLimit.softLimit * 0.2) >=
+      sessionLimit.softLimit
+  ) {
+    sessionLimitWarningError = (
+      <Alert
+        // FIXME: there is no warning type yet
+        type="critical"
+        title={t(
+          "frontend.user_sessions_overview.approaching_session_limit_warning_header",
+        )}
+        data-testid="device-limit-warning"
+      >
+        {t(
+          "frontend.user_sessions_overview.approaching_session_limit_warning_description",
+          {
+            limit: sessionLimit.softLimit,
+            num_sessions: overviewViewer.unfilteredAppSessions.totalCount,
+          },
+        )}
+      </Alert>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <H3>{t("frontend.user_sessions_overview.heading")}</H3>
-      <BrowserSessionsOverview user={viewer} />
+      <BrowserSessionsOverview user={overviewViewer} />
+
+      <H4 className="flex gap-1 items-center">
+        {deviceHeaderText}
+        {sessionLimitInfo}
+      </H4>
       <Separator kind="section" />
+      {sessionLimitWarningError}
       <div className="flex gap-2 justify-start items-center">
         <Filter
           to="/sessions"

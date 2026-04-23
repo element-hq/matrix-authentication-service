@@ -29,6 +29,10 @@
 }
 
 .nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--cpd-space-1x);
+
   padding: var(--cpd-space-1x) var(--cpd-space-2x);
   color: var(--cpd-color-text-secondary);
   line-height: var(--cpd-space-6x);

@@ -59,6 +59,9 @@ pub struct SiteConfig {
 
     /// Experimental plan management iframe URI.
     plan_management_iframe_uri: Option<String>,
+
+    /// Limits on the number of application sessions that each user can have
+    session_limit: Option<SessionLimitConfig>,
 }
 
 #[derive(SimpleObject)]
@@ -77,6 +80,25 @@ pub enum CaptchaService {
     RecaptchaV2,
     CloudflareTurnstile,
     HCaptcha,
+}
+
+#[derive(SimpleObject)]
+pub struct SessionLimitConfig {
+    pub soft_limit: u64,
+    pub hard_limit: u64,
+    pub hard_limit_eviction: bool,
+}
+
+impl SessionLimitConfig {
+    /// Create a new [`SessionLimitConfig`] from the data model
+    /// [`mas_data_model::SessionLimitConfig`].
+    pub fn new(data_model: &mas_data_model::SessionLimitConfig) -> Self {
+        Self {
+            soft_limit: data_model.soft_limit.get(),
+            hard_limit: data_model.hard_limit.get(),
+            hard_limit_eviction: data_model.hard_limit_eviction,
+        }
+    }
 }
 
 #[ComplexObject]
@@ -106,6 +128,10 @@ impl SiteConfig {
             minimum_password_complexity: data_model.minimum_password_complexity,
             login_with_email_allowed: data_model.login_with_email_allowed,
             plan_management_iframe_uri: data_model.plan_management_iframe_uri.clone(),
+            session_limit: data_model
+                .session_limit
+                .as_ref()
+                .map(SessionLimitConfig::new),
         }
     }
 }

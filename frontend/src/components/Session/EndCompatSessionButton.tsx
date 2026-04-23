@@ -55,6 +55,7 @@ const EndCompatSessionButton: React.FC<Props> = ({ session, size }) => {
       }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["sessionsOverview"] });
+      queryClient.invalidateQueries({ queryKey: ["currentUserGreeting"] });
       queryClient.invalidateQueries({ queryKey: ["appSessionList"] });
       queryClient.invalidateQueries({
         queryKey: ["sessionDetail", data.endCompatSession.compatSession?.id],
