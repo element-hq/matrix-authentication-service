@@ -218,6 +218,7 @@ function Sessions(): React.ReactElement {
         title={t(
           "frontend.user_sessions_overview.hit_session_limit_warning_header",
         )}
+        data-testid="device-limit-error"
       >
         {t(
           "frontend.user_sessions_overview.hit_session_limit_warning_description",
@@ -246,6 +247,7 @@ function Sessions(): React.ReactElement {
         title={t(
           "frontend.user_sessions_overview.approaching_session_limit_warning_header",
         )}
+        data-testid="device-limit-warning"
       >
         {t(
           "frontend.user_sessions_overview.approaching_session_limit_warning_description",
