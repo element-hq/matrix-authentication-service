@@ -441,7 +441,8 @@ impl UserEmailMutations {
             .context("Failed to load user")?;
 
         // Validate the email address
-        if input.email.parse::<lettre::Address>().is_err() {
+        let email = input.email.trim().to_owned();
+        if email.parse::<lettre::Address>().is_err() {
             return Ok(AddEmailPayload::Invalid);
         }
 
@@ -449,7 +450,7 @@ impl UserEmailMutations {
             let mut policy = state.policy().await?;
             let res = policy
                 .evaluate_email(mas_policy::EmailInput {
-                    email: &input.email,
+                    email: &email,
                     requester: requester.for_policy(),
                 })
                 .await?;
@@ -461,13 +462,13 @@ impl UserEmailMutations {
         }
 
         // Find an existing email address
-        let existing_user_email = repo.user_email().find(&user, &input.email).await?;
+        let existing_user_email = repo.user_email().find(&user, &email).await?;
         let (added, user_email) = if let Some(user_email) = existing_user_email {
             (false, user_email)
         } else {
             let user_email = repo
                 .user_email()
-                .add(&mut rng, &clock, &user, input.email)
+                .add(&mut rng, &clock, &user, email.clone())
                 .await?;
 
             (true, user_email)
@@ -621,13 +622,12 @@ impl UserEmailMutations {
         let _: DataLocale = input.language.parse()?;
 
         // Check if the email address is valid
-        if input.email.parse::<lettre::Address>().is_err() {
+        let email = input.email.trim().to_owned();
+        if email.parse::<lettre::Address>().is_err() {
             return Ok(StartEmailAuthenticationPayload::InvalidEmailAddress);
         }
 
-        if let Err(e) =
-            limiter.check_email_authentication_email(requester.fingerprint(), &input.email)
-        {
+        if let Err(e) = limiter.check_email_authentication_email(requester.fingerprint(), &email) {
             tracing::warn!(error = &e as &dyn std::error::Error);
             return Ok(StartEmailAuthenticationPayload::RateLimited);
         }
@@ -642,7 +642,7 @@ impl UserEmailMutations {
             .user_email()
             .count(
                 UserEmailFilter::new()
-                    .for_email(&input.email)
+                    .for_email(&email)
                     .for_user(&browser_session.user),
             )
             .await?;
@@ -654,7 +654,7 @@ impl UserEmailMutations {
         let mut policy = state.policy().await?;
         let res = policy
             .evaluate_email(mas_policy::EmailInput {
-                email: &input.email,
+                email: &email,
                 requester: requester.for_policy(),
             })
             .await?;
@@ -681,7 +681,7 @@ impl UserEmailMutations {
         // Create a new authentication session
         let authentication = repo
             .user_email()
-            .add_authentication_for_session(&mut rng, &clock, input.email, browser_session)
+            .add_authentication_for_session(&mut rng, &clock, email, browser_session)
             .await?;
 
         repo.queue_job()

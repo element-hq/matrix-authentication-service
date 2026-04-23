@@ -107,15 +107,16 @@ pub(crate) async fn post(
 
     let form = cookie_jar.verify_form(&clock, form)?;
     let mut form_state = FormState::from_form(&form);
+    let email = form.email.trim().to_owned();
 
-    if Address::from_str(&form.email).is_err() {
+    if Address::from_str(&email).is_err() {
         form_state =
             form_state.with_error_on_field(RecoveryStartFormField::Email, FieldError::Invalid);
     }
 
     if form_state.is_valid() {
         // Check the rate limit if we are about to process the form
-        if let Err(e) = limiter.check_account_recovery(requester, &form.email) {
+        if let Err(e) = limiter.check_account_recovery(requester, &email) {
             tracing::warn!(error = &e as &dyn std::error::Error);
             form_state.add_error_on_form(FormError::RateLimitExceeded);
         }
@@ -138,7 +139,7 @@ pub(crate) async fn post(
         .add_session(
             &mut rng,
             &clock,
-            form.email,
+            email,
             user_agent,
             ip_address,
             locale.to_string(),
