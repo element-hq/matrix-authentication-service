@@ -1739,6 +1739,7 @@ impl TemplateContext for UpstreamRegister {
                 created_at: now,
                 disabled_at: None,
                 on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                registration_token_required: false,
             },
         )])
     }

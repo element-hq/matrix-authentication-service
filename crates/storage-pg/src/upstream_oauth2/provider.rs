@@ -73,6 +73,7 @@ struct ProviderLookup {
     additional_parameters: Option<Json<Vec<(String, String)>>>,
     forward_login_hint: bool,
     on_backchannel_logout: String,
+    registration_token_required: bool,
 }
 
 impl Node<Ulid> for ProviderLookup {
@@ -234,6 +235,7 @@ impl TryFrom<ProviderLookup> for UpstreamOAuthProvider {
             additional_authorization_parameters,
             forward_login_hint: value.forward_login_hint,
             on_backchannel_logout,
+            registration_token_required: value.registration_token_required,
         })
     }
 }
@@ -293,7 +295,8 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     response_mode,
                     additional_parameters as "additional_parameters: Json<Vec<(String, String)>>",
                     forward_login_hint,
-                    on_backchannel_logout
+                    on_backchannel_logout,
+                    registration_token_required
                 FROM upstream_oauth_providers
                 WHERE upstream_oauth_provider_id = $1
             "#,
@@ -357,10 +360,11 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                 response_mode,
                 forward_login_hint,
                 on_backchannel_logout,
+                registration_token_required,
                 created_at
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
                       $12, $13, $14, $15, $16, $17, $18, $19, $20,
-                      $21, $22, $23)
+                      $21, $22, $23, $24)
         "#,
             Uuid::from(id),
             params.issuer.as_deref(),
@@ -399,6 +403,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             params.response_mode.as_ref().map(ToString::to_string),
             params.forward_login_hint,
             params.on_backchannel_logout.as_str(),
+            params.registration_token_required,
             created_at,
         )
         .traced()
@@ -431,6 +436,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             additional_authorization_parameters: params.additional_authorization_parameters,
             on_backchannel_logout: params.on_backchannel_logout,
             forward_login_hint: params.forward_login_hint,
+            registration_token_required: params.registration_token_required,
         })
     }
 
@@ -546,10 +552,11 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     forward_login_hint,
                     ui_order,
                     on_backchannel_logout,
+                    registration_token_required,
                     created_at
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
                           $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-                          $21, $22, $23, $24, $25)
+                          $21, $22, $23, $24, $25, $26)
                 ON CONFLICT (upstream_oauth_provider_id)
                     DO UPDATE
                     SET
@@ -576,7 +583,8 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                         additional_parameters = EXCLUDED.additional_parameters,
                         forward_login_hint = EXCLUDED.forward_login_hint,
                         ui_order = EXCLUDED.ui_order,
-                        on_backchannel_logout = EXCLUDED.on_backchannel_logout
+                        on_backchannel_logout = EXCLUDED.on_backchannel_logout,
+                        registration_token_required = EXCLUDED.registration_token_required
                 RETURNING created_at
             "#,
             Uuid::from(id),
@@ -618,6 +626,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             params.forward_login_hint,
             params.ui_order,
             params.on_backchannel_logout.as_str(),
+            params.registration_token_required,
             created_at,
         )
         .traced()
@@ -650,6 +659,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             additional_authorization_parameters: params.additional_authorization_parameters,
             forward_login_hint: params.forward_login_hint,
             on_backchannel_logout: params.on_backchannel_logout,
+            registration_token_required: params.registration_token_required,
         })
     }
 
@@ -874,6 +884,13 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                 )),
                 ProviderLookupIden::OnBackchannelLogout,
             )
+            .expr_as(
+                Expr::col((
+                    UpstreamOAuthProviders::Table,
+                    UpstreamOAuthProviders::RegistrationTokenRequired,
+                )),
+                ProviderLookupIden::RegistrationTokenRequired,
+            )
             .from(UpstreamOAuthProviders::Table)
             .apply_filter(filter)
             .generate_pagination(
@@ -968,7 +985,9 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     response_mode,
                     additional_parameters as "additional_parameters: Json<Vec<(String, String)>>",
                     forward_login_hint,
-                    on_backchannel_logout
+                    on_backchannel_logout,
+                    registration_token_required
+
                 FROM upstream_oauth_providers
                 WHERE disabled_at IS NULL
                 ORDER BY ui_order ASC, upstream_oauth_provider_id ASC

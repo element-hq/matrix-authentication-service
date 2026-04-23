@@ -119,6 +119,7 @@ mod tests {
             forward_login_hint: false,
             on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
             ui_order: 0,
+            registration_token_required: false,
         };
 
         let provider = repo
@@ -164,7 +165,8 @@ mod tests {
               "human_name": "Google",
               "brand_name": "google",
               "created_at": "2022-01-16T14:40:00Z",
-              "disabled_at": null
+              "disabled_at": null,
+              "registration_token_required": false
             },
             "links": {
               "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG0MZAA6S4AF7CTV32E"

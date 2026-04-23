@@ -26,7 +26,7 @@ pub struct SiteConfig {
     pub password_registration_email_required: bool,
 
     /// Whether registration tokens are required for password registrations.
-    pub registration_token_required: bool,
+    pub password_registration_token_required: bool,
 
     /// Whether users can change their email.
     pub email_change_allowed: bool,
@@ -63,7 +63,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
                 password_login_enabled: true,
                 password_registration_enabled: true,
                 password_registration_email_required: true,
-                registration_token_required: true,
+                password_registration_token_required: true,
                 email_change_allowed: true,
                 displayname_change_allowed: true,
                 password_change_allowed: true,
@@ -85,7 +85,7 @@ pub async fn handler(
         password_login_enabled: site_config.password_login_enabled,
         password_registration_enabled: site_config.password_registration_enabled,
         password_registration_email_required: site_config.password_registration_email_required,
-        registration_token_required: site_config.registration_token_required,
+        password_registration_token_required: site_config.password_registration_token_required,
         email_change_allowed: site_config.email_change_allowed,
         displayname_change_allowed: site_config.displayname_change_allowed,
         password_change_allowed: site_config.password_change_allowed,
