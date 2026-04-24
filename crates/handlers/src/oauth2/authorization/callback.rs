@@ -134,17 +134,23 @@ impl CallbackDestination {
 
                 redirect_uri.set_query(Some(&new_qs));
                 if redirect_uri.fragment().is_none() {
-                    // To avoid the browser carrying over any potential URL fragment, which may
-                    // include sensitive data from an upstream identity provider, across the
-                    // redirect, overwrite the fragment part by setting the
-                    // fragment to `#`.
+                    // Ensure that the Location header (redirect target)
+                    // includes a URL fragment (#) of some sort.
                     //
-                    // The browser behaviour is documented as part of
-                    // the 'location URL' algorithm at
-                    // https://fetch.spec.whatwg.org/commit-snapshots/809904366f33a673a9489b81155ee9e3edd29c12/#concept-response-location-url
+                    // Any fragment present in the Location header URL that the server redirects to
+                    // (e.g., via a 303 response) will overwrite the client’s existing fragment,
+                    // otherwise the fragment will be preserved across the
+                    // redirect (and may contain sensitive information,
+                    // or confuse the downstream client).
                     //
-                    // We don't need to do this if the redirect URI already includes
-                    // a fragment (as that will also overwrite the client's current value).
+                    // If the redirect_uri already contains a fragment, that fragment will do the
+                    // same job, so we leave it alone — we don't want to mangle the client's
+                    // configured redirect URL by replacing it with a blank fragment.
+                    // Otherwise, set a fragment of empty string (effectively appending `#` to the
+                    // URL).
+                    //
+                    // Browser behaviour is documented as part of the 'location URL' algorithm at
+                    // https://fetch.spec.whatwg.org/commit-snapshots/809904366f33a673a9489b81155ee9e3edd29c12#concept-response-location-url
                     redirect_uri.set_fragment(Some(""));
                 }
 
@@ -185,32 +191,8 @@ mod tests {
     use mas_router::SimpleRoute;
     use oauth2_types::registration::ClientRegistrationResponse;
     use sqlx::PgPool;
-    use url::Url;
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
-
-    /// Helper to build a GET request to the authorization endpoint with query
-    /// parameters.
-    fn authorize_get_request(
-        client_id: &str,
-        redirect_uri: &str,
-        state: &str,
-    ) -> hyper::Request<String> {
-        let mut url = Url::parse("https://example.com/authorize").unwrap();
-        url.query_pairs_mut()
-            .append_pair("response_type", "code")
-            .append_pair("client_id", client_id)
-            .append_pair("redirect_uri", redirect_uri)
-            .append_pair("scope", "openid")
-            .append_pair("state", state)
-            .append_pair("response_mode", "query")
-            .append_pair("prompt", "none");
-
-        let path = url.path();
-        let query = url.query().unwrap_or("");
-        let uri = format!("{path}?{query}");
-        Request::get(uri).empty()
-    }
 
     /// Test that checks the content of the `Location` header
     /// in response to an authorization request.
@@ -242,12 +224,21 @@ mod tests {
         // Send an authorization request with response_mode=query and prompt=none.
         // prompt=none always fails with login_required since there is no session,
         // which exercises the CallbackDestinationMode::Query path.
-        let request = authorize_get_request(
-            &client_id,
-            "https://example.com/callback",
-            "test-state-value",
-        );
-        let response = state.request(request).await;
+
+        // Build /authorize query parameters
+        let query = url::form_urlencoded::Serializer::new(String::new())
+            .append_pair("response_type", "code")
+            .append_pair("client_id", &client_id)
+            .append_pair("redirect_uri", "https://example.com/callback")
+            .append_pair("scope", "openid")
+            .append_pair("state", "test-state-value")
+            .append_pair("response_mode", "query")
+            .append_pair("prompt", "none")
+            .finish();
+
+        let response = state
+            .request(Request::get(format!("https://example.com/authorize?{query}")).empty())
+            .await;
 
         response.assert_status(StatusCode::SEE_OTHER);
 
