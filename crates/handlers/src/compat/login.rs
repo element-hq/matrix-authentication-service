@@ -54,6 +54,9 @@ static LOGIN_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
 const TYPE: Key = Key::from_static_str("type");
 const RESULT: Key = Key::from_static_str("result");
 
+/// This matches the `getNinetyDaysAgo()` used in the web UI for "inactive" sessions.
+const INACTIVE_SESSION_THRESHOLD: chrono::TimeDelta = Duration::days(90);
+
 #[derive(Debug, Serialize)]
 #[serde(tag = "type")]
 enum LoginType {
@@ -557,7 +560,7 @@ async fn process_violations_for_compat_login(
                     // `Ulid` (the query is ordered by `compat_session_id`), the
                     // first bytes are a timestamp so we'll be getting the 'oldest
                     // created' sessions which is another good proxy.
-                    let inactive_threshold_date = clock.now() - Duration::days(90);
+                    let inactive_threshold_date = clock.now() - INACTIVE_SESSION_THRESHOLD;
                     let inactive_compat_session_page = repo
                         .compat_session()
                         .list(
@@ -930,7 +933,11 @@ async fn user_password_login(
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::HashSet, num::NonZeroU64, ops::Sub};
+    use std::{
+        collections::HashSet,
+        num::NonZeroU64,
+        ops::{Mul, Sub},
+    };
 
     use hyper::Request;
     use mas_matrix::{HomeserverConnection, ProvisionRequest};
@@ -1831,23 +1838,7 @@ mod tests {
 
         let mut login_device_ids: Vec<String> = Vec::new();
 
-        // Keep logging in to add more sessions, up to the `hard_limit`. Then `+ 1` for
-        // one more login will drop one of our old sessions to make room for the new
-        // login
-        #[allow(clippy::range_plus_one)]
-        for login_index in 0..(session_limit_config.hard_limit.get() + 1) {
-            let original_time = state.clock.now();
-            // All of the logins except the last one should be in the past
-            if login_index <= session_limit_config.hard_limit.get() {
-                // Rewind time so the logins appear older than our "inactive" threshold (90
-                // days)
-                let login_index_i64: i64 = login_index.try_into().unwrap();
-                state
-                    .clock
-                    // Each login is a day earlier
-                    .advance(Duration::days(-200 + login_index_i64));
-            }
-
+        let do_login = async || {
             let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
                 "type": "m.login.password",
                 "identifier": {
@@ -1868,16 +1859,34 @@ mod tests {
                     panic!("Expected `device_id` to be a string")
                 }
             };
-            login_device_ids.push(device_id);
 
             // Wait for `last_active_at` to be set
             state.activity_tracker.flush().await;
 
-            // Restore time
-            state.clock.advance(original_time - state.clock.now());
-        }
+            // Return the new device
+            device_id
+        };
 
-        // Sanity check that the compat sessions have `last_active_at` set. This is
+        // Keep logging in to add more sessions, up to the `hard_limit`.
+        #[allow(clippy::range_plus_one)]
+        for _ in 0..session_limit_config.hard_limit.get() {
+            let device_id = do_login().await;
+            login_device_ids.push(device_id);
+
+            // Advance time so it appears like each login happens a day after each other
+            state.clock.advance(Duration::days(1));
+        }
+        let time_after_past_logins = state.clock.now();
+
+        // Jump to "current time" (anything > INACTIVE_SESSION_THRESHOLD) which will
+        // make all of those past logins to be considered "inactive" at this point.
+        state.clock.advance(INACTIVE_SESSION_THRESHOLD.mul(2));
+        assert!(
+            state.clock.now() - time_after_past_logins > INACTIVE_SESSION_THRESHOLD,
+            "Expected 'current time' login to happen > INACTIVE_SESSION_THRESHOLD from when the past logins happened"
+        );
+
+        // Sanity check that the past compat sessions have `last_active_at` set. This is
         // important as `last_active_at` starts out null.
         let mut repo = state.repository().await.unwrap();
         let compat_session_page = repo
@@ -1894,10 +1903,17 @@ mod tests {
                 .last_active_at
                 .expect("We expect compat sessions to have `last_active_at` set for this test");
             assert!(
-                last_active_at < (state.clock.now().sub(Duration::days(90))),
-                "Expected compat sessions to have a `last_active_at` older than the 90 day 'inactive' threshold"
+                last_active_at < (state.clock.now().sub(INACTIVE_SESSION_THRESHOLD)),
+                "Expected past compat sessions to have a `last_active_at` older than the `INACTIVE_SESSION_THRESHOLD`"
             );
         }
+
+        // Now the user wants to login in the "current time".
+        //
+        // One more login will drop one of our old sessions to make room for the new
+        // login
+        let device_id = do_login().await;
+        login_device_ids.push(device_id);
 
         // Ensure we still only have two sessions (`session_limit_config.hard_limit`).
         // We're sanity checking across all session types.
