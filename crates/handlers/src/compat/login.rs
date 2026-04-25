@@ -54,7 +54,8 @@ static LOGIN_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
 const TYPE: Key = Key::from_static_str("type");
 const RESULT: Key = Key::from_static_str("result");
 
-/// This matches the `getNinetyDaysAgo()` used in the web UI for "inactive" sessions.
+/// This matches the `getNinetyDaysAgo()` used in the web UI for "inactive"
+/// sessions.
 const INACTIVE_SESSION_THRESHOLD: chrono::TimeDelta = Duration::days(90);
 
 #[derive(Debug, Serialize)]
@@ -532,9 +533,9 @@ async fn process_violations_for_compat_login(
 
             // When logging in with the compatibility API, there is no way for us to
             // display any web UI for people to remove devices, so we instead
-            // automatically remove their oldest devices (when `hard_limit_eviction`
-            // is configured).
-            if session_limit_config.hard_limit_eviction {
+            // automatically remove their oldest devices (when
+            // `dangerous_hard_limit_eviction` is configured).
+            if session_limit_config.dangerous_hard_limit_eviction {
                 // Find the least recently used (LRU) compat sessions
                 //
                 // In the future, it may be nice to avoid sessions with
@@ -652,7 +653,7 @@ async fn process_violations_for_compat_login(
                             .device
                             .as_ref()
                             .map(mas_data_model::Device::as_str),
-                        "Automatically removing compat session for user (`hard_limit_eviction`)"
+                        "Automatically removing compat session for user (`dangerous_hard_limit_eviction`)"
                     );
 
                     // Remove the session
@@ -1705,7 +1706,7 @@ mod tests {
                     soft_limit: NonZeroU64::new(1).unwrap(),
                     // Some arbitrary high value (more than we login)
                     hard_limit: NonZeroU64::new(5).unwrap(),
-                    hard_limit_eviction: false,
+                    dangerous_hard_limit_eviction: false,
                 }),
                 ..test_site_config()
             },
@@ -1755,7 +1756,7 @@ mod tests {
                     soft_limit: NonZeroU64::new(1).unwrap(),
                     // Lowest non-zero value so we don't have to login a bunch
                     hard_limit: NonZeroU64::new(1).unwrap(),
-                    hard_limit_eviction: false,
+                    dangerous_hard_limit_eviction: false,
                 }),
                 ..test_site_config()
             },
@@ -1806,10 +1807,10 @@ mod tests {
         );
     }
 
-    /// Test that the `hard_limit_eviction` will automatically drop old sessions
-    /// when we go over the limit
+    /// Test that the `dangerous_hard_limit_eviction` will automatically drop
+    /// old sessions when we go over the limit
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_hard_limit_eviction_old_compat_login(pool: PgPool) {
+    async fn test_dangerous_hard_limit_eviction_old_compat_login(pool: PgPool) {
         setup();
         let state = TestState::from_pool_with_site_config(
             pool,
@@ -1817,10 +1818,10 @@ mod tests {
                 session_limit: Some(SessionLimitConfig {
                     // (doesn't matter)
                     soft_limit: NonZeroU64::new(1).unwrap(),
-                    // Must be at least 2 when `hard_limit_eviction`
+                    // Must be at least 2 when `dangerous_hard_limit_eviction`
                     hard_limit: NonZeroU64::new(2).unwrap(),
                     // Option under test
-                    hard_limit_eviction: true,
+                    dangerous_hard_limit_eviction: true,
                 }),
                 ..test_site_config()
             },
@@ -1972,11 +1973,11 @@ mod tests {
         );
     }
 
-    /// Test that the `hard_limit_eviction` will automatically drop the oldest
-    /// sessions when we go over the limit even if all of the sessions are
-    /// recent.
+    /// Test that the `dangerous_hard_limit_eviction` will automatically drop
+    /// the oldest sessions when we go over the limit even if all of the
+    /// sessions are recent.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_hard_limit_eviction_recent_compat_login(pool: PgPool) {
+    async fn test_dangerous_hard_limit_eviction_recent_compat_login(pool: PgPool) {
         setup();
         let state = TestState::from_pool_with_site_config(
             pool,
@@ -1984,10 +1985,10 @@ mod tests {
                 session_limit: Some(SessionLimitConfig {
                     // (doesn't matter)
                     soft_limit: NonZeroU64::new(1).unwrap(),
-                    // Must be at least 2 when `hard_limit_eviction`
+                    // Must be at least 2 when `dangerous_hard_limit_eviction`
                     hard_limit: NonZeroU64::new(2).unwrap(),
                     // Option under test
-                    hard_limit_eviction: true,
+                    dangerous_hard_limit_eviction: true,
                 }),
                 ..test_site_config()
             },
