@@ -22,11 +22,13 @@ Please see LICENSE files in the repository root for full details.
 
   <main class="flex flex-col gap-10">
     <div class="flex items-center justify-center gap-4">
-      <div class="bg-white rounded w-16 h-16 overflow-hidden">
-        {% if client.logo_uri %}
-          <img referrerpolicy="no-referrer" class="w-16 h-16" src="{{ client.logo_uri }}" />
-        {% endif %}
+      {% if client.logo_uri %}
+      <img class="consent-client-icon image" referrerpolicy="no-referrer" src="{{ client.logo_uri }}" />
+      {% else %}
+      <div class="consent-client-icon generic">
+        {{ icon.web_browser() }}
       </div>
+      {% endif %}
       <a target="_blank" href="{{ client.client_uri }}" class="cpd-link" data-kind="primary">{{ client.client_name or client.client_id }}</a>
     </div>
 
