@@ -15,7 +15,7 @@ Both components are stateless, and can be scaled horizontally by running multipl
 Other than the binary, the service needs a few files to run:
 
  - The templates, referenced by the [`templates.path`](../reference/configuration.md#templates) configuration option
- - The compiled policy, referenced by the [`policy.path`](../reference/configuration.md#policy) configuration option
+ - The compiled policy, referenced by the [`policy.wasm_module`](../reference/configuration.md#policy) configuration option
  - The frontend assets, referenced by the `path` option of the `assets` resource in the [`http.listeners`](../reference/configuration.md#http) configuration section
  - The frontend manifest file, referenced by tge [`templates.assets_manifest`](../reference/configuration.md#templates) configuration option
 
