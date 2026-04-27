@@ -582,7 +582,8 @@ async fn process_violations_for_compat_login(
                                 username = user.username,
                                 // So we can easily look it up in the MAS database
                                 compat_session_id = compat_session.id.to_string(),
-                                // Make it easier to line up with what the user may be talking about
+                                // Make it easier to line up with what the user may be talking
+                                // about
                                 device_id = compat_session
                                     .device
                                     .as_ref()
@@ -624,24 +625,25 @@ async fn process_violations_for_compat_login(
 }
 
 /// We fetch a minimum number of sessions (2160, more than we need in normal
-/// cases) so we can sort by `last_active_at` after it gets back from the database
-/// and can get even closer to removing the true oldest sessions.
+/// cases) so we can sort by `last_active_at` after it gets back from the
+/// database and can get even closer to removing the true oldest sessions.
 ///
-/// The 2160 number was chosen based on someone having a script that runs every hour
-/// for the the 90-day `INACTIVE_SESSION_THRESHOLD`. Additionally, it also aligns
-/// nicely with < 0.001% of people on matrix.org having less than 2160 sessions and
-/// reasoning how much memory is reasonable to spend on this operation to get things
-/// right. Assuming each row is ~1 KiB (pessimistic high bound, see next paragraph
-/// below) we end up at ~2 MiB of memory.
+/// The 2160 number was chosen based on someone having a script that runs every
+/// hour for the the 90-day `INACTIVE_SESSION_THRESHOLD`. Additionally, it also
+/// aligns nicely with < 0.001% of people on matrix.org having less than 2160
+/// sessions and reasoning how much memory is reasonable to spend on this
+/// operation to get things right. Assuming each row is ~1 KiB (pessimistic high
+/// bound, see next paragraph below) we end up at ~2 MiB of memory.
 ///
 /// Each item in the page is `(CompatSession, Option<CompatSsoLogin>)` where
 /// `CompatSession` is 192 bytes plus a couple of strings (device name and user
-/// agent) (assume pessimistic 512 total bytes). And `CompatSsoLogin` which is also
-/// 192 bytes with a `login_token` string which should be no more than 32 bytes.
+/// agent) (assume pessimistic 512 total bytes). And `CompatSsoLogin` which is
+/// also 192 bytes with a `login_token` string which should be no more than 32
+/// bytes.
 const MINIMUM_SESSIONS_TO_FETCH: usize = {
     let min_sessions = INACTIVE_SESSION_THRESHOLD.num_days() * 24;
-    // Ideally, we'd use `usize::try_from(min_sessions)` but that doesn't work in const
-    // contexts.
+    // Ideally, we'd use `usize::try_from(min_sessions)` but that doesn't work in
+    // const contexts.
     #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
     {
         // Sanity check that `clippy::cast_sign_loss` doesn't apply
@@ -657,9 +659,9 @@ const MINIMUM_SESSIONS_TO_FETCH: usize = {
         min_sessions as usize
     }
 };
-// This is a stop-gap to make people think about the downstream effects of updating
-// `INACTIVE_SESSION_THRESHOLD` or whatever contributing factors go into
-// `MINIMUM_SESSIONS_TO_FETCH`.
+// This is a stop-gap to make people think about the downstream effects of
+// updating `INACTIVE_SESSION_THRESHOLD` or whatever contributing factors go
+// into `MINIMUM_SESSIONS_TO_FETCH`.
 const _: () = {
     assert!(
         // Update this value if you're ok with the ammount of memory that could be used.
@@ -671,10 +673,11 @@ const _: () = {
 
 /// Find the least recently used (LRU) compat sessions
 ///
-/// The results of this function are flawed (for accounts with more sessions than
-/// `minimum_sessions_to_fetch`) because we can't order by `last_active_at` and get an
-/// absolute sort of actually least recently used sessions. But we do a pretty good job
-/// at working around the problem (see internal comments for details).
+/// The results of this function are flawed (for accounts with more sessions
+/// than `minimum_sessions_to_fetch`) because we can't order by `last_active_at`
+/// and get an absolute sort of actually least recently used sessions. But we do
+/// a pretty good job at working around the problem (see internal comments for
+/// details).
 async fn find_lru_compat_sessions_flawed(
     clock: &dyn Clock,
     repo: &mut BoxRepository,
