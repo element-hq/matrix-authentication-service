@@ -544,96 +544,16 @@ async fn process_violations_for_compat_login(
                     if session_limit_config.dangerous_hard_limit_eviction {
                         // Find the least recently used (LRU) compat sessions
                         //
-                        // In the future, it may be nice to avoid sessions with
-                        // cryptographic state (what does that mean exactly? keys uploaded
-                        // for device?).
+                        // FIXME: In the future, it would be nice to avoid sessions with
+                        // cryptographic state (what does that mean exactly? keys
+                        // uploaded for device?).
                         //
-                        // FIXME: We could potentially use
-                        // `repo.compat_session().finish_bulk(...)` if it had the ability to
-                        // limit and order.
-                        let lru_compat_sessions = {
-                            // TODO: In the future, instead of all of this faff, we can simply order
-                            // by `last_active_at`
-
-                            let mut edges_to_consider = Vec::new();
-
-                            // First, find the "inactive" sessions
-                            //
-                            // XXX: Since we can't order by `last_active_at` yet, we instead
-                            // filter the list down to "inactive" sessions (`last_active_at` >
-                            // 90 days ago) (this matches the `getNinetyDaysAgo()` used in the
-                            // web UI for "inactive" sessions). And by the nature of
-                            // [`mas_data_model::compat::CompatSession::id`] being a
-                            // `Ulid` (the query is ordered by `compat_session_id`), the
-                            // first bytes are a timestamp so we'll be getting the 'oldest
-                            // created' sessions which is another good proxy.
-                            let inactive_threshold_date = clock.now() - INACTIVE_SESSION_THRESHOLD;
-                            let inactive_compat_session_page = repo
-                                .compat_session()
-                                .list(
-                                    CompatSessionFilter::new()
-                                        .for_user(user)
-                                        .active_only()
-                                        .with_last_active_before(inactive_threshold_date),
-                                    // We fetch a minimum of 100 sessions (more than we need in
-                                    // normal cases) so we can sort by `last_active_at` after it
-                                    // gets back from the database and can get even closer to
-                                    // removing the oldest sessions.
-                                    Pagination::first(std::cmp::max(need_to_remove, 100)),
-                                )
+                        // FIXME: Instead of finding, then finshing, we could
+                        // potentially use `repo.compat_session().finish_bulk(...)` if
+                        // it had the ability to limit and order.
+                        let lru_compat_sessions =
+                            find_lru_compat_sessions_flawed(clock, repo, user, need_to_remove)
                                 .await?;
-                            edges_to_consider.extend(inactive_compat_session_page.edges);
-
-                            // If there aren't enough "inactive" sessions, supplement with active ones
-                            if edges_to_consider.len() < need_to_remove {
-                                let active_compat_session_page = repo
-                                    .compat_session()
-                                    .list(
-                                        // If we try to use
-                                        // `.with_last_active_after(inactive_threshold_date)`
-                                        // here, it will exclude all of the rows where
-                                        // `last_active_at` is null which we want to include.
-                                        CompatSessionFilter::new().for_user(user).active_only(),
-                                        // We fetch a minimum of 100 sessions (more than we need in
-                                        // normal cases) so we can sort by `last_active_at` after it
-                                        // gets back from the database and can get even closer to
-                                        // removing the oldest sessions.
-                                        Pagination::first(std::cmp::max(need_to_remove, 100)),
-                                    )
-                                    .await?;
-                                edges_to_consider.extend(active_compat_session_page.edges);
-                            }
-
-                            // De-duplicate the sessions across both pages
-                            let compat_session_map = {
-                                let mut compat_session_map = HashMap::new();
-                                for edge in edges_to_consider {
-                                    let (compat_session, _) = edge.node;
-                                    compat_session_map.insert(compat_session.id, compat_session);
-                                }
-                                compat_session_map
-                            };
-
-                            // List of compat sessions sorted by `last_active_at` ascending
-                            let sorted_compat_sessions = {
-                                let mut compat_sessions: Vec<mas_data_model::CompatSession> =
-                                    compat_session_map.into_values().collect();
-                                // Sort by `last_active_at` (ascending)
-                                compat_sessions.sort_by_key(|compat_session| {
-                                    (
-                                        // We mainly care about sorting by `last_active_at`
-                                        compat_session.last_active_at,
-                                        // Tie-break based on `created_at`
-                                        compat_session.created_at,
-                                        // Tie-break based on `id` for determinism
-                                        compat_session.id,
-                                    )
-                                });
-                                compat_sessions
-                            };
-
-                            sorted_compat_sessions
-                        };
 
                         // For now, we only automatically clean up compatibility sessions.
                         // If there aren't enough sessions that we could clean up, we just
@@ -693,6 +613,101 @@ async fn process_violations_for_compat_login(
     }
 
     Ok(())
+}
+
+/// Find the least recently used (LRU) compat sessions
+///
+/// The results of this function are flawed because we can't order by `last_active_at`
+/// and get an absolute sort of actually least recently used sessions. But we do a
+/// pretty good job at working around the problem (see internal comments for details).
+async fn find_lru_compat_sessions_flawed(
+    clock: &dyn Clock,
+    repo: &mut BoxRepository,
+    user: &User,
+    // Like a limit we this function may return more more results
+    num_requested: usize,
+) -> Result<Vec<CompatSession>, RouteError> {
+    // TODO: In the future, instead of all of this faff, we can simply order
+    // by `last_active_at`
+
+    let mut edges_to_consider = Vec::new();
+
+    // First, find the "inactive" sessions
+    //
+    // XXX: Since we can't order by `last_active_at` yet, we instead
+    // filter the list down to "inactive" sessions (`last_active_at` >
+    // 90 days ago) (this matches the `getNinetyDaysAgo()` used in the
+    // web UI for "inactive" sessions). And by the nature of
+    // [`mas_data_model::compat::CompatSession::id`] being a
+    // `Ulid` (the query is ordered by `compat_session_id`), the
+    // first bytes are a timestamp so we'll be getting the 'oldest
+    // created' sessions which is another good proxy.
+    let inactive_threshold_date = clock.now() - INACTIVE_SESSION_THRESHOLD;
+    let inactive_compat_session_page = repo
+        .compat_session()
+        .list(
+            CompatSessionFilter::new()
+                .for_user(user)
+                .active_only()
+                .with_last_active_before(inactive_threshold_date),
+            // We fetch a minimum of 100 sessions (more than we need in
+            // normal cases) so we can sort by `last_active_at` after it
+            // gets back from the database and can get even closer to
+            // removing the oldest sessions.
+            Pagination::first(std::cmp::max(num_requested, 100)),
+        )
+        .await?;
+    edges_to_consider.extend(inactive_compat_session_page.edges);
+
+    // If there aren't enough "inactive" sessions, supplement with active ones
+    if edges_to_consider.len() < num_requested {
+        let active_compat_session_page = repo
+            .compat_session()
+            .list(
+                // If we try to use
+                // `.with_last_active_after(inactive_threshold_date)`
+                // here, it will exclude all of the rows where
+                // `last_active_at` is null which we want to include.
+                CompatSessionFilter::new().for_user(user).active_only(),
+                // We fetch a minimum of 100 sessions (more than we need in
+                // normal cases) so we can sort by `last_active_at` after it
+                // gets back from the database and can get even closer to
+                // removing the oldest sessions.
+                Pagination::first(std::cmp::max(num_requested, 100)),
+            )
+            .await?;
+        edges_to_consider.extend(active_compat_session_page.edges);
+    }
+
+    // De-duplicate the sessions across both pages
+    let compat_session_map = {
+        let mut compat_session_map = HashMap::new();
+        for edge in edges_to_consider {
+            let (compat_session, _) = edge.node;
+            compat_session_map.insert(compat_session.id, compat_session);
+        }
+        compat_session_map
+    };
+
+    // List of compat sessions sorted by `last_active_at` ascending
+    let sorted_compat_sessions = {
+        let mut compat_sessions: Vec<mas_data_model::CompatSession> =
+            compat_session_map.into_values().collect();
+        // Sort by `last_active_at` (ascending)
+        compat_sessions.sort_by_key(|compat_session| {
+            (
+                // We mainly care about sorting by `last_active_at`
+                compat_session.last_active_at,
+                // Tie-break based on `created_at`
+                compat_session.created_at,
+                // Tie-break based on `id` for determinism
+                compat_session.id,
+            )
+        });
+        compat_sessions
+    };
+
+    Ok(sorted_compat_sessions)
 }
 
 async fn token_login(
