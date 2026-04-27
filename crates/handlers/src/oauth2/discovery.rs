@@ -59,7 +59,11 @@ pub(crate) async fn get(
     let issuer = Some(url_builder.oidc_issuer().into());
     let authorization_endpoint = Some(url_builder.oauth_authorization_endpoint());
     let token_endpoint = Some(url_builder.oauth_token_endpoint());
-    let device_authorization_endpoint = Some(url_builder.oauth_device_authorization_endpoint());
+    let device_authorization_endpoint = if site_config.device_code_grant_enabled {
+        Some(url_builder.oauth_device_authorization_endpoint())
+    } else {
+        None
+    };
     let jwks_uri = Some(url_builder.jwks_uri());
     let introspection_endpoint = Some(url_builder.oauth_introspection_endpoint());
     let revocation_endpoint = Some(url_builder.oauth_revocation_endpoint());
@@ -80,12 +84,17 @@ pub(crate) async fn get(
         ResponseMode::Fragment,
     ]);
 
-    let grant_types_supported = Some(vec![
-        GrantType::AuthorizationCode,
-        GrantType::RefreshToken,
-        GrantType::ClientCredentials,
-        GrantType::DeviceCode,
-    ]);
+    let grant_types_supported = {
+        let mut types = vec![
+            GrantType::AuthorizationCode,
+            GrantType::RefreshToken,
+            GrantType::ClientCredentials,
+        ];
+        if site_config.device_code_grant_enabled {
+            types.push(GrantType::DeviceCode);
+        }
+        Some(types)
+    };
 
     let token_endpoint_auth_methods_supported = client_auth_methods_supported.clone();
     let token_endpoint_auth_signing_alg_values_supported =
@@ -199,10 +208,11 @@ pub(crate) async fn get(
 #[cfg(test)]
 mod tests {
     use hyper::{Request, StatusCode};
-    use oauth2_types::oidc::ProviderMetadata;
+    use mas_data_model::SiteConfig;
+    use oauth2_types::{oidc::ProviderMetadata, requests::GrantType};
     use sqlx::PgPool;
 
-    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup, test_site_config};
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_valid_discovery_metadata(pool: PgPool) {
@@ -214,6 +224,37 @@ mod tests {
         response.assert_status(StatusCode::OK);
 
         let metadata: ProviderMetadata = response.json();
+        metadata
+            .validate(state.url_builder.oidc_issuer().as_str())
+            .expect("Invalid metadata");
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_discovery_device_code_grant_disabled(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                device_code_grant_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let request = Request::get("/.well-known/openid-configuration").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+
+        let metadata: ProviderMetadata = response.json();
+
+        // The device_authorization_endpoint should not be present
+        assert!(metadata.device_authorization_endpoint.is_none());
+
+        // The grant_types_supported should not include device_code
+        let grant_types = metadata.grant_types_supported.as_ref().unwrap();
+        assert!(!grant_types.contains(&GrantType::DeviceCode));
+
         metadata
             .validate(state.url_builder.oidc_issuer().as_str())
             .expect("Invalid metadata");
