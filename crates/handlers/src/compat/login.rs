@@ -521,149 +521,166 @@ async fn process_violations_for_compat_login(
                 ..
             },
         ] => {
-            let session_limit_config = session_limit_config
-                    .expect("We should have a `session_limit` config if we are seeing a `TooManySessions` violation. \
-                    This is most likely a programming error.");
-
-            let need_to_remove = usize::try_from(*need_to_remove).map_err(|err| {
-                RouteError::Internal(
-                    anyhow::anyhow!("Unable to convert `need_to_remove` to usize: {err}").into(),
-                )
-            })?;
-
-            // When logging in with the compatibility API, there is no way for us to
-            // display any web UI for people to remove devices, so we instead
-            // automatically remove their oldest devices (when
-            // `dangerous_hard_limit_eviction` is configured).
-            if session_limit_config.dangerous_hard_limit_eviction {
-                // Find the least recently used (LRU) compat sessions
-                //
-                // In the future, it may be nice to avoid sessions with
-                // cryptographic state (what does that mean exactly? keys uploaded
-                // for device?).
-                //
-                // FIXME: We could potentially use
-                // `repo.compat_session().finish_bulk(...)` if it had the ability to
-                // limit and order.
-                let lru_compat_sessions = {
-                    // TODO: In the future, instead of all of this faff, we can simply order
-                    // by `last_active_at`
-
-                    let mut edges_to_consider = Vec::new();
-
-                    // First, find the "inactive" sessions
-                    //
-                    // XXX: Since we can't order by `last_active_at` yet, we instead
-                    // filter the list down to "inactive" sessions (`last_active_at` >
-                    // 90 days ago) (this matches the `getNinetyDaysAgo()` used in the
-                    // web UI for "inactive" sessions). And by the nature of
-                    // [`mas_data_model::compat::CompatSession::id`] being a
-                    // `Ulid` (the query is ordered by `compat_session_id`), the
-                    // first bytes are a timestamp so we'll be getting the 'oldest
-                    // created' sessions which is another good proxy.
-                    let inactive_threshold_date = clock.now() - INACTIVE_SESSION_THRESHOLD;
-                    let inactive_compat_session_page = repo
-                        .compat_session()
-                        .list(
-                            CompatSessionFilter::new()
-                                .for_user(user)
-                                .active_only()
-                                .with_last_active_before(inactive_threshold_date),
-                            // We fetch a minimum of 100 sessions (more than we need in
-                            // normal cases) so we can sort by `last_active_at` after it
-                            // gets back from the database and can get even closer to
-                            // removing the oldest sessions.
-                            Pagination::first(std::cmp::max(need_to_remove, 100)),
+            // Normally, if we are seeing a `TooManySessions` violation,  we would
+            // expect `session_limit_config` to be filled in but if someone created
+            // their own policies which emit a `TooManySessions` violation that isn't
+            // based on the configured `session_limit`, we could also end up here.
+            //
+            // If you're using the default policies in MAS, `session_limit_config` being
+            // `None` would be a programming error.
+            match session_limit_config {
+                Some(session_limit_config) => {
+                    let need_to_remove = usize::try_from(*need_to_remove).map_err(|err| {
+                        RouteError::Internal(
+                            anyhow::anyhow!("Unable to convert `need_to_remove` to usize: {err}")
+                                .into(),
                         )
-                        .await?;
-                    edges_to_consider.extend(inactive_compat_session_page.edges);
+                    })?;
 
-                    // If there aren't enough "inactive" sessions, supplement with active ones
-                    if edges_to_consider.len() < need_to_remove {
-                        let active_compat_session_page = repo
-                            .compat_session()
-                            .list(
-                                // If we try to use
-                                // `.with_last_active_after(inactive_threshold_date)`
-                                // here, it will exclude all of the rows where
-                                // `last_active_at` is null which we want to include.
-                                CompatSessionFilter::new().for_user(user).active_only(),
-                                // We fetch a minimum of 100 sessions (more than we need in
-                                // normal cases) so we can sort by `last_active_at` after it
-                                // gets back from the database and can get even closer to
-                                // removing the oldest sessions.
-                                Pagination::first(std::cmp::max(need_to_remove, 100)),
-                            )
-                            .await?;
-                        edges_to_consider.extend(active_compat_session_page.edges);
-                    }
+                    // When logging in with the compatibility API, there is no way for us to
+                    // display any web UI for people to remove devices, so we instead
+                    // automatically remove their oldest devices (when
+                    // `dangerous_hard_limit_eviction` is configured).
+                    if session_limit_config.dangerous_hard_limit_eviction {
+                        // Find the least recently used (LRU) compat sessions
+                        //
+                        // In the future, it may be nice to avoid sessions with
+                        // cryptographic state (what does that mean exactly? keys uploaded
+                        // for device?).
+                        //
+                        // FIXME: We could potentially use
+                        // `repo.compat_session().finish_bulk(...)` if it had the ability to
+                        // limit and order.
+                        let lru_compat_sessions = {
+                            // TODO: In the future, instead of all of this faff, we can simply order
+                            // by `last_active_at`
 
-                    // De-duplicate the sessions across both pages
-                    let compat_session_map = {
-                        let mut compat_session_map = HashMap::new();
-                        for edge in edges_to_consider {
-                            let (compat_session, _) = edge.node;
-                            compat_session_map.insert(compat_session.id, compat_session);
+                            let mut edges_to_consider = Vec::new();
+
+                            // First, find the "inactive" sessions
+                            //
+                            // XXX: Since we can't order by `last_active_at` yet, we instead
+                            // filter the list down to "inactive" sessions (`last_active_at` >
+                            // 90 days ago) (this matches the `getNinetyDaysAgo()` used in the
+                            // web UI for "inactive" sessions). And by the nature of
+                            // [`mas_data_model::compat::CompatSession::id`] being a
+                            // `Ulid` (the query is ordered by `compat_session_id`), the
+                            // first bytes are a timestamp so we'll be getting the 'oldest
+                            // created' sessions which is another good proxy.
+                            let inactive_threshold_date = clock.now() - INACTIVE_SESSION_THRESHOLD;
+                            let inactive_compat_session_page = repo
+                                .compat_session()
+                                .list(
+                                    CompatSessionFilter::new()
+                                        .for_user(user)
+                                        .active_only()
+                                        .with_last_active_before(inactive_threshold_date),
+                                    // We fetch a minimum of 100 sessions (more than we need in
+                                    // normal cases) so we can sort by `last_active_at` after it
+                                    // gets back from the database and can get even closer to
+                                    // removing the oldest sessions.
+                                    Pagination::first(std::cmp::max(need_to_remove, 100)),
+                                )
+                                .await?;
+                            edges_to_consider.extend(inactive_compat_session_page.edges);
+
+                            // If there aren't enough "inactive" sessions, supplement with active ones
+                            if edges_to_consider.len() < need_to_remove {
+                                let active_compat_session_page = repo
+                                    .compat_session()
+                                    .list(
+                                        // If we try to use
+                                        // `.with_last_active_after(inactive_threshold_date)`
+                                        // here, it will exclude all of the rows where
+                                        // `last_active_at` is null which we want to include.
+                                        CompatSessionFilter::new().for_user(user).active_only(),
+                                        // We fetch a minimum of 100 sessions (more than we need in
+                                        // normal cases) so we can sort by `last_active_at` after it
+                                        // gets back from the database and can get even closer to
+                                        // removing the oldest sessions.
+                                        Pagination::first(std::cmp::max(need_to_remove, 100)),
+                                    )
+                                    .await?;
+                                edges_to_consider.extend(active_compat_session_page.edges);
+                            }
+
+                            // De-duplicate the sessions across both pages
+                            let compat_session_map = {
+                                let mut compat_session_map = HashMap::new();
+                                for edge in edges_to_consider {
+                                    let (compat_session, _) = edge.node;
+                                    compat_session_map.insert(compat_session.id, compat_session);
+                                }
+                                compat_session_map
+                            };
+
+                            // List of compat sessions sorted by `last_active_at` ascending
+                            let sorted_compat_sessions = {
+                                let mut compat_sessions: Vec<mas_data_model::CompatSession> =
+                                    compat_session_map.into_values().collect();
+                                // Sort by `last_active_at` (ascending)
+                                compat_sessions.sort_by_key(|compat_session| {
+                                    (
+                                        // We mainly care about sorting by `last_active_at`
+                                        compat_session.last_active_at,
+                                        // Tie-break based on `created_at`
+                                        compat_session.created_at,
+                                        // Tie-break based on `id` for determinism
+                                        compat_session.id,
+                                    )
+                                });
+                                compat_sessions
+                            };
+
+                            sorted_compat_sessions
+                        };
+
+                        // For now, we only automatically clean up compatibility sessions.
+                        // If there aren't enough sessions that we could clean up, we just
+                        // throw an error with an explanation.
+                        if lru_compat_sessions.len() < need_to_remove {
+                            return Err(RouteError::PolicyHardSessionLimitReached);
                         }
-                        compat_session_map
-                    };
 
-                    // List of compat sessions sorted by `last_active_at` ascending
-                    let sorted_compat_sessions = {
-                        let mut compat_sessions: Vec<mas_data_model::CompatSession> =
-                            compat_session_map.into_values().collect();
-                        // Sort by `last_active_at` (ascending)
-                        compat_sessions.sort_by_key(|compat_session| {
-                            (
-                                // We mainly care about sorting by `last_active_at`
-                                compat_session.last_active_at,
-                                // Tie-break based on `created_at`
-                                compat_session.created_at,
-                                // Tie-break based on `id` for determinism
-                                compat_session.id,
-                            )
-                        });
-                        compat_sessions
-                    };
+                        // Remove the sessions (only as much as necessary, `need_to_remove`)
+                        for compat_session in &lru_compat_sessions[0..need_to_remove] {
+                            // Log what's happening so we have some explanation if someone asks
+                            //
+                            // FIXME: In the future, it would probably good to mark the reason
+                            // down in the database for a better paper trail.
+                            tracing::info!(
+                                // So we can easily find logs for a given user
+                                user_id = user.id.to_string(),
+                                username = user.username,
+                                // So we can easily look it up in the MAS database
+                                compat_session_id = compat_session.id.to_string(),
+                                // Make it easier to line up with what the user may be talking about
+                                device_id = compat_session
+                                    .device
+                                    .as_ref()
+                                    .map(mas_data_model::Device::as_str),
+                                "Automatically removing compat session for user (`dangerous_hard_limit_eviction`)"
+                            );
 
-                    sorted_compat_sessions
-                };
-
-                // For now, we only automatically clean up compatibility sessions.
-                // If there aren't enough sessions that we could clean up, we just
-                // throw an error with an explanation.
-                if lru_compat_sessions.len() < need_to_remove {
-                    return Err(RouteError::PolicyHardSessionLimitReached);
+                            // Remove the session
+                            repo.compat_session()
+                                .finish(clock, compat_session.to_owned())
+                                .await?;
+                        }
+                    } else {
+                        // Tell the user about the limit
+                        return Err(RouteError::PolicyHardSessionLimitReached);
+                    }
                 }
-
-                // Remove the sessions (only as much as necessary, `need_to_remove`)
-                for compat_session in &lru_compat_sessions[0..need_to_remove] {
-                    // Log what's happening so we have some explanation if someone asks
-                    //
-                    // FIXME: In the future, it would probably good to mark the reason
-                    // down in the database for a better paper trail.
-                    tracing::info!(
-                        // So we can easily find logs for a given user
-                        user_id = user.id.to_string(),
-                        username = user.username,
-                        // So we can easily look it up in the MAS database
-                        compat_session_id = compat_session.id.to_string(),
-                        // Make it easier to line up with what the user may be talking about
-                        device_id = compat_session
-                            .device
-                            .as_ref()
-                            .map(mas_data_model::Device::as_str),
-                        "Automatically removing compat session for user (`dangerous_hard_limit_eviction`)"
-                    );
-
-                    // Remove the session
-                    repo.compat_session()
-                        .finish(clock, compat_session.to_owned())
-                        .await?;
+                // If we got here, it means they are using their own custom policies
+                // which don't take into account the configured `session_limit`.
+                //
+                // We don't know the actual reason behind the policy emitting the
+                // violation so we just have to show a generic policy rejected page.
+                None => {
+                    // FIXME: We should be exposing the violations to the user
+                    return Err(RouteError::PolicyRejected);
                 }
-            } else {
-                // Tell the user about the limit
-                return Err(RouteError::PolicyHardSessionLimitReached);
             }
         }
         // Nothing is wrong
