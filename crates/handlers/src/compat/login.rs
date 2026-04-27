@@ -623,6 +623,35 @@ async fn process_violations_for_compat_login(
     Ok(())
 }
 
+/// We fetch a minimum number of sessions (2160, more than we need in normal
+/// cases) so we can sort by `last_active_at` after it gets back from the database
+/// and can get even closer to removing the true oldest sessions.
+///
+/// The 2160 number was chosen based on someone having a script that runs every hour
+/// for the the 90-day `INACTIVE_SESSION_THRESHOLD`. Additionally, it also aligns
+/// nicely with < 0.001% of people on matrix.org having less than 2160 sessions and
+/// reasoning how much memory is reasonable to spend on this operation to get things
+/// right. Assuming each row is ~1 KiB (pessimistic high bound, see next paragraph
+/// below) we end up at ~2 MiB of memory.
+///
+/// Each item in the page is `(CompatSession, Option<CompatSsoLogin>)` where
+/// `CompatSession` is 192 bytes plus a couple of strings (device name and user
+/// agent) (assume pessimistic 512 total bytes). And `CompatSsoLogin` which is also
+/// 192 bytes with a `login_token` string which should be no more than 32 bytes.
+const MINIMUM_SESSIONS_TO_FETCH: usize = {
+    let min_sessions = INACTIVE_SESSION_THRESHOLD.num_days() * 24;
+    // Ideally, we'd use `usize::try_from(min_sessions)` but that doesn't work in const
+    // contexts.
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    {
+        assert!(
+            min_sessions >= 0,
+            "`INACTIVE_SESSION_THRESHOLD` must be non-negative (we want to convert to a usize)"
+        );
+        min_sessions as usize
+    }
+};
+
 /// Find the least recently used (LRU) compat sessions
 ///
 /// The results of this function are flawed (for accounts with more sessions than
@@ -640,21 +669,6 @@ async fn find_lru_compat_sessions_flawed(
     // by `last_active_at`
 
     let mut edges_to_consider = Vec::new();
-
-    // We fetch a minimum of 2000 sessions (more than we need in normal cases) so we can
-    // sort by `last_active_at` after it gets back from the database and can get even
-    // closer to removing the true oldest sessions.
-    //
-    // The 2000 number was chosen based on < 0.001% of people on matrix.org having less
-    // than 2000 sessions and reasoning how much memory is reasonable to spend on this
-    // operation to get things right. Assuming each row is ~1 KiB (pessimistic high
-    // bound, see next paragraph below) we end up at 2 MiB of memory.
-    //
-    // Each item in the page is `(CompatSession, Option<CompatSsoLogin>)` where
-    // `CompatSession` is 192 bytes plus a couple of strings (device name and user
-    // agent) (assume pessimistic 512 total bytes). And `CompatSsoLogin` which is also
-    // 192 bytes with a `login_token` string which should be no more than 32 bytes.
-    let minimum_sessions_to_fetch = 2000;
 
     // First, find the "inactive" sessions
     //
@@ -674,7 +688,7 @@ async fn find_lru_compat_sessions_flawed(
                 .for_user(user)
                 .active_only()
                 .with_last_active_before(inactive_threshold_date),
-            Pagination::first(std::cmp::max(num_requested, minimum_sessions_to_fetch)),
+            Pagination::first(std::cmp::max(num_requested, MINIMUM_SESSIONS_TO_FETCH)),
         )
         .await?;
     edges_to_consider.extend(inactive_compat_session_page.edges);
@@ -689,7 +703,7 @@ async fn find_lru_compat_sessions_flawed(
                 // here, it will exclude all of the rows where
                 // `last_active_at` is null which we want to include.
                 CompatSessionFilter::new().for_user(user).active_only(),
-                Pagination::first(std::cmp::max(num_requested, minimum_sessions_to_fetch)),
+                Pagination::first(std::cmp::max(num_requested, MINIMUM_SESSIONS_TO_FETCH)),
             )
             .await?;
         edges_to_consider.extend(active_compat_session_page.edges);
