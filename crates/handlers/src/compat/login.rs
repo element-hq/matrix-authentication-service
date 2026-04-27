@@ -651,6 +651,17 @@ const MINIMUM_SESSIONS_TO_FETCH: usize = {
         min_sessions as usize
     }
 };
+// This is a stop-gap to make people think about the downstream effects of updating
+// `INACTIVE_SESSION_THRESHOLD` or whatever contributing factors go into
+// `MINIMUM_SESSIONS_TO_FETCH`.
+const _: () = {
+    assert!(
+        // Update this value if you're ok with the ammount of memory that could be used.
+        MINIMUM_SESSIONS_TO_FETCH == 2160,
+        "Sanity check that you're okay with `MINIMUM_SESSIONS_TO_FETCH` x 1 KiB when fetching sessions? \
+            (read the `MINIMUM_SESSIONS_TO_FETCH` docstring)"
+    );
+};
 
 /// Find the least recently used (LRU) compat sessions
 ///
