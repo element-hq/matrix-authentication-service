@@ -642,12 +642,18 @@ const MINIMUM_SESSIONS_TO_FETCH: usize = {
     let min_sessions = INACTIVE_SESSION_THRESHOLD.num_days() * 24;
     // Ideally, we'd use `usize::try_from(min_sessions)` but that doesn't work in const
     // contexts.
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
     {
+        // Sanity check that `clippy::cast_sign_loss` doesn't apply
         assert!(
             min_sessions >= 0,
-            "`INACTIVE_SESSION_THRESHOLD` must be non-negative (we want to convert to a usize)"
+            "`MINIMUM_SESSIONS_TO_FETCH` must be non-negative (we want to convert to a usize)"
         );
+        // For `clippy::cast_possible_truncation`, we're going to assume that someone
+        // doesn't specify some value bigger than can fit in the `usize`. On a 16-bit
+        // platform, that would be 65,535 days.
+
+        // Based on the above asserts, we can assume that that the cast is safe
         min_sessions as usize
     }
 };
