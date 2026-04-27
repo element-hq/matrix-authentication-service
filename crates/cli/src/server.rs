@@ -388,7 +388,7 @@ pub fn build_listeners(
             HttpBindConfig::Address { address } => {
                 let addr: SocketAddr = address
                     .parse()
-                    .context("could not parse listener address")?;
+                    .with_context(|| format!("could not parse listener address {address}"))?;
                 let listener = TcpListener::bind(addr).context("could not bind address")?;
                 listener.set_nonblocking(true)?;
                 listener.try_into()?
