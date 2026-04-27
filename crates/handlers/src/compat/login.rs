@@ -640,36 +640,7 @@ async fn process_violations_for_compat_login(
 /// agent) (assume pessimistic 512 total bytes). And `CompatSsoLogin` which is
 /// also 192 bytes with a `login_token` string which should be no more than 32
 /// bytes.
-const MINIMUM_SESSIONS_TO_FETCH: usize = {
-    let min_sessions = INACTIVE_SESSION_THRESHOLD.num_days() * 24;
-    // Ideally, we'd use `usize::try_from(min_sessions)` but that doesn't work in
-    // const contexts.
-    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
-    {
-        // Sanity check that `clippy::cast_sign_loss` doesn't apply
-        assert!(
-            min_sessions >= 0,
-            "`MINIMUM_SESSIONS_TO_FETCH` must be non-negative (we want to convert to a usize)"
-        );
-        // For `clippy::cast_possible_truncation`, we're going to assume that someone
-        // doesn't specify some value bigger than can fit in the `usize`. On a 16-bit
-        // platform, that would be 65,535 days.
-
-        // Based on the above asserts, we can assume that that the cast is safe
-        min_sessions as usize
-    }
-};
-// This is a stop-gap to make people think about the downstream effects of
-// updating `INACTIVE_SESSION_THRESHOLD` or whatever contributing factors go
-// into `MINIMUM_SESSIONS_TO_FETCH`.
-const _: () = {
-    assert!(
-        // Update this value if you're ok with the ammount of memory that could be used.
-        MINIMUM_SESSIONS_TO_FETCH == 2160,
-        "Sanity check that you're okay with `MINIMUM_SESSIONS_TO_FETCH` x 1 KiB when fetching sessions? \
-            (read the `MINIMUM_SESSIONS_TO_FETCH` docstring)"
-    );
-};
+const MINIMUM_SESSIONS_TO_FETCH: usize = 2160;
 
 /// Find the least recently used (LRU) compat sessions
 ///
