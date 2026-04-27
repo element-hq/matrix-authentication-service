@@ -645,7 +645,7 @@ const MINIMUM_SESSIONS_TO_FETCH: usize = 2160;
 /// Find the least recently used (LRU) compat sessions
 ///
 /// The results of this function are flawed (for accounts with more sessions
-/// than `minimum_sessions_to_fetch`) because we can't order by `last_active_at`
+/// than `MINIMUM_SESSIONS_TO_FETCH`) because we can't order by `last_active_at`
 /// and get an absolute sort of actually least recently used sessions. But we do
 /// a pretty good job at working around the problem (see internal comments for
 /// details).
