@@ -108,6 +108,134 @@ If you haven't already, install [Cargo-Nextest](https://nexte.st/docs/installati
   - `make PODMAN=1 test` (runs inside a container; needs Podman installed)
   - `make DOCKER=1 test` (runs inside a container; needs Docker installed)
 
+
+### Manually testing login flows
+
+To get a better understanding of how MAS works and how things behave, you may want to
+test the login flows manually.
+
+To register a user to test with, you can use `cargo run -- manage register-user` or if
+you enabled registration as described above, you can simply visit http://localhost:8080/
+and create an account.
+
+#### Test OAuth 2.0 grants
+
+This section is all standard OAuth 2.0/OIDC flows but to jump in and test things
+immediately, here's a quick walkthrough.
+
+See the docs on [*OAuth 2.0 sessions*](../topics/authorization.md#oauth-20-sessions)
+for more info.
+
+##### Test OAuth authorization code grant (interactive)
+
+ 1. Update your MAS `config.yaml` with a [client](../reference/configuration.md#clients):
+    ```
+    clients:
+      - client_id: 00000000000000000000SEC0ND
+        client_name: "my-test-client"
+        client_auth_method: none
+        redirect_uris:
+          - http://test-login/
+    ```
+ 1. Visit http://localhost:8080/authorize?client_id=00000000000000000000SEC0ND&response_type=code&redirect_uri=http://test-login/&scope=openid%20email&state=xyz123
+ 1. Press **Continue** (or login and continue)
+ 1. You will be redirected back to a URL like `http://test-login/?state=xyz123&code=XXX`.
+ 1. Take the `code` value and exchange it for a token:
+    ```http
+    POST http://localhost:8080/oauth2/token
+    Content-Type: application/x-www-form-urlencoded
+
+    grant_type=authorization_code&code=<code>&redirect_uri=http://test-login/&client_id=00000000000000000000SEC0ND
+    ```
+
+See the docs on [*authorization code
+grant*](../topics/authorization.md#authorization-code-grant) for more info.
+
+##### Test OAuth device authorization grant (interactive)
+
+TODO
+
+See the docs on [*device code
+grant*](../topics/authorization.md#device-authorization-grant) for more info.
+
+##### Test OAuth client credentials grant (non-interactive)
+
+TODO
+
+See the docs on [*client credentials
+grant*](../topics/authorization.md#client-credentials-grant) for more info.
+
+
+#### Compatibility login flows
+
+This section is a bit of a [rehash of the Matrix spec around
+logins](https://spec.matrix.org/v1.18/client-server-api/#legacy-login) but to jump in
+and test things immediately, here's a quick walkthrough.
+
+For clients that don’t support OAuth 2.0 yet, MAS has a compatibility layer to provide
+the same Matrix API's that a homeserver traditionally provided. See the docs on
+[*Compatibility sessions*](../topics/authorization.md#compatibility-sessions) for more
+info.
+
+You can check the list of available login flows by calling the
+`/_matrix/client/v3/login` compatibility endpoint exposed by MAS:
+
+`GET http://localhost:8080/_matrix/client/v3/login`
+```json
+{
+  "flows": [
+    {
+      "type": "m.login.password"
+    },
+    {
+      "type": "m.login.sso"
+    },
+    {
+      "type": "m.login.token"
+    }
+  ]
+}
+```
+
+We will go through each of these flows in the next sections.
+
+##### Test compatibility password login (non-interactive)
+
+This is the simplest login flow to test. Just send a normal [Matrix login
+request](https://spec.matrix.org/v1.18/client-server-api/#post_matrixclientv3login):
+
+`POST http://localhost:8080/_matrix/client/v3/login`
+```json
+{
+  "identifier": {
+    "type": "m.id.user",
+    "user": "cheeky_monkey"
+  },
+  "initial_device_display_name": "Jungle Phone",
+  "password": "ilovebananas",
+  "type": "m.login.password"
+}
+```
+
+##### Test compatibility SSO login (interactive)
+
+To test the SSO login flow, it's the same process as described in the [Matrix
+spec](https://spec.matrix.org/v1.18/client-server-api/#client-login-via-sso).
+
+ 1. Visit http://localhost:8080/_matrix/client/v3/login/sso/redirect?redirectUrl=http://test-login/
+ 1. You will be redirected back to a URL like `http://test-login/?loginToken=XXX`.
+ 1. Take the `loginToken` value and use the compatibility token login flow (must be done
+    within [30
+    seconds](https://github.com/element-hq/matrix-authentication-service/blob/64f90e01da2de8e5a69e41f9031ab9ccf7457b85/crates/handlers/src/compat/login.rs#L523-L525)
+    of the previous step): `POST http://localhost:8080/_matrix/client/v3/login`
+    ```json
+    {
+      "type": "m.login.token",
+      "token": "<loginToken value>"
+    }
+    ```
+
+
 ### Debug policies
 
 When in doubt, rebuild the policies (see the *Build and run MAS* section above). It's
