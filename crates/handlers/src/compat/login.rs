@@ -545,12 +545,20 @@ async fn process_violations_for_compat_login(
                         // Find the least recently used (LRU) compat sessions
                         //
                         // FIXME: In the future, it would be nice to avoid sessions with
-                        // cryptographic state (what does that mean exactly? keys
-                        // uploaded for device?).
+                        // cryptographic state. What does that mean exactly? Keys
+                        // uploaded for device? The spec says this:
+                        // > For all intents and purposes, non-cryptographic devices are
+                        // > a completely separate concept and do not exist from the
+                        // > perspective of the cryptography layer since they do not
+                        // > have [device] identity keys, so it is impossible to send
+                        // > them decryption keys.
+                        // >
+                        // > -- https://spec.matrix.org/v1.18/client-server-api/#recommended-client-behaviour
                         //
-                        // FIXME: Instead of finding, then finshing, we could
-                        // potentially use `repo.compat_session().finish_bulk(...)` if
-                        // it had the ability to limit and order.
+                        // FIXME: Instead of finding, then finishing in separate steps,
+                        // we could potentially use
+                        // `repo.compat_session().finish_bulk(...)` if it had the
+                        // ability to limit and order.
                         let lru_compat_sessions =
                             find_lru_compat_sessions_flawed(clock, repo, user, need_to_remove)
                                 .await?;
