@@ -86,7 +86,7 @@ pub enum CaptchaService {
 pub struct SessionLimitConfig {
     pub soft_limit: u64,
     pub hard_limit: u64,
-    pub hard_limit_eviction: bool,
+    pub dangerous_hard_limit_eviction: bool,
 }
 
 impl SessionLimitConfig {
@@ -96,7 +96,7 @@ impl SessionLimitConfig {
         Self {
             soft_limit: data_model.soft_limit.get(),
             hard_limit: data_model.hard_limit.get(),
-            hard_limit_eviction: data_model.hard_limit_eviction,
+            dangerous_hard_limit_eviction: data_model.dangerous_hard_limit_eviction,
         }
     }
 }
