@@ -890,7 +890,7 @@ impl TemplateContext for CompatLoginPolicyViolationContext {
                     msg: "user has too many active sessions".to_owned(),
                     redirect_uri: None,
                     field: None,
-                    variant: Some(ViolationVariant::TooManySessions),
+                    variant: Some(ViolationVariant::TooManySessions { need_to_remove: 1 }),
                 }],
             },
         ])

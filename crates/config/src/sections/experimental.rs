@@ -17,6 +17,10 @@ fn default_true() -> bool {
     true
 }
 
+fn default_false() -> bool {
+    false
+}
+
 fn default_token_ttl() -> Duration {
     Duration::microseconds(5 * 60 * 1000 * 1000)
 }
@@ -116,11 +120,87 @@ impl ExperimentalConfig {
 
 impl ConfigurationSection for ExperimentalConfig {
     const PATH: Option<&'static str> = Some("experimental");
+
+    fn validate(
+        &self,
+        figment: &figment::Figment,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
+        if let Some(session_limit) = &self.session_limit {
+            session_limit.validate().map_err(|mut err| {
+                // Save the error location information in the error
+                err.metadata = figment.find_metadata(Self::PATH.unwrap()).cloned();
+                err.profile = Some(figment::Profile::Default);
+                err.path.insert(0, Self::PATH.unwrap().to_owned());
+                err.path.insert(1, "session_limit".to_owned());
+                err
+            })?;
+        }
+        Ok(())
+    }
 }
 
 /// Configuration options for the session limit feature
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 pub struct SessionLimitConfig {
+    /// Upon login in interactive contexts (like OAuth 2.0 sessions), if the
+    /// soft limit is reached, it will display a policy violation screen
+    /// (web UI) to remove sessions before creating the new session.
+    ///
+    /// This is not enforced in non-interactive contexts (like the legacy
+    /// compability login API) as there is no opportunity for us to show
+    /// some UI for people remove some sessions. See [`hard_limit`] for
+    /// enforcement on that side.
+    ///
+    /// [`hard_limit`]: Self::hard_limit
     pub soft_limit: NonZeroU64,
+    /// Upon login, when `dangerous_hard_limit_eviction: false`, will refuse the
+    /// new login (policy violation error), otherwise, see
+    /// [`dangerous_hard_limit_eviction`].
+    ///
+    /// The hard limit is enforced in all contexts
+    /// (interactive/non-interactive).
+    ///
+    /// [`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction
     pub hard_limit: NonZeroU64,
+    /// Whether we should automatically choose the least recently used devices
+    /// to remove when the [`Self::hard_limit`] is reached; in order to
+    /// allow the new login to continue.
+    ///
+    /// Disabled by default
+    ///
+    /// WARNING: Removing sessions is a potentially damaging operation. Any
+    /// end-to-end encrypted history on the device will be lost and can only
+    /// be recovered if you have another verified active device or have a
+    /// recovery key setup.
+    ///
+    /// When using [`dangerous_hard_limit_eviction`], the [`hard_limit`] must be
+    /// at least 2 to avoid catastrophically losing encrypted history and
+    /// digital identity in pathological cases. Keep in mind this is a bare
+    /// minimum restriction and you can still run into trouble.
+    ///
+    /// This is most applicable in scenarios where your homeserver has many
+    /// legacy bots/scripts that login over and over (which ideally should
+    /// be using [personal access
+    /// tokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))
+    /// and you want to avoid breaking their operation while maintaining some
+    /// level of sanity with the number of devices that people can have.
+    ///
+    /// [`hard_limit`]: Self::hard_limit
+    /// [`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction
+    #[serde(default = "default_false")]
+    pub dangerous_hard_limit_eviction: bool,
+}
+
+impl SessionLimitConfig {
+    fn validate(&self) -> Result<(), Box<figment::error::Error>> {
+        // See [`SessionLimitConfig::dangerous_hard_limit_eviction`] docstring
+        if self.dangerous_hard_limit_eviction && self.hard_limit.get() < 2 {
+            return Err(figment::error::Error::from(
+                "Session `hard_limit` must be at least 2 when automatic `dangerous_hard_limit_eviction` is set. \
+                See configuration docs for more info.",
+            ).with_path("hard_limit").into());
+        }
+
+        Ok(())
+    }
 }
