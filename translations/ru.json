@@ -102,8 +102,7 @@
       "granted": {
         "description": "Вы предоставили доступ для %(client_name)s. Вы можете закрыть это окно.",
         "heading": "Доступ предоставлен"
-      },
-      "this_will_setup": "Другое устройство пытается связать %(client_name)s (<span>%(client_uri)s</span>) с вашей учётной записью на <span>%(server_name)s</span>. Убедитесь что вы знаете это устройство."
+      }
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s на %(device_name)s",

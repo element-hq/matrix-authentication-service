@@ -102,8 +102,7 @@
       "granted": {
         "description": "Du har gitt tilgang til %(client_name)s. Du kan lukke dette vinduet.",
         "heading": "Tilgang gitt"
-      },
-      "this_will_setup": "En annen enhet ønsker å konfigurere %(client_name)s (<span>%(client_uri)s</span>) med din %(server_name)s<span></span> -konto. Forsikre deg om at du kjenner igjen denne enheteten."
+      }
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s på %(device_name)s",

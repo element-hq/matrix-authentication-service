@@ -102,8 +102,7 @@
       "granted": {
         "description": "Sa lubasid seadmele %(client_name)s ligipääsu. Sa võid nüüd selle akna sulgeda.",
         "heading": "Ligipääs on lubatud"
-      },
-      "this_will_setup": "Üks teine seade tahab seadistada %(client_name)s (<span>%(client_uri)s</span>) klienti kasutama sinu <span>%(server_name)s</span> kontot. Palun kontrolli, et see on õige ja sinule vajalik seade."
+      }
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s seadmes %(device_name)s",

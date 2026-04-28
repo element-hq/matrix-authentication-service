@@ -102,8 +102,7 @@
       "granted": {
         "description": "Udělili jste přístup k %(client_name)s. Toto okno můžete zavřít.",
         "heading": "Přístup udělen"
-      },
-      "this_will_setup": "Jiné zařízení chce nastavit %(client_name)s (<span>%(client_uri)s</span>) s vaším <span>%(server_name)s</span> účtem. Ujistěte se, že dané zařízení poznáváte."
+      }
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s na %(device_name)s",

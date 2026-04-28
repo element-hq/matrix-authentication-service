@@ -102,8 +102,7 @@
       "granted": {
         "description": "Ви надали доступ до %(client_name)s. Ви можете закрити це вікно.",
         "heading": "Доступ надано"
-      },
-      "this_will_setup": "Інший пристрій хоче налаштувати %(client_name)s (<span>%(client_uri)s</span>) з вашим обліковим записом <span>%(server_name)s</span>. Переконайтеся, що ви розпізнаєте цей пристрій."
+      }
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s на %(device_name)s",

@@ -102,8 +102,7 @@
       "granted": {
         "description": "您已授予 %(client_name)s 访问权限。您可以关闭此窗口。",
         "heading": "已授予访问权限"
-      },
-      "this_will_setup": "另一设备尝试使用你在上的账户 <span>%(server_name)s</span> 配置 %(client_name)s（<span>%(client_uri)s</span>）。请确保你认识该设备。"
+      }
     },
     "device_display_name": {
       "client_on_device": "运行在 %(device_name)s 的 %(client_name)s",

@@ -102,8 +102,7 @@
       "granted": {
         "description": "Udzieliłeś dostępu aplikacji %(client_name)s. Możesz zamknąć to okno.",
         "heading": "Udzielono dostępu"
-      },
-      "this_will_setup": "Inne urządzenie chce skonfigurować %(client_name)s (<span>%(client_uri)s</span>) z twoim kontem <span>%(server_name)s</span>. Upewnij się, że rozpoznajesz to urządzenie."
+      }
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s na %(device_name)s",
