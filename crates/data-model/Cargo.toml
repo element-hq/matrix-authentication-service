@@ -31,6 +31,7 @@ regex.workspace = true
 woothee.workspace = true
 
 mas-iana.workspace = true
+# Added for rustdoc links
+mas-config.workspace = true
 mas-jose.workspace = true
 oauth2-types.workspace = true
-
