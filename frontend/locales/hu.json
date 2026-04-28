@@ -125,8 +125,8 @@
       "heading": "A(z) {{email}} e-mail-cím már használatban van."
     },
     "end_session_button": {
-      "confirmation_modal_body_text": "Make sure you always have access to another verified device or your recovery key to avoid losing your encrypted chat history.",
-      "confirmation_modal_title": "Biztos, hogy befejezi a munkamenetet?",
+      "confirmation_modal_body_text": "Győződjön meg róla, hogy mindig hozzáfér egy másik ellenőrzött eszközhöz vagy a helyreállítási kulcsához, hogy elkerülje a titkosított csevegési előzmények elvesztését.",
+      "confirmation_modal_title": "Biztos, hogy eltávolítja ezt az eszközt?",
       "text": "Eszköz eltávolítása"
     },
     "error": {
