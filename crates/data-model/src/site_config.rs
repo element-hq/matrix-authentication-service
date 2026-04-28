@@ -44,7 +44,7 @@ pub struct SessionExpirationConfig {
 pub struct SessionLimitConfig {
     pub soft_limit: NonZeroU64,
     pub hard_limit: NonZeroU64,
-    pub hard_limit_eviction: bool,
+    pub dangerous_hard_limit_eviction: bool,
 }
 
 /// Random site configuration we want accessible in various places.

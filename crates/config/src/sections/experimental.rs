@@ -155,13 +155,14 @@ pub struct SessionLimitConfig {
     ///
     /// [`hard_limit`]: Self::hard_limit
     pub soft_limit: NonZeroU64,
-    /// Upon login, when `hard_limit_eviction: false`, will refuse the new login
-    /// (policy violation error), otherwise, see [`hard_limit_eviction`].
+    /// Upon login, when `dangerous_hard_limit_eviction: false`, will refuse the
+    /// new login (policy violation error), otherwise, see
+    /// [`dangerous_hard_limit_eviction`].
     ///
     /// The hard limit is enforced in all contexts
     /// (interactive/non-interactive).
     ///
-    /// [`hard_limit_eviction`]: Self::hard_limit_eviction
+    /// [`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction
     pub hard_limit: NonZeroU64,
     /// Whether we should automatically choose the least recently used devices
     /// to remove when the [`Self::hard_limit`] is reached; in order to
@@ -174,10 +175,10 @@ pub struct SessionLimitConfig {
     /// be recovered if you have another verified active device or have a
     /// recovery key setup.
     ///
-    /// When using [`hard_limit_eviction`], the [`hard_limit`] must be
-    /// at-least 2 to avoid catastropically losing encrypted history and digital
-    /// identity in pathological cases. Keep in mind this is a bare minimum
-    /// restriction and you can still run into trouble.
+    /// When using [`dangerous_hard_limit_eviction`], the [`hard_limit`] must be
+    /// at least 2 to avoid catastrophically losing encrypted history and
+    /// digital identity in pathological cases. Keep in mind this is a bare
+    /// minimum restriction and you can still run into trouble.
     ///
     /// This is most applicable in scenarios where your homeserver has many
     /// legacy bots/scripts that login over and over (which ideally should
@@ -187,9 +188,9 @@ pub struct SessionLimitConfig {
     /// level of sanity with the number of devices that people can have.
     ///
     /// [`hard_limit`]: Self::hard_limit
-    /// [`hard_limit_eviction`]: Self::hard_limit_eviction
+    /// [`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction
     #[serde(default = "default_false")]
-    pub hard_limit_eviction: bool,
+    pub dangerous_hard_limit_eviction: bool,
 }
 
 impl SessionLimitConfig {
@@ -208,10 +209,10 @@ impl SessionLimitConfig {
             .into());
         }
 
-        // See [`SessionLimitConfig::hard_limit_eviction`] docstring
-        if self.hard_limit_eviction && self.hard_limit.get() < 2 {
+        // See [`SessionLimitConfig::dangerous_hard_limit_eviction`] docstring
+        if self.dangerous_hard_limit_eviction && self.hard_limit.get() < 2 {
             return Err(figment::error::Error::from(
-                "Session `hard_limit` must be at-least 2 when automatic `hard_limit_eviction` is set. \
+                "Session `hard_limit` must be at least 2 when automatic `dangerous_hard_limit_eviction` is set. \
                 See configuration docs for more info.",
             ).with_path("hard_limit").into());
         }
