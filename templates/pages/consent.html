@@ -14,13 +14,15 @@ Please see LICENSE files in the repository root for full details.
   {% set client_name = client.client_name or client.client_id %}
 
   <header class="page-heading">
-    {% if client.logo_uri %}
-    <img class="consent-client-icon image" referrerpolicy="no-referrer" src="{{ client.logo_uri }}" />
-    {% else %}
-    <div class="consent-client-icon generic">
-      {{ icon.web_browser() }}
+    <div class="flex justify-center">
+      {% if client.logo_uri %}
+      <img class="consent-client-icon image" referrerpolicy="no-referrer" src="{{ client.logo_uri }}" />
+      {% else %}
+      <div class="consent-client-icon generic">
+        {{ icon.web_browser() }}
+      </div>
+      {% endif %}
     </div>
-    {% endif %}
 
     <div class="header">
       <h1 class="title">
