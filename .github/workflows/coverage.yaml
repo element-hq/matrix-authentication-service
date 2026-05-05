@@ -114,10 +114,7 @@ jobs:
         # See https://github.com/rust-lang/rust/issues/85658 for stability tracking issue.
         run: rustup toolchain install stable --profile minimal --component llvm-tools-preview
 
-      - name: Setup sccache (not used on release runs)
-        # Disable caching in release workflows.
-        # As advised by https://docs.zizmor.sh/audits/#cache-poisoning.
-        if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
+      - name: Setup sccache
         uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
 
       - name: Install grcov

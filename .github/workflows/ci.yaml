@@ -123,9 +123,6 @@ jobs:
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: 24
-          # Disable caching in release workflows.
-          # As advised by https://docs.zizmor.sh/audits/#cache-poisoning.
-          package-manager-cache: ${{ github.event_name != 'release' && github.event_name != 'workflow_dispatch' }}
 
       - name: Install Node dependencies
         working-directory: ./frontend
@@ -196,9 +193,6 @@ jobs:
           rustup default stable
 
       - name: Setup sccache
-        # Disable caching in release workflows.
-        # As advised by https://docs.zizmor.sh/audits/#cache-poisoning.
-        if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
         uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
 
       - uses: ./.github/actions/build-frontend
@@ -243,9 +237,6 @@ jobs:
       - uses: ./.github/actions/build-policies
 
       - name: Setup sccache
-        # Disable caching in release workflows.
-        # As advised by https://docs.zizmor.sh/audits/#cache-poisoning.
-        if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
         uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
 
       - name: Run clippy
