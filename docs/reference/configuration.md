@@ -667,7 +667,7 @@ upstream_oauth2:
 
       # The client secret to use to authenticate to the provider
       # This is only used by the `client_secret_post`, `client_secret_basic`
-      # and `client_secret_jwk` authentication methods
+      # and `client_secret_jwt` authentication methods
       client_secret_file: secret
       # OR client_secret: f4f6bb68a0269264877e9cb23b1856ab
 
