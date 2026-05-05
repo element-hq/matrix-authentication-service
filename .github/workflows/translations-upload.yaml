@@ -26,6 +26,9 @@ jobs:
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: 24
+          # Disable caching in release workflows.
+          # As advised by https://docs.zizmor.sh/audits/#cache-poisoning.
+          package-manager-cache: false
 
       - name: Install Localazy CLI
         run: npm install -g @localazy/cli
