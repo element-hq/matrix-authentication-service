@@ -86,7 +86,6 @@
   display: block;
   height: var(--cpd-space-16x);
   width: var(--cpd-space-16x);
-  margin: 0 auto;
 
   &.generic {
     background-color: var(--cpd-color-bg-subtle-secondary);
