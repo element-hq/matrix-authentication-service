@@ -39,7 +39,8 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        # Only the minimal profile is required here to run `cargo metadata`
+        run: rustup toolchain install stable --profile minimal
 
       - name: Compute the new minor RC
         id: next

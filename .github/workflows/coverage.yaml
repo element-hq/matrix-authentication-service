@@ -108,9 +108,11 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: llvm-tools-preview
+        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
+        #
+        # llvm-tools-preview installs some llvm tools, which are needed for `grcov` below.
+        # See https://github.com/rust-lang/rust/issues/85658 for stability tracking issue.
+        run: rustup toolchain install stable --profile minimal --component llvm-tools-preview
 
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9

@@ -38,7 +38,8 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        # Only the minimal profile is required here to run `cargo`
+        run: rustup toolchain install stable --profile minimal
 
       - name: Extract the current version
         id: current

@@ -146,9 +146,8 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@nightly
-        with:
-          components: rustfmt
+        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
+        run: rustup toolchain install nightly --profile minimal #--component rustfmt?
 
       - name: Check style
         run: cargo fmt --all -- --check
@@ -232,9 +231,8 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@b1b44fef029483cc79808c5eb89461241fd8f32f # 1.93.0
-        with:
-          components: clippy
+        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
+        run: rustup toolchain install stable --profile minimal --component clippy
 
       - uses: ./.github/actions/build-policies
 
@@ -259,7 +257,8 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
+        run: rustup toolchain install stable --profile minimal
 
       - name: Install nextest
         uses: taiki-e/install-action@7ea35f098a7369cd23488403f58be9c491a6c55f # v2
@@ -314,7 +313,8 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
+        run: rustup toolchain install stable --profile minimal
 
       - name: Install nextest
         uses: taiki-e/install-action@7ea35f098a7369cd23488403f58be9c491a6c55f # v2
