@@ -298,8 +298,10 @@ jobs:
         id: output
         run: |
           echo 'metadata<<EOF' >> $GITHUB_OUTPUT
-          echo '${{ steps.bake.outputs.metadata }}' | jq -c 'with_entries(select(.value | (type == "object" and has("containerimage.digest")))) | map_values({ digest: .["containerimage.digest"], tags: (.["image.name"] | split(",")) })' >> $GITHUB_OUTPUT
+          echo '${STEPS_BAKE_OUTPUTS_METADATA}' | jq -c 'with_entries(select(.value | (type == "object" and has("containerimage.digest")))) | map_values({ digest: .["containerimage.digest"], tags: (.["image.name"] | split(",")) })' >> $GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
+        env:
+          STEPS_BAKE_OUTPUTS_METADATA: ${{ steps.bake.outputs.metadata }}
 
       - name: Sign the images with GitHub Actions provided token
         # Only sign on tags and on commits on main branch
