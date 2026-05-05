@@ -145,7 +145,7 @@ for more info.
     POST http://localhost:8080/oauth2/token
     Content-Type: application/x-www-form-urlencoded
 
-    grant_type=authorization_code&code=<code>&redirect_uri=http://test-login/&client_id=00000000000000000000SEC0ND
+    grant_type=authorization_code&code=<code>&redirect_uri=http%3A%2F%2Ftest-login%2F&client_id=00000000000000000000SEC0ND
     ```
 
 See the docs on [*authorization code
