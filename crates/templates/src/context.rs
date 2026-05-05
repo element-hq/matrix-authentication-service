@@ -798,6 +798,7 @@ pub struct PolicyViolationContext {
     grant: PolicyViolationGrant,
     client: Client,
     action: PostAuthAction,
+    violations: Vec<Violation>,
 }
 
 impl TemplateContext for PolicyViolationContext {
@@ -817,8 +818,11 @@ impl TemplateContext for PolicyViolationContext {
                     // XXX
                     grant.client_id = client.id;
 
-                    let authorization_grant =
-                        PolicyViolationContext::for_authorization_grant(grant, client.clone());
+                    let authorization_grant = PolicyViolationContext::for_authorization_grant(
+                        grant,
+                        client.clone(),
+                        Vec::new(),
+                    );
                     let device_code_grant = PolicyViolationContext::for_device_code_grant(
                         DeviceCodeGrant {
                             id: Ulid::from_datetime_with_source(now.into(), rng),
@@ -833,6 +837,7 @@ impl TemplateContext for PolicyViolationContext {
                             user_agent: None,
                         },
                         client,
+                        Vec::new(),
                     );
 
                     [authorization_grant, device_code_grant]
@@ -846,24 +851,34 @@ impl PolicyViolationContext {
     /// Constructs a context for the policy violation page for an authorization
     /// grant
     #[must_use]
-    pub const fn for_authorization_grant(grant: AuthorizationGrant, client: Client) -> Self {
+    pub const fn for_authorization_grant(
+        grant: AuthorizationGrant,
+        client: Client,
+        violations: Vec<Violation>,
+    ) -> Self {
         let action = PostAuthAction::continue_grant(grant.id);
         Self {
             grant: PolicyViolationGrant::Authorization(grant),
             client,
             action,
+            violations,
         }
     }
 
     /// Constructs a context for the policy violation page for a device code
     /// grant
     #[must_use]
-    pub const fn for_device_code_grant(grant: DeviceCodeGrant, client: Client) -> Self {
+    pub const fn for_device_code_grant(
+        grant: DeviceCodeGrant,
+        client: Client,
+        violations: Vec<Violation>,
+    ) -> Self {
         let action = PostAuthAction::continue_device_code_grant(grant.id);
         Self {
             grant: PolicyViolationGrant::DeviceCode(grant),
             client,
             action,
+            violations,
         }
     }
 }

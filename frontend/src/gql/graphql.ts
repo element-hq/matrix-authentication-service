@@ -1080,8 +1080,8 @@ export type Session = CompatSession | Oauth2Session;
 
 export type SessionLimitConfig = {
   __typename?: 'SessionLimitConfig';
+  dangerousHardLimitEviction: Scalars['Boolean']['output'];
   hardLimit: Scalars['Int']['output'];
-  hardLimitEviction: Scalars['Boolean']['output'];
   softLimit: Scalars['Int']['output'];
 };
 
