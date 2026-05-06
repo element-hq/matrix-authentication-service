@@ -147,8 +147,9 @@ jobs:
 
       - name: Install Rust toolchain
         # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
+        # Then install rustfmt for `cargo fmt`.
         run: |
-          rustup toolchain install nightly --profile minimal #--component rustfmt?
+          rustup toolchain install nightly --profile minimal --component rustfmt
           rustup default nightly
 
       - name: Check style
