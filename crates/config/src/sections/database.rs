@@ -29,12 +29,12 @@ fn default_connect_timeout() -> Duration {
 
 #[allow(clippy::unnecessary_wraps)]
 fn default_idle_timeout() -> Option<Duration> {
-    Some(Duration::from_secs(10 * 60))
+    Some(Duration::from_mins(10))
 }
 
 #[allow(clippy::unnecessary_wraps)]
 fn default_max_lifetime() -> Option<Duration> {
-    Some(Duration::from_secs(30 * 60))
+    Some(Duration::from_mins(30))
 }
 
 impl Default for DatabaseConfig {
