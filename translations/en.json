@@ -508,7 +508,7 @@
         "context": "pages/compat_login_policy_violation.html:35:11-86, pages/policy_violation.html:47:11-86"
       },
       "too_many_sessions": {
-        "description": "Your account is already signed in on the maximum number of devices. To continue, remove %(num_devices_to_remove)s of your existing devices and sign in again.",
+        "description": "Your account is already signed in on the maximum number of devices. To continue, <span class=\"font-semibold\">remove %(num_devices_to_remove)s of your existing devices</span> and sign in again.",
         "@description": {
           "context": "pages/compat_login_policy_violation.html:22:27-133, pages/policy_violation.html:23:27-133"
         },
