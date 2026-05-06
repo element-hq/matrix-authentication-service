@@ -29,7 +29,7 @@ Please see LICENSE files in the repository root for full details.
         {{ icon.web_browser() }}
       </div>
       {% endif %}
-      <a target="_blank" href="{{ client.client_uri }}" class="cpd-link" data-kind="primary">{{ client.client_name or client.client_id }}</a>
+      <a target="_blank" href="{{ (client.client_uri or grant.redirect_uri) | simplify_url }}" class="cpd-link" data-kind="primary">{{ client.client_name or client.client_id }}</a>
     </div>
 
     <div class="flex gap-1 justify-center items-center">

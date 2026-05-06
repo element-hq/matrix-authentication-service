@@ -247,7 +247,7 @@ impl<T: TemplateContext> TemplateContext for WithCsrf<T> {
 }
 
 /// Context with a user session in it
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct WithSession<T> {
     current_session: BrowserSession,
 
@@ -783,7 +783,7 @@ impl ConsentContext {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(tag = "grant_type")]
 enum PolicyViolationGrant {
     #[serde(rename = "authorization_code")]
@@ -793,7 +793,7 @@ enum PolicyViolationGrant {
 }
 
 /// Context used by the `policy_violation.html` template
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct PolicyViolationContext {
     grant: PolicyViolationGrant,
     client: Client,
