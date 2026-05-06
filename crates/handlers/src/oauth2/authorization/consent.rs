@@ -164,7 +164,6 @@ pub(crate) async fn get(
             .with_csrf(csrf_token.form_value())
             .with_language(locale);
 
-        tracing::info!("asdf {:#?}", &ctx);
         let content = templates.render_policy_violation(&ctx)?;
 
         return Ok((cookie_jar, Html(content)).into_response());
