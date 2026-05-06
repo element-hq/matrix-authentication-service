@@ -242,8 +242,7 @@ function Sessions(): React.ReactElement {
   ) {
     sessionLimitWarningError = (
       <Alert
-        // FIXME: there is no warning type yet
-        type="critical"
+        type="info"
         title={t(
           "frontend.user_sessions_overview.approaching_session_limit_warning_header",
         )}
