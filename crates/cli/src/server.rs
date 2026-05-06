@@ -258,12 +258,12 @@ pub fn build_router(
                             // Cache 404s for 5 minutes
                             CacheControl::new()
                                 .with_public()
-                                .with_max_age(Duration::from_secs(5 * 60))
+                                .with_max_age(Duration::from_mins(5))
                         } else {
                             // Cache assets for 1 year
                             CacheControl::new()
                                 .with_public()
-                                .with_max_age(Duration::from_secs(365 * 24 * 60 * 60))
+                                .with_max_age(Duration::from_hours(8760))
                                 .with_immutable()
                         };
                         res.headers_mut().typed_insert(cache_control);

@@ -203,7 +203,7 @@ impl Options {
         // Activity is flushed every minute
         let activity_tracker = ActivityTracker::new(
             PgRepositoryFactory::new(pool.clone()).boxed(),
-            Duration::from_secs(60),
+            Duration::from_mins(1),
             shutdown.task_tracker(),
             shutdown.soft_shutdown_token(),
         );
