@@ -412,6 +412,7 @@ pub async fn config_sync(
                     jwks.cloned(),
                     jwks_uri.cloned(),
                     client.redirect_uris,
+                    client.skip_consent,
                 )
                 .await?;
         }

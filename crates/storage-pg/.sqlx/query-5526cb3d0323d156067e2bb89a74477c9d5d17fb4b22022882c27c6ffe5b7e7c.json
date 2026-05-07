@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT oauth2_client_id\n                     , metadata_digest\n                     , encrypted_client_secret\n                     , application_type\n                     , redirect_uris\n                     , grant_type_authorization_code\n                     , grant_type_refresh_token\n                     , grant_type_client_credentials\n                     , grant_type_device_code\n                     , client_name\n                     , logo_uri\n                     , client_uri\n                     , policy_uri\n                     , tos_uri\n                     , jwks_uri\n                     , jwks\n                     , id_token_signed_response_alg\n                     , userinfo_signed_response_alg\n                     , token_endpoint_auth_method\n                     , token_endpoint_auth_signing_alg\n                     , initiate_login_uri\n                FROM oauth2_clients c\n\n                WHERE oauth2_client_id = ANY($1::uuid[])\n            ",
+  "query": "\n                SELECT oauth2_client_id\n                     , metadata_digest\n                     , encrypted_client_secret\n                     , application_type\n                     , redirect_uris\n                     , grant_type_authorization_code\n                     , grant_type_refresh_token\n                     , grant_type_client_credentials\n                     , grant_type_device_code\n                     , client_name\n                     , logo_uri\n                     , client_uri\n                     , policy_uri\n                     , tos_uri\n                     , jwks_uri\n                     , jwks\n                     , id_token_signed_response_alg\n                     , userinfo_signed_response_alg\n                     , token_endpoint_auth_method\n                     , token_endpoint_auth_signing_alg\n                     , initiate_login_uri\n                     , skip_consent\n                FROM oauth2_clients c\n\n                WHERE oauth2_client_id = ANY($1::uuid[])\n            ",
   "describe": {
     "columns": [
       {
@@ -107,6 +107,11 @@
         "ordinal": 20,
         "name": "initiate_login_uri",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 21,
+        "name": "skip_consent",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
@@ -135,8 +140,9 @@
       true,
       true,
       true,
-      true
+      true,
+      false
     ]
   },
-  "hash": "bb0f782756c274c06c1b63af6fc3ac2a7cedfd4247b57f062d348b4b1b36bef1"
+  "hash": "5526cb3d0323d156067e2bb89a74477c9d5d17fb4b22022882c27c6ffe5b7e7c"
 }
