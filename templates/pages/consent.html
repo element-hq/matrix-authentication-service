@@ -29,6 +29,10 @@ Please see LICENSE files in the repository root for full details.
         {{ _('mas.consent.continue_to', client_name=client_name) }}
       </h1>
       <p class="text [&>span]:whitespace-nowrap [&>span]:text-[var(--cpd-color-text-link-external)]">
+        {# Make it clear to the user which client they're dealing with. This template
+        only has to deal with authorization grants. `client.client_uri` is the best but
+        it's optional so we fallback to `grant.redirect_uri` (required for authorization
+        grants) which is where the user will end up (probably a good approximation). #}
         {{ _("mas.consent.this_will_setup", client_name=client_name, client_uri=((client.client_uri or grant.redirect_uri) | simplify_url), server_name=branding.server_name) }}
       </p>
     </div>

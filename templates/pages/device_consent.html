@@ -32,6 +32,11 @@ Please see LICENSE files in the repository root for full details.
         </h1>
 
         <p class="text [&>span]:whitespace-nowrap [&>span]:text-[var(--cpd-color-text-link-external)]">
+          {# Make it clear to the user which client they're dealing with. This template
+          only has to deal with device authorization grants. `client.client_uri` is the
+          best but it's optional so we fallback to an empty string. For device
+          authorization grants, there is nothing to fallback to (like `redirect_uri`) so
+          we just leave it blank #}
           {{ _("mas.device_consent.this_will_setup", client_name=client_name, client_uri=((client.client_uri or "") | simplify_url), server_name=branding.server_name) }}
         </p>
 

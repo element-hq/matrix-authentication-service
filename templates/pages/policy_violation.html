@@ -29,7 +29,19 @@ Please see LICENSE files in the repository root for full details.
         {{ icon.web_browser() }}
       </div>
       {% endif %}
-      <a target="_blank" href="{{ (client.client_uri or grant.redirect_uri) | simplify_url }}" class="cpd-link" data-kind="primary">{{ client.client_name or client.client_id }}</a>
+
+      {# Make it clear to the user which client they're dealing with. This template has
+      to deal with authorization grants and device authorization grants.
+      `client.client_uri` is the best but it's optional so we fallback to
+      `grant.redirect_uri` (required for authorization grants) which is where the user
+      will end up (probably a good approximation). But for device authorization grants,
+      there is no `redirect_uri` so we have to fallback all the way to an empty string.
+
+      We're using the `default('')` filter otherwise we see an `undefined value` error
+      when `grant.redirect_uri` isn't defined for device authorization grants #}
+      {% set client_href = (client.client_uri or grant.redirect_uri | default('') or '') | simplify_url %}
+      <a target="_blank" {% if client_href %}href="{{ client_href }}"{% endif %} class="cpd-link"
+        data-kind="primary">{{ client.client_name or client.client_id }}</a>
     </div>
 
     <div class="flex gap-1 justify-center items-center">

@@ -7,39 +7,45 @@
 
 .cpd-link {
   display: inline-block;
-  text-decoration: underline;
   color: var(--cpd-color-text-primary);
   font-weight: var(--cpd-font-weight-medium);
   border-radius: var(--cpd-radius-pill-effect);
   padding-inline: 0.25rem;
 }
 
-.cpd-link[data-kind="primary"] {
-  color: var(--cpd-color-text-primary);
-}
+/* Only underline and add hover/active styles if it actually links to something and
+there is something to interact with */
+.cpd-link[href] {
+  text-decoration: underline;
 
-.cpd-link[data-kind="critical"] {
-  color: var(--cpd-color-text-critical-primary);
-}
-
-@media (hover) {
-  .cpd-link[data-kind="primary"]:hover {
-    background: var(--cpd-color-gray-300);
+  .cpd-link[data-kind="primary"] {
+    color: var(--cpd-color-text-primary);
   }
 
-  .cpd-link[data-kind="critical"]:hover {
-    background: var(--cpd-color-red-300);
+  .cpd-link[data-kind="critical"] {
+    color: var(--cpd-color-text-critical-primary);
+  }
+
+  @media (hover) {
+    .cpd-link[data-kind="primary"]:hover {
+      background: var(--cpd-color-gray-300);
+    }
+
+    .cpd-link[data-kind="critical"]:hover {
+      background: var(--cpd-color-red-300);
+    }
+  }
+
+  .cpd-link:active {
+    color: var(--cpd-color-text-on-solid-primary);
+  }
+
+  .cpd-link[data-kind="primary"]:active {
+    background: var(--cpd-color-text-primary);
+  }
+
+  .cpd-link[data-kind="critical"]:active {
+    background: var(--cpd-color-text-critical-primary);
   }
 }
 
-.cpd-link:active {
-  color: var(--cpd-color-text-on-solid-primary);
-}
-
-.cpd-link[data-kind="primary"]:active {
-  background: var(--cpd-color-text-primary);
-}
-
-.cpd-link[data-kind="critical"]:active {
-  background: var(--cpd-color-text-critical-primary);
-}
