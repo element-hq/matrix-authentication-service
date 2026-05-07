@@ -18,33 +18,33 @@ there is something to interact with */
 .cpd-link[href] {
   text-decoration: underline;
 
-  .cpd-link[data-kind="primary"] {
+  &[data-kind="primary"] {
     color: var(--cpd-color-text-primary);
   }
 
-  .cpd-link[data-kind="critical"] {
+  &[data-kind="critical"] {
     color: var(--cpd-color-text-critical-primary);
   }
 
   @media (hover) {
-    .cpd-link[data-kind="primary"]:hover {
+    &[data-kind="primary"]:hover {
       background: var(--cpd-color-gray-300);
     }
 
-    .cpd-link[data-kind="critical"]:hover {
+    &[data-kind="critical"]:hover {
       background: var(--cpd-color-red-300);
     }
   }
 
-  .cpd-link:active {
+  &:active {
     color: var(--cpd-color-text-on-solid-primary);
   }
 
-  .cpd-link[data-kind="primary"]:active {
+  &[data-kind="primary"]:active {
     background: var(--cpd-color-text-primary);
   }
 
-  .cpd-link[data-kind="critical"]:active {
+  &[data-kind="critical"]:active {
     background: var(--cpd-color-text-critical-primary);
   }
 }
