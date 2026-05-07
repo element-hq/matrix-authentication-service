@@ -40,9 +40,7 @@ async fn pass_none() {
             let query_pairs = form_urlencoded::parse(&req.body).collect::<HashMap<_, _>>();
 
             if query_pairs
-                .get("client_id")
-                .filter(|s| *s == CLIENT_ID)
-                .is_none()
+                .get("client_id").as_ref().is_none_or(|s| *s != CLIENT_ID)
             {
                 println!("Wrong or missing client ID");
                 return false;
@@ -131,17 +129,13 @@ async fn pass_client_secret_post() {
             let query_pairs = form_urlencoded::parse(&req.body).collect::<HashMap<_, _>>();
 
             if query_pairs
-                .get("client_id")
-                .filter(|s| *s == CLIENT_ID)
-                .is_none()
+                .get("client_id").as_ref().is_none_or(|s| *s != CLIENT_ID)
             {
                 println!("Wrong or missing client ID");
                 return false;
             }
             if query_pairs
-                .get("client_secret")
-                .filter(|s| *s == CLIENT_SECRET)
-                .is_none()
+                .get("client_secret").as_ref().is_none_or(|s| *s != CLIENT_SECRET)
             {
                 println!("Wrong or missing client secret");
                 return false;
@@ -193,9 +187,7 @@ async fn pass_client_secret_jwt() {
                 return false;
             }
             if query_pairs
-                .get("client_assertion_type")
-                .filter(|s| *s == "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
-                .is_none()
+                .get("client_assertion_type").as_ref().is_none_or(|s| *s != "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
             {
                 println!("Wrong or missing client assertion type");
                 return false;
@@ -272,9 +264,7 @@ async fn pass_private_key_jwt() {
                 return false;
             }
             if query_pairs
-                .get("client_assertion_type")
-                .filter(|s| *s == "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
-                .is_none()
+                .get("client_assertion_type").as_ref().is_none_or(|s| *s != "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
             {
                 println!("Wrong or missing client assertion type");
                 return false;

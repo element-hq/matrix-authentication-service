@@ -191,7 +191,7 @@ where
                     CONTENT_LANGUAGE,
                     CONTENT_TYPE,
                 ])
-                .max_age(Duration::from_secs(60 * 60)),
+                .max_age(Duration::from_hours(1)),
         )
 }
 
@@ -255,7 +255,7 @@ where
                     // Swagger will send this header, so we have to allow it to avoid CORS errors
                     HeaderName::from_static("x-requested-with"),
                 ])
-                .max_age(Duration::from_secs(60 * 60)),
+                .max_age(Duration::from_hours(1)),
         )
 }
 
@@ -326,7 +326,7 @@ where
                     CONTENT_TYPE,
                     HeaderName::from_static("x-requested-with"),
                 ])
-                .max_age(Duration::from_secs(60 * 60)),
+                .max_age(Duration::from_hours(1)),
         );
 
     Router::new().merge(human_router).merge(api_router)

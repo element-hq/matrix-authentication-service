@@ -145,7 +145,7 @@ impl Limiter {
         let this = self.clone();
         tokio::spawn(async move {
             // Run the task every minute
-            let mut interval = tokio::time::interval(Duration::from_secs(60));
+            let mut interval = tokio::time::interval(Duration::from_mins(1));
             interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
 
             loop {
