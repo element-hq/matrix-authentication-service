@@ -1742,13 +1742,21 @@ mod tests {
         token
     }
 
-    /// Test that the `soft_limit` is not enforced for compat login.
-    ///
-    /// `soft_limit` is for when we allow the user to remove devices in
-    /// interactive contexts. With the compatibility login API, there is no
-    /// opportunity for us to present a web UI.
+    /// Test that `soft_limit` works against interative login (like the `m.login.sso`
+    /// compat Matrix login flow)
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_soft_limit_does_not_affect_compat_login(pool: PgPool) {
+    async fn test_session_soft_limit_interactive_login(pool: PgPool) {
+        // TODO
+    }
+
+    /// Test that the `soft_limit` is not enforced for non-interactive login
+    /// (like the `m.login.password` compat Matrix login flow).
+    ///
+    /// `soft_limit` is for when we allow the user to remove devices in interactive
+    /// contexts. If someone uses the `m.login.password` compatibility login API, there
+    /// is no opportunity for us to present a web UI.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_session_soft_limit_does_not_affect_non_interactive_login(pool: PgPool) {
         setup();
         let state = TestState::from_pool_with_site_config(
             pool,
@@ -1800,7 +1808,7 @@ mod tests {
 
     /// Test that the `hard_limit` prevents more sessions
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_hard_limit_compat_login(pool: PgPool) {
+    async fn test_session_hard_limit_compat_login(pool: PgPool) {
         setup();
         let state = TestState::from_pool_with_site_config(
             pool,
@@ -1862,10 +1870,87 @@ mod tests {
         );
     }
 
+    /// Test that session limits are enforced for anyone who is *under* the
+    /// `max_session_threshold`
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_session_limit_under_max_session_threshold(pool: PgPool) {
+        // TODO
+    }
+
+    /// Test that session limits are not enforced (logins are allowed) for anyone who is
+    /// already *past* the `max_session_threshold`
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_session_limit_past_max_session_threshold(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool.clone(),
+            SiteConfig {
+                // Setup an account with a few sessions before we add a `session_limit`
+                session_limit: None,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        // Lowest non-zero value so we don't have to login a bunch
+        let upcoming_hard_limit = 1;
+
+        // Keep logging in to add more sessions. We want to be past the
+        // `hard_limit`/`max_session_threshold`
+        let _user = user_with_password(&state, "alice", "password", false).await;
+        let password_login_json = serde_json::json!({
+            "type": "m.login.password",
+            "identifier": {
+                "type": "m.id.user",
+                "user": "alice",
+            },
+            "password": "password",
+        });
+        #[allow(clippy::range_plus_one)]
+        for _ in 0..(upcoming_hard_limit + 1) {
+            let request = Request::post("/_matrix/client/v3/login")
+                .json(serde_json::json!(password_login_json.clone()));
+            let response = state.request(request.clone()).await;
+            response.assert_status(StatusCode::OK);
+        }
+
+        // Update the app state to configure a `max_session_threshold`
+        // FIXME: This creates an entirely new state
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                session_limit: Some(SessionLimitConfig {
+                    soft_limit: NonZeroU64::new(upcoming_hard_limit).unwrap(),
+                    hard_limit: NonZeroU64::new(upcoming_hard_limit).unwrap(),
+                    // The main thing we're trying to test
+                    max_session_threshold: Some(NonZeroU64::new(upcoming_hard_limit).unwrap()),
+                    dangerous_hard_limit_eviction: false,
+                }),
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let _session_limit_config = state
+            .site_config
+            .session_limit
+            .as_ref()
+            .expect("Expected `session_limit` to be configured at this point in the test");
+
+        // Since we're already above `max_session_threshold`, the `session_limit` won't
+        // stop us from adding another session.
+        let request = Request::post("/_matrix/client/v3/login")
+            .json(serde_json::json!(password_login_json.clone()));
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::OK);
+    }
+
     /// Test that the `dangerous_hard_limit_eviction` will automatically drop
     /// old sessions when we go over the limit
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_dangerous_hard_limit_eviction_old_compat_login(pool: PgPool) {
+    async fn test_session_dangerous_hard_limit_eviction_old_compat_login(pool: PgPool) {
         setup();
         let state = TestState::from_pool_with_site_config(
             pool,
@@ -2033,7 +2118,7 @@ mod tests {
     /// the oldest sessions when we go over the limit even if all of the
     /// sessions are recent.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_dangerous_hard_limit_eviction_recent_compat_login(pool: PgPool) {
+    async fn test_session_dangerous_hard_limit_eviction_recent_compat_login(pool: PgPool) {
         setup();
         let state = TestState::from_pool_with_site_config(
             pool,
