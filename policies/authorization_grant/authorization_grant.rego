@@ -167,9 +167,26 @@ violation contains {
 	# Only apply if it's a user logging in (who therefore has countable sessions)
 	input.session_counts != null
 
+	# Only apply limits to accounts under the threshold (if configured)
+	passes_session_threshold
+
 	# For OAuth 2 login, a violation occurs when the soft limit has already been
 	# reached or exceeded.
 	# We use the soft limit because the user will be able to interactively remove
 	# sessions to return under the limit.
 	data.session_limit.soft_limit <= input.session_counts.total
+}
+
+# The session limits only apply to accounts within the `max_session_threshold`.
+#
+# True if the `max_session_threshold` isn't configured or <= `max_session_threshold`.
+passes_session_threshold if {
+	# If no `session_limit` configured, automatically passes
+	not data.session_limit
+} else if {
+	# If no `max_session_threshold` configured, automatically passes
+	not data.session_limit.max_session_threshold
+} else if {
+	# Otherwise, check whether the total number of sessions is under the threshold
+	input.session_counts.total <= data.session_limit.max_session_threshold
 }

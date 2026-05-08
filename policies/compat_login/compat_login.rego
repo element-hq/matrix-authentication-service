@@ -42,6 +42,9 @@ violation contains {
 	# (As then this login is not actually increasing the number of devices)
 	not input.session_replaced
 
+	# Only apply limits to accounts under the threshold (if configured)
+	passes_session_threshold
+
 	# For web-based 'compat SSO' login, a violation occurs when the soft limit has already been
 	# reached or exceeded.
 	# We use the soft limit because the user will be able to interactively remove
@@ -66,6 +69,9 @@ violation contains {
 	# (As then this login is not actually increasing the number of devices)
 	not input.session_replaced
 
+	# Only apply limits to accounts under the threshold (if configured)
+	passes_session_threshold
+
 	# For `m.login.password` login, a violation occurs when the hard limit has already been
 	# reached or exceeded.
 	# We don't use the soft limit because the user won't be able to interactively remove
@@ -77,4 +83,18 @@ is_interactive if {
 	# Only `m.login.sso` (the interactive web form) is interactive;
 	# `m.login.password` and `m.login.token` (including the finalisation of an SSO login) are not
 	input.login.type == "m.login.sso"
+}
+
+# The session limits only apply to accounts within the `max_session_threshold`.
+#
+# True if the `max_session_threshold` isn't configured or <= `max_session_threshold`.
+passes_session_threshold if {
+	# If no `session_limit` configured, automatically passes
+	not data.session_limit
+} else if {
+	# If no `max_session_threshold` configured, automatically passes
+	not data.session_limit.max_session_threshold
+} else if {
+	# Otherwise, check whether the total number of sessions is under the threshold
+	input.session_counts.total <= data.session_limit.max_session_threshold
 }
