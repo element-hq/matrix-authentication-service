@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -44,7 +45,7 @@ pub use self::{
         NotFoundContext, PasswordRegisterContext, PolicyViolationContext, PostAuthContext,
         PostAuthContextInner, RecoveryExpiredContext, RecoveryFinishContext,
         RecoveryFinishFormField, RecoveryProgressContext, RecoveryStartContext,
-        RecoveryStartFormField, RegisterContext, RegisterFormField,
+        RecoveryStartFormField, RedirectContext, RegisterContext, RegisterFormField,
         RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
         RegisterStepsEmailInUseContext, RegisterStepsRegistrationTokenContext,
         RegisterStepsRegistrationTokenFormField, RegisterStepsVerifyEmailContext,
@@ -421,6 +422,9 @@ register_templates! {
 
     /// Render the form used by the `form_post` response mode
     pub fn render_form_post<#[sample(EmptyContext)] T: Serialize>(WithLanguage<FormPostContext<T>>) { "form_post.html" }
+
+    /// Render the redirect interstitial page (query/fragment response modes)
+    pub fn render_redirect(WithLanguage<RedirectContext>) { "redirect.html" }
 
     /// Render the HTML error page
     pub fn render_error(ErrorContext) { "pages/error.html" }

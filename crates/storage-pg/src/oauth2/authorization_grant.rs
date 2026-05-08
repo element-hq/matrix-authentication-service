@@ -8,7 +8,8 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    AuthorizationCode, AuthorizationGrant, AuthorizationGrantStage, Client, Clock, Pkce, Session,
+    AuthorizationCode, AuthorizationGrant, AuthorizationGrantStage, BrowserSession, Client, Clock,
+    Pkce, Session,
 };
 use mas_iana::oauth::PkceCodeChallengeMethod;
 use mas_storage::oauth2::OAuth2AuthorizationGrantRepository;
@@ -56,6 +57,7 @@ struct GrantLookup {
     locale: Option<String>,
     oauth2_client_id: Uuid,
     oauth2_session_id: Option<Uuid>,
+    user_session_id: Option<Uuid>,
 }
 
 impl TryFrom<GrantLookup> for AuthorizationGrant {
@@ -75,22 +77,42 @@ impl TryFrom<GrantLookup> for AuthorizationGrant {
             value.exchanged_at,
             value.cancelled_at,
             value.oauth2_session_id,
+            value.user_session_id,
         ) {
-            (None, None, None, None) => AuthorizationGrantStage::Pending,
-            (Some(fulfilled_at), None, None, Some(session_id)) => {
+            (None, None, None, None, None) => AuthorizationGrantStage::Pending,
+            // New format: fulfilled with browser_session_id (user_session_id set, oauth2_session_id
+            // not yet set)
+            (Some(fulfilled_at), None, None, None, Some(user_session_id)) => {
                 AuthorizationGrantStage::Fulfilled {
-                    session_id: session_id.into(),
+                    browser_session_id: user_session_id.into(),
                     fulfilled_at,
                 }
             }
-            (Some(fulfilled_at), Some(exchanged_at), None, Some(session_id)) => {
+            // Legacy format: fulfilled with oauth2_session_id (old code, no user_session_id column
+            // yet or backfill failed) Treat as fulfilled for backward compat during
+            // rolling deploys; the code expires in 10 mins anyway
+            (Some(fulfilled_at), None, None, Some(session_id), None) => {
+                // We don't have the browser_session_id, but we need to set something.
+                // Use a zero ULID as a sentinel; the token handler will fail to look up the
+                // browser session and reject the grant, which is the safe thing to do.
+                let _ = session_id;
+                AuthorizationGrantStage::Cancelled {
+                    cancelled_at: fulfilled_at,
+                }
+            }
+            // Legacy or new format: exchanged (oauth2_session_id always set at this point)
+            (Some(fulfilled_at), Some(exchanged_at), None, Some(session_id), user_session_id) => {
+                // For the exchanged state, we need both session_id and browser_session_id.
+                // If user_session_id is missing (old records), use a zero ULID as a sentinel.
+                let browser_session_id = user_session_id.unwrap_or_default().into();
                 AuthorizationGrantStage::Exchanged {
                     session_id: session_id.into(),
+                    browser_session_id,
                     fulfilled_at,
                     exchanged_at,
                 }
             }
-            (None, None, Some(cancelled_at), None) => {
+            (None, None, Some(cancelled_at), None, None) => {
                 AuthorizationGrantStage::Cancelled { cancelled_at }
             }
             _ => {
@@ -303,6 +325,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
                      , login_hint
                      , locale
                      , oauth2_session_id
+                     , user_session_id
                 FROM
                     oauth2_authorization_grants
 
@@ -353,6 +376,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
                      , login_hint
                      , locale
                      , oauth2_session_id
+                     , user_session_id
                 FROM
                     oauth2_authorization_grants
 
@@ -376,14 +400,14 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             db.query.text,
             %grant.id,
             client.id = %grant.client_id,
-            %session.id,
+            browser_session.id = %browser_session.id,
         ),
         err,
     )]
     async fn fulfill(
         &mut self,
         clock: &dyn Clock,
-        session: &Session,
+        browser_session: &BrowserSession,
         grant: AuthorizationGrant,
     ) -> Result<AuthorizationGrant, Self::Error> {
         let fulfilled_at = clock.now();
@@ -391,12 +415,12 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             r#"
                 UPDATE oauth2_authorization_grants
                 SET fulfilled_at = $2
-                  , oauth2_session_id = $3
+                  , user_session_id = $3
                 WHERE oauth2_authorization_grant_id = $1
             "#,
             Uuid::from(grant.id),
             fulfilled_at,
-            Uuid::from(session.id),
+            Uuid::from(browser_session.id),
         )
         .traced()
         .execute(&mut *self.conn)
@@ -404,9 +428,8 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
 
         DatabaseError::ensure_affected_rows(&res, 1)?;
 
-        // XXX: check affected rows & new methods
         let grant = grant
-            .fulfill(fulfilled_at, session)
+            .fulfill(fulfilled_at, browser_session)
             .map_err(DatabaseError::to_invalid_operation)?;
 
         Ok(grant)
@@ -419,12 +442,14 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             db.query.text,
             %grant.id,
             client.id = %grant.client_id,
+            %session.id,
         ),
         err,
     )]
     async fn exchange(
         &mut self,
         clock: &dyn Clock,
+        session: &Session,
         grant: AuthorizationGrant,
     ) -> Result<AuthorizationGrant, Self::Error> {
         let exchanged_at = clock.now();
@@ -432,10 +457,12 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             r#"
                 UPDATE oauth2_authorization_grants
                 SET exchanged_at = $2
+                  , oauth2_session_id = $3
                 WHERE oauth2_authorization_grant_id = $1
             "#,
             Uuid::from(grant.id),
             exchanged_at,
+            Uuid::from(session.id),
         )
         .traced()
         .execute(&mut *self.conn)
@@ -444,7 +471,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
         DatabaseError::ensure_affected_rows(&res, 1)?;
 
         let grant = grant
-            .exchange(exchanged_at)
+            .exchange(exchanged_at, session)
             .map_err(DatabaseError::to_invalid_operation)?;
 
         Ok(grant)
