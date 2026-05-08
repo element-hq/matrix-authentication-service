@@ -156,6 +156,7 @@ pub async fn policy_factory_from_config(
             .map(|c| SessionLimitConfig {
                 soft_limit: c.soft_limit,
                 hard_limit: c.hard_limit,
+                max_session_threshold: c.max_session_threshold,
                 dangerous_hard_limit_eviction: c.dangerous_hard_limit_eviction,
             });
 
@@ -246,6 +247,7 @@ pub fn site_config_from_config(
             .map(|c| SessionLimitConfig {
                 soft_limit: c.soft_limit,
                 hard_limit: c.hard_limit,
+                max_session_threshold: c.max_session_threshold,
                 dangerous_hard_limit_eviction: c.dangerous_hard_limit_eviction,
             }),
     })

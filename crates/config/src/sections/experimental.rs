@@ -196,7 +196,7 @@ pub struct SessionLimitConfig {
     /// and you want to avoid breaking their operation while maintaining some
     /// level of sanity with the number of devices that people can have.
     ///
-    /// Removing devices is a non-trivial tasks for some homeservers to tackle and can
+    /// Removing devices is a non-trivial task for some homeservers to tackle and can
     /// cause lots of device list changes, `/sync`, federation, and replication traffic.
     /// Consider using [`max_session_threshold`] to limit the size of accounts that are
     /// acted upon.

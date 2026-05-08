@@ -1759,6 +1759,7 @@ mod tests {
                     soft_limit: NonZeroU64::new(1).unwrap(),
                     // Some arbitrary high value (more than we login)
                     hard_limit: NonZeroU64::new(5).unwrap(),
+                    max_session_threshold: None,
                     dangerous_hard_limit_eviction: false,
                 }),
                 ..test_site_config()
@@ -1809,6 +1810,7 @@ mod tests {
                     soft_limit: NonZeroU64::new(1).unwrap(),
                     // Lowest non-zero value so we don't have to login a bunch
                     hard_limit: NonZeroU64::new(1).unwrap(),
+                    max_session_threshold: None,
                     dangerous_hard_limit_eviction: false,
                 }),
                 ..test_site_config()
@@ -1873,6 +1875,7 @@ mod tests {
                     soft_limit: NonZeroU64::new(1).unwrap(),
                     // Must be at least 2 when `dangerous_hard_limit_eviction`
                     hard_limit: NonZeroU64::new(2).unwrap(),
+                    max_session_threshold: None,
                     // Option under test
                     dangerous_hard_limit_eviction: true,
                 }),
@@ -2040,6 +2043,7 @@ mod tests {
                     soft_limit: NonZeroU64::new(1).unwrap(),
                     // Must be at least 2 when `dangerous_hard_limit_eviction`
                     hard_limit: NonZeroU64::new(2).unwrap(),
+                    max_session_threshold: None,
                     // Option under test
                     dangerous_hard_limit_eviction: true,
                 }),
