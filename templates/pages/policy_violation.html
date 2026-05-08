@@ -32,8 +32,6 @@ Please see LICENSE files in the repository root for full details.
       </div>
       {% endif %}
 
-      {# Make it clear to the user which client they're dealing with. This template has
-      to deal with authorization grants and device authorization grants. #}
       {% if client.client_uri %}
         <a target="_blank" href="{{ client.client_uri }}" class="cpd-link" data-kind="primary">
           {{ client_display_name }}

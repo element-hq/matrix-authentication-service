@@ -34,8 +34,6 @@ Please see LICENSE files in the repository root for full details.
         </h1>
 
         <p class="text [&>span]:whitespace-nowrap [&>span]:text-[var(--cpd-color-text-link-external)]">
-          {# Make it clear to the user which client they're dealing with. This template
-          only has to deal with device authorization grants. #}
           {{ _("mas.device_consent.this_will_setup", client_name=client_display_name, client_uri=client_display_uri, server_name=branding.server_name) }}
         </p>
 
