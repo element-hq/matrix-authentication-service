@@ -6,7 +6,7 @@
     },
     "cancel": "Cancel",
     "@cancel": {
-      "context": "pages/consent.html:81:11-29, pages/device_consent.html:150:13-31, pages/policy_violation.html:55:13-31"
+      "context": "pages/consent.html:81:11-29, pages/device_consent.html:150:13-31, pages/policy_violation.html:55:13-31, pages/reauth.html:37:13-31"
     },
     "continue": "Continue",
     "@continue": {
