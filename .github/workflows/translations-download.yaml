@@ -21,13 +21,17 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v6
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
+
       - name: Install Node
         uses: actions/setup-node@v6.3.0
         with:
           node-version: 24
+          cache: "pnpm"
 
-      - name: Install Localazy CLI
-        run: npm install -g @localazy/cli
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Compute the Localazy branch name
         id: branch
@@ -35,7 +39,7 @@ jobs:
         run: echo "name=${GITHUB_REF_NAME#release/}" >> "$GITHUB_OUTPUT"
 
       - name: Download translations from Localazy
-        run: localazy download -w "$LOCALAZY_WRITE_KEY" -b "$BRANCH"
+        run: pnpm exec localazy download -w "$LOCALAZY_WRITE_KEY" -b "$BRANCH"
         env:
           LOCALAZY_WRITE_KEY: ${{ secrets.LOCALAZY_WRITE_KEY }}
           BRANCH: ${{ steps.branch.outputs.name }}

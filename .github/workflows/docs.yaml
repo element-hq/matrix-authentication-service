@@ -38,10 +38,14 @@ jobs:
         with:
           tool: mdbook
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
+
       - name: Install Node
         uses: actions/setup-node@v6.3.0
         with:
           node-version: 24
+          cache: "pnpm"
 
       - name: Build the documentation
         run: sh misc/build-docs.sh

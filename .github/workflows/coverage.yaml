@@ -61,8 +61,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Test
-        working-directory: ./frontend
-        run: npm run coverage
+        run: pnpm --filter mas-frontend run coverage
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v6.0.0

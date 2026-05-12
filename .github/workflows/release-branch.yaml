@@ -39,13 +39,25 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
+
+      - name: Install Node
+        uses: actions/setup-node@v6.3.0
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Compute the new minor RC
         id: next
         env:
           BUMP: pre${{ inputs.kind }}
         run: |
           CURRENT_VERSION="$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[] | select(.name == "mas-cli") | .version')"
-          NEXT_VERSION="$(npx --yes semver@7.5.4 -i "$BUMP" --preid rc "${CURRENT_VERSION}")"
+          NEXT_VERSION="$(pnpm exec semver -i "$BUMP" --preid rc "${CURRENT_VERSION}")"
           # compute the short minor version, e.g. 0.1.0-rc.1 -> 0.1
           SHORT_VERSION="$(echo "${NEXT_VERSION}" | cut -d. -f1-2)"
           echo "full=${NEXT_VERSION}" >> "$GITHUB_OUTPUT"
@@ -63,16 +75,20 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v6
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
+
       - name: Install Node
         uses: actions/setup-node@v6.3.0
         with:
           node-version: 24
+          cache: "pnpm"
 
-      - name: Install Localazy CLI
-        run: npm install -g @localazy/cli
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Create a new branch in Localazy
-        run: localazy branch -w "$LOCALAZY_WRITE_KEY" create main "$BRANCH"
+        run: pnpm exec localazy branch -w "$LOCALAZY_WRITE_KEY" create main "$BRANCH"
         env:
           LOCALAZY_WRITE_KEY: ${{ secrets.LOCALAZY_WRITE_KEY }}
           # Localazy doesn't like slashes in branch names, so we just use the short version

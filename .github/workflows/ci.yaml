@@ -63,18 +63,20 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v6
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
+
       - name: Install Node
         uses: actions/setup-node@v6.3.0
         with:
           node-version: 24
+          cache: "pnpm"
 
-      - name: Install Node dependencies
-        working-directory: ./frontend
-        run: npm ci
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
-        working-directory: ./frontend
-        run: npm run lint
+        run: pnpm --filter mas-frontend run lint
 
   frontend-test:
     name: Run the frontend test suite
@@ -87,18 +89,20 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v6
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
+
       - name: Install Node
         uses: actions/setup-node@v6.3.0
         with:
           node-version: 24
+          cache: "pnpm"
 
-      - name: Install Node dependencies
-        working-directory: ./frontend
-        run: npm ci
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Test
-        working-directory: ./frontend
-        run: npm test
+        run: pnpm --filter mas-frontend test
 
   frontend-knip:
     name: Check the frontend for unused dependencies
@@ -111,18 +115,20 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v6
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
+
       - name: Install Node
         uses: actions/setup-node@v6.3.0
         with:
           node-version: 24
+          cache: "pnpm"
 
-      - name: Install Node dependencies
-        working-directory: ./frontend
-        run: npm ci
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Check for unused dependencies
-        working-directory: ./frontend
-        run: npm run knip
+        run: pnpm --filter mas-frontend run knip
 
   rustfmt:
     name: Check Rust style
