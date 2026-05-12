@@ -200,8 +200,16 @@ function Sessions(): React.ReactElement {
     const sessionLimitInfoText = t(
       "frontend.user_sessions_overview.session_limit_info",
       {
+        // It's unclear what should possibly drive the plural here as either X or Y
+        // could potential have an influence in other languages: "X/Y device slots"
+        //
+        // For now, I've chosen X as one could translate "No device slots used" for the
+        // zero case if desired.
+        //
+        // Using `count` for special plural meaning,
+        // https://www.i18next.com/translation-function/plurals
+        count: overviewViewer.unfilteredAppSessions.totalCount,
         limit: sessionLimit.softLimit,
-        num_sessions: overviewViewer.unfilteredAppSessions.totalCount,
       },
     );
 

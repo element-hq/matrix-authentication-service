@@ -301,7 +301,7 @@
       },
       "num_sessions_filtered_header": "{{count}} devices match your filter ({{unfiltered_session_count}} total)",
       "num_sessions_header": "{{count}} devices",
-      "session_limit_info": "You've used {{num_sessions}}/{{limit}} device slots"
+      "session_limit_info": "You've used {{count}}/{{limit}} device slots"
     },
     "verify_email": {
       "code_expired_alert": {
