@@ -8,6 +8,8 @@ import { Link } from "@tanstack/react-router";
 
 import styles from "./NavItem.module.css";
 
+
+
 const NavItem: React.FC<React.ComponentProps<typeof Link>> = (props) => {
   return (
     <li className={styles.navTab}>

@@ -63,3 +63,10 @@
 .nav-item[aria-current="page"] {
   color: var(--cpd-color-text-primary);
 }
+
+.nav-bar-error-icon {
+  display: inline-block;
+
+  color: var(--cpd-color-icon-critical-primary);
+}
+

@@ -6,17 +6,15 @@
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { notFound, Outlet } from "@tanstack/react-router";
-import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import { Heading, Tooltip } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 import Layout from "../components/Layout";
 import NavBar from "../components/NavBar";
 import NavItem from "../components/NavItem";
+import {NavItemErrorIcon} from "../components/NavItem";
 import UserGreeting from "../components/UserGreeting";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
-
-import styles from "./_account.module.css";
 
 const QUERY = graphql(/* GraphQL */ `
   query CurrentUserGreeting {
@@ -71,7 +69,7 @@ function Account(): React.ReactElement {
   ) {
     sessionLimitHitIcon = (
       <Tooltip label={t("frontend.nav.device_limit_error")}>
-        <IconErrorSolid className={styles.navBarErrorIcon} />
+        <NavItemErrorIcon />
       </Tooltip>
     );
   }
