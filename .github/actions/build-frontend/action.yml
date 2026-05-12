@@ -15,7 +15,7 @@ runs:
     - name: Install Node
       uses: actions/setup-node@v6.0.0
       with:
-        node-version: "24"
+        node-version-file: .node-version
         cache: "pnpm"
 
     - name: Install dependencies
