@@ -1742,13 +1742,6 @@ mod tests {
         token
     }
 
-    /// Test that `soft_limit` works against interative login (like the `m.login.sso`
-    /// compat Matrix login flow)
-    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_session_soft_limit_interactive_login(pool: PgPool) {
-        // TODO
-    }
-
     /// Test that the `soft_limit` is not enforced for non-interactive login
     /// (like the `m.login.password` compat Matrix login flow).
     ///
@@ -1791,6 +1784,8 @@ mod tests {
         let _user = user_with_password(&state, "alice", "password", false).await;
 
         // Keep logging in to add more sessions, more than the `soft_limit`
+        //
+        // We're using `m.login.password` login flow which is non-interactive
         #[allow(clippy::range_plus_one)]
         for _ in 0..(session_limit_config.soft_limit.get() + 1) {
             let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
