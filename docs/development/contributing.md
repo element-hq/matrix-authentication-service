@@ -149,14 +149,20 @@ for more info.
     ```
 
 See the docs on [*authorization code
-grant*](../topics/authorization.md#authorization-code-grant) for more info.
+grant*](../topics/authorization.md#authorization-code-grant) for more info. As another
+reference of this flow, there is an explanation on
+[areweoidcyet.com](https://areweoidcyet.com/client-implementation-guide/#authorization-request-msc2964)
+from the client perspective.
 
 ##### Test OAuth device authorization grant (interactive)
 
 TODO
 
 See the docs on [*device code
-grant*](../topics/authorization.md#device-authorization-grant) for more info.
+grant*](../topics/authorization.md#device-authorization-grant) for more info. As another
+reference of this flow, there is an explanation on
+[areweoidcyet.com](https://areweoidcyet.com/client-implementation-guide/device-code-grant/)
+from the client perspective.
 
 ##### Test OAuth client credentials grant (non-interactive)
 
