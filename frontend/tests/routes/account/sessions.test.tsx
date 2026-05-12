@@ -8,14 +8,13 @@
 import { screen } from "@testing-library/react";
 import { HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
+import { FRAGMENT as BROWSER_SESSIONS_FRAGMENT } from "../../../src/components/UserSessionsOverview/BrowserSessionsOverview";
 import { makeFragmentData } from "../../../src/gql";
 import {
   mockAppSessionsListQuery,
   mockSessionsOverviewQuery,
 } from "../../../src/gql/graphql";
 import { renderPage, server } from "../render";
-
-import {FRAGMENT as BROWSER_SESSIONS_FRAGMENT } from "../../../src/components/UserSessionsOverview/BrowserSessionsOverview";
 
 describe("Account sessions page", () => {
   it("renders the page", async () => {
