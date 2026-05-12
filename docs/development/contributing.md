@@ -20,7 +20,7 @@ There are two main ways to contribute to MAS:
 To get MAS running locally from source you will need to:
 
 - [Install Rust and Cargo](https://www.rust-lang.org/learn/get-started). We recommend using the latest stable version of Rust.
-- [Install Node.js and npm](https://nodejs.org/). We recommend using the latest LTS version of Node.js.
+- [Install Node.js](https://nodejs.org/). We recommend using the latest LTS version of Node.js. The frontend uses pnpm, which is installed automatically via corepack — see below.
 - [Install Open Policy Agent](https://www.openpolicyagent.org/docs#1-download-opa)
 
 ## 4. Get the source
@@ -41,9 +41,10 @@ If you need help getting started with git, this is beyond the scope of the docum
 
 - Build the frontend
   ```sh
+  corepack enable # one-time; picks pnpm@11 from the root package.json
+  pnpm install # Install dependencies for the whole workspace (run from the repo root)
   cd frontend
-  npm ci # Install the frontend dependencies
-  npm run build # Build the frontend
+  pnpm run build # Build the frontend
   cd ..
   ```
 - Build the Open Policy Agent policies
@@ -79,7 +80,7 @@ Most of them can be updated by running `sh misc/update.sh` at the root of the pr
 Make sure your code adheres to our Rust and TypeScript code style by running:
 
  - `cargo +nightly fmt` (with the nightly toolchain installed)
- - `npm run format` in the `frontend` directory
+ - `pnpm run format` in the `frontend` directory
  - `make fmt` in the `policies` directory (if changed)
 
 When updating SQL queries in the `crates/storage-pg/` crate, you may need to update the `sqlx` introspection data. To do this, make sure to install `cargo-sqlx` (`cargo install sqlx-cli`) and:
@@ -94,7 +95,7 @@ While you're developing and before submitting a patch, you'll want to test your 
 ### Run the linters
 
 - Run `cargo clippy --workspace` to lint the Rust code.
-- Run `npm run lint` in the `frontend` directory to lint the frontend code.
+- Run `pnpm run lint` in the `frontend` directory to lint the frontend code.
 - Run `make fmt` and `make lint` in the `policies` directory to format and lint the included policy.
 
 ### Run the tests
@@ -102,7 +103,7 @@ While you're developing and before submitting a patch, you'll want to test your 
 If you haven't already, install [Cargo-Nextest](https://nexte.st/docs/installation/pre-built-binaries/).
 
 - Run the tests to the backend by running `cargo nextest run --workspace`. This requires a connection to a PostgreSQL database, set via the `DATABASE_URL` environment variable.
-- Run the tests to the frontend by running `npm run test` in the `frontend` directory.
+- Run the tests to the frontend by running `pnpm run test` in the `frontend` directory.
 - To run the tests for the included policy, change to the `policies` directory and run one of:
   - `make test` (needs Open Policy Agent installed)
   - `make PODMAN=1 test` (runs inside a container; needs Podman installed)
