@@ -158,6 +158,11 @@ from the client perspective.
 
 TODO
 
+There is a utility script in the repo,
+[`misc/device-code-grant.sh`](https://github.com/element-hq/matrix-authentication-service/blob/main/misc/device-code-grant.sh),
+that you may want to reference to test this flow. See these docs on [how to get an
+access token](../topics/access-token.md) for usage instructions.
+
 See the docs on [*device code
 grant*](../topics/authorization.md#device-authorization-grant) for more info. As another
 reference of this flow, there is an explanation on
