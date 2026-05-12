@@ -170,7 +170,9 @@ function Sessions(): React.ReactElement {
   let deviceHeaderText = t(
     "frontend.user_sessions_overview.num_sessions_header",
     {
-      num_sessions: appSessions.totalCount,
+      // Using `count` for special plural meaning,
+      // https://www.i18next.com/translation-function/plurals
+      count: appSessions.totalCount,
     },
   );
   // But if we're showing a filtered down view, we want to explain how many devices you

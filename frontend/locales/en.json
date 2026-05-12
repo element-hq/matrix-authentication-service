@@ -300,7 +300,7 @@
         "inactive_90_days": "All your sessions have been active in the last 90 days."
       },
       "num_sessions_filtered_header": "{{filtered_count}} devices match your filter ({{num_sessions}} total)",
-      "num_sessions_header": "{{num_sessions}} devices",
+      "num_sessions_header": "{{count}} devices",
       "session_limit_info": "You've used {{num_sessions}}/{{limit}} device slots"
     },
     "verify_email": {
