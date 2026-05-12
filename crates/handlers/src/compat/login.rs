@@ -1834,31 +1834,25 @@ mod tests {
             .expect("Expected `session_limit` configured for this test");
 
         let _user = user_with_password(&state, "alice", "password", false).await;
-
-        // Keep logging in to add more sessions, up to the `hard_limit`
-        #[allow(clippy::range_plus_one)]
-        for _ in 0..session_limit_config.hard_limit.get() {
-            let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
-                "type": "m.login.password",
-                "identifier": {
-                    "type": "m.id.user",
-                    "user": "alice",
-                },
-                "password": "password",
-            }));
-            let response = state.request(request.clone()).await;
-            response.assert_status(StatusCode::OK);
-        }
-
-        // One more login will tip us over the `hard_limit`
-        let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+        let password_login_json = serde_json::json!({
             "type": "m.login.password",
             "identifier": {
                 "type": "m.id.user",
                 "user": "alice",
             },
             "password": "password",
-        }));
+        });
+
+        // Keep logging in to add more sessions, up to the `hard_limit`
+        for _ in 0..session_limit_config.hard_limit.get() {
+            let request =
+                Request::post("/_matrix/client/v3/login").json(password_login_json.clone());
+            let response = state.request(request.clone()).await;
+            response.assert_status(StatusCode::OK);
+        }
+
+        // One more login will tip us over the `hard_limit`
+        let request = Request::post("/_matrix/client/v3/login").json(password_login_json);
         let response = state.request(request.clone()).await;
         response.assert_status(StatusCode::FORBIDDEN);
         let body: serde_json::Value = response.json();
@@ -1874,7 +1868,63 @@ mod tests {
     /// `max_session_threshold`
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_session_limit_under_max_session_threshold(pool: PgPool) {
-        // TODO
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                session_limit: Some(SessionLimitConfig {
+                    // Lowest non-zero value so we don't have to login a bunch
+                    soft_limit: NonZeroU64::new(1).unwrap(),
+                    hard_limit: NonZeroU64::new(1).unwrap(),
+                    // The main thing we're trying to test
+                    max_session_threshold: Some(NonZeroU64::new(1).unwrap()),
+                    dangerous_hard_limit_eviction: false,
+                }),
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let session_limit_config = state
+            .site_config
+            .session_limit
+            .as_ref()
+            .expect("Expected `session_limit` configured for this test");
+        // Make sure this is configured as its the main differentiator we're trying to test
+        session_limit_config.max_session_threshold.as_ref().expect("Expected `session_limit.max_session_threshold` to be configured at this point in the test");
+
+        let _user = user_with_password(&state, "alice", "password", false).await;
+        let password_login_json = serde_json::json!({
+            "type": "m.login.password",
+            "identifier": {
+                "type": "m.id.user",
+                "user": "alice",
+            },
+            "password": "password",
+        });
+
+        // Keep logging in to add more sessions, up to the `hard_limit`
+        for _ in 0..session_limit_config.hard_limit.get() {
+            let request =
+                Request::post("/_matrix/client/v3/login").json(password_login_json.clone());
+            let response = state.request(request.clone()).await;
+            response.assert_status(StatusCode::OK);
+        }
+
+        // One more login will tip us over the `hard_limit`
+        //
+        // Session limits are enforced because we're <= `max_session_threshold`
+        let request = Request::post("/_matrix/client/v3/login").json(password_login_json);
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::FORBIDDEN);
+        let body: serde_json::Value = response.json();
+        assert_eq!(
+            body.get("errcode")
+                .expect("Expected errror response to include an `errcode`"),
+            "M_FORBIDDEN",
+            "Expected `errcode` to be `M_FORBIDDEN`"
+        );
     }
 
     /// Test that session limits are not enforced (logins are allowed) for anyone who is
@@ -1882,7 +1932,7 @@ mod tests {
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_session_limit_past_max_session_threshold(pool: PgPool) {
         setup();
-        let state = TestState::from_pool_with_site_config(
+        let mut state = TestState::from_pool_with_site_config(
             pool.clone(),
             SiteConfig {
                 // Setup an account with a few sessions before we add a `session_limit`
@@ -1896,6 +1946,8 @@ mod tests {
         // Lowest non-zero value so we don't have to login a bunch
         let upcoming_hard_limit = 1;
 
+        // Setup a user that has more sessions than the `max_session_threshold`.
+        //
         // Keep logging in to add more sessions. We want to be past the
         // `hard_limit`/`max_session_threshold`
         let _user = user_with_password(&state, "alice", "password", false).await;
@@ -1916,28 +1968,22 @@ mod tests {
         }
 
         // Update the app state to configure a `max_session_threshold`
-        // FIXME: This creates an entirely new state
-        let state = TestState::from_pool_with_site_config(
-            pool,
-            SiteConfig {
-                session_limit: Some(SessionLimitConfig {
-                    soft_limit: NonZeroU64::new(upcoming_hard_limit).unwrap(),
-                    hard_limit: NonZeroU64::new(upcoming_hard_limit).unwrap(),
-                    // The main thing we're trying to test
-                    max_session_threshold: Some(NonZeroU64::new(upcoming_hard_limit).unwrap()),
-                    dangerous_hard_limit_eviction: false,
-                }),
-                ..test_site_config()
-            },
-        )
-        .await
-        .unwrap();
+        state.site_config.session_limit = Some(SessionLimitConfig {
+            soft_limit: NonZeroU64::new(upcoming_hard_limit).unwrap(),
+            hard_limit: NonZeroU64::new(upcoming_hard_limit).unwrap(),
+            // The main thing we're trying to test
+            max_session_threshold: Some(NonZeroU64::new(upcoming_hard_limit).unwrap()),
+            dangerous_hard_limit_eviction: false,
+        });
+        let state = state.reset().await;
 
-        let _session_limit_config = state
+        let session_limit_config = state
             .site_config
             .session_limit
             .as_ref()
             .expect("Expected `session_limit` to be configured at this point in the test");
+        // Make sure this is configured as its the main differentiator we're trying to test
+        session_limit_config.max_session_threshold.as_ref().expect("Expected `session_limit.max_session_threshold` to be configured at this point in the test");
 
         // Since we're already above `max_session_threshold`, the `session_limit` won't
         // stop us from adding another session.
