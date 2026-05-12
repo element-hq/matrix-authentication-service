@@ -299,7 +299,7 @@
         "default": "You are not signed in to any application.",
         "inactive_90_days": "All your sessions have been active in the last 90 days."
       },
-      "num_sessions_filtered_header": "{{filtered_count}} devices match your filter ({{num_sessions}} total)",
+      "num_sessions_filtered_header": "{{count}} devices match your filter ({{unfiltered_session_count}} total)",
       "num_sessions_header": "{{count}} devices",
       "session_limit_info": "You've used {{num_sessions}}/{{limit}} device slots"
     },
