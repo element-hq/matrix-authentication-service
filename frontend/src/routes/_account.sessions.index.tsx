@@ -237,7 +237,19 @@ function Sessions(): React.ReactElement {
         {t(
           "frontend.user_sessions_overview.hit_session_limit_warning_description",
           {
-            limit: sessionLimit.softLimit,
+            // Even though this is similar to the `session_limit_info` translation, it's
+            // a different scenario with different nuance. You wouldn't encounter this
+            // message with 0 sessions for example.
+            //
+            // We're pluralizing the `limit` as someone can then translate the singular
+            // as "You've used your only device slot", etc. This one is tricky as
+            // technically, you could want plural variations of both variables depending
+            // on phrasing. To keep it simple, we'll stick with one until someone wants
+            // to get creative.
+            //
+            // Using `count` for special plural meaning,
+            // https://www.i18next.com/translation-function/plurals
+            count: sessionLimit.softLimit,
             num_sessions: overviewViewer.unfilteredAppSessions.totalCount,
           },
         )}
@@ -265,7 +277,12 @@ function Sessions(): React.ReactElement {
         {t(
           "frontend.user_sessions_overview.approaching_session_limit_warning_description",
           {
-            limit: sessionLimit.softLimit,
+            // See `hit_session_limit_warning_description` above for reasoning on why we
+            // pluralize `limit`.
+            //
+            // Using `count` for special plural meaning,
+            // https://www.i18next.com/translation-function/plurals
+            count: sessionLimit.softLimit,
             num_sessions: overviewViewer.unfilteredAppSessions.totalCount,
           },
         )}
