@@ -1,0 +1,40 @@
+# Copyright 2026 Element Creations Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+# $schema: https://www.schemastore.org/pnpm-workspace.json
+
+packages:
+  - "frontend"
+
+# Enforce the package.json `engines` field.
+engineStrict: true
+
+# Refuse to install dependencies whose trust level has dropped compared to an
+# earlier release (e.g. a previously-provenanced package now publishing without
+# provenance). Add specific selectors to `trustPolicyExclude` to override.
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  # @babel/core@7.29.0 still pulls in semver@6.3.1, whose earlier versions
+  # had provenance attestation but this one does not.
+  - "semver@6.3.1"
+
+# Fail the install if any dependency has a build script that isn't explicitly
+# allowed. Add entries to `allowBuilds` (package name pattern -> bool) to
+# permit specific packages to run their install/build scripts.
+strictDepBuilds: true
+allowBuilds:
+  # Native binary toolchains
+  "@swc/core": true
+  esbuild: true
+  # MSW writes a service worker file into .storybook/public during install
+  msw: true
+  # Telemetry collector — opt out
+  "@scarf/scarf": false
+
+# Fail the install if peer dependencies are missing or unsatisfied. Add
+# entries under `peerDependencyRules.allowedVersions` to whitelist specific
+# version mismatches.
+strictPeerDependencies: true
+peerDependencyRules:
+  allowedVersions: {}
