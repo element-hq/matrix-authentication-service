@@ -1742,6 +1742,132 @@ mod tests {
         token
     }
 
+    // Do a `m.login.sso` flow and return the `loginToken` which will need to be exchanged for an access token
+    async fn matrix_compat_sso_login(state: &TestState, username: &str, password: &str) -> String {
+        // Step #1: Make the first request in the SSO OAuth2 login flow: `/login/sso/redirect/{idpId}`
+        let request =
+            Request::get("/_matrix/client/v3/login/sso/redirect?redirectUrl=http://test-login/")
+                .empty();
+        let response = state.request(request.clone()).await;
+
+        // Expect a redirect so we can authenticate
+        response.assert_status(StatusCode::SEE_OTHER);
+        let location = response.headers().get(hyper::header::LOCATION).unwrap();
+        let location = location.to_str().unwrap();
+        let parsed_location_url = url::Url::parse(location).unwrap();
+
+        // Make sure we're going to the /login page
+        assert_eq!(parsed_location_url.path(), "/login");
+        // We could also assert the query parameters but its kinda just an internal
+        // detail we don't need to worry about here.
+
+        // Step #2: Follow the 303 redirect, `Location` header redirect to the `/login` page
+        let request = Request::get(
+            parsed_location_url.path().to_owned() + parsed_location_url.query().unwrap_or(""),
+        )
+        .empty();
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::OK);
+        // Keep track of the session cookies from this request
+        let cookies = "TODO";
+        // Collect any extra <form> data we need to submit alongside `username`/`password`
+        //
+        // Extract the `csrf` from the page. We're looking for `<input type="hidden" name="csrf" value="xxx">`
+        let csrf = "TODO";
+
+        // Step #3: Submit the login form
+        let request = Request::post(
+            parsed_location_url.path().to_owned() + parsed_location_url.query().unwrap_or(""),
+        )
+        .header(
+            http::header::CONTENT_TYPE.to_string(),
+            mime::APPLICATION_WWW_FORM_URLENCODED,
+        )
+        .header("Cookie", cookies)
+        .body(
+            url::form_urlencoded::Serializer::new(String::new())
+                .append_pair("username", username)
+                .append_pair("password", password)
+                .append_pair("csrf", csrf)
+                .finish(),
+        );
+        let response = state.request(request.clone()).await;
+
+        // Expect a redirect to the `redirectUrl` with a `?loginToken=XXX` specified
+        response.assert_status(StatusCode::SEE_OTHER);
+        let location = response.headers().get(hyper::header::LOCATION).unwrap();
+        let location = location.to_str().unwrap();
+
+        let parsed_location_url = url::Url::parse(location).unwrap();
+        let query_pairs = parsed_location_url.query_pairs().collect::<HashMap<_, _>>();
+        let login_token = query_pairs.get("loginToken").expect(format!("Expected `loginToken` query parameter from `m.login.sso` redirect flow. {request.uri()} -> {location}"));
+        login_token.to_string()
+    }
+
+    /// Test that `soft_limit` works against interative login (like the `m.login.sso`
+    /// compat Matrix login flow)
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_session_soft_limit_interactive_login(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                session_limit: Some(SessionLimitConfig {
+                    // Lowest non-zero value so we don't have to login a bunch (lower
+                    // than `hard_limit`)
+                    soft_limit: NonZeroU64::new(1).unwrap(),
+                    // Some arbitrary high value (more than we login)
+                    hard_limit: NonZeroU64::new(5).unwrap(),
+                    max_session_threshold: None,
+                    dangerous_hard_limit_eviction: false,
+                }),
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let session_limit_config = state
+            .site_config
+            .session_limit
+            .as_ref()
+            .expect("Expected `session_limit` configured for this test");
+
+        let _user = user_with_password(&state, "alice", "password", false).await;
+        let password_login_json = serde_json::json!({
+            "type": "m.login.password",
+            "identifier": {
+                "type": "m.id.user",
+                "user": "alice",
+            },
+            "password": "password",
+        });
+
+        // Keep logging in to add more sessions, up to the `soft_limit`. Just using whatever is easy.
+        for _ in 0..session_limit_config.soft_limit.get() {
+            let request =
+                Request::post("/_matrix/client/v3/login").json(password_login_json.clone());
+            let response = state.request(request.clone()).await;
+            response.assert_status(StatusCode::OK);
+        }
+
+        // One more login will tip us over the `soft_limit`
+        //
+        // We're specifically doing an interactive login (`m.login.sso`)
+        let request =
+            Request::get("/_matrix/client/v3/login/sso/redirect?redirectUrl=http://test-login/")
+                .empty();
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::FORBIDDEN);
+        let body: serde_json::Value = response.json();
+        assert_eq!(
+            body.get("errcode")
+                .expect("Expected errror response to include an `errcode`"),
+            "M_FORBIDDEN",
+            "Expected `errcode` to be `M_FORBIDDEN`"
+        );
+    }
+
     /// Test that the `soft_limit` is not enforced for compat login.
     ///
     /// `soft_limit` is for when we allow the user to remove devices in
