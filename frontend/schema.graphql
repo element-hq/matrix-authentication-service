@@ -1402,6 +1402,9 @@ A client session, either compat or OAuth 2.0
 """
 union Session = CompatSession | Oauth2Session
 
+"""
+See [`mas_config::ExperimentalSessionLimitConfig`]
+"""
 type SessionLimitConfig {
   softLimit: Int!
   hardLimit: Int!

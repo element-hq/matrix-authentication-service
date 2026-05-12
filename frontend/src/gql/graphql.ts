@@ -1078,6 +1078,7 @@ export type ResendRecoveryEmailStatus =
 /** A client session, either compat or OAuth 2.0 */
 export type Session = CompatSession | Oauth2Session;
 
+/** See [`mas_config::ExperimentalSessionLimitConfig`] */
 export type SessionLimitConfig = {
   __typename?: 'SessionLimitConfig';
   dangerousHardLimitEviction: Scalars['Boolean']['output'];

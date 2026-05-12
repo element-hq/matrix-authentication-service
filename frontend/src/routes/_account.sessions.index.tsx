@@ -188,7 +188,8 @@ function Sessions(): React.ReactElement {
         count: appSessions.totalCount,
         // We're going to assume that the "(Y total)" doesn't need pluralization for
         // now. I couldn't find a clear answer.
-        unfiltered_session_count: overviewViewer.unfilteredAppSessions.totalCount,
+        unfiltered_session_count:
+          overviewViewer.unfilteredAppSessions.totalCount,
       },
     );
   }
