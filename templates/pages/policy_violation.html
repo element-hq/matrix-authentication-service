@@ -9,6 +9,8 @@ Please see LICENSE files in the repository root for full details.
 {% extends "base.html" %}
 
 {% block content %}
+  {% set client_display_name = client.client_name or client.client_id %}
+
   <header class="page-heading">
     <div class="icon invalid">
       {{ icon.error_solid() }}
@@ -29,7 +31,14 @@ Please see LICENSE files in the repository root for full details.
         {{ icon.web_browser() }}
       </div>
       {% endif %}
-      <a target="_blank" href="{{ client.client_uri }}" class="cpd-link" data-kind="primary">{{ client.client_name or client.client_id }}</a>
+
+      {% if client.client_uri %}
+        <a target="_blank" href="{{ client.client_uri }}" class="cpd-link" data-kind="primary">
+          {{ client_display_name }}
+        </a>
+      {% else %}
+        {{ client_display_name }}
+      {% endif %}
     </div>
 
     <div class="flex gap-1 justify-center items-center">
