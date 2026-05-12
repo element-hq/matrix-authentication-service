@@ -8,11 +8,14 @@
 import { screen } from "@testing-library/react";
 import { HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
+import { makeFragmentData } from "../../../src/gql";
 import {
   mockAppSessionsListQuery,
   mockSessionsOverviewQuery,
 } from "../../../src/gql/graphql";
 import { renderPage, server } from "../render";
+
+import {FRAGMENT as BROWSER_SESSIONS_FRAGMENT } from "../../../src/components/UserSessionsOverview/BrowserSessionsOverview";
 
 describe("Account sessions page", () => {
   it("renders the page", async () => {
@@ -29,10 +32,14 @@ describe("Account sessions page", () => {
               viewer: {
                 __typename: "User",
                 id: "123",
-                // FIXME: Unclear how to deal with fragment masking (`$fragmentRefs`)
-                browserSessions: {
-                  totalCount: 3,
-                },
+                ...makeFragmentData(
+                  {
+                    browserSessions: {
+                      totalCount: 3,
+                    },
+                  },
+                  BROWSER_SESSIONS_FRAGMENT,
+                ),
                 unfilteredAppSessions: {
                   // They have 12 sessions
                   totalCount: 12,

@@ -1859,7 +1859,7 @@ export type UserEmailList_UserFragment = { __typename?: 'User', hasPassword: boo
 
 export type UserEmailList_SiteConfigFragment = { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean } & { ' $fragmentName'?: 'UserEmailList_SiteConfigFragment' };
 
-export type BrowserSessionsOverview_UserFragment = { __typename?: 'User', id: string, browserSessions: { __typename?: 'BrowserSessionConnection', totalCount: number } } & { ' $fragmentName'?: 'BrowserSessionsOverview_UserFragment' };
+export type BrowserSessionsOverview_UserFragment = { __typename?: 'User', browserSessions: { __typename?: 'BrowserSessionConnection', totalCount: number } } & { ' $fragmentName'?: 'BrowserSessionsOverview_UserFragment' };
 
 export type UserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2438,7 +2438,6 @@ export const UserEmailList_SiteConfigFragmentDoc = new TypedDocumentString(`
     `, {"fragmentName":"UserEmailList_siteConfig"}) as unknown as TypedDocumentString<UserEmailList_SiteConfigFragment, unknown>;
 export const BrowserSessionsOverview_UserFragmentDoc = new TypedDocumentString(`
     fragment BrowserSessionsOverview_user on User {
-  id
   browserSessions(first: 0, state: ACTIVE) {
     totalCount
   }
@@ -2726,7 +2725,6 @@ export const SessionsOverviewDocument = new TypedDocumentString(`
   }
 }
     fragment BrowserSessionsOverview_user on User {
-  id
   browserSessions(first: 0, state: ACTIVE) {
     totalCount
   }
