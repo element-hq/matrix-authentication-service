@@ -157,6 +157,9 @@ violation contains {"msg": sprintf(
 violation contains {
 	"code": "too-many-sessions",
 	"msg": "user has too many active sessions",
+	# `+ 1` because when you're at 2 sessions, and the limit is 2, you have to make room
+	# for the new session
+	"need_to_remove": (input.session_counts.total - data.session_limit.soft_limit) + 1,
 } if {
 	# Only apply if session limits are enabled in the config
 	data.session_limit != null

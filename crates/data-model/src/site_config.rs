@@ -39,10 +39,12 @@ pub struct SessionExpirationConfig {
     pub compat_session_inactivity_ttl: Option<Duration>,
 }
 
+/// See [`mas_config::ExperimentalSessionLimitConfig`]
 #[derive(Serialize, Debug, Clone)]
 pub struct SessionLimitConfig {
     pub soft_limit: NonZeroU64,
     pub hard_limit: NonZeroU64,
+    pub dangerous_hard_limit_eviction: bool,
 }
 
 /// Random site configuration we want accessible in various places.
