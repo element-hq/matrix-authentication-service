@@ -82,6 +82,7 @@ pub enum CaptchaService {
     HCaptcha,
 }
 
+/// See [`mas_config::ExperimentalSessionLimitConfig`]
 #[derive(SimpleObject)]
 pub struct SessionLimitConfig {
     pub soft_limit: u64,
