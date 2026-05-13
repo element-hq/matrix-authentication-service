@@ -102,7 +102,7 @@ pub fn client() -> reqwest::Client {
         .dns_resolver(Arc::new(TracingResolver::new()))
         .use_preconfigured_tls(tls_config)
         .user_agent(USER_AGENT)
-        .timeout(Duration::from_mins(1))
+        .timeout(Duration::from_secs(60))
         .connect_timeout(Duration::from_secs(30))
         .build()
         .expect("failed to create HTTP client")

@@ -165,7 +165,9 @@ impl Scope {
     /// Whether this `Scope` contains the given value.
     #[must_use]
     pub fn contains(&self, token: &str) -> bool {
-        ScopeToken::from_str(token).is_ok_and(|token| self.0.contains(&token))
+        ScopeToken::from_str(token)
+            .map(|token| self.0.contains(&token))
+            .unwrap_or(false)
     }
 
     /// Inserts the given token in this `Scope`.

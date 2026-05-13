@@ -36,32 +36,32 @@ async fn pass_access_token_with_client_credentials() {
 
             if query_pairs
                 .get("grant_type")
-                .as_ref()
-                .is_none_or(|s| *s != "client_credentials")
+                .filter(|s| *s == "client_credentials")
+                .is_none()
             {
                 println!("Wrong or missing grant type");
                 return false;
             }
             if query_pairs
                 .get("scope")
-                .as_ref()
-                .is_none_or(|s| *s != "profile")
+                .filter(|s| *s == "profile")
+                .is_none()
             {
                 println!("Wrong or missing scope");
                 return false;
             }
             if query_pairs
                 .get("client_id")
-                .as_ref()
-                .is_none_or(|s| *s != CLIENT_ID)
+                .filter(|s| *s == CLIENT_ID)
+                .is_none()
             {
                 println!("Wrong or missing client ID");
                 return false;
             }
             if query_pairs
                 .get("client_secret")
-                .as_ref()
-                .is_none_or(|s| *s != CLIENT_SECRET)
+                .filter(|s| *s == CLIENT_SECRET)
+                .is_none()
             {
                 println!("Wrong or missing client secret");
                 return false;

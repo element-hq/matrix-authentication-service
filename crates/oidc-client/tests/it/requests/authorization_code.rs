@@ -135,34 +135,30 @@ fn pass_full_authorization_url() {
 fn is_valid_token_endpoint_request(req: &Request) -> bool {
     let body = form_urlencoded::parse(&req.body).collect::<HashMap<_, _>>();
 
-    if body
-        .get("client_id")
-        .as_ref()
-        .is_none_or(|s| *s != CLIENT_ID)
-    {
+    if body.get("client_id").filter(|s| *s == CLIENT_ID).is_none() {
         println!("Missing or wrong client ID");
         return false;
     }
     if body
         .get("grant_type")
-        .as_ref()
-        .is_none_or(|s| *s != "authorization_code")
+        .filter(|s| *s == "authorization_code")
+        .is_none()
     {
         println!("Missing or wrong grant type");
         return false;
     }
     if body
         .get("code")
-        .as_ref()
-        .is_none_or(|s| *s != AUTHORIZATION_CODE)
+        .filter(|s| *s == AUTHORIZATION_CODE)
+        .is_none()
     {
         println!("Missing or wrong authorization code");
         return false;
     }
     if body
         .get("redirect_uri")
-        .as_ref()
-        .is_none_or(|s| *s != REDIRECT_URI)
+        .filter(|s| *s == REDIRECT_URI)
+        .is_none()
     {
         println!("Missing or wrong redirect URI");
         return false;
@@ -170,8 +166,8 @@ fn is_valid_token_endpoint_request(req: &Request) -> bool {
 
     if body
         .get("code_verifier")
-        .as_ref()
-        .is_none_or(|s| *s != CODE_VERIFIER)
+        .filter(|s| *s == CODE_VERIFIER)
+        .is_none()
     {
         println!("Missing or wrong code verifier");
         return false;

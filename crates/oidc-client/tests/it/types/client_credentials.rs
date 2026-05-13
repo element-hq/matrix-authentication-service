@@ -41,8 +41,8 @@ async fn pass_none() {
 
             if query_pairs
                 .get("client_id")
-                .as_ref()
-                .is_none_or(|s| *s != CLIENT_ID)
+                .filter(|s| *s == CLIENT_ID)
+                .is_none()
             {
                 println!("Wrong or missing client ID");
                 return false;
@@ -132,16 +132,16 @@ async fn pass_client_secret_post() {
 
             if query_pairs
                 .get("client_id")
-                .as_ref()
-                .is_none_or(|s| *s != CLIENT_ID)
+                .filter(|s| *s == CLIENT_ID)
+                .is_none()
             {
                 println!("Wrong or missing client ID");
                 return false;
             }
             if query_pairs
                 .get("client_secret")
-                .as_ref()
-                .is_none_or(|s| *s != CLIENT_SECRET)
+                .filter(|s| *s == CLIENT_SECRET)
+                .is_none()
             {
                 println!("Wrong or missing client secret");
                 return false;
@@ -194,8 +194,8 @@ async fn pass_client_secret_jwt() {
             }
             if query_pairs
                 .get("client_assertion_type")
-                .as_ref()
-                .is_none_or(|s| *s != "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
+                .filter(|s| *s == "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
+                .is_none()
             {
                 println!("Wrong or missing client assertion type");
                 return false;
@@ -273,8 +273,8 @@ async fn pass_private_key_jwt() {
             }
             if query_pairs
                 .get("client_assertion_type")
-                .as_ref()
-                .is_none_or(|s| *s != "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
+                .filter(|s| *s == "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
+                .is_none()
             {
                 println!("Wrong or missing client assertion type");
                 return false;

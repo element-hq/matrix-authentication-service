@@ -83,7 +83,7 @@ impl LifecycleManager {
         let sigterm = tokio::signal::unix::signal(SignalKind::terminate())?;
         let sigint = tokio::signal::unix::signal(SignalKind::interrupt())?;
         let sighup = tokio::signal::unix::signal(SignalKind::hangup())?;
-        let timeout = Duration::from_mins(1);
+        let timeout = Duration::from_secs(60);
         let task_tracker = TaskTracker::new();
 
         notify(&[sd_notify::NotifyState::MainPid(std::process::id())]);

@@ -100,7 +100,7 @@ impl AppState {
                     if let Err(e) = metadata_cache
                         .warm_up_and_run(
                             &http_client,
-                            std::time::Duration::from_mins(15),
+                            std::time::Duration::from_secs(60 * 15),
                             &mut repo,
                         )
                         .await

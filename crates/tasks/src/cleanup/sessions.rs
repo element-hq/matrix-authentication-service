@@ -65,7 +65,7 @@ impl RunnableJob for CleanupFinishedCompatSessionsJob {
 
     fn timeout(&self) -> Option<Duration> {
         // This job runs every hour, so having it running it for 10 minutes is fine
-        Some(Duration::from_mins(10))
+        Some(Duration::from_secs(10 * 60))
     }
 }
 
@@ -113,7 +113,7 @@ impl RunnableJob for CleanupFinishedOAuth2SessionsJob {
 
     fn timeout(&self) -> Option<Duration> {
         // This job runs every hour, so having it running it for 10 minutes is fine
-        Some(Duration::from_mins(10))
+        Some(Duration::from_secs(10 * 60))
     }
 }
 
@@ -162,7 +162,7 @@ impl RunnableJob for CleanupFinishedUserSessionsJob {
 
     fn timeout(&self) -> Option<Duration> {
         // This job runs every hour, so having it running it for 10 minutes is fine
-        Some(Duration::from_mins(10))
+        Some(Duration::from_secs(10 * 60))
     }
 }
 
@@ -203,7 +203,7 @@ impl RunnableJob for CleanupInactiveOAuth2SessionIpsJob {
     }
 
     fn timeout(&self) -> Option<Duration> {
-        Some(Duration::from_mins(10))
+        Some(Duration::from_secs(10 * 60))
     }
 }
 
@@ -244,7 +244,7 @@ impl RunnableJob for CleanupInactiveCompatSessionIpsJob {
     }
 
     fn timeout(&self) -> Option<Duration> {
-        Some(Duration::from_mins(10))
+        Some(Duration::from_secs(10 * 60))
     }
 }
 
@@ -285,6 +285,6 @@ impl RunnableJob for CleanupInactiveUserSessionIpsJob {
     }
 
     fn timeout(&self) -> Option<Duration> {
-        Some(Duration::from_mins(10))
+        Some(Duration::from_secs(10 * 60))
     }
 }

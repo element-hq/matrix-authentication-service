@@ -441,7 +441,7 @@ pub async fn load_policy_factory_dynamic_data_continuously(
     load_policy_factory_dynamic_data(&policy_factory, &*repository_factory).await?;
 
     task_tracker.spawn(async move {
-        let mut interval = tokio::time::interval(Duration::from_mins(1));
+        let mut interval = tokio::time::interval(Duration::from_secs(60));
 
         loop {
             tokio::select! {
