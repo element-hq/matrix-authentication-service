@@ -234,7 +234,8 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
+        # Install the minimal toolchain with clippy, pinned to a version kept in
+        # sync with Dockerfile.
         #
         # --override sets this as the default rust toolchain version in this directory.
         run: rustup toolchain install 1.93.0 --profile minimal --component clippy --override
