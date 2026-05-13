@@ -457,6 +457,12 @@ pub(crate) async fn post(
 
     // Now we can create the device on the homeserver, without holding the
     // transaction
+    //
+    // Normally, devices get synced to the homeserver in a `SyncDevicesJob` but we want
+    // the device to be created synchronously on the homeserver, so that when we
+    // respond, the device already exists (TODO: Why important?). We're using an upsert
+    // so if the device already exists for some reason (like when we're replacing it, or
+    // a concurrent device sync happening) it won't have any effect.
     if let Err(err) = homeserver
         .upsert_device(
             &user.username,
