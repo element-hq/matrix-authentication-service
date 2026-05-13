@@ -124,9 +124,10 @@ pub(crate) async fn post(
     //
     // Doing this in a background job is ok as the access token will be invalid
     // right away (from the session being finished above) and we do actually
-    // want to do a full device list sync, because we're not sure whether we
-    // want to delete the device (if there is for example a concurrent logout
-    // and login with the same device ID).
+    // want to do a full device list sync (as opposed to
+    // `homeserver.delete_device(...)`), because we're not sure whether we want
+    // to delete the device (if there is for example a concurrent logout and
+    // login with the same device ID).
     repo.queue_job()
         .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
         .await?;
