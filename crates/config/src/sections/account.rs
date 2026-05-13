@@ -68,7 +68,7 @@ pub struct AccountConfig {
     /// This has no effect if password login is disabled.
     #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
     pub password_recovery_enabled: bool,
-    
+
     /// Whether registration tokens are required for password registrations.
     /// Defaults to `false`.
     ///
@@ -77,7 +77,7 @@ pub struct AccountConfig {
     /// is disabled.
     #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
     pub password_registration_token_required: bool,
-    
+
     /// Whether users are allowed to delete their own account. Defaults to
     /// `true`.
     #[serde(default = "default_true", skip_serializing_if = "is_default_true")]
@@ -93,7 +93,6 @@ pub struct AccountConfig {
     /// This is deprecated in favor of `password_registration_token_required`
     #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
     pub registration_token_required: bool,
-
 }
 
 impl Default for AccountConfig {

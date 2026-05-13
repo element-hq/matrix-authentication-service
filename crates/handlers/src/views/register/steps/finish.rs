@@ -120,7 +120,9 @@ pub(crate) async fn get(
         )));
     }
 
-    let token_required = if let Some(session_id) = registration.upstream_oauth_authorization_session_id  {
+    let token_required = if let Some(session_id) =
+        registration.upstream_oauth_authorization_session_id
+    {
         let session = repo
             .upstream_oauth_session()
             .lookup(session_id)
