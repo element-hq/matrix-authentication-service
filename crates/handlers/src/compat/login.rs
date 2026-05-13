@@ -508,6 +508,7 @@ pub(crate) async fn post(
 /// Given the violations from [`Policy::evaluate_compat_login`], return the
 /// appropriate `RouteError` response.
 async fn process_violations_for_compat_login(
+    rng: &mut (dyn RngCore + Send),
     clock: &dyn Clock,
     repo: &mut BoxRepository,
     session_limit_config: Option<&SessionLimitConfig>,
@@ -602,6 +603,11 @@ async fn process_violations_for_compat_login(
                                 .finish(clock, compat_session.to_owned())
                                 .await?;
                         }
+
+                        // Schedule a device sync with the homeserver
+                        repo.queue_job()
+                            .schedule_job(rng, clock, SyncDevicesJob::new_for_id(user.id))
+                            .await?;
                     } else {
                         // Tell the user about the limit
                         return Err(RouteError::PolicyHardSessionLimitReached);
@@ -846,6 +852,7 @@ async fn token_login(
         })
         .await?;
     process_violations_for_compat_login(
+        rng,
         clock,
         repo,
         session_limit_config,
@@ -972,8 +979,15 @@ async fn user_password_login(
             requester: policy_requester,
         })
         .await?;
-    process_violations_for_compat_login(clock, repo, session_limit_config, &user, res.violations)
-        .await?;
+    process_violations_for_compat_login(
+        rng,
+        clock,
+        repo,
+        session_limit_config,
+        &user,
+        res.violations,
+    )
+    .await?;
 
     let session = repo
         .compat_session()
