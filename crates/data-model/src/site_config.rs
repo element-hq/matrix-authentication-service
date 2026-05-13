@@ -79,8 +79,8 @@ pub struct SiteConfig {
     /// Whether registration tokens are required for password registrations.
     pub password_registration_token_required: bool,
 
-    /// Whether registration tokens are required globally for password 
-    /// registrations. Deprecated in favor of 
+    /// Whether registration tokens are required globally for password
+    /// registrations. Deprecated in favor of
     /// `password_registration_token_required`
     pub registration_token_required: bool,
 
