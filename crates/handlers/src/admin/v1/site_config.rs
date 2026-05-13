@@ -25,8 +25,13 @@ pub struct SiteConfig {
     /// Whether a valid email address is required for password registrations.
     pub password_registration_email_required: bool,
 
-    /// Whether registration tokens are required for password registrations.
     pub password_registration_token_required: bool,
+
+    /// Whether registration tokens are required for password registrations.
+    /// Deprecated in favor of `password_registration_token_required`
+    #[deprecated = "use `password_registration_token_required` instead"]
+    #[allow(deprecated)]
+    pub registration_token_required: bool,
 
     /// Whether users can change their email.
     pub email_change_allowed: bool,
@@ -52,6 +57,7 @@ pub struct SiteConfig {
     pub minimum_password_complexity: u8,
 }
 
+#[allow(deprecated)]
 pub fn doc(operation: TransformOperation) -> TransformOperation {
     operation
         .id("siteConfig")
@@ -64,6 +70,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
                 password_registration_enabled: true,
                 password_registration_email_required: true,
                 password_registration_token_required: true,
+                registration_token_required: true,
                 email_change_allowed: true,
                 displayname_change_allowed: true,
                 password_change_allowed: true,
@@ -76,6 +83,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
 }
 
 #[tracing::instrument(name = "handler.admin.v1.site_config", skip_all)]
+#[allow(deprecated)]
 pub async fn handler(
     _: CallContext,
     State(site_config): State<mas_data_model::SiteConfig>,
@@ -86,6 +94,7 @@ pub async fn handler(
         password_registration_enabled: site_config.password_registration_enabled,
         password_registration_email_required: site_config.password_registration_email_required,
         password_registration_token_required: site_config.password_registration_token_required,
+        registration_token_required: site_config.password_registration_token_required,
         email_change_allowed: site_config.email_change_allowed,
         displayname_change_allowed: site_config.displayname_change_allowed,
         password_change_allowed: site_config.password_change_allowed,

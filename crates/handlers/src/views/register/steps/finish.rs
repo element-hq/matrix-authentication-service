@@ -120,17 +120,7 @@ pub(crate) async fn get(
         )));
     }
 
-    let token_required = if registration
-        .upstream_oauth_authorization_session_id
-        .is_some()
-    {
-        // load provider to let OAuth registrations check its
-        // per provider `registration_token_required` flag
-        let session_id = registration
-            .upstream_oauth_authorization_session_id
-            .context("Missing upstream OAuth session ID")
-            .map_err(InternalError::from_anyhow)?;
-
+    let token_required = if let Some(session_id) = registration.upstream_oauth_authorization_session_id  {
         let session = repo
             .upstream_oauth_session()
             .lookup(session_id)
@@ -145,9 +135,9 @@ pub(crate) async fn get(
             .context("Could not load the upstream OAuth provider")
             .map_err(InternalError::from_anyhow)?;
 
-        provider.registration_token_required
+        provider.registration_token_required || site_config.registration_token_required
     } else {
-        site_config.password_registration_token_required
+        site_config.password_registration_token_required || site_config.registration_token_required
     };
 
     let registration_token = if token_required {
