@@ -28,11 +28,14 @@ violation contains {"msg": sprintf(
 violation contains {
 	"code": "too-many-sessions",
 	"msg": "user has too many active sessions (soft limit)",
+	# `+ 1` because when you're at 2 sessions, and the limit is 2, you have to make room
+	# for the new session
+	"need_to_remove": (input.session_counts.total - data.session_limit.soft_limit) + 1,
 } if {
 	# Only apply if session limits are enabled in the config
 	data.session_limit != null
 
-	# This is a web-based interactive login
+	# This is a web-based interactive login (like `m.login.sso`)
 	is_interactive
 
 	# Only apply if this login doesn't replace a session
@@ -49,11 +52,14 @@ violation contains {
 violation contains {
 	"code": "too-many-sessions",
 	"msg": "user has too many active sessions (hard limit)",
+	# `+ 1` because when you're at 2 sessions, and the limit is 2, you have to make room
+	# for the new session
+	"need_to_remove": (input.session_counts.total - data.session_limit.hard_limit) + 1,
 } if {
 	# Only apply if session limits are enabled in the config
 	data.session_limit != null
 
-	# This is not a web-based interactive login
+	# This is *not* a web-based interactive login (like `m.login.password`)
 	not is_interactive
 
 	# Only apply if this login doesn't replace a session

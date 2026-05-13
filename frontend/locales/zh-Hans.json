@@ -124,6 +124,7 @@
       "heading": "此邮件地址 {{email}} 已被使用。"
     },
     "end_session_button": {
+      "confirmation_modal_body_text": "Make sure you always have access to another verified device or your recovery key to avoid losing your encrypted chat history.",
       "confirmation_modal_title": "你确定要结束这个会话吗？",
       "text": "移除设备"
     },

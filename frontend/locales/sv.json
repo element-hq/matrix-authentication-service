@@ -125,6 +125,7 @@
       "heading": "E-postadressen {{email}} är redan i bruk."
     },
     "end_session_button": {
+      "confirmation_modal_body_text": "Make sure you always have access to another verified device or your recovery key to avoid losing your encrypted chat history.",
       "confirmation_modal_title": "Är du säker på att du vill avsluta denna session?",
       "text": "Logga ut"
     },
