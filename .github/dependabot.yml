@@ -44,6 +44,8 @@ updates:
         patterns:
           - "icu"
           - "icu_*"
+    cooldown:
+      default-days: 14
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -52,6 +54,8 @@ updates:
       - "Z-Deps-CI"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 14
 
   - package-ecosystem: "npm"
     directory: "/frontend/"
@@ -111,3 +115,5 @@ updates:
       browser-logos:
         patterns:
           - "@browser-logos/*"
+    cooldown:
+      default-days: 14
