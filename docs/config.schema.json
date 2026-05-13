@@ -204,6 +204,14 @@
         }
       ]
     },
+    "oauth": {
+      "description": "Configuration section for OAuth 2.0 protocol options",
+      "allOf": [
+        {
+          "$ref": "#/definitions/OAuthConfig"
+        }
+      ]
+    },
     "experimental": {
       "description": "Experimental configuration options",
       "allOf": [
@@ -2809,6 +2817,16 @@
         },
         "registration_token_required": {
           "description": "Whether registration tokens are required for password registrations.\n Defaults to `false`.\n\n When enabled, users must provide a valid registration token during\n password registration. This has no effect if password registration\n is disabled.",
+          "type": "boolean"
+        }
+      }
+    },
+    "OAuthConfig": {
+      "description": "Configuration section for OAuth 2.0 protocol options",
+      "type": "object",
+      "properties": {
+        "device_code_grant_enabled": {
+          "description": "Whether the Device Authorization Grant (RFC 8628) is enabled. Defaults\n to `true`.\n\n When disabled, the device authorization endpoint will reject requests,\n the discovery metadata will not advertise the device authorization\n endpoint, and dynamic client registrations requesting the\n `urn:ietf:params:oauth:grant-type:device_code` grant type will be\n rejected.",
           "type": "boolean"
         }
       }
