@@ -1269,8 +1269,8 @@ mod tests {
         }
         "###);
 
-        // Reset the state, to reset rate limits
-        let state = state.reset().await;
+        // Restart, to reset rate limits
+        let state = state.restart().await;
 
         // Try to login with a wrong password.
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
@@ -1970,7 +1970,7 @@ mod tests {
             max_session_threshold: Some(NonZeroU64::new(upcoming_hard_limit).unwrap()),
             dangerous_hard_limit_eviction: false,
         });
-        let state = state.reset().await;
+        let state = state.restart().await;
 
         let session_limit_config = state
             .site_config
