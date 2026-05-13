@@ -148,9 +148,10 @@ jobs:
       - name: Install Rust toolchain
         # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
         # Then install rustfmt for `cargo fmt`.
+        #
+        # --override sets this as the default rust toolchain version in this directory.
         run: |
-          rustup toolchain install nightly --profile minimal --component rustfmt
-          rustup default nightly
+          rustup toolchain install nightly --profile minimal --component rustfmt --override
 
       - name: Check style
         run: cargo fmt --all -- --check
@@ -193,7 +194,6 @@ jobs:
       - name: Install Rust toolchain
         run: |
           rustup toolchain install stable
-          rustup default stable
 
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
@@ -235,7 +235,9 @@ jobs:
 
       - name: Install Rust toolchain
         # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
-        run: rustup toolchain install 1.93.0 --profile minimal --component clippy
+        #
+        # --override sets this as the default rust toolchain version in this directory.
+        run: rustup toolchain install 1.93.0 --profile minimal --component clippy --override
 
       - uses: ./.github/actions/build-policies
 
