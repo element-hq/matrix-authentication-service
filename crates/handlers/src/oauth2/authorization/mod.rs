@@ -260,6 +260,7 @@ pub(crate) async fn get(
                     response_type.has_id_token(),
                     params.auth.login_hint,
                     Some(locale.to_string()),
+                    std::collections::BTreeMap::new(),
                 )
                 .await?;
             let continue_grant = PostAuthAction::continue_grant(grant.id);
