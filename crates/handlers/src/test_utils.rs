@@ -299,11 +299,17 @@ impl TestState {
         queue.process_all_jobs_in_tests().await.unwrap();
     }
 
-    /// Reset the test utils to a fresh state, with the same configuration.
-    pub async fn reset(self) -> Self {
+    /// Restart the app with the same configuration.
+    ///
+    /// To change the config, mutate `TestState.site_config` before calling this
+    /// function.
+    pub async fn restart(self) -> Self {
         let site_config = self.site_config.clone();
         let pool = self.repository_factory.pool();
         let task_tracker = self.task_tracker.clone();
+
+        // Retain the homeserver connection so we keep the in-memory state
+        let homeserver_connection = self.homeserver_connection.clone();
 
         // This should trigger the cancellation drop guard
         drop(self);
@@ -312,9 +318,12 @@ impl TestState {
         task_tracker.close();
         task_tracker.wait().await;
 
-        Self::from_pool_with_site_config(pool, site_config)
+        let mut state = Self::from_pool_with_site_config(pool, site_config)
             .await
-            .unwrap()
+            .unwrap();
+        // Restore the homeserver connection so we keep the in-memory state
+        state.homeserver_connection = homeserver_connection;
+        state
     }
 
     pub async fn request<B>(&self, request: Request<B>) -> Response<String>
