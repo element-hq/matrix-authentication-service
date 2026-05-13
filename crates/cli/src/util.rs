@@ -217,7 +217,7 @@ pub fn site_config_from_config(
             "`account.registration_token_required` is deprecated. use \
             `account.password_registration_token_required` and per-provider \
             `registration_token_required` instead"
-        )
+        );
     }
 
     Ok(SiteConfig {
