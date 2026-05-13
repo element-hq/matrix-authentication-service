@@ -856,6 +856,23 @@ branding:
   #logo_uri:
 ```
 
+## `oauth`
+
+Configuration section for OAuth 2.0 protocol options.
+
+```yaml
+oauth:
+  # Whether the Device Authorization Grant (RFC 8628) is enabled. Defaults
+  # to `true`.
+  #
+  # When disabled, the device authorization endpoint will reject requests,
+  # the discovery metadata will not advertise the device authorization
+  # endpoint, and dynamic client registrations requesting the
+  # `urn:ietf:params:oauth:grant-type:device_code` grant type will be
+  # rejected.
+  device_code_grant_enabled: true
+```
+
 ## `experimental`
 
 Settings that may change or be removed in future versions.

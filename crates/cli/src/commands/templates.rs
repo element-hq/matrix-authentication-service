@@ -13,7 +13,7 @@ use clap::Parser;
 use figment::Figment;
 use mas_config::{
     AccountConfig, BrandingConfig, CaptchaConfig, ConfigurationSection, ConfigurationSectionExt,
-    ExperimentalConfig, MatrixConfig, PasswordsConfig, TemplatesConfig,
+    ExperimentalConfig, MatrixConfig, OAuthConfig, PasswordsConfig, TemplatesConfig,
 };
 use mas_data_model::{Clock, SystemClock};
 use rand::SeedableRng;
@@ -65,6 +65,8 @@ impl Options {
                     .map_err(anyhow::Error::from_boxed)?;
                 let captcha_config = CaptchaConfig::extract_or_default(figment)
                     .map_err(anyhow::Error::from_boxed)?;
+                let oauth_config =
+                    OAuthConfig::extract_or_default(figment).map_err(anyhow::Error::from_boxed)?;
 
                 let now = if stabilise {
                     DateTime::from_timestamp_secs(1_446_823_992).unwrap()
@@ -86,6 +88,7 @@ impl Options {
                     &password_config,
                     &account_config,
                     &captcha_config,
+                    &oauth_config,
                 )?;
                 let templates = templates_from_config(
                     &template_config,
