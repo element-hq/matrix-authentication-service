@@ -87,7 +87,7 @@ jobs:
           chmod -R u=rwX,go=rX assets-dist/
 
       - name: Upload assets
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: assets
           path: assets-dist
@@ -148,7 +148,7 @@ jobs:
             -p mas-cli
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: binary-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/mas-cli
@@ -197,13 +197,13 @@ jobs:
           done
 
       - name: Upload aarch64 archive
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: mas-cli-aarch64-linux
           path: mas-cli-aarch64-linux.tar.gz
 
       - name: Upload x86_64 archive
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: mas-cli-x86_64-linux
           path: mas-cli-x86_64-linux.tar.gz
