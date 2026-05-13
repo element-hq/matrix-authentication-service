@@ -37,6 +37,7 @@
                   "password_registration_enabled": true,
                   "password_registration_email_required": true,
                   "password_registration_token_required": true,
+                  "registration_token_required": true,
                   "email_change_allowed": true,
                   "displayname_change_allowed": true,
                   "password_change_allowed": true,
@@ -4864,8 +4865,12 @@
             "type": "boolean"
           },
           "password_registration_token_required": {
-            "description": "Whether registration tokens are required for password registrations.",
             "type": "boolean"
+          },
+          "registration_token_required": {
+            "description": "Whether registration tokens are required for password registrations.\n Deprecated in favor of `password_registration_token_required`",
+            "type": "boolean",
+            "deprecated": true
           },
           "email_change_allowed": {
             "description": "Whether users can change their email.",
@@ -4905,6 +4910,7 @@
           "password_registration_enabled",
           "password_registration_email_required",
           "password_registration_token_required",
+          "registration_token_required",
           "email_change_allowed",
           "displayname_change_allowed",
           "password_change_allowed",

@@ -2804,6 +2804,10 @@
           "description": "Whether email-based password recovery is enabled. Defaults to `false`.\n\n This has no effect if password login is disabled.",
           "type": "boolean"
         },
+        "password_registration_token_required": {
+          "description": "Whether registration tokens are required for password registrations.\n Defaults to `false`.\n\n When enabled, users must provide a valid registration token during\n password registration. This has no effect if password registration\n is disabled.",
+          "type": "boolean"
+        },
         "account_deactivation_allowed": {
           "description": "Whether users are allowed to delete their own account. Defaults to\n `true`.",
           "type": "boolean"
@@ -2812,8 +2816,8 @@
           "description": "Whether users can log in with their email address. Defaults to `false`.\n\n This has no effect if password login is disabled.",
           "type": "boolean"
         },
-        "password_registration_token_required": {
-          "description": "Whether registration tokens are required for password registrations.\n Defaults to `false`.\n\n When enabled, users must provide a valid registration token during\n password registration. This has no effect if password registration\n is disabled.",
+        "registration_token_required": {
+          "description": "Whether registration tokens are required for password registrations\n This is deprecated in favor of `password_registration_token_required`",
           "type": "boolean"
         }
       }
