@@ -235,7 +235,7 @@ jobs:
 
       - name: Install Rust toolchain
         # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
-        run: rustup toolchain install stable --profile minimal --component clippy
+        run: rustup toolchain install 1.93.0 --profile minimal --component clippy
 
       - uses: ./.github/actions/build-policies
 
