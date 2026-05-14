@@ -181,11 +181,17 @@ violation contains {
 #
 # True if the `max_session_threshold` isn't configured or <= `max_session_threshold`.
 passes_session_threshold if {
-	# If no `session_limit` configured, automatically passes
+	# If no `session_limit` configured, automatically passes (undefined)
 	not data.session_limit
 } else if {
-	# If no `max_session_threshold` configured, automatically passes
+	# If no `session_limit` configured, automatically passes (null)
+	data.session_limit == null
+} else if {
+	# If no `max_session_threshold` configured, automatically passes (undefined)
 	not data.session_limit.max_session_threshold
+} else if {
+	# If no `max_session_threshold` configured, automatically passes (null)
+	data.session_limit.max_session_threshold == null
 } else if {
 	# Otherwise, check whether the total number of sessions is under the threshold
 	input.session_counts.total <= data.session_limit.max_session_threshold
