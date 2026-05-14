@@ -33,10 +33,13 @@ jobs:
         run: exit 1
 
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        # Only the minimal profile is required here to run `cargo`
+        run: rustup toolchain install stable --profile minimal
 
       - name: Extract the current version
         id: current
@@ -76,13 +79,14 @@ jobs:
     needs: [tag, compute-version]
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           sparse-checkout: |
             .github/scripts
+          persist-credentials: false
 
       - name: Update the release branch
-        uses: actions/github-script@v8.0.0
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           BRANCH: "${{ github.ref_name }}"
           SHA: ${{ needs.tag.outputs.sha }}
