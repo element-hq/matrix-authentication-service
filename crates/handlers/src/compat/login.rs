@@ -1853,12 +1853,13 @@ mod tests {
             "password": "password",
         });
 
-        // Keep logging in to add more sessions, up to the `soft_limit`. Just using whatever is easy.
+        // Keep logging in to add more sessions, up to the `soft_limit`. We can use
+        // whatever login method to create some sessions but we will use an interactive
+        // login (`m.login.sso`) like the main thing we're trying to test below.
         for _ in 0..session_limit_config.soft_limit.get() {
-            let request =
-                Request::post("/_matrix/client/v3/login").json(password_login_json.clone());
-            let response = state.request(request.clone()).await;
-            response.assert_status(StatusCode::OK);
+            matrix_compat_sso_login(&state, "alice", "password")
+                .await
+                .expect("We should be able to login without any issue when we're under the session limit");
         }
 
         // One more login will tip us over the `soft_limit`
@@ -1867,7 +1868,7 @@ mod tests {
         match matrix_compat_sso_login(&state, "alice", "password").await {
             Err(ConsentErrorTodo {
                 status: StatusCode::FORBIDDEN,
-                errcode: "M_FORBIDDEN",
+                policy_error: PolicyRejectedPageType::DeviceLimitReached,
             }) => {
                 let response = state.request(request.clone()).await;
                 response.assert_status(StatusCode::FORBIDDEN);
