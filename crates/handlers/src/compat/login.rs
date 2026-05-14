@@ -499,28 +499,31 @@ pub(crate) async fn post(
     }))
 }
 
-/// Given the violations from [`Policy::evaluate_compat_login`], return the
-/// appropriate `RouteError` response.
+/// Given the evaluation result/violations from [`Policy::evaluate_compat_login`],
+/// return the appropriate `RouteError` response.
 async fn process_violations_for_compat_login(
     clock: &dyn Clock,
     repo: &mut BoxRepository,
     session_limit_config: Option<&SessionLimitConfig>,
     user: &User,
-    violations: Vec<Violation>,
+    res: mas_policy::EvaluationResult,
 ) -> Result<(), RouteError> {
     // We're using slice syntax here so we can match easily
-    match &violations[..] {
+    match (res.valid(), &res.violations[..]) {
         // If the only violation is having reached the session limit, we might be
         // able to resolve the situation.
         //
         // We don't trigger this if there was some other violation anyway, since
         // that means that removing a session wouldn't actually unblock the login.
-        [
-            Violation {
-                variant: Some(ViolationVariant::TooManySessions { need_to_remove }),
-                ..
-            },
-        ] => {
+        (
+            false,
+            [
+                Violation {
+                    variant: Some(ViolationVariant::TooManySessions { need_to_remove }),
+                    ..
+                },
+            ],
+        ) => {
             // Normally, if we are seeing a `TooManySessions` violation,  we would
             // expect `session_limit_config` to be filled in but if someone created
             // their own policies which emit a `TooManySessions` violation that isn't
@@ -613,9 +616,9 @@ async fn process_violations_for_compat_login(
             }
         }
         // Nothing is wrong
-        [] => return Ok(()),
+        (true, _) => return Ok(()),
         // Just throw an error for any other violation
-        _violations => {
+        (false, _violations) => {
             // FIXME: We should be exposing the violations to the user
             return Err(RouteError::PolicyRejected);
         }
@@ -844,7 +847,7 @@ async fn token_login(
         repo,
         session_limit_config,
         &browser_session.user,
-        res.violations,
+        res,
     )
     .await?;
 
@@ -966,8 +969,7 @@ async fn user_password_login(
             requester: policy_requester,
         })
         .await?;
-    process_violations_for_compat_login(clock, repo, session_limit_config, &user, res.violations)
-        .await?;
+    process_violations_for_compat_login(clock, repo, session_limit_config, &user, res).await?;
 
     let session = repo
         .compat_session()
