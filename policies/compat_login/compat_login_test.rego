@@ -29,8 +29,7 @@ test_no_session_limiting_undefined if {
 		with input.session_counts as {"total": 1}
 		with input.login as {"type": "m.login.sso"}
 		with input.session_replaced as false
-		# The main thing we're trying to test (undefined)
-		# with data.session_limit as null
+		with input._noop as null # The main thing we're trying to test (`data.session_limit` as undefined)
 	result.allow
 	result.need_to_remove_sessions == 0
 }
@@ -43,8 +42,7 @@ test_no_session_limiting_null if {
 		with input.session_counts as {"total": 1}
 		with input.login as {"type": "m.login.sso"}
 		with input.session_replaced as false
-		# The main thing we're trying to test (null)
-		with data.session_limit as null
+		with data.session_limit as null # The main thing we're trying to test (null)
 	result.allow
 	result.need_to_remove_sessions == 0
 }

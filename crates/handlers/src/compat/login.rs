@@ -1745,9 +1745,10 @@ mod tests {
     /// Test that the `soft_limit` is not enforced for non-interactive login
     /// (like the `m.login.password` compat Matrix login flow).
     ///
-    /// `soft_limit` is for when we allow the user to remove devices in interactive
-    /// contexts. If someone uses the `m.login.password` compatibility login API, there
-    /// is no opportunity for us to present a web UI.
+    /// `soft_limit` is for when we allow the user to remove devices in
+    /// interactive contexts. If someone uses the `m.login.password`
+    /// compatibility login API, there is no opportunity for us to present a
+    /// web UI.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_session_soft_limit_does_not_affect_non_interactive_login(pool: PgPool) {
         setup();
@@ -1886,7 +1887,8 @@ mod tests {
             .session_limit
             .as_ref()
             .expect("Expected `session_limit` configured for this test");
-        // Make sure this is configured as its the main differentiator we're trying to test
+        // Make sure this is configured as its the main differentiator we're trying to
+        // test
         session_limit_config.max_session_threshold.as_ref().expect("Expected `session_limit.max_session_threshold` to be configured at this point in the test");
 
         let _user = user_with_password(&state, "alice", "password", false).await;
@@ -1922,8 +1924,8 @@ mod tests {
         );
     }
 
-    /// Test that session limits are not enforced (logins are allowed) for anyone who is
-    /// already *past* the `max_session_threshold`
+    /// Test that session limits are not enforced (logins are allowed) for
+    /// anyone who is already *past* the `max_session_threshold`
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_session_limit_past_max_session_threshold(pool: PgPool) {
         setup();
@@ -1977,7 +1979,8 @@ mod tests {
             .session_limit
             .as_ref()
             .expect("Expected `session_limit` to be configured at this point in the test");
-        // Make sure this is configured as its the main differentiator we're trying to test
+        // Make sure this is configured as its the main differentiator we're trying to
+        // test
         session_limit_config.max_session_threshold.as_ref().expect("Expected `session_limit.max_session_threshold` to be configured at this point in the test");
 
         // Since we're already above `max_session_threshold`, the `session_limit` won't

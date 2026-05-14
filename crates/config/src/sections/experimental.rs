@@ -163,16 +163,16 @@ pub struct SessionLimitConfig {
     ///
     /// [`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction
     pub hard_limit: NonZeroU64,
-    /// When set, only accounts with <= `max_session_threshold` sessions have the
-    /// session limits applied.
+    /// When set, only accounts with <= `max_session_threshold` sessions have
+    /// the session limits applied.
     ///
-    /// This is most applicable in scenarios where your homeserver has many legacy
-    /// bots/scripts that login over and over (which ideally should be using [personal
-    /// access
+    /// This is most applicable in scenarios where your homeserver has many
+    /// legacy bots/scripts that login over and over (which ideally should
+    /// be using [personal access
     /// tokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))
-    /// and you want to avoid breaking their operation while maintaining some level of
-    /// sanity with the number of devices that people can have. This will prevent anyone
-    /// else from crossing the limit.
+    /// and you want to avoid breaking their operation while maintaining some
+    /// level of sanity with the number of devices that people can have.
+    /// This will prevent anyone else from crossing the limit.
     pub max_session_threshold: Option<NonZeroU64>,
     /// Whether we should automatically choose the least recently used devices
     /// to remove when the [`Self::hard_limit`] is reached; in order to
@@ -197,10 +197,10 @@ pub struct SessionLimitConfig {
     /// and you want to avoid breaking their operation while maintaining some
     /// level of sanity with the number of devices that people can have.
     ///
-    /// Removing devices is a non-trivial task for some homeservers to tackle and can
-    /// cause lots of device list changes, `/sync`, federation, and replication traffic.
-    /// Consider using [`max_session_threshold`] to limit the size of accounts that are
-    /// acted upon.
+    /// Removing devices is a non-trivial task for some homeservers to tackle
+    /// and can cause lots of device list changes, `/sync`, federation, and
+    /// replication traffic. Consider using [`max_session_threshold`] to
+    /// limit the size of accounts that are acted upon.
     ///
     /// [`hard_limit`]: Self::hard_limit
     /// [`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction
