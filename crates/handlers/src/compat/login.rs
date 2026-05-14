@@ -1742,20 +1742,30 @@ mod tests {
         token
     }
 
-    // Do a `m.login.sso` flow and return the `loginToken` which will need to be exchanged for an access token
-    async fn matrix_compat_sso_login(state: &TestState, username: &str, password: &str) -> String {
+    #[derive(Debug, Error)]
+    pub enum MatrixCompactSsoLoginError {
+        #[error("TODO")]
+        LoginRedirectError,
+    }
+
+    /// Do a `m.login.sso` flow and return the `loginToken` which will need to be
+    /// exchanged for an access token using the `m.login.token` flow.
+    async fn matrix_compat_sso_login(
+        state: &TestState,
+        username: &str,
+        password: &str,
+    ) -> Result<String, MatrixCompactSsoLoginError> {
         // Step #1: Make the first request in the SSO OAuth2 login flow: `/login/sso/redirect/{idpId}`
         let request =
             Request::get("/_matrix/client/v3/login/sso/redirect?redirectUrl=http://test-login/")
                 .empty();
         let response = state.request(request.clone()).await;
 
-        // Expect a redirect so we can authenticate
+        // Expect a redirect to a login page so we can authenticate
         response.assert_status(StatusCode::SEE_OTHER);
         let location = response.headers().get(hyper::header::LOCATION).unwrap();
         let location = location.to_str().unwrap();
         let parsed_location_url = url::Url::parse(location).unwrap();
-
         // Make sure we're going to the /login page
         assert_eq!(parsed_location_url.path(), "/login");
         // We could also assert the query parameters but its kinda just an internal
@@ -1801,7 +1811,7 @@ mod tests {
         let parsed_location_url = url::Url::parse(location).unwrap();
         let query_pairs = parsed_location_url.query_pairs().collect::<HashMap<_, _>>();
         let login_token = query_pairs.get("loginToken").expect(format!("Expected `loginToken` query parameter from `m.login.sso` redirect flow. {request.uri()} -> {location}"));
-        login_token.to_string()
+        Ok(login_token.to_string())
     }
 
     /// Test that `soft_limit` works against interative login (like the `m.login.sso`
@@ -1854,18 +1864,25 @@ mod tests {
         // One more login will tip us over the `soft_limit`
         //
         // We're specifically doing an interactive login (`m.login.sso`)
-        let request =
-            Request::get("/_matrix/client/v3/login/sso/redirect?redirectUrl=http://test-login/")
-                .empty();
-        let response = state.request(request.clone()).await;
-        response.assert_status(StatusCode::FORBIDDEN);
-        let body: serde_json::Value = response.json();
-        assert_eq!(
-            body.get("errcode")
-                .expect("Expected errror response to include an `errcode`"),
-            "M_FORBIDDEN",
-            "Expected `errcode` to be `M_FORBIDDEN`"
-        );
+        match matrix_compat_sso_login(&state, "alice", "password").await {
+            Err(ConsentErrorTodo {
+                status: StatusCode::FORBIDDEN,
+                errcode: "M_FORBIDDEN",
+            }) => {
+                let response = state.request(request.clone()).await;
+                response.assert_status(StatusCode::FORBIDDEN);
+                let body: serde_json::Value = response.json();
+                assert_eq!(
+                    body.get("errcode")
+                        .expect("Expected error response to include an `errcode`"),
+                    "M_FORBIDDEN",
+                    "Expected `errcode` to be `M_FORBIDDEN`"
+                );
+            }
+            _ => {
+                panic!("Expected `m.login.sso` to fail on TODO but saw TODO");
+            }
+        }
     }
 
     /// Test that the `soft_limit` is not enforced for compat login.
