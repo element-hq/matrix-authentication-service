@@ -499,8 +499,9 @@ pub(crate) async fn post(
     }))
 }
 
-/// Given the evaluation result/violations from [`Policy::evaluate_compat_login`],
-/// return the appropriate `RouteError` response.
+/// Given the evaluation result/violations from
+/// [`Policy::evaluate_compat_login`], return the appropriate `RouteError`
+/// response.
 async fn process_violations_for_compat_login(
     clock: &dyn Clock,
     repo: &mut BoxRepository,
