@@ -7,6 +7,7 @@
 use axum::http::Request;
 use hyper::StatusCode;
 use mas_axum_utils::SessionInfoExt;
+use mas_config::GraphQLIntrospectionMode;
 use mas_data_model::{AccessToken, Client, TokenType, User};
 use mas_matrix::{HomeserverConnection, ProvisionRequest};
 use mas_router::SimpleRoute;
@@ -111,6 +112,7 @@ async fn start_oauth_session(
 
 const GRAPHQL: ScopeToken = ScopeToken::from_static("urn:mas:graphql:*");
 const ADMIN: ScopeToken = ScopeToken::from_static("urn:mas:admin");
+const INTROSPECTION_BLOCKED: &str = "GraphQL introspection is not available for anonymous requests";
 
 #[derive(serde::Deserialize)]
 struct GraphQLResponse {
@@ -173,6 +175,151 @@ async fn test_anonymous_viewer(pool: PgPool) {
             },
         })
     );
+}
+
+/// Test that anonymous introspection stays enabled by default.
+#[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+async fn test_anonymous_introspection_default_public(pool: PgPool) {
+    setup();
+    let state = TestState::from_pool(pool).await.unwrap();
+
+    let request = Request::post("/graphql").json(serde_json::json!({
+        "query": r#"
+            query {
+                __schema {
+                    queryType {
+                        name
+                    }
+                }
+            }
+        "#,
+    }));
+
+    let response = state.request(request).await;
+    response.assert_status(StatusCode::OK);
+    let response: GraphQLResponse = response.json();
+
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+    assert_eq!(response.data["__schema"]["queryType"]["name"], "Query");
+}
+
+/// Test that anonymous schema introspection can be disabled per listener.
+#[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+async fn test_anonymous_introspection_authenticated_only(pool: PgPool) {
+    setup();
+    let state = TestState::from_pool(pool).await.unwrap();
+
+    for (query, path) in [
+        (
+            r#"
+                query {
+                    __schema {
+                        queryType {
+                            name
+                        }
+                    }
+                }
+            "#,
+            "__schema",
+        ),
+        (
+            r#"
+                query {
+                    __type(name: "Query") {
+                        name
+                    }
+                }
+            "#,
+            "__type",
+        ),
+    ] {
+        let request = Request::post("/graphql").json(serde_json::json!({ "query": query }));
+
+        let response = state
+            .request_with_graphql_introspection(
+                request,
+                GraphQLIntrospectionMode::AuthenticatedOnly,
+            )
+            .await;
+        response.assert_status(StatusCode::OK);
+        let response: GraphQLResponse = response.json();
+
+        assert!(response.data.is_null(), "{:?}", response.data);
+        assert_eq!(response.errors.len(), 1, "{:?}", response.errors);
+        assert_eq!(response.errors[0]["message"], INTROSPECTION_BLOCKED);
+        assert_eq!(response.errors[0]["path"], serde_json::json!([path]));
+    }
+}
+
+/// Test that disabling schema introspection does not block regular anonymous queries.
+#[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+async fn test_authenticated_only_still_allows_anonymous_viewer(pool: PgPool) {
+    setup();
+    let state = TestState::from_pool(pool).await.unwrap();
+
+    let request = Request::post("/graphql").json(serde_json::json!({
+        "query": r#"
+            query {
+                viewer {
+                    __typename
+                }
+            }
+        "#,
+    }));
+
+    let response = state
+        .request_with_graphql_introspection(request, GraphQLIntrospectionMode::AuthenticatedOnly)
+        .await;
+    response.assert_status(StatusCode::OK);
+    let response: GraphQLResponse = response.json();
+
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+    assert_eq!(response.data["viewer"]["__typename"], "Anonymous");
+}
+
+/// Test that authenticated browser sessions can still introspect the schema.
+#[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+async fn test_authenticated_browser_session_introspection(pool: PgPool) {
+    setup();
+    let state = TestState::from_pool(pool).await.unwrap();
+
+    let user = create_test_user(&state, "alice").await;
+    let mut repo = state.repository().await.unwrap();
+    let mut rng = state.rng();
+    let browser_session = repo
+        .browser_session()
+        .add(&mut rng, &state.clock, &user, None)
+        .await
+        .unwrap();
+    repo.save().await.unwrap();
+
+    let cookie_jar = state.cookie_jar().set_session(&browser_session);
+    let cookies = CookieHelper::new();
+    cookies.import(cookie_jar);
+
+    let request = Request::post("/graphql").json(serde_json::json!({
+        "query": r#"
+            query {
+                __schema {
+                    queryType {
+                        name
+                    }
+                }
+            }
+        "#,
+    }));
+
+    let response = state
+        .request_with_graphql_introspection(
+            cookies.with_cookies(request),
+            GraphQLIntrospectionMode::AuthenticatedOnly,
+        )
+        .await;
+    response.assert_status(StatusCode::OK);
+    let response: GraphQLResponse = response.json();
+
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+    assert_eq!(response.data["__schema"]["queryType"]["name"], "Query");
 }
 
 /// Test that the GraphQL endpoint can be authenticated with a bearer token.
