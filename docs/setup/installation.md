@@ -64,7 +64,7 @@ The image can also be built from the source:
 Building from the source requires:
 
 - The latest stable [Rust toolchain](https://www.rust-lang.org/learn/get-started)
-- [Node.js (18 and later)](https://nodejs.org/en/) and [npm](https://www.npmjs.com/get-npm)
+- [Node.js (24 and later)](https://nodejs.org/en/), with [corepack](https://nodejs.org/api/corepack.html) enabled so pnpm@11 is provisioned automatically
 - the [Open Policy Agent](https://www.openpolicyagent.org/docs/latest/#running-opa) binary (or alternatively, Docker)
 
 1. Get the source
@@ -74,9 +74,10 @@ Building from the source requires:
    ```
 1. Build the frontend
    ```sh
+   corepack enable
+   pnpm install # installs deps for the workspace; run from the repo root
    cd frontend
-   npm ci
-   npm run build
+   pnpm run build
    cd ..
    ```
    This will produce a `frontend/dist` directory containing the built frontend assets.

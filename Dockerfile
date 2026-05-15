@@ -15,7 +15,8 @@ ARG DEBIAN_VERSION=13
 ARG DEBIAN_VERSION_NAME=trixie
 # Keep in sync with .github/workflows/ci.yaml
 ARG RUSTC_VERSION=1.93.0
-ARG NODEJS_VERSION=24.13.0
+# Keep in sync with .node-version
+ARG NODEJS_VERSION=24.15.0
 # Keep in sync with .github/actions/build-policies/action.yml and policies/Makefile
 ARG OPA_VERSION=1.13.1
 ARG CARGO_AUDITABLE_VERSION=0.7.2
@@ -25,19 +26,29 @@ ARG CARGO_AUDITABLE_VERSION=0.7.2
 ##########################################
 FROM --platform=${BUILDPLATFORM} docker.io/library/node:${NODEJS_VERSION}-${DEBIAN_VERSION_NAME} AS frontend
 
-WORKDIR /app/frontend
+WORKDIR /app
 
-COPY ./frontend/.npmrc ./frontend/package.json ./frontend/package-lock.json /app/frontend/
+# Enable corepack so the pnpm version pinned in package.json's `packageManager`
+# field is used.
+RUN --network=default \
+  corepack enable
+
+# Copy the workspace manifest and lockfile first so the install layer can be
+# cached independently from the rest of the frontend source.
+COPY ./package.json ./pnpm-workspace.yaml ./pnpm-lock.yaml /app/
+COPY ./frontend/package.json /app/frontend/
+
 # Network access: to fetch dependencies
 RUN --network=default \
-  npm ci
+  pnpm install --frozen-lockfile
 
 COPY ./frontend/ /app/frontend/
 COPY ./templates/ /app/templates/
 RUN --network=none \
-  npm run build
+  pnpm --filter mas-frontend run build
 
 # Move the built files
+WORKDIR /app/frontend
 RUN --network=none \
   mkdir -p /share/assets && \
   cp ./dist/manifest.json /share/manifest.json && \
