@@ -1777,16 +1777,35 @@ mod tests {
         Some(value.to_owned())
     }
 
+    /// Keep making requests until we reach a stable destination (non-redirect).
+    ///
+    /// Returns the last response and a list of redirect URLs encountered along the way.
     /// Keep making requests until we reach a stable destination (non-redirect)
     ///
     /// Returns the last response and a list of redirects we made along the way
-    async fn follow_redirects_from_response(
+    async fn request_and_follow_redirects(
         state: &TestState,
-        response: http::Response<String>,
+        request: http::Request<String>,
     ) -> (http::Response<String>, Vec<url::Url>) {
-        let mut response = response;
+        let mut request = request;
         let mut redirects = Vec::new();
         loop {
+            let mas_hostname = state.url_builder.public_hostname();
+            // This says "host" but the host here is actually just the hostname and the port
+            // is separate. This is a quirk of the `http` crate.
+            let request_host = request.uri().host().map(str::to_string);
+            let response = match request_host.clone() {
+                // Relative URL (assumed to be MAS)
+                None => state.request(request).await,
+                // Request to MAS
+                Some(host) if host == mas_hostname => state.request(request).await,
+                // Something external outside of MAS
+                _external_url => {
+                    todo!("Not implemented yet as we expect everything to MAS related so far.");
+                }
+            };
+
+            // Stop when it's no longer a redirect
             let is_redirect = matches!(
                 response.status(),
                 StatusCode::PERMANENT_REDIRECT
@@ -1794,9 +1813,10 @@ mod tests {
                     | StatusCode::SEE_OTHER
             );
             if !is_redirect {
-                break;
+                return (response, redirects);
             }
 
+            // Look for the `Location` header
             let location = response
                 .headers()
                 .get(hyper::header::LOCATION)
@@ -1804,33 +1824,39 @@ mod tests {
                 .to_str()
                 .expect("Expected `Location` header to be a valid string")
                 .to_owned();
-
-            // Store the redirect destination as an absolute URL
             let location_url =
                 url::Url::parse(&location).expect("Expected `Location` header to be a valid URL");
+
+            // Keep track of the redirects
             redirects.push(location_url.clone());
 
-            // Follow the redirect
-            let mas_hostname = state.url_builder.public_hostname();
+            // Follow the location redirect
+            //
             // This says "host" but the host here is actually just the hostname and the port
             // is separate. This is a quirk of the `url` crate.
-            match location_url.host_str() {
-                // Request to MAS
-                Some(host) if host == mas_hostname => {
-                    let request = Request::get(
-                        location_url.path().to_owned() + location_url.query().unwrap_or(""),
-                    )
+            match location_url.host() {
+                // Relative URL (relative to MAS)
+                None if request_host.as_deref() == Some(mas_hostname) => {
+                    request = Request::get(match location_url.query() {
+                        Some(query_string) => format!("{}?{}", location_url.path(), query_string),
+                        None => location_url.path().to_owned(),
+                    })
                     .empty();
-                    response = state.request(request).await;
                 }
-                // Something external to MAS
+                // Directly pointing at MAS
+                Some(host) if host.to_string() == mas_hostname => {
+                    request = Request::get(match location_url.query() {
+                        Some(query_string) => format!("{}?{}", location_url.path(), query_string),
+                        None => location_url.path().to_owned(),
+                    })
+                    .empty();
+                }
+                // Something external outside of MAS
                 _external_url => {
                     todo!("Not implemented yet as we expect everything to MAS related so far.");
                 }
             }
         }
-
-        (response, redirects)
     }
 
     /// Drive the `m.login.sso` login flow (act like an actual user) and return the
@@ -1848,12 +1874,15 @@ mod tests {
         let request =
             Request::get("/_matrix/client/v3/login/sso/redirect?redirectUrl=http://test-login/")
                 .empty();
-        let response = state.request(request).await;
-        // We expect to be redirected to `/login`
-        let (_last_response, redirects) = follow_redirects_from_response(state, response).await;
+        // We expect to be redirected to `/login` (with the typical MAS flow this will be a
+        // couple of hops, `/complete-compat-sso/{id}` -> `/login`)
+        let (_last_response, redirects) = request_and_follow_redirects(state, request).await;
         let login_url = match redirects.last() {
             Some(last_redirect) if last_redirect.path() == "/login" => {
-                last_redirect.path().to_owned() + last_redirect.query().unwrap_or("")
+                match last_redirect.query() {
+                    Some(query_string) => format!("{}?{}", last_redirect.path(), query_string),
+                    None => last_redirect.path().to_owned(),
+                }
             }
             _ => return Err(MatrixCompatSsoLoginError::UnexpectedInitialRedirects { redirects }),
         };
@@ -1888,8 +1917,11 @@ mod tests {
             .unwrap()
             .to_str()
             .unwrap();
-        let parsed_url = url::Url::parse(location).unwrap();
-        let complete_sso_path = parsed_url.path().to_owned() + parsed_url.query().unwrap_or("");
+        let parsed_location_url = url::Url::parse(location).unwrap();
+        let complete_sso_path = match parsed_location_url.query() {
+            Some(query_string) => format!("{}?{}", parsed_location_url.path(), query_string),
+            None => parsed_location_url.path().to_owned(),
+        };
 
         // Step 4: Go to the consent screen, `GET /complete-compat-sso/{id}` with the browser session cookie.
         // -> 200: consent page (user must approve the login)
