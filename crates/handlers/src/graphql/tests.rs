@@ -209,9 +209,8 @@ async fn test_anonymous_introspection_authenticated_only(pool: PgPool) {
     setup();
     let state = TestState::from_pool(pool).await.unwrap();
 
-    for (query, path) in [
-        (
-            r#"
+    for query in [
+        r#"
                 query {
                     __schema {
                         queryType {
@@ -220,18 +219,13 @@ async fn test_anonymous_introspection_authenticated_only(pool: PgPool) {
                     }
                 }
             "#,
-            "__schema",
-        ),
-        (
-            r#"
+        r#"
                 query {
                     __type(name: "Query") {
                         name
                     }
                 }
             "#,
-            "__type",
-        ),
     ] {
         let request = Request::post("/graphql").json(serde_json::json!({ "query": query }));
 
@@ -247,7 +241,7 @@ async fn test_anonymous_introspection_authenticated_only(pool: PgPool) {
         assert!(response.data.is_null(), "{:?}", response.data);
         assert_eq!(response.errors.len(), 1, "{:?}", response.errors);
         assert_eq!(response.errors[0]["message"], INTROSPECTION_BLOCKED);
-        assert_eq!(response.errors[0]["path"], serde_json::json!([path]));
+        assert!(response.errors[0]["path"].is_null());
     }
 }
 
