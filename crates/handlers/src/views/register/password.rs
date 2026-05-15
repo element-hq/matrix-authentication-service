@@ -38,7 +38,7 @@ use zeroize::Zeroizing;
 use super::cookie::UserRegistrationSessions;
 use crate::{
     BoundActivityTracker, Limiter, PreferredLanguage, RequesterFingerprint, SiteConfig,
-    captcha::Form as CaptchaForm, passwords::PasswordManager,
+    captcha::Form as CaptchaForm, normalize_username, passwords::PasswordManager,
     views::shared::OptionalPostAuthAction,
 };
 
@@ -171,7 +171,7 @@ pub(crate) async fn post(
     // The email form is only shown if the server requires it
     let email = site_config
         .password_registration_email_required
-        .then_some(form.email);
+        .then_some(form.email.trim().to_owned());
 
     // Validate the form
     let state = {
@@ -182,19 +182,20 @@ pub(crate) async fn post(
         }
 
         let mut homeserver_denied_username = false;
-        if form.username.is_empty() {
+        let username = normalize_username(&form.username);
+        if username.is_empty() {
             state.add_error_on_field(RegisterFormField::Username, FieldError::Required);
-        } else if repo.user().exists(&form.username).await? {
+        } else if repo.user().exists(&username).await? {
             // The user already exists in the database
             state.add_error_on_field(RegisterFormField::Username, FieldError::Exists);
         } else if !homeserver
-            .is_localpart_available(&form.username)
+            .is_localpart_available(&username)
             .await
             .map_err(InternalError::from_anyhow)?
         {
             // The user already exists on the homeserver
             tracing::warn!(
-                username = &form.username,
+                username = &username,
                 "Homeserver denied username provided by user"
             );
 
@@ -249,7 +250,7 @@ pub(crate) async fn post(
         let res = policy
             .evaluate_register(mas_policy::RegisterInput {
                 registration_method: mas_policy::RegistrationMethod::Password,
-                username: &form.username,
+                username: &username,
                 email: email.as_deref(),
                 requester: mas_policy::Requester {
                     ip_address: activity_tracker.ip(),
@@ -335,12 +336,13 @@ pub(crate) async fn post(
         .post_auth_action
         .map(serde_json::to_value)
         .transpose()?;
+    let username = normalize_username(&form.username);
     let registration = repo
         .user_registration()
         .add(
             &mut rng,
             &clock,
-            form.username,
+            username,
             ip_address,
             user_agent,
             post_auth_action,

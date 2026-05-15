@@ -96,7 +96,7 @@ macro_rules! impl_from_error_for_route {
 }
 
 pub use mas_axum_utils::{ErrorWrapper, cookies::CookieManager};
-use mas_data_model::{BoxClock, BoxRng};
+use mas_data_model::{BoxClock, BoxRng, normalize_username};
 
 pub use self::{
     activity_tracker::{ActivityTracker, Bound as BoundActivityTracker},
