@@ -1753,31 +1753,38 @@ mod tests {
 
     #[derive(Debug, Error)]
     pub enum MatrixCompatSsoLoginError {
+        #[error("Expected to be redirected to `/login` but we ended up going to {redirects:?}")]
+        UnexpectedInitialRedirects { redirects: Vec<url::Url> },
+
+        #[error("Unable to find csrf token as part of <form> on the `/login` page")]
+        NoCsrfOnLoginPage { page_html: String },
+
         #[error("consent page returned forbidden (violation: {violation:?})\nBody:\n{body}")]
         ConsentForbidden {
             violation: SsoConsentPolicyViolation,
             body: String,
         },
+
+        #[error("Unable to find csrf token as part of <form> on the consent page")]
+        NoCsrfOnConsentPage { page_html: String },
     }
 
-    /// Extract the path (and query) portion of a redirect Location header so it
-    /// can be used with `state.request()`.  Absolute URLs (e.g.
-    /// `https://example.com/foo?bar=1`) are stripped down to `/foo?bar=1`;
-    /// relative URLs (e.g. `/foo?bar=1`) are returned unchanged.
-    fn location_to_test_path(location: &str) -> String {
-        if let Ok(url) = url::Url::parse(location) {
-            match url.query() {
-                Some(q) => format!("{}?{}", url.path(), q),
-                None => url.path().to_owned(),
-            }
-        } else {
-            location.to_owned()
-        }
+    /// Extract the path (and query) portion of a URL that can be used with
+    /// `state.request(...)`.
+    ///
+    /// Absolute URLs (e.g. `https://example.com/foo?bar=1`) are stripped down to
+    /// `/foo?bar=1`; relative URLs (e.g. `/foo?bar=1`) are returned unchanged.
+    fn get_requestable_uri(state: &TestState, raw_url: &str) -> String {
+        let parsed_url = url::Url::parse(raw_url).unwrap();
+        // Make sure they're all requests against our MAS instance
+        assert_eq!(parsed_url.host(), state.TODO);
+
+        parsed_url.path().to_owned() + parsed_url.query().unwrap_or("")
     }
 
     /// Extract the CSRF token value from an HTML page that contains
     /// `<input type="hidden" name="csrf" value="…">`.
-    fn extract_csrf_token(body: &str) -> String {
+    fn extract_csrf_token_from_page_html(body: &str) -> Option<String> {
         body.split("name=\"csrf\" value=\"")
             .nth(1)
             .expect("Expected CSRF token in HTML page")
@@ -1787,8 +1794,36 @@ mod tests {
             .to_owned()
     }
 
-    /// Do a `m.login.sso` flow and return the `loginToken` which will need to be
-    /// exchanged for an access token using the `m.login.token` flow.
+    /// Keep making requests until we reach the stable destination (non-redirect)
+    ///
+    /// Returns the last response and a list of redirects we made along the way
+    async fn follow_redirects_from_response(
+        state: &TestState,
+        response: http::Response<String>,
+    ) -> (http::Response<String>, Vec<url::Url>) {
+        while (match response.status() {
+            StatusCode::PERMANENT_REDIRECT
+            | StatusCode::TEMPORARY_REDIRECT
+            | StatusCode::SEE_OTHER => true,
+            status => false,
+        }) {
+            let location = response
+                .headers()
+                .get(hyper::header::LOCATION)
+                .expect("Expected `Location` header when we see a redirect related status code");
+            let location = location
+                .to_str()
+                .expect("We expect the location URL to be string compatible");
+
+            // Make the next request
+            let request = Request::get(get_requestable_uri(state, location));
+            let response = state.request(request.clone()).await;
+        }
+    }
+
+    /// Drive the `m.login.sso` login flow (act like an actual user) and return the
+    /// `loginToken` which will need to be exchanged for an access token using the
+    /// `m.login.token` flow.
     async fn matrix_compat_sso_login(
         state: &TestState,
         username: &str,
@@ -1796,44 +1831,39 @@ mod tests {
     ) -> Result<String, MatrixCompatSsoLoginError> {
         let cookies = CookieHelper::new();
 
-        // Step 1: Initiate the SSO flow — creates a compat SSO login and redirects
-        // to /complete-compat-sso/{id}.
+        // Step #1: Initiate the `m.login.sso` login flow. The browser navigates to
+        // `/login/sso/redirect/{idpId}`
         let request =
             Request::get("/_matrix/client/v3/login/sso/redirect?redirectUrl=http://test-login/")
                 .empty();
         let response = state.request(request).await;
-        response.assert_status(StatusCode::SEE_OTHER);
-        let location = response
-            .headers()
-            .get(hyper::header::LOCATION)
-            .unwrap()
-            .to_str()
-            .unwrap();
-        let complete_sso_path = location_to_test_path(location);
+        // We expect to be redirected to `/login`
+        let (last_response, redirects) = follow_redirects_from_response(state, response).await;
+        let login_url = match redirects.last() {
+            Some(last_redirect) if last_redirect.path() == "/login" => {
+                last_redirect.path().to_owned() + last_redirect.query().unwrap_or("")
+            }
+            _ => return Err(MatrixCompatSsoLoginError::UnexpectedInitialRedirects { redirects }),
+        };
 
-        // Step 2: GET /complete-compat-sso/{id} without a session — redirects to
-        // /login?... so the user can authenticate.
-        let request = cookies.with_cookies(Request::get(&complete_sso_path).empty());
-        let response = state.request(request).await;
-        cookies.save_cookies(&response);
-        response.assert_status(StatusCode::SEE_OTHER);
-        let location = response
-            .headers()
-            .get(hyper::header::LOCATION)
-            .unwrap()
-            .to_str()
-            .unwrap();
-        let login_url = location_to_test_path(location);
-
-        // Step 3: GET the login page to obtain a CSRF token and establish cookies.
+        // Step 2: GET the /login page to obtain a CSRF token and establish cookies.
         let request = cookies.with_cookies(Request::get(&login_url).empty());
         let response = state.request(request).await;
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
-        let csrf = extract_csrf_token(response.body());
+        // Collect any extra <form> data we need to submit alongside `username`/`password`
+        //
+        // Extract the `csrf` from the page. We're looking for `<input type="hidden" name="csrf" value="xxx">`
+        let csrf = match extract_csrf_token_from_page_html(response.body()) {
+            Some(csrf) => csrf,
+            None => {
+                return Err(MatrixCompatSsoLoginError::NoCsrfOnLoginPage {
+                    page_html: response.body().to_owned(),
+                });
+            }
+        };
 
-        // Step 4: POST login credentials — on success the server creates a browser
-        // session and redirects back to /complete-compat-sso/{id}.
+        // Step #3: Submit the login form
         let request = cookies.with_cookies(Request::post(&login_url).form(serde_json::json!({
             "csrf": csrf,
             "username": username,
@@ -1841,35 +1871,43 @@ mod tests {
         })));
         let response = state.request(request).await;
         cookies.save_cookies(&response);
+        // We expect to be redirected to the consent screen (`/complete-compat-sso/{id}`)
         response.assert_status(StatusCode::SEE_OTHER);
         let location = response
             .headers()
-            .get(hyper::header::LOCATION)
+            .get(http::header::LOCATION)
             .unwrap()
             .to_str()
             .unwrap();
-        let complete_sso_path = location_to_test_path(location);
+        let complete_sso_path = get_requestable_uri(state, location);
 
-        // Step 5: GET /complete-compat-sso/{id} with the browser session cookie.
-        // → 200: consent page (user must approve the login)
-        // → 403: policy violation (e.g. policy rejected or more specifically device limit reached)
+        // Step 4: Go to the consent screen, `GET /complete-compat-sso/{id}` with the browser session cookie.
+        // -> 200: consent page (user must approve the login)
+        // -> 403: policy rejected (e.g. could be a generic policy rejection or more specifically device limit reached)
         let request = cookies.with_cookies(Request::get(&complete_sso_path).empty());
         let response = state.request(request).await;
         cookies.save_cookies(&response);
 
         match response.status() {
+            // Policy rejection
             StatusCode::FORBIDDEN => {
-                // Detect whether this is the "device limit reached" page by checking
-                // for the heading that only appears in that case.
-                let body = response.body().to_owned();
-                let violation = if body.contains("Device limit reached") {
+                // Detect whether this is the "device limit reached" page
+                let violation = if response
+                    .body()
+                    .contains("data-testid=\"device-limit-reached\"")
+                {
                     SsoConsentPolicyViolation::DeviceLimitReached
                 } else {
                     SsoConsentPolicyViolation::Other
                 };
-                return Err(MatrixCompatSsoLoginError::ConsentForbidden { violation, body });
+                return Err(MatrixCompatSsoLoginError::ConsentForbidden {
+                    violation,
+                    body: response.body().to_owned(),
+                });
             }
-            StatusCode::OK => {}
+            StatusCode::OK => {
+                // Consent screen rendered
+            }
             status => panic!(
                 "Unexpected status from /complete-compat-sso consent page: {status}. \
                 Body: {}",
@@ -1877,31 +1915,39 @@ mod tests {
             ),
         }
 
-        // Step 6: POST /complete-compat-sso/{id} to approve the consent — the server
-        // fulfills the SSO login and redirects to the redirectUrl with loginToken.
-        let csrf = extract_csrf_token(response.body());
+        // Step 5: Press "Continue" on the page (submit the form)
+        //
+        // Collect any extra <form> data we need to submit alongside `username`/`password`
+        //
+        // Extract the `csrf` from the page. We're looking for `<input type="hidden" name="csrf" value="xxx">`
+        let csrf = match extract_csrf_token_from_page_html(response.body()) {
+            Some(csrf) => csrf,
+            None => {
+                return Err(MatrixCompatSsoLoginError::NoCsrfOnConsentPage {
+                    page_html: response.body().to_owned(),
+                });
+            }
+        };
         let request = cookies.with_cookies(
             Request::post(&complete_sso_path).form(serde_json::json!({ "csrf": csrf })),
         );
         let response = state.request(request).await;
+        // We expect to be redirected to the `redirectUrl` (from the first step) with a
+        // `?loginToken=xxx` query parameter.
         response.assert_status(StatusCode::SEE_OTHER);
         let location = response
             .headers()
-            .get(hyper::header::LOCATION)
+            .get(http::header::LOCATION)
             .unwrap()
             .to_str()
             .unwrap();
 
         // Location is http://test-login/?loginToken=xxx — extract the token.
-        let redirect_url = url::Url::parse(location)
-            .unwrap_or_else(|_| panic!("Expected absolute URL in final redirect, got: {location}"));
-        let query_pairs: HashMap<_, _> = redirect_url.query_pairs().collect();
-        let login_token = query_pairs
-            .get("loginToken")
-            .unwrap_or_else(|| panic!("Expected loginToken in redirect URL: {location}"))
-            .to_string();
+        let parsed_location_url = url::Url::parse(location).unwrap();
+        let query_pairs: HashMap<_, _> = parsed_location_url.query_pairs().collect();
+        let login_token = query_pairs.get("loginToken").expect(format!("Expected `loginToken` query parameter from `m.login.sso` redirect flow. {request.uri()} -> {location}"));
 
-        Ok(login_token)
+        Ok(login_token.to_string())
     }
 
     /// Test that `soft_limit` works against interactive login (like the `m.login.sso`

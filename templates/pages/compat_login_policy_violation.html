@@ -17,7 +17,7 @@ Please see LICENSE files in the repository root for full details.
     </div>
 
     {% if is_too_many_sessions %}
-      <div class="header">
+      <div class="header" data-testid="device-limit-reached">
         <h1 class="title">{{ _("mas.policy_violation.too_many_sessions.heading") }}</h1>
         <p class="text">{{ _("mas.policy_violation.too_many_sessions.description", num_devices_to_remove=num_sessions_need_to_remove) }}</p>
       </div>
