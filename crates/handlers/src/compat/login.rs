@@ -1769,56 +1769,68 @@ mod tests {
         NoCsrfOnConsentPage { page_html: String },
     }
 
-    /// Extract the path (and query) portion of a URL that can be used with
-    /// `state.request(...)`.
-    ///
-    /// Absolute URLs (e.g. `https://example.com/foo?bar=1`) are stripped down to
-    /// `/foo?bar=1`; relative URLs (e.g. `/foo?bar=1`) are returned unchanged.
-    fn get_requestable_uri(state: &TestState, raw_url: &str) -> String {
-        let parsed_url = url::Url::parse(raw_url).unwrap();
-        // Make sure they're all requests against our MAS instance
-        assert_eq!(parsed_url.host(), state.TODO);
-
-        parsed_url.path().to_owned() + parsed_url.query().unwrap_or("")
-    }
-
     /// Extract the CSRF token value from an HTML page that contains
     /// `<input type="hidden" name="csrf" value="…">`.
     fn extract_csrf_token_from_page_html(body: &str) -> Option<String> {
-        body.split("name=\"csrf\" value=\"")
-            .nth(1)
-            .expect("Expected CSRF token in HTML page")
-            .split('"')
-            .next()
-            .expect("Expected CSRF token closing quote")
-            .to_owned()
+        let after_name = body.split("name=\"csrf\" value=\"").nth(1)?;
+        let value = after_name.split('"').next()?;
+        Some(value.to_owned())
     }
 
-    /// Keep making requests until we reach the stable destination (non-redirect)
+    /// Keep making requests until we reach a stable destination (non-redirect)
     ///
     /// Returns the last response and a list of redirects we made along the way
     async fn follow_redirects_from_response(
         state: &TestState,
         response: http::Response<String>,
     ) -> (http::Response<String>, Vec<url::Url>) {
-        while (match response.status() {
-            StatusCode::PERMANENT_REDIRECT
-            | StatusCode::TEMPORARY_REDIRECT
-            | StatusCode::SEE_OTHER => true,
-            status => false,
-        }) {
+        let mut response = response;
+        let mut redirects = Vec::new();
+        loop {
+            let is_redirect = matches!(
+                response.status(),
+                StatusCode::PERMANENT_REDIRECT
+                    | StatusCode::TEMPORARY_REDIRECT
+                    | StatusCode::SEE_OTHER
+            );
+            if !is_redirect {
+                break;
+            }
+
             let location = response
                 .headers()
                 .get(hyper::header::LOCATION)
-                .expect("Expected `Location` header when we see a redirect related status code");
-            let location = location
+                .expect("Expected `Location` header for redirect response")
                 .to_str()
-                .expect("We expect the location URL to be string compatible");
+                .expect("Expected `Location` header to be a valid string")
+                .to_owned();
 
-            // Make the next request
-            let request = Request::get(get_requestable_uri(state, location));
-            let response = state.request(request.clone()).await;
+            // Store the redirect destination as an absolute URL
+            let location_url =
+                url::Url::parse(&location).expect("Expected `Location` header to be a valid URL");
+            redirects.push(location_url.clone());
+
+            // Follow the redirect
+            let mas_hostname = state.url_builder.public_hostname();
+            // This says "host" but the host here is actually just the hostname and the port
+            // is separate. This is a quirk of the `url` crate.
+            match location_url.host_str() {
+                // Request to MAS
+                Some(host) if host == mas_hostname => {
+                    let request = Request::get(
+                        location_url.path().to_owned() + location_url.query().unwrap_or(""),
+                    )
+                    .empty();
+                    response = state.request(request).await;
+                }
+                // Something external to MAS
+                _external_url => {
+                    todo!("Not implemented yet as we expect everything to MAS related so far.");
+                }
+            }
         }
+
+        (response, redirects)
     }
 
     /// Drive the `m.login.sso` login flow (act like an actual user) and return the
@@ -1838,7 +1850,7 @@ mod tests {
                 .empty();
         let response = state.request(request).await;
         // We expect to be redirected to `/login`
-        let (last_response, redirects) = follow_redirects_from_response(state, response).await;
+        let (_last_response, redirects) = follow_redirects_from_response(state, response).await;
         let login_url = match redirects.last() {
             Some(last_redirect) if last_redirect.path() == "/login" => {
                 last_redirect.path().to_owned() + last_redirect.query().unwrap_or("")
@@ -1854,13 +1866,10 @@ mod tests {
         // Collect any extra <form> data we need to submit alongside `username`/`password`
         //
         // Extract the `csrf` from the page. We're looking for `<input type="hidden" name="csrf" value="xxx">`
-        let csrf = match extract_csrf_token_from_page_html(response.body()) {
-            Some(csrf) => csrf,
-            None => {
-                return Err(MatrixCompatSsoLoginError::NoCsrfOnLoginPage {
-                    page_html: response.body().to_owned(),
-                });
-            }
+        let Some(csrf) = extract_csrf_token_from_page_html(response.body()) else {
+            return Err(MatrixCompatSsoLoginError::NoCsrfOnLoginPage {
+                page_html: response.body().to_owned(),
+            });
         };
 
         // Step #3: Submit the login form
@@ -1879,7 +1888,8 @@ mod tests {
             .unwrap()
             .to_str()
             .unwrap();
-        let complete_sso_path = get_requestable_uri(state, location);
+        let parsed_url = url::Url::parse(location).unwrap();
+        let complete_sso_path = parsed_url.path().to_owned() + parsed_url.query().unwrap_or("");
 
         // Step 4: Go to the consent screen, `GET /complete-compat-sso/{id}` with the browser session cookie.
         // -> 200: consent page (user must approve the login)
@@ -1915,23 +1925,21 @@ mod tests {
             ),
         }
 
-        // Step 5: Press "Continue" on the page (submit the form)
+        // Step 5: Press "Continue" on the consent page (submit the form)
         //
-        // Collect any extra <form> data we need to submit alongside `username`/`password`
+        // Collect any extra <form> data we need to submit
         //
         // Extract the `csrf` from the page. We're looking for `<input type="hidden" name="csrf" value="xxx">`
-        let csrf = match extract_csrf_token_from_page_html(response.body()) {
-            Some(csrf) => csrf,
-            None => {
-                return Err(MatrixCompatSsoLoginError::NoCsrfOnConsentPage {
-                    page_html: response.body().to_owned(),
-                });
-            }
+        let Some(csrf) = extract_csrf_token_from_page_html(response.body()) else {
+            return Err(MatrixCompatSsoLoginError::NoCsrfOnConsentPage {
+                page_html: response.body().to_owned(),
+            });
         };
         let request = cookies.with_cookies(
             Request::post(&complete_sso_path).form(serde_json::json!({ "csrf": csrf })),
         );
         let response = state.request(request).await;
+        cookies.save_cookies(&response);
         // We expect to be redirected to the `redirectUrl` (from the first step) with a
         // `?loginToken=xxx` query parameter.
         response.assert_status(StatusCode::SEE_OTHER);
@@ -1945,7 +1953,10 @@ mod tests {
         // Location is http://test-login/?loginToken=xxx — extract the token.
         let parsed_location_url = url::Url::parse(location).unwrap();
         let query_pairs: HashMap<_, _> = parsed_location_url.query_pairs().collect();
-        let login_token = query_pairs.get("loginToken").expect(format!("Expected `loginToken` query parameter from `m.login.sso` redirect flow. {request.uri()} -> {location}"));
+        let login_token = query_pairs.get("loginToken").unwrap_or_else(|| {
+            // This must be a MAS programming error
+            panic!("Expected `loginToken` query parameter in final redirect URL: {location}")
+        });
 
         Ok(login_token.to_string())
     }
