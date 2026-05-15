@@ -1746,26 +1746,38 @@ mod tests {
 
     /// The kind of policy violation shown on the SSO consent page.
     #[derive(Debug, PartialEq)]
-    pub enum SsoConsentPolicyViolation {
+    pub enum PolicyViolationPageType {
         DeviceLimitReached,
         Other,
     }
 
+    /// Errors we might encounter while going through the `m.login.sso` login flow.
+    ///
+    /// These are things we either a) want to distinguish and detect in a test or b) are
+    /// helpful to have a better label to understand what went wrong when seeing a test
+    /// failure.
     #[derive(Debug, Error)]
     pub enum MatrixCompatSsoLoginError {
         #[error("Expected to be redirected to `/login` but we ended up going to {redirects:?}")]
         UnexpectedInitialRedirects { redirects: Vec<http::Uri> },
 
-        #[error("Unable to find csrf token as part of <form> on the `/login` page")]
+        #[error(
+            "Unable to find csrf token as part of <form> on the `/login` page\npage_html:\n{page_html}"
+        )]
         NoCsrfOnLoginPage { page_html: String },
 
-        #[error("consent page returned forbidden (violation: {violation:?})\nBody:\n{body}")]
+        #[error(
+            "consent page returned forbidden (violation: {violation_type:?})\npage_html:\n{page_html}"
+        )]
         ConsentForbidden {
-            violation: SsoConsentPolicyViolation,
-            body: String,
+            violation_type: PolicyViolationPageType,
+            // Useful to understand what the page looked like at the time
+            page_html: String,
         },
 
-        #[error("Unable to find csrf token as part of <form> on the consent page")]
+        #[error(
+            "Unable to find csrf token as part of <form> on the consent page\npage_html:\n{page_html}"
+        )]
         NoCsrfOnConsentPage { page_html: String },
 
         #[error("Unable to `loginToken` query parameter in uri={uri}")]
@@ -1866,9 +1878,15 @@ mod tests {
         }
     }
 
-    /// Drive the `m.login.sso` login flow (act like an actual user) and return the
-    /// `loginToken` which will need to be exchanged for an access token using the
-    /// `m.login.token` flow.
+    /// Drive the `m.login.sso` login flow (act like an actual user going throught the
+    /// process in their browser)
+    ///
+    /// Return the `loginToken` (if the login flow was successful) which will need to be
+    /// exchanged for an access token using the `m.login.token` flow.
+    ///
+    /// Returns proper errors for many problems but we also have some expectations that
+    /// will panic (fail the test). Feel free to add more [`MatrixCompatSsoLoginError`]
+    /// for specific scenarios that you may need to detect more specifically.
     async fn matrix_compat_sso_login(
         state: &TestState,
         username: &str,
@@ -1876,8 +1894,8 @@ mod tests {
     ) -> Result<String, MatrixCompatSsoLoginError> {
         let cookies = CookieHelper::new();
 
-        // Step #1: Initiate the `m.login.sso` login flow. The browser navigates to
-        // `/login/sso/redirect/{idpId}`
+        // Step #1: Initiate the `m.login.sso` login flow (the browser navigates to
+        // `/login/sso/redirect/{idpId}`)
         let request =
             Request::get("/_matrix/client/v3/login/sso/redirect?redirectUrl=http://test-login/")
                 .empty();
@@ -1943,17 +1961,17 @@ mod tests {
             // Policy rejection
             StatusCode::FORBIDDEN => {
                 // Detect whether this is the "device limit reached" page
-                let violation = if response
+                let violation_type = if response
                     .body()
                     .contains("data-testid=\"device-limit-reached\"")
                 {
-                    SsoConsentPolicyViolation::DeviceLimitReached
+                    PolicyViolationPageType::DeviceLimitReached
                 } else {
-                    SsoConsentPolicyViolation::Other
+                    PolicyViolationPageType::Other
                 };
                 return Err(MatrixCompatSsoLoginError::ConsentForbidden {
-                    violation,
-                    body: response.body().to_owned(),
+                    violation_type,
+                    page_html: response.body().to_owned(),
                 });
             }
             StatusCode::OK => {
@@ -2085,17 +2103,20 @@ mod tests {
         // consent page should return 403 (device limit reached).
         match matrix_compat_sso_login(&state, "alice", "password").await {
             Err(MatrixCompatSsoLoginError::ConsentForbidden {
-                violation: SsoConsentPolicyViolation::DeviceLimitReached,
+                violation_type: PolicyViolationPageType::DeviceLimitReached,
                 ..
             }) => {
                 // Correct — the `soft_limit` blocked the interactive SSO login at the
                 // consent stage, as expected.
             }
             Ok(_login_token) => {
-                panic!("Expected SSO login to fail due to soft limit, but it succeeded");
+                panic!("Expected SSO login to fail due to soft_limit, but it succeeded");
             }
             Err(err) => {
-                panic!("Expected ConsentForbidden(DeviceLimitReached) error, but got: {err:?}");
+                panic!(
+                    "Expected to see the MatrixCompatSsoLoginError::ConsentForbidden error \
+                    with a DeviceLimitReached violation, but saw a different error instead: {err:?}"
+                );
             }
         }
     }
