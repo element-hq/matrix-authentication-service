@@ -1767,6 +1767,12 @@ mod tests {
 
         #[error("Unable to find csrf token as part of <form> on the consent page")]
         NoCsrfOnConsentPage { page_html: String },
+
+        #[error("Unable to `loginToken` query parameter in uri={uri}")]
+        NoLoginTokenOnFinalClientRedirect { uri: http::Uri },
+
+        #[error("Expected one but found multiple `loginToken` query parameter in uri={uri}")]
+        MultipleLoginTokenOnFinalClientRedirect { uri: http::Uri },
     }
 
     /// Extract the CSRF token value from an HTML page that contains
@@ -1915,12 +1921,12 @@ mod tests {
         let location = response
             .headers()
             .get(http::header::LOCATION)
-            .unwrap()
+            .expect("Expected `Location` header for redirect response")
             .to_str()
-            .unwrap();
+            .expect("Expected `Location` header to be a valid string");
         let parsed_location_uri = location
             .parse::<http::Uri>()
-            .expect("Expected `Location` header to be a valid string");
+            .expect("Expected `Location` header to be a valid URI");
         let complete_sso_path = match parsed_location_uri.query() {
             Some(query_string) => format!("{}?{}", parsed_location_uri.path(), query_string),
             None => parsed_location_uri.path().to_owned(),
@@ -1981,19 +1987,50 @@ mod tests {
         let location = response
             .headers()
             .get(http::header::LOCATION)
-            .unwrap()
+            .expect("Expected `Location` header for redirect response")
             .to_str()
-            .unwrap();
+            .expect("Expected `Location` header to be a valid string");
 
-        // Location is http://test-login/?loginToken=xxx — extract the token.
-        let parsed_location_url = url::Url::parse(location).unwrap();
-        let query_pairs: HashMap<_, _> = parsed_location_url.query_pairs().collect();
-        let login_token = query_pairs.get("loginToken").unwrap_or_else(|| {
-            // This must be a MAS programming error
-            panic!("Expected `loginToken` query parameter in final redirect URL: {location}")
-        });
+        // Extract the `?loginToken=xxx` query parameter.
+        let parsed_location_uri = location
+            .parse::<http::Uri>()
+            .expect("Expected `Location` header to be a valid URI");
+        let query_string = parsed_location_uri.query().expect(
+            "Expected to be redirected to URI with some query parameters (`?loginToken=xxx`)",
+        );
+        let query_map: HashMap<_, _> = url::form_urlencoded::parse(query_string.as_bytes())
+            .into_owned()
+            .fold(
+                HashMap::new(),
+                |mut hm: HashMap<String, Vec<String>>, (k, v)| {
+                    hm.entry(k).or_default().push(v);
+                    hm
+                },
+            );
+        // Make sure we only see one `loginToken` parameter
+        let login_token = match query_map
+            .get("loginToken")
+            // We're using slice syntax here so we can match easily
+            .map_or(&[] as &[String], |v| v.as_slice())
+        {
+            [login_token] => login_token.to_owned(),
+            [] => {
+                return Err(
+                    MatrixCompatSsoLoginError::NoLoginTokenOnFinalClientRedirect {
+                        uri: parsed_location_uri,
+                    },
+                );
+            }
+            _ => {
+                return Err(
+                    MatrixCompatSsoLoginError::MultipleLoginTokenOnFinalClientRedirect {
+                        uri: parsed_location_uri,
+                    },
+                );
+            }
+        };
 
-        Ok(login_token.to_string())
+        Ok(login_token)
     }
 
     /// Test that `soft_limit` works against interactive login (like the `m.login.sso`
