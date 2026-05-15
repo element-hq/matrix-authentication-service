@@ -1758,11 +1758,9 @@ mod tests {
     /// failure.
     #[derive(Debug, Error)]
     pub enum MatrixCompatSsoLoginError {
-        #[error("Expected to be redirected to `/login` but we ended up going to {redirects:?}")]
-        UnexpectedInitialRedirects { redirects: Vec<http::Uri> },
-
         #[error(
-            "Unable to find csrf token as part of <form> on the `/login` page\npage_html:\n{page_html}"
+            "Unable to find csrf token as part of <form> on the `/login` page. \
+            We need this in order to submit the form and login.\npage_html:\n{page_html}"
         )]
         NoCsrfOnLoginPage { page_html: String },
 
@@ -1776,7 +1774,8 @@ mod tests {
         },
 
         #[error(
-            "Unable to find csrf token as part of <form> on the consent page\npage_html:\n{page_html}"
+            "Unable to find csrf token as part of <form> on the consent page. \
+            We need this in order to submit the form and login.\npage_html:\n{page_html}"
         )]
         NoCsrfOnConsentPage { page_html: String },
 
@@ -1831,7 +1830,7 @@ mod tests {
         let parsed_location_uri = location
             .parse::<http::Uri>()
             .expect("Expected `Location` header to be a valid URI");
-        // Follow redirect
+        // Follow redirect (`/complete-compat-sso/{id}`)
         let request = Request::get(parsed_location_uri).empty();
         let response = state.request(request).await;
         response.assert_status(StatusCode::SEE_OTHER);
