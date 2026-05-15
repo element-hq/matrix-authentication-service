@@ -48,6 +48,29 @@ pub enum Error {
     RequestFailed(#[from] reqwest::Error),
 }
 
+fn normalize_hostname(hostname: &str) -> String {
+    hostname.trim_end_matches('.').to_ascii_lowercase()
+}
+
+/// Checks whether the CAPTCHA response hostname matches the site hostname.
+///
+/// Some CAPTCHA providers (notably hCaptcha) may return only the registrable
+/// domain in the verification response even if the site is hosted on a
+/// subdomain. In that case, the response hostname is a parent domain of the
+/// site hostname and should be accepted.
+fn hostname_matches_site(site_hostname: &str, response_hostname: &str) -> bool {
+    let site = normalize_hostname(site_hostname);
+    let response = normalize_hostname(response_hostname);
+
+    if site == response {
+        return true;
+    }
+
+    // Accept the case where the response contains the parent domain of the site,
+    // e.g. site: "mauth.example.com"; response: "example.com".
+    site.strip_suffix(&format!(".{response}")).is_some()
+}
+
 #[allow(clippy::struct_field_names)]
 #[derive(Debug, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
@@ -245,7 +268,7 @@ impl Form {
         span.record("captcha.hostname", &hostname);
         span.record("captcha.challenge_ts", &challenge_ts);
 
-        if hostname != site_hostname {
+        if !hostname_matches_site(site_hostname, &hostname) {
             return Err(Error::HostnameMismatch {
                 expected: site_hostname.to_owned(),
                 got: hostname,
@@ -253,5 +276,35 @@ impl Form {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::hostname_matches_site;
+
+    #[test]
+    fn hostname_matches_exact() {
+        assert!(hostname_matches_site(
+            "mauth.example.com",
+            "mauth.example.com"
+        ));
+    }
+
+    #[test]
+    fn hostname_matches_parent_domain() {
+        assert!(hostname_matches_site("mauth.example.com", "example.com"));
+    }
+
+    #[test]
+    fn hostname_does_not_match_similar_suffix() {
+        assert!(!hostname_matches_site("badexample.com", "example.com"));
+        assert!(!hostname_matches_site("mauth.example.com", "example.com"));
+    }
+
+    #[test]
+    fn hostname_matching_is_case_insensitive_and_allows_trailing_dot() {
+        assert!(hostname_matches_site("MAuth.Example.Com.", "example.com"));
+        assert!(hostname_matches_site("mauth.example.com", "EXAMPLE.COM."));
     }
 }
