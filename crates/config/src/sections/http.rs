@@ -64,6 +64,24 @@ pub enum UnixOrTcp {
     Tcp,
 }
 
+/// Controls who can use GraphQL schema introspection.
+#[derive(Debug, Serialize, Deserialize, JsonSchema, Clone, Copy, Default, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum GraphQLIntrospectionMode {
+    /// Allow anonymous and authenticated requests to introspect the schema.
+    #[default]
+    Public,
+
+    /// Only allow authenticated requests to introspect the schema.
+    AuthenticatedOnly,
+}
+
+impl GraphQLIntrospectionMode {
+    fn is_public(&self) -> bool {
+        matches!(self, Self::Public)
+    }
+}
+
 impl UnixOrTcp {
     /// UNIX domain socket
     #[must_use]
@@ -271,6 +289,10 @@ pub enum Resource {
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         playground: bool,
 
+        /// Controls who can introspect the GraphQL schema.
+        #[serde(default, skip_serializing_if = "GraphQLIntrospectionMode::is_public")]
+        introspection: GraphQLIntrospectionMode,
+
         /// Allow access for OAuth 2.0 clients (undocumented)
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         undocumented_oauth2_access: bool,
@@ -363,6 +385,7 @@ impl Default for HttpConfig {
                         Resource::Compat,
                         Resource::GraphQL {
                             playground: false,
+                            introspection: GraphQLIntrospectionMode::Public,
                             undocumented_oauth2_access: false,
                         },
                         Resource::Assets {
@@ -469,5 +492,50 @@ impl ConfigurationSection for HttpConfig {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use figment::{
+        Figment, Jail,
+        providers::{Format, Yaml},
+    };
+
+    use super::*;
+
+    #[test]
+    fn load_graphql_introspection_mode() {
+        Jail::expect_with(|jail| {
+            jail.create_file(
+                "config.yaml",
+                r#"
+                    http:
+                      public_base: https://auth.example.com/
+                      listeners:
+                        - resources:
+                            - name: graphql
+                              introspection: authenticated_only
+                          binds:
+                            - address: "[::]:8080"
+                "#,
+            )?;
+
+            let config = Figment::new()
+                .merge(Yaml::file("config.yaml"))
+                .extract_inner::<HttpConfig>("http")?;
+
+            let [listener] = config.listeners.as_slice() else {
+                panic!("expected a single listener");
+            };
+
+            let [Resource::GraphQL { introspection, .. }] = listener.resources.as_slice() else {
+                panic!("expected a single graphql resource");
+            };
+
+            assert_eq!(*introspection, GraphQLIntrospectionMode::AuthenticatedOnly);
+
+            Ok(())
+        });
     }
 }
