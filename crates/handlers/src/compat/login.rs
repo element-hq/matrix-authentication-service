@@ -1754,36 +1754,19 @@ mod tests {
 
     /// Errors we might encounter while going through the `m.login.sso` login flow.
     ///
-    /// These are things we either a) want to distinguish and detect in a test or b) are
-    /// helpful to have a better label to understand what went wrong when seeing a test
-    /// failure. It's a bit of a toss-up whether we should just panic with a similar
-    /// message for some of these.
+    /// These are things that are a) possible and expected under certain conditions b)
+    /// we want to distinguish and detect in a test
     #[derive(Debug, Error)]
     pub enum MatrixCompatSsoLoginError {
-        #[error(
-            "Unable to find csrf token as part of <form> on the `/login` page. \
-            We need this in order to submit the form and login.\npage_html:\n{page_html}"
-        )]
-        NoCsrfOnLoginPage { page_html: String },
-
         #[error("Consent page returned 403 forbidden ({page_type:?})\npage_html:\n{page_html}")]
         ConsentForbidden {
             page_type: ConsentForbiddenPageType,
             // Useful to understand what the page looked like at the time
             page_html: String,
         },
-
-        #[error(
-            "Unable to find csrf token as part of <form> on the consent page. \
-            We need this in order to submit the form and continue.\npage_html:\n{page_html}"
-        )]
-        NoCsrfOnConsentPage { page_html: String },
-
-        #[error("Expected `loginToken` query parameter in uri={uri}")]
-        NoLoginTokenOnFinalClientRedirect { uri: http::Uri },
-
-        #[error("Expected one but found multiple `loginToken` query parameters in uri={uri}")]
-        MultipleLoginTokenOnFinalClientRedirect { uri: http::Uri },
+        // InvalidUsernamePassword
+        // UserLocked
+        // etc
     }
 
     /// Extract the CSRF token value from an HTML page that contains
@@ -1795,13 +1778,13 @@ mod tests {
         Some(value.to_owned())
     }
 
-    /// Drive the `m.login.sso` login flow (act like an actual user going throught the
+    /// Drive the `m.login.sso` login flow (act like an actual user going through the
     /// process in their browser)
     ///
     /// Return the `loginToken` (if the login flow was successful) which will need to be
     /// exchanged for an access token using the `m.login.token` flow.
     ///
-    /// Returns proper errors for many problems but we also have some expectations that
+    /// Returns proper errors for some problems but we also have some expectations that
     /// will panic (fail the test). Feel free to add more [`MatrixCompatSsoLoginError`]
     /// for specific scenarios that you may need to detect more specifically.
     async fn matrix_compat_sso_login(
@@ -1856,9 +1839,11 @@ mod tests {
         //
         // Extract the `csrf` from the page. We're looking for `<input type="hidden" name="csrf" value="xxx">`
         let Some(csrf) = extract_csrf_token_from_page_html(response.body()) else {
-            return Err(MatrixCompatSsoLoginError::NoCsrfOnLoginPage {
-                page_html: response.body().to_owned(),
-            });
+            panic!(
+                "Unable to find csrf token as part of <form> on the `/login` page. \
+                We need this in order to submit the form and login.\npage_html:\n{page_html}",
+                page_html = response.body()
+            )
         };
 
         // Step #3: Submit the login form
@@ -1930,9 +1915,11 @@ mod tests {
         //
         // Extract the `csrf` from the page. We're looking for `<input type="hidden" name="csrf" value="xxx">`
         let Some(csrf) = extract_csrf_token_from_page_html(response.body()) else {
-            return Err(MatrixCompatSsoLoginError::NoCsrfOnConsentPage {
-                page_html: response.body().to_owned(),
-            });
+            panic!(
+                "Unable to find csrf token as part of <form> on the consent page. \
+                We need this in order to submit the form and continue.\npage_html:\n{page_html}",
+                page_html = response.body()
+            );
         };
         let request = cookies.with_cookies(
             Request::post(&complete_sso_path).form(serde_json::json!({ "csrf": csrf })),
@@ -1973,17 +1960,11 @@ mod tests {
         {
             [login_token] => login_token.to_owned(),
             [] => {
-                return Err(
-                    MatrixCompatSsoLoginError::NoLoginTokenOnFinalClientRedirect {
-                        uri: parsed_location_uri,
-                    },
-                );
+                panic!("Expected `loginToken` query parameter in uri={parsed_location_uri}");
             }
             _ => {
-                return Err(
-                    MatrixCompatSsoLoginError::MultipleLoginTokenOnFinalClientRedirect {
-                        uri: parsed_location_uri,
-                    },
+                panic!(
+                    "Expected one but found multiple `loginToken` query parameters in uri={parsed_location_uri}"
                 );
             }
         };
