@@ -1832,13 +1832,7 @@ mod tests {
             .parse::<http::Uri>()
             .expect("Expected `Location` header to be a valid URI");
         // Follow redirect
-        let request = Request::get(
-            parsed_location_uri
-                .path_and_query()
-                .expect("`Location` redirect should include URI that has path/query")
-                .as_str(),
-        )
-        .empty();
+        let request = Request::get(parsed_location_uri).empty();
         let response = state.request(request).await;
         response.assert_status(StatusCode::SEE_OTHER);
         let location = response
@@ -1855,15 +1849,7 @@ mod tests {
         let login_uri = parsed_location_uri;
 
         // Step 2: GET the /login page to obtain a CSRF token and establish cookies.
-        let request = cookies.with_cookies(
-            Request::get(
-                login_uri
-                    .path_and_query()
-                    .expect("`Location` redirect should include URI that has path/query")
-                    .as_str(),
-            )
-            .empty(),
-        );
+        let request = cookies.with_cookies(Request::get(login_uri.clone()).empty());
         let response = state.request(request).await;
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
@@ -1877,19 +1863,11 @@ mod tests {
         };
 
         // Step #3: Submit the login form
-        let request = cookies.with_cookies(
-            Request::post(
-                login_uri
-                    .path_and_query()
-                    .expect("`Location` redirect should include URI that has path/query")
-                    .as_str(),
-            )
-            .form(serde_json::json!({
-                "csrf": csrf,
-                "username": username,
-                "password": password,
-            })),
-        );
+        let request = cookies.with_cookies(Request::post(login_uri).form(serde_json::json!({
+            "csrf": csrf,
+            "username": username,
+            "password": password,
+        })));
         let response = state.request(request).await;
         cookies.save_cookies(&response);
         // We expect to be redirected to the consent screen (`/complete-compat-sso/{id}`)
