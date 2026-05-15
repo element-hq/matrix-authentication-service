@@ -12,10 +12,6 @@ updates:
       - "Z-Deps-Backend"
     schedule:
       interval: "daily"
-    ignore:
-      # We plan to remove apalis soon, let's ignore it for now
-      - dependency-name: "apalis"
-      - dependency-name: "apalis-*"
     groups:
       axum:
         patterns:
