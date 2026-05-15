@@ -1789,93 +1789,11 @@ mod tests {
 
     /// Extract the CSRF token value from an HTML page that contains
     /// `<input type="hidden" name="csrf" value="…">`.
+    /// (cheeky HTML parsing)
     fn extract_csrf_token_from_page_html(body: &str) -> Option<String> {
         let after_name = body.split("name=\"csrf\" value=\"").nth(1)?;
         let value = after_name.split('"').next()?;
         Some(value.to_owned())
-    }
-
-    /// Keep making requests until we reach a stable destination (non-redirect)
-    ///
-    /// Returns the last response and a list of redirects we made along the way
-    async fn request_and_follow_redirects(
-        state: &TestState,
-        request: http::Request<String>,
-    ) -> (http::Response<String>, Vec<http::Uri>) {
-        let mut request = request;
-        let mut redirects = Vec::new();
-        loop {
-            let mas_hostname = state.url_builder.public_hostname();
-            // This says "host" but the host here is actually just the hostname and the port
-            // is separate. This is a quirk of the `http` crate.
-            let request_host = request.uri().host().map(str::to_string);
-            let response = match request_host.clone() {
-                // Relative URL (assumed to be MAS)
-                None => state.request(request).await,
-                // Request to MAS
-                Some(host) if host == mas_hostname => state.request(request).await,
-                // Something external outside of MAS
-                _external_url => {
-                    todo!("Not implemented yet as we expect everything to MAS related so far.");
-                }
-            };
-
-            // Stop when it's no longer a redirect
-            let is_redirect = matches!(
-                response.status(),
-                StatusCode::PERMANENT_REDIRECT
-                    | StatusCode::TEMPORARY_REDIRECT
-                    | StatusCode::SEE_OTHER
-            );
-            if !is_redirect {
-                return (response, redirects);
-            }
-
-            // Look for the `Location` header
-            let location = response
-                .headers()
-                .get(http::header::LOCATION)
-                .expect("Expected `Location` header for redirect response")
-                .to_str()
-                .expect("Expected `Location` header to be a valid string");
-            let location_uri = location
-                .parse::<http::Uri>()
-                .expect("Expected `Location` header to be a valid URI");
-
-            // Keep track of the redirects
-            redirects.push(location_uri.clone());
-
-            // Follow the location redirect
-            //
-            // This says "host" but the host here is actually just the hostname and the port
-            // is separate. This is a quirk of the `url` crate.
-            match location_uri.host() {
-                // Relative URL (relative to MAS)
-                None if request_host.is_none() || request_host.as_deref() == Some(mas_hostname) => {
-                    request = Request::get(match location_uri.query() {
-                        Some(query_string) => format!("{}?{}", location_uri.path(), query_string),
-                        None => location_uri.path().to_owned(),
-                    })
-                    .empty();
-                }
-                // Directly pointing at MAS
-                Some(hostname) if hostname == mas_hostname => {
-                    request = Request::get(match location_uri.query() {
-                        Some(query_string) => format!("{}?{}", location_uri.path(), query_string),
-                        None => location_uri.path().to_owned(),
-                    })
-                    .empty();
-                }
-                // Something external outside of MAS
-                _external_hostname => {
-                    todo!(
-                        "request_and_follow_redirects(...) does not implement redirects to external URL's yet \
-                        as we expect everything to MAS related so far. Saw redirect to {:?}",
-                        location_uri
-                    );
-                }
-            }
-        }
     }
 
     /// Drive the `m.login.sso` login flow (act like an actual user going throught the
@@ -1899,21 +1817,53 @@ mod tests {
         let request =
             Request::get("/_matrix/client/v3/login/sso/redirect?redirectUrl=http://test-login/")
                 .empty();
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
         // We expect to be redirected to `/login` (with the typical MAS flow this will be a
-        // couple of hops, `/complete-compat-sso/{id}` -> `/login`)
-        let (_last_response, redirects) = request_and_follow_redirects(state, request).await;
-        let login_url = match redirects.last() {
-            Some(last_redirect) if last_redirect.path() == "/login" => {
-                match last_redirect.query() {
-                    Some(query_string) => format!("{}?{}", last_redirect.path(), query_string),
-                    None => last_redirect.path().to_owned(),
-                }
-            }
-            _ => return Err(MatrixCompatSsoLoginError::UnexpectedInitialRedirects { redirects }),
-        };
+        // couple of hops -> `/complete-compat-sso/{id}` -> `/login`)
+        response.assert_status(StatusCode::SEE_OTHER);
+        let location = response
+            .headers()
+            .get(http::header::LOCATION)
+            .expect("Expected `Location` header for redirect response")
+            .to_str()
+            .expect("Expected `Location` header to be a valid string");
+        let parsed_location_uri = location
+            .parse::<http::Uri>()
+            .expect("Expected `Location` header to be a valid URI");
+        // Follow redirect
+        let request = Request::get(
+            parsed_location_uri
+                .path_and_query()
+                .expect("`Location` redirect should include URI that has path/query")
+                .as_str(),
+        )
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        let location = response
+            .headers()
+            .get(http::header::LOCATION)
+            .expect("Expected `Location` header for redirect response")
+            .to_str()
+            .expect("Expected `Location` header to be a valid string");
+        let parsed_location_uri = location
+            .parse::<http::Uri>()
+            .expect("Expected `Location` header to be a valid URI");
+        // Expect to see the `/login` page at this point
+        assert_eq!(parsed_location_uri.path(), "/login");
+        let login_uri = parsed_location_uri;
 
         // Step 2: GET the /login page to obtain a CSRF token and establish cookies.
-        let request = cookies.with_cookies(Request::get(&login_url).empty());
+        let request = cookies.with_cookies(
+            Request::get(
+                login_uri
+                    .path_and_query()
+                    .expect("`Location` redirect should include URI that has path/query")
+                    .as_str(),
+            )
+            .empty(),
+        );
         let response = state.request(request).await;
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
@@ -1927,11 +1877,19 @@ mod tests {
         };
 
         // Step #3: Submit the login form
-        let request = cookies.with_cookies(Request::post(&login_url).form(serde_json::json!({
-            "csrf": csrf,
-            "username": username,
-            "password": password,
-        })));
+        let request = cookies.with_cookies(
+            Request::post(
+                login_uri
+                    .path_and_query()
+                    .expect("`Location` redirect should include URI that has path/query")
+                    .as_str(),
+            )
+            .form(serde_json::json!({
+                "csrf": csrf,
+                "username": username,
+                "password": password,
+            })),
+        );
         let response = state.request(request).await;
         cookies.save_cookies(&response);
         // We expect to be redirected to the consent screen (`/complete-compat-sso/{id}`)
