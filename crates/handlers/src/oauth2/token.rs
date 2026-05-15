@@ -1078,6 +1078,7 @@ mod tests {
                 false,
                 None,
                 None,
+                std::collections::BTreeMap::new(),
             )
             .await
             .unwrap();
@@ -1178,6 +1179,7 @@ mod tests {
                 false,
                 None,
                 None,
+                std::collections::BTreeMap::new(),
             )
             .await
             .unwrap();

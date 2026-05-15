@@ -120,6 +120,10 @@ mod tests {
         assert_eq!(grant, None);
 
         // Create an authorization grant
+        let raw_parameters = std::collections::BTreeMap::from([
+            ("client_id".to_owned(), "client".to_owned()),
+            ("foo".to_owned(), "bar".to_owned()),
+        ]);
         let grant = repo
             .oauth2_authorization_grant()
             .add(
@@ -138,10 +142,12 @@ mod tests {
                 true,
                 None,
                 None,
+                raw_parameters.clone(),
             )
             .await
             .unwrap();
         assert!(grant.is_pending());
+        assert_eq!(grant.raw_parameters, raw_parameters);
 
         // Lookup the same grant by id
         let grant_lookup = repo
