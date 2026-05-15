@@ -2028,8 +2028,7 @@ mod tests {
                 page_type: ConsentForbiddenPageType::DeviceLimitReached,
                 ..
             }) => {
-                // Correct — the `soft_limit` blocked the interactive SSO login at the
-                // consent stage, as expected.
+                // We expect to hit the `soft_limit` for this interactive SSO login attempt
             }
             Ok(_login_token) => {
                 panic!("Expected SSO login to fail due to soft_limit, but it succeeded");
