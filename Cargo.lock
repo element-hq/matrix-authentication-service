@@ -3301,6 +3301,7 @@ dependencies = [
  "governor",
  "headers",
  "hex",
+ "http",
  "hyper",
  "icu_normalizer",
  "indexmap 2.14.0",

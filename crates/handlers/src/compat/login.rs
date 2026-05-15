@@ -999,7 +999,9 @@ mod tests {
     use sqlx::PgPool;
 
     use super::*;
-    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup, test_site_config};
+    use crate::test_utils::{
+        CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup, test_site_config,
+    };
 
     /// Test that the server advertises the right login flows.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -1740,6 +1742,313 @@ mod tests {
         repo.save().await.unwrap();
 
         token
+    }
+
+    /// The kind of page shown when encountering a 403 forbidden at the constent
+    /// stage of the `m.login.sso` flow.
+    #[derive(Debug, PartialEq)]
+    pub enum ConsentForbiddenPageType {
+        DeviceLimitReached,
+        GenericPolicyViolation,
+        Unknown,
+    }
+
+    /// Errors we might encounter while going through the `m.login.sso` login
+    /// flow.
+    ///
+    /// These are things that are a) possible and expected under certain
+    /// conditions b) we want to distinguish and detect in a test
+    #[derive(Debug, Error)]
+    pub enum MatrixCompatSsoLoginError {
+        #[error("Consent page returned 403 forbidden ({page_type:?})\npage_html:\n{page_html}")]
+        ConsentForbidden {
+            page_type: ConsentForbiddenPageType,
+            // Useful to understand what the page looked like at the time
+            page_html: String,
+        },
+        // InvalidUsernamePassword
+        // UserLocked
+        // etc
+    }
+
+    /// Extract the CSRF token value from an HTML page that contains
+    /// `<input type="hidden" name="csrf" value="…">`.
+    /// (cheeky HTML parsing)
+    fn extract_csrf_token_from_page_html(body: &str) -> Option<String> {
+        let after_name = body.split("name=\"csrf\" value=\"").nth(1)?;
+        let value = after_name.split('"').next()?;
+        Some(value.to_owned())
+    }
+
+    /// Drive the `m.login.sso` login flow (act like an actual user going
+    /// through the process in their browser)
+    ///
+    /// Return the `loginToken` (if the login flow was successful) which will
+    /// need to be exchanged for an access token using the `m.login.token`
+    /// flow.
+    ///
+    /// Returns proper errors for some problems but we also have some
+    /// expectations that will panic (fail the test). Feel free to add more
+    /// [`MatrixCompatSsoLoginError`] for specific scenarios that you may
+    /// need to detect more specifically.
+    async fn matrix_compat_sso_login(
+        state: &TestState,
+        username: &str,
+        password: &str,
+    ) -> Result<String, MatrixCompatSsoLoginError> {
+        let cookies = CookieHelper::new();
+
+        // Step #1: Initiate the `m.login.sso` login flow (the browser navigates to
+        // `/login/sso/redirect/{idpId}`)
+        let request =
+            Request::get("/_matrix/client/v3/login/sso/redirect?redirectUrl=http://test-login/")
+                .empty();
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        // We expect to be redirected to `/login` (with the typical MAS flow this will
+        // be a couple of hops -> `/complete-compat-sso/{id}` -> `/login`)
+        response.assert_status(StatusCode::SEE_OTHER);
+        let location = response
+            .headers()
+            .get(http::header::LOCATION)
+            .expect("Expected `Location` header for redirect response")
+            .to_str()
+            .expect("Expected `Location` header to be a valid string");
+        let parsed_location_uri = location
+            .parse::<http::Uri>()
+            .expect("Expected `Location` header to be a valid URI");
+        // Follow redirect (`/complete-compat-sso/{id}`)
+        let request = Request::get(parsed_location_uri).empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        let location = response
+            .headers()
+            .get(http::header::LOCATION)
+            .expect("Expected `Location` header for redirect response")
+            .to_str()
+            .expect("Expected `Location` header to be a valid string");
+        let parsed_location_uri = location
+            .parse::<http::Uri>()
+            .expect("Expected `Location` header to be a valid URI");
+        // Expect to see the `/login` page at this point
+        assert_eq!(parsed_location_uri.path(), "/login");
+        let login_uri = parsed_location_uri;
+
+        // Step 2: GET the /login page to obtain a CSRF token and establish cookies.
+        let request = cookies.with_cookies(Request::get(login_uri.clone()).empty());
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        // Collect any extra <form> data we need to submit alongside
+        // `username`/`password`
+        //
+        // Extract the `csrf` from the page. We're looking for `<input type="hidden"
+        // name="csrf" value="xxx">`
+        let Some(csrf) = extract_csrf_token_from_page_html(response.body()) else {
+            panic!(
+                "Unable to find csrf token as part of <form> on the `/login` page. \
+                We need this in order to submit the form and login.\npage_html:\n{page_html}",
+                page_html = response.body()
+            )
+        };
+
+        // Step #3: Submit the login form
+        let request = cookies.with_cookies(Request::post(login_uri).form(serde_json::json!({
+            "csrf": csrf,
+            "username": username,
+            "password": password,
+        })));
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        // We expect to be redirected to the consent screen
+        // (`/complete-compat-sso/{id}`)
+        response.assert_status(StatusCode::SEE_OTHER);
+        let location = response
+            .headers()
+            .get(http::header::LOCATION)
+            .expect("Expected `Location` header for redirect response")
+            .to_str()
+            .expect("Expected `Location` header to be a valid string");
+        let parsed_location_uri = location
+            .parse::<http::Uri>()
+            .expect("Expected `Location` header to be a valid URI");
+        let complete_sso_path = match parsed_location_uri.query() {
+            Some(query_string) => format!("{}?{}", parsed_location_uri.path(), query_string),
+            None => parsed_location_uri.path().to_owned(),
+        };
+
+        // Step 4: Go to the consent screen, `GET /complete-compat-sso/{id}` with the
+        // browser session cookie. -> 200: consent page (user must approve the
+        // login) -> 403: policy rejected (e.g. could be a generic policy
+        // rejection or more specifically device limit reached)
+        let request = cookies.with_cookies(Request::get(&complete_sso_path).empty());
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+
+        match response.status() {
+            // Policy rejection
+            StatusCode::FORBIDDEN => {
+                // Detect whether this is the "device limit reached" page
+                let page_type = if response
+                    .body()
+                    .contains("data-testid=\"device-limit-reached\"")
+                {
+                    ConsentForbiddenPageType::DeviceLimitReached
+                } else if response
+                    .body()
+                    .contains("data-testid=\"generic-policy-violation\"")
+                {
+                    ConsentForbiddenPageType::GenericPolicyViolation
+                } else {
+                    ConsentForbiddenPageType::Unknown
+                };
+                return Err(MatrixCompatSsoLoginError::ConsentForbidden {
+                    page_type,
+                    page_html: response.body().to_owned(),
+                });
+            }
+            StatusCode::OK => {
+                // Consent screen rendered
+            }
+            status => panic!(
+                "Unexpected status from /complete-compat-sso consent page: {status}. \
+                Body: {}",
+                response.body()
+            ),
+        }
+
+        // Step 5: Press "Continue" on the consent page (submit the form)
+        //
+        // Collect any extra <form> data we need to submit
+        //
+        // Extract the `csrf` from the page. We're looking for `<input type="hidden"
+        // name="csrf" value="xxx">`
+        let Some(csrf) = extract_csrf_token_from_page_html(response.body()) else {
+            panic!(
+                "Unable to find csrf token as part of <form> on the consent page. \
+                We need this in order to submit the form and continue.\npage_html:\n{page_html}",
+                page_html = response.body()
+            );
+        };
+        let request = cookies.with_cookies(
+            Request::post(&complete_sso_path).form(serde_json::json!({ "csrf": csrf })),
+        );
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        // We expect to be redirected to the `redirectUrl` (from the first step) with a
+        // `?loginToken=xxx` query parameter.
+        response.assert_status(StatusCode::SEE_OTHER);
+        let location = response
+            .headers()
+            .get(http::header::LOCATION)
+            .expect("Expected `Location` header for redirect response")
+            .to_str()
+            .expect("Expected `Location` header to be a valid string");
+
+        // Extract the `?loginToken=xxx` query parameter.
+        let parsed_location_uri = location
+            .parse::<http::Uri>()
+            .expect("Expected `Location` header to be a valid URI");
+        let query_string = parsed_location_uri.query().expect(
+            "Expected to be redirected to URI with some query parameters (`?loginToken=xxx`)",
+        );
+        let query_map: HashMap<_, _> = url::form_urlencoded::parse(query_string.as_bytes())
+            .into_owned()
+            .fold(
+                HashMap::new(),
+                |mut hm: HashMap<String, Vec<String>>, (k, v)| {
+                    hm.entry(k).or_default().push(v);
+                    hm
+                },
+            );
+        // Make sure we only see one `loginToken` parameter
+        let login_token = match query_map
+            .get("loginToken")
+            // We're using slice syntax here so we can match easily
+            .map_or(&[] as &[String], |v| v.as_slice())
+        {
+            [login_token] => login_token.to_owned(),
+            [] => {
+                panic!("Expected `loginToken` query parameter in uri={parsed_location_uri}");
+            }
+            _ => {
+                panic!(
+                    "Expected one but found multiple `loginToken` query parameters in uri={parsed_location_uri}"
+                );
+            }
+        };
+
+        Ok(login_token)
+    }
+
+    /// Test that `soft_limit` works against interactive login (like the
+    /// `m.login.sso` compat Matrix login flow)
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_session_soft_limit_interactive_login(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                session_limit: Some(SessionLimitConfig {
+                    // Lowest non-zero value so we don't have to login a bunch (lower
+                    // than `hard_limit`)
+                    soft_limit: NonZeroU64::new(1).unwrap(),
+                    // Some arbitrary high value (more than we login)
+                    hard_limit: NonZeroU64::new(5).unwrap(),
+                    dangerous_hard_limit_eviction: false,
+                }),
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let session_limit_config = state
+            .site_config
+            .session_limit
+            .as_ref()
+            .expect("Expected `session_limit` configured for this test");
+
+        let _user = user_with_password(&state, "alice", "password", false).await;
+
+        // Keep logging in to add more sessions, up to the `soft_limit`. We use the
+        // interactive SSO login and exchange each loginToken to create an actual compat
+        // session that counts toward the limit.
+        for _ in 0..session_limit_config.soft_limit.get() {
+            let login_token = matrix_compat_sso_login(&state, "alice", "password")
+                .await
+                .expect("Should be able to login without issue when under the session limit");
+
+            // Exchange the `loginToken` for an access token. This is what actually
+            // creates the session.
+            let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+                "type": "m.login.token",
+                "token": login_token,
+            }));
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::OK);
+        }
+
+        // One more interactive SSO login will tip us over the `soft_limit`. The
+        // consent page should return 403 forbidden (device limit reached).
+        match matrix_compat_sso_login(&state, "alice", "password").await {
+            Err(MatrixCompatSsoLoginError::ConsentForbidden {
+                page_type: ConsentForbiddenPageType::DeviceLimitReached,
+                ..
+            }) => {
+                // We expect to hit the `soft_limit` for this interactive SSO
+                // login attempt
+            }
+            Ok(_login_token) => {
+                panic!("Expected SSO login to fail due to soft_limit, but it succeeded");
+            }
+            Err(err) => {
+                panic!(
+                    "Expected to see the MatrixCompatSsoLoginError::ConsentForbidden error \
+                    with a DeviceLimitReached violation, but saw a different error instead: {err:?}"
+                );
+            }
+        }
     }
 
     /// Test that the `soft_limit` is not enforced for compat login.
