@@ -1746,16 +1746,18 @@ mod tests {
 
     /// The kind of policy violation shown on the SSO consent page.
     #[derive(Debug, PartialEq)]
-    pub enum PolicyViolationPageType {
+    pub enum ConsentForbiddenPageType {
         DeviceLimitReached,
-        Other,
+        GenericPolicyViolation,
+        Unknown,
     }
 
     /// Errors we might encounter while going through the `m.login.sso` login flow.
     ///
     /// These are things we either a) want to distinguish and detect in a test or b) are
     /// helpful to have a better label to understand what went wrong when seeing a test
-    /// failure.
+    /// failure. It's a bit of a toss-up whether we should just panic with a similar
+    /// message for some of these.
     #[derive(Debug, Error)]
     pub enum MatrixCompatSsoLoginError {
         #[error(
@@ -1764,25 +1766,23 @@ mod tests {
         )]
         NoCsrfOnLoginPage { page_html: String },
 
-        #[error(
-            "consent page returned forbidden (violation: {violation_type:?})\npage_html:\n{page_html}"
-        )]
+        #[error("Consent page returned 403 forbidden ({page_type:?})\npage_html:\n{page_html}")]
         ConsentForbidden {
-            violation_type: PolicyViolationPageType,
+            page_type: ConsentForbiddenPageType,
             // Useful to understand what the page looked like at the time
             page_html: String,
         },
 
         #[error(
             "Unable to find csrf token as part of <form> on the consent page. \
-            We need this in order to submit the form and login.\npage_html:\n{page_html}"
+            We need this in order to submit the form and continue.\npage_html:\n{page_html}"
         )]
         NoCsrfOnConsentPage { page_html: String },
 
-        #[error("Unable to `loginToken` query parameter in uri={uri}")]
+        #[error("Expected `loginToken` query parameter in uri={uri}")]
         NoLoginTokenOnFinalClientRedirect { uri: http::Uri },
 
-        #[error("Expected one but found multiple `loginToken` query parameter in uri={uri}")]
+        #[error("Expected one but found multiple `loginToken` query parameters in uri={uri}")]
         MultipleLoginTokenOnFinalClientRedirect { uri: http::Uri },
     }
 
@@ -1896,16 +1896,21 @@ mod tests {
             // Policy rejection
             StatusCode::FORBIDDEN => {
                 // Detect whether this is the "device limit reached" page
-                let violation_type = if response
+                let page_type = if response
                     .body()
                     .contains("data-testid=\"device-limit-reached\"")
                 {
-                    PolicyViolationPageType::DeviceLimitReached
+                    ConsentForbiddenPageType::DeviceLimitReached
+                } else if response
+                    .body()
+                    .contains("data-testid=\"generic-policy-violation\"")
+                {
+                    ConsentForbiddenPageType::GenericPolicyViolation
                 } else {
-                    PolicyViolationPageType::Other
+                    ConsentForbiddenPageType::Unknown
                 };
                 return Err(MatrixCompatSsoLoginError::ConsentForbidden {
-                    violation_type,
+                    page_type,
                     page_html: response.body().to_owned(),
                 });
             }
@@ -2035,10 +2040,10 @@ mod tests {
         }
 
         // One more interactive SSO login will tip us over the `soft_limit`. The
-        // consent page should return 403 (device limit reached).
+        // consent page should return 403 forbidden (device limit reached).
         match matrix_compat_sso_login(&state, "alice", "password").await {
             Err(MatrixCompatSsoLoginError::ConsentForbidden {
-                violation_type: PolicyViolationPageType::DeviceLimitReached,
+                page_type: ConsentForbiddenPageType::DeviceLimitReached,
                 ..
             }) => {
                 // Correct — the `soft_limit` blocked the interactive SSO login at the

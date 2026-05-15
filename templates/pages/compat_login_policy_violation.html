@@ -22,7 +22,7 @@ Please see LICENSE files in the repository root for full details.
         <p class="text">{{ _("mas.policy_violation.too_many_sessions.description", num_devices_to_remove=num_sessions_need_to_remove) }}</p>
       </div>
     {% else %}
-      <div class="header">
+      <div class="header" data-testid="generic-policy-violation">
         <h1 class="title">{{ _("mas.policy_violation.heading") }}</h1>
         <p class="text">{{ _("mas.policy_violation.description") }}</p>
       </div>
