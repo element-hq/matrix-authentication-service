@@ -1744,8 +1744,8 @@ mod tests {
         token
     }
 
-    /// The kind of page shown when encountering a 403 forbidden at the constent stage
-    /// of the `m.login.sso` flow.
+    /// The kind of page shown when encountering a 403 forbidden at the constent
+    /// stage of the `m.login.sso` flow.
     #[derive(Debug, PartialEq)]
     pub enum ConsentForbiddenPageType {
         DeviceLimitReached,
@@ -1753,10 +1753,11 @@ mod tests {
         Unknown,
     }
 
-    /// Errors we might encounter while going through the `m.login.sso` login flow.
+    /// Errors we might encounter while going through the `m.login.sso` login
+    /// flow.
     ///
-    /// These are things that are a) possible and expected under certain conditions b)
-    /// we want to distinguish and detect in a test
+    /// These are things that are a) possible and expected under certain
+    /// conditions b) we want to distinguish and detect in a test
     #[derive(Debug, Error)]
     pub enum MatrixCompatSsoLoginError {
         #[error("Consent page returned 403 forbidden ({page_type:?})\npage_html:\n{page_html}")]
@@ -1779,15 +1780,17 @@ mod tests {
         Some(value.to_owned())
     }
 
-    /// Drive the `m.login.sso` login flow (act like an actual user going through the
-    /// process in their browser)
+    /// Drive the `m.login.sso` login flow (act like an actual user going
+    /// through the process in their browser)
     ///
-    /// Return the `loginToken` (if the login flow was successful) which will need to be
-    /// exchanged for an access token using the `m.login.token` flow.
+    /// Return the `loginToken` (if the login flow was successful) which will
+    /// need to be exchanged for an access token using the `m.login.token`
+    /// flow.
     ///
-    /// Returns proper errors for some problems but we also have some expectations that
-    /// will panic (fail the test). Feel free to add more [`MatrixCompatSsoLoginError`]
-    /// for specific scenarios that you may need to detect more specifically.
+    /// Returns proper errors for some problems but we also have some
+    /// expectations that will panic (fail the test). Feel free to add more
+    /// [`MatrixCompatSsoLoginError`] for specific scenarios that you may
+    /// need to detect more specifically.
     async fn matrix_compat_sso_login(
         state: &TestState,
         username: &str,
@@ -1802,8 +1805,8 @@ mod tests {
                 .empty();
         let response = state.request(request).await;
         cookies.save_cookies(&response);
-        // We expect to be redirected to `/login` (with the typical MAS flow this will be a
-        // couple of hops -> `/complete-compat-sso/{id}` -> `/login`)
+        // We expect to be redirected to `/login` (with the typical MAS flow this will
+        // be a couple of hops -> `/complete-compat-sso/{id}` -> `/login`)
         response.assert_status(StatusCode::SEE_OTHER);
         let location = response
             .headers()
@@ -1836,9 +1839,11 @@ mod tests {
         let response = state.request(request).await;
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
-        // Collect any extra <form> data we need to submit alongside `username`/`password`
+        // Collect any extra <form> data we need to submit alongside
+        // `username`/`password`
         //
-        // Extract the `csrf` from the page. We're looking for `<input type="hidden" name="csrf" value="xxx">`
+        // Extract the `csrf` from the page. We're looking for `<input type="hidden"
+        // name="csrf" value="xxx">`
         let Some(csrf) = extract_csrf_token_from_page_html(response.body()) else {
             panic!(
                 "Unable to find csrf token as part of <form> on the `/login` page. \
@@ -1855,7 +1860,8 @@ mod tests {
         })));
         let response = state.request(request).await;
         cookies.save_cookies(&response);
-        // We expect to be redirected to the consent screen (`/complete-compat-sso/{id}`)
+        // We expect to be redirected to the consent screen
+        // (`/complete-compat-sso/{id}`)
         response.assert_status(StatusCode::SEE_OTHER);
         let location = response
             .headers()
@@ -1871,9 +1877,10 @@ mod tests {
             None => parsed_location_uri.path().to_owned(),
         };
 
-        // Step 4: Go to the consent screen, `GET /complete-compat-sso/{id}` with the browser session cookie.
-        // -> 200: consent page (user must approve the login)
-        // -> 403: policy rejected (e.g. could be a generic policy rejection or more specifically device limit reached)
+        // Step 4: Go to the consent screen, `GET /complete-compat-sso/{id}` with the
+        // browser session cookie. -> 200: consent page (user must approve the
+        // login) -> 403: policy rejected (e.g. could be a generic policy
+        // rejection or more specifically device limit reached)
         let request = cookies.with_cookies(Request::get(&complete_sso_path).empty());
         let response = state.request(request).await;
         cookies.save_cookies(&response);
@@ -1914,7 +1921,8 @@ mod tests {
         //
         // Collect any extra <form> data we need to submit
         //
-        // Extract the `csrf` from the page. We're looking for `<input type="hidden" name="csrf" value="xxx">`
+        // Extract the `csrf` from the page. We're looking for `<input type="hidden"
+        // name="csrf" value="xxx">`
         let Some(csrf) = extract_csrf_token_from_page_html(response.body()) else {
             panic!(
                 "Unable to find csrf token as part of <form> on the consent page. \
@@ -1973,8 +1981,8 @@ mod tests {
         Ok(login_token)
     }
 
-    /// Test that `soft_limit` works against interactive login (like the `m.login.sso`
-    /// compat Matrix login flow)
+    /// Test that `soft_limit` works against interactive login (like the
+    /// `m.login.sso` compat Matrix login flow)
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_session_soft_limit_interactive_login(pool: PgPool) {
         setup();
@@ -2028,7 +2036,8 @@ mod tests {
                 page_type: ConsentForbiddenPageType::DeviceLimitReached,
                 ..
             }) => {
-                // We expect to hit the `soft_limit` for this interactive SSO login attempt
+                // We expect to hit the `soft_limit` for this interactive SSO
+                // login attempt
             }
             Ok(_login_token) => {
                 panic!("Expected SSO login to fail due to soft_limit, but it succeeded");
