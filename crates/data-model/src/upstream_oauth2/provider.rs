@@ -285,6 +285,7 @@ pub struct UpstreamOAuthProvider {
     pub additional_authorization_parameters: Vec<(String, String)>,
     pub forward_login_hint: bool,
     pub on_backchannel_logout: OnBackchannelLogout,
+    pub registration_token_required: bool,
 }
 
 impl PartialOrd for UpstreamOAuthProvider {

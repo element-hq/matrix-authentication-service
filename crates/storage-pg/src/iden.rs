@@ -156,6 +156,7 @@ pub enum UpstreamOAuthProviders {
     AuthorizationEndpointOverride,
     UserinfoEndpointOverride,
     OnBackchannelLogout,
+    RegistrationTokenRequired,
 }
 
 #[derive(sea_query::Iden)]
