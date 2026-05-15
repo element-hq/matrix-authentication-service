@@ -1,0 +1,1128 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Account sessions page > renders the page 1`] = `
+<DocumentFragment>
+  <div
+    class="_layoutContainer_4402d3"
+  >
+    <div
+      class="flex flex-col gap-6"
+    >
+      <header
+        class="_pageHeading_5ba6c3"
+      >
+        <div
+          class="_icon_5ba6c3 _invalid_5ba6c3"
+        >
+          <svg
+            fill="currentColor"
+            height="1em"
+            viewBox="0 0 24 24"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 17q.424 0 .713-.288A.97.97 0 0 0 13 16a.97.97 0 0 0-.287-.713A.97.97 0 0 0 12 15a.97.97 0 0 0-.713.287A.97.97 0 0 0 11 16q0 .424.287.712.288.288.713.288m0-4q.424 0 .713-.287A.97.97 0 0 0 13 12V8a.97.97 0 0 0-.287-.713A.97.97 0 0 0 12 7a.97.97 0 0 0-.713.287A.97.97 0 0 0 11 8v4q0 .424.287.713.288.287.713.287m0 9a9.7 9.7 0 0 1-3.9-.788 10.1 10.1 0 0 1-3.175-2.137q-1.35-1.35-2.137-3.175A9.7 9.7 0 0 1 2 12q0-2.075.788-3.9a10.1 10.1 0 0 1 2.137-3.175q1.35-1.35 3.175-2.137A9.7 9.7 0 0 1 12 2q2.075 0 3.9.788a10.1 10.1 0 0 1 3.175 2.137q1.35 1.35 2.137 3.175A9.7 9.7 0 0 1 22 12a9.7 9.7 0 0 1-.788 3.9 10.1 10.1 0 0 1-2.137 3.175q-1.35 1.35-3.175 2.137A9.7 9.7 0 0 1 12 22"
+            />
+          </svg>
+        </div>
+        <div
+          class="_header_5ba6c3"
+        >
+          <h1
+            class="_title_5ba6c3"
+          >
+            Something went wrong
+          </h1>
+          <p
+            class="_text_5ba6c3"
+          >
+            An unexpected error occurred. Please try again.
+          </p>
+        </div>
+      </header>
+      <button
+        class="_button_13vu4_8"
+        data-kind="tertiary"
+        data-size="lg"
+        role="button"
+        tabindex="0"
+      >
+        Show details
+      </button>
+    </div>
+    <footer
+      class="_legalFooter_acfd2c"
+    >
+      <nav>
+        <a
+          class="_link_1v5rz_8"
+          data-kind="primary"
+          data-size="medium"
+          href="https://matrix.org/policy"
+          rel="noreferrer noopener"
+          title="Link to the service privacy policy"
+        >
+          Privacy Policy
+        </a>
+        <div
+          aria-hidden="true"
+          class="_separator_acfd2c"
+        >
+          •
+        </div>
+        <a
+          class="_link_1v5rz_8"
+          data-kind="primary"
+          data-size="medium"
+          href="https://matrix.org/tos"
+          rel="noreferrer noopener"
+          title="Link to the service terms and conditions"
+        >
+          Terms & Conditions
+        </a>
+      </nav>
+      <p
+        class="_imprint_acfd2c"
+      >
+        All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
+      </p>
+    </footer>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`Account sessions page > session limit > displays an error if they've hit the session soft_limit 1`] = `
+<DocumentFragment>
+  <div
+    class="_layoutContainer_4402d3 _wide_4402d3"
+  >
+    <div
+      class="flex flex-col gap-10"
+    >
+      <h1
+        class="_typography_6v6n8_153 _font-heading-md-semibold_6v6n8_112"
+      >
+        Your account
+      </h1>
+      <div
+        class="flex flex-col gap-4"
+      >
+        <div
+          class="_user_0d9d49"
+        >
+          <span
+            aria-label="@alice:example.com"
+            class="_avatar_zysgz_8 _avatar_0d9d49 _avatar-imageless_zysgz_55"
+            data-color="6"
+            data-type="round"
+            role="img"
+            style="--cpd-avatar-size: var(--cpd-space-14x);"
+          >
+            A
+          </span>
+          <div
+            class="_meta_0d9d49"
+          >
+            <p
+              class="_typography_6v6n8_153 _font-body-lg-semibold_6v6n8_74"
+            >
+              Alice
+            </p>
+            <p
+              class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50 _mxid_0d9d49"
+            >
+              @alice:example.com
+            </p>
+          </div>
+          <button
+            aria-controls="radix-_r_g_"
+            aria-expanded="false"
+            aria-haspopup="dialog"
+            aria-labelledby="_r_j_"
+            class="_icon-button_1215g_8 _editButton_0d9d49"
+            data-kind="primary"
+            data-state="closed"
+            role="button"
+            style="--cpd-icon-button-size: var(--cpd-space-6x);"
+            tabindex="0"
+            type="button"
+          >
+            <div
+              class="_indicator-icon_147l5_17"
+              style="--cpd-icon-button-size: 100%;"
+            >
+              <svg
+                fill="currentColor"
+                height="1em"
+                viewBox="0 0 24 24"
+                width="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  clip-rule="evenodd"
+                  d="M15.706 2.637a2 2 0 0 1 2.829 0l2.828 2.828a2 2 0 0 1 0 2.829L9.605 20.052a1 1 0 0 1-.465.263L3.483 21.73a1 1 0 0 1-1.212-1.213l1.414-5.657a1 1 0 0 1 .263-.465zm1.224 7.262L14.102 7.07l-8.544 8.544-.943 3.771 3.771-.943z"
+                  fill-rule="evenodd"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <nav
+          class="_navBar_6d152a"
+        >
+          <ul
+            class="_navBarItems_6d152a"
+          >
+            <li
+              class="_navTab_a2fe1e"
+            >
+              <a
+                class="_navItem_a2fe1e"
+                href="/"
+              >
+                Settings
+              </a>
+            </li>
+            <li
+              class="_navTab_a2fe1e"
+            >
+              <a
+                aria-current="page"
+                class="_navItem_a2fe1e"
+                data-status="active"
+                href="/sessions"
+              >
+                Devices
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div
+      class="flex flex-col gap-6"
+    >
+      <h3
+        class="_typography_6v6n8_153 _font-heading-md-semibold_6v6n8_112"
+      >
+        Where you're signed in
+      </h3>
+      <div
+        class="_browserSessionsOverview_5c5d1f"
+      >
+        <div
+          class="flex flex-1 flex-col"
+        >
+          <h5
+            class="_typography_6v6n8_153 _font-body-lg-semibold_6v6n8_74"
+          >
+            Browsers
+          </h5>
+          <p
+            class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50"
+          >
+            3 active sessions
+          </p>
+        </div>
+        <a
+          class="_link_1v5rz_8"
+          data-kind="primary"
+          data-size="medium"
+          href="/sessions/browsers"
+          rel="noreferrer noopener"
+        >
+          View all
+        </a>
+      </div>
+      <h4
+        class="_typography_6v6n8_153 _font-heading-sm-semibold_6v6n8_93 flex gap-1 items-center"
+      >
+        12 devices
+        <svg
+          aria-labelledby="_r_o_"
+          fill="currentColor"
+          height="1em"
+          viewBox="0 0 24 24"
+          width="1em"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M11.288 7.288A.97.97 0 0 1 12 7q.424 0 .713.287Q13 7.576 13 8t-.287.713A.97.97 0 0 1 12 9a.97.97 0 0 1-.713-.287A.97.97 0 0 1 11 8q0-.424.287-.713m.001 4.001A.97.97 0 0 1 12 11q.424 0 .713.287.287.288.287.713v4q0 .424-.287.712A.97.97 0 0 1 12 17a.97.97 0 0 1-.713-.288A.97.97 0 0 1 11 16v-4q0-.424.287-.713"
+          />
+          <path
+            clip-rule="evenodd"
+            d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10m-2 0a8 8 0 1 1-16 0 8 8 0 0 1 16 0"
+            fill-rule="evenodd"
+          />
+        </svg>
+      </h4>
+      <div
+        aria-orientation="horizontal"
+        class="_separator_59a6a1 _section_59a6a1"
+        role="separator"
+      />
+      <div
+        class="_alert_zx76t_10"
+        data-testid="device-limit-error"
+        data-type="critical"
+      >
+        <svg
+          aria-hidden="true"
+          class="_icon_zx76t_48"
+          fill="currentColor"
+          height="24"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 17q.424 0 .713-.288A.97.97 0 0 0 13 16a.97.97 0 0 0-.287-.713A.97.97 0 0 0 12 15a.97.97 0 0 0-.713.287A.97.97 0 0 0 11 16q0 .424.287.712.288.288.713.288m0-4q.424 0 .713-.287A.97.97 0 0 0 13 12V8a.97.97 0 0 0-.287-.713A.97.97 0 0 0 12 7a.97.97 0 0 0-.713.287A.97.97 0 0 0 11 8v4q0 .424.287.713.288.287.713.287m0 9a9.7 9.7 0 0 1-3.9-.788 10.1 10.1 0 0 1-3.175-2.137q-1.35-1.35-2.137-3.175A9.7 9.7 0 0 1 2 12q0-2.075.788-3.9a10.1 10.1 0 0 1 2.137-3.175q1.35-1.35 3.175-2.137A9.7 9.7 0 0 1 12 2q2.075 0 3.9.788a10.1 10.1 0 0 1 3.175 2.137q1.35 1.35 2.137 3.175A9.7 9.7 0 0 1 22 12a9.7 9.7 0 0 1-.788 3.9 10.1 10.1 0 0 1-2.137 3.175q-1.35 1.35-3.175 2.137A9.7 9.7 0 0 1 12 22"
+          />
+        </svg>
+        <div
+          class="_content_zx76t_37"
+        >
+          <div
+            class="_text-content_zx76t_44"
+          >
+            <p
+              class="_typography_6v6n8_153 _font-body-md-semibold_6v6n8_55"
+            >
+              You've hit the device limit
+            </p>
+            <p
+              class="_typography_6v6n8_153 _font-body-sm-regular_6v6n8_31"
+            >
+              You've used 12 of 12 device slots. When you try to sign-in again, you'll need to remove an existing device.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div
+        class="flex gap-2 justify-start items-center"
+      >
+        <a
+          class="_filter_f76dea _disabledFilter_f76dea"
+          href="/sessions?inactive=true"
+        >
+          Inactive for 90+ days
+        </a>
+      </div>
+      <section
+        class="_sessionCardRoot_6c1027"
+      >
+        <a
+          class="_sessionCard_6c1027"
+          href="/sessions/compat_session%3A5"
+        >
+          <header
+            class="_cardHeader_6c1027"
+          >
+            <svg
+              aria-label="Computer"
+              class="_deviceTypeIcon_261d75"
+              fill="currentColor"
+              height="1em"
+              viewBox="0 0 24 24"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 18q-.824 0-1.412-.587A1.93 1.93 0 0 1 2 16V5q0-.824.587-1.412A1.93 1.93 0 0 1 4 3h16q.824 0 1.413.587Q22 4.176 22 5v11q0 .824-.587 1.413A1.93 1.93 0 0 1 20 18zm0-2h16V5H4zm-2 5a.97.97 0 0 1-.712-.288A.97.97 0 0 1 1 20q0-.424.288-.712A.97.97 0 0 1 2 19h20q.424 0 .712.288.288.287.288.712 0 .424-.288.712A.97.97 0 0 1 22 21z"
+              />
+            </svg>
+            <div
+              class="_content_6c1027"
+            >
+              <div
+                class="_name_6c1027"
+              >
+                Chrome for Linux
+              </div>
+              <div
+                class="_client_6c1027"
+              >
+                <img
+                  alt="Jungle Phone"
+                  class="_avatar_d3cd4c"
+                  referrerpolicy="no-referrer"
+                  src="/node_modules/@browser-logos/chrome/chrome_64x64.png"
+                  style="--mas-avatar-size: var(--cpd-space-5x);"
+                />
+                Jungle Phone
+              </div>
+            </div>
+          </header>
+          <ul
+            class="_metadata_6c1027"
+          >
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Last Active
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <span
+                  title="Thu, Apr 23, 2026, 9:25 PM"
+                >
+                  Active Thu, Apr 23, 2026, 9:25 PM
+                </span>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Signed in
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <time
+                  datetime="2026-04-23T21:25:43Z"
+                >
+                  Thu, Apr 23, 2026, 9:25 PM
+                </time>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Device ID
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                zzzZZZzzz5
+              </div>
+            </li>
+          </ul>
+        </a>
+        <div
+          class="_action_6c1027"
+        >
+          <button
+            aria-controls="radix-_r_t_"
+            aria-expanded="false"
+            aria-haspopup="dialog"
+            class="_button_13vu4_8 _has-icon_13vu4_60 _destructive_13vu4_110"
+            data-kind="secondary"
+            data-size="sm"
+            data-state="closed"
+            role="button"
+            tabindex="0"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              fill="currentColor"
+              height="20"
+              viewBox="0 0 24 24"
+              width="20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7 21q-.824 0-1.412-.587A1.93 1.93 0 0 1 5 19V6a.97.97 0 0 1-.713-.287A.97.97 0 0 1 4 5q0-.424.287-.713A.97.97 0 0 1 5 4h4q0-.424.287-.712A.97.97 0 0 1 10 3h4q.424 0 .713.288Q15 3.575 15 4h4q.424 0 .712.287Q20 4.576 20 5t-.288.713A.97.97 0 0 1 19 6v13q0 .824-.587 1.413A1.93 1.93 0 0 1 17 21zM7 6v13h10V6zm2 10q0 .424.287.712Q9.576 17 10 17t.713-.288A.97.97 0 0 0 11 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 10 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 9 9zm4 0q0 .424.287.712.288.288.713.288.424 0 .713-.288A.97.97 0 0 0 15 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 14 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 13 9z"
+              />
+            </svg>
+            Remove device
+          </button>
+        </div>
+      </section>
+      <section
+        class="_sessionCardRoot_6c1027"
+      >
+        <a
+          class="_sessionCard_6c1027"
+          href="/sessions/compat_session%3A4"
+        >
+          <header
+            class="_cardHeader_6c1027"
+          >
+            <svg
+              aria-label="Computer"
+              class="_deviceTypeIcon_261d75"
+              fill="currentColor"
+              height="1em"
+              viewBox="0 0 24 24"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 18q-.824 0-1.412-.587A1.93 1.93 0 0 1 2 16V5q0-.824.587-1.412A1.93 1.93 0 0 1 4 3h16q.824 0 1.413.587Q22 4.176 22 5v11q0 .824-.587 1.413A1.93 1.93 0 0 1 20 18zm0-2h16V5H4zm-2 5a.97.97 0 0 1-.712-.288A.97.97 0 0 1 1 20q0-.424.288-.712A.97.97 0 0 1 2 19h20q.424 0 .712.288.288.287.288.712 0 .424-.288.712A.97.97 0 0 1 22 21z"
+              />
+            </svg>
+            <div
+              class="_content_6c1027"
+            >
+              <div
+                class="_name_6c1027"
+              >
+                Chrome for Linux
+              </div>
+              <div
+                class="_client_6c1027"
+              >
+                <img
+                  alt="Jungle Phone"
+                  class="_avatar_d3cd4c"
+                  referrerpolicy="no-referrer"
+                  src="/node_modules/@browser-logos/chrome/chrome_64x64.png"
+                  style="--mas-avatar-size: var(--cpd-space-5x);"
+                />
+                Jungle Phone
+              </div>
+            </div>
+          </header>
+          <ul
+            class="_metadata_6c1027"
+          >
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Last Active
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <span
+                  title="Thu, Apr 23, 2026, 9:25 PM"
+                >
+                  Active Thu, Apr 23, 2026, 9:25 PM
+                </span>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Signed in
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <time
+                  datetime="2026-04-23T21:25:43Z"
+                >
+                  Thu, Apr 23, 2026, 9:25 PM
+                </time>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Device ID
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                zzzZZZzzz4
+              </div>
+            </li>
+          </ul>
+        </a>
+        <div
+          class="_action_6c1027"
+        >
+          <button
+            aria-controls="radix-_r_10_"
+            aria-expanded="false"
+            aria-haspopup="dialog"
+            class="_button_13vu4_8 _has-icon_13vu4_60 _destructive_13vu4_110"
+            data-kind="secondary"
+            data-size="sm"
+            data-state="closed"
+            role="button"
+            tabindex="0"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              fill="currentColor"
+              height="20"
+              viewBox="0 0 24 24"
+              width="20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7 21q-.824 0-1.412-.587A1.93 1.93 0 0 1 5 19V6a.97.97 0 0 1-.713-.287A.97.97 0 0 1 4 5q0-.424.287-.713A.97.97 0 0 1 5 4h4q0-.424.287-.712A.97.97 0 0 1 10 3h4q.424 0 .713.288Q15 3.575 15 4h4q.424 0 .712.287Q20 4.576 20 5t-.288.713A.97.97 0 0 1 19 6v13q0 .824-.587 1.413A1.93 1.93 0 0 1 17 21zM7 6v13h10V6zm2 10q0 .424.287.712Q9.576 17 10 17t.713-.288A.97.97 0 0 0 11 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 10 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 9 9zm4 0q0 .424.287.712.288.288.713.288.424 0 .713-.288A.97.97 0 0 0 15 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 14 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 13 9z"
+              />
+            </svg>
+            Remove device
+          </button>
+        </div>
+      </section>
+      <section
+        class="_sessionCardRoot_6c1027"
+      >
+        <a
+          class="_sessionCard_6c1027"
+          href="/sessions/compat_session%3A3"
+        >
+          <header
+            class="_cardHeader_6c1027"
+          >
+            <svg
+              aria-label="Computer"
+              class="_deviceTypeIcon_261d75"
+              fill="currentColor"
+              height="1em"
+              viewBox="0 0 24 24"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 18q-.824 0-1.412-.587A1.93 1.93 0 0 1 2 16V5q0-.824.587-1.412A1.93 1.93 0 0 1 4 3h16q.824 0 1.413.587Q22 4.176 22 5v11q0 .824-.587 1.413A1.93 1.93 0 0 1 20 18zm0-2h16V5H4zm-2 5a.97.97 0 0 1-.712-.288A.97.97 0 0 1 1 20q0-.424.288-.712A.97.97 0 0 1 2 19h20q.424 0 .712.288.288.287.288.712 0 .424-.288.712A.97.97 0 0 1 22 21z"
+              />
+            </svg>
+            <div
+              class="_content_6c1027"
+            >
+              <div
+                class="_name_6c1027"
+              >
+                Chrome for Linux
+              </div>
+              <div
+                class="_client_6c1027"
+              >
+                <img
+                  alt="Jungle Phone"
+                  class="_avatar_d3cd4c"
+                  referrerpolicy="no-referrer"
+                  src="/node_modules/@browser-logos/chrome/chrome_64x64.png"
+                  style="--mas-avatar-size: var(--cpd-space-5x);"
+                />
+                Jungle Phone
+              </div>
+            </div>
+          </header>
+          <ul
+            class="_metadata_6c1027"
+          >
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Last Active
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <span
+                  title="Thu, Apr 23, 2026, 9:25 PM"
+                >
+                  Active Thu, Apr 23, 2026, 9:25 PM
+                </span>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Signed in
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <time
+                  datetime="2026-04-23T21:25:43Z"
+                >
+                  Thu, Apr 23, 2026, 9:25 PM
+                </time>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Device ID
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                zzzZZZzzz3
+              </div>
+            </li>
+          </ul>
+        </a>
+        <div
+          class="_action_6c1027"
+        >
+          <button
+            aria-controls="radix-_r_13_"
+            aria-expanded="false"
+            aria-haspopup="dialog"
+            class="_button_13vu4_8 _has-icon_13vu4_60 _destructive_13vu4_110"
+            data-kind="secondary"
+            data-size="sm"
+            data-state="closed"
+            role="button"
+            tabindex="0"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              fill="currentColor"
+              height="20"
+              viewBox="0 0 24 24"
+              width="20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7 21q-.824 0-1.412-.587A1.93 1.93 0 0 1 5 19V6a.97.97 0 0 1-.713-.287A.97.97 0 0 1 4 5q0-.424.287-.713A.97.97 0 0 1 5 4h4q0-.424.287-.712A.97.97 0 0 1 10 3h4q.424 0 .713.288Q15 3.575 15 4h4q.424 0 .712.287Q20 4.576 20 5t-.288.713A.97.97 0 0 1 19 6v13q0 .824-.587 1.413A1.93 1.93 0 0 1 17 21zM7 6v13h10V6zm2 10q0 .424.287.712Q9.576 17 10 17t.713-.288A.97.97 0 0 0 11 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 10 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 9 9zm4 0q0 .424.287.712.288.288.713.288.424 0 .713-.288A.97.97 0 0 0 15 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 14 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 13 9z"
+              />
+            </svg>
+            Remove device
+          </button>
+        </div>
+      </section>
+      <section
+        class="_sessionCardRoot_6c1027"
+      >
+        <a
+          class="_sessionCard_6c1027"
+          href="/sessions/compat_session%3A2"
+        >
+          <header
+            class="_cardHeader_6c1027"
+          >
+            <svg
+              aria-label="Computer"
+              class="_deviceTypeIcon_261d75"
+              fill="currentColor"
+              height="1em"
+              viewBox="0 0 24 24"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 18q-.824 0-1.412-.587A1.93 1.93 0 0 1 2 16V5q0-.824.587-1.412A1.93 1.93 0 0 1 4 3h16q.824 0 1.413.587Q22 4.176 22 5v11q0 .824-.587 1.413A1.93 1.93 0 0 1 20 18zm0-2h16V5H4zm-2 5a.97.97 0 0 1-.712-.288A.97.97 0 0 1 1 20q0-.424.288-.712A.97.97 0 0 1 2 19h20q.424 0 .712.288.288.287.288.712 0 .424-.288.712A.97.97 0 0 1 22 21z"
+              />
+            </svg>
+            <div
+              class="_content_6c1027"
+            >
+              <div
+                class="_name_6c1027"
+              >
+                Chrome for Linux
+              </div>
+              <div
+                class="_client_6c1027"
+              >
+                <img
+                  alt="Jungle Phone"
+                  class="_avatar_d3cd4c"
+                  referrerpolicy="no-referrer"
+                  src="/node_modules/@browser-logos/chrome/chrome_64x64.png"
+                  style="--mas-avatar-size: var(--cpd-space-5x);"
+                />
+                Jungle Phone
+              </div>
+            </div>
+          </header>
+          <ul
+            class="_metadata_6c1027"
+          >
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Last Active
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <span
+                  title="Thu, Apr 23, 2026, 9:25 PM"
+                >
+                  Active Thu, Apr 23, 2026, 9:25 PM
+                </span>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Signed in
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <time
+                  datetime="2026-04-23T21:25:43Z"
+                >
+                  Thu, Apr 23, 2026, 9:25 PM
+                </time>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Device ID
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                zzzZZZzzz2
+              </div>
+            </li>
+          </ul>
+        </a>
+        <div
+          class="_action_6c1027"
+        >
+          <button
+            aria-controls="radix-_r_16_"
+            aria-expanded="false"
+            aria-haspopup="dialog"
+            class="_button_13vu4_8 _has-icon_13vu4_60 _destructive_13vu4_110"
+            data-kind="secondary"
+            data-size="sm"
+            data-state="closed"
+            role="button"
+            tabindex="0"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              fill="currentColor"
+              height="20"
+              viewBox="0 0 24 24"
+              width="20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7 21q-.824 0-1.412-.587A1.93 1.93 0 0 1 5 19V6a.97.97 0 0 1-.713-.287A.97.97 0 0 1 4 5q0-.424.287-.713A.97.97 0 0 1 5 4h4q0-.424.287-.712A.97.97 0 0 1 10 3h4q.424 0 .713.288Q15 3.575 15 4h4q.424 0 .712.287Q20 4.576 20 5t-.288.713A.97.97 0 0 1 19 6v13q0 .824-.587 1.413A1.93 1.93 0 0 1 17 21zM7 6v13h10V6zm2 10q0 .424.287.712Q9.576 17 10 17t.713-.288A.97.97 0 0 0 11 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 10 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 9 9zm4 0q0 .424.287.712.288.288.713.288.424 0 .713-.288A.97.97 0 0 0 15 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 14 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 13 9z"
+              />
+            </svg>
+            Remove device
+          </button>
+        </div>
+      </section>
+      <section
+        class="_sessionCardRoot_6c1027"
+      >
+        <a
+          class="_sessionCard_6c1027"
+          href="/sessions/compat_session%3A1"
+        >
+          <header
+            class="_cardHeader_6c1027"
+          >
+            <svg
+              aria-label="Computer"
+              class="_deviceTypeIcon_261d75"
+              fill="currentColor"
+              height="1em"
+              viewBox="0 0 24 24"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 18q-.824 0-1.412-.587A1.93 1.93 0 0 1 2 16V5q0-.824.587-1.412A1.93 1.93 0 0 1 4 3h16q.824 0 1.413.587Q22 4.176 22 5v11q0 .824-.587 1.413A1.93 1.93 0 0 1 20 18zm0-2h16V5H4zm-2 5a.97.97 0 0 1-.712-.288A.97.97 0 0 1 1 20q0-.424.288-.712A.97.97 0 0 1 2 19h20q.424 0 .712.288.288.287.288.712 0 .424-.288.712A.97.97 0 0 1 22 21z"
+              />
+            </svg>
+            <div
+              class="_content_6c1027"
+            >
+              <div
+                class="_name_6c1027"
+              >
+                Chrome for Linux
+              </div>
+              <div
+                class="_client_6c1027"
+              >
+                <img
+                  alt="Jungle Phone"
+                  class="_avatar_d3cd4c"
+                  referrerpolicy="no-referrer"
+                  src="/node_modules/@browser-logos/chrome/chrome_64x64.png"
+                  style="--mas-avatar-size: var(--cpd-space-5x);"
+                />
+                Jungle Phone
+              </div>
+            </div>
+          </header>
+          <ul
+            class="_metadata_6c1027"
+          >
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Last Active
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <span
+                  title="Thu, Apr 23, 2026, 9:25 PM"
+                >
+                  Active Thu, Apr 23, 2026, 9:25 PM
+                </span>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Signed in
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <time
+                  datetime="2026-04-23T21:25:43Z"
+                >
+                  Thu, Apr 23, 2026, 9:25 PM
+                </time>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Device ID
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                zzzZZZzzz1
+              </div>
+            </li>
+          </ul>
+        </a>
+        <div
+          class="_action_6c1027"
+        >
+          <button
+            aria-controls="radix-_r_19_"
+            aria-expanded="false"
+            aria-haspopup="dialog"
+            class="_button_13vu4_8 _has-icon_13vu4_60 _destructive_13vu4_110"
+            data-kind="secondary"
+            data-size="sm"
+            data-state="closed"
+            role="button"
+            tabindex="0"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              fill="currentColor"
+              height="20"
+              viewBox="0 0 24 24"
+              width="20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7 21q-.824 0-1.412-.587A1.93 1.93 0 0 1 5 19V6a.97.97 0 0 1-.713-.287A.97.97 0 0 1 4 5q0-.424.287-.713A.97.97 0 0 1 5 4h4q0-.424.287-.712A.97.97 0 0 1 10 3h4q.424 0 .713.288Q15 3.575 15 4h4q.424 0 .712.287Q20 4.576 20 5t-.288.713A.97.97 0 0 1 19 6v13q0 .824-.587 1.413A1.93 1.93 0 0 1 17 21zM7 6v13h10V6zm2 10q0 .424.287.712Q9.576 17 10 17t.713-.288A.97.97 0 0 0 11 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 10 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 9 9zm4 0q0 .424.287.712.288.288.713.288.424 0 .713-.288A.97.97 0 0 0 15 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 14 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 13 9z"
+              />
+            </svg>
+            Remove device
+          </button>
+        </div>
+      </section>
+      <section
+        class="_sessionCardRoot_6c1027"
+      >
+        <a
+          class="_sessionCard_6c1027"
+          href="/sessions/compat_session%3A0"
+        >
+          <header
+            class="_cardHeader_6c1027"
+          >
+            <svg
+              aria-label="Computer"
+              class="_deviceTypeIcon_261d75"
+              fill="currentColor"
+              height="1em"
+              viewBox="0 0 24 24"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 18q-.824 0-1.412-.587A1.93 1.93 0 0 1 2 16V5q0-.824.587-1.412A1.93 1.93 0 0 1 4 3h16q.824 0 1.413.587Q22 4.176 22 5v11q0 .824-.587 1.413A1.93 1.93 0 0 1 20 18zm0-2h16V5H4zm-2 5a.97.97 0 0 1-.712-.288A.97.97 0 0 1 1 20q0-.424.288-.712A.97.97 0 0 1 2 19h20q.424 0 .712.288.288.287.288.712 0 .424-.288.712A.97.97 0 0 1 22 21z"
+              />
+            </svg>
+            <div
+              class="_content_6c1027"
+            >
+              <div
+                class="_name_6c1027"
+              >
+                Chrome for Linux
+              </div>
+              <div
+                class="_client_6c1027"
+              >
+                <img
+                  alt="Jungle Phone"
+                  class="_avatar_d3cd4c"
+                  referrerpolicy="no-referrer"
+                  src="/node_modules/@browser-logos/chrome/chrome_64x64.png"
+                  style="--mas-avatar-size: var(--cpd-space-5x);"
+                />
+                Jungle Phone
+              </div>
+            </div>
+          </header>
+          <ul
+            class="_metadata_6c1027"
+          >
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Last Active
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <span
+                  title="Thu, Apr 23, 2026, 9:25 PM"
+                >
+                  Active Thu, Apr 23, 2026, 9:25 PM
+                </span>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Signed in
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <time
+                  datetime="2026-04-23T21:25:43Z"
+                >
+                  Thu, Apr 23, 2026, 9:25 PM
+                </time>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Device ID
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                zzzZZZzzz0
+              </div>
+            </li>
+          </ul>
+        </a>
+        <div
+          class="_action_6c1027"
+        >
+          <button
+            aria-controls="radix-_r_1c_"
+            aria-expanded="false"
+            aria-haspopup="dialog"
+            class="_button_13vu4_8 _has-icon_13vu4_60 _destructive_13vu4_110"
+            data-kind="secondary"
+            data-size="sm"
+            data-state="closed"
+            role="button"
+            tabindex="0"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              fill="currentColor"
+              height="20"
+              viewBox="0 0 24 24"
+              width="20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7 21q-.824 0-1.412-.587A1.93 1.93 0 0 1 5 19V6a.97.97 0 0 1-.713-.287A.97.97 0 0 1 4 5q0-.424.287-.713A.97.97 0 0 1 5 4h4q0-.424.287-.712A.97.97 0 0 1 10 3h4q.424 0 .713.288Q15 3.575 15 4h4q.424 0 .712.287Q20 4.576 20 5t-.288.713A.97.97 0 0 1 19 6v13q0 .824-.587 1.413A1.93 1.93 0 0 1 17 21zM7 6v13h10V6zm2 10q0 .424.287.712Q9.576 17 10 17t.713-.288A.97.97 0 0 0 11 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 10 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 9 9zm4 0q0 .424.287.712.288.288.713.288.424 0 .713-.288A.97.97 0 0 0 15 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 14 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 13 9z"
+              />
+            </svg>
+            Remove device
+          </button>
+        </div>
+      </section>
+      <div
+        class="flex *:flex-1"
+      >
+        <a
+          aria-disabled="true"
+          class="_button_13vu4_8 _buttonLink_014cb0"
+          data-kind="secondary"
+          data-size="sm"
+          role="link"
+          tabindex="0"
+        >
+          Previous
+        </a>
+        <div />
+        <a
+          aria-disabled="false"
+          class="_button_13vu4_8 _buttonLink_014cb0"
+          data-kind="secondary"
+          data-size="sm"
+          href="/sessions?last=6&before=foo"
+          role="link"
+          tabindex="0"
+        >
+          Next
+        </a>
+      </div>
+    </div>
+    <footer
+      class="_legalFooter_acfd2c"
+    >
+      <nav>
+        <a
+          class="_link_1v5rz_8"
+          data-kind="primary"
+          data-size="medium"
+          href="https://matrix.org/policy"
+          rel="noreferrer noopener"
+          title="Link to the service privacy policy"
+        >
+          Privacy Policy
+        </a>
+        <div
+          aria-hidden="true"
+          class="_separator_acfd2c"
+        >
+          •
+        </div>
+        <a
+          class="_link_1v5rz_8"
+          data-kind="primary"
+          data-size="medium"
+          href="https://matrix.org/tos"
+          rel="noreferrer noopener"
+          title="Link to the service terms and conditions"
+        >
+          Terms & Conditions
+        </a>
+      </nav>
+      <p
+        class="_imprint_acfd2c"
+      >
+        All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
+      </p>
+    </footer>
+  </div>
+</DocumentFragment>
+`;
