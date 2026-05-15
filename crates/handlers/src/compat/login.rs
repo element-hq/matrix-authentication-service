@@ -1754,7 +1754,7 @@ mod tests {
     #[derive(Debug, Error)]
     pub enum MatrixCompatSsoLoginError {
         #[error("Expected to be redirected to `/login` but we ended up going to {redirects:?}")]
-        UnexpectedInitialRedirects { redirects: Vec<url::Url> },
+        UnexpectedInitialRedirects { redirects: Vec<http::Uri> },
 
         #[error("Unable to find csrf token as part of <form> on the `/login` page")]
         NoCsrfOnLoginPage { page_html: String },
@@ -1777,16 +1777,13 @@ mod tests {
         Some(value.to_owned())
     }
 
-    /// Keep making requests until we reach a stable destination (non-redirect).
-    ///
-    /// Returns the last response and a list of redirect URLs encountered along the way.
     /// Keep making requests until we reach a stable destination (non-redirect)
     ///
     /// Returns the last response and a list of redirects we made along the way
     async fn request_and_follow_redirects(
         state: &TestState,
         request: http::Request<String>,
-    ) -> (http::Response<String>, Vec<url::Url>) {
+    ) -> (http::Response<String>, Vec<http::Uri>) {
         let mut request = request;
         let mut redirects = Vec::new();
         loop {
@@ -1819,41 +1816,45 @@ mod tests {
             // Look for the `Location` header
             let location = response
                 .headers()
-                .get(hyper::header::LOCATION)
+                .get(http::header::LOCATION)
                 .expect("Expected `Location` header for redirect response")
                 .to_str()
-                .expect("Expected `Location` header to be a valid string")
-                .to_owned();
-            let location_url =
-                url::Url::parse(&location).expect("Expected `Location` header to be a valid URL");
+                .expect("Expected `Location` header to be a valid string");
+            let location_uri = location
+                .parse::<http::Uri>()
+                .expect("Expected `Location` header to be a valid URI");
 
             // Keep track of the redirects
-            redirects.push(location_url.clone());
+            redirects.push(location_uri.clone());
 
             // Follow the location redirect
             //
             // This says "host" but the host here is actually just the hostname and the port
             // is separate. This is a quirk of the `url` crate.
-            match location_url.host() {
+            match location_uri.host() {
                 // Relative URL (relative to MAS)
-                None if request_host.as_deref() == Some(mas_hostname) => {
-                    request = Request::get(match location_url.query() {
-                        Some(query_string) => format!("{}?{}", location_url.path(), query_string),
-                        None => location_url.path().to_owned(),
+                None if request_host.is_none() || request_host.as_deref() == Some(mas_hostname) => {
+                    request = Request::get(match location_uri.query() {
+                        Some(query_string) => format!("{}?{}", location_uri.path(), query_string),
+                        None => location_uri.path().to_owned(),
                     })
                     .empty();
                 }
                 // Directly pointing at MAS
-                Some(host) if host.to_string() == mas_hostname => {
-                    request = Request::get(match location_url.query() {
-                        Some(query_string) => format!("{}?{}", location_url.path(), query_string),
-                        None => location_url.path().to_owned(),
+                Some(hostname) if hostname == mas_hostname => {
+                    request = Request::get(match location_uri.query() {
+                        Some(query_string) => format!("{}?{}", location_uri.path(), query_string),
+                        None => location_uri.path().to_owned(),
                     })
                     .empty();
                 }
                 // Something external outside of MAS
-                _external_url => {
-                    todo!("Not implemented yet as we expect everything to MAS related so far.");
+                _external_hostname => {
+                    todo!(
+                        "request_and_follow_redirects(...) does not implement redirects to external URL's yet \
+                        as we expect everything to MAS related so far. Saw redirect to {:?}",
+                        location_uri
+                    );
                 }
             }
         }
@@ -1917,10 +1918,12 @@ mod tests {
             .unwrap()
             .to_str()
             .unwrap();
-        let parsed_location_url = url::Url::parse(location).unwrap();
-        let complete_sso_path = match parsed_location_url.query() {
-            Some(query_string) => format!("{}?{}", parsed_location_url.path(), query_string),
-            None => parsed_location_url.path().to_owned(),
+        let parsed_location_uri = location
+            .parse::<http::Uri>()
+            .expect("Expected `Location` header to be a valid string");
+        let complete_sso_path = match parsed_location_uri.query() {
+            Some(query_string) => format!("{}?{}", parsed_location_uri.path(), query_string),
+            None => parsed_location_uri.path().to_owned(),
         };
 
         // Step 4: Go to the consent screen, `GET /complete-compat-sso/{id}` with the browser session cookie.
