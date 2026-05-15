@@ -1744,7 +1744,8 @@ mod tests {
         token
     }
 
-    /// The kind of policy violation shown on the SSO consent page.
+    /// The kind of page shown when encountering a 403 forbidden at the constent stage
+    /// of the `m.login.sso` flow.
     #[derive(Debug, PartialEq)]
     pub enum ConsentForbiddenPageType {
         DeviceLimitReached,
