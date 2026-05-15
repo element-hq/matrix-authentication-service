@@ -11,7 +11,7 @@ updates:
       - "A-Dependencies"
       - "Z-Deps-Backend"
     schedule:
-      interval: "daily"
+      interval: "monthly"
     ignore:
       # We plan to remove apalis soon, let's ignore it for now
       - dependency-name: "apalis"
@@ -53,7 +53,7 @@ updates:
       - "A-Dependencies"
       - "Z-Deps-CI"
     schedule:
-      interval: "daily"
+      interval: "monthly"
     cooldown:
       default-days: 14
 
@@ -63,7 +63,7 @@ updates:
       - "A-Dependencies"
       - "Z-Deps-Frontend"
     schedule:
-      interval: "daily"
+      interval: "monthly"
     groups:
       storybook:
         patterns:
