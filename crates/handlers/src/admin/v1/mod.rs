@@ -166,6 +166,10 @@ where
             post_with(self::users::unlock, self::users::unlock_doc),
         )
         .api_route(
+            "/users/{id}/kill-sessions",
+            post_with(self::users::kill_sessions, self::users::kill_sessions_doc),
+        )
+        .api_route(
             "/user-emails",
             get_with(self::user_emails::list, self::user_emails::list_doc)
                 .post_with(self::user_emails::add, self::user_emails::add_doc),

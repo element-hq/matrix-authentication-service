@@ -2726,6 +2726,77 @@
         }
       }
     },
+    "/api/admin/v1/users/{id}/kill-sessions": {
+      "post": {
+        "tags": [
+          "user"
+        ],
+        "summary": "Kill all sessions (compatibility, oauth2, user sessions)",
+        "description": "Calling this endpoint will end all the compatibility, oauth2 and user sessions, preventing any further use. A job will be scheduled to sync the user's devices with the homeserver.",
+        "operationId": "KillSessions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All sessions were killed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_User"
+                },
+                "example": {
+                  "data": {
+                    "type": "user",
+                    "id": "02081040G2081040G2081040G2",
+                    "attributes": {
+                      "username": "bob",
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "locked_at": null,
+                      "deactivated_at": null,
+                      "admin": true,
+                      "legacy_guest": false
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/users/02081040G2081040G2081040G2"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/users/02081040G2081040G2081040G2/kill-sessions"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/user-emails": {
       "get": {
         "tags": [
