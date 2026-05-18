@@ -167,6 +167,16 @@ enum Subcommand {
         reactivate: bool,
     },
 
+    /// List the entries currently held in the shared JWKS cache.
+    JwksCacheList,
+
+    /// Drop a JWKS cache entry by URI. The next request that needs it will
+    /// refetch from the origin.
+    JwksCacheInvalidate {
+        /// The `jwks_uri` to remove from the cache.
+        uri: String,
+    },
+
     /// Register a user
     ///
     /// This will interactively prompt for the user's attributes unless the
@@ -513,6 +523,56 @@ impl Options {
                 repo.into_inner().commit().await?;
 
                 info!(%registration_token.id, "Created user registration token: {}", registration_token.token);
+
+                Ok(ExitCode::SUCCESS)
+            }
+
+            SC::JwksCacheList => {
+                let _span = info_span!("cli.manage.jwks_cache_list").entered();
+                let database_config = DatabaseConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let mut conn = database_connection_from_config(&database_config).await?;
+                let txn = conn.begin().await?;
+                let mut repo = PgRepository::from_conn(txn);
+
+                let entries = repo.jwks_cache().list().await?;
+                if entries.is_empty() {
+                    info!("JWKS cache is empty");
+                } else {
+                    info!(count = entries.len(), "JWKS cache entries");
+                    for entry in entries {
+                        info!(
+                            jwks_uri = %entry.jwks_uri,
+                            fetched_at = %entry.fetched_at,
+                            fresh_until = %entry.fresh_until,
+                            stale_until = ?entry.stale_until,
+                            keys = entry.jwks.len(),
+                            "cached"
+                        );
+                    }
+                }
+
+                repo.into_inner().commit().await?;
+                Ok(ExitCode::SUCCESS)
+            }
+
+            SC::JwksCacheInvalidate { uri } => {
+                let _span = info_span!("cli.manage.jwks_cache_invalidate").entered();
+                let parsed: url::Url = uri.parse().context("invalid URI")?;
+                let database_config = DatabaseConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let mut conn = database_connection_from_config(&database_config).await?;
+                let txn = conn.begin().await?;
+                let mut repo = PgRepository::from_conn(txn);
+
+                let removed = repo.jwks_cache().delete(&parsed).await?;
+                repo.into_inner().commit().await?;
+
+                if removed {
+                    info!(jwks_uri = %parsed, "Invalidated JWKS cache entry");
+                } else {
+                    info!(jwks_uri = %parsed, "No matching cache entry; nothing to do");
+                }
 
                 Ok(ExitCode::SUCCESS)
             }

@@ -8,7 +8,7 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
-use mas_storage::queue::{CleanupQueueJobsJob, PruneStalePolicyDataJob};
+use mas_storage::queue::{CleanupJwksCacheJob, CleanupQueueJobsJob, PruneStalePolicyDataJob};
 use tracing::{debug, info};
 use ulid::Ulid;
 
@@ -59,6 +59,29 @@ impl RunnableJob for CleanupQueueJobsJob {
 
     fn timeout(&self) -> Option<Duration> {
         Some(Duration::from_secs(10 * 60))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupJwksCacheJob {
+    #[tracing::instrument(name = "job.cleanup_jwks_cache", skip_all)]
+    async fn run(&self, state: &State, _context: JobContext) -> Result<(), JobError> {
+        let before = state.clock.now() - chrono::Duration::days(30);
+        let mut repo = state.repository().await.map_err(JobError::retry)?;
+        let count = repo
+            .jwks_cache()
+            .delete_unused_since(before)
+            .await
+            .map_err(JobError::retry)?;
+        repo.save().await.map_err(JobError::retry)?;
+
+        if count == 0 {
+            debug!("no JWKS cache entries to clean up");
+        } else {
+            info!(count, "cleaned up unused JWKS cache entries");
+        }
+
+        Ok(())
     }
 }
 

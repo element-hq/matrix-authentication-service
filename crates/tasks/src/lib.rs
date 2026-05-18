@@ -158,6 +158,7 @@ pub async fn init(
         .register_handler::<mas_storage::queue::ExpireInactiveOAuthSessionsJob>()
         .register_handler::<mas_storage::queue::ExpireInactiveUserSessionsJob>()
         .register_handler::<mas_storage::queue::PruneStalePolicyDataJob>()
+        .register_handler::<mas_storage::queue::CleanupJwksCacheJob>()
         .register_handler::<mas_storage::queue::CleanupInactiveOAuth2SessionIpsJob>()
         .register_handler::<mas_storage::queue::CleanupInactiveCompatSessionIpsJob>()
         .register_handler::<mas_storage::queue::CleanupInactiveUserSessionIpsJob>()
@@ -284,6 +285,12 @@ pub async fn init(
             // Run once a day at 2:00 AM
             "0 0 2 * * *".parse()?,
             mas_storage::queue::PruneStalePolicyDataJob,
+        )
+        .add_schedule(
+            "cleanup-jwks-cache",
+            // Run once a day at 3:00 AM
+            "0 0 3 * * *".parse()?,
+            mas_storage::queue::CleanupJwksCacheJob,
         );
 
     Ok(worker)

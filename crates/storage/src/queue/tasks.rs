@@ -628,6 +628,18 @@ impl InsertableJob for PruneStalePolicyDataJob {
     const QUEUE_NAME: &'static str = "prune-stale-policy-data";
 }
 
+/// Drop JWKS cache entries that haven't been used in a long time.
+///
+/// The cache row is small but unbounded by client / publisher cardinality;
+/// this job retires entries whose `last_used_at` is older than 30 days so the
+/// table doesn't accumulate forever.
+#[derive(Debug, Serialize, Deserialize, Default)]
+pub struct CleanupJwksCacheJob;
+
+impl InsertableJob for CleanupJwksCacheJob {
+    const QUEUE_NAME: &'static str = "cleanup-jwks-cache";
+}
+
 /// Cleanup IP addresses from inactive OAuth 2.0 sessions
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct CleanupInactiveOAuth2SessionIpsJob;
