@@ -286,7 +286,7 @@ async fn run_fetcher(
                                 Arc::clone(&clock),
                                 tx_self.clone().upgrade(),
                                 done_tx.clone(),
-                                span,
+                                &span,
                             );
                             UriState { waiters: Vec::new() }
                         });
@@ -302,7 +302,7 @@ async fn run_fetcher(
                                 Arc::clone(&clock),
                                 tx_self.clone().upgrade(),
                                 done_tx.clone(),
-                                span,
+                                &span,
                             );
                             UriState { waiters: Vec::new() }
                         });
@@ -314,6 +314,7 @@ async fn run_fetcher(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn spawn_worker(
     uri: Url,
     mode: WorkerMode,
@@ -322,10 +323,10 @@ fn spawn_worker(
     clock: Arc<dyn Clock>,
     tx_self: Option<mpsc::Sender<FetchRequest>>,
     done_tx: mpsc::UnboundedSender<(Url, FetchResult)>,
-    span: Span,
+    span: &Span,
 ) {
     let worker_span = tracing::info_span!(
-        parent: &span,
+        parent: span,
         "jwks_fetcher.worker",
         otel.kind = "internal",
         jwks_uri = %uri,
@@ -365,37 +366,35 @@ async fn run_worker(
     let mut repo = factory.create().await.map_err(repo_err)?;
     let entry = repo.jwks_cache().get(&uri).await.map_err(repo_err)?;
 
-    if let WorkerMode::Get = mode {
-        if let Some(entry_ref) = entry.as_ref() {
-            if entry_ref.is_fresh(now) {
-                let cached = entry_ref.jwks.clone();
-                let threshold = now - TOUCH_THRESHOLD;
-                repo.jwks_cache()
-                    .touch(&uri, now, threshold)
-                    .await
-                    .map_err(repo_err)?;
-                repo.save().await.map_err(repo_err)?;
-                return Ok(cached);
+    if let (WorkerMode::Get, Some(entry_ref)) = (mode, entry.as_ref()) {
+        if entry_ref.is_fresh(now) {
+            let cached = entry_ref.jwks.clone();
+            let threshold = now - TOUCH_THRESHOLD;
+            repo.jwks_cache()
+                .touch(&uri, now, threshold)
+                .await
+                .map_err(repo_err)?;
+            repo.save().await.map_err(repo_err)?;
+            return Ok(cached);
+        }
+        if entry_ref.is_stale_but_servable(now) {
+            let cached = entry_ref.jwks.clone();
+            let threshold = now - TOUCH_THRESHOLD;
+            repo.jwks_cache()
+                .touch(&uri, now, threshold)
+                .await
+                .map_err(repo_err)?;
+            repo.save().await.map_err(repo_err)?;
+            // Schedule a background refresh. If the queue is full or the
+            // actor has already shut down, drop it — another request will
+            // trigger one soon enough.
+            if let Some(tx) = &tx_self {
+                let _ = tx.try_send(FetchRequest::Refresh {
+                    uri: uri.clone(),
+                    span: Span::current(),
+                });
             }
-            if entry_ref.is_stale_but_servable(now) {
-                let cached = entry_ref.jwks.clone();
-                let threshold = now - TOUCH_THRESHOLD;
-                repo.jwks_cache()
-                    .touch(&uri, now, threshold)
-                    .await
-                    .map_err(repo_err)?;
-                repo.save().await.map_err(repo_err)?;
-                // Schedule a background refresh. If the queue is full or the
-                // actor has already shut down, drop it — another request will
-                // trigger one soon enough.
-                if let Some(tx) = &tx_self {
-                    let _ = tx.try_send(FetchRequest::Refresh {
-                        uri: uri.clone(),
-                        span: Span::current(),
-                    });
-                }
-                return Ok(cached);
-            }
+            return Ok(cached);
         }
     }
 
@@ -575,7 +574,7 @@ async fn fetch_remote(
         }
     };
 
-    let jwks = sanitize_jwks(parsed);
+    let jwks = sanitize_jwks(&parsed);
 
     Ok(FetchOutcome::Body {
         jwks,
@@ -661,9 +660,7 @@ fn parse_cache_control(header: &str) -> ParsedCacheControl {
         );
         MIN_TTL
     } else {
-        max_age
-            .map(|d| clamp(d, MIN_TTL, MAX_TTL))
-            .unwrap_or(DEFAULT_TTL)
+        max_age.map_or(DEFAULT_TTL, |d| clamp(d, MIN_TTL, MAX_TTL))
     };
 
     let swr = swr.map(|d| clamp(d, Duration::zero(), MAX_SWR));
@@ -685,7 +682,7 @@ fn clamp(d: Duration, min: Duration, max: Duration) -> Duration {
 /// `alg=none` is a rejection-at-fetch case; the public-parameters JWK enum
 /// already excludes symmetric `oct` keys at parse time so they cannot enter
 /// the cache regardless.
-fn sanitize_jwks(jwks: PublicJsonWebKeySet) -> PublicJsonWebKeySet {
+fn sanitize_jwks(jwks: &PublicJsonWebKeySet) -> PublicJsonWebKeySet {
     let filtered: Vec<_> = jwks
         .iter()
         .filter(|k| !matches!(k.alg(), Some(JsonWebSignatureAlg::None)))
@@ -762,7 +759,7 @@ mod tests {
         });
         let jwks: PublicJsonWebKeySet = serde_json::from_value(raw).unwrap();
         assert_eq!(jwks.len(), 2);
-        let cleaned = sanitize_jwks(jwks);
+        let cleaned = sanitize_jwks(&jwks);
         assert_eq!(cleaned.len(), 1);
         assert_eq!(cleaned[0].kid(), Some("k1"));
     }

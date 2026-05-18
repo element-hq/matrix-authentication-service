@@ -33,7 +33,7 @@ pub struct JwksCacheUpsert<'a> {
     /// When the cached body stops being acceptable as stale-while-revalidate.
     pub stale_until: Option<DateTime<Utc>>,
 
-    /// The ETag (if any) to record for conditional revalidation.
+    /// The `ETag` (if any) to record for conditional revalidation.
     pub etag: Option<&'a str>,
 
     /// The `Last-Modified` (if any) to record for conditional revalidation.
