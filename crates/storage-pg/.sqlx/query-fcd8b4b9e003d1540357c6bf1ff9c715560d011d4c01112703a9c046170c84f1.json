@@ -23,7 +23,7 @@
       "Left": []
     },
     "nullable": [
-      false,
+      true,
       true,
       null
     ]

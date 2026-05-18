@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM jwks_cache WHERE jwks_uri = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "738ebc2c580655540d9e91bcbc7a08832cfb9c2d2b4e0ce7fae0c512b3df83b4"
+}

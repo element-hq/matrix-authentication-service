@@ -110,6 +110,7 @@ mod utils;
 
 pub mod app_session;
 pub mod compat;
+pub mod jwks_cache;
 pub mod oauth2;
 pub mod personal;
 pub mod policy_data;

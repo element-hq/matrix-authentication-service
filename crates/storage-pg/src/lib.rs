@@ -181,6 +181,7 @@ pub mod user;
 mod errors;
 pub(crate) mod filter;
 pub(crate) mod iden;
+pub(crate) mod jwks_cache;
 pub(crate) mod pagination;
 pub(crate) mod policy_data;
 pub(crate) mod repository;

@@ -14,6 +14,7 @@ use crate::{
         CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository,
         CompatSsoLoginRepository,
     },
+    jwks_cache::JwksCacheRepository,
     oauth2::{
         OAuth2AccessTokenRepository, OAuth2AuthorizationGrantRepository, OAuth2ClientRepository,
         OAuth2DeviceCodeGrantRepository, OAuth2RefreshTokenRepository, OAuth2SessionRepository,
@@ -238,6 +239,9 @@ pub trait RepositoryAccess: Send {
 
     /// Get a [`PolicyDataRepository`]
     fn policy_data<'c>(&'c mut self) -> Box<dyn PolicyDataRepository<Error = Self::Error> + 'c>;
+
+    /// Get a [`JwksCacheRepository`]
+    fn jwks_cache<'c>(&'c mut self) -> Box<dyn JwksCacheRepository<Error = Self::Error> + 'c>;
 }
 
 /// Implementations of the [`RepositoryAccess`], [`RepositoryTransaction`] and
@@ -253,6 +257,7 @@ mod impls {
             CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository,
             CompatSsoLoginRepository,
         },
+        jwks_cache::JwksCacheRepository,
         oauth2::{
             OAuth2AccessTokenRepository, OAuth2AuthorizationGrantRepository,
             OAuth2ClientRepository, OAuth2DeviceCodeGrantRepository, OAuth2RefreshTokenRepository,
@@ -506,6 +511,12 @@ mod impls {
         ) -> Box<dyn PolicyDataRepository<Error = Self::Error> + 'c> {
             Box::new(MapErr::new(self.inner.policy_data(), &mut self.mapper))
         }
+
+        fn jwks_cache<'c>(
+            &'c mut self,
+        ) -> Box<dyn JwksCacheRepository<Error = Self::Error> + 'c> {
+            Box::new(MapErr::new(self.inner.jwks_cache(), &mut self.mapper))
+        }
     }
 
     impl<R: RepositoryAccess + ?Sized> RepositoryAccess for Box<R> {
@@ -669,6 +680,12 @@ mod impls {
             &'c mut self,
         ) -> Box<dyn PolicyDataRepository<Error = Self::Error> + 'c> {
             (**self).policy_data()
+        }
+
+        fn jwks_cache<'c>(
+            &'c mut self,
+        ) -> Box<dyn JwksCacheRepository<Error = Self::Error> + 'c> {
+            (**self).jwks_cache()
         }
     }
 }

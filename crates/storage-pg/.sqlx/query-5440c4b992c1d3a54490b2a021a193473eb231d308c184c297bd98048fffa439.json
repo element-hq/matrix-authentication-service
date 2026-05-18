@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                jwks_uri,\n                jwks AS \"jwks: Json<serde_json::Value>\",\n                fetched_at,\n                fresh_until,\n                stale_until,\n                etag,\n                last_modified,\n                forced_refresh_at,\n                last_used_at\n            FROM jwks_cache\n            WHERE jwks_uri = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "jwks_uri",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "jwks: Json<serde_json::Value>",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 2,
+        "name": "fetched_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "fresh_until",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "stale_until",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "etag",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "last_modified",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "forced_refresh_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "last_used_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "5440c4b992c1d3a54490b2a021a193473eb231d308c184c297bd98048fffa439"
+}

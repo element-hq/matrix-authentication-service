@@ -10,6 +10,7 @@ use thiserror::Error;
 
 pub mod clock;
 pub(crate) mod compat;
+pub(crate) mod jwks_cache;
 pub mod oauth2;
 pub mod personal;
 pub(crate) mod policy_data;
@@ -34,6 +35,7 @@ pub use self::{
         CompatAccessToken, CompatRefreshToken, CompatRefreshTokenState, CompatSession,
         CompatSessionState, CompatSsoLogin, CompatSsoLoginState, Device, ToScopeTokenError,
     },
+    jwks_cache::JwksCacheEntry,
     oauth2::{
         AuthorizationCode, AuthorizationGrant, AuthorizationGrantStage, Client, DeviceCodeGrant,
         DeviceCodeGrantState, InvalidRedirectUriError, JwksOrJwksUri, Pkce, Session, SessionState,

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE jwks_cache\n               SET forced_refresh_at = $2\n             WHERE jwks_uri = $1\n               AND (forced_refresh_at IS NULL OR forced_refresh_at < $3)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9ec17ab5ca4831bba685128058d3d83877434f3cfe35c74283167f8de8a13974"
+}

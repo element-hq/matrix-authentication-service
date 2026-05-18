@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM jwks_cache WHERE last_used_at < $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b3a49f108b61c70cc0f4b4de569651101f5e311661a4d246a6b7292e4572c0e1"
+}

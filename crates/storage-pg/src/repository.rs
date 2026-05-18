@@ -16,6 +16,7 @@ use mas_storage::{
         CompatAccessTokenRepository, CompatRefreshTokenRepository, CompatSessionRepository,
         CompatSsoLoginRepository,
     },
+    jwks_cache::JwksCacheRepository,
     oauth2::{
         OAuth2AccessTokenRepository, OAuth2AuthorizationGrantRepository, OAuth2ClientRepository,
         OAuth2DeviceCodeGrantRepository, OAuth2RefreshTokenRepository, OAuth2SessionRepository,
@@ -43,6 +44,7 @@ use crate::{
         PgCompatAccessTokenRepository, PgCompatRefreshTokenRepository, PgCompatSessionRepository,
         PgCompatSsoLoginRepository,
     },
+    jwks_cache::PgJwksCacheRepository,
     oauth2::{
         PgOAuth2AccessTokenRepository, PgOAuth2AuthorizationGrantRepository,
         PgOAuth2ClientRepository, PgOAuth2DeviceCodeGrantRepository,
@@ -359,5 +361,9 @@ where
 
     fn policy_data<'c>(&'c mut self) -> Box<dyn PolicyDataRepository<Error = Self::Error> + 'c> {
         Box::new(PgPolicyDataRepository::new(self.conn.as_mut()))
+    }
+
+    fn jwks_cache<'c>(&'c mut self) -> Box<dyn JwksCacheRepository<Error = Self::Error> + 'c> {
+        Box::new(PgJwksCacheRepository::new(self.conn.as_mut()))
     }
 }
