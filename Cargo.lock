@@ -3473,6 +3473,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "mas-jwks-cache"
+version = "1.17.0-rc.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "headers",
+ "http",
+ "mas-data-model",
+ "mas-http",
+ "mas-iana",
+ "mas-jose",
+ "mas-storage",
+ "mas-storage-pg",
+ "reqwest",
+ "serde_json",
+ "sqlx",
+ "thiserror 2.0.17",
+ "tokio",
+ "tracing",
+ "url",
+ "wiremock",
+]
+
+[[package]]
 name = "mas-keystore"
 version = "1.17.0-rc.0"
 dependencies = [

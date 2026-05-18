@@ -53,6 +53,7 @@ mas-i18n-scan = { path = "./crates/i18n-scan/", version = "=1.17.0-rc.0" }
 mas-iana = { path = "./crates/iana/", version = "=1.17.0-rc.0" }
 mas-iana-codegen = { path = "./crates/iana-codegen/", version = "=1.17.0-rc.0" }
 mas-jose = { path = "./crates/jose/", version = "=1.17.0-rc.0" }
+mas-jwks-cache = { path = "./crates/jwks-cache/", version = "=1.17.0-rc.0" }
 mas-keystore = { path = "./crates/keystore/", version = "=1.17.0-rc.0" }
 mas-listener = { path = "./crates/listener/", version = "=1.17.0-rc.0" }
 mas-matrix = { path = "./crates/matrix/", version = "=1.17.0-rc.0" }
