@@ -122,7 +122,7 @@ impl From<mas_data_model::TokenFormatError> for RouteError {
 pub(crate) async fn post(
     clock: BoxClock,
     mut rng: BoxRng,
-    State(http_client): State<reqwest::Client>,
+    State(jwks_fetcher): State<mas_jwks_cache::JwksFetcher>,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
     State(encrypter): State<Encrypter>,
@@ -141,7 +141,7 @@ pub(crate) async fn post(
 
     client_authorization
         .credentials
-        .verify(&http_client, &encrypter, method, &client)
+        .verify(&jwks_fetcher, &encrypter, method, &client)
         .await
         .map_err(|err| {
             if err.is_internal() {

@@ -37,7 +37,7 @@ use mas_storage::{
 };
 use thiserror::Error;
 use tokio::{
-    sync::{mpsc, oneshot},
+    sync::{mpsc, mpsc::WeakSender, oneshot},
     task::JoinHandle,
 };
 use tracing::{Instrument, Span};
@@ -138,10 +138,18 @@ pub enum FetcherError {
     ActorGone,
 }
 
-/// Result type fanned out to coalesced waiters. Wrapping in an `Arc` lets the
-/// actor share the result by refcount rather than by `Clone` (which would
-/// require `JwksError: Clone`, which it isn't).
-pub type FetchResult = Arc<Result<PublicJsonWebKeySet, FetcherError>>;
+/// Result type fanned out to coalesced waiters. Each variant is wrapped in an
+/// `Arc` so success and error both fan out by refcount-bump rather than
+/// `Clone` — `FetcherError` is not (and need not be) `Clone`, and a JWKS body
+/// is non-trivial to copy.
+pub type FetchResult = Result<Arc<PublicJsonWebKeySet>, Arc<FetcherError>>;
+
+/// A transparent `std::error::Error` wrapper around `Arc<FetcherError>`. Useful
+/// at call sites that need to bubble the error up through trait objects like
+/// `Box<dyn Error + Send + Sync>`.
+#[derive(Debug, Error)]
+#[error(transparent)]
+pub struct SharedFetcherError(#[from] pub Arc<FetcherError>);
 
 /// A handle to the fetcher actor. Cheap to clone (just an `mpsc::Sender`).
 #[derive(Clone)]
@@ -159,7 +167,12 @@ impl JwksFetcher {
         clock: Arc<dyn Clock>,
     ) -> (Self, JoinHandle<()>) {
         let (tx, rx) = mpsc::channel(FETCHER_QUEUE_SIZE);
-        let handle = tokio::spawn(run_fetcher(rx, tx.clone(), http, factory, clock));
+        // The actor only holds a WeakSender — it can self-message for SWR
+        // refreshes when caller handles still exist, but doesn't itself keep
+        // the channel alive. When all `JwksFetcher` clones drop, `rx.recv()`
+        // returns `None` and the actor shuts down.
+        let weak = tx.downgrade();
+        let handle = tokio::spawn(run_fetcher(rx, weak, http, factory, clock));
         (Self { tx }, handle)
     }
 
@@ -219,6 +232,13 @@ struct UriState {
     waiters: Vec<oneshot::Sender<FetchResult>>,
 }
 
+fn clone_result(r: &FetchResult) -> FetchResult {
+    match r {
+        Ok(arc) => Ok(Arc::clone(arc)),
+        Err(arc) => Err(Arc::clone(arc)),
+    }
+}
+
 /// Determines whether the spawned worker treats a cache hit as a return-as-is
 /// (Get) or as a candidate for inline revalidation (Refresh).
 #[derive(Debug, Clone, Copy)]
@@ -232,7 +252,7 @@ enum WorkerMode {
 
 async fn run_fetcher(
     mut rx: mpsc::Receiver<FetchRequest>,
-    tx_self: mpsc::Sender<FetchRequest>,
+    tx_self: WeakSender<FetchRequest>,
     http: reqwest::Client,
     factory: Arc<dyn RepositoryFactory + Send + Sync>,
     clock: Arc<dyn Clock>,
@@ -249,7 +269,7 @@ async fn run_fetcher(
             Some((uri, result)) = done_rx.recv() => {
                 if let Some(state) = in_flight.remove(&uri) {
                     for w in state.waiters {
-                        let _ = w.send(result.clone());
+                        let _ = w.send(clone_result(&result));
                     }
                 }
             },
@@ -264,7 +284,7 @@ async fn run_fetcher(
                                 http.clone(),
                                 Arc::clone(&factory),
                                 Arc::clone(&clock),
-                                tx_self.clone(),
+                                tx_self.clone().upgrade(),
                                 done_tx.clone(),
                                 span,
                             );
@@ -280,7 +300,7 @@ async fn run_fetcher(
                                 http.clone(),
                                 Arc::clone(&factory),
                                 Arc::clone(&clock),
-                                tx_self.clone(),
+                                tx_self.clone().upgrade(),
                                 done_tx.clone(),
                                 span,
                             );
@@ -300,7 +320,7 @@ fn spawn_worker(
     http: reqwest::Client,
     factory: Arc<dyn RepositoryFactory + Send + Sync>,
     clock: Arc<dyn Clock>,
-    tx_self: mpsc::Sender<FetchRequest>,
+    tx_self: Option<mpsc::Sender<FetchRequest>>,
     done_tx: mpsc::UnboundedSender<(Url, FetchResult)>,
     span: Span,
 ) {
@@ -314,10 +334,13 @@ fn spawn_worker(
     let uri_for_done = uri.clone();
     tokio::spawn(
         async move {
-            let result = run_worker(uri.clone(), mode, http, factory, clock, tx_self).await;
+            let result = run_worker(uri.clone(), mode, http, factory, clock, tx_self)
+                .await
+                .map(Arc::new)
+                .map_err(Arc::new);
             // If the receiver has been dropped (handler timed out) the result
             // is still useful — the upsert already updated the DB cache.
-            let _ = done_tx.send((uri_for_done, Arc::new(result)));
+            let _ = done_tx.send((uri_for_done, result));
         }
         .instrument(worker_span),
     );
@@ -329,7 +352,7 @@ async fn run_worker(
     http: reqwest::Client,
     factory: Arc<dyn RepositoryFactory + Send + Sync>,
     clock: Arc<dyn Clock>,
-    tx_self: mpsc::Sender<FetchRequest>,
+    tx_self: Option<mpsc::Sender<FetchRequest>>,
 ) -> Result<PublicJsonWebKeySet, FetcherError> {
     let now = clock.now();
     let repo_err = |source: mas_storage::RepositoryError| FetcherError::Repository {
@@ -362,12 +385,15 @@ async fn run_worker(
                     .await
                     .map_err(repo_err)?;
                 repo.save().await.map_err(repo_err)?;
-                // Schedule a background refresh. If the queue is full, drop
-                // it — another request will trigger one soon enough.
-                let _ = tx_self.try_send(FetchRequest::Refresh {
-                    uri: uri.clone(),
-                    span: Span::current(),
-                });
+                // Schedule a background refresh. If the queue is full or the
+                // actor has already shut down, drop it — another request will
+                // trigger one soon enough.
+                if let Some(tx) = &tx_self {
+                    let _ = tx.try_send(FetchRequest::Refresh {
+                        uri: uri.clone(),
+                        span: Span::current(),
+                    });
+                }
                 return Ok(cached);
             }
         }

@@ -77,6 +77,7 @@ mas-email.workspace = true
 mas-handlers.workspace = true
 mas-http.workspace = true
 mas-i18n.workspace = true
+mas-jwks-cache.workspace = true
 mas-keystore.workspace = true
 mas-listener.workspace = true
 mas-matrix.workspace = true

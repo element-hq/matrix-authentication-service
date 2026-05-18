@@ -16,6 +16,7 @@ use mas_config::{
 use mas_context::LogContext;
 use mas_data_model::SystemClock;
 use mas_handlers::{ActivityTracker, CookieManager, Limiter, MetadataCache};
+use mas_jwks_cache::JwksFetcher;
 use mas_listener::server::Server;
 use mas_router::UrlBuilder;
 use mas_storage_pg::PgRepositoryFactory;
@@ -200,6 +201,15 @@ impl Options {
         // The upstream OIDC metadata cache
         let metadata_cache = MetadataCache::new();
 
+        // Boot the JWKS fetcher actor. It owns the per-URI request coalescer
+        // and the cross-replica cooldown coordination via the `jwks_cache`
+        // table.
+        let (jwks_fetcher, _jwks_fetcher_handle) = JwksFetcher::start(
+            http_client.clone(),
+            Arc::new(PgRepositoryFactory::new(pool.clone())),
+            Arc::new(SystemClock::default()),
+        );
+
         // Initialize the activity tracker
         // Activity is flushed every minute
         let activity_tracker = ActivityTracker::new(
@@ -248,6 +258,7 @@ impl Options {
                 http_client,
                 password_manager,
                 metadata_cache,
+                jwks_fetcher,
                 site_config,
                 activity_tracker,
                 trusted_proxies,

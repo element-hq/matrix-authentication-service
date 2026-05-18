@@ -58,6 +58,14 @@ pub enum RouteError {
     #[error("failed to verify logout token")]
     LogoutTokenVerification(#[from] JwtVerificationError),
 
+    /// The JWKS fetcher actor is unavailable
+    #[error("JWKS fetcher actor is unavailable")]
+    JwksFetcherActor(#[source] mas_jwks_cache::FetcherError),
+
+    /// Failed to fetch the JWKS
+    #[error("failed to fetch JWKS")]
+    JwksFetch(#[source] std::sync::Arc<mas_jwks_cache::FetcherError>),
+
     /// Logout token had invalid claims
     #[error("invalid claims in logout token")]
     InvalidLogoutTokenClaims(#[from] claims::ClaimError),
@@ -76,7 +84,7 @@ impl IntoResponse for RouteError {
         let sentry_event_id = record_error!(self, Self::Internal(_));
 
         let response = match self {
-            e @ Self::Internal(_) => (
+            e @ (Self::Internal(_) | Self::JwksFetcherActor(_) | Self::JwksFetch(_)) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(
                     ClientError::from(ClientErrorCode::ServerError).with_description(e.to_string()),
@@ -141,6 +149,7 @@ pub(crate) async fn post(
     mut rng: BoxRng,
     mut repo: BoxRepository,
     State(metadata_cache): State<MetadataCache>,
+    State(jwks_fetcher): State<mas_jwks_cache::JwksFetcher>,
     State(client): State<reqwest::Client>,
     Path(provider_id): Path<Ulid>,
     request: Result<Form<BackchannelLogoutRequest>, FormRejection>,
@@ -155,9 +164,12 @@ pub(crate) async fn post(
 
     let mut lazy_metadata = LazyProviderInfos::new(&metadata_cache, &provider, &client);
 
-    let jwks =
-        mas_oidc_client::requests::jose::fetch_jwks(&client, lazy_metadata.jwks_uri().await?)
-            .await?;
+    let jwks_uri = lazy_metadata.jwks_uri().await?.clone();
+    let jwks = jwks_fetcher
+        .get(jwks_uri)
+        .await
+        .map_err(RouteError::JwksFetcherActor)?
+        .map_err(RouteError::JwksFetch)?;
 
     // Validate the logout token. The rules are defined in
     // <https://openid.net/specs/openid-connect-backchannel-1_0.html#Validation>

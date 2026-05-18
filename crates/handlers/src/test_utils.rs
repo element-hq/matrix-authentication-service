@@ -51,6 +51,8 @@ use tokio_util::{
 use tower::{Layer, Service, ServiceExt};
 use url::Url;
 
+use mas_jwks_cache::JwksFetcher;
+
 use crate::{
     ActivityTracker, BoundActivityTracker, Limiter, RequesterFingerprint, graphql,
     passwords::{Hasher, PasswordManager},
@@ -100,6 +102,7 @@ pub(crate) struct TestState {
     pub key_store: Keystore,
     pub cookie_manager: CookieManager,
     pub metadata_cache: MetadataCache,
+    pub jwks_fetcher: JwksFetcher,
     pub encrypter: Encrypter,
     pub url_builder: UrlBuilder,
     pub homeserver_connection: Arc<MockHomeserverConnection>,
@@ -223,6 +226,12 @@ impl TestState {
         let clock = Arc::new(MockClock::default());
         let rng = Arc::new(Mutex::new(ChaChaRng::seed_from_u64(42)));
 
+        let (jwks_fetcher, _jwks_fetcher_handle) = JwksFetcher::start(
+            http_client.clone(),
+            Arc::new(PgRepositoryFactory::new(pool.clone())),
+            Arc::clone(&clock) as Arc<dyn mas_data_model::Clock>,
+        );
+
         let limiter = Limiter::new(&RateLimitingConfig::default()).unwrap();
 
         let graphql_state = TestGraphQLState {
@@ -274,6 +283,7 @@ impl TestState {
             key_store,
             cookie_manager,
             metadata_cache,
+            jwks_fetcher,
             encrypter,
             url_builder,
             homeserver_connection,
@@ -566,6 +576,12 @@ impl FromRef<TestState> for CookieManager {
 impl FromRef<TestState> for MetadataCache {
     fn from_ref(input: &TestState) -> Self {
         input.metadata_cache.clone()
+    }
+}
+
+impl FromRef<TestState> for JwksFetcher {
+    fn from_ref(input: &TestState) -> Self {
+        input.jwks_fetcher.clone()
     }
 }
 

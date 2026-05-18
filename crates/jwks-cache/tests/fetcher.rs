@@ -66,7 +66,7 @@ async fn first_fetch_populates_cache(pool: PgPool) {
     let (fetcher, _clock) = start_fetcher(pool.clone()).await;
 
     let result = fetcher.get(uri.clone()).await.unwrap();
-    let jwks = result.as_ref().as_ref().expect("fetch should succeed");
+    let jwks = result.as_ref().expect("fetch should succeed");
     assert_eq!(jwks.len(), 1);
 
     // Cache row should be populated.
@@ -95,9 +95,9 @@ async fn second_get_is_cached(pool: PgPool) {
     let (fetcher, _clock) = start_fetcher(pool).await;
 
     let r1 = fetcher.get(uri.clone()).await.unwrap();
-    assert!(r1.as_ref().is_ok());
+    assert!(r1.is_ok());
     let r2 = fetcher.get(uri.clone()).await.unwrap();
-    assert!(r2.as_ref().is_ok());
+    assert!(r2.is_ok());
 }
 
 #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -121,7 +121,7 @@ async fn revalidation_uses_if_none_match(pool: PgPool) {
 
     let (fetcher, clock) = start_fetcher(pool).await;
     let r1 = fetcher.get(uri.clone()).await.unwrap();
-    assert!(r1.as_ref().is_ok());
+    assert!(r1.is_ok());
 
     // Advance past the freshness window so the next Get must revalidate.
     clock.advance(Duration::seconds(120));
@@ -140,7 +140,7 @@ async fn revalidation_uses_if_none_match(pool: PgPool) {
         .await;
 
     let r2 = fetcher.get(uri.clone()).await.unwrap();
-    let jwks = r2.as_ref().as_ref().expect("304 should produce cached body");
+    let jwks = r2.as_ref().expect("304 should produce cached body");
     assert_eq!(jwks.len(), 1);
 }
 
@@ -162,7 +162,7 @@ async fn forced_refresh_refetches(pool: PgPool) {
 
     let (fetcher, _clock) = start_fetcher(pool.clone()).await;
     let r1 = fetcher.get(uri.clone()).await.unwrap();
-    let jwks = r1.as_ref().as_ref().expect("first fetch ok");
+    let jwks = r1.as_ref().expect("first fetch ok");
     assert_eq!(jwks.len(), 1);
     drop(first);
 
@@ -180,7 +180,7 @@ async fn forced_refresh_refetches(pool: PgPool) {
 
     fetcher.refresh(uri.clone());
     let r2 = fetcher.get(uri.clone()).await.unwrap();
-    let jwks = r2.as_ref().as_ref().expect("post-refresh fetch ok");
+    let jwks = r2.as_ref().expect("post-refresh fetch ok");
     assert_eq!(jwks.len(), 2);
 
     // And the DB row should now hold both keys too.
@@ -218,9 +218,6 @@ async fn stale_on_error_serves_cached(pool: PgPool) {
         .await;
 
     let r = fetcher.get(uri.clone()).await.unwrap();
-    let jwks = r
-        .as_ref()
-        .as_ref()
-        .expect("stale-on-error should serve cached body");
+    let jwks = r.expect("stale-on-error should serve cached body");
     assert_eq!(jwks.len(), 1);
 }

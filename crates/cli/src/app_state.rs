@@ -14,6 +14,7 @@ use mas_handlers::{
     ActivityTracker, BoundActivityTracker, CookieManager, ErrorWrapper, GraphQLSchema, Limiter,
     MetadataCache, RequesterFingerprint, passwords::PasswordManager,
 };
+use mas_jwks_cache::JwksFetcher;
 use mas_i18n::Translator;
 use mas_keystore::{Encrypter, Keystore};
 use mas_matrix::HomeserverConnection;
@@ -43,6 +44,7 @@ pub struct AppState {
     pub http_client: reqwest::Client,
     pub password_manager: PasswordManager,
     pub metadata_cache: MetadataCache,
+    pub jwks_fetcher: JwksFetcher,
     pub site_config: SiteConfig,
     pub activity_tracker: ActivityTracker,
     pub trusted_proxies: Vec<IpNetwork>,
@@ -187,6 +189,12 @@ impl FromRef<AppState> for CookieManager {
 impl FromRef<AppState> for MetadataCache {
     fn from_ref(input: &AppState) -> Self {
         input.metadata_cache.clone()
+    }
+}
+
+impl FromRef<AppState> for JwksFetcher {
+    fn from_ref(input: &AppState) -> Self {
+        input.jwks_fetcher.clone()
     }
 }
 

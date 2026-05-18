@@ -274,7 +274,7 @@ impl_from_error_for_route!(super::IdTokenSignatureError);
 pub(crate) async fn post(
     mut rng: BoxRng,
     clock: BoxClock,
-    State(http_client): State<reqwest::Client>,
+    State(jwks_fetcher): State<mas_jwks_cache::JwksFetcher>,
     State(key_store): State<Keystore>,
     State(url_builder): State<UrlBuilder>,
     activity_tracker: BoundActivityTracker,
@@ -301,7 +301,7 @@ pub(crate) async fn post(
 
     client_authorization
         .credentials
-        .verify(&http_client, &encrypter, method, &client)
+        .verify(&jwks_fetcher, &encrypter, method, &client)
         .await
         .map_err(|err| {
             // Classify the error differntly, depending on whether it's an 'internal' error,

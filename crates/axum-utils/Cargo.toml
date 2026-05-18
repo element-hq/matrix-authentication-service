@@ -43,6 +43,7 @@ mas-data-model.workspace = true
 mas-http.workspace = true
 mas-iana.workspace = true
 mas-jose.workspace = true
+mas-jwks-cache.workspace = true
 mas-keystore.workspace = true
 mas-storage.workspace = true
 mas-templates.workspace = true

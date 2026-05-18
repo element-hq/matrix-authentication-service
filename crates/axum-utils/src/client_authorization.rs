@@ -6,8 +6,10 @@
 
 use std::collections::HashMap;
 
+use std::sync::Arc;
+
 use axum::{
-    BoxError, Json,
+    Json,
     extract::{
         Form, FromRequest,
         rejection::{FailedToDeserializeForm, FormRejection},
@@ -17,9 +19,9 @@ use axum::{
 use headers::authorization::{Basic, Bearer, Credentials as _};
 use http::{Request, StatusCode};
 use mas_data_model::{Client, JwksOrJwksUri};
-use mas_http::RequestBuilderExt;
 use mas_iana::oauth::OAuthClientAuthenticationMethod;
 use mas_jose::{jwk::PublicJsonWebKeySet, jwt::Jwt};
+use mas_jwks_cache::{JwksFetcher, SharedFetcherError};
 use mas_keystore::Encrypter;
 use mas_storage::{RepositoryAccess, oauth2::OAuth2ClientRepository};
 use oauth2_types::errors::{ClientError, ClientErrorCode};
@@ -115,7 +117,7 @@ impl Credentials {
     #[tracing::instrument(skip_all)]
     pub async fn verify(
         &self,
-        http_client: &reqwest::Client,
+        jwks_fetcher: &JwksFetcher,
         encrypter: &Encrypter,
         method: &OAuthClientAuthenticationMethod,
         client: &Client,
@@ -151,17 +153,32 @@ impl Credentials {
                 Credentials::ClientAssertionJwtBearer { jwt, .. },
                 OAuthClientAuthenticationMethod::PrivateKeyJwt,
             ) => {
-                // Get the client JWKS
-                let jwks = client
+                let jwks_config = client
                     .jwks
                     .as_ref()
                     .ok_or(CredentialsVerificationError::InvalidClientConfig)?;
 
-                let jwks = fetch_jwks(http_client, jwks)
-                    .await
-                    .map_err(CredentialsVerificationError::JwksFetchFailed)?;
+                // Inline JWKS bypasses the cache: the bytes are already
+                // persisted on the client row. URI-based JWKS goes through
+                // the shared cache.
+                let jwks_arc: Arc<PublicJsonWebKeySet> = match jwks_config {
+                    JwksOrJwksUri::Jwks(j) => Arc::new(j.clone()),
+                    JwksOrJwksUri::JwksUri(uri) => {
+                        let result = jwks_fetcher
+                            .get(uri.clone())
+                            .await
+                            .map_err(|e| {
+                                CredentialsVerificationError::JwksFetchFailed(Box::new(e))
+                            })?;
+                        result.map_err(|e| {
+                            CredentialsVerificationError::JwksFetchFailed(Box::new(
+                                SharedFetcherError(e),
+                            ))
+                        })?
+                    }
+                };
 
-                jwt.verify_with_jwks(&jwks)
+                jwt.verify_with_jwks(&jwks_arc)
                     .map_err(|_| CredentialsVerificationError::InvalidAssertionSignature)?;
             }
 
@@ -189,26 +206,6 @@ impl Credentials {
         }
         Ok(())
     }
-}
-
-async fn fetch_jwks(
-    http_client: &reqwest::Client,
-    jwks: &JwksOrJwksUri,
-) -> Result<PublicJsonWebKeySet, BoxError> {
-    let uri = match jwks {
-        JwksOrJwksUri::Jwks(j) => return Ok(j.clone()),
-        JwksOrJwksUri::JwksUri(u) => u,
-    };
-
-    let response = http_client
-        .get(uri.as_str())
-        .send_traced()
-        .await?
-        .error_for_status()?
-        .json()
-        .await?;
-
-    Ok(response)
 }
 
 #[derive(Debug, Error)]

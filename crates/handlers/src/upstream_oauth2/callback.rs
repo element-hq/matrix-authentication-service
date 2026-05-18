@@ -139,6 +139,12 @@ pub(crate) enum RouteError {
         expected: UpstreamOAuthProviderResponseMode,
     },
 
+    #[error("JWKS fetcher actor is unavailable")]
+    JwksFetcherActor(#[source] mas_jwks_cache::FetcherError),
+
+    #[error("Failed to fetch JWKS")]
+    JwksFetch(#[source] std::sync::Arc<mas_jwks_cache::FetcherError>),
+
     #[error(transparent)]
     Internal(Box<dyn std::error::Error + Send + Sync + 'static>),
 }
@@ -157,6 +163,8 @@ impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
         match self {
             Self::Internal(e) => InternalError::new(e).into_response(),
+            e @ Self::JwksFetcherActor(_) => InternalError::new(Box::new(e)).into_response(),
+            e @ Self::JwksFetch(_) => InternalError::new(Box::new(e)).into_response(),
             e @ (Self::ProviderNotFound | Self::SessionNotFound) => {
                 GenericError::new(StatusCode::NOT_FOUND, e).into_response()
             }
@@ -175,6 +183,7 @@ pub(crate) async fn handler(
     mut rng: BoxRng,
     clock: BoxClock,
     State(metadata_cache): State<MetadataCache>,
+    State(jwks_fetcher): State<mas_jwks_cache::JwksFetcher>,
     mut repo: BoxRepository,
     State(url_builder): State<UrlBuilder>,
     State(encrypter): State<Encrypter>,
@@ -311,15 +320,18 @@ pub(crate) async fn handler(
     )
     .await?;
 
-    let mut jwks = None;
+    let mut jwks: Option<std::sync::Arc<mas_jose::jwk::PublicJsonWebKeySet>> = None;
     let mut id_token_claims = None;
 
     let mut context = AttributeMappingContext::new();
     if let Some(id_token) = token_response.id_token.as_ref() {
-        jwks = Some(
-            mas_oidc_client::requests::jose::fetch_jwks(&client, lazy_metadata.jwks_uri().await?)
-                .await?,
-        );
+        let jwks_uri = lazy_metadata.jwks_uri().await?.clone();
+        let result = jwks_fetcher
+            .get(jwks_uri.clone())
+            .await
+            .map_err(RouteError::JwksFetcherActor)?;
+        let fetched = result.map_err(RouteError::JwksFetch)?;
+        jwks = Some(fetched);
 
         let id_token_verification_data = JwtVerificationData {
             issuer: provider.issuer.as_deref(),
@@ -385,11 +397,12 @@ pub(crate) async fn handler(
                 let jwks = match jwks {
                     Some(jwks) => jwks,
                     None => {
-                        mas_oidc_client::requests::jose::fetch_jwks(
-                            &client,
-                            lazy_metadata.jwks_uri().await?,
-                        )
-                        .await?
+                        let jwks_uri = lazy_metadata.jwks_uri().await?.clone();
+                        let result = jwks_fetcher
+                            .get(jwks_uri)
+                            .await
+                            .map_err(RouteError::JwksFetcherActor)?;
+                        result.map_err(RouteError::JwksFetch)?
                     }
                 };
 

@@ -102,7 +102,7 @@ pub(crate) async fn post(
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     activity_tracker: BoundActivityTracker,
     State(url_builder): State<UrlBuilder>,
-    State(http_client): State<reqwest::Client>,
+    State(jwks_fetcher): State<mas_jwks_cache::JwksFetcher>,
     State(encrypter): State<Encrypter>,
     State(site_config): State<SiteConfig>,
     client_authorization: ClientAuthorization<DeviceAuthorizationRequest>,
@@ -125,7 +125,7 @@ pub(crate) async fn post(
 
     client_authorization
         .credentials
-        .verify(&http_client, &encrypter, method, &client)
+        .verify(&jwks_fetcher, &encrypter, method, &client)
         .await
         .map_err(|err| {
             if err.is_internal() {

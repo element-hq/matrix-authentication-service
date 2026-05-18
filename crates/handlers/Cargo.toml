@@ -78,6 +78,7 @@ mas-http.workspace = true
 mas-i18n.workspace = true
 mas-iana.workspace = true
 mas-jose.workspace = true
+mas-jwks-cache.workspace = true
 mas-keystore.workspace = true
 mas-matrix.workspace = true
 mas-oidc-client.workspace = true
