@@ -11,7 +11,7 @@
 use std::sync::Arc;
 
 use chrono::Duration;
-use mas_data_model::clock::MockClock;
+use mas_data_model::{Clock, clock::MockClock};
 use mas_jwks_cache::JwksFetcher;
 use mas_storage::{RepositoryAccess, RepositoryFactory};
 use mas_storage_pg::PgRepositoryFactory;
@@ -188,6 +188,90 @@ async fn forced_refresh_refetches(pool: PgPool) {
     let mut repo = factory.create().await.unwrap();
     let entry = repo.jwks_cache().get(&uri).await.unwrap().unwrap();
     assert_eq!(entry.jwks.len(), 2);
+}
+
+#[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+async fn kid_miss_triggers_refresh_and_returns_new_keys(pool: PgPool) {
+    let server = MockServer::start().await;
+    let uri: Url = format!("{}/jwks", server.uri()).parse().unwrap();
+
+    // First call: only k1 is published.
+    let first = Mock::given(method("GET"))
+        .and(path("/jwks"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(jwks_with_kid("k1"))
+                .insert_header("Cache-Control", "max-age=86400"),
+        )
+        .mount_as_scoped(&server)
+        .await;
+
+    let factory = Arc::new(PgRepositoryFactory::new(pool.clone()));
+    let (fetcher, clock) = start_fetcher(pool.clone()).await;
+
+    // Warm the cache.
+    let r = fetcher.get(uri.clone()).await.unwrap();
+    assert_eq!(r.expect("ok").len(), 1);
+    drop(first);
+
+    // Origin rotates to k2.
+    Mock::given(method("GET"))
+        .and(path("/jwks"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(jwks_with_kid("k2"))
+                .insert_header("Cache-Control", "max-age=86400"),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // get_with_kid_refresh sees that k2 isn't cached, claims the cooldown,
+    // forces a refresh, and returns the post-refresh JWKS.
+    let result = fetcher
+        .get_with_kid_refresh(uri.clone(), Some("k2"), &*factory, clock.now())
+        .await
+        .expect("kid refresh");
+    assert_eq!(result.len(), 1);
+    use mas_jose::constraints::Constrainable;
+    assert_eq!(result[0].kid(), Some("k2"));
+}
+
+#[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+async fn kid_miss_during_cooldown_returns_cached(pool: PgPool) {
+    let server = MockServer::start().await;
+    let uri: Url = format!("{}/jwks", server.uri()).parse().unwrap();
+
+    Mock::given(method("GET"))
+        .and(path("/jwks"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(jwks_with_kid("k1"))
+                .insert_header("Cache-Control", "max-age=86400"),
+        )
+        // The publisher only ever serves k1 — even after refreshes.
+        .mount(&server)
+        .await;
+
+    let factory = Arc::new(PgRepositoryFactory::new(pool.clone()));
+    let (fetcher, clock) = start_fetcher(pool).await;
+
+    // Warm the cache, then exhaust the cooldown via a first kid-miss.
+    let _ = fetcher.get(uri.clone()).await.unwrap().expect("ok");
+    let first = fetcher
+        .get_with_kid_refresh(uri.clone(), Some("rotated"), &*factory, clock.now())
+        .await
+        .expect("first claim");
+    // Still no k2 in publisher's response, so we get k1.
+    assert_eq!(first.len(), 1);
+
+    // Second kid-miss within the cooldown: the claim fails, we return the
+    // cached body without forcing another fetch.
+    let second = fetcher
+        .get_with_kid_refresh(uri.clone(), Some("rotated"), &*factory, clock.now())
+        .await
+        .expect("second claim, denied");
+    assert_eq!(second.len(), 1);
 }
 
 #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

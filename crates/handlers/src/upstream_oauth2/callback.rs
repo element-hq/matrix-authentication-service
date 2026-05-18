@@ -145,6 +145,9 @@ pub(crate) enum RouteError {
     #[error("Failed to fetch JWKS")]
     JwksFetch(#[source] std::sync::Arc<mas_jwks_cache::FetcherError>),
 
+    #[error("Failed to fetch JWKS with kid-miss handling")]
+    JwksRefresh(#[source] mas_jwks_cache::KidRefreshError),
+
     #[error(transparent)]
     Internal(Box<dyn std::error::Error + Send + Sync + 'static>),
 }
@@ -165,6 +168,7 @@ impl IntoResponse for RouteError {
             Self::Internal(e) => InternalError::new(e).into_response(),
             e @ Self::JwksFetcherActor(_) => InternalError::new(Box::new(e)).into_response(),
             e @ Self::JwksFetch(_) => InternalError::new(Box::new(e)).into_response(),
+            e @ Self::JwksRefresh(_) => InternalError::new(Box::new(e)).into_response(),
             e @ (Self::ProviderNotFound | Self::SessionNotFound) => {
                 GenericError::new(StatusCode::NOT_FOUND, e).into_response()
             }
@@ -184,6 +188,7 @@ pub(crate) async fn handler(
     clock: BoxClock,
     State(metadata_cache): State<MetadataCache>,
     State(jwks_fetcher): State<mas_jwks_cache::JwksFetcher>,
+    State(repository_factory): State<mas_storage::BoxRepositoryFactory>,
     mut repo: BoxRepository,
     State(url_builder): State<UrlBuilder>,
     State(encrypter): State<Encrypter>,
@@ -326,11 +331,23 @@ pub(crate) async fn handler(
     let mut context = AttributeMappingContext::new();
     if let Some(id_token) = token_response.id_token.as_ref() {
         let jwks_uri = lazy_metadata.jwks_uri().await?.clone();
-        let result = jwks_fetcher
-            .get(jwks_uri.clone())
+        // Decode just the header to see if the publisher rotated to a kid
+        // our cache doesn't know about; if so, force a refresh under the
+        // cross-replica cooldown.
+        let kid_for_refresh = mas_jose::jwt::Jwt::<'_, serde_json::Value>::try_from(
+            id_token.as_str(),
+        )
+        .ok()
+        .and_then(|jwt| jwt.header().kid().map(str::to_owned));
+        let fetched = jwks_fetcher
+            .get_with_kid_refresh(
+                jwks_uri.clone(),
+                kid_for_refresh.as_deref(),
+                &*repository_factory,
+                clock.now(),
+            )
             .await
-            .map_err(RouteError::JwksFetcherActor)?;
-        let fetched = result.map_err(RouteError::JwksFetch)?;
+            .map_err(RouteError::JwksRefresh)?;
         jwks = Some(fetched);
 
         let id_token_verification_data = JwtVerificationData {
@@ -397,12 +414,16 @@ pub(crate) async fn handler(
                 let jwks = match jwks {
                     Some(jwks) => jwks,
                     None => {
+                        // No ID token in the token response, so we have no
+                        // kid hint and we just use the cached JWKS as-is —
+                        // the userinfo response will produce its own
+                        // verification error if needed.
                         let jwks_uri = lazy_metadata.jwks_uri().await?.clone();
-                        let result = jwks_fetcher
+                        jwks_fetcher
                             .get(jwks_uri)
                             .await
-                            .map_err(RouteError::JwksFetcherActor)?;
-                        result.map_err(RouteError::JwksFetch)?
+                            .map_err(RouteError::JwksFetcherActor)?
+                            .map_err(RouteError::JwksFetch)?
                     }
                 };
 

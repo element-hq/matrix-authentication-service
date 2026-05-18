@@ -144,13 +144,6 @@ pub enum FetcherError {
 /// is non-trivial to copy.
 pub type FetchResult = Result<Arc<PublicJsonWebKeySet>, Arc<FetcherError>>;
 
-/// A transparent `std::error::Error` wrapper around `Arc<FetcherError>`. Useful
-/// at call sites that need to bubble the error up through trait objects like
-/// `Box<dyn Error + Send + Sync>`.
-#[derive(Debug, Error)]
-#[error(transparent)]
-pub struct SharedFetcherError(#[from] pub Arc<FetcherError>);
-
 /// A handle to the fetcher actor. Cheap to clone (just an `mpsc::Sender`).
 #[derive(Clone)]
 pub struct JwksFetcher {
@@ -214,6 +207,109 @@ impl JwksFetcher {
             span: Span::current(),
         });
     }
+
+    /// Fetch a JWKS, forcing a refresh (subject to the cross-replica
+    /// cooldown) if the given `kid` isn't already cached.
+    ///
+    /// Used by JWT-verifier call sites: a `kid` value from the JWT header
+    /// that doesn't appear in the cached JWKS is the canonical signal that
+    /// the publisher rotated their signing key. We want to fetch the new
+    /// keys, but not without bound — an attacker who supplies a JWT with a
+    /// random `kid` per request shouldn't be able to weaponise this into one
+    /// HTTP fetch per request.
+    ///
+    /// The `factory` parameter is *separate from any request transaction*.
+    /// The cooldown claim is run in its own short-lived transaction that
+    /// commits before this method waits on the refresh, so the actor's
+    /// worker doesn't block on the row lock that the request transaction
+    /// would otherwise hold.
+    ///
+    /// Returns the most up-to-date JWKS the fetcher could obtain — caller
+    /// still needs to verify the JWT signature against it and decide what
+    /// to do if the kid is still missing (typically reject with
+    /// `kid_unknown`).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`KidRefreshError`] on transport, storage, or actor errors.
+    pub async fn get_with_kid_refresh(
+        &self,
+        uri: Url,
+        kid: Option<&str>,
+        factory: &(dyn RepositoryFactory + Send + Sync),
+        now: chrono::DateTime<chrono::Utc>,
+    ) -> Result<Arc<PublicJsonWebKeySet>, KidRefreshError> {
+        let cached = self
+            .get(uri.clone())
+            .await
+            .map_err(KidRefreshError::Actor)?
+            .map_err(KidRefreshError::Fetch)?;
+
+        if jwks_contains_kid(&cached, kid) {
+            return Ok(cached);
+        }
+
+        // Kid miss: try to claim the cross-replica cooldown. This needs to
+        // happen in its own short-lived transaction so the claim row-lock is
+        // released before we await the refresh — otherwise the actor's
+        // worker would block on the same row.
+        let mut claim_repo = factory.create().await.map_err(KidRefreshError::Repository)?;
+        let claimed = claim_repo
+            .jwks_cache()
+            .try_claim_forced_refresh(&uri, now, FORCED_REFRESH_COOLDOWN)
+            .await
+            .map_err(KidRefreshError::Repository)?;
+        claim_repo
+            .save()
+            .await
+            .map_err(KidRefreshError::Repository)?;
+
+        if !claimed {
+            // Another replica is refreshing (or recently did) — we can't
+            // force a fetch right now. Return what we have; verification
+            // will reject and the request will fail with kid_unknown.
+            return Ok(cached);
+        }
+
+        self.refresh(uri.clone());
+        self.get(uri)
+            .await
+            .map_err(KidRefreshError::Actor)?
+            .map_err(KidRefreshError::Fetch)
+    }
+}
+
+/// The forced-refresh cooldown enforced by [`JwksFetcher::get_with_kid_refresh`].
+/// Crate-level constant — see the plan's [open question](../plans/jwks-cache.md)
+/// about keeping these un-tuneable.
+const FORCED_REFRESH_COOLDOWN: chrono::Duration = chrono::Duration::seconds(30);
+
+fn jwks_contains_kid(jwks: &PublicJsonWebKeySet, kid: Option<&str>) -> bool {
+    use mas_jose::constraints::Constrainable;
+    match kid {
+        Some(kid) => jwks.iter().any(|k| k.kid() == Some(kid)),
+        // A JWT without a `kid` is allowed when the JWKS has exactly one
+        // key; otherwise the verifier will reject it. Don't force a refresh
+        // — there's nothing the publisher could rotate to that helps.
+        None => true,
+    }
+}
+
+/// Errors surfaced by [`JwksFetcher::get_with_kid_refresh`].
+#[derive(Debug, Error)]
+pub enum KidRefreshError {
+    /// The fetcher actor is no longer running.
+    #[error("JWKS fetcher actor is no longer running")]
+    Actor(#[source] FetcherError),
+
+    /// The HTTP fetch / parse failed and there was no usable cache to fall
+    /// back on.
+    #[error("failed to fetch JWKS")]
+    Fetch(#[source] Arc<FetcherError>),
+
+    /// The cooldown claim / commit failed.
+    #[error("storage error during forced JWKS refresh")]
+    Repository(#[source] mas_storage::RepositoryError),
 }
 
 enum FetchRequest {

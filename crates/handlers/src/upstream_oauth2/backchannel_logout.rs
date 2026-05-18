@@ -58,13 +58,10 @@ pub enum RouteError {
     #[error("failed to verify logout token")]
     LogoutTokenVerification(#[from] JwtVerificationError),
 
-    /// The JWKS fetcher actor is unavailable
-    #[error("JWKS fetcher actor is unavailable")]
-    JwksFetcherActor(#[source] mas_jwks_cache::FetcherError),
-
-    /// Failed to fetch the JWKS
+    /// Failed to fetch the JWKS (transport, parse, or storage error,
+    /// optionally combined with a kid-miss-triggered forced refresh).
     #[error("failed to fetch JWKS")]
-    JwksFetch(#[source] std::sync::Arc<mas_jwks_cache::FetcherError>),
+    JwksRefresh(#[source] mas_jwks_cache::KidRefreshError),
 
     /// Logout token had invalid claims
     #[error("invalid claims in logout token")]
@@ -84,7 +81,7 @@ impl IntoResponse for RouteError {
         let sentry_event_id = record_error!(self, Self::Internal(_));
 
         let response = match self {
-            e @ (Self::Internal(_) | Self::JwksFetcherActor(_) | Self::JwksFetch(_)) => (
+            e @ (Self::Internal(_) | Self::JwksRefresh(_)) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(
                     ClientError::from(ClientErrorCode::ServerError).with_description(e.to_string()),
@@ -150,6 +147,7 @@ pub(crate) async fn post(
     mut repo: BoxRepository,
     State(metadata_cache): State<MetadataCache>,
     State(jwks_fetcher): State<mas_jwks_cache::JwksFetcher>,
+    State(repository_factory): State<mas_storage::BoxRepositoryFactory>,
     State(client): State<reqwest::Client>,
     Path(provider_id): Path<Ulid>,
     request: Result<Form<BackchannelLogoutRequest>, FormRejection>,
@@ -165,11 +163,22 @@ pub(crate) async fn post(
     let mut lazy_metadata = LazyProviderInfos::new(&metadata_cache, &provider, &client);
 
     let jwks_uri = lazy_metadata.jwks_uri().await?.clone();
+    // Peek at the logout token's `kid` so we can trigger a forced refresh
+    // if the publisher rotated to a key we haven't cached yet.
+    let kid_for_refresh = mas_jose::jwt::Jwt::<'_, serde_json::Value>::try_from(
+        request.logout_token.as_str(),
+    )
+    .ok()
+    .and_then(|jwt| jwt.header().kid().map(str::to_owned));
     let jwks = jwks_fetcher
-        .get(jwks_uri)
+        .get_with_kid_refresh(
+            jwks_uri,
+            kid_for_refresh.as_deref(),
+            &*repository_factory,
+            clock.now(),
+        )
         .await
-        .map_err(RouteError::JwksFetcherActor)?
-        .map_err(RouteError::JwksFetch)?;
+        .map_err(RouteError::JwksRefresh)?;
 
     // Validate the logout token. The rules are defined in
     // <https://openid.net/specs/openid-connect-backchannel-1_0.html#Validation>

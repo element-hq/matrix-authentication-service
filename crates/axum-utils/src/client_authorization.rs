@@ -18,12 +18,12 @@ use axum::{
 };
 use headers::authorization::{Basic, Bearer, Credentials as _};
 use http::{Request, StatusCode};
-use mas_data_model::{Client, JwksOrJwksUri};
+use mas_data_model::{Client, Clock, JwksOrJwksUri};
 use mas_iana::oauth::OAuthClientAuthenticationMethod;
 use mas_jose::{jwk::PublicJsonWebKeySet, jwt::Jwt};
-use mas_jwks_cache::{JwksFetcher, SharedFetcherError};
+use mas_jwks_cache::JwksFetcher;
 use mas_keystore::Encrypter;
-use mas_storage::{RepositoryAccess, oauth2::OAuth2ClientRepository};
+use mas_storage::{RepositoryAccess, RepositoryFactory, oauth2::OAuth2ClientRepository};
 use oauth2_types::errors::{ClientError, ClientErrorCode};
 use serde::{Deserialize, de::DeserializeOwned};
 use serde_json::Value;
@@ -118,6 +118,8 @@ impl Credentials {
     pub async fn verify(
         &self,
         jwks_fetcher: &JwksFetcher,
+        factory: &(dyn RepositoryFactory + Send + Sync),
+        clock: &dyn Clock,
         encrypter: &Encrypter,
         method: &OAuthClientAuthenticationMethod,
         client: &Client,
@@ -160,22 +162,21 @@ impl Credentials {
 
                 // Inline JWKS bypasses the cache: the bytes are already
                 // persisted on the client row. URI-based JWKS goes through
-                // the shared cache.
+                // the shared cache, with kid-miss handling to absorb
+                // publisher key rotation under a cross-replica cooldown.
                 let jwks_arc: Arc<PublicJsonWebKeySet> = match jwks_config {
                     JwksOrJwksUri::Jwks(j) => Arc::new(j.clone()),
-                    JwksOrJwksUri::JwksUri(uri) => {
-                        let result = jwks_fetcher
-                            .get(uri.clone())
-                            .await
-                            .map_err(|e| {
-                                CredentialsVerificationError::JwksFetchFailed(Box::new(e))
-                            })?;
-                        result.map_err(|e| {
-                            CredentialsVerificationError::JwksFetchFailed(Box::new(
-                                SharedFetcherError(e),
-                            ))
-                        })?
-                    }
+                    JwksOrJwksUri::JwksUri(uri) => jwks_fetcher
+                        .get_with_kid_refresh(
+                            uri.clone(),
+                            jwt.header().kid(),
+                            factory,
+                            clock.now(),
+                        )
+                        .await
+                        .map_err(|e| {
+                            CredentialsVerificationError::JwksFetchFailed(Box::new(e))
+                        })?,
                 };
 
                 jwt.verify_with_jwks(&jwks_arc)

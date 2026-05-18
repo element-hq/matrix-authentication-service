@@ -123,6 +123,7 @@ pub(crate) async fn post(
     clock: BoxClock,
     mut rng: BoxRng,
     State(jwks_fetcher): State<mas_jwks_cache::JwksFetcher>,
+    State(repository_factory): State<mas_storage::BoxRepositoryFactory>,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
     State(encrypter): State<Encrypter>,
@@ -141,7 +142,7 @@ pub(crate) async fn post(
 
     client_authorization
         .credentials
-        .verify(&jwks_fetcher, &encrypter, method, &client)
+        .verify(&jwks_fetcher, &*repository_factory, &clock, &encrypter, method, &client)
         .await
         .map_err(|err| {
             if err.is_internal() {

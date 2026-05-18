@@ -261,6 +261,7 @@ fn normalize_scope(mut scope: Scope) -> Scope {
 pub(crate) async fn post(
     clock: BoxClock,
     State(jwks_fetcher): State<mas_jwks_cache::JwksFetcher>,
+    State(repository_factory): State<mas_storage::BoxRepositoryFactory>,
     mut repo: BoxRepository,
     activity_tracker: ActivityTracker,
     State(encrypter): State<Encrypter>,
@@ -294,7 +295,7 @@ pub(crate) async fn post(
         };
 
         credentials
-            .verify(&jwks_fetcher, &encrypter, method, &client)
+            .verify(&jwks_fetcher, &*repository_factory, &clock, &encrypter, method, &client)
             .await?;
     }
 
