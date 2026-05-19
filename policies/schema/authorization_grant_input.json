@@ -34,13 +34,18 @@
     },
     "requester": {
       "$ref": "#/definitions/Requester"
+    },
+    "requested_via_par": {
+      "description": "Whether the authorization request was pushed via the RFC 9126 PAR\n endpoint. Only meaningful for the `authorization_code` grant type;\n `false` for other grant types.",
+      "type": "boolean"
     }
   },
   "required": [
     "client",
     "scope",
     "grant_type",
-    "requester"
+    "requester",
+    "requested_via_par"
   ],
   "definitions": {
     "SessionCounts": {

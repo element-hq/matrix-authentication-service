@@ -195,6 +195,11 @@ pub struct AuthorizationGrantInput<'a> {
     pub grant_type: GrantType,
 
     pub requester: Requester,
+
+    /// Whether the authorization request was pushed via the RFC 9126 PAR
+    /// endpoint. Only meaningful for the `authorization_code` grant type;
+    /// `false` for other grant types.
+    pub requested_via_par: bool,
 }
 
 /// Input for the compatibility login policy.

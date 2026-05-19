@@ -156,6 +156,7 @@ pub(crate) async fn get(
                 ip_address: activity_tracker.ip(),
                 user_agent,
             },
+            requested_via_par: grant.created_via_par,
         })
         .await?;
     if !res.valid() {
@@ -288,6 +289,7 @@ pub(crate) async fn post(
                 ip_address: activity_tracker.ip(),
                 user_agent,
             },
+            requested_via_par: grant.created_via_par,
         })
         .await?;
 
