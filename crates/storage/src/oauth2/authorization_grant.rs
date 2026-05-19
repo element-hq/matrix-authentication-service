@@ -42,6 +42,8 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
     /// * `login_hint`: The `login_hint` the client sent, if set
     /// * `locale`: The locale the detected when the user asked for the
     ///   authorization grant
+    /// * `created_via_par`: Whether this grant is being created via the Pushed
+    ///   Authorization Request endpoint (RFC 9126)
     ///
     /// # Errors
     ///
@@ -61,6 +63,7 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
         response_type_id_token: bool,
         login_hint: Option<String>,
         locale: Option<String>,
+        created_via_par: bool,
     ) -> Result<AuthorizationGrant, Self::Error>;
 
     /// Lookup an authorization grant by its ID
@@ -169,6 +172,7 @@ repository_impl!(OAuth2AuthorizationGrantRepository:
         response_type_id_token: bool,
         login_hint: Option<String>,
         locale: Option<String>,
+        created_via_par: bool,
     ) -> Result<AuthorizationGrant, Self::Error>;
 
     async fn lookup(&mut self, id: Ulid) -> Result<Option<AuthorizationGrant>, Self::Error>;

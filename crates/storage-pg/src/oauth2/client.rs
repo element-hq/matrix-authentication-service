@@ -62,6 +62,7 @@ struct OAuth2ClientLookup {
     token_endpoint_auth_method: Option<String>,
     token_endpoint_auth_signing_alg: Option<String>,
     initiate_login_uri: Option<String>,
+    require_pushed_authorization_requests: bool,
 }
 
 impl TryInto<Client> for OAuth2ClientLookup {
@@ -242,6 +243,7 @@ impl TryInto<Client> for OAuth2ClientLookup {
             token_endpoint_auth_method,
             token_endpoint_auth_signing_alg,
             initiate_login_uri,
+            require_pushed_authorization_requests: self.require_pushed_authorization_requests,
         })
     }
 }
@@ -284,6 +286,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                      , token_endpoint_auth_method
                      , token_endpoint_auth_signing_alg
                      , initiate_login_uri
+                     , require_pushed_authorization_requests
                 FROM oauth2_clients c
 
                 WHERE oauth2_client_id = $1
@@ -335,6 +338,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                     , token_endpoint_auth_method
                     , token_endpoint_auth_signing_alg
                     , initiate_login_uri
+                    , require_pushed_authorization_requests
                 FROM oauth2_clients
                 WHERE metadata_digest = $1
             "#,
@@ -386,6 +390,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                      , token_endpoint_auth_method
                      , token_endpoint_auth_signing_alg
                      , initiate_login_uri
+                     , require_pushed_authorization_requests
                 FROM oauth2_clients c
 
                 WHERE oauth2_client_id = ANY($1::uuid[])
@@ -436,6 +441,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
         token_endpoint_auth_method: Option<OAuthClientAuthenticationMethod>,
         token_endpoint_auth_signing_alg: Option<JsonWebSignatureAlg>,
         initiate_login_uri: Option<Url>,
+        require_pushed_authorization_requests: bool,
     ) -> Result<Client, Self::Error> {
         let now = clock.now();
         let id = Ulid::from_datetime_with_source(now.into(), rng);
@@ -473,11 +479,12 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                     , token_endpoint_auth_method
                     , token_endpoint_auth_signing_alg
                     , initiate_login_uri
+                    , require_pushed_authorization_requests
                     , is_static
                     )
                 VALUES
                     ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-                    $14, $15, $16, $17, $18, $19, $20, $21, FALSE)
+                    $14, $15, $16, $17, $18, $19, $20, $21, $22, FALSE)
             "#,
             Uuid::from(id),
             metadata_digest,
@@ -506,6 +513,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                 .as_ref()
                 .map(ToString::to_string),
             initiate_login_uri.as_ref().map(Url::as_str),
+            require_pushed_authorization_requests,
         )
         .traced()
         .execute(&mut *self.conn)
@@ -537,6 +545,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
             token_endpoint_auth_method,
             token_endpoint_auth_signing_alg,
             initiate_login_uri,
+            require_pushed_authorization_requests,
         })
     }
 
@@ -646,6 +655,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
             token_endpoint_auth_method: None,
             token_endpoint_auth_signing_alg: None,
             initiate_login_uri: None,
+            require_pushed_authorization_requests: false,
         })
     }
 
@@ -682,6 +692,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                      , token_endpoint_auth_method
                      , token_endpoint_auth_signing_alg
                      , initiate_login_uri
+                     , require_pushed_authorization_requests
                 FROM oauth2_clients c
                 WHERE is_static = TRUE
             "#,

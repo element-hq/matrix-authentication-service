@@ -50,6 +50,7 @@ async fn create_test_client(state: &TestState) -> Client {
             None,
             None,
             None,
+            false,
         )
         .await
         .unwrap();

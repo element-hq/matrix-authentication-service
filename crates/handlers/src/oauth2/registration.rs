@@ -367,6 +367,7 @@ pub(crate) async fn post(
                 metadata.token_endpoint_auth_method.clone(),
                 metadata.token_endpoint_auth_signing_alg.clone(),
                 metadata.initiate_login_uri.clone(),
+                metadata.require_pushed_authorization_requests(),
             )
             .await?;
         tracing::info!(%client.id, "Registered new client");

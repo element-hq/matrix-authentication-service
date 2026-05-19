@@ -109,6 +109,8 @@ pub trait OAuth2ClientRepository: Send + Sync {
     ///   when using the `client_secret_jwt` or `private_key_jwt` authentication
     ///   methods
     /// * `initiate_login_uri`: The URI used to initiate a login, if given
+    /// * `require_pushed_authorization_requests`: Whether the client must use
+    ///   Pushed Authorization Requests (RFC 9126) for authorization flows
     ///
     /// # Errors
     ///
@@ -135,6 +137,7 @@ pub trait OAuth2ClientRepository: Send + Sync {
         token_endpoint_auth_method: Option<OAuthClientAuthenticationMethod>,
         token_endpoint_auth_signing_alg: Option<JsonWebSignatureAlg>,
         initiate_login_uri: Option<Url>,
+        require_pushed_authorization_requests: bool,
     ) -> Result<Client, Self::Error>;
 
     /// Add or replace a static client
@@ -233,6 +236,7 @@ repository_impl!(OAuth2ClientRepository:
         token_endpoint_auth_method: Option<OAuthClientAuthenticationMethod>,
         token_endpoint_auth_signing_alg: Option<JsonWebSignatureAlg>,
         initiate_login_uri: Option<Url>,
+        require_pushed_authorization_requests: bool,
     ) -> Result<Client, Self::Error>;
 
     async fn upsert_static(

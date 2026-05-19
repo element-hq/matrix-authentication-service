@@ -81,6 +81,7 @@ mod tests {
                 None,
                 None,
                 Some("https://example.com/login".parse().unwrap()),
+                false,
             )
             .await
             .unwrap();
@@ -138,6 +139,7 @@ mod tests {
                 true,
                 None,
                 None,
+                false,
             )
             .await
             .unwrap();
@@ -425,6 +427,7 @@ mod tests {
                 None,
                 None,
                 Some("https://first.example.com/login".parse().unwrap()),
+                false,
             )
             .await
             .unwrap();
@@ -450,6 +453,7 @@ mod tests {
                 None,
                 None,
                 Some("https://second.example.com/login".parse().unwrap()),
+                false,
             )
             .await
             .unwrap();
@@ -750,6 +754,7 @@ mod tests {
                 None,
                 None,
                 Some("https://example.com/login".parse().unwrap()),
+                false,
             )
             .await
             .unwrap();

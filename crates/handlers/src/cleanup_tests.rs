@@ -153,6 +153,7 @@ async fn create_session_hierarchy(
                 None,
                 None,
                 None,
+                false,
             )
             .await
             .unwrap();

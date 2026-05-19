@@ -155,6 +155,10 @@ pub struct AuthorizationGrant {
     pub created_at: DateTime<Utc>,
     pub login_hint: Option<String>,
     pub locale: Option<String>,
+
+    /// Whether this grant was created via a Pushed Authorization Request
+    /// (RFC 9126 / MSC4305).
+    pub created_via_par: bool,
 }
 
 impl std::ops::Deref for AuthorizationGrant {
@@ -229,6 +233,7 @@ impl AuthorizationGrant {
             created_at: now,
             login_hint: Some(String::from("mxid:@example-user:example.com")),
             locale: Some(String::from("fr")),
+            created_via_par: false,
         }
     }
 }

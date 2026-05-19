@@ -86,6 +86,10 @@ pub struct Client {
     /// URI using the https scheme that a third party can use to initiate a
     /// login by the RP
     pub initiate_login_uri: Option<Url>,
+
+    /// Whether the client must use Pushed Authorization Requests (RFC 9126 /
+    /// MSC4305) for all authorization flows.
+    pub require_pushed_authorization_requests: bool,
 }
 
 #[derive(Debug, Error)]
@@ -165,7 +169,11 @@ impl Client {
             default_acr_values: None,
             request_uris: None,
             require_signed_request_object: None,
-            require_pushed_authorization_requests: None,
+            // Only echo this back when explicitly set, to keep responses
+            // backwards-compatible for clients that don't opt in.
+            require_pushed_authorization_requests: self
+                .require_pushed_authorization_requests
+                .then_some(true),
             introspection_signed_response_alg: None,
             introspection_encrypted_response_alg: None,
             introspection_encrypted_response_enc: None,
@@ -201,6 +209,7 @@ impl Client {
                 id_token_signed_response_alg: None,
                 userinfo_signed_response_alg: None,
                 jwks: None,
+                require_pushed_authorization_requests: false,
             },
             // Another client without any URIs set
             Self {
@@ -222,6 +231,7 @@ impl Client {
                 id_token_signed_response_alg: None,
                 userinfo_signed_response_alg: None,
                 jwks: None,
+                require_pushed_authorization_requests: false,
             },
         ]
     }

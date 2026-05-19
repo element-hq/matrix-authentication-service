@@ -56,6 +56,7 @@ struct GrantLookup {
     locale: Option<String>,
     oauth2_client_id: Uuid,
     oauth2_session_id: Option<Uuid>,
+    created_via_par: bool,
 }
 
 impl TryFrom<GrantLookup> for AuthorizationGrant {
@@ -164,6 +165,7 @@ impl TryFrom<GrantLookup> for AuthorizationGrant {
             response_type_id_token: value.response_type_id_token,
             login_hint: value.login_hint,
             locale: value.locale,
+            created_via_par: value.created_via_par,
         })
     }
 }
@@ -197,6 +199,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
         response_type_id_token: bool,
         login_hint: Option<String>,
         locale: Option<String>,
+        created_via_par: bool,
     ) -> Result<AuthorizationGrant, Self::Error> {
         let code_challenge = code
             .as_ref()
@@ -229,10 +232,11 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
                      authorization_code,
                      login_hint,
                      locale,
-                     created_at
+                     created_at,
+                     created_via_par
                 )
                 VALUES
-                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
             "#,
             Uuid::from(id),
             Uuid::from(client.id),
@@ -249,6 +253,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             login_hint,
             locale,
             created_at,
+            created_via_par,
         )
         .traced()
         .execute(&mut *self.conn)
@@ -268,6 +273,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             response_type_id_token,
             login_hint,
             locale,
+            created_via_par,
         })
     }
 
@@ -303,6 +309,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
                      , login_hint
                      , locale
                      , oauth2_session_id
+                     , created_via_par
                 FROM
                     oauth2_authorization_grants
 
@@ -353,6 +360,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
                      , login_hint
                      , locale
                      , oauth2_session_id
+                     , created_via_par
                 FROM
                     oauth2_authorization_grants
 

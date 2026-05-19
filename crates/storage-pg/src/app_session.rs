@@ -666,6 +666,7 @@ mod tests {
                 None,
                 None,
                 Some("https://example.com/login".parse().unwrap()),
+                false,
             )
             .await
             .unwrap();
