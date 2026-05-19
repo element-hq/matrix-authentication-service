@@ -27,6 +27,7 @@ pub mod device;
 pub mod discovery;
 pub mod introspection;
 pub mod keys;
+pub mod par;
 pub mod registration;
 pub mod revoke;
 pub mod token;

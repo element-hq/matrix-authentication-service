@@ -863,6 +863,14 @@ impl SimpleRoute for OAuth2DeviceAuthorizationEndpoint {
     const PATH: &'static str = "/oauth2/device";
 }
 
+/// `POST /oauth2/par`
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
+pub struct OAuth2PushedAuthorizationRequestEndpoint;
+
+impl SimpleRoute for OAuth2PushedAuthorizationRequestEndpoint {
+    const PATH: &'static str = "/oauth2/par";
+}
+
 /// `GET|POST /recover`
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct AccountRecoveryStart;

@@ -20,18 +20,53 @@ use mas_templates::Templates;
 use oauth2_types::{
     errors::{ClientError, ClientErrorCode},
     pkce,
-    requests::{AuthorizationRequest, GrantType, Prompt, ResponseMode},
+    requests::{GrantType, Prompt, ResponseMode},
     response_type::ResponseType,
+    scope::Scope,
 };
 use rand::{Rng, distributions::Alphanumeric};
 use serde::Deserialize;
+use serde_with::{StringWithSeparator, formats::SpaceSeparator, serde_as};
 use thiserror::Error;
+use url::Url;
 
 use self::callback::CallbackDestination;
 use crate::{BoundActivityTracker, PreferredLanguage, impl_from_error_for_route};
 
 mod callback;
 pub(crate) mod consent;
+
+/// The URN prefix for `request_uri` values issued by the PAR endpoint
+/// (RFC 9126 / MSC4305).
+pub(crate) const REQUEST_URI_PREFIX: &str = "urn:ietf:params:oauth:request_uri:";
+
+/// Build a `request_uri` referring to the given pushed authorization grant.
+#[must_use]
+pub(crate) fn build_request_uri(grant_id: ulid::Ulid) -> String {
+    format!("{REQUEST_URI_PREFIX}{grant_id}")
+}
+
+/// Parse a `request_uri` value back into the grant ULID it refers to.
+///
+/// Returns `None` if the URI does not match the expected URN format or if the
+/// embedded identifier is not a valid ULID.
+#[must_use]
+pub(crate) fn parse_request_uri(request_uri: &url::Url) -> Option<ulid::Ulid> {
+    request_uri
+        .as_str()
+        .strip_prefix(REQUEST_URI_PREFIX)
+        .and_then(|s| s.parse().ok())
+}
+
+/// Lifetime of a `request_uri` issued by the PAR endpoint
+/// (RFC 9126 §2 recommends a short lifetime; we use 60 seconds).
+pub(crate) const REQUEST_URI_LIFETIME_SECONDS: i64 = 60;
+
+/// Lifetime of a `request_uri` issued by the PAR endpoint.
+#[must_use]
+pub(crate) fn request_uri_lifetime() -> chrono::Duration {
+    chrono::Duration::seconds(REQUEST_URI_LIFETIME_SECONDS)
+}
 
 #[derive(Debug, Error)]
 pub enum RouteError {
@@ -49,6 +84,12 @@ pub enum RouteError {
 
     #[error("invalid redirect uri")]
     UnknownRedirectUri(#[from] mas_data_model::InvalidRedirectUriError),
+
+    #[error("invalid or expired request_uri")]
+    InvalidRequestUri,
+
+    #[error("missing response_type parameter")]
+    MissingResponseType,
 }
 
 impl IntoResponse for RouteError {
@@ -58,7 +99,9 @@ impl IntoResponse for RouteError {
             e @ (Self::ClientNotFound
             | Self::InvalidResponseMode
             | Self::IntoCallbackDestination(_)
-            | Self::UnknownRedirectUri(_)) => {
+            | Self::UnknownRedirectUri(_)
+            | Self::InvalidRequestUri
+            | Self::MissingResponseType) => {
                 GenericError::new(StatusCode::BAD_REQUEST, e).into_response()
             }
         }
@@ -71,10 +114,32 @@ impl_from_error_for_route!(self::callback::CallbackDestinationError);
 impl_from_error_for_route!(mas_policy::LoadError);
 impl_from_error_for_route!(mas_policy::EvaluationError);
 
+/// Query parameters accepted at the `/authorize` endpoint.
+///
+/// Mirrors [`oauth2_types::requests::AuthorizationRequest`] but with
+/// `response_type` and `scope` made optional, because RFC 9126 §4 allows them
+/// to be absent when `request_uri` is used. The handler validates that both
+/// are present on the non-PAR path.
+#[serde_as]
 #[derive(Deserialize)]
 pub(crate) struct Params {
-    #[serde(flatten)]
-    auth: AuthorizationRequest,
+    client_id: String,
+    response_type: Option<ResponseType>,
+    redirect_uri: Option<Url>,
+    scope: Option<Scope>,
+    state: Option<String>,
+    response_mode: Option<ResponseMode>,
+    nonce: Option<String>,
+
+    #[serde_as(as = "Option<StringWithSeparator::<SpaceSeparator, Prompt>>")]
+    #[serde(default)]
+    prompt: Option<Vec<Prompt>>,
+
+    login_hint: Option<String>,
+
+    request: Option<String>,
+    request_uri: Option<Url>,
+    registration: Option<String>,
 
     #[serde(flatten)]
     pkce: Option<pkce::AuthorizationRequest>,
@@ -83,7 +148,7 @@ pub(crate) struct Params {
 /// Given a list of response types and an optional user-defined response mode,
 /// figure out what response mode must be used, and emit an error if the
 /// suggested response mode isn't allowed for the given response types.
-fn resolve_response_mode(
+pub(crate) fn resolve_response_mode(
     response_type: &ResponseType,
     suggested_response_mode: Option<ResponseMode>,
 ) -> Result<ResponseMode, RouteError> {
@@ -106,7 +171,7 @@ fn resolve_response_mode(
 
 #[tracing::instrument(
     name = "handlers.oauth2.authorization.get",
-    fields(client.id = %params.auth.client_id),
+    fields(client.id = %params.client_id),
     skip_all,
 )]
 pub(crate) async fn get(
@@ -123,23 +188,79 @@ pub(crate) async fn get(
     // First, figure out what client it is
     let client = repo
         .oauth2_client()
-        .find_by_client_id(&params.auth.client_id)
+        .find_by_client_id(&params.client_id)
         .await?
         .ok_or(RouteError::ClientNotFound)?;
 
-    // And resolve the redirect_uri and response_mode
-    let redirect_uri = client
-        .resolve_redirect_uri(&params.auth.redirect_uri)?
-        .clone();
-    let response_type = params.auth.response_type;
-    let response_mode = resolve_response_mode(&response_type, params.auth.response_mode)?;
+    // If the client supplied a `request_uri`, resolve it to a previously-pushed
+    // authorization grant (RFC 9126). Other request parameters are ignored in
+    // that case, per spec.
+    let pushed_grant: Option<mas_data_model::AuthorizationGrant> =
+        if let Some(request_uri) = params.request_uri.as_ref() {
+            let grant_id = parse_request_uri(request_uri).ok_or(RouteError::InvalidRequestUri)?;
+            let grant = repo
+                .oauth2_authorization_grant()
+                .lookup(grant_id)
+                .await?
+                .ok_or(RouteError::InvalidRequestUri)?;
+
+            if grant.client_id != client.id
+                || !grant.created_via_par
+                || !grant.stage.is_pending()
+                || clock.now() - grant.created_at > request_uri_lifetime()
+            {
+                return Err(RouteError::InvalidRequestUri);
+            }
+
+            Some(grant)
+        } else {
+            if client.require_pushed_authorization_requests {
+                // The client requires PAR but didn't use it.
+                // Validate the rest of the request just enough to build a
+                // callback destination, so we can return a proper error.
+                let response_type = params
+                    .response_type
+                    .as_ref()
+                    .ok_or(RouteError::MissingResponseType)?;
+                let redirect_uri = client.resolve_redirect_uri(&params.redirect_uri)?;
+                let response_mode = resolve_response_mode(response_type, params.response_mode)?;
+                let callback_destination = CallbackDestination::try_new(
+                    &response_mode,
+                    redirect_uri.clone(),
+                    params.state.clone(),
+                )?;
+                return Ok(callback_destination.go(
+                    &templates,
+                    &locale,
+                    ClientError::from(ClientErrorCode::InvalidRequest).with_description(
+                        "this client must use Pushed Authorization Requests".to_owned(),
+                    ),
+                )?);
+            }
+            None
+        };
+
+    // Resolve redirect_uri / response_mode / state — from the pushed grant if
+    // PAR is in use, otherwise from the inbound request parameters.
+    let (redirect_uri, response_mode, callback_state) = if let Some(grant) = &pushed_grant {
+        (
+            grant.redirect_uri.clone(),
+            grant.response_mode.clone(),
+            grant.state.clone(),
+        )
+    } else {
+        let response_type = params
+            .response_type
+            .as_ref()
+            .ok_or(RouteError::MissingResponseType)?;
+        let redirect_uri = client.resolve_redirect_uri(&params.redirect_uri)?.clone();
+        let response_mode = resolve_response_mode(response_type, params.response_mode)?;
+        (redirect_uri, response_mode, params.state.clone())
+    };
 
     // Now we have a proper callback destination to go to on error
-    let callback_destination = CallbackDestination::try_new(
-        &response_mode,
-        redirect_uri.clone(),
-        params.auth.state.clone(),
-    )?;
+    let callback_destination =
+        CallbackDestination::try_new(&response_mode, redirect_uri.clone(), callback_state)?;
 
     // Get the session info from the cookie
     let (session_info, cookie_jar) = cookie_jar.session_info();
@@ -151,66 +272,49 @@ pub(crate) async fn get(
         let locale = locale.clone();
         async move {
             let maybe_session = session_info.load_active_session(&mut repo).await?;
-            let prompt = params.auth.prompt.as_deref().unwrap_or_default();
 
-            // Check if the request/request_uri/registration params are used. If so, reply
-            // with the right error since we don't support them.
-            if params.auth.request.is_some() {
-                return Ok(callback_destination.go(
-                    &templates,
-                    &locale,
-                    ClientError::from(ClientErrorCode::RequestNotSupported),
-                )?);
-            }
+            let grant = if let Some(grant) = pushed_grant {
+                // The grant has already been validated at the PAR endpoint.
+                grant
+            } else {
+                let prompt = params.prompt.as_deref().unwrap_or_default();
+                // Safe: pushed_grant.is_none() means we already validated
+                // response_type is present above.
+                let response_type = params.response_type.expect("response_type present");
+                let Some(scope) = params.scope else {
+                    return Ok(callback_destination.go(
+                        &templates,
+                        &locale,
+                        ClientError::from(ClientErrorCode::InvalidRequest)
+                            .with_description("missing scope parameter".to_owned()),
+                    )?);
+                };
 
-            if params.auth.request_uri.is_some() {
-                return Ok(callback_destination.go(
-                    &templates,
-                    &locale,
-                    ClientError::from(ClientErrorCode::RequestUriNotSupported),
-                )?);
-            }
+                // Check if the request/registration params are used. If so, reply
+                // with the right error since we don't support them.
+                if params.request.is_some() {
+                    return Ok(callback_destination.go(
+                        &templates,
+                        &locale,
+                        ClientError::from(ClientErrorCode::RequestNotSupported),
+                    )?);
+                }
 
-            // Check if the client asked for a `token` response type, and bail out if it's
-            // the case, since we don't support them
-            if response_type.has_token() {
-                return Ok(callback_destination.go(
-                    &templates,
-                    &locale,
-                    ClientError::from(ClientErrorCode::UnsupportedResponseType),
-                )?);
-            }
+                // Check if the client asked for a `token` response type, and bail
+                // out if it's the case, since we don't support them
+                if response_type.has_token() {
+                    return Ok(callback_destination.go(
+                        &templates,
+                        &locale,
+                        ClientError::from(ClientErrorCode::UnsupportedResponseType),
+                    )?);
+                }
 
-            // If the client asked for a `id_token` response type, we must check if it can
-            // use the `implicit` grant type
-            if response_type.has_id_token() && !client.grant_types.contains(&GrantType::Implicit) {
-                return Ok(callback_destination.go(
-                    &templates,
-                    &locale,
-                    ClientError::from(ClientErrorCode::UnauthorizedClient),
-                )?);
-            }
-
-            if params.auth.registration.is_some() {
-                return Ok(callback_destination.go(
-                    &templates,
-                    &locale,
-                    ClientError::from(ClientErrorCode::RegistrationNotSupported),
-                )?);
-            }
-
-            // Fail early if prompt=none; we never let it go through
-            if prompt.contains(&Prompt::None) {
-                return Ok(callback_destination.go(
-                    &templates,
-                    &locale,
-                    ClientError::from(ClientErrorCode::LoginRequired),
-                )?);
-            }
-
-            let code: Option<AuthorizationCode> = if response_type.has_code() {
-                // Check if it is allowed to use this grant type
-                if !client.grant_types.contains(&GrantType::AuthorizationCode) {
+                // If the client asked for a `id_token` response type, we must check
+                // if it can use the `implicit` grant type
+                if response_type.has_id_token()
+                    && !client.grant_types.contains(&GrantType::Implicit)
+                {
                     return Ok(callback_destination.go(
                         &templates,
                         &locale,
@@ -218,55 +322,88 @@ pub(crate) async fn get(
                     )?);
                 }
 
-                // 32 random alphanumeric characters, about 190bit of entropy
-                let code: String = (&mut rng)
-                    .sample_iter(&Alphanumeric)
-                    .take(32)
-                    .map(char::from)
-                    .collect();
-
-                let pkce = params.pkce.map(|p| Pkce {
-                    challenge: p.code_challenge,
-                    challenge_method: p.code_challenge_method,
-                });
-
-                Some(AuthorizationCode { code, pkce })
-            } else {
-                // If the request had PKCE params but no code asked, it should get back with an
-                // error
-                if params.pkce.is_some() {
+                if params.registration.is_some() {
                     return Ok(callback_destination.go(
                         &templates,
                         &locale,
-                        ClientError::from(ClientErrorCode::InvalidRequest),
+                        ClientError::from(ClientErrorCode::RegistrationNotSupported),
                     )?);
                 }
 
-                None
+                // Fail early if prompt=none; we never let it go through
+                if prompt.contains(&Prompt::None) {
+                    return Ok(callback_destination.go(
+                        &templates,
+                        &locale,
+                        ClientError::from(ClientErrorCode::LoginRequired),
+                    )?);
+                }
+
+                let code: Option<AuthorizationCode> = if response_type.has_code() {
+                    // Check if it is allowed to use this grant type
+                    if !client.grant_types.contains(&GrantType::AuthorizationCode) {
+                        return Ok(callback_destination.go(
+                            &templates,
+                            &locale,
+                            ClientError::from(ClientErrorCode::UnauthorizedClient),
+                        )?);
+                    }
+
+                    // 32 random alphanumeric characters, about 190bit of entropy
+                    let code: String = (&mut rng)
+                        .sample_iter(&Alphanumeric)
+                        .take(32)
+                        .map(char::from)
+                        .collect();
+
+                    let pkce = params.pkce.map(|p| Pkce {
+                        challenge: p.code_challenge,
+                        challenge_method: p.code_challenge_method,
+                    });
+
+                    Some(AuthorizationCode { code, pkce })
+                } else {
+                    // If the request had PKCE params but no code asked, it should
+                    // get back with an error
+                    if params.pkce.is_some() {
+                        return Ok(callback_destination.go(
+                            &templates,
+                            &locale,
+                            ClientError::from(ClientErrorCode::InvalidRequest),
+                        )?);
+                    }
+
+                    None
+                };
+
+                repo.oauth2_authorization_grant()
+                    .add(
+                        &mut rng,
+                        &clock,
+                        &client,
+                        redirect_uri.clone(),
+                        scope,
+                        code,
+                        params.state.clone(),
+                        params.nonce,
+                        response_mode,
+                        response_type.has_id_token(),
+                        params.login_hint,
+                        Some(locale.to_string()),
+                        false,
+                    )
+                    .await?
             };
 
-            let grant = repo
-                .oauth2_authorization_grant()
-                .add(
-                    &mut rng,
-                    &clock,
-                    &client,
-                    redirect_uri.clone(),
-                    params.auth.scope,
-                    code,
-                    params.auth.state.clone(),
-                    params.auth.nonce,
-                    response_mode,
-                    response_type.has_id_token(),
-                    params.auth.login_hint,
-                    Some(locale.to_string()),
-                    false,
-                )
-                .await?;
+            let prompt_create = params
+                .prompt
+                .as_deref()
+                .is_some_and(|p| p.contains(&Prompt::Create));
+
             let continue_grant = PostAuthAction::continue_grant(grant.id);
 
             let res = match maybe_session {
-                None if prompt.contains(&Prompt::Create) => {
+                None if prompt_create => {
                     // Client asked for a registration, show the registration prompt
                     repo.save().await?;
 

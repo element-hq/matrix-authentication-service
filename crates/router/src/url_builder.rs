@@ -172,6 +172,12 @@ impl UrlBuilder {
         self.absolute_url_for(&crate::endpoints::OAuth2DeviceAuthorizationEndpoint)
     }
 
+    /// RFC 9126 Pushed Authorization Request endpoint
+    #[must_use]
+    pub fn oauth_pushed_authorization_request_endpoint(&self) -> Url {
+        self.absolute_url_for(&crate::endpoints::OAuth2PushedAuthorizationRequestEndpoint)
+    }
+
     /// OAuth 2.0 device code link
     #[must_use]
     pub fn device_code_link(&self) -> Url {

@@ -32,6 +32,15 @@ struct DiscoveryResponse {
     // As per MSC4191
     account_management_uri: url::Url,
     account_management_actions_supported: Vec<String>,
+
+    // MSC4305 unstable prefix for the PAR endpoint, mirroring the standard
+    // RFC 9126 `pushed_authorization_request_endpoint` field above. Removed
+    // once the MSC is accepted.
+    #[serde(rename = "de.gematik.msc4305.pushed_authorization_request_endpoint")]
+    unstable_msc4305_pushed_authorization_request_endpoint: url::Url,
+
+    #[serde(rename = "de.gematik.msc4305.require_pushed_authorization_requests")]
+    unstable_msc4305_require_pushed_authorization_requests: bool,
 }
 
 #[tracing::instrument(name = "handlers.oauth2.discovery.get", skip_all)]
@@ -69,6 +78,8 @@ pub(crate) async fn get(
     let revocation_endpoint = Some(url_builder.oauth_revocation_endpoint());
     let userinfo_endpoint = Some(url_builder.oidc_userinfo_endpoint());
     let registration_endpoint = Some(url_builder.oauth_registration_endpoint());
+    let pushed_authorization_request_endpoint =
+        Some(url_builder.oauth_pushed_authorization_request_endpoint());
 
     let scopes_supported = Some(vec![scope::OPENID.to_string(), scope::EMAIL.to_string()]);
 
@@ -181,6 +192,8 @@ pub(crate) async fn get(
         request_uri_parameter_supported,
         prompt_values_supported,
         device_authorization_endpoint,
+        pushed_authorization_request_endpoint,
+        require_pushed_authorization_requests: Some(false),
         ..ProviderMetadata::default()
     };
 
@@ -188,6 +201,9 @@ pub(crate) async fn get(
         standard,
         graphql_endpoint: url_builder.graphql_endpoint(),
         account_management_uri: url_builder.account_management_uri(),
+        unstable_msc4305_pushed_authorization_request_endpoint: url_builder
+            .oauth_pushed_authorization_request_endpoint(),
+        unstable_msc4305_require_pushed_authorization_requests: false,
         // This needs to be kept in sync with what is supported in the frontend,
         // see frontend/src/routes/__root.tsx
         account_management_actions_supported: vec![
