@@ -3286,6 +3286,7 @@ dependencies = [
  "aide",
  "anyhow",
  "argon2",
+ "assert_matches",
  "async-graphql",
  "async-trait",
  "axum",

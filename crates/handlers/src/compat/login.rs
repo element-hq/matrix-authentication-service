@@ -1014,6 +1014,7 @@ mod tests {
         ops::{Mul, Sub},
     };
 
+    use assert_matches::assert_matches;
     use hyper::Request;
     use mas_matrix::{HomeserverConnection, ProvisionRequest};
     use rand::distributions::{Alphanumeric, DistString};
@@ -2057,24 +2058,13 @@ mod tests {
 
         // One more interactive SSO login will tip us over the `soft_limit`. The
         // consent page should return 403 forbidden (device limit reached).
-        match matrix_compat_sso_login(&state, "alice", "password").await {
+        assert_matches!(
+            matrix_compat_sso_login(&state, "alice", "password").await,
             Err(MatrixCompatSsoLoginError::ConsentForbidden {
                 page_type: ConsentForbiddenPageType::DeviceLimitReached,
                 ..
-            }) => {
-                // We expect to hit the `soft_limit` for this interactive SSO
-                // login attempt
-            }
-            Ok(_login_token) => {
-                panic!("Expected SSO login to fail due to soft_limit, but it succeeded");
-            }
-            Err(err) => {
-                panic!(
-                    "Expected to see the MatrixCompatSsoLoginError::ConsentForbidden error \
-                    with a DeviceLimitReached violation, but saw a different error instead: {err:?}"
-                );
-            }
-        }
+            })
+        );
     }
 
     /// Test that the `soft_limit` is not enforced for compat login.
