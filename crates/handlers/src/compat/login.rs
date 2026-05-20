@@ -1269,8 +1269,8 @@ mod tests {
         }
         "###);
 
-        // Reset the state, to reset rate limits
-        let state = state.reset().await;
+        // Restart, to reset rate limits
+        let state = state.restart().await;
 
         // Try to login with a wrong password.
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({

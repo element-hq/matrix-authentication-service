@@ -29,7 +29,7 @@ use tracing::warn;
 use ulid::Ulid;
 
 use crate::{
-    BoundActivityTracker, PreferredLanguage,
+    BoundActivityTracker, PreferredLanguage, SiteConfig,
     session::{SessionOrFallback, count_user_sessions_for_limiting, load_session_or_fallback},
 };
 
@@ -53,6 +53,7 @@ pub(crate) async fn get(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
+    State(site_config): State<SiteConfig>,
     mut repo: BoxRepository,
     mut policy: Policy,
     activity_tracker: BoundActivityTracker,
@@ -60,6 +61,11 @@ pub(crate) async fn get(
     cookie_jar: CookieJar,
     Path(grant_id): Path<Ulid>,
 ) -> Result<Response, InternalError> {
+    if !site_config.device_code_grant_enabled {
+        return Err(InternalError::from_anyhow(anyhow::anyhow!(
+            "The Device Authorization Grant is disabled"
+        )));
+    }
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
         cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
     )
@@ -191,6 +197,7 @@ pub(crate) async fn post(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
+    State(site_config): State<SiteConfig>,
     mut repo: BoxRepository,
     mut policy: Policy,
     activity_tracker: BoundActivityTracker,
@@ -199,6 +206,11 @@ pub(crate) async fn post(
     Path(grant_id): Path<Ulid>,
     Form(form): Form<ProtectedForm<ConsentForm>>,
 ) -> Result<Response, InternalError> {
+    if !site_config.device_code_grant_enabled {
+        return Err(InternalError::from_anyhow(anyhow::anyhow!(
+            "The Device Authorization Grant is disabled"
+        )));
+    }
     let form = cookie_jar.verify_form(&clock, form)?;
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
         cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
