@@ -457,6 +457,17 @@ pub(crate) async fn post(
 
     // Now we can create the device on the homeserver, without holding the
     // transaction
+    //
+    // Normally, devices get synced to the homeserver in a `SyncDevicesJob` but we
+    // want the device to be created synchronously on the homeserver, so that
+    // when we respond, the access token works completely. If the device doesn't
+    // exist on the homeserver side, token introspection from Synapse to MAS
+    // will work but Synapse will return a 401 because it doesn't see the
+    // device.
+    //
+    // We're using an upsert so if the device already exists for some reason (like
+    // when we're replacing it, or a concurrent device sync happening) it won't
+    // have any effect.
     if let Err(err) = homeserver
         .upsert_device(
             &user.username,
@@ -502,6 +513,7 @@ pub(crate) async fn post(
 /// Given the violations from [`Policy::evaluate_compat_login`], return the
 /// appropriate `RouteError` response.
 async fn process_violations_for_compat_login(
+    rng: &mut (dyn RngCore + Send),
     clock: &dyn Clock,
     repo: &mut BoxRepository,
     session_limit_config: Option<&SessionLimitConfig>,
@@ -596,6 +608,11 @@ async fn process_violations_for_compat_login(
                                 .finish(clock, compat_session.to_owned())
                                 .await?;
                         }
+
+                        // Schedule a device sync with the homeserver
+                        repo.queue_job()
+                            .schedule_job(rng, clock, SyncDevicesJob::new_for_id(user.id))
+                            .await?;
                     } else {
                         // Tell the user about the limit
                         return Err(RouteError::PolicyHardSessionLimitReached);
@@ -840,6 +857,7 @@ async fn token_login(
         })
         .await?;
     process_violations_for_compat_login(
+        rng,
         clock,
         repo,
         session_limit_config,
@@ -966,8 +984,15 @@ async fn user_password_login(
             requester: policy_requester,
         })
         .await?;
-    process_violations_for_compat_login(clock, repo, session_limit_config, &user, res.violations)
-        .await?;
+    process_violations_for_compat_login(
+        rng,
+        clock,
+        repo,
+        session_limit_config,
+        &user,
+        res.violations,
+    )
+    .await?;
 
     let session = repo
         .compat_session()
