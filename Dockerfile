@@ -6,9 +6,9 @@
 # Please see LICENSE files in the repository root for full details.
 
 # Builds a minimal image with the binary only. It is multi-arch capable,
-# cross-building to aarch64 and x86_64. When cross-compiling, Docker sets two
+# cross-building to aarch64 or x86_64. When cross-compiling, Docker sets two
 # implicit BUILDARG: BUILDPLATFORM being the host platform and TARGETPLATFORM
-# being the platform being built.
+# being the platform being built. Each architecture is built separately.
 
 # The Debian version and version name must be in sync
 ARG DEBIAN_VERSION=13
@@ -119,20 +119,25 @@ ENV SQLX_OFFLINE=true
 ARG VERGEN_GIT_DESCRIBE
 ENV VERGEN_GIT_DESCRIBE=${VERGEN_GIT_DESCRIBE}
 
+ARG TARGETARCH
+
 # Network access: cargo auditable needs it
 RUN --network=default \
   --mount=type=cache,target=/root/.cargo/registry \
   --mount=type=cache,target=/app/target \
+  RUST_TARGET=$(case "${TARGETARCH}" in \
+    amd64) echo "x86_64-unknown-linux-gnu" ;; \
+    arm64) echo "aarch64-unknown-linux-gnu" ;; \
+    *) echo "unsupported architecture: ${TARGETARCH}" >&2; exit 1 ;; \
+  esac) && \
   cargo auditable build \
     --locked \
     --release \
     --bin mas-cli \
     --no-default-features \
     --features docker \
-    --target x86_64-unknown-linux-gnu \
-    --target aarch64-unknown-linux-gnu \
-  && mv "target/x86_64-unknown-linux-gnu/release/mas-cli" /usr/local/bin/mas-cli-amd64 \
-  && mv "target/aarch64-unknown-linux-gnu/release/mas-cli" /usr/local/bin/mas-cli-arm64
+    --target "${RUST_TARGET}" \
+  && mv "target/${RUST_TARGET}/release/mas-cli" /usr/local/bin/mas-cli
 
 #######################################
 ## Prepare /usr/local/share/mas-cli/ ##
@@ -149,8 +154,7 @@ COPY ./translations/ /share/translations
 ##################################
 FROM gcr.io/distroless/cc-debian${DEBIAN_VERSION}:debug-nonroot AS debug
 
-ARG TARGETARCH
-COPY --from=builder /usr/local/bin/mas-cli-${TARGETARCH} /usr/local/bin/mas-cli
+COPY --from=builder /usr/local/bin/mas-cli /usr/local/bin/mas-cli
 COPY --from=share /share /usr/local/share/mas-cli
 
 WORKDIR /
@@ -161,8 +165,7 @@ ENTRYPOINT ["/usr/local/bin/mas-cli"]
 ###################
 FROM gcr.io/distroless/cc-debian${DEBIAN_VERSION}:nonroot
 
-ARG TARGETARCH
-COPY --from=builder /usr/local/bin/mas-cli-${TARGETARCH} /usr/local/bin/mas-cli
+COPY --from=builder /usr/local/bin/mas-cli /usr/local/bin/mas-cli
 COPY --from=share /share /usr/local/share/mas-cli
 
 WORKDIR /

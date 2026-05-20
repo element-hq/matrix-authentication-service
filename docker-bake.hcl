@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -15,8 +16,8 @@ group "default" { targets = ["regular", "debug"] }
 target "docker-metadata-action" {}
 target "docker-metadata-action-debug" {}
 
-// This sets the platforms and is further extended by GitHub Actions to set the
-// output and the cache locations
+// This is extended by GitHub Actions to set the output, cache locations,
+// and platforms (one architecture per job for parallel builds)
 target "base" {
   args = {
     // This is set so that when we use a git context, the .git directory is
@@ -26,11 +27,6 @@ target "base" {
     // Pass down the version from an external git describe source
     VERGEN_GIT_DESCRIBE = "${VERGEN_GIT_DESCRIBE}"
   }
-
-  platforms = [
-    "linux/amd64",
-    "linux/arm64",
-  ]
 }
 
 target "regular" {

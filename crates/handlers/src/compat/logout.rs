@@ -117,12 +117,20 @@ pub(crate) async fn post(
         // XXX: this is probably not the right error
         .ok_or(RouteError::InvalidAuthorization)?;
 
+    // This will make the access token invalid
+    repo.compat_session().finish(&clock, session).await?;
+
     // Schedule a job to sync the devices of the user with the homeserver
+    //
+    // Doing this in a background job is ok as the access token will be invalid
+    // right away (from the session being finished above) and we do actually
+    // want to do a full device list sync (as opposed to
+    // `homeserver.delete_device(...)`), because we're not sure whether we want
+    // to delete the device (if there is for example a concurrent logout and
+    // login with the same device ID).
     repo.queue_job()
         .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
         .await?;
-
-    repo.compat_session().finish(&clock, session).await?;
 
     repo.save().await?;
 
