@@ -180,7 +180,7 @@ function Sessions(): React.ReactElement {
   if (
     overviewViewer.unfilteredAppSessions.totalCount !== appSessions.totalCount
   ) {
-    let unfilteredSessionTotal = t(
+    const unfilteredSessionTotal = t(
       "frontend.user_sessions_overview.num_sessions_filtered_header.unfiltered_session_total",
       {
         count: overviewViewer.unfilteredAppSessions.totalCount,
