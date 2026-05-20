@@ -203,7 +203,7 @@ function Sessions(): React.ReactElement {
       "frontend.user_sessions_overview.session_limit_info",
       {
         // It's unclear what should possibly drive the plural here as either X or Y
-        // could potential have an influence in other languages: "X/Y device slots"
+        // could potentially have an influence in other languages: "X/Y device slots"
         //
         // For now, I've chosen X as one could translate "No device slots used" for the
         // zero case if desired.
