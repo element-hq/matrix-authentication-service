@@ -28,7 +28,9 @@ env:
   SCCACHE_GHA_ENABLED: "true"
   RUSTC_WRAPPER: "sccache"
   BUILDCACHE: ghcr.io/element-hq/matrix-authentication-service/buildcache
-  DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+  # We only ever apply annotations to the image index (manifest list) during
+  # `finalize-image`; per-arch manifests don't get any.
+  DOCKER_METADATA_ANNOTATIONS_LEVELS: index
 
 jobs:
   compute-version:
@@ -216,8 +218,10 @@ jobs:
       contents: read
 
     outputs:
-      regular-json: ${{ steps.meta.outputs.json }}
-      debug-json: ${{ steps.meta-debug.outputs.json }}
+      regular-tags: ${{ steps.meta.outputs.tags }}
+      regular-annotations: ${{ steps.meta.outputs.annotations }}
+      debug-tags: ${{ steps.meta-debug.outputs.tags }}
+      debug-annotations: ${{ steps.meta-debug.outputs.annotations }}
 
     steps:
       - name: Docker meta
@@ -512,70 +516,43 @@ jobs:
           password: ${{ steps.import-secrets.outputs.OCI_PASSWORD }}
 
       - name: Create regular manifest
+        id: regular
         env:
-          META_JSON: ${{ needs.compute-image-meta.outputs.regular-json }}
+          TAGS: ${{ needs.compute-image-meta.outputs.regular-tags }}
+          ANNOTATIONS: ${{ needs.compute-image-meta.outputs.regular-annotations }}
         run: |
-          REGULAR_AMD64=$(cat /tmp/digests/regular-amd64)
-          REGULAR_ARM64=$(cat /tmp/digests/regular-arm64)
-          # Build `-t TAG` and `--annotation index:NAME=VALUE` args into a bash
-          # array so that values containing spaces survive shell word-splitting.
-          # We keep the `index:` prefix so the annotations land on the index
-          # manifest itself rather than getting applied at the default manifest
-          # level. Empty-valued entries are filtered as a safety net (the bake
-          # step's annotation file is already pre-filtered upstream).
-          declare -a ARGS=()
-          while IFS= read -r tag; do
-            ARGS+=(-t "$tag")
-          done < <(jq -r '.tags[]' <<< "$META_JSON")
-          while IFS= read -r annotation; do
-            ARGS+=(--annotation "$annotation")
-          done < <(jq -r '
-            .annotations
-            | map(select(startswith("index:")))
-            | map(select(endswith("=") | not))
-            | .[]
-          ' <<< "$META_JSON")
-          docker buildx imagetools create \
-            "${ARGS[@]}" \
-            "ghcr.io/element-hq/matrix-authentication-service@$REGULAR_AMD64" \
-            "ghcr.io/element-hq/matrix-authentication-service@$REGULAR_ARM64"
+          # Construct the `imagetools create` command line from the tag and annotation inputs.
+          args=()
+
+          # Add a `-t <tag>` argument for each non-empty tag.
+          while IFS= read -r t; do [[ -n $t ]] && args+=(-t "$t"); done <<< "$TAGS"
+
+          # Add a `--annotation <key>=<value>` argument for each non-empty annotation
+          while IFS= read -r a; do [[ -n $a && $a != *= ]] && args+=(--annotation "$a"); done <<< "$ANNOTATIONS"
+
+          docker buildx imagetools create "${args[@]}" \
+            "ghcr.io/element-hq/matrix-authentication-service@$(cat /tmp/digests/regular-amd64)" \
+            "ghcr.io/element-hq/matrix-authentication-service@$(cat /tmp/digests/regular-arm64)" \
+            --metadata-file regular-metadata.json
+
+          # `imagetools create` wrote the digest to regular-metadata.json
+          echo "digest=$(jq -r '.["containerimage.descriptor"].digest' regular-metadata.json)" >> "$GITHUB_OUTPUT"
 
       - name: Create debug manifest
+        id: debug
         env:
-          META_DEBUG_JSON: ${{ needs.compute-image-meta.outputs.debug-json }}
+          TAGS: ${{ needs.compute-image-meta.outputs.debug-tags }}
+          ANNOTATIONS: ${{ needs.compute-image-meta.outputs.debug-annotations }}
         run: |
-          DEBUG_AMD64=$(cat /tmp/digests/debug-amd64)
-          DEBUG_ARM64=$(cat /tmp/digests/debug-arm64)
-          declare -a ARGS=()
-          while IFS= read -r tag; do
-            ARGS+=(-t "$tag")
-          done < <(jq -r '.tags[]' <<< "$META_DEBUG_JSON")
-          while IFS= read -r annotation; do
-            ARGS+=(--annotation "$annotation")
-          done < <(jq -r '
-            .annotations
-            | map(select(startswith("index:")))
-            | map(select(endswith("=") | not))
-            | .[]
-          ' <<< "$META_DEBUG_JSON")
-          docker buildx imagetools create \
-            "${ARGS[@]}" \
-            "ghcr.io/element-hq/matrix-authentication-service@$DEBUG_AMD64" \
-            "ghcr.io/element-hq/matrix-authentication-service@$DEBUG_ARM64"
-
-      - name: Get manifest digests
-        id: manifests
-        env:
-          META_JSON: ${{ needs.compute-image-meta.outputs.regular-json }}
-          META_DEBUG_JSON: ${{ needs.compute-image-meta.outputs.debug-json }}
-        run: |
-          # Inspect the manifest list under the first tag to retrieve its digest
-          REGULAR_TAG=$(jq -r '.tags[0]' <<< "$META_JSON")
-          DEBUG_TAG=$(jq -r '.tags[0]' <<< "$META_DEBUG_JSON")
-          REGULAR_DIGEST=$(docker buildx imagetools inspect "$REGULAR_TAG" --format '{{ json . }}' | jq -r '.manifest.digest')
-          DEBUG_DIGEST=$(docker buildx imagetools inspect "$DEBUG_TAG" --format '{{ json . }}' | jq -r '.manifest.digest')
-          echo "regular=$REGULAR_DIGEST" >> $GITHUB_OUTPUT
-          echo "debug=$DEBUG_DIGEST" >> $GITHUB_OUTPUT
+          # See comments in regular manifest creation for argument construction.
+          args=()
+          while IFS= read -r t; do [[ -n $t ]] && args+=(-t "$t"); done <<< "$TAGS"
+          while IFS= read -r a; do [[ -n $a && $a != *= ]] && args+=(--annotation "$a"); done <<< "$ANNOTATIONS"
+          docker buildx imagetools create "${args[@]}" \
+            "ghcr.io/element-hq/matrix-authentication-service@$(cat /tmp/digests/debug-amd64)" \
+            "ghcr.io/element-hq/matrix-authentication-service@$(cat /tmp/digests/debug-arm64)" \
+            --metadata-file debug-metadata.json
+          echo "digest=$(jq -r '.["containerimage.descriptor"].digest' debug-metadata.json)" >> "$GITHUB_OUTPUT"
 
       - name: Sign the images with GitHub Actions provided token
         # Only sign on tags and on commits on main branch
@@ -584,8 +561,8 @@ jobs:
           && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
 
         env:
-          REGULAR_DIGEST: ${{ steps.manifests.outputs.regular }}
-          DEBUG_DIGEST: ${{ steps.manifests.outputs.debug }}
+          REGULAR_DIGEST: ${{ steps.regular.outputs.digest }}
+          DEBUG_DIGEST: ${{ steps.debug.outputs.digest }}
 
         run: |-
           cosign sign --yes \
@@ -598,19 +575,24 @@ jobs:
       - name: Output metadata
         id: output
         env:
-          REGULAR_DIGEST: ${{ steps.manifests.outputs.regular }}
-          DEBUG_DIGEST: ${{ steps.manifests.outputs.debug }}
-          META_JSON: ${{ needs.compute-image-meta.outputs.regular-json }}
-          META_DEBUG_JSON: ${{ needs.compute-image-meta.outputs.debug-json }}
+          REGULAR_DIGEST: ${{ steps.regular.outputs.digest }}
+          DEBUG_DIGEST: ${{ steps.debug.outputs.digest }}
+          REGULAR_TAGS: ${{ needs.compute-image-meta.outputs.regular-tags }}
+          DEBUG_TAGS: ${{ needs.compute-image-meta.outputs.debug-tags }}
         run: |
-          echo 'metadata<<EOF' >> $GITHUB_OUTPUT
-          jq -nc \
-            --arg regular_digest "$REGULAR_DIGEST" \
-            --arg debug_digest "$DEBUG_DIGEST" \
-            --argjson regular_tags "$(jq '.tags' <<< "$META_JSON")" \
-            --argjson debug_tags "$(jq '.tags' <<< "$META_DEBUG_JSON")" \
-            '{regular: {digest: $regular_digest, tags: $regular_tags}, debug: {digest: $debug_digest, tags: $debug_tags}}' >> $GITHUB_OUTPUT
-          echo 'EOF' >> $GITHUB_OUTPUT
+          # Convert the newline-separated tag lists into JSON arrays.
+          regular_tags=$(jq -Rnc '[inputs | select(length > 0)]' <<< "$REGULAR_TAGS")
+          debug_tags=$(jq -Rnc '[inputs | select(length > 0)]' <<< "$DEBUG_TAGS")
+          {
+            echo 'metadata<<EOF'
+            jq -nc \
+              --arg regular_digest "$REGULAR_DIGEST" \
+              --arg debug_digest "$DEBUG_DIGEST" \
+              --argjson regular_tags "$regular_tags" \
+              --argjson debug_tags "$debug_tags" \
+              '{regular: {digest: $regular_digest, tags: $regular_tags}, debug: {digest: $debug_digest, tags: $debug_tags}}'
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
 
   release:
     name: Release
