@@ -104,6 +104,17 @@ describe("Account sessions page", () => {
       const { asFragment } = await renderPage("/sessions");
 
       // Make sure there is an error on the page
+      //
+      // FIXME: Ideally, we'd use a more accessible way to look for the error on the
+      // page (like `getByRole(...)`) but there doesn't seem to be an appropriate
+      // `aria-role` for this kind of thing. `aria-role="status"` is for the result of
+      // the user taking some action whereas this is just an error that's displayed
+      // informationally on page load.
+      //
+      // Perhaps the best we could do is add a generic `aria-role="region"` with
+      // `aria-labelledby="error-heading"` so we could use `getByRole('region', { name:
+      // "You've hit the device limit"})` but this would require some changes to the
+      // `Alert` component in Compound itself.
       screen.getByTestId("device-limit-error");
 
       // Sanity check page overall
