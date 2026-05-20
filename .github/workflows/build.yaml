@@ -299,7 +299,7 @@ jobs:
         id: vault-jwt-role
         if: github.event_name == 'push'
         run: |
-           echo "role_name=github_service_management_$( echo "${{ github.repository }}" | sed -r 's|[/-]|_|g')" | tee -a "$GITHUB_OUTPUT"
+          echo "role_name=github_service_management_$( echo "${{ github.repository }}" | sed -r 's|[/-]|_|g')" | tee -a "$GITHUB_OUTPUT"
 
       - name: Get team registry token
         id: import-secrets
@@ -312,8 +312,8 @@ jobs:
           jwtGithubAudience: https://vault.infra.ci.i.element.dev
           method: jwt
           secrets: |
-             services/backend-repositories/secret/data/oci.element.io username | OCI_USERNAME ;
-             services/backend-repositories/secret/data/oci.element.io password | OCI_PASSWORD ;
+            services/backend-repositories/secret/data/oci.element.io username | OCI_USERNAME ;
+            services/backend-repositories/secret/data/oci.element.io password | OCI_PASSWORD ;
 
       - name: Login to Element OCI Registry
         if: github.event_name == 'push'
@@ -413,7 +413,7 @@ jobs:
               - Digest:
                 ```
                 ghcr.io/element-hq/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).regular.digest }}
-                oci-push.vpn.infra.element.io/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).regular.digest }}
+                oci.element.io/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).regular.digest }}
                 ```
               - Tags:
                 ```
@@ -426,7 +426,7 @@ jobs:
               - Digest:
                 ```
                 ghcr.io/element-hq/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).debug.digest }}
-                oci-push.vpn.infra.element.io/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).debug.digest }}
+                oci.element.io/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).debug.digest }}
                 ```
               - Tags:
                 ```
@@ -493,7 +493,7 @@ jobs:
               - Digest:
                 ```
                 ghcr.io/element-hq/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).regular.digest }}
-                oci-push.vpn.infra.element.io/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).regular.digest }}
+                oci.element.io/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).regular.digest }}
                 ```
               - Tags:
                 ```
@@ -506,7 +506,7 @@ jobs:
               - Digest:
                 ```
                 ghcr.io/element-hq/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).debug.digest }}
-                oci-push.vpn.infra.element.io/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).debug.digest }}
+                oci.element.io/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).debug.digest }}
                 ```
               - Tags:
                 ```
