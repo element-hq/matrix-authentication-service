@@ -457,6 +457,17 @@ pub(crate) async fn post(
 
     // Now we can create the device on the homeserver, without holding the
     // transaction
+    //
+    // Normally, devices get synced to the homeserver in a `SyncDevicesJob` but we
+    // want the device to be created synchronously on the homeserver, so that
+    // when we respond, the access token works completely. If the device doesn't
+    // exist on the homeserver side, token introspection from Synapse to MAS
+    // will work but Synapse will return a 401 because it doesn't see the
+    // device.
+    //
+    // We're using an upsert so if the device already exists for some reason (like
+    // when we're replacing it, or a concurrent device sync happening) it won't
+    // have any effect.
     if let Err(err) = homeserver
         .upsert_device(
             &user.username,
@@ -499,28 +510,33 @@ pub(crate) async fn post(
     }))
 }
 
-/// Given the violations from [`Policy::evaluate_compat_login`], return the
-/// appropriate `RouteError` response.
+/// Given the evaluation result/violations from
+/// [`Policy::evaluate_compat_login`], return the appropriate `RouteError`
+/// response.
 async fn process_violations_for_compat_login(
+    rng: &mut (dyn RngCore + Send),
     clock: &dyn Clock,
     repo: &mut BoxRepository,
     session_limit_config: Option<&SessionLimitConfig>,
     user: &User,
-    violations: Vec<Violation>,
+    res: mas_policy::EvaluationResult,
 ) -> Result<(), RouteError> {
     // We're using slice syntax here so we can match easily
-    match &violations[..] {
+    match (res.valid(), &res.violations[..]) {
         // If the only violation is having reached the session limit, we might be
         // able to resolve the situation.
         //
         // We don't trigger this if there was some other violation anyway, since
         // that means that removing a session wouldn't actually unblock the login.
-        [
-            Violation {
-                variant: Some(ViolationVariant::TooManySessions { need_to_remove }),
-                ..
-            },
-        ] => {
+        (
+            false,
+            [
+                Violation {
+                    variant: Some(ViolationVariant::TooManySessions { need_to_remove }),
+                    ..
+                },
+            ],
+        ) => {
             // Normally, if we are seeing a `TooManySessions` violation,  we would
             // expect `session_limit_config` to be filled in but if someone created
             // their own policies which emit a `TooManySessions` violation that isn't
@@ -596,6 +612,11 @@ async fn process_violations_for_compat_login(
                                 .finish(clock, compat_session.to_owned())
                                 .await?;
                         }
+
+                        // Schedule a device sync with the homeserver
+                        repo.queue_job()
+                            .schedule_job(rng, clock, SyncDevicesJob::new_for_id(user.id))
+                            .await?;
                     } else {
                         // Tell the user about the limit
                         return Err(RouteError::PolicyHardSessionLimitReached);
@@ -613,9 +634,9 @@ async fn process_violations_for_compat_login(
             }
         }
         // Nothing is wrong
-        [] => return Ok(()),
+        (true, _) => return Ok(()),
         // Just throw an error for any other violation
-        _violations => {
+        (false, _violations) => {
             // FIXME: We should be exposing the violations to the user
             return Err(RouteError::PolicyRejected);
         }
@@ -840,11 +861,12 @@ async fn token_login(
         })
         .await?;
     process_violations_for_compat_login(
+        rng,
         clock,
         repo,
         session_limit_config,
         &browser_session.user,
-        res.violations,
+        res,
     )
     .await?;
 
@@ -966,8 +988,7 @@ async fn user_password_login(
             requester: policy_requester,
         })
         .await?;
-    process_violations_for_compat_login(clock, repo, session_limit_config, &user, res.violations)
-        .await?;
+    process_violations_for_compat_login(rng, clock, repo, session_limit_config, &user, res).await?;
 
     let session = repo
         .compat_session()
