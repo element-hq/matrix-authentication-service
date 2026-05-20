@@ -282,6 +282,14 @@ jobs:
       - name: Build and push
         id: bake
         uses: docker/bake-action@a66e1c87e2eca0503c343edf1d208c716d54b8a8 # v7.1.0
+        env:
+          # By default, docker bake will add provenance information to the
+          # metadata output. This makes the output larger and may exceed the
+          # shell ARG_MAX limit. Disabling through this environment variable
+          # disables provenance in the metadata while still attaching provenance
+          # attestations to the image we push.
+          # https://github.com/docker/bake-action/issues/239#issuecomment-3828170326
+          BUILDX_METADATA_PROVENANCE: disabled
         with:
           files: |
             ./docker-bake.hcl
