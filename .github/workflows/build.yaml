@@ -227,9 +227,11 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5.10.0
         with:
+          # The oci-push registry login requires Tailscale + Vault, which only
+          # works for `push` events (PR-labelled runs lack the right OIDC token).
           images: |
             ghcr.io/element-hq/matrix-authentication-service
-            oci-push.vpn.infra.element.io/matrix-authentication-service
+            ${{ github.event_name == 'push' && 'oci-push.vpn.infra.element.io/matrix-authentication-service' || '' }}
           bake-target: docker-metadata-action
           flavor: |
             latest=auto
@@ -247,7 +249,7 @@ jobs:
         with:
           images: |
             ghcr.io/element-hq/matrix-authentication-service
-            oci-push.vpn.infra.element.io/matrix-authentication-service
+            ${{ github.event_name == 'push' && 'oci-push.vpn.infra.element.io/matrix-authentication-service' || '' }}
           bake-target: docker-metadata-action-debug
           flavor: |
             latest=auto
@@ -277,7 +279,11 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # The Element OCI Registry is only reachable via Tailscale, and the Vault
+      # JWT exchange relies on a GitHub OIDC token issued from a `push` event.
+      # PR-labelled builds (`Z-Build-Workflow`) skip this and push only to ghcr.
       - name: Tailscale
+        if: github.event_name == 'push'
         uses: tailscale/github-action@53acf823325fe9ca47f4cdaa951f90b4b0de5bb9 # v4.1.1
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
@@ -286,11 +292,13 @@ jobs:
 
       - name: Compute vault jwt role name
         id: vault-jwt-role
+        if: github.event_name == 'push'
         run: |
            echo "role_name=github_service_management_$( echo "${{ github.repository }}" | sed -r 's|[/-]|_|g')" | tee -a "$GITHUB_OUTPUT"
 
       - name: Get team registry token
         id: import-secrets
+        if: github.event_name == 'push'
         uses: hashicorp/vault-action@4c06c5ccf5c0761b6029f56cfb1dcf5565918a3b # v3.4.0
         with:
           url: https://vault.infra.ci.i.element.dev
@@ -303,6 +311,7 @@ jobs:
              services/backend-repositories/secret/data/oci.element.io password | OCI_PASSWORD ;
 
       - name: Login to Element OCI Registry
+        if: github.event_name == 'push'
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           registry: oci-push.vpn.infra.element.io
