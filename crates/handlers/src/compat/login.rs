@@ -458,13 +458,14 @@ pub(crate) async fn post(
     // Now we can create the device on the homeserver, without holding the
     // transaction
     //
-    // Normally, devices get synced to the homeserver in a `SyncDevicesJob` but we want
-    // the device to be created synchronously on the homeserver, so that when we
-    // respond, the device already exists. If the device doesn't exist on Synapse, token
-    // introspection from Synapse to MAS will work, but then the device won't exist, so
-    // Synapse will return a 401. We're using an upsert so if the device already exists
-    // for some reason (like when we're replacing it, or a concurrent device sync
-    // happening) it won't have any effect.
+    // Normally, devices get synced to the homeserver in a `SyncDevicesJob` but we
+    // want the device to be created synchronously on the homeserver, so that
+    // when we respond, the device already exists. If the device doesn't exist
+    // on Synapse, token introspection from Synapse to MAS will work, but then
+    // the device won't exist, so Synapse will return a 401. We're using an
+    // upsert so if the device already exists for some reason (like when we're
+    // replacing it, or a concurrent device sync happening) it won't have any
+    // effect.
     if let Err(err) = homeserver
         .upsert_device(
             &user.username,
