@@ -27,7 +27,6 @@ env:
   CARGO_NET_GIT_FETCH_WITH_CLI: "true"
   SCCACHE_GHA_ENABLED: "true"
   RUSTC_WRAPPER: "sccache"
-  IMAGE: ghcr.io/element-hq/matrix-authentication-service
   BUILDCACHE: ghcr.io/element-hq/matrix-authentication-service/buildcache
   DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
 
@@ -233,7 +232,11 @@ jobs:
         id: meta
         uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
         with:
-          images: "${{ env.IMAGE }}"
+          # The oci-push registry login requires Tailscale + Vault, which only
+          # works for `push` events (PR-labelled runs lack the right OIDC token).
+          images: |
+            ghcr.io/element-hq/matrix-authentication-service
+            ${{ github.event_name == 'push' && 'oci-push.vpn.infra.element.io/matrix-authentication-service' || '' }}
           bake-target: docker-metadata-action
           flavor: |
             latest=auto
@@ -249,7 +252,9 @@ jobs:
         id: meta-debug
         uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
         with:
-          images: "${{ env.IMAGE }}"
+          images: |
+            ghcr.io/element-hq/matrix-authentication-service
+            ${{ github.event_name == 'push' && 'oci-push.vpn.infra.element.io/matrix-authentication-service' || '' }}
           bake-target: docker-metadata-action-debug
           flavor: |
             latest=auto
@@ -278,6 +283,45 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      # The Element OCI Registry is only reachable via Tailscale, and the Vault
+      # JWT exchange relies on a GitHub OIDC token issued from a `push` event.
+      # PR-labelled builds (`Z-Build-Workflow`) skip this and push only to ghcr.
+      - name: Tailscale
+        if: github.event_name == 'push'
+        uses: tailscale/github-action@53acf823325fe9ca47f4cdaa951f90b4b0de5bb9 # v4.1.1
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:github-actions
+
+      - name: Compute vault jwt role name
+        id: vault-jwt-role
+        if: github.event_name == 'push'
+        run: |
+          echo "role_name=github_service_management_$( echo "${{ github.repository }}" | sed -r 's|[/-]|_|g')" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Get team registry token
+        id: import-secrets
+        if: github.event_name == 'push'
+        uses: hashicorp/vault-action@4c06c5ccf5c0761b6029f56cfb1dcf5565918a3b # v3.4.0
+        with:
+          url: https://vault.infra.ci.i.element.dev
+          role: ${{ steps.vault-jwt-role.outputs.role_name }}
+          path: service-management/github-actions
+          jwtGithubAudience: https://vault.infra.ci.i.element.dev
+          method: jwt
+          secrets: |
+            services/backend-repositories/secret/data/oci.element.io username | OCI_USERNAME ;
+            services/backend-repositories/secret/data/oci.element.io password | OCI_PASSWORD ;
+
+      - name: Login to Element OCI Registry
+        if: github.event_name == 'push'
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: oci-push.vpn.infra.element.io
+          username: ${{ steps.import-secrets.outputs.OCI_USERNAME }}
+          password: ${{ steps.import-secrets.outputs.OCI_PASSWORD }}
 
       - name: Build and push
         id: bake
@@ -335,8 +379,11 @@ jobs:
 
         run: |-
           cosign sign --yes \
-            "$IMAGE@$REGULAR_DIGEST" \
-            "$IMAGE@$DEBUG_DIGEST" \
+            "ghcr.io/element-hq/matrix-authentication-service@$REGULAR_DIGEST" \
+            "ghcr.io/element-hq/matrix-authentication-service@$DEBUG_DIGEST"
+          cosign sign --yes \
+            "oci-push.vpn.infra.element.io/matrix-authentication-service@$REGULAR_DIGEST" \
+            "oci-push.vpn.infra.element.io/matrix-authentication-service@$DEBUG_DIGEST"
 
   release:
     name: Release
@@ -345,6 +392,7 @@ jobs:
     needs:
       - assemble-archives
       - build-image
+
     steps:
       - name: Download the artifacts from the previous job
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
@@ -364,7 +412,8 @@ jobs:
 
               - Digest:
                 ```
-                ${{ env.IMAGE }}@${{ fromJSON(needs.build-image.outputs.metadata).regular.digest }}
+                ghcr.io/element-hq/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).regular.digest }}
+                oci.element.io/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).regular.digest }}
                 ```
               - Tags:
                 ```
@@ -376,7 +425,8 @@ jobs:
 
               - Digest:
                 ```
-                ${{ env.IMAGE }}@${{ fromJSON(needs.build-image.outputs.metadata).debug.digest }}
+                ghcr.io/element-hq/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).debug.digest }}
+                oci.element.io/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).debug.digest }}
                 ```
               - Tags:
                 ```
@@ -442,7 +492,8 @@ jobs:
 
               - Digest:
                 ```
-                ${{ env.IMAGE }}@${{ fromJSON(needs.build-image.outputs.metadata).regular.digest }}
+                ghcr.io/element-hq/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).regular.digest }}
+                oci.element.io/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).regular.digest }}
                 ```
               - Tags:
                 ```
@@ -454,7 +505,8 @@ jobs:
 
               - Digest:
                 ```
-                ${{ env.IMAGE }}@${{ fromJSON(needs.build-image.outputs.metadata).debug.digest }}
+                ghcr.io/element-hq/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).debug.digest }}
+                oci.element.io/matrix-authentication-service@${{ fromJSON(needs.build-image.outputs.metadata).debug.digest }}
                 ```
               - Tags:
                 ```
