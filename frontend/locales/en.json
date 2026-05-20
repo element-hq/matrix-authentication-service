@@ -301,8 +301,12 @@
         "default": "You are not signed in to any application.",
         "inactive_90_days": "All your sessions have been active in the last 90 days."
       },
-      "num_sessions_filtered_header:one": "{{count}} devices match your filter ({{unfiltered_session_count}} total)",
-      "num_sessions_filtered_header:other": "{{count}} devices match your filter ({{unfiltered_session_count}} total)",
+      "num_sessions_filtered_header": {
+        "header:one": "{{count}} devices match your filter ({{unfiltered_session_total}})",
+        "header:other": "{{count}} devices match your filter ({{unfiltered_session_total}})",
+        "unfiltered_session_total:one": "{{count}} total",
+        "unfiltered_session_total:other": "{{count}} total"
+      },
       "num_sessions_header:one": "{{count}} devices",
       "num_sessions_header:other": "{{count}} devices",
       "session_limit_info:one": "You've used {{count}}/{{limit}} device slots",

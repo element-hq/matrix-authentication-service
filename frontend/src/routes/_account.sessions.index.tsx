@@ -180,16 +180,17 @@ function Sessions(): React.ReactElement {
   if (
     overviewViewer.unfilteredAppSessions.totalCount !== appSessions.totalCount
   ) {
-    deviceHeaderText = t(
-      "frontend.user_sessions_overview.num_sessions_filtered_header",
+    let unfilteredSessionTotal = t(
+      "frontend.user_sessions_overview.num_sessions_filtered_header.unfiltered_session_total",
       {
-        // Using `count` for special plural meaning,
-        // https://www.i18next.com/translation-function/plurals
+        count: overviewViewer.unfilteredAppSessions.totalCount,
+      },
+    );
+    deviceHeaderText = t(
+      "frontend.user_sessions_overview.num_sessions_filtered_header.header",
+      {
         count: appSessions.totalCount,
-        // We're going to assume that the "(Y total)" doesn't need pluralization for
-        // now. I couldn't find a clear answer.
-        unfiltered_session_count:
-          overviewViewer.unfilteredAppSessions.totalCount,
+        unfiltered_session_total: unfilteredSessionTotal,
       },
     );
   }
