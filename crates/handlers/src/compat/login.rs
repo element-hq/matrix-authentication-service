@@ -1910,6 +1910,11 @@ mod tests {
             // Policy rejection
             StatusCode::FORBIDDEN => {
                 // Detect whether this is the "device limit reached" page
+                //
+                // FIXME: Ideally, we'd use something like `getByRole('heading', { name:
+                // 'Device limit reached'})` instead to determine what kind of page
+                // we're looking at but we don't have the `testing-library` utilities on
+                // the Rust side here.
                 let page_type = if response
                     .body()
                     .contains("data-testid=\"device-limit-reached\"")
