@@ -1,39 +1,39 @@
 {
   "action": {
-    "back": "Terug",
-    "cancel": "Annuleren",
-    "clear": "Wissen",
-    "close": "Sluiten",
+    "back": "Voltar",
+    "cancel": "Cancelar",
+    "clear": "Clear",
+    "close": "Close",
     "collapse": "Collapse",
-    "confirm": "Bevestigen",
-    "continue": "Doorgaan",
-    "edit": "Bewerken",
+    "confirm": "Confirm",
+    "continue": "Continuar",
+    "edit": "Edit",
     "expand": "Expand",
-    "save": "Opslaan",
+    "save": "Salvar",
     "save_and_continue": "Save and continue",
-    "sign_out": "Uitloggen",
-    "start_over": "Opnieuw beginnen"
+    "sign_out": "Sair",
+    "start_over": "Start over"
   },
   "branding": {
     "privacy_policy": {
-      "alt": "Link naar het privacybeleid van de service",
-      "link": "Privacybeleid"
+      "alt": "Link to the service privacy policy",
+      "link": "Privacy Policy"
     },
     "terms_and_conditions": {
-      "alt": "Link naar de servicevoorwaarden",
-      "link": "Algemene voorwaarden"
+      "alt": "Link to the service terms and conditions",
+      "link": "Terms & Conditions"
     }
   },
   "common": {
-    "add": "Toevoegen",
-    "e2ee": "End-to-end-encryptie",
-    "error": "Fout",
-    "loading": "Laden...",
-    "next": "Volgende",
-    "password": "Wachtwoord",
-    "previous": "Vorige",
-    "saved": "Opgeslagen",
-    "saving": "Opslaan..."
+    "add": "Adicionar",
+    "e2ee": "End-to-end encryption",
+    "error": "Erro",
+    "loading": "Carregando…",
+    "next": "Próximo",
+    "password": "Senha",
+    "previous": "Anterior",
+    "saved": "Saved",
+    "saving": "Saving…"
   },
   "frontend": {
     "account": {
@@ -52,73 +52,73 @@
         "password_label": "Enter your password to continue"
       },
       "edit_profile": {
-        "display_name_help": "Dit is wat anderen zien wanneer je bent ingelogd.",
-        "display_name_label": "Weergavenaam",
-        "title": "Profiel bewerken",
-        "username_label": "Gebruikersnaam"
+        "display_name_help": "This is what others will see wherever you’re signed in.",
+        "display_name_label": "Display name",
+        "title": "Edit profile",
+        "username_label": "Nome de usuário"
       },
       "password": {
-        "change": "Wachtwoord wijzigen",
+        "change": "Alterar a senha",
         "change_disabled": "Password changes are disabled by the administrator.",
-        "label": "Wachtwoord"
+        "label": "Senha"
       },
       "sign_out": {
         "button": "Sign out of account",
         "dialog": "Sign out of this account?"
       },
-      "title": "Uw account"
+      "title": "Your account"
     },
     "add_email_form": {
       "email_denied_alert": {
-        "text": "Het ingevoerde e-mailadres is niet toegestaan volgens het serverbeleid.",
-        "title": "E-mailadres geweigerd door het beleid"
+        "text": "O endereço de e-mail inserido não é permitido pela política do servidor.",
+        "title": "Email denied by policy"
       },
       "email_denied_error": "The entered email is not allowed by the server policy",
       "email_exists_alert": {
-        "text": "Het ingevoerde e-mailadres is al toegevoegd aan dit account",
-        "title": "E-mailadres bestaat al"
+        "text": "O endereço de e-mail inserido já foi adicionado a esta conta.",
+        "title": "Email already exists"
       },
-      "email_exists_error": "Het ingevoerde e-mailadres is al toegevoegd aan dit account",
-      "email_field_help": "Voeg een alternatief e-mailadres toe dat u kunt gebruiken om toegang tot dit account te krijgen.",
-      "email_field_label": "E-mailadres toevoegen",
+      "email_exists_error": "O endereço de e-mail inserido já foi adicionado a esta conta.",
+      "email_field_help": "Add an alternative email you can use to access this account.",
+      "email_field_label": "Adicionar e-mail",
       "email_in_use_error": "The entered email is already in use",
       "email_invalid_alert": {
-        "text": "Het ingevoerde e-mailadres is ongeldig",
-        "title": "Ongeldig e-mailadres"
+        "text": "O endereço de e-mail inserido é inválido.",
+        "title": "E-mail inválido"
       },
-      "email_invalid_error": "Het ingevoerde e-mailadres is ongeldig",
+      "email_invalid_error": "O endereço de e-mail inserido é inválido.",
       "incorrect_password_error": "Incorrect password, please try again",
       "password_confirmation": "Confirm your account password to add this email address"
     },
     "app_sessions_list": {
-      "error": "Kan app-sessies niet laden",
+      "error": "Failed to load app sessions",
       "heading": "Apps"
     },
     "browser_session_details": {
-      "current_badge": "Huidige",
-      "session_details_title": "Sessie"
+      "current_badge": "Current",
+      "session_details_title": "Session"
     },
     "browser_sessions_overview": {
-      "body:one": "{{count}} actieve sessie",
-      "body:other": "{{count}} actieve sessies",
+      "body:one": "{{count}} active session",
+      "body:other": "{{count}} active sessions",
       "heading": "Browsers",
       "no_active_sessions": {
         "default": "You are not signed in to any web browsers.",
         "inactive_90_days": "All your sessions have been active in the last 90 days."
       },
-      "view_all_button": "Bekijk alles"
+      "view_all_button": "View all"
     },
     "compat_session_detail": {
-      "client_details_title": "Client",
-      "name": "Naam",
-      "session_details_title": "Sessie"
+      "client_details_title": "Client info",
+      "name": "Nome",
+      "session_details_title": "Session"
     },
     "device_type_icon_label": {
       "desktop": "Desktop",
-      "mobile": "Mobiel",
+      "mobile": "Mobile",
       "pc": "Computer",
       "tablet": "Tablet",
-      "unknown": "Onbekend apparaattype",
+      "unknown": "Unknown device type",
       "web": "Web"
     },
     "email_in_use": {
@@ -126,51 +126,51 @@
     },
     "end_session_button": {
       "confirmation_modal_body_text": "Make sure you always have access to another verified device or your recovery key to avoid losing your encrypted chat history.",
-      "confirmation_modal_title": "Weet u zeker dat u deze sessie wilt beëindigen?",
-      "text": "Uitloggen"
+      "confirmation_modal_title": "Are you sure you want to remove this device?",
+      "text": "Remove device"
     },
     "error": {
-      "hideDetails": "Verberg details",
-      "showDetails": "Details weergeven",
-      "subtitle": "Er is een onverwachte fout opgetreden. Probeer het opnieuw.",
-      "title": "Er is iets misgegaan"
+      "hideDetails": "Hide details",
+      "showDetails": "Show details",
+      "subtitle": "An unexpected error occurred. Please try again.",
+      "title": "Something went wrong"
     },
-    "error_boundary_title": "Er is iets misgegaan",
+    "error_boundary_title": "Something went wrong",
     "errors": {
-      "field_required": "This field is required",
+      "field_required": "Este campo é obrigatório",
       "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again."
     },
     "last_active": {
-      "active_date": "Actief {{relativeDate}}",
-      "active_now": "Nu actief",
-      "inactive_90_days": "Meer dan 90 dagen inactief"
+      "active_date": "Active {{relativeDate}}",
+      "active_now": "Active now",
+      "inactive_90_days": "Inactive for 90+ days"
     },
     "nav": {
-      "devices": "Apparaten",
+      "devices": "Devices",
       "plan": "Plan",
-      "profile": "Profiel",
-      "sessions": "Sessies",
-      "settings": "Instellingen"
+      "profile": "Perfil",
+      "sessions": "Sessões",
+      "settings": "Settings"
     },
-    "not_found_alert_title": "Niet gevonden.",
-    "not_logged_in_alert": "U bent niet ingelogd.",
+    "not_found_alert_title": "Not found.",
+    "not_logged_in_alert": "You're not logged in.",
     "oauth2_client_detail": {
-      "details_title": "Client",
+      "details_title": "Client info",
       "id": "Client ID",
-      "name": "Naam",
-      "policy": "Beleid",
-      "terms": "Servicevoorwaarden"
+      "name": "Nome",
+      "policy": "Policy",
+      "terms": "Terms of service"
     },
     "oauth2_session_detail": {
-      "client_details_name": "Naam",
-      "client_title": "Client",
-      "session_details_title": "Sessie"
+      "client_details_name": "Nome",
+      "client_title": "Client info",
+      "session_details_title": "Session"
     },
     "pagination_controls": {
-      "total": "Totaal: {{totalCount}}"
+      "total": "Total: {{totalCount}}"
     },
     "password_change": {
-      "current_password_label": "Huidig wachtwoord",
+      "current_password_label": "Senha atual",
       "failure": {
         "description": {
           "account_locked": "Your account is locked and can not be recovered at this time. If this is not expected, please contact your server administrator.",
@@ -186,8 +186,8 @@
         "title": "Failed to update password"
       },
       "new_password_again_label": "Enter new password again",
-      "new_password_label": "New password",
-      "passwords_match": "Wachtwoorden komen overeen!",
+      "new_password_label": "Nova senha",
+      "passwords_match": "Passwords match!",
       "passwords_no_match": "Passwords don't match",
       "subtitle": "Choose a new password for your account.",
       "success": {
@@ -255,13 +255,13 @@
       }
     },
     "reset_cross_signing": {
-      "button": "Identiteit resetten",
+      "button": "Reset identity",
       "cancelled": {
         "description_1": "You can close this window and go back to the app to continue.",
         "description_2": "If don’t have access to any other verified devices and you don’t have your recovery key, then you’ll need to reset your digital identity to continue using the app.",
         "heading": "Digital identity reset cancelled."
       },
-      "description": "Als u niet bent aangemeld bij andere apparaten en u bent uw herstelsleutel kwijt, moet u uw identiteit opnieuw instellen om de app te kunnen blijven gebruiken.",
+      "description": "If don’t have access to any other verified devices and you don’t have your recovery key, then you’ll need to reset your digital identity to continue using the app.",
       "effect_list": {
         "negative_1": "You will lose your existing message history",
         "negative_2": "You will need to verify all your existing devices and contacts again",
@@ -272,92 +272,92 @@
       "failure": {
         "description": "This might be a temporary problem, so please try again later. If the problem persists, please contact your server administrator.",
         "heading": "Failed to allow digital identity reset",
-        "title": "Kan crypto identiteit niet toestaan"
+        "title": "Failed to allow crypto identity"
       },
       "finish_reset": "Finish reset",
-      "heading": "Stel uw identiteit opnieuw in als u op een andere manier niet kunt bevestigen",
+      "heading": "Reset your digital identity in case you can't confirm another way",
       "start_reset": "Start reset",
       "success": {
-        "description": "De identiteits reset is goedgekeurd voor de volgende {{minutes}} minuten. U kunt dit venster sluiten en teruggaan naar de app om door te gaan.",
+        "description": "The digital identity reset has been approved for the next {{minutes}} minutes. You can close this window and go back to the app to continue.",
         "heading": "Digital identity reset successfully. Go back to the app to finish the process.",
-        "title": "Het opnieuw instellen van de crypto identiteit is tijdelijk toegestaan"
+        "title": "Crypto identity reset temporarily allowed"
       },
       "warning": "Only reset your digital identity if you don't have access to another verified device and you don't have your recovery key."
     },
     "selectable_session": {
-      "label": "Sessie selecteren"
+      "label": "Select session"
     },
     "session": {
       "client_id_label": "Client ID",
-      "current": "Huidige",
-      "current_badge": "Huidige",
-      "device_id_label": "Apparaat-ID",
-      "finished_date": "Voltooid op <datetime/>",
-      "finished_label": "Voltooid",
+      "current": "Current",
+      "current_badge": "Current",
+      "device_id_label": "Device ID",
+      "finished_date": "Finished <datetime/>",
+      "finished_label": "Finished",
       "generic_browser_session": "Browser session",
       "id_label": "ID",
-      "ip_label": "IP-adres",
-      "last_active_label": "Laatst actief",
-      "last_auth_label": "Laatste authenticatie",
-      "name_for_platform": "{{name}} voor {{platform}}",
+      "ip_label": "IP Address",
+      "last_active_label": "Last Active",
+      "last_auth_label": "Last Authentication",
+      "name_for_platform": "{{name}} for {{platform}}",
       "scopes_label": "Scopes",
       "set_device_name": {
         "help": "Set a name that will help you identify this device.",
         "label": "Device name",
         "title": "Edit device name"
       },
-      "signed_in_date": "Ingelogd op <datetime/>",
-      "signed_in_label": "Ingelogd",
+      "signed_in_date": "Signed in <datetime/>",
+      "signed_in_label": "Signed in",
       "title": "Device details",
-      "unknown_browser": "Onbekende browser",
-      "unknown_device": "Onbekend apparaat",
+      "unknown_browser": "Unknown browser",
+      "unknown_device": "Unknown device",
       "uri_label": "Uri",
-      "user_id_label": "Gebruikers-ID",
-      "username_label": "Gebruikersnaam"
+      "user_id_label": "User ID",
+      "username_label": "User name"
     },
     "session_detail": {
       "alert": {
-        "button": "Terug",
-        "text": "Deze sessie bestaat niet of is niet langer actief.",
-        "title": "Kan sessie niet vinden: {{deviceId}}"
+        "button": "Voltar",
+        "text": "This session does not exist, or is no longer active.",
+        "title": "Cannot find session: {{deviceId}}"
       }
     },
-    "unknown_route": "Onbekende route {{route}}",
+    "unknown_route": "Unknown route {{route}}",
     "unverified_email_alert": {
-      "button": "Controleren en verifiëren",
+      "button": "Review and verify",
       "text:one": "You have {{count}} unverified email address.",
       "text:other": "You have {{count}} unverified email addresses.",
-      "title": "Niet geverifieerd e-mailadres"
+      "title": "Unverified email"
     },
     "user_email": {
-      "cant_delete_primary": "Kies een ander primair e-mailadres om de huidige te verwijderen.",
+      "cant_delete_primary": "Choose a different primary email to delete this one.",
       "delete_button_confirmation_modal": {
-        "action": "E-mailadres verwijderen",
-        "body": "Dit e-mailadres verwijderen?",
+        "action": "Delete email",
+        "body": "Delete this email?",
         "incorrect_password": "Incorrect password, please try again",
         "password_confirmation": "Confirm your account password to delete this email address"
       },
-      "delete_button_title": "E-mailadres verwijderen",
-      "email": "E-mailadres",
-      "make_primary_button": "Instellen als primair",
-      "not_verified": "Niet geverifieerd",
-      "primary_email": "Primair e-mailadres",
-      "retry_button": "Code opnieuw verzenden",
-      "unverified": "Niet geverifieerd"
+      "delete_button_title": "Remove email address",
+      "email": "E-mail",
+      "make_primary_button": "Make primary",
+      "not_verified": "Not verified",
+      "primary_email": "Primary email",
+      "retry_button": "Resend code",
+      "unverified": "Não verificado"
     },
     "user_email_list": {
-      "heading": "E-mailadressen",
-      "no_primary_email_alert": "Geen primair e-mailadres"
+      "heading": "Emails",
+      "no_primary_email_alert": "No primary email address"
     },
     "user_greeting": {
-      "error": "Het laden van de gebruiker is mislukt"
+      "error": "Failed to load user"
     },
     "user_name": {
-      "display_name_field_label": "Weergavenaam"
+      "display_name_field_label": "Nome e sobrenome"
     },
     "user_sessions_overview": {
-      "active_sessions:one": "{{count}} actieve sessie",
-      "active_sessions:other": "{{count}} actieve sessies",
+      "active_sessions:one": "{{count}} active session",
+      "active_sessions:other": "{{count}} active sessions",
       "heading": "Where you're signed in",
       "no_active_sessions": {
         "default": "You are not signed in to any application.",
@@ -370,33 +370,33 @@
         "title": "Code expired"
       },
       "code_field_error": "Code not recognised",
-      "code_field_label": "6-cijferige code",
+      "code_field_label": "6-digit code",
       "code_field_wrong_shape": "Code must be 6 digits",
       "email_sent_alert": {
         "description": "Enter the new code below.",
         "title": "New code sent"
       },
       "enter_code_prompt": "Enter the 6-digit code sent to: <email>{{email}}</email>",
-      "heading": "Verifieer uw e-mailadres",
+      "heading": "Verifique seu e-mail",
       "invalid_code_alert": {
         "description": "Check the code sent to your email and update the fields below to continue.",
         "title": "You entered the wrong code"
       },
-      "resend_code": "Code opnieuw verzenden",
+      "resend_code": "Resend code",
       "resend_email": "Resend email",
-      "sent": "Verzonden!",
+      "sent": "Sent!",
       "unknown_email": "Unknown email"
     }
   },
   "mas": {
     "scope": {
-      "edit_profile": "Edit your profile and contact details",
-      "manage_sessions": "Manage your devices and sessions",
+      "edit_profile": "Edite seu perfil e seus dados de contato.",
+      "manage_sessions": "Gerencie seus dispositivos e sessões",
       "mas_admin": "Manage users (urn:mas:admin)",
       "send_messages": "Send new messages on your behalf",
       "synapse_admin": "Administer the server (urn:synapse:admin:*)",
       "view_messages": "View your existing messages and data",
-      "view_profile": "See your profile info and contact details"
+      "view_profile": "Veja as informações do seu perfil e os seus dados de contato."
     }
   }
 }

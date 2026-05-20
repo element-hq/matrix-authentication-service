@@ -117,22 +117,22 @@ const AccountSessionsBrowsersRoute = AccountSessionsBrowsersRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof AccountIndexRoute
   '/reset-cross-signing': typeof ResetCrossSigningRouteWithChildren
   '/clients/$id': typeof ClientsIdRoute
   '/devices/$': typeof DevicesSplatRoute
   '/reset-cross-signing/cancelled': typeof ResetCrossSigningCancelledRoute
   '/reset-cross-signing/success': typeof ResetCrossSigningSuccessRoute
   '/sessions/$id': typeof SessionsIdRoute
-  '/': typeof AccountIndexRoute
   '/reset-cross-signing/': typeof ResetCrossSigningIndexRoute
   '/sessions/browsers': typeof AccountSessionsBrowsersRoute
   '/emails/$id/in-use': typeof EmailsIdInUseRoute
   '/emails/$id/verify': typeof EmailsIdVerifyRoute
   '/password/change/success': typeof PasswordChangeSuccessRoute
-  '/plan': typeof AccountPlanIndexRoute
-  '/sessions': typeof AccountSessionsIndexRoute
-  '/password/change': typeof PasswordChangeIndexRoute
-  '/password/recovery': typeof PasswordRecoveryIndexRoute
+  '/plan/': typeof AccountPlanIndexRoute
+  '/sessions/': typeof AccountSessionsIndexRoute
+  '/password/change/': typeof PasswordChangeIndexRoute
+  '/password/recovery/': typeof PasswordRecoveryIndexRoute
 }
 export interface FileRoutesByTo {
   '/clients/$id': typeof ClientsIdRoute
@@ -174,22 +174,22 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/reset-cross-signing'
     | '/clients/$id'
     | '/devices/$'
     | '/reset-cross-signing/cancelled'
     | '/reset-cross-signing/success'
     | '/sessions/$id'
-    | '/'
     | '/reset-cross-signing/'
     | '/sessions/browsers'
     | '/emails/$id/in-use'
     | '/emails/$id/verify'
     | '/password/change/success'
-    | '/plan'
-    | '/sessions'
-    | '/password/change'
-    | '/password/recovery'
+    | '/plan/'
+    | '/sessions/'
+    | '/password/change/'
+    | '/password/recovery/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/clients/$id'
@@ -253,7 +253,7 @@ declare module '@tanstack/react-router' {
     '/_account': {
       id: '/_account'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -309,28 +309,28 @@ declare module '@tanstack/react-router' {
     '/password/recovery/': {
       id: '/password/recovery/'
       path: '/password/recovery'
-      fullPath: '/password/recovery'
+      fullPath: '/password/recovery/'
       preLoaderRoute: typeof PasswordRecoveryIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/password/change/': {
       id: '/password/change/'
       path: '/password/change'
-      fullPath: '/password/change'
+      fullPath: '/password/change/'
       preLoaderRoute: typeof PasswordChangeIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_account/sessions/': {
       id: '/_account/sessions/'
       path: '/sessions'
-      fullPath: '/sessions'
+      fullPath: '/sessions/'
       preLoaderRoute: typeof AccountSessionsIndexRouteImport
       parentRoute: typeof AccountRoute
     }
     '/_account/plan/': {
       id: '/_account/plan/'
       path: '/plan'
-      fullPath: '/plan'
+      fullPath: '/plan/'
       preLoaderRoute: typeof AccountPlanIndexRouteImport
       parentRoute: typeof AccountRoute
     }

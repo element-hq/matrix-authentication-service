@@ -408,6 +408,38 @@ upstream_oauth2:
 ```
 
 
+### Kanidm
+
+
+Install and configure a Kanidm instance using the [Official Docs](https://kanidm.github.io/kanidm/stable/introduction_to_kanidm.html)
+
+Create a OAuth2 Client following the [OAuth2 Setup](https://kanidm.github.io/kanidm/stable/integrations/oauth2.html) guide
+
+> ⚠️ **Important**
+> Ensure you configure the client to prefer short usernames. This means instead of `user@domain.tld` it will return just `user` as the preferred username
+> You can configure this by running `kanidm system oauth2 prefer-short-username <client_id>`.
+
+```yaml
+upstream_oauth2:
+  providers:
+    - id: "[ulid]" # randomly generated ulid (https://www.ulidtools.com/)
+      id_token_signed_response_alg: ES256 # This is important since Kanidm doesn't support RS256 by default  
+      issuer: "https://<kanidm_instance>/oauth2/openid/<client_id>" # TO BE FILLED
+      token_endpoint_auth_method: client_secret_basic
+      client_id: "<client-id>" # TO BE FILLED
+      client_secret: "<client-secret>" # TO BE FILLED
+      scope: "openid profile email" # Add any additional scopes
+      claims_imports:
+        localpart:
+          action: require
+          template: "{{ user.preferred_username }}"
+        displayname:
+          action: suggest
+          template: "{{ user.name }}"
+        email:
+          action: suggest
+          template: "{{ user.email }}"
+```
 ### Keycloak
 
 

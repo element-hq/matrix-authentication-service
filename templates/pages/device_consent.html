@@ -11,26 +11,30 @@ Please see LICENSE files in the repository root for full details.
 {% extends "base.html" %}
 
 {% block content %}
-  {% set client_name = client.client_name or client.client_id %}
+  {% set client_display_name = client.client_name or client.client_id %}
+  {# The URI we can display to distinguish this client #}
+  {% set client_display_uri = ((client.client_uri or "") | simplify_url) or "<no client_uri provided>" %}
   {% set user_agent = grant.user_agent | parse_user_agent() %}
 
   {% if grant.state == "pending" %}
     <header class="page-heading">
-      {% if client.logo_uri %}
-        <img class="consent-client-icon image" referrerpolicy="no-referrer" src="{{ client.logo_uri }}" />
-      {% else %}
-      <div class="consent-client-icon generic">
-        {{ icon.web_browser() }}
+      <div class="flex justify-center">
+        {% if client.logo_uri %}
+          <img class="consent-client-icon image" referrerpolicy="no-referrer" src="{{ client.logo_uri }}" />
+        {% else %}
+        <div class="consent-client-icon generic">
+          {{ icon.web_browser() }}
+        </div>
+        {% endif %}
       </div>
-      {% endif %}
 
       <div class="header">
         <h1 class="title">
-          {{ _('mas.consent.continue_to', client_name=client_name) }}
+          {{ _('mas.consent.continue_to', client_name=client_display_name) }}
         </h1>
 
         <p class="text [&>span]:whitespace-nowrap [&>span]:text-[var(--cpd-color-text-link-external)]">
-          {{ _("mas.device_consent.this_will_setup", client_name=client_name, client_uri=((client.client_uri or "") | simplify_url), server_name=branding.server_name) }}
+          {{ _("mas.device_consent.this_will_setup", client_name=client_display_name, client_uri=client_display_uri, server_name=branding.server_name) }}
         </p>
 
         <div class="session-card mt-4">
@@ -101,7 +105,7 @@ Please see LICENSE files in the repository root for full details.
       {% if scopes is not empty %}
         <section class="flex flex-col gap-3">
           <p class="text-center cpd-text-body-md-regular">
-            {{ _('mas.consent.scope_list_preface', client_name=client_name) }}
+            {{ _('mas.consent.scope_list_preface', client_name=client_display_name) }}
           </p>
           <div class="consent-scope-list">
             {{ scope.list(scopes=scopes) }}
@@ -155,7 +159,7 @@ Please see LICENSE files in the repository root for full details.
 
       <div class="header">
         <h1 class="title">{{ _("mas.device_consent.denied.heading") }}</h1>
-        <p class="text">{{ _("mas.device_consent.denied.description", client_name=client_name) }}</p>
+        <p class="text">{{ _("mas.device_consent.denied.description", client_name=client_display_name) }}</p>
       </div>
     </header>
   {% else %}
@@ -166,7 +170,7 @@ Please see LICENSE files in the repository root for full details.
 
       <div class="header">
         <h1 class="title">{{ _("mas.device_consent.granted.heading") }}</h1>
-        <p class="text">{{ _("mas.device_consent.granted.description", client_name=client_name) }}</p>
+        <p class="text">{{ _("mas.device_consent.granted.description", client_name=client_display_name) }}</p>
       </div>
     </header>
   {% endif %}

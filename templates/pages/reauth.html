@@ -34,7 +34,7 @@ Please see LICENSE files in the repository root for full details.
 
     {% if next and next.kind == "continue_authorization_grant" %}
       {{ back_to_client.link(
-        text="Cancel",
+        text=_("action.cancel"),
         destructive=True,
         uri=next.grant.redirect_uri,
         mode=next.grant.response_mode,

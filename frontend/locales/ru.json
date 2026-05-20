@@ -126,6 +126,7 @@
       "heading": "Адрес электронной почты {{email}} уже используется."
     },
     "end_session_button": {
+      "confirmation_modal_body_text": "Make sure you always have access to another verified device or your recovery key to avoid losing your encrypted chat history.",
       "confirmation_modal_title": "Вы уверены, что хотите завершить этот сеанс?",
       "text": "Удалить устройство"
     },

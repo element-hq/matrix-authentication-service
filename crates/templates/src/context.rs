@@ -29,7 +29,7 @@ use mas_data_model::{
 };
 use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
-use mas_policy::{Violation, ViolationCode};
+use mas_policy::{Violation, ViolationVariant};
 use mas_router::{Account, GraphQL, PostAuthAction, UrlBuilder};
 use oauth2_types::scope::{OPENID, Scope};
 use rand::{
@@ -247,7 +247,7 @@ impl<T: TemplateContext> TemplateContext for WithCsrf<T> {
 }
 
 /// Context with a user session in it
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct WithSession<T> {
     current_session: BrowserSession,
 
@@ -783,7 +783,7 @@ impl ConsentContext {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(tag = "grant_type")]
 enum PolicyViolationGrant {
     #[serde(rename = "authorization_code")]
@@ -793,11 +793,12 @@ enum PolicyViolationGrant {
 }
 
 /// Context used by the `policy_violation.html` template
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct PolicyViolationContext {
     grant: PolicyViolationGrant,
     client: Client,
     action: PostAuthAction,
+    violations: Vec<Violation>,
 }
 
 impl TemplateContext for PolicyViolationContext {
@@ -817,8 +818,11 @@ impl TemplateContext for PolicyViolationContext {
                     // XXX
                     grant.client_id = client.id;
 
-                    let authorization_grant =
-                        PolicyViolationContext::for_authorization_grant(grant, client.clone());
+                    let authorization_grant = PolicyViolationContext::for_authorization_grant(
+                        grant,
+                        client.clone(),
+                        Vec::new(),
+                    );
                     let device_code_grant = PolicyViolationContext::for_device_code_grant(
                         DeviceCodeGrant {
                             id: Ulid::from_datetime_with_source(now.into(), rng),
@@ -833,6 +837,7 @@ impl TemplateContext for PolicyViolationContext {
                             user_agent: None,
                         },
                         client,
+                        Vec::new(),
                     );
 
                     [authorization_grant, device_code_grant]
@@ -846,24 +851,34 @@ impl PolicyViolationContext {
     /// Constructs a context for the policy violation page for an authorization
     /// grant
     #[must_use]
-    pub const fn for_authorization_grant(grant: AuthorizationGrant, client: Client) -> Self {
+    pub const fn for_authorization_grant(
+        grant: AuthorizationGrant,
+        client: Client,
+        violations: Vec<Violation>,
+    ) -> Self {
         let action = PostAuthAction::continue_grant(grant.id);
         Self {
             grant: PolicyViolationGrant::Authorization(grant),
             client,
             action,
+            violations,
         }
     }
 
     /// Constructs a context for the policy violation page for a device code
     /// grant
     #[must_use]
-    pub const fn for_device_code_grant(grant: DeviceCodeGrant, client: Client) -> Self {
+    pub const fn for_device_code_grant(
+        grant: DeviceCodeGrant,
+        client: Client,
+        violations: Vec<Violation>,
+    ) -> Self {
         let action = PostAuthAction::continue_device_code_grant(grant.id);
         Self {
             grant: PolicyViolationGrant::DeviceCode(grant),
             client,
             action,
+            violations,
         }
     }
 }
@@ -890,7 +905,7 @@ impl TemplateContext for CompatLoginPolicyViolationContext {
                     msg: "user has too many active sessions".to_owned(),
                     redirect_uri: None,
                     field: None,
-                    code: Some(ViolationCode::TooManySessions),
+                    variant: Some(ViolationVariant::TooManySessions { need_to_remove: 1 }),
                 }],
             },
         ])

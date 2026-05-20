@@ -204,6 +204,14 @@
         }
       ]
     },
+    "oauth": {
+      "description": "Configuration section for OAuth 2.0 protocol options",
+      "allOf": [
+        {
+          "$ref": "#/definitions/OAuthConfig"
+        }
+      ]
+    },
     "experimental": {
       "description": "Experimental configuration options",
       "allOf": [
@@ -2813,6 +2821,16 @@
         }
       }
     },
+    "OAuthConfig": {
+      "description": "Configuration section for OAuth 2.0 protocol options",
+      "type": "object",
+      "properties": {
+        "device_code_grant_enabled": {
+          "description": "Whether the Device Authorization Grant (RFC 8628) is enabled. Defaults\n to `true`.\n\n When disabled, the device authorization endpoint will reject requests,\n the discovery metadata will not advertise the device authorization\n endpoint, and dynamic client registrations requesting the\n `urn:ietf:params:oauth:grant-type:device_code` grant type will be\n rejected.",
+          "type": "boolean"
+        }
+      }
+    },
     "ExperimentalConfig": {
       "description": "Configuration sections for experimental options\n\n Do not change these options unless you know what you are doing.",
       "type": "object",
@@ -2898,14 +2916,21 @@
       "type": "object",
       "properties": {
         "soft_limit": {
+          "description": "Upon login in interactive contexts (like OAuth 2.0 sessions, or\n `m.login.sso` compability login flow), if the soft limit is reached,\n it will display a policy violation screen (web UI) to remove\n sessions before creating the new session.\n\n This is not enforced in non-interactive contexts (like\n `m.login.password` login with the compability API) as there is no\n opportunity for us to show some UI for people remove some sessions.\n See [`hard_limit`] for enforcement on that side.\n\n [`hard_limit`]: Self::hard_limit",
           "type": "integer",
           "format": "uint64",
           "minimum": 1
         },
         "hard_limit": {
+          "description": "Upon login, when `dangerous_hard_limit_eviction: false`, will refuse the\n new login (policy violation error), otherwise, see\n [`dangerous_hard_limit_eviction`].\n\n The hard limit is enforced in all contexts\n (interactive/non-interactive).\n\n [`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction",
           "type": "integer",
           "format": "uint64",
           "minimum": 1
+        },
+        "dangerous_hard_limit_eviction": {
+          "description": "Whether we should automatically choose the least recently used devices\n to remove when the [`Self::hard_limit`] is reached; in order to\n allow the new login to continue.\n\n Disabled by default\n\n WARNING: Removing sessions is a potentially damaging operation. Any\n end-to-end encrypted history on the device will be lost and can only\n be recovered if you have another verified active device or have a\n recovery key setup.\n\n When using [`dangerous_hard_limit_eviction`], the [`hard_limit`] must be\n at least 2 to avoid catastrophically losing encrypted history and\n digital identity in pathological cases. Keep in mind this is a bare\n minimum restriction and you can still run into trouble.\n\n This is most applicable in scenarios where your homeserver has many\n legacy bots/scripts that login over and over (which ideally should\n be using [personal access\n tokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))\n and you want to avoid breaking their operation while maintaining some\n level of sanity with the number of devices that people can have.\n\n [`hard_limit`]: Self::hard_limit\n [`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction",
+          "type": "boolean",
+          "default": false
         }
       },
       "required": [

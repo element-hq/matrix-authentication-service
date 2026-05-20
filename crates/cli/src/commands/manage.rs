@@ -638,6 +638,12 @@ impl Options {
                 // synchronously yet.
                 let user = repo.user().lock(&clock, user).await?;
 
+                // Schedule a job to provision the user so that the lock flag is propagated
+                // to Synapse
+                repo.queue_job()
+                    .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&user))
+                    .await?;
+
                 if deactivate {
                     warn!(%user.id, "Scheduling user deactivation");
                     repo.queue_job()
@@ -667,6 +673,12 @@ impl Options {
                     .find_by_username(&username)
                     .await?
                     .context("User not found")?;
+
+                // Schedule a job to provision the user so that the lock flag is propagated
+                // to Synapse
+                repo.queue_job()
+                    .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&user))
+                    .await?;
 
                 if reactivate {
                     warn!(%user.id, "Scheduling user reactivation");

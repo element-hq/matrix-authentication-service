@@ -14,7 +14,7 @@ use thiserror::Error;
 use crate::BoundActivityTracker;
 
 // https://developers.google.com/recaptcha/docs/verify#api_request
-const RECAPTCHA_VERIFY_URL: &str = "https://www.google.com/recaptcha/api/siteverify";
+const RECAPTCHA_VERIFY_URL: &str = "https://www.recaptcha.net/recaptcha/api/siteverify";
 
 // https://docs.hcaptcha.com/#verify-the-user-response-server-side
 const HCAPTCHA_VERIFY_URL: &str = "https://api.hcaptcha.com/siteverify";

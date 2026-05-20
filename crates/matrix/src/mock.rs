@@ -10,9 +10,10 @@ use anyhow::Context;
 use async_trait::async_trait;
 use tokio::sync::RwLock;
 
-use crate::{MatrixUser, ProvisionRequest};
+use crate::{HomeserverConnection as _, MatrixUser, ProvisionRequest};
 
-struct MockUser {
+#[derive(Clone)]
+pub struct MockUser {
     sub: String,
     avatar_url: Option<String>,
     displayname: Option<String>,
@@ -20,6 +21,7 @@ struct MockUser {
     emails: Option<Vec<String>>,
     cross_signing_reset_allowed: bool,
     deactivated: bool,
+    pub locked: bool,
 }
 
 /// A mock implementation of a [`HomeserverConnection`], which never fails and
@@ -49,6 +51,18 @@ impl HomeserverConnection {
 
     pub async fn reserve_localpart(&self, localpart: &'static str) {
         self.reserved_localparts.write().await.insert(localpart);
+    }
+
+    /// Like `query_user` but get the raw test state of the user.
+    ///
+    /// # Errors
+    ///
+    /// Will fail if the user doesn't exist.
+    pub async fn query_user_raw(&self, localpart: &str) -> Result<MockUser, anyhow::Error> {
+        let mxid = self.mxid(localpart);
+        let users = self.users.read().await;
+        let user = users.get(&mxid).context("User not found")?;
+        Ok(user.clone())
     }
 }
 
@@ -85,6 +99,7 @@ impl crate::HomeserverConnection for HomeserverConnection {
             emails: None,
             cross_signing_reset_allowed: false,
             deactivated: false,
+            locked: false,
         });
 
         anyhow::ensure!(
@@ -103,6 +118,8 @@ impl crate::HomeserverConnection for HomeserverConnection {
         request.on_avatar_url(|avatar_url| {
             user.avatar_url = avatar_url.map(ToOwned::to_owned);
         });
+
+        user.locked = request.locked();
 
         Ok(inserted)
     }
@@ -219,7 +236,6 @@ impl crate::HomeserverConnection for HomeserverConnection {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::HomeserverConnection as _;
 
     #[tokio::test]
     async fn test_mock_connection() {
@@ -234,7 +250,7 @@ mod tests {
         assert!(conn.upsert_device("test", device, None).await.is_err());
         assert!(conn.delete_device("test", device).await.is_err());
 
-        let request = ProvisionRequest::new("test", "test")
+        let request = ProvisionRequest::new("test", "test", false)
             .set_displayname("Test User".into())
             .set_avatar_url("mxc://example.org/1234567890".into())
             .set_emails(vec!["test@example.org".to_owned()]);

@@ -805,7 +805,7 @@ mod tests {
 
         state
             .homeserver_connection
-            .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub, false))
             .await
             .unwrap();
 
@@ -1005,7 +1005,7 @@ mod tests {
 
         state
             .homeserver_connection
-            .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub, false))
             .await
             .unwrap();
 

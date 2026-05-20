@@ -1,12 +1,13 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
 use console::{Color, Style};
-use opentelemetry::TraceId;
+use opentelemetry::{TraceId, trace::TraceContextExt as _};
 use tracing::{Level, Subscriber};
-use tracing_opentelemetry::OtelData;
+use tracing_opentelemetry::get_otel_context;
 use tracing_subscriber::{
     fmt::{
         FormatEvent, FormatFields,
@@ -127,8 +128,11 @@ where
 
         // If we have a OTEL span, we can add the trace ID to the end of the log line
         if let Some(span) = ctx.lookup_current()
-            && let Some(otel) = span.extensions().get::<OtelData>()
-            && let Some(trace_id) = otel.trace_id()
+            && let Some(trace_id) = tracing::dispatcher::get_default(|dispatch| {
+                let otel_cx = get_otel_context(&mut span.extensions_mut(), dispatch)?;
+                let trace_id = otel_cx.span().span_context().trace_id();
+                Some(trace_id)
+            })
             && trace_id != TraceId::INVALID
         {
             let label = Style::new()

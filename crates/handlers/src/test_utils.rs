@@ -69,7 +69,7 @@ pub(crate) fn setup() {
 }
 
 pub(crate) async fn policy_factory(
-    server_name: &str,
+    base_data: mas_policy::BaseData,
     data: serde_json::Value,
 ) -> Result<Arc<PolicyFactory>, anyhow::Error> {
     let workspace_root = camino::Utf8Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -86,7 +86,7 @@ pub(crate) async fn policy_factory(
         email: "email/violation".to_owned(),
     };
 
-    let data = mas_policy::Data::new(server_name.to_owned(), None).with_rest(data);
+    let data = mas_policy::Data::new(base_data).with_rest(data);
 
     let policy_factory = PolicyFactory::load(file, data, entrypoints).await?;
     let policy_factory = Arc::new(policy_factory);
@@ -150,6 +150,7 @@ pub fn test_site_config() -> SiteConfig {
         login_with_email_allowed: true,
         plan_management_iframe_uri: None,
         session_limit: None,
+        device_code_grant_enabled: true,
     }
 }
 
@@ -207,8 +208,14 @@ impl TestState {
             PasswordManager::disabled()
         };
 
-        let policy_factory =
-            policy_factory(&site_config.server_name, serde_json::json!({})).await?;
+        let policy_factory = policy_factory(
+            mas_policy::BaseData {
+                server_name: site_config.server_name.clone(),
+                session_limit: site_config.session_limit.clone(),
+            },
+            serde_json::json!({}),
+        )
+        .await?;
 
         let homeserver_connection =
             Arc::new(MockHomeserverConnection::new(&site_config.server_name));
@@ -293,11 +300,17 @@ impl TestState {
         queue.process_all_jobs_in_tests().await.unwrap();
     }
 
-    /// Reset the test utils to a fresh state, with the same configuration.
-    pub async fn reset(self) -> Self {
+    /// Restart the app with the same configuration.
+    ///
+    /// To change the config, mutate `TestState.site_config` before calling this
+    /// function.
+    pub async fn restart(self) -> Self {
         let site_config = self.site_config.clone();
         let pool = self.repository_factory.pool();
         let task_tracker = self.task_tracker.clone();
+
+        // Retain the homeserver connection so we keep the in-memory state
+        let homeserver_connection = self.homeserver_connection.clone();
 
         // This should trigger the cancellation drop guard
         drop(self);
@@ -306,9 +319,12 @@ impl TestState {
         task_tracker.close();
         task_tracker.wait().await;
 
-        Self::from_pool_with_site_config(pool, site_config)
+        let mut state = Self::from_pool_with_site_config(pool, site_config)
             .await
-            .unwrap()
+            .unwrap();
+        // Restore the homeserver connection so we keep the in-memory state
+        state.homeserver_connection = homeserver_connection;
+        state
     }
 
     pub async fn request<B>(&self, request: Request<B>) -> Response<String>
@@ -365,7 +381,10 @@ impl TestState {
         let state = {
             let mut state = self.clone();
             state.policy_factory = policy_factory(
-                "example.com",
+                mas_policy::BaseData {
+                    server_name: "example.com".to_owned(),
+                    session_limit: None,
+                },
                 serde_json::json!({
                     "admin_clients": [client_id],
                 }),

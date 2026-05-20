@@ -74,9 +74,13 @@
     },
     "consent": {
       "client_wants_access": "<span>%(client_name)s</span> 位于 <span>%(redirect_uri)s</span>，请求访问您的账户。",
+      "continue_to": "继续前往 <span>%(client_name)s</span>？",
       "heading": "允许访问你的账户？",
       "make_sure_you_trust": "请确保你信任 <span>%(client_name)s</span> 。",
+      "scope_list_preface": "一旦继续你将允许 <span>%(client_name)s</span>：",
       "this_will_allow": "这将允许 <span>%(client_name)s</span> ：",
+      "this_will_setup": "这将使用你在 <span>%(server_name)s</span> 上的账户配置 %(client_name)s（<span>%(client_uri)s</span>）。",
+      "use_another_account": "使用另一账户",
       "you_may_be_sharing": "你可能正在与本网站或 app 分享敏感信息。"
     },
     "device_card": {
@@ -98,7 +102,8 @@
       "granted": {
         "description": "您已授予 %(client_name)s 访问权限。您可以关闭此窗口。",
         "heading": "已授予访问权限"
-      }
+      },
+      "this_will_setup": "另一设备尝试使用你在上的账户 <span>%(server_name)s</span> 配置 %(client_name)s（<span>%(client_uri)s</span>）。请确保你认识该设备。"
     },
     "device_display_name": {
       "client_on_device": "运行在 %(device_name)s 的 %(client_name)s",
@@ -144,6 +149,9 @@
       "username_taken": "此用户名已被使用",
       "username_too_long": "用户名太长",
       "username_too_short": "用户名太短"
+    },
+    "legacy_consent": {
+      "this_will_setup": "这将设置你位于 <span>%(server_name)s</span> 上的账户：<span>%(client_name)s</span>。"
     },
     "login": {
       "call_to_register": "还没有账户？",
@@ -275,7 +283,7 @@
       "6_digit_code": "6位数代码",
       "code": "代码",
       "description": "输入发送至以下邮箱的6位数代码：<em>%(email)s</em>",
-      "headline": "验证邮箱"
+      "headline": "验证邮件地址"
     }
   }
 }

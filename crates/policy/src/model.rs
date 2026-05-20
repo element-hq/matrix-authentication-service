@@ -16,10 +16,11 @@ use oauth2_types::{registration::VerifiedClientMetadata, scope::Scope};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-/// A well-known policy code.
+/// Violation variants identified by a well-known policy code (under the `code`
+/// key).
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, JsonSchema, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
-pub enum Code {
+#[serde(tag = "code", rename_all = "kebab-case")]
+pub enum ViolationVariant {
     /// The username is too short.
     UsernameTooShort,
 
@@ -51,10 +52,13 @@ pub enum Code {
     EmailBanned,
 
     /// The user has reached their session limit.
-    TooManySessions,
+    TooManySessions {
+        /// How many devices need to be removed to make room for the new session
+        need_to_remove: u32,
+    },
 }
 
-impl Code {
+impl ViolationVariant {
     /// Returns the code as a string
     #[must_use]
     pub fn as_str(&self) -> &'static str {
@@ -69,7 +73,7 @@ impl Code {
             Self::EmailDomainBanned => "email-domain-banned",
             Self::EmailNotAllowed => "email-not-allowed",
             Self::EmailBanned => "email-banned",
-            Self::TooManySessions => "too-many-sessions",
+            Self::TooManySessions { .. } => "too-many-sessions",
         }
     }
 }
@@ -80,7 +84,13 @@ pub struct Violation {
     pub msg: String,
     pub redirect_uri: Option<String>,
     pub field: Option<String>,
-    pub code: Option<Code>,
+
+    // We flatten as policies expect `code` as another top-level field.
+    //
+    // This also means all of the extra fields from the variant will be splatted at this
+    // level which is fine (arbitrary).
+    #[serde(flatten)]
+    pub variant: Option<ViolationVariant>,
 }
 
 /// The result of a policy evaluation.

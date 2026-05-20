@@ -125,7 +125,8 @@
       "heading": "E-posti aadress {{email}} on juba kasutusel."
     },
     "end_session_button": {
-      "confirmation_modal_title": "Kas sa oled kindel, et soovid selle sessiooni lõpetada?",
+      "confirmation_modal_body_text": "Krüptitud vestlusajaloo kaotamise vältimiseks veendu, et sul on alati juurdepääs mõnele muule verifitseeritud seadmele või taastevõtmele.",
+      "confirmation_modal_title": "Kas sa oled kindel, et soovid selle seadme eemaldada?",
       "text": "Eemalda seade"
     },
     "error": {

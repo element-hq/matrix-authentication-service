@@ -223,7 +223,7 @@ async fn create_test_user(state: &TestState, username: &str) -> mas_data_model::
     // Provision the user on the homeserver
     state
         .homeserver_connection
-        .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
+        .provision_user(&ProvisionRequest::new(&user.username, &user.sub, false))
         .await
         .unwrap();
 
