@@ -32,6 +32,9 @@ too_many_lines = "allow"
 # Sometimes variables are long and annoying to inline in the format string.
 # And this lint also complains about aliases, https://github.com/rust-lang/rust-clippy/issues/10247
 uninlined_format_args = "allow"
+# Prefer `#[expect(unused_mut)]` over `#[allow(unused_mut)]` because it will complain if
+# the lint ignore is not used.
+allow_attributes = "deny"
 
 [workspace.lints.rustdoc]
 broken_intra_doc_links = "deny"
