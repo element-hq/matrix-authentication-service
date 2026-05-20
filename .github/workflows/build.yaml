@@ -28,6 +28,11 @@ env:
   SCCACHE_GHA_ENABLED: "true"
   RUSTC_WRAPPER: "sccache"
   BUILDCACHE: ghcr.io/element-hq/matrix-authentication-service/buildcache
+  # metadata-action defaults to `manifest`, which `docker buildx imagetools
+  # create --annotation` refuses with "manifest annotations are not supported
+  # yet". We only want annotations on the manifest list anyway, so narrow it
+  # to `index`.
+  DOCKER_METADATA_ANNOTATIONS_LEVELS: index
 
 jobs:
   compute-version:
