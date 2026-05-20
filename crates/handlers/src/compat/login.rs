@@ -460,12 +460,14 @@ pub(crate) async fn post(
     //
     // Normally, devices get synced to the homeserver in a `SyncDevicesJob` but we
     // want the device to be created synchronously on the homeserver, so that
-    // when we respond, the device already exists. If the device doesn't exist
-    // on Synapse, token introspection from Synapse to MAS will work, but then
-    // the device won't exist, so Synapse will return a 401. We're using an
-    // upsert so if the device already exists for some reason (like when we're
-    // replacing it, or a concurrent device sync happening) it won't have any
-    // effect.
+    // when we respond, the access token works completely. If the device doesn't
+    // exist on the homeserver side, token introspection from Synapse to MAS
+    // will work but Synapse will return a 401 because it doesn't see the
+    // device.
+    //
+    // We're using an upsert so if the device already exists for some reason (like
+    // when we're replacing it, or a concurrent device sync happening) it won't
+    // have any effect.
     if let Err(err) = homeserver
         .upsert_device(
             &user.username,
