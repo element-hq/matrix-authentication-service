@@ -28,9 +28,6 @@ env:
   SCCACHE_GHA_ENABLED: "true"
   RUSTC_WRAPPER: "sccache"
   BUILDCACHE: ghcr.io/element-hq/matrix-authentication-service/buildcache
-  # We only ever apply annotations to the image index (manifest list) during
-  # `finalize-image`; per-arch manifests don't get any.
-  DOCKER_METADATA_ANNOTATIONS_LEVELS: index
 
 jobs:
   compute-version:
