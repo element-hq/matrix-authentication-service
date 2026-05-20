@@ -464,6 +464,7 @@ jobs:
         with:
           pattern: digests-*
           path: /tmp/digests
+          # Collect digests from both amd64 and arm64 builds
           merge-multiple: true
 
       - name: Setup Cosign
