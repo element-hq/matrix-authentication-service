@@ -167,7 +167,6 @@ pub enum JwtVerificationError {
 }
 
 impl JwtVerificationError {
-    #[expect(clippy::needless_pass_by_value)]
     fn parse_signature<E>(_inner: E) -> Self {
         Self::ParseSignature
     }

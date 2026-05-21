@@ -173,7 +173,6 @@ impl<'a> FromIterator<Constraint<'a>> for ConstraintSet<'a> {
     }
 }
 
-#[expect(dead_code)]
 impl<'a> ConstraintSet<'a> {
     pub fn new(constraints: impl IntoIterator<Item = Constraint<'a>>) -> Self {
         constraints.into_iter().collect()

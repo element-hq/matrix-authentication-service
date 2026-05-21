@@ -259,7 +259,6 @@ where
         )
 }
 
-#[expect(clippy::trait_duplication_in_bounds)]
 pub fn compat_router<S>(templates: Templates) -> Router<S>
 where
     S: Clone + Send + Sync + 'static,

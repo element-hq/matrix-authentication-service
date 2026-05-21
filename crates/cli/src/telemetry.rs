@@ -191,7 +191,6 @@ fn stdout_metric_reader() -> PeriodicReader<opentelemetry_stdout::MetricExporter
 type PromServiceFuture =
     std::future::Ready<Result<Response<Full<Bytes>>, std::convert::Infallible>>;
 
-#[expect(clippy::needless_pass_by_value)]
 fn prometheus_service_fn<T>(_req: T) -> PromServiceFuture {
     let response = if let Some(exporter) = PROMETHEUS_EXPORTER.get() {
         // We'll need some space for this, so we preallocate a bit

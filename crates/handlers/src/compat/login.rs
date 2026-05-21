@@ -2518,7 +2518,6 @@ mod tests {
         };
 
         // Keep logging in to add more sessions, up to the `hard_limit`.
-        #[expect(clippy::range_plus_one)]
         for _ in 0..session_limit_config.hard_limit.get() {
             let device_id = do_login().await;
             login_device_ids.push(device_id);

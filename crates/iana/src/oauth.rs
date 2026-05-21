@@ -83,7 +83,6 @@ impl schemars::JsonSchema for OAuthAccessTokenType {
         std::borrow::Cow::Borrowed("OAuthAccessTokenType")
     }
 
-    #[expect(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
@@ -199,7 +198,6 @@ impl schemars::JsonSchema for OAuthAuthorizationEndpointResponseType {
         std::borrow::Cow::Borrowed("OAuthAuthorizationEndpointResponseType")
     }
 
-    #[expect(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
@@ -311,7 +309,6 @@ impl schemars::JsonSchema for OAuthTokenTypeHint {
         std::borrow::Cow::Borrowed("OAuthTokenTypeHint")
     }
 
-    #[expect(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
@@ -423,7 +420,6 @@ impl schemars::JsonSchema for OAuthClientAuthenticationMethod {
         std::borrow::Cow::Borrowed("OAuthClientAuthenticationMethod")
     }
 
-    #[expect(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
@@ -526,7 +522,6 @@ impl schemars::JsonSchema for PkceCodeChallengeMethod {
         std::borrow::Cow::Borrowed("PkceCodeChallengeMethod")
     }
 
-    #[expect(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---

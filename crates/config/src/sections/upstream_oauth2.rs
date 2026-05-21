@@ -450,12 +450,10 @@ fn is_default_true(value: &bool) -> bool {
     *value
 }
 
-#[expect(clippy::ref_option)]
 fn is_signed_response_alg_default(signed_response_alg: &JsonWebSignatureAlg) -> bool {
     *signed_response_alg == signed_response_alg_default()
 }
 
-#[expect(clippy::unnecessary_wraps)]
 fn signed_response_alg_default() -> JsonWebSignatureAlg {
     JsonWebSignatureAlg::Rs256
 }
