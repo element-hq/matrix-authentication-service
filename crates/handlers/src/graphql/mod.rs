@@ -26,7 +26,8 @@ use futures_util::TryStreamExt;
 use headers::{Authorization, ContentType, HeaderValue, authorization::Bearer};
 use hyper::header::CACHE_CONTROL;
 use mas_axum_utils::{
-    InternalError, SessionInfo, SessionInfoExt, cookies::CookieJar, sentry::SentryEventID,
+    InternalError, RecordAsRequester, SessionInfo, SessionInfoExt, cookies::CookieJar,
+    sentry::SentryEventID,
 };
 use mas_data_model::{
     BoxClock, BoxRng, BrowserSession, Clock, Session, SiteConfig, SystemClock, User,
@@ -281,6 +282,10 @@ async fn get_requester(
 
         if !session.scope.contains("urn:mas:graphql:*") {
             return Err(RouteError::MissingScope);
+        }
+
+        if let Some(user) = &user {
+            user.maybe_record_as_requester();
         }
 
         RequestingEntity::OAuth2Session(Box::new((session, user)))

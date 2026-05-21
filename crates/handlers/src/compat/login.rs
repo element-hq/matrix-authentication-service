@@ -13,7 +13,7 @@ use axum::{Json, extract::State, response::IntoResponse};
 use axum_extra::typed_header::TypedHeader;
 use chrono::Duration;
 use hyper::StatusCode;
-use mas_axum_utils::record_error;
+use mas_axum_utils::{RecordAsRequester, record_error};
 use mas_data_model::{
     BoxClock, BoxRng, Clock, CompatSession, CompatSsoLoginState, Device, SessionLimitConfig,
     SiteConfig, TokenType, User,
@@ -404,6 +404,8 @@ pub(crate) async fn post(
             .record_user_agent(session, user_agent)
             .await?;
     }
+
+    user.maybe_record_as_requester();
 
     let user_id = homeserver.mxid(&user.username);
 
