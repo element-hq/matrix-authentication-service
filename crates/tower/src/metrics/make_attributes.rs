@@ -139,8 +139,8 @@ macro_rules! impl_for_tuple {
             // Lint-ignore for the `#[allow(...)]` usage below
             #[expect(clippy::allow_attributes)]
             fn attributes<'a>(&'a self, t: &'a T) -> Self::Iter<'a> {
-                // This has to be a an `#[allow(...)]` as it doesn't get fulfilled here but is
-                // relevant when the macro expansion occurs.
+                // This has to be an `#[allow(...)]` (vs `#[expect(...)]`) as it doesn't
+                // get fulfilled here but is relevant when the macro expansion occurs.
                 #[allow(non_snake_case)]
                 let (head, $($rest,)*) = self;
                 head.attributes(t)
