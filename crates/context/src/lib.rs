@@ -11,7 +11,7 @@ mod service;
 use std::{
     borrow::Cow,
     sync::{
-        Arc,
+        Arc, OnceLock,
         atomic::{AtomicU64, Ordering},
     },
     time::Duration,
@@ -19,6 +19,7 @@ use std::{
 
 use quanta::Instant;
 use tokio::task_local;
+use ulid::Ulid;
 
 pub use self::{
     fmt::EventFormatter,
@@ -26,6 +27,51 @@ pub use self::{
     layer::LogContextLayer,
     service::LogContextService,
 };
+
+/// An identified principal making a request, recorded on the [`LogContext`].
+///
+/// Modeled as an enum so future variants (e.g. an `OAuth2` client acting on its
+/// own behalf via `client_credentials`) can be added without churning all call
+/// sites.
+#[derive(Clone, Debug)]
+pub enum Requester {
+    /// A user, identified by their Ulid and (when known) their username.
+    User {
+        id: Ulid,
+        /// Sometimes only the `user_id` is known at auth-resolution time (e.g.
+        /// `OAuth2` bearer flows that don't load the `User` row).
+        username: Option<String>,
+    },
+}
+
+impl Requester {
+    /// Build a `User` requester with both an id and a known username.
+    #[must_use]
+    pub fn user(id: Ulid, username: impl Into<String>) -> Self {
+        Self::User {
+            id,
+            username: Some(username.into()),
+        }
+    }
+
+    /// Build a `User` requester from a `user_id` alone (username unknown).
+    #[must_use]
+    pub fn user_id_only(id: Ulid) -> Self {
+        Self::User { id, username: None }
+    }
+}
+
+impl std::fmt::Display for Requester {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::User {
+                id,
+                username: Some(name),
+            } => write!(f, "user:{id}({name})"),
+            Self::User { id, username: None } => write!(f, "user:{id}"),
+        }
+    }
+}
 
 /// A counter which increments each time we create a new log context
 /// It will wrap around if we create more than [`u64::MAX`] contexts
@@ -57,6 +103,10 @@ struct LogContextInner {
     /// An approximation of the total CPU time spent in the context, in
     /// nanoseconds
     cpu_time: AtomicU64,
+
+    /// The identified principal making the request, if it has been resolved.
+    /// Set once per context, first writer wins.
+    requester: OnceLock<Requester>,
 }
 
 impl LogContext {
@@ -69,6 +119,7 @@ impl LogContext {
             start: Instant::now(),
             polls: AtomicU64::new(0),
             cpu_time: AtomicU64::new(0),
+            requester: OnceLock::new(),
         };
 
         Self {
@@ -99,6 +150,24 @@ impl LogContext {
         let elapsed = start.elapsed().as_nanos().try_into().unwrap_or(u64::MAX);
         self.inner.cpu_time.fetch_add(elapsed, Ordering::Relaxed);
         result
+    }
+
+    /// Associate a [`Requester`] with this log context. Silently does nothing
+    /// if a requester has already been recorded (first writer wins).
+    pub fn set_requester(&self, requester: Requester) {
+        let _ = self.inner.requester.set(requester);
+    }
+
+    /// Get the [`Requester`] associated with this log context, if one was set.
+    #[must_use]
+    pub fn requester(&self) -> Option<&Requester> {
+        self.inner.requester.get()
+    }
+
+    /// Convenience: set the [`Requester`] on the current task-local
+    /// `LogContext`, if one exists. No-op outside of a `LogContext` scope.
+    pub fn maybe_set_requester(requester: Requester) {
+        Self::maybe_with(|ctx| ctx.set_requester(requester));
     }
 
     /// Create a snapshot of the log context statistics
