@@ -44,6 +44,7 @@ pub struct SessionExpirationConfig {
 pub struct SessionLimitConfig {
     pub soft_limit: NonZeroU64,
     pub hard_limit: NonZeroU64,
+    pub max_session_threshold: Option<NonZeroU64>,
     pub dangerous_hard_limit_eviction: bool,
 }
 

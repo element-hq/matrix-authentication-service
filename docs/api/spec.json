@@ -6301,6 +6301,20 @@
             "description": "Skip checking with the homeserver whether the username is available.\n\n Use this with caution! The main reason to use this, is when a user used\n by an application service needs to exist in MAS to craft special\n tokens (like with admin access) for them",
             "type": "boolean",
             "default": false
+          },
+          "displayname": {
+            "description": "The displayname of the user to add.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "avatar_url": {
+            "description": "The avatar URL of the user to add.",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
