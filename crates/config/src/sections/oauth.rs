@@ -12,7 +12,7 @@ const fn default_true() -> bool {
     true
 }
 
-#[allow(clippy::trivially_copy_pass_by_ref)]
+#[expect(clippy::trivially_copy_pass_by_ref)]
 const fn is_default_true(value: &bool) -> bool {
     *value == default_true()
 }

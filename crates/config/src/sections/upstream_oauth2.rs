@@ -216,7 +216,7 @@ pub enum ImportAction {
 }
 
 impl ImportAction {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
+    #[expect(clippy::trivially_copy_pass_by_ref)]
     const fn is_default(&self) -> bool {
         matches!(self, ImportAction::Ignore)
     }
@@ -243,7 +243,7 @@ pub enum OnConflict {
 }
 
 impl OnConflict {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
+    #[expect(clippy::trivially_copy_pass_by_ref)]
     const fn is_default(&self) -> bool {
         matches!(self, OnConflict::Fail)
     }
@@ -410,7 +410,7 @@ pub enum DiscoveryMode {
 }
 
 impl DiscoveryMode {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
+    #[expect(clippy::trivially_copy_pass_by_ref)]
     const fn is_default(&self) -> bool {
         matches!(self, DiscoveryMode::Oidc)
     }
@@ -435,7 +435,7 @@ pub enum PkceMethod {
 }
 
 impl PkceMethod {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
+    #[expect(clippy::trivially_copy_pass_by_ref)]
     const fn is_default(&self) -> bool {
         matches!(self, PkceMethod::Auto)
     }
@@ -445,17 +445,17 @@ fn default_true() -> bool {
     true
 }
 
-#[allow(clippy::trivially_copy_pass_by_ref)]
+#[expect(clippy::trivially_copy_pass_by_ref)]
 fn is_default_true(value: &bool) -> bool {
     *value
 }
 
-#[allow(clippy::ref_option)]
+#[expect(clippy::ref_option)]
 fn is_signed_response_alg_default(signed_response_alg: &JsonWebSignatureAlg) -> bool {
     *signed_response_alg == signed_response_alg_default()
 }
 
-#[allow(clippy::unnecessary_wraps)]
+#[expect(clippy::unnecessary_wraps)]
 fn signed_response_alg_default() -> JsonWebSignatureAlg {
     JsonWebSignatureAlg::Rs256
 }
@@ -503,7 +503,7 @@ pub enum OnBackchannelLogout {
 }
 
 impl OnBackchannelLogout {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
+    #[expect(clippy::trivially_copy_pass_by_ref)]
     const fn is_default(&self) -> bool {
         matches!(self, OnBackchannelLogout::DoNothing)
     }

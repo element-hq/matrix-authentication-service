@@ -26,7 +26,7 @@ pub enum SessionLoadError {
     Repository(#[from] RepositoryError),
 }
 
-#[allow(clippy::large_enum_variant)]
+#[expect(clippy::large_enum_variant)]
 pub enum SessionOrFallback {
     MaybeSession {
         cookie_jar: CookieJar,

@@ -47,7 +47,7 @@ fn default_email() -> String {
     r#""Authentication Service" <root@localhost>"#.to_owned()
 }
 
-#[allow(clippy::unnecessary_wraps)]
+#[expect(clippy::unnecessary_wraps)]
 fn default_sendmail_command() -> Option<String> {
     Some("sendmail".to_owned())
 }

@@ -147,7 +147,7 @@ impl<'a> LazyProviderInfos<'a> {
 /// It never evicts entries, does not cache failures and has no locking.
 /// It can also be refreshed in the background, and warmed up on startup.
 /// It is good enough for our use case.
-#[allow(clippy::module_name_repetitions)]
+#[expect(clippy::module_name_repetitions)]
 #[derive(Debug, Clone, Default)]
 pub struct MetadataCache {
     cache: Arc<RwLock<HashMap<String, Arc<VerifiedProviderMetadata>>>>,

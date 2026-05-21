@@ -32,7 +32,7 @@ use crate::{
     },
 };
 
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 #[derive(Parser, Debug, Default)]
 pub(super) struct Options {
     /// Do not apply pending database migrations on start

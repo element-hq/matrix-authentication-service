@@ -137,7 +137,7 @@ macro_rules! impl_for_tuple {
         {
             type Iter<'a> = chain_for!($first $(, $rest)*);
             fn attributes<'a>(&'a self, t: &'a T) -> Self::Iter<'a> {
-                #[allow(non_snake_case)]
+                #[expect(non_snake_case)]
                 let (head, $($rest,)*) = self;
                 head.attributes(t)
                     $(.chain($rest.attributes(t)))*

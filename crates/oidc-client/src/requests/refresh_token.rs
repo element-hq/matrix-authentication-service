@@ -64,7 +64,7 @@ use crate::{
 ///
 /// Returns an error if the request fails, the response is invalid or the
 /// verification of the ID Token fails.
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 #[tracing::instrument(skip_all, fields(token_endpoint))]
 pub async fn refresh_access_token(
     http_client: &reqwest::Client,

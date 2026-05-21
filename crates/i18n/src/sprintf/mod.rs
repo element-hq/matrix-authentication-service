@@ -63,16 +63,16 @@ macro_rules! sprintf {
     }};
 }
 
-#[allow(unused_imports)]
+#[expect(unused_imports)]
 pub(crate) use arg_list;
-#[allow(unused_imports)]
+#[expect(unused_imports)]
 pub(crate) use arg_list_inner;
-#[allow(unused_imports)]
+#[expect(unused_imports)]
 pub(crate) use sprintf;
 
 #[derive(Debug, thiserror::Error)]
 #[error(transparent)]
-#[allow(dead_code)]
+#[expect(dead_code)]
 enum Error {
     Format(#[from] self::formatter::FormatError),
     Parse(Box<self::parser::Error>),
