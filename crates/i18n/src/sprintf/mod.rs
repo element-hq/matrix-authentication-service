@@ -63,21 +63,20 @@ macro_rules! sprintf {
     }};
 }
 
-#[expect(unused_imports)]
+#[cfg(test)]
 pub(crate) use arg_list;
-#[expect(unused_imports)]
+#[cfg(test)]
 pub(crate) use arg_list_inner;
-#[expect(unused_imports)]
-pub(crate) use sprintf;
 
 #[derive(Debug, thiserror::Error)]
 #[error(transparent)]
-#[expect(dead_code)]
+#[cfg(test)]
 enum Error {
     Format(#[from] self::formatter::FormatError),
     Parse(Box<self::parser::Error>),
 }
 
+#[cfg(test)]
 impl From<self::parser::Error> for Error {
     fn from(err: self::parser::Error) -> Self {
         Self::Parse(Box::new(err))
