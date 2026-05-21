@@ -24,6 +24,8 @@ use mas_storage::{
 use serde::{Deserialize, de::DeserializeOwned};
 use thiserror::Error;
 
+use crate::log_context::RecordAsRequester;
+
 #[derive(Debug, Deserialize)]
 struct AuthorizedForm<F> {
     #[serde(default)]
@@ -61,6 +63,8 @@ impl AccessToken {
             .lookup(token.session_id)
             .await?
             .ok_or(AuthorizationVerificationError::InvalidToken)?;
+
+        session.maybe_record_as_requester();
 
         Ok((token, session))
     }

@@ -15,7 +15,7 @@ use axum::{
 use axum_extra::TypedHeader;
 use headers::{Authorization, authorization::Bearer};
 use hyper::StatusCode;
-use mas_axum_utils::record_error;
+use mas_axum_utils::{RecordAsRequester, record_error};
 use mas_data_model::{
     BoxClock, Session, TokenFormatError, TokenType, User,
     personal::session::{PersonalSession, PersonalSessionOwner},
@@ -272,6 +272,8 @@ where
                     }
                 }
             }
+
+            user.maybe_record_as_requester();
 
             Some(user)
         } else {
