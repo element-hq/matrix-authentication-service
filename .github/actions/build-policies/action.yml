@@ -10,7 +10,7 @@ runs:
   using: composite
   steps:
     - name: Install Open Policy Agent
-      uses: open-policy-agent/setup-opa@v2.2.0
+      uses: open-policy-agent/setup-opa@34a30e8a924d1b03ce2cf7abe97250bbb1f332b5 # v2.2.0
       with:
         # Keep in sync with the Dockerfile and policies/Makefile
         version: 1.13.1

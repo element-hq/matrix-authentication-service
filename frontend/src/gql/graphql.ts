@@ -1078,6 +1078,14 @@ export type ResendRecoveryEmailStatus =
 /** A client session, either compat or OAuth 2.0 */
 export type Session = CompatSession | Oauth2Session;
 
+/** See [`mas_config::ExperimentalSessionLimitConfig`] */
+export type SessionLimitConfig = {
+  __typename?: 'SessionLimitConfig';
+  dangerousHardLimitEviction: Scalars['Boolean']['output'];
+  hardLimit: Scalars['Int']['output'];
+  softLimit: Scalars['Int']['output'];
+};
+
 /** The state of a session */
 export type SessionState =
   /** The session is active. */
@@ -1302,6 +1310,8 @@ export type SiteConfig = Node & {
   policyUri?: Maybe<Scalars['Url']['output']>;
   /** The server name of the homeserver. */
   serverName: Scalars['String']['output'];
+  /** Limits on the number of application sessions that each user can have */
+  sessionLimit?: Maybe<SessionLimitConfig>;
   /** The URL to the terms of service. */
   tosUri?: Maybe<Scalars['Url']['output']>;
 };
@@ -1850,7 +1860,7 @@ export type UserEmailList_UserFragment = { __typename?: 'User', hasPassword: boo
 
 export type UserEmailList_SiteConfigFragment = { __typename?: 'SiteConfig', emailChangeAllowed: boolean, passwordLoginEnabled: boolean } & { ' $fragmentName'?: 'UserEmailList_SiteConfigFragment' };
 
-export type BrowserSessionsOverview_UserFragment = { __typename?: 'User', id: string, browserSessions: { __typename?: 'BrowserSessionConnection', totalCount: number } } & { ' $fragmentName'?: 'BrowserSessionsOverview_UserFragment' };
+export type BrowserSessionsOverview_UserFragment = { __typename?: 'User', browserSessions: { __typename?: 'BrowserSessionConnection', totalCount: number } } & { ' $fragmentName'?: 'BrowserSessionsOverview_UserFragment' };
 
 export type UserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1896,10 +1906,10 @@ export type SessionsOverviewQueryVariables = Exact<{ [key: string]: never; }>;
 export type SessionsOverviewQuery = { __typename?: 'Query', viewer:
     | { __typename: 'Anonymous' }
     | (
-      { __typename: 'User', id: string }
+      { __typename: 'User', id: string, unfilteredAppSessions: { __typename?: 'AppSessionConnection', totalCount: number } }
       & { ' $fragmentRefs'?: { 'BrowserSessionsOverview_UserFragment': BrowserSessionsOverview_UserFragment } }
     )
-   };
+  , siteConfig: { __typename?: 'SiteConfig', sessionLimit?: { __typename?: 'SessionLimitConfig', softLimit: number } | null } };
 
 export type AppSessionsListQueryVariables = Exact<{
   before?: InputMaybe<Scalars['String']['input']>;
@@ -1930,11 +1940,11 @@ export type CurrentUserGreetingQueryVariables = Exact<{ [key: string]: never; }>
 export type CurrentUserGreetingQuery = { __typename?: 'Query', viewer:
     | { __typename: 'Anonymous' }
     | (
-      { __typename: 'User' }
+      { __typename: 'User', unfilteredAppSessions: { __typename?: 'AppSessionConnection', totalCount: number } }
       & { ' $fragmentRefs'?: { 'UserGreeting_UserFragment': UserGreeting_UserFragment } }
     )
   , siteConfig: (
-    { __typename?: 'SiteConfig', planManagementIframeUri?: string | null }
+    { __typename?: 'SiteConfig', planManagementIframeUri?: string | null, sessionLimit?: { __typename?: 'SessionLimitConfig', softLimit: number } | null }
     & { ' $fragmentRefs'?: { 'UserGreeting_SiteConfigFragment': UserGreeting_SiteConfigFragment } }
   ) };
 
@@ -2429,7 +2439,6 @@ export const UserEmailList_SiteConfigFragmentDoc = new TypedDocumentString(`
     `, {"fragmentName":"UserEmailList_siteConfig"}) as unknown as TypedDocumentString<UserEmailList_SiteConfigFragment, unknown>;
 export const BrowserSessionsOverview_UserFragmentDoc = new TypedDocumentString(`
     fragment BrowserSessionsOverview_user on User {
-  id
   browserSessions(first: 0, state: ACTIVE) {
     totalCount
   }
@@ -2705,11 +2714,18 @@ export const SessionsOverviewDocument = new TypedDocumentString(`
     ... on User {
       id
       ...BrowserSessionsOverview_user
+      unfilteredAppSessions: appSessions(first: 1, state: ACTIVE) {
+        totalCount
+      }
+    }
+  }
+  siteConfig {
+    sessionLimit {
+      softLimit
     }
   }
 }
     fragment BrowserSessionsOverview_user on User {
-  id
   browserSessions(first: 0, state: ACTIVE) {
     totalCount
   }
@@ -2824,11 +2840,17 @@ export const CurrentUserGreetingDocument = new TypedDocumentString(`
     __typename
     ... on User {
       ...UserGreeting_user
+      unfilteredAppSessions: appSessions(first: 1, state: ACTIVE) {
+        totalCount
+      }
     }
   }
   siteConfig {
     ...UserGreeting_siteConfig
     planManagementIframeUri
+    sessionLimit {
+      softLimit
+    }
   }
 }
     fragment UserGreeting_user on User {
@@ -3398,7 +3420,7 @@ export const mockBrowserSessionListQuery = (resolver: GraphQLResponseResolver<Br
  * mockSessionsOverviewQuery(
  *   ({ query, variables }) => {
  *     return HttpResponse.json({
- *       data: { viewer }
+ *       data: { viewer, siteConfig }
  *     })
  *   },
  *   requestOptions

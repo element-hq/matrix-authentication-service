@@ -27,9 +27,12 @@ env:
   CARGO_NET_GIT_FETCH_WITH_CLI: "true"
   SCCACHE_GHA_ENABLED: "true"
   RUSTC_WRAPPER: "sccache"
-  IMAGE: ghcr.io/element-hq/matrix-authentication-service
   BUILDCACHE: ghcr.io/element-hq/matrix-authentication-service/buildcache
-  DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+  # metadata-action defaults to `manifest`, which `docker buildx imagetools
+  # create --annotation` refuses with "manifest annotations are not supported
+  # yet". We only want annotations on the manifest list anyway, so narrow it
+  # to `index`.
+  DOCKER_METADATA_ANNOTATIONS_LEVELS: index
 
 jobs:
   compute-version:
@@ -46,10 +49,11 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           # Need a full clone so that `git describe` reports the right version
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Compute version and timestamp out of git history
         id: git
@@ -67,7 +71,9 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/build-frontend
       - uses: ./.github/actions/build-policies
@@ -84,7 +90,7 @@ jobs:
           chmod -R u=rwX,go=rX assets-dist/
 
       - name: Upload assets
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: assets
           path: assets-dist
@@ -112,24 +118,26 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: |
-            ${{ matrix.target }}
+        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup target add ${{ matrix.target }}
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.9
+        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
 
       - name: Install zig
-        uses: goto-bus-stop/setup-zig@v2
+        uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2
         with:
           version: 0.13.0
 
       - name: Install cargo-zigbuild
-        uses: taiki-e/install-action@v2
+        uses: taiki-e/install-action@7ea35f098a7369cd23488403f58be9c491a6c55f # v2
         with:
           tool: cargo-zigbuild
 
@@ -143,7 +151,7 @@ jobs:
             -p mas-cli
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: binary-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/mas-cli
@@ -162,19 +170,19 @@ jobs:
 
     steps:
       - name: Download assets
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: assets
           path: assets-dist
 
       - name: Download binary x86_64
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: binary-x86_64-unknown-linux-gnu
           path: binary-x86_64
 
       - name: Download binary aarch64
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: binary-aarch64-unknown-linux-gnu
           path: binary-aarch64
@@ -192,43 +200,41 @@ jobs:
           done
 
       - name: Upload aarch64 archive
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: mas-cli-aarch64-linux
           path: mas-cli-aarch64-linux.tar.gz
 
       - name: Upload x86_64 archive
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: mas-cli-x86_64-linux
           path: mas-cli-x86_64-linux.tar.gz
 
-  build-image:
-    name: Build and push Docker image
+  compute-image-meta:
+    name: Compute Docker image metadata
     if: github.event_name == 'push' || github.event.label.name == 'Z-Build-Workflow'
     runs-on: ubuntu-24.04
 
-    outputs:
-      metadata: ${{ steps.output.outputs.metadata }}
-
     permissions:
       contents: read
-      packages: write
-      id-token: write
 
-    needs:
-      - compute-version
-
-    env:
-      VERGEN_GIT_DESCRIBE: ${{ needs.compute-version.outputs.describe }}
-      SOURCE_DATE_EPOCH: ${{ needs.compute-version.outputs.timestamp }}
+    outputs:
+      regular-tags: ${{ steps.meta.outputs.tags }}
+      regular-annotations: ${{ steps.meta.outputs.annotations }}
+      debug-tags: ${{ steps.meta-debug.outputs.tags }}
+      debug-annotations: ${{ steps.meta-debug.outputs.annotations }}
 
     steps:
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v6.0.0
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
         with:
-          images: "${{ env.IMAGE }}"
+          # The oci-push registry login requires Tailscale + Vault, which only
+          # works for `push` events (PR-labelled runs lack the right OIDC token).
+          images: |
+            ghcr.io/element-hq/matrix-authentication-service
+            ${{ github.event_name == 'push' && 'oci-push.vpn.infra.element.io/matrix-authentication-service' || '' }}
           bake-target: docker-metadata-action
           flavor: |
             latest=auto
@@ -239,12 +245,23 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=sha
+          # GitHub's license detection (via Licensee) can only report a single
+          # SPDX identifier and still emits the legacy `AGPL-3.0` form, which
+          # `metadata-action` would otherwise propagate as-is. Override it with
+          # the project's actual dual-license SPDX expression so the image
+          # advertises both halves of the dual licensing.
+          labels: |
+            org.opencontainers.image.licenses=AGPL-3.0-only OR LicenseRef-Element-Commercial
+          annotations: |
+            org.opencontainers.image.licenses=AGPL-3.0-only OR LicenseRef-Element-Commercial
 
       - name: Docker meta (debug variant)
         id: meta-debug
-        uses: docker/metadata-action@v6.0.0
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
         with:
-          images: "${{ env.IMAGE }}"
+          images: |
+            ghcr.io/element-hq/matrix-authentication-service
+            ${{ github.event_name == 'push' && 'oci-push.vpn.infra.element.io/matrix-authentication-service' || '' }}
           bake-target: docker-metadata-action-debug
           flavor: |
             latest=auto
@@ -256,45 +273,289 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=sha
+          labels: |
+            org.opencontainers.image.licenses=AGPL-3.0-only OR LicenseRef-Element-Commercial
+          annotations: |
+            org.opencontainers.image.licenses=AGPL-3.0-only OR LicenseRef-Element-Commercial
 
-      - name: Setup Cosign
-        uses: sigstore/cosign-installer@v4.1.1
+      # Stage the labels bake files under predictable names (the metadata-action
+      # writes them under a random temp dir with the same base name) and ship
+      # them to `build-image` as an artifact. We deliberately only pass through
+      # `bake-file-labels` (not `bake-file-annotations`): the per-arch images
+      # then carry the same config labels as today, while annotations are only
+      # applied at the index level in `finalize-image` — matching `:latest`'s
+      # shape and sidestepping `metadata-action`'s empty-value annotations
+      # which would otherwise trip `docker buildx imagetools create`.
+      - name: Stage bake files
+        env:
+          REGULAR_FILE: ${{ steps.meta.outputs.bake-file-labels }}
+          DEBUG_FILE: ${{ steps.meta-debug.outputs.bake-file-labels }}
+        run: |
+          mkdir -p /tmp/bake
+          cp "$REGULAR_FILE" /tmp/bake/regular.json
+          cp "$DEBUG_FILE" /tmp/bake/debug.json
 
+      - name: Upload bake files
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: bake-files
+          path: /tmp/bake/
+          retention-days: 1
+
+  build-image:
+    name: Build Docker image (${{ matrix.arch }})
+    if: github.event_name == 'push' || github.event.label.name == 'Z-Build-Workflow'
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    needs:
+      - compute-version
+      - compute-image-meta
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+
+    env:
+      VERGEN_GIT_DESCRIBE: ${{ needs.compute-version.outputs.describe }}
+      SOURCE_DATE_EPOCH: ${{ needs.compute-version.outputs.timestamp }}
+      # Comma-separated list of registries to push each per-arch image to.
+      # The oci-push registry is only included on `push` events because the
+      # Tailscale + Vault login below requires the right OIDC token.
+      IMAGES: ghcr.io/element-hq/matrix-authentication-service${{ github.event_name == 'push' && ',oci-push.vpn.infra.element.io/matrix-authentication-service' || '' }}
+
+    steps:
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4.0.0
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
         with:
           buildkitd-config-inline: |
             [registry."docker.io"]
               mirrors = ["mirror.gcr.io"]
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v4.1.0
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      # The Element OCI Registry is only reachable via Tailscale, and the Vault
+      # JWT exchange relies on a GitHub OIDC token issued from a `push` event.
+      # PR-labelled builds (`Z-Build-Workflow`) skip this and push only to ghcr.
+      - name: Tailscale
+        if: github.event_name == 'push'
+        uses: tailscale/github-action@53acf823325fe9ca47f4cdaa951f90b4b0de5bb9 # v4.1.1
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:github-actions
+
+      - name: Compute vault jwt role name
+        id: vault-jwt-role
+        if: github.event_name == 'push'
+        run: |
+          echo "role_name=github_service_management_$( echo "${{ github.repository }}" | sed -r 's|[/-]|_|g')" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Get team registry token
+        id: import-secrets
+        if: github.event_name == 'push'
+        uses: hashicorp/vault-action@4c06c5ccf5c0761b6029f56cfb1dcf5565918a3b # v3.4.0
+        with:
+          url: https://vault.infra.ci.i.element.dev
+          role: ${{ steps.vault-jwt-role.outputs.role_name }}
+          path: service-management/github-actions
+          jwtGithubAudience: https://vault.infra.ci.i.element.dev
+          method: jwt
+          secrets: |
+            services/backend-repositories/secret/data/oci.element.io username | OCI_USERNAME ;
+            services/backend-repositories/secret/data/oci.element.io password | OCI_PASSWORD ;
+
+      - name: Login to Element OCI Registry
+        if: github.event_name == 'push'
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: oci-push.vpn.infra.element.io
+          username: ${{ steps.import-secrets.outputs.OCI_USERNAME }}
+          password: ${{ steps.import-secrets.outputs.OCI_PASSWORD }}
+
+      - name: Download bake files
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: bake-files
+          path: /tmp/bake
+
+      - name: Build and push by digest
         id: bake
-        uses: docker/bake-action@v7.1.0
+        uses: docker/bake-action@a66e1c87e2eca0503c343edf1d208c716d54b8a8 # v7.1.0
+        env:
+          # By default, docker bake will add provenance information to the
+          # metadata output. This makes the output larger and may exceed the
+          # shell ARG_MAX limit. Disabling through this environment variable
+          # disables provenance in the metadata while still attaching provenance
+          # attestations to the image we push.
+          # https://github.com/docker/bake-action/issues/239#issuecomment-3828170326
+          BUILDX_METADATA_PROVENANCE: disabled
         with:
           files: |
             ./docker-bake.hcl
-            cwd://${{ steps.meta.outputs.bake-file }}
-            cwd://${{ steps.meta-debug.outputs.bake-file }}
+            cwd:///tmp/bake/regular.json
+            cwd:///tmp/bake/debug.json
           set: |
-            base.output=type=image,push=true
-            base.cache-from=type=registry,ref=${{ env.BUILDCACHE }}:buildcache
-            base.cache-to=type=registry,ref=${{ env.BUILDCACHE }}:buildcache,mode=max
+            *.platform=linux/${{ matrix.arch }}
+            *.output=type=image,"name=${{ env.IMAGES }}",push-by-digest=true,name-canonical=true,push=true
+            *.cache-from=type=registry,ref=${{ env.BUILDCACHE }}:buildcache-${{ matrix.arch }}
+            *.cache-to=type=registry,ref=${{ env.BUILDCACHE }}:buildcache-${{ matrix.arch }},mode=max
 
-      - name: Transform bake output
-        # This transforms the ouput to an object which looks like this:
-        # { reguar: { digest: "…", tags: ["…", "…"] }, debug: { digest: "…", tags: ["…"] }, … }
-        id: output
+      # We use github-script rather than shelling out to jq because the bake
+      # metadata can exceed the shell ARG_MAX limit when inherited as an env
+      # var by an exec'd jq.
+      - name: Export digests
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          STEPS_BAKE_OUTPUTS_METADATA: ${{ steps.bake.outputs.metadata }}
+          ARCH: ${{ matrix.arch }}
+        with:
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const bakeOutput = JSON.parse(process.env.STEPS_BAKE_OUTPUTS_METADATA);
+            const arch = process.env.ARCH;
+            fs.mkdirSync('/tmp/digests', { recursive: true });
+            for (const target of ['regular', 'debug']) {
+              const digest = bakeOutput[target]?.['containerimage.digest'];
+              if (!digest) {
+                throw new Error(`Missing containerimage.digest for target ${target}`);
+              }
+              fs.writeFileSync(path.join('/tmp/digests', `${target}-${arch}`), digest);
+            }
+
+      - name: Upload digests
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: digests-${{ matrix.arch }}
+          path: /tmp/digests/*
+          retention-days: 1
+
+  finalize-image:
+    name: Create multi-arch manifests
+    if: github.event_name == 'push' || github.event.label.name == 'Z-Build-Workflow'
+    runs-on: ubuntu-24.04
+
+    needs:
+      - build-image
+      - compute-image-meta
+
+    outputs:
+      metadata: ${{ steps.output.outputs.metadata }}
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: digests-*
+          path: /tmp/digests
+          # Collect digests from both amd64 and arm64 builds
+          merge-multiple: true
+
+      - name: Setup Cosign
+        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # See `build-image` for why the Element OCI Registry login is gated on
+      # `push` events.
+      - name: Tailscale
+        if: github.event_name == 'push'
+        uses: tailscale/github-action@53acf823325fe9ca47f4cdaa951f90b4b0de5bb9 # v4.1.1
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:github-actions
+
+      - name: Compute vault jwt role name
+        id: vault-jwt-role
+        if: github.event_name == 'push'
         run: |
-          echo 'metadata<<EOF' >> $GITHUB_OUTPUT
-          echo '${{ steps.bake.outputs.metadata }}' | jq -c 'with_entries(select(.value | (type == "object" and has("containerimage.digest")))) | map_values({ digest: .["containerimage.digest"], tags: (.["image.name"] | split(",")) })' >> $GITHUB_OUTPUT
-          echo 'EOF' >> $GITHUB_OUTPUT
+          echo "role_name=github_service_management_$( echo "${{ github.repository }}" | sed -r 's|[/-]|_|g')" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Get team registry token
+        id: import-secrets
+        if: github.event_name == 'push'
+        uses: hashicorp/vault-action@4c06c5ccf5c0761b6029f56cfb1dcf5565918a3b # v3.4.0
+        with:
+          url: https://vault.infra.ci.i.element.dev
+          role: ${{ steps.vault-jwt-role.outputs.role_name }}
+          path: service-management/github-actions
+          jwtGithubAudience: https://vault.infra.ci.i.element.dev
+          method: jwt
+          secrets: |
+            services/backend-repositories/secret/data/oci.element.io username | OCI_USERNAME ;
+            services/backend-repositories/secret/data/oci.element.io password | OCI_PASSWORD ;
+
+      - name: Login to Element OCI Registry
+        if: github.event_name == 'push'
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: oci-push.vpn.infra.element.io
+          username: ${{ steps.import-secrets.outputs.OCI_USERNAME }}
+          password: ${{ steps.import-secrets.outputs.OCI_PASSWORD }}
+
+      - name: Create regular manifest
+        id: regular
+        env:
+          TAGS: ${{ needs.compute-image-meta.outputs.regular-tags }}
+          ANNOTATIONS: ${{ needs.compute-image-meta.outputs.regular-annotations }}
+        run: |
+          # Construct the `imagetools create` command line from the tag and annotation inputs.
+          args=()
+
+          # Add a `-t <tag>` argument for each non-empty tag.
+          while IFS= read -r t; do [[ -n $t ]] && args+=(-t "$t"); done <<< "$TAGS"
+
+          # Add a `--annotation <key>=<value>` argument for each non-empty annotation
+          while IFS= read -r a; do [[ -n $a && $a != *= ]] && args+=(--annotation "$a"); done <<< "$ANNOTATIONS"
+
+          docker buildx imagetools create "${args[@]}" \
+            "ghcr.io/element-hq/matrix-authentication-service@$(cat /tmp/digests/regular-amd64)" \
+            "ghcr.io/element-hq/matrix-authentication-service@$(cat /tmp/digests/regular-arm64)" \
+            --metadata-file regular-metadata.json
+
+          # `imagetools create` wrote the digest to regular-metadata.json
+          echo "digest=$(jq -r '.["containerimage.descriptor"].digest' regular-metadata.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Create debug manifest
+        id: debug
+        env:
+          TAGS: ${{ needs.compute-image-meta.outputs.debug-tags }}
+          ANNOTATIONS: ${{ needs.compute-image-meta.outputs.debug-annotations }}
+        run: |
+          # See comments in regular manifest creation for argument construction.
+          args=()
+          while IFS= read -r t; do [[ -n $t ]] && args+=(-t "$t"); done <<< "$TAGS"
+          while IFS= read -r a; do [[ -n $a && $a != *= ]] && args+=(--annotation "$a"); done <<< "$ANNOTATIONS"
+          docker buildx imagetools create "${args[@]}" \
+            "ghcr.io/element-hq/matrix-authentication-service@$(cat /tmp/digests/debug-amd64)" \
+            "ghcr.io/element-hq/matrix-authentication-service@$(cat /tmp/digests/debug-arm64)" \
+            --metadata-file debug-metadata.json
+          echo "digest=$(jq -r '.["containerimage.descriptor"].digest' debug-metadata.json)" >> "$GITHUB_OUTPUT"
 
       - name: Sign the images with GitHub Actions provided token
         # Only sign on tags and on commits on main branch
@@ -303,13 +564,38 @@ jobs:
           && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
 
         env:
-          REGULAR_DIGEST: ${{ steps.output.outputs.metadata && fromJSON(steps.output.outputs.metadata).regular.digest }}
-          DEBUG_DIGEST: ${{ steps.output.outputs.metadata && fromJSON(steps.output.outputs.metadata).debug.digest }}
+          REGULAR_DIGEST: ${{ steps.regular.outputs.digest }}
+          DEBUG_DIGEST: ${{ steps.debug.outputs.digest }}
 
         run: |-
           cosign sign --yes \
-            "$IMAGE@$REGULAR_DIGEST" \
-            "$IMAGE@$DEBUG_DIGEST" \
+            "ghcr.io/element-hq/matrix-authentication-service@$REGULAR_DIGEST" \
+            "ghcr.io/element-hq/matrix-authentication-service@$DEBUG_DIGEST"
+          cosign sign --yes \
+            "oci-push.vpn.infra.element.io/matrix-authentication-service@$REGULAR_DIGEST" \
+            "oci-push.vpn.infra.element.io/matrix-authentication-service@$DEBUG_DIGEST"
+
+      - name: Output metadata
+        id: output
+        env:
+          REGULAR_DIGEST: ${{ steps.regular.outputs.digest }}
+          DEBUG_DIGEST: ${{ steps.debug.outputs.digest }}
+          REGULAR_TAGS: ${{ needs.compute-image-meta.outputs.regular-tags }}
+          DEBUG_TAGS: ${{ needs.compute-image-meta.outputs.debug-tags }}
+        run: |
+          # Convert the newline-separated tag lists into JSON arrays.
+          regular_tags=$(jq -Rnc '[inputs | select(length > 0)]' <<< "$REGULAR_TAGS")
+          debug_tags=$(jq -Rnc '[inputs | select(length > 0)]' <<< "$DEBUG_TAGS")
+          {
+            echo 'metadata<<EOF'
+            jq -nc \
+              --arg regular_digest "$REGULAR_DIGEST" \
+              --arg debug_digest "$DEBUG_DIGEST" \
+              --argjson regular_tags "$regular_tags" \
+              --argjson debug_tags "$debug_tags" \
+              '{regular: {digest: $regular_digest, tags: $regular_tags}, debug: {digest: $debug_digest, tags: $debug_tags}}'
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
 
   release:
     name: Release
@@ -317,17 +603,18 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - assemble-archives
-      - build-image
+      - finalize-image
+
     steps:
       - name: Download the artifacts from the previous job
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: mas-cli-*
           path: artifacts
           merge-multiple: true
 
       - name: Prepare a release
-        uses: softprops/action-gh-release@v2.6.1
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
           generate_release_notes: true
           body: |
@@ -337,11 +624,12 @@ jobs:
 
               - Digest:
                 ```
-                ${{ env.IMAGE }}@${{ fromJSON(needs.build-image.outputs.metadata).regular.digest }}
+                ghcr.io/element-hq/matrix-authentication-service@${{ fromJSON(needs.finalize-image.outputs.metadata).regular.digest }}
+                oci.element.io/matrix-authentication-service@${{ fromJSON(needs.finalize-image.outputs.metadata).regular.digest }}
                 ```
               - Tags:
                 ```
-                ${{ join(fromJSON(needs.build-image.outputs.metadata).regular.tags, '
+                ${{ join(fromJSON(needs.finalize-image.outputs.metadata).regular.tags, '
                 ') }}
                 ```
 
@@ -349,11 +637,12 @@ jobs:
 
               - Digest:
                 ```
-                ${{ env.IMAGE }}@${{ fromJSON(needs.build-image.outputs.metadata).debug.digest }}
+                ghcr.io/element-hq/matrix-authentication-service@${{ fromJSON(needs.finalize-image.outputs.metadata).debug.digest }}
+                oci.element.io/matrix-authentication-service@${{ fromJSON(needs.finalize-image.outputs.metadata).debug.digest }}
                 ```
               - Tags:
                 ```
-                ${{ join(fromJSON(needs.build-image.outputs.metadata).debug.tags, '
+                ${{ join(fromJSON(needs.finalize-image.outputs.metadata).debug.tags, '
                 ') }}
                 ```
 
@@ -369,34 +658,35 @@ jobs:
 
     needs:
       - assemble-archives
-      - build-image
+      - finalize-image
 
     permissions:
       contents: write
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           sparse-checkout: |
             .github/scripts
+          persist-credentials: false
 
       - name: Download the artifacts from the previous job
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: mas-cli-*
           path: artifacts
           merge-multiple: true
 
       - name: Update unstable git tag
-        uses: actions/github-script@v8.0.0
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const script = require('./.github/scripts/update-unstable-tag.cjs');
             await script({ core, github, context });
 
       - name: Update unstable release
-        uses: softprops/action-gh-release@v2.6.1
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
           name: "Unstable build"
           tag_name: unstable
@@ -414,11 +704,12 @@ jobs:
 
               - Digest:
                 ```
-                ${{ env.IMAGE }}@${{ fromJSON(needs.build-image.outputs.metadata).regular.digest }}
+                ghcr.io/element-hq/matrix-authentication-service@${{ fromJSON(needs.finalize-image.outputs.metadata).regular.digest }}
+                oci.element.io/matrix-authentication-service@${{ fromJSON(needs.finalize-image.outputs.metadata).regular.digest }}
                 ```
               - Tags:
                 ```
-                ${{ join(fromJSON(needs.build-image.outputs.metadata).regular.tags, '
+                ${{ join(fromJSON(needs.finalize-image.outputs.metadata).regular.tags, '
                 ') }}
                 ```
 
@@ -426,11 +717,12 @@ jobs:
 
               - Digest:
                 ```
-                ${{ env.IMAGE }}@${{ fromJSON(needs.build-image.outputs.metadata).debug.digest }}
+                ghcr.io/element-hq/matrix-authentication-service@${{ fromJSON(needs.finalize-image.outputs.metadata).debug.digest }}
+                oci.element.io/matrix-authentication-service@${{ fromJSON(needs.finalize-image.outputs.metadata).debug.digest }}
                 ```
               - Tags:
                 ```
-                ${{ join(fromJSON(needs.build-image.outputs.metadata).debug.tags, '
+                ${{ join(fromJSON(needs.finalize-image.outputs.metadata).debug.tags, '
                 ') }}
                 ```
 
@@ -446,7 +738,7 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.label.name == 'Z-Build-Workflow'
 
     needs:
-      - build-image
+      - finalize-image
 
     permissions:
       contents: read
@@ -454,15 +746,16 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           sparse-checkout: |
             .github/scripts
+          persist-credentials: false
 
       - name: Remove label and comment
-        uses: actions/github-script@v8.0.0
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
-          BUILD_IMAGE_MANIFEST: ${{ needs.build-image.outputs.metadata }}
+          BUILD_IMAGE_MANIFEST: ${{ needs.finalize-image.outputs.metadata }}
         with:
           script: |
             const script = require('./.github/scripts/cleanup-pr.cjs');

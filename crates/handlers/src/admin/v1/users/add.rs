@@ -103,6 +103,12 @@ pub struct Request {
     /// tokens (like with admin access) for them
     #[serde(default)]
     skip_homeserver_check: bool,
+
+    /// The displayname of the user to add.
+    displayname: Option<String>,
+
+    /// The avatar URL of the user to add.
+    avatar_url: Option<String>,
 }
 
 pub fn doc(operation: TransformOperation) -> TransformOperation {
@@ -165,8 +171,16 @@ pub async fn handler(
 
     let user = repo.user().add(&mut rng, &clock, params.username).await?;
 
+    let mut provision_request = ProvisionRequest::new(&user.username, &user.sub, false);
+    if let Some(displayname) = params.displayname {
+        provision_request = provision_request.set_displayname(displayname);
+    }
+    if let Some(avatar_url) = params.avatar_url {
+        provision_request = provision_request.set_avatar_url(avatar_url);
+    }
+
     homeserver
-        .provision_user(&ProvisionRequest::new(&user.username, &user.sub, false))
+        .provision_user(&provision_request)
         .await
         .map_err(RouteError::Homeserver)?;
 
@@ -197,6 +211,8 @@ mod tests {
             .bearer(&token)
             .json(serde_json::json!({
                 "username": "alice",
+                "displayname": "Alice Test",
+                "avatar_url": "mxc://homeserver/4880dc98b127f4a5f4c3c9f588e1f37af70047da1810312767102517248",
             }));
 
         let response = state.request(request).await;
@@ -221,6 +237,15 @@ mod tests {
         // Check that the user was created on the homeserver
         let result = state.homeserver_connection.query_user("alice").await;
         assert!(result.is_ok());
+        let user = result.unwrap();
+        assert_eq!(user.displayname, Some("Alice Test".to_owned()));
+        assert_eq!(
+            user.avatar_url,
+            Some(
+                "mxc://homeserver/4880dc98b127f4a5f4c3c9f588e1f37af70047da1810312767102517248"
+                    .to_owned()
+            )
+        );
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

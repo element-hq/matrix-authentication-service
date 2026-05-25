@@ -26,7 +26,7 @@ use rand::distributions::{Alphanumeric, DistString};
 use thiserror::Error;
 use ulid::Ulid;
 
-use crate::{BoundActivityTracker, impl_from_error_for_route};
+use crate::{BoundActivityTracker, SiteConfig, impl_from_error_for_route};
 
 #[derive(Debug, Error)]
 pub(crate) enum RouteError {
@@ -38,6 +38,9 @@ pub(crate) enum RouteError {
 
     #[error("client {0} is not allowed to use the device code grant")]
     ClientNotAllowed(Ulid),
+
+    #[error("the Device Authorization Grant is disabled")]
+    DeviceCodeGrantDisabled,
 
     #[error("invalid client credentials for client {client_id}")]
     InvalidClientCredentials {
@@ -73,6 +76,14 @@ impl IntoResponse for RouteError {
                 StatusCode::UNAUTHORIZED,
                 Json(ClientError::from(ClientErrorCode::UnauthorizedClient)),
             ),
+            Self::DeviceCodeGrantDisabled => (
+                StatusCode::BAD_REQUEST,
+                Json(
+                    ClientError::from(ClientErrorCode::InvalidRequest).with_description(
+                        "The Device Authorization Grant is disabled on this server".to_owned(),
+                    ),
+                ),
+            ),
         };
 
         (sentry_event_id, response).into_response()
@@ -93,8 +104,13 @@ pub(crate) async fn post(
     State(url_builder): State<UrlBuilder>,
     State(http_client): State<reqwest::Client>,
     State(encrypter): State<Encrypter>,
+    State(site_config): State<SiteConfig>,
     client_authorization: ClientAuthorization<DeviceAuthorizationRequest>,
 ) -> Result<impl IntoResponse, RouteError> {
+    if !site_config.device_code_grant_enabled {
+        return Err(RouteError::DeviceCodeGrantDisabled);
+    }
+
     let client = client_authorization
         .credentials
         .fetch(&mut repo)
@@ -182,13 +198,16 @@ pub(crate) async fn post(
 #[cfg(test)]
 mod tests {
     use hyper::{Request, StatusCode};
+    use mas_data_model::SiteConfig;
     use mas_router::SimpleRoute;
     use oauth2_types::{
-        registration::ClientRegistrationResponse, requests::DeviceAuthorizationResponse,
+        errors::{ClientError, ClientErrorCode},
+        registration::ClientRegistrationResponse,
+        requests::DeviceAuthorizationResponse,
     };
     use sqlx::PgPool;
 
-    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup, test_site_config};
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_device_code_request(pool: PgPool) {
@@ -223,5 +242,38 @@ mod tests {
         let response: DeviceAuthorizationResponse = response.json();
         assert_eq!(response.device_code.len(), 32);
         assert_eq!(response.user_code.len(), 6);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_device_code_request_disabled(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                device_code_grant_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        // The endpoint rejects the request before looking up the client
+        let request = Request::post(mas_router::OAuth2DeviceAuthorizationEndpoint::PATH).form(
+            serde_json::json!({
+                "client_id": "some-client-id",
+                "scope": "openid",
+            }),
+        );
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::BAD_REQUEST);
+
+        let error: ClientError = response.json();
+        assert_eq!(error.error, ClientErrorCode::InvalidRequest);
+        assert!(
+            error
+                .error_description
+                .unwrap()
+                .contains("Device Authorization Grant is disabled")
+        );
     }
 }

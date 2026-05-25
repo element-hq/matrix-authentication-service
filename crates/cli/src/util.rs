@@ -9,8 +9,8 @@ use std::{sync::Arc, time::Duration};
 use anyhow::Context;
 use mas_config::{
     AccountConfig, BrandingConfig, CaptchaConfig, DatabaseConfig, EmailConfig, EmailSmtpMode,
-    EmailTransportKind, ExperimentalConfig, HomeserverKind, MatrixConfig, PasswordsConfig,
-    PolicyConfig, TemplatesConfig,
+    EmailTransportKind, ExperimentalConfig, HomeserverKind, MatrixConfig, OAuthConfig,
+    PasswordsConfig, PolicyConfig, TemplatesConfig,
 };
 use mas_context::LogContext;
 use mas_data_model::{SessionExpirationConfig, SessionLimitConfig, SiteConfig};
@@ -156,6 +156,7 @@ pub async fn policy_factory_from_config(
             .map(|c| SessionLimitConfig {
                 soft_limit: c.soft_limit,
                 hard_limit: c.hard_limit,
+                max_session_threshold: c.max_session_threshold,
                 dangerous_hard_limit_eviction: c.dangerous_hard_limit_eviction,
             });
 
@@ -205,6 +206,7 @@ pub fn site_config_from_config(
     password_config: &PasswordsConfig,
     account_config: &AccountConfig,
     captcha_config: &CaptchaConfig,
+    oauth_config: &OAuthConfig,
 ) -> Result<SiteConfig, anyhow::Error> {
     let captcha = captcha_config_from_config(captcha_config)?;
     let session_expiration = experimental_config
@@ -246,8 +248,10 @@ pub fn site_config_from_config(
             .map(|c| SessionLimitConfig {
                 soft_limit: c.soft_limit,
                 hard_limit: c.hard_limit,
+                max_session_threshold: c.max_session_threshold,
                 dangerous_hard_limit_eviction: c.dangerous_hard_limit_eviction,
             }),
+        device_code_grant_enabled: oauth_config.device_code_grant_enabled,
     })
 }
 
