@@ -556,6 +556,43 @@ exports[`Reset cross signing > renders the success page 1`] = `
     >
       The identity reset has been approved for the next 10 minutes. You can close this window and go back to the app to continue.
     </p>
+    <footer
+      class="_legalFooter_acfd2c"
+    >
+      <nav>
+        <a
+          class="_link_1v5rz_8"
+          data-kind="primary"
+          data-size="medium"
+          href="https://matrix.org/policy"
+          rel="noreferrer noopener"
+          title="Link to the service privacy policy"
+        >
+          Privacy Policy
+        </a>
+        <div
+          aria-hidden="true"
+          class="_separator_acfd2c"
+        >
+          •
+        </div>
+        <a
+          class="_link_1v5rz_8"
+          data-kind="primary"
+          data-size="medium"
+          href="https://matrix.org/tos"
+          rel="noreferrer noopener"
+          title="Link to the service terms and conditions"
+        >
+          Terms & Conditions
+        </a>
+      </nav>
+      <p
+        class="_imprint_acfd2c"
+      >
+        All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
+      </p>
+    </footer>
   </div>
 </DocumentFragment>
 `;
@@ -598,6 +635,43 @@ exports[`Reset cross signing > renders the success page 2`] = `
     >
       The identity reset has been approved for the next 10 minutes. You can close this window and go back to the app to continue.
     </p>
+    <footer
+      class="_legalFooter_acfd2c"
+    >
+      <nav>
+        <a
+          class="_link_1v5rz_8"
+          data-kind="primary"
+          data-size="medium"
+          href="https://matrix.org/policy"
+          rel="noreferrer noopener"
+          title="Link to the service privacy policy"
+        >
+          Privacy Policy
+        </a>
+        <div
+          aria-hidden="true"
+          class="_separator_acfd2c"
+        >
+          •
+        </div>
+        <a
+          class="_link_1v5rz_8"
+          data-kind="primary"
+          data-size="medium"
+          href="https://matrix.org/tos"
+          rel="noreferrer noopener"
+          title="Link to the service terms and conditions"
+        >
+          Terms & Conditions
+        </a>
+      </nav>
+      <p
+        class="_imprint_acfd2c"
+      >
+        All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
+      </p>
+    </footer>
   </div>
 </DocumentFragment>
 `;

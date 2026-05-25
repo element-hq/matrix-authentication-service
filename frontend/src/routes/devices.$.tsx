@@ -5,7 +5,7 @@
 // Please see LICENSE files in the repository root for full details.
 
 import { queryOptions } from "@tanstack/react-query";
-import { notFound, redirect } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { Alert } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 import Layout from "../components/Layout";
@@ -55,7 +55,7 @@ const query = (deviceId: string, userId: string) =>
       }),
   });
 
-export const Route = createFileRoute({
+export const Route = createFileRoute("/devices/$")({
   async loader({ context, params }) {
     const data = await context.queryClient.fetchQuery(currentViewerQuery);
     if (data.viewer.__typename !== "User")

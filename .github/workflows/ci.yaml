@@ -67,18 +67,20 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
+
       - name: Install Node
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
-          node-version: 24
+          node-version-file: .node-version
+          cache: "pnpm"
 
-      - name: Install Node dependencies
-        working-directory: ./frontend
-        run: npm ci
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
-        working-directory: ./frontend
-        run: npm run lint
+        run: pnpm --filter mas-frontend run lint
 
   frontend-test:
     name: Run the frontend test suite
@@ -93,18 +95,20 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
+
       - name: Install Node
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
-          node-version: 24
+          node-version-file: .node-version
+          cache: "pnpm"
 
-      - name: Install Node dependencies
-        working-directory: ./frontend
-        run: npm ci
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Test
-        working-directory: ./frontend
-        run: npm test
+        run: pnpm --filter mas-frontend test
 
   frontend-knip:
     name: Check the frontend for unused dependencies
@@ -119,18 +123,20 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
+
       - name: Install Node
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
-          node-version: 24
+          node-version-file: .node-version
+          cache: "pnpm"
 
-      - name: Install Node dependencies
-        working-directory: ./frontend
-        run: npm ci
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Check for unused dependencies
-        working-directory: ./frontend
-        run: npm run knip
+        run: pnpm --filter mas-frontend run knip
 
   rustfmt:
     name: Check Rust style
@@ -280,7 +286,7 @@ jobs:
           SQLX_OFFLINE: "1"
 
       - name: Upload archive to workflow
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: nextest-archive
           path: nextest-archive.tar.zst

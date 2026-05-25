@@ -19,12 +19,17 @@ describe("<OAuth2Session />", () => {
     scope:
       "openid urn:matrix:org.matrix.msc2967.client:api:* urn:matrix:org.matrix.msc2967.client:device:abcd1234",
     createdAt: "2023-06-29T03:35:17.451292+00:00",
+    finishedAt: null,
     lastActiveIp: "1.2.3.4",
+    lastActiveAt: null,
+    userAgent: null,
+    humanName: null,
     client: {
       id: "test-id",
       clientId: "test-client-id",
       clientName: "Element",
       clientUri: "https://element.io",
+      logoUri: null,
       applicationType: "WEB" as Oauth2ApplicationType,
     },
   };
