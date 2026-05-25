@@ -343,7 +343,7 @@ function Sessions(): React.ReactElement {
         <div className="flex *:flex-1">
           <ButtonLink
             kind="secondary"
-            size="sm"
+            size="md"
             disabled={!forwardPage}
             to="/sessions"
             search={{ inactive, ...(forwardPage || pagination) }}
@@ -357,7 +357,7 @@ function Sessions(): React.ReactElement {
 
           <ButtonLink
             kind="secondary"
-            size="sm"
+            size="md"
             disabled={!backwardPage}
             to="/sessions"
             search={{ inactive, ...(backwardPage || pagination) }}

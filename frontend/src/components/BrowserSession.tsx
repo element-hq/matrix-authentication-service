@@ -125,7 +125,7 @@ const BrowserSession: React.FC<Props> = ({ session, isCurrent }) => {
 
       {!data.finishedAt && (
         <Card.Action>
-          <EndBrowserSessionButton session={data} size="sm" />
+          <EndBrowserSessionButton session={data} size="md" />
         </Card.Action>
       )}
     </Card.Root>

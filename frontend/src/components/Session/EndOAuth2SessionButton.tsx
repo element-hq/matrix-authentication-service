@@ -56,7 +56,7 @@ const getDeviceTypeFromClientAppType = (
 
 type Props = {
   session: FragmentType<typeof FRAGMENT>;
-  size: "sm" | "lg";
+  size: "md" | "lg";
 };
 
 const EndOAuth2SessionButton: React.FC<Props> = ({ session, size }) => {
