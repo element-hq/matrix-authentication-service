@@ -52,7 +52,7 @@ const QUERY = graphql(/* GraphQL */ `
     }
 
     siteConfig {
-      ...PasswordCreationDoubleInput_siteConfig
+      minimumPasswordComplexity
     }
   }
 `);
@@ -183,7 +183,7 @@ function ChangePassword(): React.ReactNode {
           <Separator />
 
           <PasswordCreationDoubleInput
-            siteConfig={siteConfig}
+            minimumPasswordComplexity={siteConfig.minimumPasswordComplexity}
             forceShowNewPasswordInvalid={
               (mutation.data &&
                 mutation.data.status === "INVALID_NEW_PASSWORD") ||
