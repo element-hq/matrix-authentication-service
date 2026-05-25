@@ -3,6 +3,6 @@
   "private": true,
   "devDependencies": {
     "@actions/github-script": "github:actions/github-script",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.3"
   }
 }

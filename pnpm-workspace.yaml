@@ -22,6 +22,10 @@ trustPolicyExclude:
   # @actions/github-script bundles @actions/http-client which pulls in
   # undici@5.29.0 — older 5.x releases were published with provenance.
   - "undici@5.29.0"
+  # They switched to npm staged publishing, which for some reason npm flags
+  # from being a release with a trusted publisher (GH actions) and provenance
+  # to one with only provenance.
+  - "tinyexec@1.2.2"
 
 # Fail the install if any dependency has a build script that isn't explicitly
 # allowed. Add entries to `allowBuilds` (package name pattern -> bool) to
