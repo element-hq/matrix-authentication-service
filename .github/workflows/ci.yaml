@@ -67,18 +67,20 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
+
       - name: Install Node
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
-          node-version: 24
+          node-version-file: .node-version
+          cache: "pnpm"
 
-      - name: Install Node dependencies
-        working-directory: ./frontend
-        run: npm ci
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
-        working-directory: ./frontend
-        run: npm run lint
+        run: pnpm --filter mas-frontend run lint
 
   frontend-test:
     name: Run the frontend test suite
@@ -93,18 +95,20 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
+
       - name: Install Node
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
-          node-version: 24
+          node-version-file: .node-version
+          cache: "pnpm"
 
-      - name: Install Node dependencies
-        working-directory: ./frontend
-        run: npm ci
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Test
-        working-directory: ./frontend
-        run: npm test
+        run: pnpm --filter mas-frontend test
 
   frontend-knip:
     name: Check the frontend for unused dependencies
@@ -119,18 +123,20 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
+
       - name: Install Node
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
-          node-version: 24
+          node-version-file: .node-version
+          cache: "pnpm"
 
-      - name: Install Node dependencies
-        working-directory: ./frontend
-        run: npm ci
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Check for unused dependencies
-        working-directory: ./frontend
-        run: npm run knip
+        run: pnpm --filter mas-frontend run knip
 
   rustfmt:
     name: Check Rust style

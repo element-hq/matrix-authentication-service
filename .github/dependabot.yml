@@ -54,7 +54,9 @@ updates:
       default-days: 14
 
   - package-ecosystem: "npm"
-    directory: "/frontend/"
+    # pnpm workspace lives at the repo root, includes mostly frontend
+    # dependencies but also a few tools
+    directory: "/"
     labels:
       - "A-Dependencies"
       - "Z-Deps-Frontend"

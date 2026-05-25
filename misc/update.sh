@@ -20,6 +20,6 @@ cargo run -p mas-handlers --bin api-schema > "${API_SCHEMA}"
 cargo run -p mas-i18n-scan -- --update "${BASE_DIR}/templates/" "${BASE_DIR}/translations/en.json"
 OUT_DIR="${POLICIES_SCHEMA}" cargo run -p mas-policy
 
-cd "${BASE_DIR}/frontend"
-npm run format
-npm run generate
+cd "${BASE_DIR}"
+pnpm --filter mas-frontend run format
+pnpm --filter mas-frontend run generate
