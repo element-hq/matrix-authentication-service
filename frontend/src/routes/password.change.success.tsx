@@ -4,13 +4,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+import { createFileRoute } from "@tanstack/react-router";
 import IconCheckCircle from "@vector-im/compound-design-tokens/assets/web/icons/check-circle-solid";
 import { useTranslation } from "react-i18next";
 import { ButtonLink } from "../components/ButtonLink";
 import Layout from "../components/Layout";
 import PageHeading from "../components/PageHeading";
 
-export const Route = createFileRoute({
+export const Route = createFileRoute("/password/change/success")({
   component: ChangePasswordSuccess,
 });
 

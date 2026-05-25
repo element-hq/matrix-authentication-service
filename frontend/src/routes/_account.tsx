@@ -5,7 +5,7 @@
 // Please see LICENSE files in the repository root for full details.
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { notFound, Outlet } from "@tanstack/react-router";
+import { createFileRoute, notFound, Outlet } from "@tanstack/react-router";
 import { Heading, Tooltip } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 import Layout from "../components/Layout";
@@ -44,7 +44,7 @@ const query = queryOptions({
   queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
 });
 
-export const Route = createFileRoute({
+export const Route = createFileRoute("/_account")({
   loader: ({ context }) => context.queryClient.ensureQueryData(query),
   component: Account,
 });
