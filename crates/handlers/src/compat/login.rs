@@ -2113,7 +2113,7 @@ mod tests {
         // Keep logging in to add more sessions, more than the `soft_limit`
         //
         // We're using `m.login.password` login flow which is non-interactive
-        #[allow(clippy::range_plus_one)]
+        #[expect(clippy::range_plus_one)]
         for _ in 0..(session_limit_config.soft_limit.get() + 1) {
             let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
                 "type": "m.login.password",
@@ -2336,7 +2336,7 @@ mod tests {
         // Keep logging in to add more sessions. We want to be past the
         // `hard_limit`/`max_session_threshold`
         let _user = user_with_password(&state, "alice", "password", false).await;
-        #[allow(clippy::range_plus_one)]
+        #[expect(clippy::range_plus_one)]
         for _ in 0..(upcoming_hard_limit + 1) {
             let login_token = matrix_compat_sso_login(&state, "alice", "password")
                 .await
@@ -2420,7 +2420,7 @@ mod tests {
             },
             "password": "password",
         });
-        #[allow(clippy::range_plus_one)]
+        #[expect(clippy::range_plus_one)]
         for _ in 0..(upcoming_hard_limit + 1) {
             let request = Request::post("/_matrix/client/v3/login")
                 .json(serde_json::json!(password_login_json.clone()));
@@ -2518,7 +2518,6 @@ mod tests {
         };
 
         // Keep logging in to add more sessions, up to the `hard_limit`.
-        #[allow(clippy::range_plus_one)]
         for _ in 0..session_limit_config.hard_limit.get() {
             let device_id = do_login().await;
             login_device_ids.push(device_id);
@@ -2658,7 +2657,7 @@ mod tests {
 
         // Keep logging in to add more sessions, up to the `hard_limit`. Then one more
         // login will drop one of our old sessions to make room for the new login
-        #[allow(clippy::range_plus_one)]
+        #[expect(clippy::range_plus_one)]
         for _ in 0..(session_limit_config.hard_limit.get() + 1) {
             let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
                 "type": "m.login.password",

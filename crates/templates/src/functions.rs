@@ -344,7 +344,7 @@ impl Object for TranslateFunc {
                 })?;
 
                 // TODO: grab the clock somewhere
-                #[allow(clippy::disallowed_methods)]
+                #[expect(clippy::disallowed_methods)]
                 let now = chrono::Utc::now();
 
                 let diff = (date - now).num_days();

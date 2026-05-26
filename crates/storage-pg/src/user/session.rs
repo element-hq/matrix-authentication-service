@@ -47,7 +47,7 @@ impl<'c> PgBrowserSessionRepository<'c> {
     }
 }
 
-#[allow(clippy::struct_field_names)]
+#[expect(clippy::struct_field_names)]
 #[derive(sqlx::FromRow)]
 #[sea_query::enum_def]
 struct SessionLookup {

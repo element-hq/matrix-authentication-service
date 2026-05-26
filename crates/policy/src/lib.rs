@@ -518,7 +518,7 @@ mod tests {
             "banned_domains": ["staging.element.io"],
         }));
 
-        #[allow(clippy::disallowed_types)]
+        #[expect(clippy::disallowed_types)]
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("..")
             .join("..")
@@ -583,7 +583,7 @@ mod tests {
             session_limit: None,
         });
 
-        #[allow(clippy::disallowed_types)]
+        #[expect(clippy::disallowed_types)]
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("..")
             .join("..")
@@ -650,7 +650,7 @@ mod tests {
             session_limit: None,
         });
 
-        #[allow(clippy::disallowed_types)]
+        #[expect(clippy::disallowed_types)]
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("..")
             .join("..")
