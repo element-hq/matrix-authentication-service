@@ -117,4 +117,9 @@ pub struct SiteConfig {
 
     /// Whether the Device Authorization Grant (RFC 8628) is enabled.
     pub device_code_grant_enabled: bool,
+
+    /// Whether the device authorization endpoint advertises a
+    /// `verification_uri_complete` and whether `/link` accepts a `code`
+    /// query parameter to auto-fill the user code.
+    pub device_code_user_code_auto_fill_enabled: bool,
 }
