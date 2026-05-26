@@ -123,7 +123,7 @@ const OAuth2Session: React.FC<Props> = ({ session }) => {
 
       {!data.finishedAt && (
         <Card.Action>
-          <EndOAuth2SessionButton session={data} size="sm" />
+          <EndOAuth2SessionButton session={data} size="md" />
         </Card.Action>
       )}
     </Card.Root>

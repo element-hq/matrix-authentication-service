@@ -40,7 +40,7 @@ const END_SESSION_MUTATION = graphql(/* GraphQL */ `
 
 type Props = {
   session: FragmentType<typeof FRAGMENT>;
-  size: "sm" | "lg";
+  size: "md" | "lg";
 };
 
 const EndCompatSessionButton: React.FC<Props> = ({ session, size }) => {

@@ -42,7 +42,7 @@ exports[`Account sessions page > renders the page 1`] = `
         </div>
       </header>
       <button
-        class="_button_13vu4_8"
+        class="_button_1nw83_8"
         data-kind="tertiary"
         data-size="lg"
         role="button"
@@ -56,9 +56,9 @@ exports[`Account sessions page > renders the page 1`] = `
     >
       <nav>
         <a
-          class="_link_1v5rz_8"
+          class="_link_k9ljz_8"
           data-kind="primary"
-          data-size="medium"
+          data-size="md"
           href="https://matrix.org/policy"
           rel="noreferrer noopener"
           title="Link to the service privacy policy"
@@ -72,9 +72,9 @@ exports[`Account sessions page > renders the page 1`] = `
           •
         </div>
         <a
-          class="_link_1v5rz_8"
+          class="_link_k9ljz_8"
           data-kind="primary"
-          data-size="medium"
+          data-size="md"
           href="https://matrix.org/tos"
           rel="noreferrer noopener"
           title="Link to the service terms and conditions"
@@ -113,7 +113,7 @@ exports[`Account sessions page > session limit > displays an error if they've hi
         >
           <span
             aria-label="@alice:example.com"
-            class="_avatar_zysgz_8 _avatar_0d9d49 _avatar-imageless_zysgz_55"
+            class="_avatar_va14e_8 _avatar_0d9d49 _avatar-imageless_va14e_55"
             data-color="6"
             data-type="round"
             role="img"
@@ -226,9 +226,9 @@ exports[`Account sessions page > session limit > displays an error if they've hi
           </p>
         </div>
         <a
-          class="_link_1v5rz_8"
+          class="_link_k9ljz_8"
           data-kind="primary"
-          data-size="medium"
+          data-size="md"
           href="/sessions/browsers"
           rel="noreferrer noopener"
         >
@@ -410,9 +410,9 @@ exports[`Account sessions page > session limit > displays an error if they've hi
             aria-controls="radix-_r_t_"
             aria-expanded="false"
             aria-haspopup="dialog"
-            class="_button_13vu4_8 _has-icon_13vu4_60 _destructive_13vu4_110"
+            class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
             data-kind="secondary"
-            data-size="sm"
+            data-size="md"
             data-state="closed"
             role="button"
             tabindex="0"
@@ -535,9 +535,9 @@ exports[`Account sessions page > session limit > displays an error if they've hi
             aria-controls="radix-_r_10_"
             aria-expanded="false"
             aria-haspopup="dialog"
-            class="_button_13vu4_8 _has-icon_13vu4_60 _destructive_13vu4_110"
+            class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
             data-kind="secondary"
-            data-size="sm"
+            data-size="md"
             data-state="closed"
             role="button"
             tabindex="0"
@@ -660,9 +660,9 @@ exports[`Account sessions page > session limit > displays an error if they've hi
             aria-controls="radix-_r_13_"
             aria-expanded="false"
             aria-haspopup="dialog"
-            class="_button_13vu4_8 _has-icon_13vu4_60 _destructive_13vu4_110"
+            class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
             data-kind="secondary"
-            data-size="sm"
+            data-size="md"
             data-state="closed"
             role="button"
             tabindex="0"
@@ -785,9 +785,9 @@ exports[`Account sessions page > session limit > displays an error if they've hi
             aria-controls="radix-_r_16_"
             aria-expanded="false"
             aria-haspopup="dialog"
-            class="_button_13vu4_8 _has-icon_13vu4_60 _destructive_13vu4_110"
+            class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
             data-kind="secondary"
-            data-size="sm"
+            data-size="md"
             data-state="closed"
             role="button"
             tabindex="0"
@@ -910,9 +910,9 @@ exports[`Account sessions page > session limit > displays an error if they've hi
             aria-controls="radix-_r_19_"
             aria-expanded="false"
             aria-haspopup="dialog"
-            class="_button_13vu4_8 _has-icon_13vu4_60 _destructive_13vu4_110"
+            class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
             data-kind="secondary"
-            data-size="sm"
+            data-size="md"
             data-state="closed"
             role="button"
             tabindex="0"
@@ -1035,9 +1035,9 @@ exports[`Account sessions page > session limit > displays an error if they've hi
             aria-controls="radix-_r_1c_"
             aria-expanded="false"
             aria-haspopup="dialog"
-            class="_button_13vu4_8 _has-icon_13vu4_60 _destructive_13vu4_110"
+            class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
             data-kind="secondary"
-            data-size="sm"
+            data-size="md"
             data-state="closed"
             role="button"
             tabindex="0"
@@ -1064,9 +1064,9 @@ exports[`Account sessions page > session limit > displays an error if they've hi
       >
         <a
           aria-disabled="true"
-          class="_button_13vu4_8 _buttonLink_014cb0"
+          class="_button_1nw83_8 _buttonLink_014cb0"
           data-kind="secondary"
-          data-size="sm"
+          data-size="md"
           role="link"
           tabindex="0"
         >
@@ -1075,9 +1075,9 @@ exports[`Account sessions page > session limit > displays an error if they've hi
         <div />
         <a
           aria-disabled="false"
-          class="_button_13vu4_8 _buttonLink_014cb0"
+          class="_button_1nw83_8 _buttonLink_014cb0"
           data-kind="secondary"
-          data-size="sm"
+          data-size="md"
           href="/sessions?last=6&before=foo"
           role="link"
           tabindex="0"
@@ -1091,9 +1091,9 @@ exports[`Account sessions page > session limit > displays an error if they've hi
     >
       <nav>
         <a
-          class="_link_1v5rz_8"
+          class="_link_k9ljz_8"
           data-kind="primary"
-          data-size="medium"
+          data-size="md"
           href="https://matrix.org/policy"
           rel="noreferrer noopener"
           title="Link to the service privacy policy"
@@ -1107,9 +1107,9 @@ exports[`Account sessions page > session limit > displays an error if they've hi
           •
         </div>
         <a
-          class="_link_1v5rz_8"
+          class="_link_k9ljz_8"
           data-kind="primary"
-          data-size="medium"
+          data-size="md"
           href="https://matrix.org/tos"
           rel="noreferrer noopener"
           title="Link to the service terms and conditions"
