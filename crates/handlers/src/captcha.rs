@@ -48,7 +48,7 @@ pub enum Error {
     RequestFailed(#[from] reqwest::Error),
 }
 
-#[allow(clippy::struct_field_names)]
+#[expect(clippy::struct_field_names)]
 #[derive(Debug, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
 pub struct Form {

@@ -14,7 +14,7 @@ pub const CAPTCHA_CONFIG_ID: &str = "captcha_config";
 
 #[derive(SimpleObject)]
 #[graphql(complex)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 pub struct SiteConfig {
     /// The configuration of CAPTCHA provider.
     captcha_config: Option<CaptchaConfig>,

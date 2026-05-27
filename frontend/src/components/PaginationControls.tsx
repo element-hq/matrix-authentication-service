@@ -32,7 +32,7 @@ const PaginationControls: React.FC<Props> = ({
     <div className="grid items-center grid-cols-3 gap-2">
       <Button
         kind="secondary"
-        size="sm"
+        size="md"
         disabled={disabled || !onPrev}
         onClick={(): void => onPrev?.()}
       >
@@ -45,7 +45,7 @@ const PaginationControls: React.FC<Props> = ({
       </div>
       <Button
         kind="secondary"
-        size="sm"
+        size="md"
         disabled={disabled || !onNext}
         onClick={(): void => onNext?.()}
       >

@@ -163,7 +163,7 @@ function BrowserSessions(): React.ReactElement {
         <div className="flex *:flex-1">
           <ButtonLink
             kind="secondary"
-            size="sm"
+            size="md"
             disabled={!forwardPage}
             to="/sessions/browsers"
             search={forwardPage || pagination}
@@ -177,7 +177,7 @@ function BrowserSessions(): React.ReactElement {
 
           <ButtonLink
             kind="secondary"
-            size="sm"
+            size="md"
             disabled={!backwardPage}
             to="/sessions/browsers"
             search={backwardPage || pagination}

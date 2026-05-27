@@ -222,7 +222,7 @@ impl RootConfig {
 }
 
 /// Partial configuration actually used by the server
-#[allow(missing_docs)]
+#[expect(missing_docs)]
 #[derive(Debug, Deserialize)]
 pub struct AppConfig {
     #[serde(default)]
@@ -291,7 +291,7 @@ impl ConfigurationSection for AppConfig {
 }
 
 /// Partial config used by the `mas-cli config sync` command
-#[allow(missing_docs)]
+#[expect(missing_docs)]
 #[derive(Debug, Deserialize)]
 pub struct SyncConfig {
     #[serde(default)]

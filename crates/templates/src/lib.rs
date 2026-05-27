@@ -501,7 +501,7 @@ mod tests {
 
     #[tokio::test]
     async fn check_builtin_templates() {
-        #[allow(clippy::disallowed_methods)]
+        #[expect(clippy::disallowed_methods)]
         let now = chrono::Utc::now();
         let rng = rand_chacha::ChaCha8Rng::from_seed([42; 32]);
 

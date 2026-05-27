@@ -25,7 +25,7 @@ pub enum Propagator {
     Jaeger,
 }
 
-#[allow(clippy::unnecessary_wraps)]
+#[expect(clippy::unnecessary_wraps)]
 fn otlp_endpoint_default() -> Option<String> {
     Some("https://localhost:4318".to_owned())
 }

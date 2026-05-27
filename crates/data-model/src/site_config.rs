@@ -49,7 +49,7 @@ pub struct SessionLimitConfig {
 }
 
 /// Random site configuration we want accessible in various places.
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 #[derive(Debug, Clone)]
 pub struct SiteConfig {
     /// Time-to-live of access tokens.

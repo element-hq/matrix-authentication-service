@@ -58,7 +58,7 @@ use crate::{
 };
 
 /// Setup rustcrypto and tracing for tests.
-#[allow(unused_must_use)]
+#[expect(unused_must_use)]
 pub(crate) fn setup() {
     rustls::crypto::aws_lc_rs::default_provider().install_default();
 
@@ -115,7 +115,7 @@ pub(crate) struct TestState {
     pub task_tracker: TaskTracker,
     queue_worker: Arc<tokio::sync::Mutex<QueueWorker>>,
 
-    #[allow(dead_code)] // It is used, as it will cancel the CancellationToken when dropped
+    #[expect(dead_code)] // It is used, as it will cancel the CancellationToken when dropped
     cancellation_drop_guard: Arc<DropGuard>,
 }
 
