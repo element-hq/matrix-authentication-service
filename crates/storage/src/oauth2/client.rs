@@ -23,6 +23,7 @@ use crate::{Page, Pagination, repository_impl};
 pub struct OAuth2ClientFilter<'a> {
     state: Option<bool>,
     client_name: Option<&'a str>,
+    client_uri: Option<&'a str>,
 }
 
 impl<'a> OAuth2ClientFilter<'a> {
@@ -71,6 +72,22 @@ impl<'a> OAuth2ClientFilter<'a> {
     #[must_use]
     pub fn client_name(&self) -> Option<&'a str> {
         self.client_name
+    }
+
+    /// Only return clients whose `client_uri` matches the given substring
+    /// (case-insensitive)
+    #[must_use]
+    pub fn matching_client_uri(mut self, client_uri: &'a str) -> Self {
+        self.client_uri = Some(client_uri);
+        self
+    }
+
+    /// Get the client URI filter
+    ///
+    /// Returns [`None`] if no client URI filter was set
+    #[must_use]
+    pub fn client_uri(&self) -> Option<&'a str> {
+        self.client_uri
     }
 }
 

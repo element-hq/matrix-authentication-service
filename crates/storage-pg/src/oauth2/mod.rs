@@ -1097,5 +1097,20 @@ mod tests {
         // Case-insensitive match on client_name
         let filter = OAuth2ClientFilter::new().matching_client_name("CLIENT");
         assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 3);
+
+        // Substring match on client_uri
+        let filter = OAuth2ClientFilter::new().matching_client_uri("second");
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 1);
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert_eq!(page.edges.len(), 1);
+        assert_eq!(page.edges[0].node, client2);
+
+        // Case-insensitive match on client_uri
+        let filter = OAuth2ClientFilter::new().matching_client_uri("EXAMPLE.COM");
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 2);
     }
 }

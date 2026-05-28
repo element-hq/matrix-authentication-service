@@ -94,6 +94,10 @@ impl Filter for OAuth2ClientFilter<'_> {
                 Expr::col((OAuth2Clients::Table, OAuth2Clients::ClientName))
                     .ilike(format!("%{client_name}%"))
             }))
+            .add_option(self.client_uri().map(|client_uri| {
+                Expr::col((OAuth2Clients::Table, OAuth2Clients::ClientUri))
+                    .ilike(format!("%{client_uri}%"))
+            }))
     }
 }
 
