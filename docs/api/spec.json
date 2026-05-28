@@ -1966,6 +1966,19 @@
               "default": []
             },
             "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[has-active-compat-session]",
+            "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) compatibility session.",
+            "schema": {
+              "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) compatibility session.",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "style": "form"
           }
         ],
         "responses": {
@@ -6183,6 +6196,13 @@
               "$ref": "#/components/schemas/ULID"
             },
             "default": []
+          },
+          "filter[has-active-compat-session]": {
+            "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) compatibility session.",
+            "type": [
+              "boolean",
+              "null"
+            ]
           }
         }
       },

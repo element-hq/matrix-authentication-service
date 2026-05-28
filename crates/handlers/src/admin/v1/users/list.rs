@@ -85,6 +85,11 @@ pub struct FilterParams {
     #[serde(default, rename = "filter[active-oauth2-client]")]
     #[schemars(with = "Vec<crate::admin::schema::Ulid>")]
     active_oauth2_client: Vec<Ulid>,
+
+    /// Retrieve users which have (or don't have) at least one active
+    /// (non-finished) compatibility session.
+    #[serde(rename = "filter[has-active-compat-session]")]
+    has_active_compat_session: Option<bool>,
 }
 
 impl std::fmt::Display for FilterParams {
@@ -109,6 +114,10 @@ impl std::fmt::Display for FilterParams {
         }
         for client in &self.active_oauth2_client {
             write!(f, "{sep}filter[active-oauth2-client]={client}")?;
+            sep = '&';
+        }
+        if let Some(has) = self.has_active_compat_session {
+            write!(f, "{sep}filter[has-active-compat-session]={has}")?;
             sep = '&';
         }
 
@@ -228,6 +237,11 @@ pub async fn handler(
         filter.with_active_oauth2_session_for_any_of_clients(&params.active_oauth2_client)
     };
 
+    let filter = match params.has_active_compat_session {
+        Some(has) => filter.with_active_compat_session(has),
+        None => filter,
+    };
+
     let response = match include_count {
         IncludeCount::True => {
             let page = repo.user().list(filter, pagination).await?;
@@ -250,8 +264,10 @@ pub async fn handler(
 #[cfg(test)]
 mod tests {
     use hyper::{Request, StatusCode};
+    use mas_data_model::Device;
     use mas_storage::{
         RepositoryAccess,
+        compat::CompatSessionRepository,
         oauth2::{OAuth2ClientRepository, OAuth2SessionRepository},
     };
     use oauth2_types::{
@@ -611,5 +627,76 @@ mod tests {
         .empty();
         let response = state.request(request).await;
         response.assert_status(StatusCode::NOT_FOUND);
+    }
+
+    /// Test the `filter[has-active-compat-session]` filter in both
+    /// directions.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_list_users_filter_has_active_compat_session(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+        let mut rng = state.rng();
+
+        let mut repo = state.repository().await.unwrap();
+
+        // Alice has an active compat session.
+        let alice = repo
+            .user()
+            .add(&mut rng, &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+        let device = Device::generate(&mut rng);
+        repo.compat_session()
+            .add(&mut rng, &state.clock, &alice, device, None, false, None)
+            .await
+            .unwrap();
+
+        // Bob has a finished compat session.
+        let bob = repo
+            .user()
+            .add(&mut rng, &state.clock, "bob".to_owned())
+            .await
+            .unwrap();
+        let device = Device::generate(&mut rng);
+        let bob_session = repo
+            .compat_session()
+            .add(&mut rng, &state.clock, &bob, device, None, false, None)
+            .await
+            .unwrap();
+        repo.compat_session()
+            .finish(&state.clock, bob_session)
+            .await
+            .unwrap();
+
+        // Carol has no compat session.
+        repo.user()
+            .add(&mut rng, &state.clock, "carol".to_owned())
+            .await
+            .unwrap();
+
+        repo.save().await.unwrap();
+
+        // has-active-compat-session=true -> 1 (alice)
+        let request =
+            Request::get("/api/admin/v1/users?count=only&filter[has-active-compat-session]=true")
+                .bearer(&token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_eq!(body["meta"]["count"], 1);
+
+        // has-active-compat-session=false -> 2 (bob + carol). The admin
+        // token is created via client-credentials and does not provision a
+        // user.
+        let request =
+            Request::get("/api/admin/v1/users?count=only&filter[has-active-compat-session]=false")
+                .bearer(&token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_eq!(body["meta"]["count"], 2);
     }
 }

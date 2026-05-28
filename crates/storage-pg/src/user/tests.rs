@@ -841,7 +841,7 @@ async fn test_user_session(pool: PgPool) {
 
 /// Test [`UserFilter::with_active_oauth2_session_for_any_of_clients`].
 ///
-/// Sets up three users (A, B, C) with various OAuth2 session states across
+/// Sets up three users (A, B, C) with various `OAuth2` session states across
 /// three clients, and asserts that filtering on `[client_x, client_y]`
 /// returns users that have an ACTIVE session for *any* of those clients
 /// (OR semantics).
