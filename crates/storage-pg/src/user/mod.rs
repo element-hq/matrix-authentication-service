@@ -21,7 +21,7 @@ use uuid::Uuid;
 use crate::{
     DatabaseError,
     filter::{Filter, StatementExt},
-    iden::{OAuth2Sessions, Users},
+    iden::{CompatSessions, OAuth2Sessions, Users},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
 };
@@ -163,6 +163,23 @@ impl Filter for UserFilter<'_> {
                     )
                 },
             ))
+            .add_option(self.has_active_compat_session().map(|has| -> SimpleExpr {
+                let exists = Expr::exists(
+                    Query::select()
+                        .expr(Expr::cust("1"))
+                        .from(CompatSessions::Table)
+                        .and_where(
+                            Expr::col((CompatSessions::Table, CompatSessions::UserId))
+                                .equals((Users::Table, Users::UserId)),
+                        )
+                        .and_where(
+                            Expr::col((CompatSessions::Table, CompatSessions::FinishedAt))
+                                .is_null(),
+                        )
+                        .take(),
+                );
+                if has { exists } else { exists.not() }
+            }))
     }
 }
 

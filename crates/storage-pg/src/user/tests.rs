@@ -6,10 +6,11 @@
 // Please see LICENSE files in the repository root for full details.
 
 use chrono::Duration;
-use mas_data_model::{Clock, clock::MockClock};
+use mas_data_model::{Clock, Device, clock::MockClock};
 use mas_iana::jose::JsonWebSignatureAlg;
 use mas_storage::{
     Pagination, RepositoryAccess,
+    compat::CompatSessionRepository,
     oauth2::{OAuth2ClientRepository, OAuth2SessionRepository},
     upstream_oauth2::{UpstreamOAuthProviderParams, UpstreamOAuthSessionFilter},
     user::{
@@ -992,6 +993,73 @@ async fn test_user_filter_active_oauth2_session_for_any_of_clients(pool: PgPool)
     let none: [ulid::Ulid; 0] = [];
     let filter = UserFilter::new().with_active_oauth2_session_for_any_of_clients(&none);
     assert_eq!(repo.user().count(filter).await.unwrap(), 0);
+
+    repo.save().await.unwrap();
+}
+
+/// Test [`UserFilter::with_active_compat_session`] in both directions.
+#[sqlx::test(migrator = "crate::MIGRATOR")]
+async fn test_user_filter_active_compat_session(pool: PgPool) {
+    let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+    let mut rng = ChaChaRng::seed_from_u64(42);
+    let clock = MockClock::default();
+
+    // Three users: alice has an active compat session, bob has a finished one,
+    // carol has none.
+    let alice = repo
+        .user()
+        .add(&mut rng, &clock, "alice".to_owned())
+        .await
+        .unwrap();
+    let bob = repo
+        .user()
+        .add(&mut rng, &clock, "bob".to_owned())
+        .await
+        .unwrap();
+    let carol = repo
+        .user()
+        .add(&mut rng, &clock, "carol".to_owned())
+        .await
+        .unwrap();
+
+    // Alice gets an active compat session
+    let device = Device::generate(&mut rng);
+    repo.compat_session()
+        .add(&mut rng, &clock, &alice, device, None, false, None)
+        .await
+        .unwrap();
+
+    // Bob gets a compat session that is then finished
+    let device = Device::generate(&mut rng);
+    let bob_session = repo
+        .compat_session()
+        .add(&mut rng, &clock, &bob, device, None, false, None)
+        .await
+        .unwrap();
+    repo.compat_session()
+        .finish(&clock, bob_session)
+        .await
+        .unwrap();
+
+    // has = true -> only alice
+    let with = UserFilter::new().with_active_compat_session(true);
+    assert_eq!(repo.user().count(with).await.unwrap(), 1);
+    let page = repo.user().list(with, Pagination::first(10)).await.unwrap();
+    assert_eq!(page.edges.len(), 1);
+    assert_eq!(page.edges[0].node.id, alice.id);
+
+    // has = false -> bob + carol
+    let without = UserFilter::new().with_active_compat_session(false);
+    assert_eq!(repo.user().count(without).await.unwrap(), 2);
+    let page = repo
+        .user()
+        .list(without, Pagination::first(10))
+        .await
+        .unwrap();
+    let ids: std::collections::HashSet<_> = page.edges.iter().map(|e| e.node.id).collect();
+    assert!(!ids.contains(&alice.id));
+    assert!(ids.contains(&bob.id));
+    assert!(ids.contains(&carol.id));
 
     repo.save().await.unwrap();
 }
