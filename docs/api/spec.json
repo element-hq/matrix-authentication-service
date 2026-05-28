@@ -215,6 +215,62 @@
               ]
             },
             "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[created-before]",
+            "description": "Retrieve sessions created strictly before the given time",
+            "schema": {
+              "description": "Retrieve sessions created strictly before the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[created-after]",
+            "description": "Retrieve sessions created strictly after the given time",
+            "schema": {
+              "description": "Retrieve sessions created strictly after the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[last-active-before]",
+            "description": "Retrieve sessions last active strictly before the given time",
+            "schema": {
+              "description": "Retrieve sessions last active strictly before the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[last-active-after]",
+            "description": "Retrieve sessions last active strictly after the given time",
+            "schema": {
+              "description": "Retrieve sessions last active strictly after the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
           }
         ],
         "responses": {
@@ -829,7 +885,7 @@
           "oauth2-session"
         ],
         "summary": "List OAuth 2.0 sessions",
-        "description": "Retrieve a list of OAuth 2.0 sessions.\nNote that by default, all sessions, including finished ones are returned, with the oldest first.\nUse the `filter[status]` parameter to filter the sessions by their status and `page[last]` parameter to retrieve the last N sessions.",
+        "description": "Retrieve a list of OAuth 2.0 sessions.\nNote that by default, all sessions, including finished ones are returned, with the oldest first.\nUse the `filter[status]` parameter to filter the sessions by their status and `page[last]` parameter to retrieve the last N sessions.\nThe `filter[client]` parameter may be repeated to filter on multiple clients at once.",
         "operationId": "listOAuth2Sessions",
         "parameters": [
           {
@@ -933,17 +989,14 @@
           {
             "in": "query",
             "name": "filter[client]",
-            "description": "Retrieve the items for the given client",
+            "description": "Retrieve the items for the given client(s)\n\n This parameter may be repeated to filter on multiple clients at\n once (sessions matching any of the given clients are returned).",
             "schema": {
-              "description": "Retrieve the items for the given client",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "description": "Retrieve the items for the given client(s)\n\n This parameter may be repeated to filter on multiple clients at\n once (sessions matching any of the given clients are returned).",
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ULID"
+              },
+              "default": []
             },
             "style": "form"
           },
@@ -1009,6 +1062,62 @@
                   "type": "null"
                 }
               ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[created-before]",
+            "description": "Retrieve sessions created strictly before the given time",
+            "schema": {
+              "description": "Retrieve sessions created strictly before the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[created-after]",
+            "description": "Retrieve sessions created strictly after the given time",
+            "schema": {
+              "description": "Retrieve sessions created strictly after the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[last-active-before]",
+            "description": "Retrieve sessions last active strictly before the given time",
+            "schema": {
+              "description": "Retrieve sessions last active strictly before the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[last-active-after]",
+            "description": "Retrieve sessions last active strictly after the given time",
+            "schema": {
+              "description": "Retrieve sessions last active strictly after the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
             },
             "style": "form"
           }
@@ -2276,6 +2385,46 @@
               ]
             },
             "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[active-oauth2-client]",
+            "description": "Retrieve users which have at least one active OAuth 2.0 session\n belonging to any of the given client IDs.\n\n This filter may be repeated; the semantics are OR across the supplied\n clients (a user matches if they have an active session for *any* of\n them).",
+            "schema": {
+              "description": "Retrieve users which have at least one active OAuth 2.0 session\n belonging to any of the given client IDs.\n\n This filter may be repeated; the semantics are OR across the supplied\n clients (a user matches if they have an active session for *any* of\n them).",
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ULID"
+              },
+              "default": []
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[has-active-oauth2-session]",
+            "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) OAuth 2.0 session, regardless of the client.",
+            "schema": {
+              "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) OAuth 2.0 session, regardless of the client.",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[has-active-compat-session]",
+            "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) compatibility session.",
+            "schema": {
+              "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) compatibility session.",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "style": "form"
           }
         ],
         "responses": {
@@ -2358,6 +2507,23 @@
                     "last": "/api/admin/v1/users?page[last]=3",
                     "next": "/api/admin/v1/users?page[after]=030C1G60R30C1G60R30C1G60R3&page[first]=3"
                   }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Client was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Client ID 00000000000000000000000000 not found"
+                    }
+                  ]
                 }
               }
             }
@@ -3562,6 +3728,62 @@
                   "type": "null"
                 }
               ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[created-before]",
+            "description": "Retrieve sessions created strictly before the given time",
+            "schema": {
+              "description": "Retrieve sessions created strictly before the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[created-after]",
+            "description": "Retrieve sessions created strictly after the given time",
+            "schema": {
+              "description": "Retrieve sessions created strictly after the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[last-active-before]",
+            "description": "Retrieve sessions last active strictly before the given time",
+            "schema": {
+              "description": "Retrieve sessions last active strictly before the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[last-active-after]",
+            "description": "Retrieve sessions last active strictly after the given time",
+            "schema": {
+              "description": "Retrieve sessions last active strictly after the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
             },
             "style": "form"
           }
@@ -5369,6 +5591,38 @@
                 "type": "null"
               }
             ]
+          },
+          "filter[created-before]": {
+            "description": "Retrieve sessions created strictly before the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "filter[created-after]": {
+            "description": "Retrieve sessions created strictly after the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "filter[last-active-before]": {
+            "description": "Retrieve sessions last active strictly before the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "filter[last-active-after]": {
+            "description": "Retrieve sessions last active strictly after the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -5950,15 +6204,12 @@
             ]
           },
           "filter[client]": {
-            "description": "Retrieve the items for the given client",
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ULID"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "description": "Retrieve the items for the given client(s)\n\n This parameter may be repeated to filter on multiple clients at\n once (sessions matching any of the given clients are returned).",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ULID"
+            },
+            "default": []
           },
           "filter[client-kind]": {
             "description": "Retrieve the items only for a specific client kind",
@@ -6000,6 +6251,38 @@
                 "type": "null"
               }
             ]
+          },
+          "filter[created-before]": {
+            "description": "Retrieve sessions created strictly before the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "filter[created-after]": {
+            "description": "Retrieve sessions created strictly after the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "filter[last-active-before]": {
+            "description": "Retrieve sessions last active strictly before the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "filter[last-active-after]": {
+            "description": "Retrieve sessions last active strictly after the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -6682,6 +6965,28 @@
                 "type": "null"
               }
             ]
+          },
+          "filter[active-oauth2-client]": {
+            "description": "Retrieve users which have at least one active OAuth 2.0 session\n belonging to any of the given client IDs.\n\n This filter may be repeated; the semantics are OR across the supplied\n clients (a user matches if they have an active session for *any* of\n them).",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ULID"
+            },
+            "default": []
+          },
+          "filter[has-active-oauth2-session]": {
+            "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) OAuth 2.0 session, regardless of the client.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "filter[has-active-compat-session]": {
+            "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) compatibility session.",
+            "type": [
+              "boolean",
+              "null"
+            ]
           }
         }
       },
@@ -7135,6 +7440,38 @@
                 "type": "null"
               }
             ]
+          },
+          "filter[created-before]": {
+            "description": "Retrieve sessions created strictly before the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "filter[created-after]": {
+            "description": "Retrieve sessions created strictly after the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "filter[last-active-before]": {
+            "description": "Retrieve sessions last active strictly before the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "filter[last-active-after]": {
+            "description": "Retrieve sessions last active strictly after the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         }
       },
