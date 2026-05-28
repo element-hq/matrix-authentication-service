@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -13,17 +14,29 @@ use async_trait::async_trait;
 use mas_data_model::{Client, Clock, JwksOrJwksUri};
 use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
 use mas_jose::jwk::PublicJsonWebKeySet;
-use mas_storage::oauth2::OAuth2ClientRepository;
+use mas_storage::{
+    Page, Pagination,
+    oauth2::{OAuth2ClientFilter, OAuth2ClientRepository},
+    pagination::Node,
+};
 use oauth2_types::{oidc::ApplicationType, requests::GrantType};
 use opentelemetry_semantic_conventions::attribute::DB_QUERY_TEXT;
 use rand::RngCore;
+use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def};
+use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use tracing::{Instrument, info_span};
 use ulid::Ulid;
 use url::Url;
 use uuid::Uuid;
 
-use crate::{DatabaseError, DatabaseInconsistencyError, tracing::ExecuteExt};
+use crate::{
+    DatabaseError, DatabaseInconsistencyError,
+    filter::{Filter, StatementExt},
+    iden::OAuth2Clients,
+    pagination::QueryBuilderExt,
+    tracing::ExecuteExt,
+};
 
 /// An implementation of [`OAuth2ClientRepository`] for a PostgreSQL connection
 pub struct PgOAuth2ClientRepository<'c> {
@@ -39,7 +52,8 @@ impl<'c> PgOAuth2ClientRepository<'c> {
 }
 
 #[expect(clippy::struct_excessive_bools)]
-#[derive(Debug)]
+#[derive(Debug, sqlx::FromRow)]
+#[enum_def]
 struct OAuth2ClientLookup {
     oauth2_client_id: Uuid,
     metadata_digest: Option<String>,
@@ -64,14 +78,26 @@ struct OAuth2ClientLookup {
     initiate_login_uri: Option<String>,
 }
 
-impl TryInto<Client> for OAuth2ClientLookup {
+impl Node<Ulid> for OAuth2ClientLookup {
+    fn cursor(&self) -> Ulid {
+        self.oauth2_client_id.into()
+    }
+}
+
+impl Filter for OAuth2ClientFilter<'_> {
+    fn generate_condition(&self, _has_joins: bool) -> impl sea_query::IntoCondition {
+        sea_query::Condition::all()
+    }
+}
+
+impl TryFrom<OAuth2ClientLookup> for Client {
     type Error = DatabaseInconsistencyError;
 
-    fn try_into(self) -> Result<Client, Self::Error> {
-        let id = Ulid::from(self.oauth2_client_id);
+    fn try_from(value: OAuth2ClientLookup) -> Result<Self, Self::Error> {
+        let id = Ulid::from(value.oauth2_client_id);
 
         let redirect_uris: Result<Vec<Url>, _> =
-            self.redirect_uris.iter().map(|s| s.parse()).collect();
+            value.redirect_uris.iter().map(|s| s.parse()).collect();
         let redirect_uris = redirect_uris.map_err(|e| {
             DatabaseInconsistencyError::on("oauth2_clients")
                 .column("redirect_uris")
@@ -79,7 +105,7 @@ impl TryInto<Client> for OAuth2ClientLookup {
                 .source(e)
         })?;
 
-        let application_type = self
+        let application_type = value
             .application_type
             .map(|s| s.parse())
             .transpose()
@@ -91,27 +117,27 @@ impl TryInto<Client> for OAuth2ClientLookup {
             })?;
 
         let mut grant_types = Vec::new();
-        if self.grant_type_authorization_code {
+        if value.grant_type_authorization_code {
             grant_types.push(GrantType::AuthorizationCode);
         }
-        if self.grant_type_refresh_token {
+        if value.grant_type_refresh_token {
             grant_types.push(GrantType::RefreshToken);
         }
-        if self.grant_type_client_credentials {
+        if value.grant_type_client_credentials {
             grant_types.push(GrantType::ClientCredentials);
         }
-        if self.grant_type_device_code {
+        if value.grant_type_device_code {
             grant_types.push(GrantType::DeviceCode);
         }
 
-        let logo_uri = self.logo_uri.map(|s| s.parse()).transpose().map_err(|e| {
+        let logo_uri = value.logo_uri.map(|s| s.parse()).transpose().map_err(|e| {
             DatabaseInconsistencyError::on("oauth2_clients")
                 .column("logo_uri")
                 .row(id)
                 .source(e)
         })?;
 
-        let client_uri = self
+        let client_uri = value
             .client_uri
             .map(|s| s.parse())
             .transpose()
@@ -122,7 +148,7 @@ impl TryInto<Client> for OAuth2ClientLookup {
                     .source(e)
             })?;
 
-        let policy_uri = self
+        let policy_uri = value
             .policy_uri
             .map(|s| s.parse())
             .transpose()
@@ -133,14 +159,14 @@ impl TryInto<Client> for OAuth2ClientLookup {
                     .source(e)
             })?;
 
-        let tos_uri = self.tos_uri.map(|s| s.parse()).transpose().map_err(|e| {
+        let tos_uri = value.tos_uri.map(|s| s.parse()).transpose().map_err(|e| {
             DatabaseInconsistencyError::on("oauth2_clients")
                 .column("tos_uri")
                 .row(id)
                 .source(e)
         })?;
 
-        let id_token_signed_response_alg = self
+        let id_token_signed_response_alg = value
             .id_token_signed_response_alg
             .map(|s| s.parse())
             .transpose()
@@ -151,7 +177,7 @@ impl TryInto<Client> for OAuth2ClientLookup {
                     .source(e)
             })?;
 
-        let userinfo_signed_response_alg = self
+        let userinfo_signed_response_alg = value
             .userinfo_signed_response_alg
             .map(|s| s.parse())
             .transpose()
@@ -162,7 +188,7 @@ impl TryInto<Client> for OAuth2ClientLookup {
                     .source(e)
             })?;
 
-        let token_endpoint_auth_method = self
+        let token_endpoint_auth_method = value
             .token_endpoint_auth_method
             .map(|s| s.parse())
             .transpose()
@@ -173,7 +199,7 @@ impl TryInto<Client> for OAuth2ClientLookup {
                     .source(e)
             })?;
 
-        let token_endpoint_auth_signing_alg = self
+        let token_endpoint_auth_signing_alg = value
             .token_endpoint_auth_signing_alg
             .map(|s| s.parse())
             .transpose()
@@ -184,7 +210,7 @@ impl TryInto<Client> for OAuth2ClientLookup {
                     .source(e)
             })?;
 
-        let initiate_login_uri = self
+        let initiate_login_uri = value
             .initiate_login_uri
             .map(|s| s.parse())
             .transpose()
@@ -195,7 +221,7 @@ impl TryInto<Client> for OAuth2ClientLookup {
                     .source(e)
             })?;
 
-        let jwks = match (self.jwks, self.jwks_uri) {
+        let jwks = match (value.jwks, value.jwks_uri) {
             (None, None) => None,
             (Some(jwks), None) => {
                 let jwks = serde_json::from_value(jwks).map_err(|e| {
@@ -226,12 +252,12 @@ impl TryInto<Client> for OAuth2ClientLookup {
         Ok(Client {
             id,
             client_id: id.to_string(),
-            metadata_digest: self.metadata_digest,
-            encrypted_client_secret: self.encrypted_client_secret,
+            metadata_digest: value.metadata_digest,
+            encrypted_client_secret: value.encrypted_client_secret,
             application_type,
             redirect_uris,
             grant_types,
-            client_name: self.client_name,
+            client_name: value.client_name,
             logo_uri,
             client_uri,
             policy_uri,
@@ -847,5 +873,134 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
         .await?;
 
         DatabaseError::ensure_affected_rows(&res, 1)
+    }
+
+    #[tracing::instrument(
+        name = "db.oauth2_client.list",
+        skip_all,
+        fields(
+            db.query.text,
+        ),
+        err,
+    )]
+    async fn list(
+        &mut self,
+        filter: OAuth2ClientFilter<'_>,
+        pagination: Pagination,
+    ) -> Result<Page<Client>, Self::Error> {
+        let (sql, arguments) = Query::select()
+            .expr_as(
+                Expr::col((OAuth2Clients::Table, OAuth2Clients::OAuth2ClientId)),
+                OAuth2ClientLookupIden::Oauth2ClientId,
+            )
+            .expr_as(
+                Expr::cust("metadata_digest"),
+                OAuth2ClientLookupIden::MetadataDigest,
+            )
+            .expr_as(
+                Expr::cust("encrypted_client_secret"),
+                OAuth2ClientLookupIden::EncryptedClientSecret,
+            )
+            .expr_as(
+                Expr::cust("application_type"),
+                OAuth2ClientLookupIden::ApplicationType,
+            )
+            .expr_as(
+                Expr::col((OAuth2Clients::Table, OAuth2Clients::RedirectUris)),
+                OAuth2ClientLookupIden::RedirectUris,
+            )
+            .expr_as(
+                Expr::cust("grant_type_authorization_code"),
+                OAuth2ClientLookupIden::GrantTypeAuthorizationCode,
+            )
+            .expr_as(
+                Expr::cust("grant_type_refresh_token"),
+                OAuth2ClientLookupIden::GrantTypeRefreshToken,
+            )
+            .expr_as(
+                Expr::cust("grant_type_client_credentials"),
+                OAuth2ClientLookupIden::GrantTypeClientCredentials,
+            )
+            .expr_as(
+                Expr::cust("grant_type_device_code"),
+                OAuth2ClientLookupIden::GrantTypeDeviceCode,
+            )
+            .expr_as(
+                Expr::col((OAuth2Clients::Table, OAuth2Clients::ClientName)),
+                OAuth2ClientLookupIden::ClientName,
+            )
+            .expr_as(
+                Expr::col((OAuth2Clients::Table, OAuth2Clients::LogoUri)),
+                OAuth2ClientLookupIden::LogoUri,
+            )
+            .expr_as(
+                Expr::col((OAuth2Clients::Table, OAuth2Clients::ClientUri)),
+                OAuth2ClientLookupIden::ClientUri,
+            )
+            .expr_as(Expr::cust("policy_uri"), OAuth2ClientLookupIden::PolicyUri)
+            .expr_as(Expr::cust("tos_uri"), OAuth2ClientLookupIden::TosUri)
+            .expr_as(Expr::cust("jwks_uri"), OAuth2ClientLookupIden::JwksUri)
+            .expr_as(Expr::cust("jwks"), OAuth2ClientLookupIden::Jwks)
+            .expr_as(
+                Expr::cust("id_token_signed_response_alg"),
+                OAuth2ClientLookupIden::IdTokenSignedResponseAlg,
+            )
+            .expr_as(
+                Expr::cust("userinfo_signed_response_alg"),
+                OAuth2ClientLookupIden::UserinfoSignedResponseAlg,
+            )
+            .expr_as(
+                Expr::cust("token_endpoint_auth_method"),
+                OAuth2ClientLookupIden::TokenEndpointAuthMethod,
+            )
+            .expr_as(
+                Expr::cust("token_endpoint_auth_signing_alg"),
+                OAuth2ClientLookupIden::TokenEndpointAuthSigningAlg,
+            )
+            .expr_as(
+                Expr::cust("initiate_login_uri"),
+                OAuth2ClientLookupIden::InitiateLoginUri,
+            )
+            .from(OAuth2Clients::Table)
+            .apply_filter(filter)
+            .generate_pagination(
+                (OAuth2Clients::Table, OAuth2Clients::OAuth2ClientId),
+                pagination,
+            )
+            .build_sqlx(PostgresQueryBuilder);
+
+        let edges: Vec<OAuth2ClientLookup> = sqlx::query_as_with(&sql, arguments)
+            .traced()
+            .fetch_all(&mut *self.conn)
+            .await?;
+
+        let page = pagination.process(edges).try_map(Client::try_from)?;
+
+        Ok(page)
+    }
+
+    #[tracing::instrument(
+        name = "db.oauth2_client.count",
+        skip_all,
+        fields(
+            db.query.text,
+        ),
+        err,
+    )]
+    async fn count(&mut self, filter: OAuth2ClientFilter<'_>) -> Result<usize, Self::Error> {
+        let (sql, arguments) = Query::select()
+            .expr(Expr::col((OAuth2Clients::Table, OAuth2Clients::OAuth2ClientId)).count())
+            .from(OAuth2Clients::Table)
+            .apply_filter(filter)
+            .build_sqlx(PostgresQueryBuilder);
+
+        let count: i64 = sqlx::query_scalar_with(&sql, arguments)
+            .traced()
+            .fetch_one(&mut *self.conn)
+            .await?;
+
+        count
+            .try_into()
+            .map_err(DatabaseError::to_invalid_operation)
     }
 }

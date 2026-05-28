@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -27,7 +28,10 @@ mod tests {
     use mas_data_model::{AuthorizationCode, Clock, clock::MockClock};
     use mas_storage::{
         Pagination,
-        oauth2::{OAuth2DeviceCodeGrantParams, OAuth2SessionFilter, OAuth2SessionRepository},
+        oauth2::{
+            OAuth2ClientFilter, OAuth2DeviceCodeGrantParams, OAuth2SessionFilter,
+            OAuth2SessionRepository,
+        },
     };
     use oauth2_types::{
         requests::{GrantType, ResponseMode},
@@ -943,5 +947,92 @@ mod tests {
             .exchange(&clock, grant, &session)
             .await;
         assert!(res.is_err());
+    }
+
+    /// Test the [`OAuth2ClientRepository::list`] and
+    /// [`OAuth2ClientRepository::count`] methods.
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_list_clients(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+
+        // Empty initially
+        let filter = OAuth2ClientFilter::new();
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 0);
+
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert!(page.edges.is_empty());
+        assert!(!page.has_next_page);
+
+        // Add a couple of clients
+        let client1 = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &clock,
+                vec!["https://first.example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::AuthorizationCode],
+                Some("First client".to_owned()),
+                None,
+                Some("https://first.example.com/".parse().unwrap()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+        clock.advance(Duration::try_minutes(1).unwrap());
+
+        let client2 = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &clock,
+                vec!["https://second.example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::AuthorizationCode],
+                Some("Second client".to_owned()),
+                None,
+                Some("https://second.example.com/".parse().unwrap()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 2);
+
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert!(!page.has_next_page);
+        assert_eq!(page.edges.len(), 2);
+        assert_eq!(page.edges[0].node, client1);
+        assert_eq!(page.edges[1].node, client2);
     }
 }

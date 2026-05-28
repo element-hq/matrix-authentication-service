@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -15,7 +16,21 @@ use rand_core::RngCore;
 use ulid::Ulid;
 use url::Url;
 
-use crate::repository_impl;
+use crate::{Page, Pagination, repository_impl};
+
+/// Filter parameters for listing OAuth 2.0 clients
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub struct OAuth2ClientFilter<'a> {
+    _lifetime: std::marker::PhantomData<&'a ()>,
+}
+
+impl OAuth2ClientFilter<'_> {
+    /// Create a new [`OAuth2ClientFilter`] with default values
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
 
 /// An [`OAuth2ClientRepository`] helps interacting with [`Client`] saved in the
 /// storage backend
@@ -197,6 +212,33 @@ pub trait OAuth2ClientRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails, or if the
     /// client does not exist
     async fn delete_by_id(&mut self, id: Ulid) -> Result<(), Self::Error>;
+
+    /// List [`Client`] with the given filter and pagination
+    ///
+    /// # Parameters
+    ///
+    /// * `filter`: The filter parameters
+    /// * `pagination`: The pagination parameters
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn list(
+        &mut self,
+        filter: OAuth2ClientFilter<'_>,
+        pagination: Pagination,
+    ) -> Result<Page<Client>, Self::Error>;
+
+    /// Count the [`Client`] with the given filter
+    ///
+    /// # Parameters
+    ///
+    /// * `filter`: The filter parameters
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn count(&mut self, filter: OAuth2ClientFilter<'_>) -> Result<usize, Self::Error>;
 }
 
 repository_impl!(OAuth2ClientRepository:
@@ -251,4 +293,12 @@ repository_impl!(OAuth2ClientRepository:
     async fn delete(&mut self, client: Client) -> Result<(), Self::Error>;
 
     async fn delete_by_id(&mut self, id: Ulid) -> Result<(), Self::Error>;
+
+    async fn list(
+        &mut self,
+        filter: OAuth2ClientFilter<'_>,
+        pagination: Pagination,
+    ) -> Result<Page<Client>, Self::Error>;
+
+    async fn count(&mut self, filter: OAuth2ClientFilter<'_>) -> Result<usize, Self::Error>;
 );

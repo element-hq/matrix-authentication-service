@@ -95,6 +95,10 @@ pub enum OAuth2Clients {
     #[iden = "oauth2_client_id"]
     OAuth2ClientId,
     IsStatic,
+    ClientName,
+    ClientUri,
+    LogoUri,
+    RedirectUris,
 }
 
 #[derive(sea_query::Iden)]
