@@ -21,6 +21,7 @@ use crate::{Page, Pagination, repository_impl};
 /// Filter parameters for listing OAuth 2.0 clients
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct OAuth2ClientFilter<'a> {
+    state: Option<bool>,
     _lifetime: std::marker::PhantomData<&'a ()>,
 }
 
@@ -29,6 +30,31 @@ impl OAuth2ClientFilter<'_> {
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Only return static clients (those declared in the configuration)
+    #[must_use]
+    pub fn only_static_clients(mut self) -> Self {
+        self.state = Some(true);
+        self
+    }
+
+    /// Only return dynamic clients (those registered via the
+    /// dynamic-client-registration endpoint)
+    #[must_use]
+    pub fn only_dynamic_clients(mut self) -> Self {
+        self.state = Some(false);
+        self
+    }
+
+    /// Get the static/dynamic state filter
+    ///
+    /// Returns `Some(true)` if only static clients should be returned,
+    /// `Some(false)` if only dynamic clients should be returned, and
+    /// `None` if no filter was set.
+    #[must_use]
+    pub fn state(&self) -> Option<bool> {
+        self.state
     }
 }
 

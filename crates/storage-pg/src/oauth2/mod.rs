@@ -26,6 +26,7 @@ pub use self::{
 mod tests {
     use chrono::Duration;
     use mas_data_model::{AuthorizationCode, Clock, clock::MockClock};
+    use mas_iana::oauth::OAuthClientAuthenticationMethod;
     use mas_storage::{
         Pagination,
         oauth2::{
@@ -1031,6 +1032,53 @@ mod tests {
             .await
             .unwrap();
         assert!(!page.has_next_page);
+        assert_eq!(page.edges.len(), 2);
+        assert_eq!(page.edges[0].node, client1);
+        assert_eq!(page.edges[1].node, client2);
+
+        // Add a static client
+        let static_id = Ulid::from_datetime_with_source(clock.now().into(), &mut rng);
+        repo.oauth2_client()
+            .upsert_static(
+                static_id,
+                Some("Static client".to_owned()),
+                OAuthClientAuthenticationMethod::None,
+                None,
+                None,
+                None,
+                vec!["https://static.example.com/redirect".parse().unwrap()],
+            )
+            .await
+            .unwrap();
+        // Re-read via lookup so we have the canonical representation
+        let static_client = repo
+            .oauth2_client()
+            .lookup(static_id)
+            .await
+            .unwrap()
+            .expect("static client just inserted");
+
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 3);
+
+        // Only static clients
+        let filter = OAuth2ClientFilter::new().only_static_clients();
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 1);
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert_eq!(page.edges.len(), 1);
+        assert_eq!(page.edges[0].node, static_client);
+
+        // Only dynamic clients
+        let filter = OAuth2ClientFilter::new().only_dynamic_clients();
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 2);
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
         assert_eq!(page.edges.len(), 2);
         assert_eq!(page.edges[0].node, client1);
         assert_eq!(page.edges[1].node, client2);

@@ -86,7 +86,9 @@ impl Node<Ulid> for OAuth2ClientLookup {
 
 impl Filter for OAuth2ClientFilter<'_> {
     fn generate_condition(&self, _has_joins: bool) -> impl sea_query::IntoCondition {
-        sea_query::Condition::all()
+        sea_query::Condition::all().add_option(self.state().map(|is_static| {
+            Expr::col((OAuth2Clients::Table, OAuth2Clients::IsStatic)).eq(is_static)
+        }))
     }
 }
 
