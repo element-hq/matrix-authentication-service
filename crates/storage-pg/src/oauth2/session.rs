@@ -32,6 +32,7 @@ use crate::{
     iden::{OAuth2Clients, OAuth2Sessions, UserSessions},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
+    ulid_at::{max_ulid_at, min_ulid_at},
 };
 
 /// An implementation of [`OAuth2SessionRepository`] for a PostgreSQL connection
@@ -196,6 +197,17 @@ impl Filter for OAuth2SessionFilter<'_> {
             .add_option(self.last_active_before().map(|last_active_before| {
                 Expr::col((OAuth2Sessions::Table, OAuth2Sessions::LastActiveAt))
                     .lt(last_active_before)
+            }))
+            .add_option(self.created_after().map(|created_after| {
+                // ULIDs encode the creation time in their high 48 bits, so we
+                // can use the primary key index to filter on creation time
+                // without touching the `created_at` column.
+                Expr::col((OAuth2Sessions::Table, OAuth2Sessions::OAuth2SessionId))
+                    .gt(max_ulid_at(created_after))
+            }))
+            .add_option(self.created_before().map(|created_before| {
+                Expr::col((OAuth2Sessions::Table, OAuth2Sessions::OAuth2SessionId))
+                    .lt(min_ulid_at(created_before))
             }))
     }
 }
