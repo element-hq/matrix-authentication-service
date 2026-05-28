@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -7,6 +8,7 @@ use aide::{OperationIo, transform::TransformOperation};
 use axum::{Json, response::IntoResponse};
 use axum_extra::extract::{Query, QueryRejection};
 use axum_macros::FromRequestParts;
+use chrono::{DateTime, Utc};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
 use mas_storage::{Page, compat::CompatSessionFilter};
@@ -64,6 +66,14 @@ pub struct FilterParams {
     /// * `finished`: Only retrieve finished sessions
     #[serde(rename = "filter[status]")]
     status: Option<CompatSessionStatus>,
+
+    /// Retrieve sessions created strictly before the given time
+    #[serde(rename = "filter[created-before]")]
+    created_before: Option<DateTime<Utc>>,
+
+    /// Retrieve sessions created strictly after the given time
+    #[serde(rename = "filter[created-after]")]
+    created_after: Option<DateTime<Utc>>,
 }
 
 impl std::fmt::Display for FilterParams {
@@ -82,6 +92,24 @@ impl std::fmt::Display for FilterParams {
 
         if let Some(status) = self.status {
             write!(f, "{sep}filter[status]={status}")?;
+            sep = '&';
+        }
+
+        if let Some(created_before) = self.created_before {
+            write!(
+                f,
+                "{sep}filter[created-before]={}",
+                created_before.format("%Y-%m-%dT%H:%M:%SZ")
+            )?;
+            sep = '&';
+        }
+
+        if let Some(created_after) = self.created_after {
+            write!(
+                f,
+                "{sep}filter[created-after]={}",
+                created_after.format("%Y-%m-%dT%H:%M:%SZ")
+            )?;
             sep = '&';
         }
 
@@ -210,6 +238,18 @@ pub async fn handler(
         None => filter,
     };
 
+    let filter = if let Some(created_before) = params.created_before {
+        filter.with_created_before(created_before)
+    } else {
+        filter
+    };
+
+    let filter = if let Some(created_after) = params.created_after {
+        filter.with_created_after(created_after)
+    } else {
+        filter
+    };
+
     let response = match include_count {
         IncludeCount::True => {
             let page = repo
@@ -242,7 +282,7 @@ mod tests {
     use chrono::Duration;
     use hyper::{Request, StatusCode};
     use insta::assert_json_snapshot;
-    use mas_data_model::Device;
+    use mas_data_model::{Clock, Device};
     use sqlx::PgPool;
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
@@ -649,5 +689,54 @@ mod tests {
           }
         }
         "#);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_compat_session_list_by_created_at(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+        let mut rng = state.rng();
+
+        let mut repo = state.repository().await.unwrap();
+        let user = repo
+            .user()
+            .add(&mut rng, &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+
+        let device1 = Device::generate(&mut rng);
+        repo.compat_session()
+            .add(&mut rng, &state.clock, &user, device1, None, false, None)
+            .await
+            .unwrap();
+        state.clock.advance(Duration::minutes(1));
+        let cutoff = state.clock.now();
+        state.clock.advance(Duration::minutes(1));
+        let device2 = Device::generate(&mut rng);
+        let after_session = repo
+            .compat_session()
+            .add(&mut rng, &state.clock, &user, device2, None, false, None)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let request = Request::get(format!(
+            "/api/admin/v1/compat-sessions?filter[created-after]={}",
+            cutoff.format("%Y-%m-%dT%H:%M:%SZ")
+        ))
+        .bearer(&token)
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_eq!(body["meta"]["count"], 1);
+        let ids: Vec<&str> = body["data"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v["id"].as_str().unwrap())
+            .collect();
+        assert_eq!(ids, vec![after_session.id.to_string()]);
     }
 }
