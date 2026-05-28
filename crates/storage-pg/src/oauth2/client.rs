@@ -22,7 +22,7 @@ use mas_storage::{
 use oauth2_types::{oidc::ApplicationType, requests::GrantType};
 use opentelemetry_semantic_conventions::attribute::DB_QUERY_TEXT;
 use rand::RngCore;
-use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def};
+use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def, extension::postgres::PgExpr as _};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use tracing::{Instrument, info_span};
@@ -86,9 +86,14 @@ impl Node<Ulid> for OAuth2ClientLookup {
 
 impl Filter for OAuth2ClientFilter<'_> {
     fn generate_condition(&self, _has_joins: bool) -> impl sea_query::IntoCondition {
-        sea_query::Condition::all().add_option(self.state().map(|is_static| {
-            Expr::col((OAuth2Clients::Table, OAuth2Clients::IsStatic)).eq(is_static)
-        }))
+        sea_query::Condition::all()
+            .add_option(self.state().map(|is_static| {
+                Expr::col((OAuth2Clients::Table, OAuth2Clients::IsStatic)).eq(is_static)
+            }))
+            .add_option(self.client_name().map(|client_name| {
+                Expr::col((OAuth2Clients::Table, OAuth2Clients::ClientName))
+                    .ilike(format!("%{client_name}%"))
+            }))
     }
 }
 

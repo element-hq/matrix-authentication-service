@@ -22,10 +22,10 @@ use crate::{Page, Pagination, repository_impl};
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct OAuth2ClientFilter<'a> {
     state: Option<bool>,
-    _lifetime: std::marker::PhantomData<&'a ()>,
+    client_name: Option<&'a str>,
 }
 
-impl OAuth2ClientFilter<'_> {
+impl<'a> OAuth2ClientFilter<'a> {
     /// Create a new [`OAuth2ClientFilter`] with default values
     #[must_use]
     pub fn new() -> Self {
@@ -55,6 +55,22 @@ impl OAuth2ClientFilter<'_> {
     #[must_use]
     pub fn state(&self) -> Option<bool> {
         self.state
+    }
+
+    /// Only return clients whose `client_name` matches the given substring
+    /// (case-insensitive)
+    #[must_use]
+    pub fn matching_client_name(mut self, client_name: &'a str) -> Self {
+        self.client_name = Some(client_name);
+        self
+    }
+
+    /// Get the client name filter
+    ///
+    /// Returns [`None`] if no client name filter was set
+    #[must_use]
+    pub fn client_name(&self) -> Option<&'a str> {
+        self.client_name
     }
 }
 
