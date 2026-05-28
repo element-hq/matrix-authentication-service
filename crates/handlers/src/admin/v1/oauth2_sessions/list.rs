@@ -107,6 +107,14 @@ pub struct FilterParams {
     /// Retrieve sessions created strictly after the given time
     #[serde(rename = "filter[created-after]")]
     created_after: Option<DateTime<Utc>>,
+
+    /// Retrieve sessions last active strictly before the given time
+    #[serde(rename = "filter[last-active-before]")]
+    last_active_before: Option<DateTime<Utc>>,
+
+    /// Retrieve sessions last active strictly after the given time
+    #[serde(rename = "filter[last-active-after]")]
+    last_active_after: Option<DateTime<Utc>>,
 }
 
 impl std::fmt::Display for FilterParams {
@@ -157,6 +165,24 @@ impl std::fmt::Display for FilterParams {
                 f,
                 "{sep}filter[created-after]={}",
                 created_after.format("%Y-%m-%dT%H:%M:%SZ")
+            )?;
+            sep = '&';
+        }
+
+        if let Some(last_active_before) = self.last_active_before {
+            write!(
+                f,
+                "{sep}filter[last-active-before]={}",
+                last_active_before.format("%Y-%m-%dT%H:%M:%SZ")
+            )?;
+            sep = '&';
+        }
+
+        if let Some(last_active_after) = self.last_active_after {
+            write!(
+                f,
+                "{sep}filter[last-active-after]={}",
+                last_active_after.format("%Y-%m-%dT%H:%M:%SZ")
             )?;
             sep = '&';
         }
@@ -344,6 +370,18 @@ pub async fn handler(
         filter
     };
 
+    let filter = if let Some(last_active_before) = params.last_active_before {
+        filter.with_last_active_before(last_active_before)
+    } else {
+        filter
+    };
+
+    let filter = if let Some(last_active_after) = params.last_active_after {
+        filter.with_last_active_after(last_active_after)
+    } else {
+        filter
+    };
+
     let response = match include_count {
         IncludeCount::True => {
             let page = repo
@@ -496,6 +534,80 @@ mod tests {
           }
         }
         "#);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_oauth2_session_list_by_last_active(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+        let mut rng = state.rng();
+
+        let mut repo = state.repository().await.unwrap();
+        let client = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &state.clock,
+                vec!["https://example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::ClientCredentials],
+                Some("Test client".to_owned()),
+                Some("https://example.com/logo.png".parse().unwrap()),
+                Some("https://example.com/".parse().unwrap()),
+                Some("https://example.com/policy".parse().unwrap()),
+                Some("https://example.com/tos".parse().unwrap()),
+                Some("https://example.com/jwks.json".parse().unwrap()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some("https://example.com/login".parse().unwrap()),
+            )
+            .await
+            .unwrap();
+
+        let session = repo
+            .oauth2_session()
+            .add_from_client_credentials(
+                &mut rng,
+                &state.clock,
+                &client,
+                Scope::from_iter([OPENID]),
+            )
+            .await
+            .unwrap();
+
+        state.clock.advance(Duration::minutes(5));
+        let activity_at = state.clock.now();
+        repo.oauth2_session()
+            .record_batch_activity(vec![(session.id, activity_at, None)])
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        // Sessions last active after `activity_at - 1m` should include our
+        // session.
+        let threshold = activity_at - Duration::minutes(1);
+        let request = Request::get(format!(
+            "/api/admin/v1/oauth2-sessions?filter[last-active-after]={}",
+            threshold.format("%Y-%m-%dT%H:%M:%SZ")
+        ))
+        .bearer(&token)
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        let ids: Vec<&str> = body["data"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v["id"].as_str().unwrap())
+            .collect();
+        assert!(ids.contains(&session.id.to_string().as_str()));
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
