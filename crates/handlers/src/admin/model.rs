@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -698,6 +699,81 @@ impl UserRegistrationToken {
                 last_used_at: None,
                 expires_at: None,
                 revoked_at: Some(DateTime::default()),
+            },
+        ]
+    }
+}
+
+/// An OAuth 2.0 client registered with this service
+#[derive(Serialize, JsonSchema)]
+pub struct OAuth2Client {
+    #[serde(skip)]
+    id: Ulid,
+
+    /// The OAuth 2.0 client identifier
+    client_id: String,
+
+    /// The human-readable name of the client, if registered
+    client_name: Option<String>,
+
+    /// The homepage URL of the client, if registered
+    client_uri: Option<Url>,
+
+    /// The URL of the client's logo, if registered
+    logo_uri: Option<Url>,
+
+    /// The list of redirect URIs registered by the client
+    redirect_uris: Vec<Url>,
+
+    /// Whether the client is statically configured (defined in the
+    /// configuration file) rather than dynamically registered.
+    is_static: bool,
+}
+
+impl From<mas_data_model::Client> for OAuth2Client {
+    fn from(client: mas_data_model::Client) -> Self {
+        Self {
+            id: client.id,
+            client_id: client.client_id,
+            client_name: client.client_name,
+            client_uri: client.client_uri,
+            logo_uri: client.logo_uri,
+            redirect_uris: client.redirect_uris,
+            is_static: client.is_static,
+        }
+    }
+}
+
+impl Resource for OAuth2Client {
+    const KIND: &'static str = "oauth2-client";
+    const PATH: &'static str = "/api/admin/v1/oauth2-clients";
+
+    fn id(&self) -> Ulid {
+        self.id
+    }
+}
+
+impl OAuth2Client {
+    /// Samples of OAuth 2.0 clients
+    pub fn samples() -> [Self; 2] {
+        [
+            Self {
+                id: Ulid::from_bytes([0x01; 16]),
+                client_id: "01040G2081040G2081040G2081".to_owned(),
+                client_name: Some("Example dynamic client".to_owned()),
+                client_uri: Some("https://example.com/".parse().unwrap()),
+                logo_uri: Some("https://example.com/logo.png".parse().unwrap()),
+                redirect_uris: vec!["https://example.com/oauth/callback".parse().unwrap()],
+                is_static: false,
+            },
+            Self {
+                id: Ulid::from_bytes([0x02; 16]),
+                client_id: "static-client".to_owned(),
+                client_name: Some("Configured static client".to_owned()),
+                client_uri: None,
+                logo_uri: None,
+                redirect_uris: vec!["https://static.example.com/callback".parse().unwrap()],
+                is_static: true,
             },
         ]
     }

@@ -76,6 +76,7 @@ struct OAuth2ClientLookup {
     token_endpoint_auth_method: Option<String>,
     token_endpoint_auth_signing_alg: Option<String>,
     initiate_login_uri: Option<String>,
+    is_static: bool,
 }
 
 impl Node<Ulid> for OAuth2ClientLookup {
@@ -279,6 +280,7 @@ impl TryFrom<OAuth2ClientLookup> for Client {
             token_endpoint_auth_method,
             token_endpoint_auth_signing_alg,
             initiate_login_uri,
+            is_static: value.is_static,
         })
     }
 }
@@ -321,6 +323,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                      , token_endpoint_auth_method
                      , token_endpoint_auth_signing_alg
                      , initiate_login_uri
+                     , is_static
                 FROM oauth2_clients c
 
                 WHERE oauth2_client_id = $1
@@ -372,6 +375,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                     , token_endpoint_auth_method
                     , token_endpoint_auth_signing_alg
                     , initiate_login_uri
+                    , is_static
                 FROM oauth2_clients
                 WHERE metadata_digest = $1
             "#,
@@ -423,6 +427,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                      , token_endpoint_auth_method
                      , token_endpoint_auth_signing_alg
                      , initiate_login_uri
+                     , is_static
                 FROM oauth2_clients c
 
                 WHERE oauth2_client_id = ANY($1::uuid[])
@@ -574,6 +579,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
             token_endpoint_auth_method,
             token_endpoint_auth_signing_alg,
             initiate_login_uri,
+            is_static: false,
         })
     }
 
@@ -683,6 +689,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
             token_endpoint_auth_method: None,
             token_endpoint_auth_signing_alg: None,
             initiate_login_uri: None,
+            is_static: true,
         })
     }
 
@@ -719,6 +726,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                      , token_endpoint_auth_method
                      , token_endpoint_auth_signing_alg
                      , initiate_login_uri
+                     , is_static
                 FROM oauth2_clients c
                 WHERE is_static = TRUE
             "#,
@@ -971,6 +979,10 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
             .expr_as(
                 Expr::cust("initiate_login_uri"),
                 OAuth2ClientLookupIden::InitiateLoginUri,
+            )
+            .expr_as(
+                Expr::col((OAuth2Clients::Table, OAuth2Clients::IsStatic)),
+                OAuth2ClientLookupIden::IsStatic,
             )
             .from(OAuth2Clients::Table)
             .apply_filter(filter)
