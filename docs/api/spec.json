@@ -714,6 +714,79 @@
         }
       }
     },
+    "/api/admin/v1/oauth2-clients/{id}": {
+      "get": {
+        "tags": [
+          "oauth2-client"
+        ],
+        "summary": "Get an OAuth 2.0 client",
+        "operationId": "getOAuth2Client",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OAuth 2.0 client was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_OAuth2Client"
+                },
+                "example": {
+                  "data": {
+                    "type": "oauth2-client",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "client_id": "01040G2081040G2081040G2081",
+                      "client_name": "Example dynamic client",
+                      "client_uri": "https://example.com/",
+                      "logo_uri": "https://example.com/logo.png",
+                      "redirect_uris": [
+                        "https://example.com/oauth/callback"
+                      ],
+                      "is_static": false,
+                      "created_at": "1970-01-01T00:00:00Z"
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/oauth2-clients/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/oauth2-clients/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "OAuth 2.0 client was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "OAuth 2.0 client ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/oauth2-sessions": {
       "get": {
         "tags": [
@@ -5786,6 +5859,22 @@
           "client_id",
           "redirect_uris",
           "is_static"
+        ]
+      },
+      "SingleResponse_for_OAuth2Client": {
+        "description": "A top-level response with a single resource",
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SingleResource_for_OAuth2Client"
+          },
+          "links": {
+            "$ref": "#/components/schemas/SelfLinks"
+          }
+        },
+        "required": [
+          "data",
+          "links"
         ]
       },
       "OAuth2SessionFilter": {

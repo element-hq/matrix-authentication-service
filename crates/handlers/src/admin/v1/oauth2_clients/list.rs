@@ -43,6 +43,10 @@ impl std::fmt::Display for OAuth2ClientKind {
 #[serde(rename = "OAuth2ClientFilter")]
 #[aide(input_with = "Query<FilterParams>")]
 #[from_request(via(Query), rejection(RouteError))]
+#[expect(
+    clippy::struct_field_names,
+    reason = "fields mirror the `filter[client-*]` URL parameters"
+)]
 pub struct FilterParams {
     /// Retrieve only clients of the given kind
     ///

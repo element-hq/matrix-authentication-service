@@ -73,6 +73,10 @@ where
             get_with(self::oauth2_clients::list, self::oauth2_clients::list_doc),
         )
         .api_route(
+            "/oauth2-clients/{id}",
+            get_with(self::oauth2_clients::get, self::oauth2_clients::get_doc),
+        )
+        .api_route(
             "/oauth2-sessions",
             get_with(self::oauth2_sessions::list, self::oauth2_sessions::list_doc),
         )
