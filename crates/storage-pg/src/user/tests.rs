@@ -10,13 +10,17 @@ use mas_data_model::{Clock, clock::MockClock};
 use mas_iana::jose::JsonWebSignatureAlg;
 use mas_storage::{
     Pagination, RepositoryAccess,
+    oauth2::{OAuth2ClientRepository, OAuth2SessionRepository},
     upstream_oauth2::{UpstreamOAuthProviderParams, UpstreamOAuthSessionFilter},
     user::{
         BrowserSessionFilter, BrowserSessionRepository, UserEmailFilter, UserEmailRepository,
         UserFilter, UserPasswordRepository, UserRepository,
     },
 };
-use oauth2_types::scope::{OPENID, Scope};
+use oauth2_types::{
+    requests::GrantType,
+    scope::{OPENID, Scope},
+};
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
 use sqlx::PgPool;
@@ -832,6 +836,164 @@ async fn test_user_session(pool: PgPool) {
         .expect("session to be found in the database");
     // It should be finished
     assert!(lookup.finished_at.is_some());
+}
+
+/// Test [`UserFilter::with_active_oauth2_session_for_any_of_clients`].
+///
+/// Sets up three users (A, B, C) with various OAuth2 session states across
+/// three clients, and asserts that filtering on `[client_x, client_y]`
+/// returns users that have an ACTIVE session for *any* of those clients
+/// (OR semantics).
+#[sqlx::test(migrator = "crate::MIGRATOR")]
+async fn test_user_filter_active_oauth2_session_for_any_of_clients(pool: PgPool) {
+    let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+    let mut rng = ChaChaRng::seed_from_u64(42);
+    let clock = MockClock::default();
+
+    // Three users
+    let user_a = repo
+        .user()
+        .add(&mut rng, &clock, "alice".to_owned())
+        .await
+        .unwrap();
+    let user_b = repo
+        .user()
+        .add(&mut rng, &clock, "bob".to_owned())
+        .await
+        .unwrap();
+    let user_c = repo
+        .user()
+        .add(&mut rng, &clock, "carol".to_owned())
+        .await
+        .unwrap();
+
+    let session_a = repo
+        .browser_session()
+        .add(&mut rng, &clock, &user_a, None)
+        .await
+        .unwrap();
+    let session_b = repo
+        .browser_session()
+        .add(&mut rng, &clock, &user_b, None)
+        .await
+        .unwrap();
+    let session_c = repo
+        .browser_session()
+        .add(&mut rng, &clock, &user_c, None)
+        .await
+        .unwrap();
+
+    // Three OAuth2 clients
+    let make_client = async |repo: &mut mas_storage::BoxRepository,
+                             rng: &mut ChaChaRng,
+                             clock: &MockClock,
+                             host: &str| {
+        repo.oauth2_client()
+            .add(
+                rng,
+                clock,
+                vec![format!("https://{host}/redirect").parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::AuthorizationCode],
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap()
+    };
+
+    let client_x = make_client(&mut repo, &mut rng, &clock, "x.example.com").await;
+    let client_y = make_client(&mut repo, &mut rng, &clock, "y.example.com").await;
+    let client_z = make_client(&mut repo, &mut rng, &clock, "z.example.com").await;
+
+    let scope = Scope::from_iter([OPENID]);
+
+    // User A: active session on client_x  -> should match [x,y]
+    repo.oauth2_session()
+        .add_from_browser_session(&mut rng, &clock, &client_x, &session_a, scope.clone())
+        .await
+        .unwrap();
+
+    // User B: a FINISHED session on client_x and an active session on client_y
+    //   -> should match [x,y] (because of client_y active)
+    let session_b_x_finished = repo
+        .oauth2_session()
+        .add_from_browser_session(&mut rng, &clock, &client_x, &session_b, scope.clone())
+        .await
+        .unwrap();
+    repo.oauth2_session()
+        .finish(&clock, session_b_x_finished)
+        .await
+        .unwrap();
+    repo.oauth2_session()
+        .add_from_browser_session(&mut rng, &clock, &client_y, &session_b, scope.clone())
+        .await
+        .unwrap();
+
+    // User C: active session on client_z only  -> should NOT match [x,y]
+    repo.oauth2_session()
+        .add_from_browser_session(&mut rng, &clock, &client_z, &session_c, scope.clone())
+        .await
+        .unwrap();
+
+    // Filtering on [client_x, client_y]
+    let clients = [client_x.id, client_y.id];
+    let filter = UserFilter::new().with_active_oauth2_session_for_any_of_clients(&clients);
+    assert_eq!(repo.user().count(filter).await.unwrap(), 2);
+
+    let page = repo
+        .user()
+        .list(filter, Pagination::first(10))
+        .await
+        .unwrap();
+    let ids: std::collections::HashSet<_> = page.edges.iter().map(|e| e.node.id).collect();
+    assert!(ids.contains(&user_a.id));
+    assert!(ids.contains(&user_b.id));
+    assert!(!ids.contains(&user_c.id));
+
+    // Filtering on [client_z] alone should match only user C.
+    let only_z = [client_z.id];
+    let filter = UserFilter::new().with_active_oauth2_session_for_any_of_clients(&only_z);
+    assert_eq!(repo.user().count(filter).await.unwrap(), 1);
+    let page = repo
+        .user()
+        .list(filter, Pagination::first(10))
+        .await
+        .unwrap();
+    assert_eq!(page.edges.len(), 1);
+    assert_eq!(page.edges[0].node.id, user_c.id);
+
+    // Filtering on [client_x] alone should match only user A (B's client_x
+    // session is finished).
+    let only_x = [client_x.id];
+    let filter = UserFilter::new().with_active_oauth2_session_for_any_of_clients(&only_x);
+    assert_eq!(repo.user().count(filter).await.unwrap(), 1);
+    let page = repo
+        .user()
+        .list(filter, Pagination::first(10))
+        .await
+        .unwrap();
+    assert_eq!(page.edges.len(), 1);
+    assert_eq!(page.edges[0].node.id, user_a.id);
+
+    // Filtering on an empty slice should match nothing.
+    let none: [ulid::Ulid; 0] = [];
+    let filter = UserFilter::new().with_active_oauth2_session_for_any_of_clients(&none);
+    assert_eq!(repo.user().count(filter).await.unwrap(), 0);
+
+    repo.save().await.unwrap();
 }
 
 #[sqlx::test(migrator = "crate::MIGRATOR")]

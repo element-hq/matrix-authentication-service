@@ -12,7 +12,7 @@ use async_trait::async_trait;
 use mas_data_model::{Clock, User};
 use mas_storage::user::{UserFilter, UserRepository};
 use rand::RngCore;
-use sea_query::{Expr, PostgresQueryBuilder, Query, extension::postgres::PgExpr as _};
+use sea_query::{Expr, PostgresQueryBuilder, Query, SimpleExpr, extension::postgres::PgExpr as _};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
@@ -21,7 +21,7 @@ use uuid::Uuid;
 use crate::{
     DatabaseError,
     filter::{Filter, StatementExt},
-    iden::Users,
+    iden::{OAuth2Sessions, Users},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
 };
@@ -132,6 +132,37 @@ impl Filter for UserFilter<'_> {
             .add_option(self.search().map(|search| {
                 Expr::col((Users::Table, Users::Username)).ilike(format!("%{search}%"))
             }))
+            .add_option(self.active_oauth2_session_for_any_of_clients().map(
+                |clients| -> SimpleExpr {
+                    if clients.is_empty() {
+                        // "Has an active OAuth2 session for any of these
+                        // zero clients" matches no row.
+                        return Expr::val(false).into();
+                    }
+                    let client_ids: Vec<SimpleExpr> = clients
+                        .iter()
+                        .map(|c| Expr::val(Uuid::from(*c)).into())
+                        .collect();
+                    Expr::exists(
+                        Query::select()
+                            .expr(Expr::cust("1"))
+                            .from(OAuth2Sessions::Table)
+                            .and_where(
+                                Expr::col((OAuth2Sessions::Table, OAuth2Sessions::UserId))
+                                    .equals((Users::Table, Users::UserId)),
+                            )
+                            .and_where(
+                                Expr::col((OAuth2Sessions::Table, OAuth2Sessions::FinishedAt))
+                                    .is_null(),
+                            )
+                            .and_where(
+                                Expr::col((OAuth2Sessions::Table, OAuth2Sessions::OAuth2ClientId))
+                                    .is_in(client_ids),
+                            )
+                            .take(),
+                    )
+                },
+            ))
     }
 }
 
