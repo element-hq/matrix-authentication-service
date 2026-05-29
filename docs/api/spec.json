@@ -505,7 +505,7 @@
           "oauth2-client"
         ],
         "summary": "List OAuth 2.0 clients",
-        "description": "Retrieve a paginated list of OAuth 2.0 clients registered with this service.\nUse the `filter[client-kind]` parameter to restrict the response to either static (configured) or dynamic (registered at runtime) clients,\nthe `filter[client-name]`/`filter[client-uri]` parameters for a case-insensitive substring search,\nand the `filter[grant-type]` parameter to restrict to clients which support a given grant type.",
+        "description": "Retrieve a paginated list of OAuth 2.0 clients registered with this service.\nUse the `filter[client-kind]` parameter to restrict the response to either static (configured) or dynamic (registered at runtime) clients,\nthe `filter[client-name]`/`filter[client-uri]` parameters for a case-insensitive substring search,\nthe `filter[grant-type]` parameter to restrict to clients which support a given grant type,\nand the `filter[has-active-sessions]` parameter to restrict to clients which have (or don't have) an active session.",
         "operationId": "listOAuth2Clients",
         "parameters": [
           {
@@ -640,6 +640,19 @@
               "description": "Retrieve only clients which support the given grant type\n\n e.g. `authorization_code`, `client_credentials`,\n `urn:ietf:params:oauth:grant-type:device_code`",
               "type": [
                 "string",
+                "null"
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[has-active-sessions]",
+            "description": "Retrieve only clients which have (`true`) or don't have (`false`) at\n least one active OAuth 2.0 session",
+            "schema": {
+              "description": "Retrieve only clients which have (`true`) or don't have (`false`) at\n least one active OAuth 2.0 session",
+              "type": [
+                "boolean",
                 "null"
               ]
             },
@@ -5740,6 +5753,13 @@
             "description": "Retrieve only clients which support the given grant type\n\n e.g. `authorization_code`, `client_credentials`,\n `urn:ietf:params:oauth:grant-type:device_code`",
             "type": [
               "string",
+              "null"
+            ]
+          },
+          "filter[has-active-sessions]": {
+            "description": "Retrieve only clients which have (`true`) or don't have (`false`) at\n least one active OAuth 2.0 session",
+            "type": [
+              "boolean",
               "null"
             ]
           }

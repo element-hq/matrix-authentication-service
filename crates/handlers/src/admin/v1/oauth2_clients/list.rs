@@ -69,6 +69,11 @@ pub struct FilterParams {
     #[serde(rename = "filter[grant-type]")]
     #[schemars(with = "Option<String>")]
     grant_type: Option<GrantType>,
+
+    /// Retrieve only clients which have (`true`) or don't have (`false`) at
+    /// least one active OAuth 2.0 session
+    #[serde(rename = "filter[has-active-sessions]")]
+    has_active_sessions: Option<bool>,
 }
 
 impl std::fmt::Display for FilterParams {
@@ -92,6 +97,11 @@ impl std::fmt::Display for FilterParams {
 
         if let Some(grant_type) = &self.grant_type {
             write!(f, "{sep}filter[grant-type]={grant_type}")?;
+            sep = '&';
+        }
+
+        if let Some(has_active_sessions) = self.has_active_sessions {
+            write!(f, "{sep}filter[has-active-sessions]={has_active_sessions}")?;
             sep = '&';
         }
 
@@ -133,7 +143,8 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             "Retrieve a paginated list of OAuth 2.0 clients registered with this service.
 Use the `filter[client-kind]` parameter to restrict the response to either static (configured) or dynamic (registered at runtime) clients,
 the `filter[client-name]`/`filter[client-uri]` parameters for a case-insensitive substring search,
-and the `filter[grant-type]` parameter to restrict to clients which support a given grant type.",
+the `filter[grant-type]` parameter to restrict to clients which support a given grant type,
+and the `filter[has-active-sessions]` parameter to restrict to clients which have (or don't have) an active session.",
         )
         .tag("oauth2-client")
         .response_with::<200, Json<PaginatedResponse<OAuth2Client>>, _>(|t| {
@@ -192,6 +203,10 @@ pub async fn handler(
 
     if let Some(grant_type) = &params.grant_type {
         filter = filter.with_grant_type(grant_type);
+    }
+
+    if let Some(has_active_sessions) = params.has_active_sessions {
+        filter = filter.with_active_sessions(has_active_sessions);
     }
 
     let response = match include_count {
@@ -485,6 +500,109 @@ mod tests {
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
         assert_eq!(body["meta"]["count"], 0);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_filter_by_has_active_sessions(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+
+        // A client with an active client-credentials session, and one without
+        let mut repo = state.repository().await.unwrap();
+        let with_session = repo
+            .oauth2_client()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                vec![],
+                None,
+                None,
+                None,
+                vec![GrantType::ClientCredentials],
+                Some("Client with session".to_owned()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+        repo.oauth2_client()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                vec![],
+                None,
+                None,
+                None,
+                vec![GrantType::ClientCredentials],
+                Some("Client without session".to_owned()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+        repo.oauth2_session()
+            .add_from_client_credentials(
+                &mut state.rng(),
+                &state.clock,
+                &with_session,
+                "urn:mas:admin".parse().unwrap(),
+            )
+            .await
+            .unwrap();
+        Box::new(repo).save().await.unwrap();
+
+        // Clients with an active session: includes our client and the admin
+        // token's own client, but not "Client without session"
+        let request = Request::get("/api/admin/v1/oauth2-clients?filter[has-active-sessions]=true")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        let names: Vec<&str> = body["data"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|c| c["attributes"]["client_name"].as_str().unwrap_or_default())
+            .collect();
+        assert!(names.contains(&"Client with session"));
+        assert!(!names.contains(&"Client without session"));
+
+        // Clients without an active session: includes "Client without session"
+        let request =
+            Request::get("/api/admin/v1/oauth2-clients?filter[has-active-sessions]=false")
+                .bearer(&token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        let names: Vec<&str> = body["data"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|c| c["attributes"]["client_name"].as_str().unwrap_or_default())
+            .collect();
+        assert!(names.contains(&"Client without session"));
+        assert!(!names.contains(&"Client with session"));
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
