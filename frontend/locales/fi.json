@@ -146,6 +146,7 @@
       "inactive_90_days": "Ei aktiivinen yli 90 päivää"
     },
     "nav": {
+      "device_limit_error": "Laiteraja saavutettu",
       "devices": "Laitteet",
       "plan": "Tilaus",
       "profile": "Profiili",
@@ -358,11 +359,27 @@
     "user_sessions_overview": {
       "active_sessions:one": "{{count}} aktiivinen istunto",
       "active_sessions:other": "{{count}} aktiivista istuntoa",
+      "approaching_session_limit_warning_description:one": "Olet käyttänyt {{num_sessions}}/{{count}} laitepaikkaa. Kun olet saavuttanut rajan, sinun on poistettava olemassa oleva laite lisätäksesi uuden.",
+      "approaching_session_limit_warning_description:other": "Olet käyttänyt {{num_sessions}}/{{count}} laitepaikkaa. Kun olet saavuttanut rajan, sinun on poistettava olemassa oleva laite lisätäksesi uuden.",
+      "approaching_session_limit_warning_header": "Huomio, olet lähellä laiterajaasi",
       "heading": "Missä olet kirjautuneena",
+      "hit_session_limit_warning_description:one": "Olet käyttänyt {{num_sessions}}/{{count}} laitepaikkaa. Kun yrität kirjautua sisään uudelleen, sinun on poistettava olemassa oleva laite.",
+      "hit_session_limit_warning_description:other": "Olet käyttänyt {{num_sessions}}/{{count}} laitepaikkaa. Kun yrität kirjautua sisään uudelleen, sinun on poistettava olemassa oleva laite.",
+      "hit_session_limit_warning_header": "Olet saavuttanut laiterajan",
       "no_active_sessions": {
         "default": "Et ole kirjautunut mihinkään sovellukseen.",
         "inactive_90_days": "Kaikki istuntosi ovat olleet aktiivisia viimeisten 90 päivän aikana."
-      }
+      },
+      "num_sessions_filtered_header": {
+        "header:one": "{{count}} laite täsmää suodattimesi kanssa ({{unfiltered_session_total}})",
+        "header:other": "{{count}} laitetta täsmää suodattimesi kanssa ({{unfiltered_session_total}})",
+        "unfiltered_session_total:one": "Yhteensä {{count}}",
+        "unfiltered_session_total:other": "Yhteensä {{count}}"
+      },
+      "num_sessions_header:one": "{{count}} laite",
+      "num_sessions_header:other": "{{count}} laitetta",
+      "session_limit_info:one": "Olet käyttänyt {{count}}/{{limit}} laitepaikkaa",
+      "session_limit_info:other": "Olet käyttänyt {{count}}/{{limit}} laitepaikkaa"
     },
     "verify_email": {
       "code_expired_alert": {

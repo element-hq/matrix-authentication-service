@@ -181,7 +181,12 @@
     "policy_violation": {
       "description": "Põhjustajaks võib olla autentimispäringu teinud klient, hetkel sisselogitud kasutaja või päring ise.",
       "heading": "Selle teenuse reeglite alusel keelduti autentimispäringust",
-      "logged_as": "Sisselogitud kui <span class=\"font-semibold\">%(username)s</span>"
+      "logged_as": "Sisselogitud kui <span class=\"font-semibold\">%(username)s</span>",
+      "too_many_sessions": {
+        "description": "Sinu kasutajakonto on juba sisse loginud kõikides lubatud seadmetes. Jätkamiseks eemalda <span class=\"font-semibold\">oma olemasolevatest seadmetest %(num_devices_to_remove)s</span> ja logi uuesti sisse.",
+        "heading": "Seadmete arvu ülempiir on käes",
+        "manage_devices": "Halda seadmeid"
+      }
     },
     "recovery": {
       "consumed": {
