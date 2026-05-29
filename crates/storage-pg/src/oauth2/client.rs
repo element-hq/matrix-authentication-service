@@ -35,7 +35,7 @@ use uuid::Uuid;
 use crate::{
     DatabaseError, DatabaseInconsistencyError,
     filter::{Filter, StatementExt},
-    iden::OAuth2Clients,
+    iden::{OAuth2Clients, OAuth2Sessions},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
 };
@@ -112,6 +112,23 @@ impl Filter for OAuth2ClientFilter<'_> {
                     _ => return Expr::val(false).into(),
                 };
                 Expr::col((OAuth2Clients::Table, column)).eq(true)
+            }))
+            .add_option(self.has_active_sessions().map(|has| -> SimpleExpr {
+                let exists = Expr::exists(
+                    Query::select()
+                        .expr(Expr::cust("1"))
+                        .from(OAuth2Sessions::Table)
+                        .and_where(
+                            Expr::col((OAuth2Sessions::Table, OAuth2Sessions::OAuth2ClientId))
+                                .equals((OAuth2Clients::Table, OAuth2Clients::OAuth2ClientId)),
+                        )
+                        .and_where(
+                            Expr::col((OAuth2Sessions::Table, OAuth2Sessions::FinishedAt))
+                                .is_null(),
+                        )
+                        .take(),
+                );
+                if has { exists } else { exists.not() }
             }))
     }
 }

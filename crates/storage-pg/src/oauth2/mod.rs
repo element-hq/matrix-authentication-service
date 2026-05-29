@@ -1209,4 +1209,107 @@ mod tests {
         let filter = OAuth2ClientFilter::new().with_grant_type(&GrantType::Implicit);
         assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 0);
     }
+
+    /// Test the active-sessions filter on [`OAuth2ClientFilter`].
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_list_clients_by_active_sessions(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+
+        // A client that will have an active session
+        let with_session = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &clock,
+                vec![],
+                None,
+                None,
+                None,
+                vec![GrantType::ClientCredentials],
+                Some("Client with session".to_owned()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        // A client without any session
+        let without_session = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &clock,
+                vec![],
+                None,
+                None,
+                None,
+                vec![GrantType::ClientCredentials],
+                Some("Client without session".to_owned()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let session = repo
+            .oauth2_session()
+            .add_from_client_credentials(
+                &mut rng,
+                &clock,
+                &with_session,
+                Scope::from_iter([OPENID]),
+            )
+            .await
+            .unwrap();
+
+        // Has an active session: only the first client
+        let filter = OAuth2ClientFilter::new().with_active_sessions(true);
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 1);
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert_eq!(page.edges.len(), 1);
+        assert_eq!(page.edges[0].node, with_session);
+
+        // Has no active session: only the second client
+        let filter = OAuth2ClientFilter::new().with_active_sessions(false);
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 1);
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert_eq!(page.edges.len(), 1);
+        assert_eq!(page.edges[0].node, without_session);
+
+        // Once the session is finished, the first client no longer has one
+        repo.oauth2_session().finish(&clock, session).await.unwrap();
+
+        let filter = OAuth2ClientFilter::new().with_active_sessions(true);
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 0);
+        let filter = OAuth2ClientFilter::new().with_active_sessions(false);
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 2);
+    }
 }

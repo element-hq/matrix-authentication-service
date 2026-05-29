@@ -25,6 +25,7 @@ pub struct OAuth2ClientFilter<'a> {
     client_name: Option<&'a str>,
     client_uri: Option<&'a str>,
     grant_type: Option<&'a GrantType>,
+    has_active_sessions: Option<bool>,
 }
 
 impl<'a> OAuth2ClientFilter<'a> {
@@ -104,6 +105,22 @@ impl<'a> OAuth2ClientFilter<'a> {
     #[must_use]
     pub fn grant_type(&self) -> Option<&'a GrantType> {
         self.grant_type
+    }
+
+    /// Only return clients which have (or don't have) at least one active
+    /// (non-finished) `OAuth2` session
+    #[must_use]
+    pub fn with_active_sessions(mut self, has_active_sessions: bool) -> Self {
+        self.has_active_sessions = Some(has_active_sessions);
+        self
+    }
+
+    /// Get the active-sessions filter
+    ///
+    /// Returns [`None`] if no active-sessions filter was set
+    #[must_use]
+    pub fn has_active_sessions(&self) -> Option<bool> {
+        self.has_active_sessions
     }
 }
 
