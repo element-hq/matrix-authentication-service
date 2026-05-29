@@ -1113,4 +1113,100 @@ mod tests {
         let filter = OAuth2ClientFilter::new().matching_client_uri("EXAMPLE.COM");
         assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 2);
     }
+
+    /// Test the grant-type filter on [`OAuth2ClientFilter`].
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_list_clients_by_grant_type(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+
+        // A client supporting authorization_code (+ refresh_token)
+        let auth_code_client = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &clock,
+                vec!["https://code.example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::AuthorizationCode, GrantType::RefreshToken],
+                Some("Authorization code client".to_owned()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        // A client supporting only client_credentials
+        let client_credentials_client = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &clock,
+                vec![],
+                None,
+                None,
+                None,
+                vec![GrantType::ClientCredentials],
+                Some("Client credentials client".to_owned()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        // authorization_code: only the first client
+        let filter = OAuth2ClientFilter::new().with_grant_type(&GrantType::AuthorizationCode);
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 1);
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert_eq!(page.edges.len(), 1);
+        assert_eq!(page.edges[0].node, auth_code_client);
+
+        // client_credentials: only the second client
+        let filter = OAuth2ClientFilter::new().with_grant_type(&GrantType::ClientCredentials);
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 1);
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert_eq!(page.edges.len(), 1);
+        assert_eq!(page.edges[0].node, client_credentials_client);
+
+        // refresh_token: only the first client
+        let filter = OAuth2ClientFilter::new().with_grant_type(&GrantType::RefreshToken);
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 1);
+
+        // device_code: no client supports it
+        let filter = OAuth2ClientFilter::new().with_grant_type(&GrantType::DeviceCode);
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 0);
+
+        // A grant type without a dedicated column matches nothing
+        let filter = OAuth2ClientFilter::new().with_grant_type(&GrantType::Implicit);
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 0);
+    }
 }

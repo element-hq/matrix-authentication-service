@@ -99,6 +99,10 @@ pub enum OAuth2Clients {
     ClientUri,
     LogoUri,
     RedirectUris,
+    GrantTypeAuthorizationCode,
+    GrantTypeRefreshToken,
+    GrantTypeClientCredentials,
+    GrantTypeDeviceCode,
 }
 
 #[derive(sea_query::Iden)]

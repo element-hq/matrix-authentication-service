@@ -24,6 +24,7 @@ pub struct OAuth2ClientFilter<'a> {
     state: Option<bool>,
     client_name: Option<&'a str>,
     client_uri: Option<&'a str>,
+    grant_type: Option<&'a GrantType>,
 }
 
 impl<'a> OAuth2ClientFilter<'a> {
@@ -88,6 +89,21 @@ impl<'a> OAuth2ClientFilter<'a> {
     #[must_use]
     pub fn client_uri(&self) -> Option<&'a str> {
         self.client_uri
+    }
+
+    /// Only return clients which support the given grant type
+    #[must_use]
+    pub fn with_grant_type(mut self, grant_type: &'a GrantType) -> Self {
+        self.grant_type = Some(grant_type);
+        self
+    }
+
+    /// Get the grant type filter
+    ///
+    /// Returns [`None`] if no grant type filter was set
+    #[must_use]
+    pub fn grant_type(&self) -> Option<&'a GrantType> {
+        self.grant_type
     }
 }
 

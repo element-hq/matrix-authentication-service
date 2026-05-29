@@ -22,7 +22,9 @@ use mas_storage::{
 use oauth2_types::{oidc::ApplicationType, requests::GrantType};
 use opentelemetry_semantic_conventions::attribute::DB_QUERY_TEXT;
 use rand::RngCore;
-use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def, extension::postgres::PgExpr as _};
+use sea_query::{
+    Expr, PostgresQueryBuilder, Query, SimpleExpr, enum_def, extension::postgres::PgExpr as _,
+};
 use sea_query_binder::SqlxBinder;
 use sqlx::PgConnection;
 use tracing::{Instrument, info_span};
@@ -98,6 +100,18 @@ impl Filter for OAuth2ClientFilter<'_> {
             .add_option(self.client_uri().map(|client_uri| {
                 Expr::col((OAuth2Clients::Table, OAuth2Clients::ClientUri))
                     .ilike(format!("%{client_uri}%"))
+            }))
+            .add_option(self.grant_type().map(|grant_type| -> SimpleExpr {
+                let column = match grant_type {
+                    GrantType::AuthorizationCode => OAuth2Clients::GrantTypeAuthorizationCode,
+                    GrantType::RefreshToken => OAuth2Clients::GrantTypeRefreshToken,
+                    GrantType::ClientCredentials => OAuth2Clients::GrantTypeClientCredentials,
+                    GrantType::DeviceCode => OAuth2Clients::GrantTypeDeviceCode,
+                    // The other grant types don't have a dedicated column, so no
+                    // client can declare them: the filter matches nothing.
+                    _ => return Expr::val(false).into(),
+                };
+                Expr::col((OAuth2Clients::Table, column)).eq(true)
             }))
     }
 }
