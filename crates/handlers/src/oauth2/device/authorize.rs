@@ -178,11 +178,15 @@ pub(crate) async fn post(
 
     repo.save().await?;
 
+    let verification_uri_complete = site_config
+        .device_code_user_code_auto_fill_enabled
+        .then(|| url_builder.device_code_link_full(device_code.user_code.clone()));
+
     let response = DeviceAuthorizationResponse {
         device_code: device_code.device_code,
-        user_code: device_code.user_code.clone(),
+        user_code: device_code.user_code,
         verification_uri: url_builder.device_code_link(),
-        verification_uri_complete: Some(url_builder.device_code_link_full(device_code.user_code)),
+        verification_uri_complete,
         expires_in,
         interval: Some(Duration::microseconds(5 * 1000 * 1000)),
     };
@@ -242,6 +246,51 @@ mod tests {
         let response: DeviceAuthorizationResponse = response.json();
         assert_eq!(response.device_code.len(), 32);
         assert_eq!(response.user_code.len(), 6);
+        assert!(response.verification_uri_complete.is_some());
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_device_code_request_no_auto_fill(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                device_code_user_code_auto_fill_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        // Provision a client
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://example.com/",
+                "token_endpoint_auth_method": "none",
+                "grant_types": ["urn:ietf:params:oauth:grant-type:device_code"],
+                "response_types": [],
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+
+        let response: ClientRegistrationResponse = response.json();
+        let client_id = response.client_id;
+
+        // The endpoint omits verification_uri_complete from the response
+        let request = Request::post(mas_router::OAuth2DeviceAuthorizationEndpoint::PATH).form(
+            serde_json::json!({
+                "client_id": client_id,
+                "scope": "openid",
+            }),
+        );
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+
+        let response: DeviceAuthorizationResponse = response.json();
+        assert_eq!(response.device_code.len(), 32);
+        assert_eq!(response.user_code.len(), 6);
+        assert!(response.verification_uri_complete.is_none());
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
