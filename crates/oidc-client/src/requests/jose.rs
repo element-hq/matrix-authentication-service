@@ -102,7 +102,7 @@ pub fn verify_signed_jwt<'a>(
     jwt: &'a str,
     verification_data: JwtVerificationData<'_>,
 ) -> Result<Jwt<'a, HashMap<String, Value>>, JwtVerificationError> {
-    tracing::debug!("Validating JWT...");
+    tracing::debug!(jwt, "Validating JWT...");
 
     let JwtVerificationData {
         issuer,
