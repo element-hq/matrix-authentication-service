@@ -657,6 +657,10 @@
                         "redirect_uris": [
                           "https://example.com/oauth/callback"
                         ],
+                        "grant_types": [
+                          "authorization_code",
+                          "refresh_token"
+                        ],
                         "is_static": false
                       },
                       "links": {
@@ -678,6 +682,9 @@
                         "logo_uri": null,
                         "redirect_uris": [
                           "https://static.example.com/callback"
+                        ],
+                        "grant_types": [
+                          "client_credentials"
                         ],
                         "is_static": true
                       },
@@ -753,8 +760,11 @@
                       "redirect_uris": [
                         "https://example.com/oauth/callback"
                       ],
-                      "is_static": false,
-                      "created_at": "1970-01-01T00:00:00Z"
+                      "grant_types": [
+                        "authorization_code",
+                        "refresh_token"
+                      ],
+                      "is_static": false
                     },
                     "links": {
                       "self": "/api/admin/v1/oauth2-clients/01040G2081040G2081040G2081"
@@ -5850,6 +5860,13 @@
               "format": "uri"
             }
           },
+          "grant_types": {
+            "description": "The list of grant types the client is allowed to use",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "is_static": {
             "description": "Whether the client is statically configured (defined in the\n configuration file) rather than dynamically registered.",
             "type": "boolean"
@@ -5858,6 +5875,7 @@
         "required": [
           "client_id",
           "redirect_uris",
+          "grant_types",
           "is_static"
         ]
       },

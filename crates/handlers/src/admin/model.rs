@@ -15,6 +15,7 @@ use mas_data_model::{
         session::{PersonalSession as DataModelPersonalSession, PersonalSessionOwner},
     },
 };
+use oauth2_types::requests::GrantType;
 use schemars::JsonSchema;
 use serde::Serialize;
 use thiserror::Error;
@@ -725,6 +726,10 @@ pub struct OAuth2Client {
     /// The list of redirect URIs registered by the client
     redirect_uris: Vec<Url>,
 
+    /// The list of grant types the client is allowed to use
+    #[schemars(with = "Vec<String>")]
+    grant_types: Vec<GrantType>,
+
     /// Whether the client is statically configured (defined in the
     /// configuration file) rather than dynamically registered.
     is_static: bool,
@@ -739,6 +744,7 @@ impl From<mas_data_model::Client> for OAuth2Client {
             client_uri: client.client_uri,
             logo_uri: client.logo_uri,
             redirect_uris: client.redirect_uris,
+            grant_types: client.grant_types,
             is_static: client.is_static,
         }
     }
@@ -764,6 +770,7 @@ impl OAuth2Client {
                 client_uri: Some("https://example.com/".parse().unwrap()),
                 logo_uri: Some("https://example.com/logo.png".parse().unwrap()),
                 redirect_uris: vec!["https://example.com/oauth/callback".parse().unwrap()],
+                grant_types: vec![GrantType::AuthorizationCode, GrantType::RefreshToken],
                 is_static: false,
             },
             Self {
@@ -773,6 +780,7 @@ impl OAuth2Client {
                 client_uri: None,
                 logo_uri: None,
                 redirect_uris: vec!["https://static.example.com/callback".parse().unwrap()],
+                grant_types: vec![GrantType::ClientCredentials],
                 is_static: true,
             },
         ]
