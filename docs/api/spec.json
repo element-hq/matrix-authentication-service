@@ -505,7 +505,7 @@
           "oauth2-client"
         ],
         "summary": "List OAuth 2.0 clients",
-        "description": "Retrieve a paginated list of OAuth 2.0 clients registered with this service.\nUse the `filter[client-kind]` parameter to restrict the response to either static (configured) or dynamic (registered at runtime) clients,\nand the `filter[client-name]`/`filter[client-uri]` parameters for a case-insensitive substring search.",
+        "description": "Retrieve a paginated list of OAuth 2.0 clients registered with this service.\nUse the `filter[client-kind]` parameter to restrict the response to either static (configured) or dynamic (registered at runtime) clients,\nthe `filter[client-name]`/`filter[client-uri]` parameters for a case-insensitive substring search,\nand the `filter[grant-type]` parameter to restrict to clients which support a given grant type.",
         "operationId": "listOAuth2Clients",
         "parameters": [
           {
@@ -625,6 +625,19 @@
             "description": "Substring (case-insensitive) match on the client's `client_uri`",
             "schema": {
               "description": "Substring (case-insensitive) match on the client's `client_uri`",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[grant-type]",
+            "description": "Retrieve only clients which support the given grant type\n\n e.g. `authorization_code`, `client_credentials`,\n `urn:ietf:params:oauth:grant-type:device_code`",
+            "schema": {
+              "description": "Retrieve only clients which support the given grant type\n\n e.g. `authorization_code`, `client_credentials`,\n `urn:ietf:params:oauth:grant-type:device_code`",
               "type": [
                 "string",
                 "null"
@@ -5718,6 +5731,13 @@
           },
           "filter[client-uri]": {
             "description": "Substring (case-insensitive) match on the client's `client_uri`",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "filter[grant-type]": {
+            "description": "Retrieve only clients which support the given grant type\n\n e.g. `authorization_code`, `client_credentials`,\n `urn:ietf:params:oauth:grant-type:device_code`",
             "type": [
               "string",
               "null"

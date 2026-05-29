@@ -10,6 +10,7 @@ use axum_macros::FromRequestParts;
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
 use mas_storage::{Page, oauth2::OAuth2ClientFilter};
+use oauth2_types::requests::GrantType;
 use schemars::JsonSchema;
 use serde::Deserialize;
 
@@ -43,10 +44,6 @@ impl std::fmt::Display for OAuth2ClientKind {
 #[serde(rename = "OAuth2ClientFilter")]
 #[aide(input_with = "Query<FilterParams>")]
 #[from_request(via(Query), rejection(RouteError))]
-#[expect(
-    clippy::struct_field_names,
-    reason = "fields mirror the `filter[client-*]` URL parameters"
-)]
 pub struct FilterParams {
     /// Retrieve only clients of the given kind
     ///
@@ -64,6 +61,14 @@ pub struct FilterParams {
     /// Substring (case-insensitive) match on the client's `client_uri`
     #[serde(rename = "filter[client-uri]")]
     client_uri: Option<String>,
+
+    /// Retrieve only clients which support the given grant type
+    ///
+    /// e.g. `authorization_code`, `client_credentials`,
+    /// `urn:ietf:params:oauth:grant-type:device_code`
+    #[serde(rename = "filter[grant-type]")]
+    #[schemars(with = "Option<String>")]
+    grant_type: Option<GrantType>,
 }
 
 impl std::fmt::Display for FilterParams {
@@ -82,6 +87,11 @@ impl std::fmt::Display for FilterParams {
 
         if let Some(client_uri) = &self.client_uri {
             write!(f, "{sep}filter[client-uri]={client_uri}")?;
+            sep = '&';
+        }
+
+        if let Some(grant_type) = &self.grant_type {
+            write!(f, "{sep}filter[grant-type]={grant_type}")?;
             sep = '&';
         }
 
@@ -122,7 +132,8 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         .description(
             "Retrieve a paginated list of OAuth 2.0 clients registered with this service.
 Use the `filter[client-kind]` parameter to restrict the response to either static (configured) or dynamic (registered at runtime) clients,
-and the `filter[client-name]`/`filter[client-uri]` parameters for a case-insensitive substring search.",
+the `filter[client-name]`/`filter[client-uri]` parameters for a case-insensitive substring search,
+and the `filter[grant-type]` parameter to restrict to clients which support a given grant type.",
         )
         .tag("oauth2-client")
         .response_with::<200, Json<PaginatedResponse<OAuth2Client>>, _>(|t| {
@@ -177,6 +188,10 @@ pub async fn handler(
 
     if let Some(client_uri) = params.client_uri.as_deref() {
         filter = filter.matching_client_uri(client_uri);
+    }
+
+    if let Some(grant_type) = &params.grant_type {
+        filter = filter.with_grant_type(grant_type);
     }
 
     let response = match include_count {
@@ -383,6 +398,93 @@ mod tests {
         let data = body["data"].as_array().unwrap();
         assert_eq!(data.len(), 1);
         assert_eq!(data[0]["attributes"]["client_name"], "Second Client");
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_filter_by_grant_type(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+
+        // One authorization_code client and one client_credentials client
+        let mut repo = state.repository().await.unwrap();
+        repo.oauth2_client()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                vec!["https://code.example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::AuthorizationCode],
+                Some("Code client".to_owned()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+        repo.oauth2_client()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                vec![],
+                None,
+                None,
+                None,
+                vec![GrantType::ClientCredentials],
+                Some("Credentials client".to_owned()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+        Box::new(repo).save().await.unwrap();
+
+        // client_credentials: only the credentials client (the admin token's
+        // own client uses client_credentials too, so match by name)
+        let request =
+            Request::get("/api/admin/v1/oauth2-clients?filter[grant-type]=client_credentials")
+                .bearer(&token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        let names: Vec<&str> = body["data"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|c| c["attributes"]["client_name"].as_str().unwrap_or_default())
+            .collect();
+        assert!(names.contains(&"Credentials client"));
+        assert!(!names.contains(&"Code client"));
+
+        // device_code: no client supports it
+        let request =
+            Request::get("/api/admin/v1/oauth2-clients?count=only&filter[grant-type]=urn:ietf:params:oauth:grant-type:device_code")
+                .bearer(&token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_eq!(body["meta"]["count"], 0);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
