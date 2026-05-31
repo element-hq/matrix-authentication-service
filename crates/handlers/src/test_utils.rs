@@ -151,6 +151,7 @@ pub fn test_site_config() -> SiteConfig {
         plan_management_iframe_uri: None,
         session_limit: None,
         device_code_grant_enabled: true,
+        device_code_user_code_auto_fill_enabled: true,
     }
 }
 

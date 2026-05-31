@@ -5,6 +5,7 @@
  * Please see LICENSE files in the repository root for full details.
  */
 
+@import "../styles/cpd-alert.css";
 @import "../styles/cpd-button.css";
 @import "../styles/cpd-form.css";
 @import "../styles/cpd-link.css";

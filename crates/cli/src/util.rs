@@ -252,6 +252,8 @@ pub fn site_config_from_config(
                 dangerous_hard_limit_eviction: c.dangerous_hard_limit_eviction,
             }),
         device_code_grant_enabled: oauth_config.device_code_grant_enabled,
+        device_code_user_code_auto_fill_enabled: oauth_config
+            .device_code_user_code_auto_fill_enabled,
     })
 }
 
