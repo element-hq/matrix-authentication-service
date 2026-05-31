@@ -245,7 +245,8 @@ async fn test_anonymous_introspection_authenticated_only(pool: PgPool) {
     }
 }
 
-/// Test that disabling schema introspection does not block regular anonymous queries.
+/// Test that disabling schema introspection does not block regular anonymous
+/// queries.
 #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
 async fn test_authenticated_only_still_allows_anonymous_viewer(pool: PgPool) {
     setup();
