@@ -184,7 +184,7 @@ async fn test_anonymous_introspection_default_public(pool: PgPool) {
     let state = TestState::from_pool(pool).await.unwrap();
 
     let request = Request::post("/graphql").json(serde_json::json!({
-        "query": r#"
+        "query": r"
             query {
                 __schema {
                     queryType {
@@ -192,7 +192,7 @@ async fn test_anonymous_introspection_default_public(pool: PgPool) {
                     }
                 }
             }
-        "#,
+        ",
     }));
 
     let response = state.request(request).await;
@@ -210,7 +210,7 @@ async fn test_anonymous_introspection_authenticated_only(pool: PgPool) {
     let state = TestState::from_pool(pool).await.unwrap();
 
     for query in [
-        r#"
+        r"
                 query {
                     __schema {
                         queryType {
@@ -218,7 +218,7 @@ async fn test_anonymous_introspection_authenticated_only(pool: PgPool) {
                         }
                     }
                 }
-            "#,
+            ",
         r#"
                 query {
                     __type(name: "Query") {
@@ -253,13 +253,13 @@ async fn test_authenticated_only_still_allows_anonymous_viewer(pool: PgPool) {
     let state = TestState::from_pool(pool).await.unwrap();
 
     let request = Request::post("/graphql").json(serde_json::json!({
-        "query": r#"
+        "query": r"
             query {
                 viewer {
                     __typename
                 }
             }
-        "#,
+        ",
     }));
 
     let response = state
@@ -293,7 +293,7 @@ async fn test_authenticated_browser_session_introspection(pool: PgPool) {
     cookies.import(cookie_jar);
 
     let request = Request::post("/graphql").json(serde_json::json!({
-        "query": r#"
+        "query": r"
             query {
                 __schema {
                     queryType {
@@ -301,7 +301,7 @@ async fn test_authenticated_browser_session_introspection(pool: PgPool) {
                     }
                 }
             }
-        "#,
+        ",
     }));
 
     let response = state
