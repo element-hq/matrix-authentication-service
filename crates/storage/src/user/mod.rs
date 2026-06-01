@@ -79,6 +79,7 @@ pub struct UserFilter<'a> {
     is_guest: Option<bool>,
     search: Option<&'a str>,
     active_oauth2_session_for_any_of_clients: Option<&'a [Ulid]>,
+    has_active_oauth2_session: Option<bool>,
     has_active_compat_session: Option<bool>,
 }
 
@@ -157,6 +158,14 @@ impl<'a> UserFilter<'a> {
     }
 
     /// Filter for users which have (or don't have) at least one active
+    /// (non-finished) `OAuth2` session, regardless of the client.
+    #[must_use]
+    pub fn with_active_oauth2_session(mut self, has: bool) -> Self {
+        self.has_active_oauth2_session = Some(has);
+        self
+    }
+
+    /// Filter for users which have (or don't have) at least one active
     /// (non-finished) compatibility session.
     #[must_use]
     pub fn with_active_compat_session(mut self, has: bool) -> Self {
@@ -202,6 +211,14 @@ impl<'a> UserFilter<'a> {
     #[must_use]
     pub fn active_oauth2_session_for_any_of_clients(&self) -> Option<&'a [Ulid]> {
         self.active_oauth2_session_for_any_of_clients
+    }
+
+    /// Get the has-active-`OAuth2`-session filter
+    ///
+    /// Returns [`None`] if no such filter was set
+    #[must_use]
+    pub fn has_active_oauth2_session(&self) -> Option<bool> {
+        self.has_active_oauth2_session
     }
 
     /// Get the has-active-compat-session filter

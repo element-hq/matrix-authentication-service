@@ -1064,6 +1064,110 @@ async fn test_user_filter_active_compat_session(pool: PgPool) {
     repo.save().await.unwrap();
 }
 
+/// Test [`UserFilter::with_active_oauth2_session`] in both directions.
+#[sqlx::test(migrator = "crate::MIGRATOR")]
+async fn test_user_filter_active_oauth2_session(pool: PgPool) {
+    let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+    let mut rng = ChaChaRng::seed_from_u64(42);
+    let clock = MockClock::default();
+
+    // Three users: alice has an active OAuth2 session, bob has a finished one,
+    // carol has none.
+    let alice = repo
+        .user()
+        .add(&mut rng, &clock, "alice".to_owned())
+        .await
+        .unwrap();
+    let bob = repo
+        .user()
+        .add(&mut rng, &clock, "bob".to_owned())
+        .await
+        .unwrap();
+    let carol = repo
+        .user()
+        .add(&mut rng, &clock, "carol".to_owned())
+        .await
+        .unwrap();
+
+    let alice_browser = repo
+        .browser_session()
+        .add(&mut rng, &clock, &alice, None)
+        .await
+        .unwrap();
+    let bob_browser = repo
+        .browser_session()
+        .add(&mut rng, &clock, &bob, None)
+        .await
+        .unwrap();
+
+    let client = repo
+        .oauth2_client()
+        .add(
+            &mut rng,
+            &clock,
+            vec!["https://example.com/redirect".parse().unwrap()],
+            None,
+            None,
+            None,
+            vec![GrantType::AuthorizationCode],
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+
+    let scope = Scope::from_iter([OPENID]);
+
+    // Alice gets an active OAuth2 session
+    repo.oauth2_session()
+        .add_from_browser_session(&mut rng, &clock, &client, &alice_browser, scope.clone())
+        .await
+        .unwrap();
+
+    // Bob gets an OAuth2 session that is then finished
+    let bob_session = repo
+        .oauth2_session()
+        .add_from_browser_session(&mut rng, &clock, &client, &bob_browser, scope.clone())
+        .await
+        .unwrap();
+    repo.oauth2_session()
+        .finish(&clock, bob_session)
+        .await
+        .unwrap();
+
+    // has = true -> only alice
+    let with = UserFilter::new().with_active_oauth2_session(true);
+    assert_eq!(repo.user().count(with).await.unwrap(), 1);
+    let page = repo.user().list(with, Pagination::first(10)).await.unwrap();
+    assert_eq!(page.edges.len(), 1);
+    assert_eq!(page.edges[0].node.id, alice.id);
+
+    // has = false -> bob + carol
+    let without = UserFilter::new().with_active_oauth2_session(false);
+    assert_eq!(repo.user().count(without).await.unwrap(), 2);
+    let page = repo
+        .user()
+        .list(without, Pagination::first(10))
+        .await
+        .unwrap();
+    let ids: std::collections::HashSet<_> = page.edges.iter().map(|e| e.node.id).collect();
+    assert!(!ids.contains(&alice.id));
+    assert!(ids.contains(&bob.id));
+    assert!(ids.contains(&carol.id));
+
+    repo.save().await.unwrap();
+}
+
 #[sqlx::test(migrator = "crate::MIGRATOR")]
 async fn test_user_terms(pool: PgPool) {
     let mut repo = PgRepository::from_pool(&pool).await.unwrap();

@@ -163,6 +163,23 @@ impl Filter for UserFilter<'_> {
                     )
                 },
             ))
+            .add_option(self.has_active_oauth2_session().map(|has| -> SimpleExpr {
+                let exists = Expr::exists(
+                    Query::select()
+                        .expr(Expr::cust("1"))
+                        .from(OAuth2Sessions::Table)
+                        .and_where(
+                            Expr::col((OAuth2Sessions::Table, OAuth2Sessions::UserId))
+                                .equals((Users::Table, Users::UserId)),
+                        )
+                        .and_where(
+                            Expr::col((OAuth2Sessions::Table, OAuth2Sessions::FinishedAt))
+                                .is_null(),
+                        )
+                        .take(),
+                );
+                if has { exists } else { exists.not() }
+            }))
             .add_option(self.has_active_compat_session().map(|has| -> SimpleExpr {
                 let exists = Expr::exists(
                     Query::select()
