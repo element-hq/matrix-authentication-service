@@ -77,6 +77,10 @@ pub enum GraphQLIntrospectionMode {
 }
 
 impl GraphQLIntrospectionMode {
+    #[expect(
+        clippy::trivially_copy_pass_by_ref,
+        reason = "used as a serde skip_serializing_if predicate, which passes a reference"
+    )]
     fn is_public(&self) -> bool {
         matches!(self, Self::Public)
     }
