@@ -1969,6 +1969,19 @@
           },
           {
             "in": "query",
+            "name": "filter[has-active-oauth2-session]",
+            "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) OAuth 2.0 session, regardless of the client.",
+            "schema": {
+              "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) OAuth 2.0 session, regardless of the client.",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
             "name": "filter[has-active-compat-session]",
             "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) compatibility session.",
             "schema": {
@@ -6196,6 +6209,13 @@
               "$ref": "#/components/schemas/ULID"
             },
             "default": []
+          },
+          "filter[has-active-oauth2-session]": {
+            "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) OAuth 2.0 session, regardless of the client.",
+            "type": [
+              "boolean",
+              "null"
+            ]
           },
           "filter[has-active-compat-session]": {
             "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) compatibility session.",

@@ -87,6 +87,11 @@ pub struct FilterParams {
     active_oauth2_client: Vec<Ulid>,
 
     /// Retrieve users which have (or don't have) at least one active
+    /// (non-finished) OAuth 2.0 session, regardless of the client.
+    #[serde(rename = "filter[has-active-oauth2-session]")]
+    has_active_oauth2_session: Option<bool>,
+
+    /// Retrieve users which have (or don't have) at least one active
     /// (non-finished) compatibility session.
     #[serde(rename = "filter[has-active-compat-session]")]
     has_active_compat_session: Option<bool>,
@@ -114,6 +119,10 @@ impl std::fmt::Display for FilterParams {
         }
         for client in &self.active_oauth2_client {
             write!(f, "{sep}filter[active-oauth2-client]={client}")?;
+            sep = '&';
+        }
+        if let Some(has) = self.has_active_oauth2_session {
+            write!(f, "{sep}filter[has-active-oauth2-session]={has}")?;
             sep = '&';
         }
         if let Some(has) = self.has_active_compat_session {
@@ -235,6 +244,11 @@ pub async fn handler(
         filter
     } else {
         filter.with_active_oauth2_session_for_any_of_clients(&params.active_oauth2_client)
+    };
+
+    let filter = match params.has_active_oauth2_session {
+        Some(has) => filter.with_active_oauth2_session(has),
+        None => filter,
     };
 
     let filter = match params.has_active_compat_session {
@@ -692,6 +706,121 @@ mod tests {
         // user.
         let request =
             Request::get("/api/admin/v1/users?count=only&filter[has-active-compat-session]=false")
+                .bearer(&token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_eq!(body["meta"]["count"], 2);
+    }
+
+    /// Test the `filter[has-active-oauth2-session]` filter in both directions.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_list_users_filter_has_active_oauth2_session(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+        let mut rng = state.rng();
+
+        let mut repo = state.repository().await.unwrap();
+
+        let client = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &state.clock,
+                vec!["https://example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::AuthorizationCode],
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        // Alice has an active OAuth2 session.
+        let alice = repo
+            .user()
+            .add(&mut rng, &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+        let alice_session = repo
+            .browser_session()
+            .add(&mut rng, &state.clock, &alice, None)
+            .await
+            .unwrap();
+        repo.oauth2_session()
+            .add_from_browser_session(
+                &mut rng,
+                &state.clock,
+                &client,
+                &alice_session,
+                Scope::from_iter([OPENID]),
+            )
+            .await
+            .unwrap();
+
+        // Bob has a finished OAuth2 session.
+        let bob = repo
+            .user()
+            .add(&mut rng, &state.clock, "bob".to_owned())
+            .await
+            .unwrap();
+        let bob_session = repo
+            .browser_session()
+            .add(&mut rng, &state.clock, &bob, None)
+            .await
+            .unwrap();
+        let bob_oauth2 = repo
+            .oauth2_session()
+            .add_from_browser_session(
+                &mut rng,
+                &state.clock,
+                &client,
+                &bob_session,
+                Scope::from_iter([OPENID]),
+            )
+            .await
+            .unwrap();
+        repo.oauth2_session()
+            .finish(&state.clock, bob_oauth2)
+            .await
+            .unwrap();
+
+        // Carol has no OAuth2 session.
+        repo.user()
+            .add(&mut rng, &state.clock, "carol".to_owned())
+            .await
+            .unwrap();
+
+        repo.save().await.unwrap();
+
+        // has-active-oauth2-session=true -> 1 (alice)
+        let request =
+            Request::get("/api/admin/v1/users?count=only&filter[has-active-oauth2-session]=true")
+                .bearer(&token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_eq!(body["meta"]["count"], 1);
+
+        // has-active-oauth2-session=false -> 2 (bob + carol). The admin token
+        // is created via client-credentials and does not provision a user.
+        let request =
+            Request::get("/api/admin/v1/users?count=only&filter[has-active-oauth2-session]=false")
                 .bearer(&token)
                 .empty();
         let response = state.request(request).await;
