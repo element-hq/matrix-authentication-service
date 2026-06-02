@@ -5172,17 +5172,23 @@
           },
           "device_id": {
             "description": "The Matrix device ID of this session",
-            "allOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/DeviceID"
+              },
+              {
+                "type": "null"
               }
             ]
           },
           "user_session_id": {
             "description": "The ID of the user session that started this session, if any",
-            "allOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "type": "null"
               }
             ]
           },
@@ -5240,8 +5246,6 @@
         },
         "required": [
           "user_id",
-          "device_id",
-          "user_session_id",
           "created_at"
         ]
       },
