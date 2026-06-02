@@ -273,7 +273,7 @@ jobs:
         run: rustup toolchain install stable --profile minimal
 
       - name: Install nextest
-        uses: taiki-e/install-action@7ea35f098a7369cd23488403f58be9c491a6c55f # v2
+        uses: taiki-e/install-action@213ccc1a076163c093f914550b94feb90fab916d # v2
         with:
           tool: cargo-nextest
 
@@ -329,7 +329,7 @@ jobs:
         run: rustup toolchain install stable --profile minimal
 
       - name: Install nextest
-        uses: taiki-e/install-action@7ea35f098a7369cd23488403f58be9c491a6c55f # v2
+        uses: taiki-e/install-action@213ccc1a076163c093f914550b94feb90fab916d # v2
         with:
           tool: cargo-nextest
 
