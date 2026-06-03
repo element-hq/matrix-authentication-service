@@ -60,6 +60,6 @@ pub use self::{
         UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode, UserRecoverySession,
         UserRecoveryTicket, UserRegistration, UserRegistrationPassword, UserRegistrationToken,
     },
-    utils::{BoxClock, BoxRng},
+    utils::{BoxClock, BoxRng, normalize_username},
     version::AppVersion,
 };

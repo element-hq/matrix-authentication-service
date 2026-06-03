@@ -11,3 +11,8 @@ use crate::clock::Clock;
 pub type BoxClock = Box<dyn Clock + Send>;
 /// A boxed random number generator
 pub type BoxRng = Box<dyn CryptoRngCore + Send>;
+
+#[must_use]
+pub fn normalize_username(input: &str) -> String {
+    input.chars().filter(|c| !c.is_whitespace()).collect()
+}

@@ -15,7 +15,9 @@ use figment::Figment;
 use mas_config::{
     ConfigurationSection, ConfigurationSectionExt, DatabaseConfig, MatrixConfig, PasswordsConfig,
 };
-use mas_data_model::{Clock, Device, SystemClock, TokenType, Ulid, UpstreamOAuthProvider, User};
+use mas_data_model::{
+    Clock, Device, SystemClock, TokenType, Ulid, UpstreamOAuthProvider, User, normalize_username,
+};
 use mas_email::Address;
 use mas_matrix::HomeserverConnection;
 use mas_storage::{
@@ -730,9 +732,7 @@ impl Options {
 
                 // If the username is provided, check if it's available and normalize it.
                 let localpart = if let Some(username) = username {
-                    check_and_normalize_username(&username, &mut repo, &homeserver)
-                        .await?
-                        .to_owned()
+                    check_and_normalize_username(&username, &mut repo, &homeserver).await?
                 } else {
                     // Else we prompt for one until we get a valid one.
                     loop {
@@ -745,7 +745,7 @@ impl Options {
 
                         match check_and_normalize_username(&username, &mut repo, &homeserver).await
                         {
-                            Ok(localpart) => break localpart.to_owned(),
+                            Ok(localpart) => break localpart.clone(),
                             Err(e) => {
                                 warn!("Invalid username: {e}");
                             }
@@ -841,7 +841,7 @@ impl Options {
                                 )
                                 .await
                                 {
-                                    Ok(localpart) => break localpart.to_owned(),
+                                    Ok(localpart) => break localpart,
                                     Err(e) => {
                                         warn!("Invalid username: {e}");
                                     }
@@ -961,29 +961,34 @@ impl std::fmt::Display for HumanReadable<&UpstreamOAuthProvider> {
     }
 }
 
-async fn check_and_normalize_username<'a>(
-    localpart_or_mxid: &'a str,
+async fn check_and_normalize_username(
+    localpart_or_mxid: &str,
     repo: &mut dyn RepositoryAccess<Error = DatabaseError>,
     homeserver: &dyn HomeserverConnection,
-) -> anyhow::Result<&'a str> {
+) -> anyhow::Result<String> {
     // XXX: this is a very basic MXID to localpart conversion
     // Strip any leading '@'
-    let mut localpart = localpart_or_mxid.trim_start_matches('@');
+    let localpart = localpart_or_mxid.trim_start_matches('@');
 
     // Strip any trailing ':homeserver'
-    if let Some(index) = localpart.find(':') {
-        localpart = &localpart[..index];
-    }
+    let localpart = if let Some(index) = localpart.find(':') {
+        &localpart[..index]
+    } else {
+        localpart
+    };
+
+    // Trim whitespace
+    let localpart = normalize_username(localpart);
 
     if localpart.is_empty() {
         return Err(anyhow::anyhow!("Username cannot be empty"));
     }
 
-    if repo.user().exists(localpart).await? {
+    if repo.user().exists(&localpart).await? {
         return Err(anyhow::anyhow!("User already exists"));
     }
 
-    if !homeserver.is_localpart_available(localpart).await? {
+    if !homeserver.is_localpart_available(&localpart).await? {
         return Err(anyhow::anyhow!("Username not available on homeserver"));
     }
 
