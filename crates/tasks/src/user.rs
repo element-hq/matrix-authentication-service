@@ -7,11 +7,12 @@
 use anyhow::Context;
 use async_trait::async_trait;
 use mas_storage::{
-    RepositoryAccess,
+    Pagination, RepositoryAccess,
     compat::CompatSessionFilter,
     oauth2::OAuth2SessionFilter,
     personal::PersonalSessionFilter,
     queue::{DeactivateUserJob, ReactivateUserJob},
+    upstream_oauth2::{UpstreamOAuthLinkFilter, UpstreamOAuthLinkRepository},
     user::{BrowserSessionFilter, UserEmailFilter, UserRepository},
 };
 use tracing::info;
@@ -128,6 +129,34 @@ impl RunnableJob for DeactivateUserJob {
         info!(
             affected = n,
             "Removed all unsupported third-party IDs for user"
+        );
+
+        // Delete all upstream OAuth links for the user
+        let filter = UpstreamOAuthLinkFilter::new().for_user(&user);
+        let mut cursor = Pagination::first(100);
+        let mut removed = 0;
+        loop {
+            let page = repo
+                .upstream_oauth_link()
+                .list(filter, cursor)
+                .await
+                .map_err(JobError::retry)?;
+            for edge in page.edges {
+                cursor = cursor.after(edge.cursor);
+                repo.upstream_oauth_link()
+                    .remove(clock, edge.node)
+                    .await
+                    .map_err(JobError::retry)?;
+                removed += 1;
+            }
+
+            if !page.has_next_page {
+                break;
+            }
+        }
+        info!(
+            affected = removed,
+            "Removed all upstream OAuth links for user"
         );
 
         // Before calling back to the homeserver, commit the changes to the database, as
