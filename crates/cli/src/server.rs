@@ -191,7 +191,12 @@ async fn log_response_middleware(
 
     let response = next.run(request).await;
 
-    let Some(stats) = LogContext::maybe_with(LogContext::stats) else {
+    let Some((stats, requester)) = LogContext::maybe_with(|ctx| {
+        (
+            ctx.stats(),
+            ctx.requester().cloned().map(tracing::field::display),
+        )
+    }) else {
         tracing::error!("Missing log context for request, this is a bug!");
         return response;
     };
@@ -200,14 +205,17 @@ async fn log_response_middleware(
     match status_code.as_u16() {
         100..=399 => tracing::info!(
             name: "http.server.response",
+            { requester = requester },
             "\"{method} {path} HTTP/{version}\" {status_code} {user_agent:?} [{stats}]",
         ),
         400..=499 => tracing::warn!(
             name: "http.server.response",
+            { requester = requester },
             "\"{method} {path} HTTP/{version}\" {status_code} {user_agent:?} [{stats}]",
         ),
         500..=599 => tracing::error!(
             name: "http.server.response",
+            { requester = requester },
             "\"{method} {path} HTTP/{version}\" {status_code} {user_agent:?} [{stats}]",
         ),
         _ => { /* This shouldn't happen */ }
