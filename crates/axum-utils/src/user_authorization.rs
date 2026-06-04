@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -23,6 +24,8 @@ use mas_storage::{
 };
 use serde::{Deserialize, de::DeserializeOwned};
 use thiserror::Error;
+
+use crate::log_context::RecordAsRequester;
 
 #[derive(Debug, Deserialize)]
 struct AuthorizedForm<F> {
@@ -61,6 +64,8 @@ impl AccessToken {
             .lookup(token.session_id)
             .await?
             .ok_or(AuthorizationVerificationError::InvalidToken)?;
+
+        session.maybe_record_as_requester();
 
         Ok((token, session))
     }
