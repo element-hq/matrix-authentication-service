@@ -21,6 +21,7 @@ use hyper::{Method, Request, Response, StatusCode, Version, header::USER_AGENT};
 use listenfd::ListenFd;
 use mas_config::{HttpBindConfig, HttpResource, HttpTlsConfig, UnixOrTcp};
 use mas_context::LogContext;
+use mas_handlers::ClientIp;
 use mas_listener::{ConnectionInfo, unix_or_tcp::UnixOrTcpListener};
 use mas_router::Route;
 use mas_templates::Templates;
@@ -41,7 +42,7 @@ use tower_http::services::{ServeDir, fs::ServeFileSystemResponseBody};
 use tracing::Span;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
-use crate::app_state::AppState;
+use crate::app_state::{AppState, client_ip_middleware};
 
 const MAS_LISTENER_NAME: Key = Key::from_static_str("mas.listener.name");
 
@@ -188,6 +189,11 @@ async fn log_response_middleware(
     let method = otel_http_method(&request);
     let path = request.uri().path().to_owned();
     let version = otel_net_protocol_version(&request);
+    let client_ip = request
+        .extensions()
+        .get::<ClientIp>()
+        .and_then(|ip| ip.0)
+        .map(tracing::field::display);
 
     let response = next.run(request).await;
 
@@ -200,14 +206,17 @@ async fn log_response_middleware(
     match status_code.as_u16() {
         100..=399 => tracing::info!(
             name: "http.server.response",
+            { client.address = client_ip },
             "\"{method} {path} HTTP/{version}\" {status_code} {user_agent:?} [{stats}]",
         ),
         400..=499 => tracing::warn!(
             name: "http.server.response",
+            { client.address = client_ip },
             "\"{method} {path} HTTP/{version}\" {status_code} {user_agent:?} [{stats}]",
         ),
         500..=599 => tracing::error!(
             name: "http.server.response",
+            { client.address = client_ip },
             "\"{method} {path} HTTP/{version}\" {status_code} {user_agent:?} [{stats}]",
         ),
         _ => { /* This shouldn't happen */ }
@@ -310,6 +319,15 @@ pub fn build_router(
 
     router
         .layer(axum::middleware::from_fn(log_response_middleware))
+        // Infer the client IP once, ahead of `log_response_middleware` and the
+        // handlers, and store it in the request extensions. Placed after
+        // `log_response_middleware` in this list so it wraps it (the first layer
+        // is the innermost), meaning the `ClientIp` extension is set before the
+        // logging middleware and the extractors read it.
+        .layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            client_ip_middleware,
+        ))
         .layer(
             InFlightCounterLayer::new("http.server.active_requests").on_request((
                 name.map(|name| KeyValue::new(MAS_LISTENER_NAME, name.to_owned())),
