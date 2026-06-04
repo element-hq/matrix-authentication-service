@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -15,7 +16,7 @@ use axum::{
 use axum_extra::TypedHeader;
 use headers::{Authorization, authorization::Bearer};
 use hyper::StatusCode;
-use mas_axum_utils::record_error;
+use mas_axum_utils::{RecordAsRequester, record_error};
 use mas_data_model::{
     BoxClock, Session, TokenFormatError, TokenType, User,
     personal::session::{PersonalSession, PersonalSessionOwner},
@@ -273,10 +274,17 @@ where
                 }
             }
 
+            user.maybe_record_as_requester();
+
             Some(user)
         } else {
             // Double check we're not using a PersonalSession
             assert!(matches!(session, CallerSession::OAuth2Session(_)));
+            // There is no user on this session (client-credentials): attribute
+            // the request to the client instead.
+            if let CallerSession::OAuth2Session(session) = &session {
+                session.maybe_record_as_requester();
+            }
             None
         };
 

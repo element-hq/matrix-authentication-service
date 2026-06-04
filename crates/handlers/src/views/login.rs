@@ -13,7 +13,7 @@ use axum::{
 use axum_extra::{extract::Query, typed_header::TypedHeader};
 use hyper::StatusCode;
 use mas_axum_utils::{
-    InternalError, SessionInfoExt,
+    InternalError, RecordAsRequester, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
@@ -346,6 +346,10 @@ pub(crate) async fn post(
         .await?;
 
     repo.save().await?;
+
+    // Attribute the rest of this request (and its log line) to the user that
+    // just logged in.
+    user.maybe_record_as_requester();
 
     PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "success")]);
 

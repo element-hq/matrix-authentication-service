@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -7,7 +8,7 @@
 //! locked or deactivated
 
 use axum::response::{Html, IntoResponse as _, Response};
-use mas_axum_utils::{SessionInfoExt, cookies::CookieJar, csrf::CsrfExt};
+use mas_axum_utils::{RecordAsRequester, SessionInfoExt, cookies::CookieJar, csrf::CsrfExt};
 use mas_data_model::{BrowserSession, Clock, User};
 use mas_i18n::DataLocale;
 use mas_policy::model::SessionCounts;
@@ -64,6 +65,10 @@ pub async fn load_session_or_fallback(
             maybe_session: None,
         });
     };
+
+    // Record the user as the requester even when we return a fallback page
+    // below — the request is still attributable to that user.
+    session.maybe_record_as_requester();
 
     if session.user.deactivated_at.is_some() {
         // The account is deactivated, show the 'account deactivated' fallback

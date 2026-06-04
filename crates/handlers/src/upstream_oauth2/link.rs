@@ -17,7 +17,7 @@ use axum::{
 use axum_extra::typed_header::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::{
-    GenericError, SessionInfoExt,
+    GenericError, RecordAsRequester, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
     record_error,
@@ -356,6 +356,10 @@ pub(crate) async fn get(
                 .add(&mut rng, &clock, &user, user_agent)
                 .await?;
 
+            // Attribute this request (and its log line) to the user being
+            // logged in through the upstream provider.
+            user.maybe_record_as_requester();
+
             let upstream_session = repo
                 .upstream_oauth_session()
                 .consume(&clock, upstream_session, &session)
@@ -647,6 +651,10 @@ pub(crate) async fn get(
                         .browser_session()
                         .add(&mut rng, &clock, &existing_user, user_agent)
                         .await?;
+
+                    // Attribute this request (and its log line) to the user
+                    // being logged in through the upstream provider.
+                    existing_user.maybe_record_as_requester();
 
                     let upstream_session = repo
                         .upstream_oauth_session()

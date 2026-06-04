@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -12,9 +13,11 @@ use std::{
 use axum::{Json, extract::State, http::HeaderValue, response::IntoResponse};
 use hyper::{HeaderMap, StatusCode};
 use mas_axum_utils::{
+    RecordAsRequester,
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
     record_error,
 };
+use mas_context::{LogContext, Requester};
 use mas_data_model::{
     BoxClock, Clock, Device, TokenFormatError, TokenType, personal::session::PersonalSessionOwner,
 };
@@ -278,6 +281,10 @@ pub(crate) async fn post(
         {
             return Err(RouteError::InvalidBearerToken);
         }
+
+        // The caller is the homeserver itself — not the user whose token is
+        // being introspected below.
+        LogContext::maybe_set_requester(Requester::Homeserver);
     } else {
         // Otherwise, it presented regular client credentials, so we verify them
         let client = credentials
@@ -296,6 +303,10 @@ pub(crate) async fn post(
         credentials
             .verify(&http_client, &encrypter, method, &client)
             .await?;
+
+        // The introspecting client is the caller — not the introspected token's
+        // subject.
+        client.maybe_record_as_requester();
     }
 
     let Some(form) = form else {
@@ -763,6 +774,115 @@ mod tests {
         oauth2::generate_token_pair,
         test_utils::{RequestBuilderExt, ResponseExt, TestState, setup},
     };
+
+    /// Introspection records the *caller* (the introspecting client, or the
+    /// homeserver) as the requester — never the subject of the introspected
+    /// token.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_introspection_records_caller_as_requester(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        // A confidential client allowed to introspect.
+        let request = Request::post(OAuth2RegistrationEndpoint::PATH).json(json!({
+            "client_uri": "https://introspecting.com/",
+            "grant_types": [],
+            "token_endpoint_auth_method": "client_secret_basic",
+        }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+        let client: ClientRegistrationResponse = response.json();
+        let introspecting_client_id = client.client_id;
+        let introspecting_client_secret = client.client_secret.unwrap();
+
+        // A separate client + user + oauth2 session, to mint a token to introspect.
+        let request = Request::post(OAuth2RegistrationEndpoint::PATH).json(json!({
+            "client_uri": "https://client.com/",
+            "redirect_uris": ["https://client.com/"],
+            "response_types": ["code"],
+            "grant_types": ["authorization_code", "refresh_token"],
+            "token_endpoint_auth_method": "none",
+        }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+        let ClientRegistrationResponse { client_id, .. } = response.json();
+
+        let mut repo = state.repository().await.unwrap();
+        let user = repo
+            .user()
+            .add(&mut state.rng(), &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+        state
+            .homeserver_connection
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub, false))
+            .await
+            .unwrap();
+        let client = repo
+            .oauth2_client()
+            .find_by_client_id(&client_id)
+            .await
+            .unwrap()
+            .unwrap();
+        let browser_session = repo
+            .browser_session()
+            .add(&mut state.rng(), &state.clock, &user, None)
+            .await
+            .unwrap();
+        let session = repo
+            .oauth2_session()
+            .add_from_browser_session(
+                &mut state.rng(),
+                &state.clock,
+                &client,
+                &browser_session,
+                Scope::from_iter([OPENID]),
+            )
+            .await
+            .unwrap();
+        let (AccessToken { access_token, .. }, _) = generate_token_pair(
+            &mut state.rng(),
+            &state.clock,
+            &mut repo,
+            &session,
+            Duration::microseconds(5 * 60 * 1000 * 1000),
+        )
+        .await
+        .unwrap();
+
+        // The internal id of the introspecting client, for the assertion below.
+        let introspecting_client = repo
+            .oauth2_client()
+            .find_by_client_id(&introspecting_client_id)
+            .await
+            .unwrap()
+            .unwrap();
+        repo.save().await.unwrap();
+
+        // (1) Introspecting with client credentials: the introspecting client is
+        //     the requester — not alice, who owns the token.
+        let request = Request::post(OAuth2Introspection::PATH)
+            .basic_auth(&introspecting_client_id, &introspecting_client_secret)
+            .form(json!({ "token": access_token }));
+        let (response, requester) = state.request_capturing_requester(request).await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            requester,
+            Some(format!("oauth2-client:{}", introspecting_client.id))
+        );
+
+        // (2) Introspecting with the homeserver's bearer token: the homeserver is
+        //     the requester.
+        let request = Request::post(OAuth2Introspection::PATH)
+            .header(
+                "authorization",
+                format!("Bearer {}", MockHomeserverConnection::VALID_BEARER_TOKEN),
+            )
+            .form(json!({ "token": access_token }));
+        let (response, requester) = state.request_capturing_requester(request).await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(requester, Some("homeserver".to_owned()));
+    }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_introspect_oauth_tokens(pool: PgPool) {

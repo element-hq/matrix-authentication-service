@@ -10,6 +10,7 @@ use chrono::Duration;
 use headers::{CacheControl, Pragma};
 use hyper::StatusCode;
 use mas_axum_utils::{
+    RecordAsRequester,
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
     record_error,
 };
@@ -140,6 +141,8 @@ pub(crate) async fn post(
                 }
             }
         })?;
+
+    client.maybe_record_as_requester();
 
     if !client.grant_types.contains(&GrantType::DeviceCode) {
         return Err(RouteError::ClientNotAllowed(client.id));

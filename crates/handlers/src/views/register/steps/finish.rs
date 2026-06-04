@@ -12,7 +12,7 @@ use axum::{
 };
 use axum_extra::TypedHeader;
 use chrono::Duration;
-use mas_axum_utils::{InternalError, SessionInfoExt as _, cookies::CookieJar};
+use mas_axum_utils::{InternalError, RecordAsRequester, SessionInfoExt as _, cookies::CookieJar};
 use mas_data_model::{BoxClock, BoxRng, SiteConfig};
 use mas_matrix::HomeserverConnection;
 use mas_router::{PostAuthAction, UrlBuilder};
@@ -307,6 +307,9 @@ pub(crate) async fn get(
         .user()
         .add(&mut rng, &clock, registration.username)
         .await?;
+    // Attribute this request (and its log line) to the user that was just
+    // registered and logged in.
+    user.maybe_record_as_requester();
     // Also create a browser session which will log the user in
     let user_session = repo
         .browser_session()
