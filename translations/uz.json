@@ -41,6 +41,9 @@
       "heading": "Email manzilini qo‘shish"
     },
     "back_to_homepage": "Bosh sahifaga qaytish",
+    "captcha": {
+      "noscript": "Bu shakl CAPTCHA bilan himoyalangan va uni yuborish uchun JavaScript yoqilishi kerak. Brauzeringizda JavaScript’ni yoqing va bu sahifani qayta yuklang."
+    },
     "change_password": {
       "change": "Parolni o‘zgartirish",
       "confirm": "Parolni tasdiqlash",
@@ -89,6 +92,7 @@
       }
     },
     "errors": {
+      "captcha": "CAPTCHA tekshiruvi amalga oshmadi, qayta urining",
       "denied_policy": "Siyosat tomonidan rad etilgan: %(policy)s",
       "field_required": "Ushbu qator toʻldirilishi shart",
       "invalid_credentials": "Hisob ma’lumotlari yaroqsiz",
@@ -128,6 +132,7 @@
         "resend_email": "Elektron pochtani qayta yuborish"
       },
       "finish": {
+        "description": "Hisobingiz uchun yangi parol tanlang.",
         "new": "Yangi parol"
       },
       "progress": {
