@@ -1952,6 +1952,46 @@
               ]
             },
             "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[active-oauth2-client]",
+            "description": "Retrieve users which have at least one active OAuth 2.0 session\n belonging to any of the given client IDs.\n\n This filter may be repeated; the semantics are OR across the supplied\n clients (a user matches if they have an active session for *any* of\n them).",
+            "schema": {
+              "description": "Retrieve users which have at least one active OAuth 2.0 session\n belonging to any of the given client IDs.\n\n This filter may be repeated; the semantics are OR across the supplied\n clients (a user matches if they have an active session for *any* of\n them).",
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ULID"
+              },
+              "default": []
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[has-active-oauth2-session]",
+            "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) OAuth 2.0 session, regardless of the client.",
+            "schema": {
+              "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) OAuth 2.0 session, regardless of the client.",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[has-active-compat-session]",
+            "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) compatibility session.",
+            "schema": {
+              "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) compatibility session.",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "style": "form"
           }
         ],
         "responses": {
@@ -2034,6 +2074,23 @@
                     "last": "/api/admin/v1/users?page[last]=3",
                     "next": "/api/admin/v1/users?page[after]=030C1G60R30C1G60R30C1G60R3&page[first]=3"
                   }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Client was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Client ID 00000000000000000000000000 not found"
+                    }
+                  ]
                 }
               }
             }
@@ -6143,6 +6200,28 @@
               {
                 "type": "null"
               }
+            ]
+          },
+          "filter[active-oauth2-client]": {
+            "description": "Retrieve users which have at least one active OAuth 2.0 session\n belonging to any of the given client IDs.\n\n This filter may be repeated; the semantics are OR across the supplied\n clients (a user matches if they have an active session for *any* of\n them).",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ULID"
+            },
+            "default": []
+          },
+          "filter[has-active-oauth2-session]": {
+            "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) OAuth 2.0 session, regardless of the client.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "filter[has-active-compat-session]": {
+            "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) compatibility session.",
+            "type": [
+              "boolean",
+              "null"
             ]
           }
         }
