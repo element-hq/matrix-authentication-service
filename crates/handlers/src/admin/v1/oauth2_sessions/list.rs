@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -10,6 +11,7 @@ use aide::{OperationIo, transform::TransformOperation};
 use axum::{Json, response::IntoResponse};
 use axum_extra::extract::{Query, QueryRejection};
 use axum_macros::FromRequestParts;
+use chrono::{DateTime, Utc};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
 use mas_storage::{Page, oauth2::OAuth2SessionFilter};
@@ -70,10 +72,13 @@ pub struct FilterParams {
     #[schemars(with = "Option<crate::admin::schema::Ulid>")]
     user: Option<Ulid>,
 
-    /// Retrieve the items for the given client
-    #[serde(rename = "filter[client]")]
-    #[schemars(with = "Option<crate::admin::schema::Ulid>")]
-    client: Option<Ulid>,
+    /// Retrieve the items for the given client(s)
+    ///
+    /// This parameter may be repeated to filter on multiple clients at
+    /// once (sessions matching any of the given clients are returned).
+    #[serde(default, rename = "filter[client]")]
+    #[schemars(with = "Vec<crate::admin::schema::Ulid>")]
+    client: Vec<Ulid>,
 
     /// Retrieve the items only for a specific client kind
     #[serde(rename = "filter[client-kind]")]
@@ -97,6 +102,22 @@ pub struct FilterParams {
     /// * `finished`: Only retrieve finished sessions
     #[serde(rename = "filter[status]")]
     status: Option<OAuth2SessionStatus>,
+
+    /// Retrieve sessions created strictly before the given time
+    #[serde(rename = "filter[created-before]")]
+    created_before: Option<DateTime<Utc>>,
+
+    /// Retrieve sessions created strictly after the given time
+    #[serde(rename = "filter[created-after]")]
+    created_after: Option<DateTime<Utc>>,
+
+    /// Retrieve sessions last active strictly before the given time
+    #[serde(rename = "filter[last-active-before]")]
+    last_active_before: Option<DateTime<Utc>>,
+
+    /// Retrieve sessions last active strictly after the given time
+    #[serde(rename = "filter[last-active-after]")]
+    last_active_after: Option<DateTime<Utc>>,
 }
 
 impl std::fmt::Display for FilterParams {
@@ -108,7 +129,7 @@ impl std::fmt::Display for FilterParams {
             sep = '&';
         }
 
-        if let Some(client) = self.client {
+        for client in &self.client {
             write!(f, "{sep}filter[client]={client}")?;
             sep = '&';
         }
@@ -130,6 +151,42 @@ impl std::fmt::Display for FilterParams {
 
         if let Some(status) = self.status {
             write!(f, "{sep}filter[status]={status}")?;
+            sep = '&';
+        }
+
+        if let Some(created_before) = self.created_before {
+            write!(
+                f,
+                "{sep}filter[created-before]={}",
+                created_before.format("%Y-%m-%dT%H:%M:%SZ")
+            )?;
+            sep = '&';
+        }
+
+        if let Some(created_after) = self.created_after {
+            write!(
+                f,
+                "{sep}filter[created-after]={}",
+                created_after.format("%Y-%m-%dT%H:%M:%SZ")
+            )?;
+            sep = '&';
+        }
+
+        if let Some(last_active_before) = self.last_active_before {
+            write!(
+                f,
+                "{sep}filter[last-active-before]={}",
+                last_active_before.format("%Y-%m-%dT%H:%M:%SZ")
+            )?;
+            sep = '&';
+        }
+
+        if let Some(last_active_after) = self.last_active_after {
+            write!(
+                f,
+                "{sep}filter[last-active-after]={}",
+                last_active_after.format("%Y-%m-%dT%H:%M:%SZ")
+            )?;
             sep = '&';
         }
 
@@ -183,7 +240,8 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         .summary("List OAuth 2.0 sessions")
         .description("Retrieve a list of OAuth 2.0 sessions.
 Note that by default, all sessions, including finished ones are returned, with the oldest first.
-Use the `filter[status]` parameter to filter the sessions by their status and `page[last]` parameter to retrieve the last N sessions.")
+Use the `filter[status]` parameter to filter the sessions by their status and `page[last]` parameter to retrieve the last N sessions.
+The `filter[client]` parameter may be repeated to filter on multiple clients at once.")
         .tag("oauth2-session")
         .response_with::<200, Json<PaginatedResponse<OAuth2Session>>, _>(|t| {
             let sessions = OAuth2Session::samples();
@@ -246,21 +304,21 @@ pub async fn handler(
         None => filter,
     };
 
-    let client = if let Some(client_id) = params.client {
+    let mut clients = Vec::with_capacity(params.client.len());
+    for client_id in params.client {
         let client = repo
             .oauth2_client()
             .lookup(client_id)
             .await?
             .ok_or(RouteError::ClientNotFound(client_id))?;
+        clients.push(client);
+    }
+    let client_refs: Vec<&_> = clients.iter().collect();
 
-        Some(client)
+    let filter = if client_refs.is_empty() {
+        filter
     } else {
-        None
-    };
-
-    let filter = match &client {
-        Some(client) => filter.for_client(client),
-        None => filter,
+        filter.for_clients(&client_refs)
     };
 
     let filter = match params.client_kind {
@@ -304,6 +362,30 @@ pub async fn handler(
         None => filter,
     };
 
+    let filter = if let Some(created_before) = params.created_before {
+        filter.with_created_before(created_before)
+    } else {
+        filter
+    };
+
+    let filter = if let Some(created_after) = params.created_after {
+        filter.with_created_after(created_after)
+    } else {
+        filter
+    };
+
+    let filter = if let Some(last_active_before) = params.last_active_before {
+        filter.with_last_active_before(last_active_before)
+    } else {
+        filter
+    };
+
+    let filter = if let Some(last_active_after) = params.last_active_after {
+        filter.with_last_active_after(last_active_after)
+    } else {
+        filter
+    };
+
     let response = match include_count {
         IncludeCount::True => {
             let page = repo
@@ -333,7 +415,13 @@ pub async fn handler(
 
 #[cfg(test)]
 mod tests {
+    use chrono::Duration;
     use hyper::{Request, StatusCode};
+    use mas_data_model::Clock;
+    use oauth2_types::{
+        requests::GrantType,
+        scope::{OPENID, Scope},
+    };
     use sqlx::PgPool;
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
@@ -450,5 +538,267 @@ mod tests {
           }
         }
         "#);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_oauth2_session_list_by_last_active(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+        let mut rng = state.rng();
+
+        let mut repo = state.repository().await.unwrap();
+        let client = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &state.clock,
+                vec!["https://example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::ClientCredentials],
+                Some("Test client".to_owned()),
+                Some("https://example.com/logo.png".parse().unwrap()),
+                Some("https://example.com/".parse().unwrap()),
+                Some("https://example.com/policy".parse().unwrap()),
+                Some("https://example.com/tos".parse().unwrap()),
+                Some("https://example.com/jwks.json".parse().unwrap()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some("https://example.com/login".parse().unwrap()),
+            )
+            .await
+            .unwrap();
+
+        let session = repo
+            .oauth2_session()
+            .add_from_client_credentials(
+                &mut rng,
+                &state.clock,
+                &client,
+                Scope::from_iter([OPENID]),
+            )
+            .await
+            .unwrap();
+
+        state.clock.advance(Duration::minutes(5));
+        let activity_at = state.clock.now();
+        repo.oauth2_session()
+            .record_batch_activity(vec![(session.id, activity_at, None)])
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        // Sessions last active after `activity_at - 1m` should include our
+        // session.
+        let threshold = activity_at - Duration::minutes(1);
+        let request = Request::get(format!(
+            "/api/admin/v1/oauth2-sessions?filter[last-active-after]={}",
+            threshold.format("%Y-%m-%dT%H:%M:%SZ")
+        ))
+        .bearer(&token)
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        let ids: Vec<&str> = body["data"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v["id"].as_str().unwrap())
+            .collect();
+        assert!(ids.contains(&session.id.to_string().as_str()));
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_oauth2_session_list_by_created_at(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+        let mut rng = state.rng();
+
+        let mut repo = state.repository().await.unwrap();
+        let client = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &state.clock,
+                vec!["https://example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::ClientCredentials],
+                Some("Test client".to_owned()),
+                Some("https://example.com/logo.png".parse().unwrap()),
+                Some("https://example.com/".parse().unwrap()),
+                Some("https://example.com/policy".parse().unwrap()),
+                Some("https://example.com/tos".parse().unwrap()),
+                Some("https://example.com/jwks.json".parse().unwrap()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some("https://example.com/login".parse().unwrap()),
+            )
+            .await
+            .unwrap();
+
+        // Two extra sessions, one before and one after a cutoff. (There's
+        // also one pre-existing session from the admin token.)
+        repo.oauth2_session()
+            .add_from_client_credentials(
+                &mut rng,
+                &state.clock,
+                &client,
+                Scope::from_iter([OPENID]),
+            )
+            .await
+            .unwrap();
+        state.clock.advance(Duration::minutes(1));
+        let cutoff = state.clock.now();
+        state.clock.advance(Duration::minutes(1));
+        let new_session = repo
+            .oauth2_session()
+            .add_from_client_credentials(
+                &mut rng,
+                &state.clock,
+                &client,
+                Scope::from_iter([OPENID]),
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        // Sessions created after the cutoff: only the second one
+        let request = Request::get(format!(
+            "/api/admin/v1/oauth2-sessions?filter[created-after]={}",
+            cutoff.format("%Y-%m-%dT%H:%M:%SZ")
+        ))
+        .bearer(&token)
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_eq!(body["meta"]["count"], 1);
+        let ids: Vec<&str> = body["data"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v["id"].as_str().unwrap())
+            .collect();
+        assert_eq!(ids, vec![new_session.id.to_string()]);
+    }
+
+    /// Provisions two extra clients and a session for each, then verifies
+    /// that listing with two `filter[client]` query parameters returns both
+    /// sessions (and excludes the admin session for the third, unrelated
+    /// client).
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_oauth2_session_list_multiple_clients(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+        let mut rng = state.rng();
+
+        // Provision two clients and a session for each, both using the
+        // client_credentials flow so that they don't depend on a user.
+        let mut repo = state.repository().await.unwrap();
+        let client_a = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &state.clock,
+                vec!["https://a.example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::ClientCredentials],
+                Some("client a".to_owned()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+        let client_b = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &state.clock,
+                vec!["https://b.example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::ClientCredentials],
+                Some("client b".to_owned()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let scope: Scope = "urn:mas:admin".parse().unwrap();
+        let session_a = repo
+            .oauth2_session()
+            .add_from_client_credentials(&mut rng, &state.clock, &client_a, scope.clone())
+            .await
+            .unwrap();
+        let session_b = repo
+            .oauth2_session()
+            .add_from_client_credentials(&mut rng, &state.clock, &client_b, scope.clone())
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        // Filter on both new clients. The admin session (a third client) must
+        // not appear in the result.
+        let url = format!(
+            "/api/admin/v1/oauth2-sessions?filter[client]={}&filter[client]={}",
+            client_a.id, client_b.id,
+        );
+        let request = Request::get(&url).bearer(&token).empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+
+        assert_eq!(body["meta"]["count"], 2);
+        let ids: Vec<&str> = body["data"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v["id"].as_str().unwrap())
+            .collect();
+        let session_a_id = session_a.id.to_string();
+        let session_b_id = session_b.id.to_string();
+        assert!(ids.contains(&session_a_id.as_str()));
+        assert!(ids.contains(&session_b_id.as_str()));
+        assert_eq!(ids.len(), 2);
+
+        // The self/first/last links should preserve both filter[client] segments
+        let self_link = body["links"]["self"].as_str().unwrap();
+        assert!(self_link.contains(&format!("filter[client]={}", client_a.id)));
+        assert!(self_link.contains(&format!("filter[client]={}", client_b.id)));
     }
 }
