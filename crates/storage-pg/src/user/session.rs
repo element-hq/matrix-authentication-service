@@ -31,6 +31,7 @@ use crate::{
     iden::{UpstreamOAuthAuthorizationSessions, UserSessions, Users},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
+    ulid_at::{max_ulid_at, min_ulid_at},
 };
 
 /// An implementation of [`BrowserSessionRepository`] for a PostgreSQL
@@ -154,6 +155,17 @@ impl crate::filter::Filter for BrowserSessionFilter<'_> {
             }))
             .add_option(self.last_active_before().map(|last_active_before| {
                 Expr::col((UserSessions::Table, UserSessions::LastActiveAt)).lt(last_active_before)
+            }))
+            .add_option(self.created_after().map(|created_after| {
+                // ULIDs encode the creation time in their high 48 bits, so we
+                // can use the primary key index to filter on creation time
+                // without touching the `created_at` column.
+                Expr::col((UserSessions::Table, UserSessions::UserSessionId))
+                    .gt(max_ulid_at(created_after))
+            }))
+            .add_option(self.created_before().map(|created_before| {
+                Expr::col((UserSessions::Table, UserSessions::UserSessionId))
+                    .lt(min_ulid_at(created_before))
             }))
             .add_option(self.linked_to_upstream_sessions().map(|filter| {
                 Expr::col((UserSessions::Table, UserSessions::UserSessionId)).in_subquery(

@@ -66,6 +66,8 @@ pub struct CompatSessionFilter<'a> {
     device: Option<&'a Device>,
     last_active_before: Option<DateTime<Utc>>,
     last_active_after: Option<DateTime<Utc>>,
+    created_before: Option<DateTime<Utc>>,
+    created_after: Option<DateTime<Utc>>,
 }
 
 impl<'a> CompatSessionFilter<'a> {
@@ -158,6 +160,36 @@ impl<'a> CompatSessionFilter<'a> {
     #[must_use]
     pub fn last_active_after(&self) -> Option<DateTime<Utc>> {
         self.last_active_after
+    }
+
+    /// Only return sessions created before the given time
+    #[must_use]
+    pub fn with_created_before(mut self, created_before: DateTime<Utc>) -> Self {
+        self.created_before = Some(created_before);
+        self
+    }
+
+    /// Only return sessions created after the given time
+    #[must_use]
+    pub fn with_created_after(mut self, created_after: DateTime<Utc>) -> Self {
+        self.created_after = Some(created_after);
+        self
+    }
+
+    /// Get the created-before filter
+    ///
+    /// Returns [`None`] if no filter was set
+    #[must_use]
+    pub fn created_before(&self) -> Option<DateTime<Utc>> {
+        self.created_before
+    }
+
+    /// Get the created-after filter
+    ///
+    /// Returns [`None`] if no filter was set
+    #[must_use]
+    pub fn created_after(&self) -> Option<DateTime<Utc>> {
+        self.created_after
     }
 
     /// Only return active compatibility sessions

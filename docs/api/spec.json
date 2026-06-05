@@ -215,6 +215,62 @@
               ]
             },
             "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[created-before]",
+            "description": "Retrieve sessions created strictly before the given time",
+            "schema": {
+              "description": "Retrieve sessions created strictly before the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[created-after]",
+            "description": "Retrieve sessions created strictly after the given time",
+            "schema": {
+              "description": "Retrieve sessions created strictly after the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[last-active-before]",
+            "description": "Retrieve sessions last active strictly before the given time",
+            "schema": {
+              "description": "Retrieve sessions last active strictly before the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[last-active-after]",
+            "description": "Retrieve sessions last active strictly after the given time",
+            "schema": {
+              "description": "Retrieve sessions last active strictly after the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
           }
         ],
         "responses": {
@@ -685,6 +741,62 @@
                   "type": "null"
                 }
               ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[created-before]",
+            "description": "Retrieve sessions created strictly before the given time",
+            "schema": {
+              "description": "Retrieve sessions created strictly before the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[created-after]",
+            "description": "Retrieve sessions created strictly after the given time",
+            "schema": {
+              "description": "Retrieve sessions created strictly after the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[last-active-before]",
+            "description": "Retrieve sessions last active strictly before the given time",
+            "schema": {
+              "description": "Retrieve sessions last active strictly before the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[last-active-after]",
+            "description": "Retrieve sessions last active strictly after the given time",
+            "schema": {
+              "description": "Retrieve sessions last active strictly after the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
             },
             "style": "form"
           }
@@ -3240,6 +3352,62 @@
               ]
             },
             "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[created-before]",
+            "description": "Retrieve sessions created strictly before the given time",
+            "schema": {
+              "description": "Retrieve sessions created strictly before the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[created-after]",
+            "description": "Retrieve sessions created strictly after the given time",
+            "schema": {
+              "description": "Retrieve sessions created strictly after the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[last-active-before]",
+            "description": "Retrieve sessions last active strictly before the given time",
+            "schema": {
+              "description": "Retrieve sessions last active strictly before the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[last-active-after]",
+            "description": "Retrieve sessions last active strictly after the given time",
+            "schema": {
+              "description": "Retrieve sessions last active strictly after the given time",
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "style": "form"
           }
         ],
         "responses": {
@@ -5045,6 +5213,38 @@
                 "type": "null"
               }
             ]
+          },
+          "filter[created-before]": {
+            "description": "Retrieve sessions created strictly before the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "filter[created-after]": {
+            "description": "Retrieve sessions created strictly after the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "filter[last-active-before]": {
+            "description": "Retrieve sessions last active strictly before the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "filter[last-active-after]": {
+            "description": "Retrieve sessions last active strictly after the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -5462,6 +5662,38 @@
                 "type": "null"
               }
             ]
+          },
+          "filter[created-before]": {
+            "description": "Retrieve sessions created strictly before the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "filter[created-after]": {
+            "description": "Retrieve sessions created strictly after the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "filter[last-active-before]": {
+            "description": "Retrieve sessions last active strictly before the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "filter[last-active-after]": {
+            "description": "Retrieve sessions last active strictly after the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -6597,6 +6829,38 @@
                 "type": "null"
               }
             ]
+          },
+          "filter[created-before]": {
+            "description": "Retrieve sessions created strictly before the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "filter[created-after]": {
+            "description": "Retrieve sessions created strictly after the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "filter[last-active-before]": {
+            "description": "Retrieve sessions last active strictly before the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "filter[last-active-after]": {
+            "description": "Retrieve sessions last active strictly after the given time",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         }
       },

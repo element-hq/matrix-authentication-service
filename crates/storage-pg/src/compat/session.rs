@@ -32,6 +32,7 @@ use crate::{
     iden::{CompatSessions, CompatSsoLogins, UserSessions},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
+    ulid_at::{max_ulid_at, min_ulid_at},
 };
 
 /// An implementation of [`CompatSessionRepository`] for a PostgreSQL connection
@@ -262,6 +263,17 @@ impl Filter for CompatSessionFilter<'_> {
             .add_option(self.last_active_before().map(|last_active_before| {
                 Expr::col((CompatSessions::Table, CompatSessions::LastActiveAt))
                     .lt(last_active_before)
+            }))
+            .add_option(self.created_after().map(|created_after| {
+                // ULIDs encode the creation time in their high 48 bits, so we
+                // can use the primary key index to filter on creation time
+                // without touching the `created_at` column.
+                Expr::col((CompatSessions::Table, CompatSessions::CompatSessionId))
+                    .gt(max_ulid_at(created_after))
+            }))
+            .add_option(self.created_before().map(|created_before| {
+                Expr::col((CompatSessions::Table, CompatSessions::CompatSessionId))
+                    .lt(min_ulid_at(created_before))
             }))
             .add_option(self.device().map(|device| {
                 Expr::col((CompatSessions::Table, CompatSessions::DeviceId)).eq(device.as_str())
