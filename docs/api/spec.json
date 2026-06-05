@@ -505,7 +505,7 @@
           "oauth2-session"
         ],
         "summary": "List OAuth 2.0 sessions",
-        "description": "Retrieve a list of OAuth 2.0 sessions.\nNote that by default, all sessions, including finished ones are returned, with the oldest first.\nUse the `filter[status]` parameter to filter the sessions by their status and `page[last]` parameter to retrieve the last N sessions.",
+        "description": "Retrieve a list of OAuth 2.0 sessions.\nNote that by default, all sessions, including finished ones are returned, with the oldest first.\nUse the `filter[status]` parameter to filter the sessions by their status and `page[last]` parameter to retrieve the last N sessions.\nThe `filter[client]` parameter may be repeated to filter on multiple clients at once.",
         "operationId": "listOAuth2Sessions",
         "parameters": [
           {
@@ -609,17 +609,14 @@
           {
             "in": "query",
             "name": "filter[client]",
-            "description": "Retrieve the items for the given client",
+            "description": "Retrieve the items for the given client(s)\n\n This parameter may be repeated to filter on multiple clients at\n once (sessions matching any of the given clients are returned).",
             "schema": {
-              "description": "Retrieve the items for the given client",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "description": "Retrieve the items for the given client(s)\n\n This parameter may be repeated to filter on multiple clients at\n once (sessions matching any of the given clients are returned).",
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ULID"
+              },
+              "default": []
             },
             "style": "form"
           },
@@ -5412,15 +5409,12 @@
             ]
           },
           "filter[client]": {
-            "description": "Retrieve the items for the given client",
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ULID"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "description": "Retrieve the items for the given client(s)\n\n This parameter may be repeated to filter on multiple clients at\n once (sessions matching any of the given clients are returned).",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ULID"
+            },
+            "default": []
           },
           "filter[client-kind]": {
             "description": "Retrieve the items only for a specific client kind",

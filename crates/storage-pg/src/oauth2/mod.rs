@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -718,6 +719,140 @@ mod tests {
                 .unwrap(),
             1
         );
+    }
+
+    /// Test the multi-client filter on [`OAuth2SessionFilter`].
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_list_sessions_for_clients(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+
+        // Provision a user + browser session to attach the OAuth2 sessions to
+        let user = repo
+            .user()
+            .add(&mut rng, &clock, "alice".to_owned())
+            .await
+            .unwrap();
+        let user_session = repo
+            .browser_session()
+            .add(&mut rng, &clock, &user, None)
+            .await
+            .unwrap();
+
+        // Provision three clients
+        let mut clients = Vec::new();
+        for label in ["first", "second", "third"] {
+            let client = repo
+                .oauth2_client()
+                .add(
+                    &mut rng,
+                    &clock,
+                    vec![
+                        format!("https://{label}.example.com/redirect")
+                            .parse()
+                            .unwrap(),
+                    ],
+                    None,
+                    None,
+                    None,
+                    vec![GrantType::AuthorizationCode],
+                    Some(format!("{label} client")),
+                    Some(
+                        format!("https://{label}.example.com/logo.png")
+                            .parse()
+                            .unwrap(),
+                    ),
+                    Some(format!("https://{label}.example.com/").parse().unwrap()),
+                    Some(
+                        format!("https://{label}.example.com/policy")
+                            .parse()
+                            .unwrap(),
+                    ),
+                    Some(format!("https://{label}.example.com/tos").parse().unwrap()),
+                    Some(
+                        format!("https://{label}.example.com/jwks.json")
+                            .parse()
+                            .unwrap(),
+                    ),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    Some(
+                        format!("https://{label}.example.com/login")
+                            .parse()
+                            .unwrap(),
+                    ),
+                )
+                .await
+                .unwrap();
+            clients.push(client);
+        }
+        let [client1, client2, client3] = <[_; 3]>::try_from(clients).ok().unwrap();
+
+        let scope = Scope::from_iter([OPENID]);
+
+        // One session per client
+        let session1 = repo
+            .oauth2_session()
+            .add_from_browser_session(&mut rng, &clock, &client1, &user_session, scope.clone())
+            .await
+            .unwrap();
+        clock.advance(Duration::try_minutes(1).unwrap());
+
+        let session2 = repo
+            .oauth2_session()
+            .add_from_browser_session(&mut rng, &clock, &client2, &user_session, scope.clone())
+            .await
+            .unwrap();
+        clock.advance(Duration::try_minutes(1).unwrap());
+
+        let _session3 = repo
+            .oauth2_session()
+            .add_from_browser_session(&mut rng, &clock, &client3, &user_session, scope.clone())
+            .await
+            .unwrap();
+
+        let pagination = Pagination::first(10);
+
+        // Filter on two of the three clients returns the matching sessions
+        let two_clients = [&client1, &client2];
+        let filter = OAuth2SessionFilter::new().for_clients(&two_clients);
+        let list = repo
+            .oauth2_session()
+            .list(filter, pagination)
+            .await
+            .unwrap();
+        assert!(!list.has_next_page);
+        assert_eq!(list.edges.len(), 2);
+        assert_eq!(list.edges[0].node, session1);
+        assert_eq!(list.edges[1].node, session2);
+        assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 2);
+
+        // A single-element list behaves like for_client
+        let one_client = [&client2];
+        let filter = OAuth2SessionFilter::new().for_clients(&one_client);
+        let list = repo
+            .oauth2_session()
+            .list(filter, pagination)
+            .await
+            .unwrap();
+        assert_eq!(list.edges.len(), 1);
+        assert_eq!(list.edges[0].node, session2);
+        assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 1);
+
+        // An empty list matches no sessions (sea-query emits `1 = 2` for IN ())
+        let no_clients: [&mas_data_model::Client; 0] = [];
+        let filter = OAuth2SessionFilter::new().for_clients(&no_clients);
+        let list = repo
+            .oauth2_session()
+            .list(filter, pagination)
+            .await
+            .unwrap();
+        assert!(list.edges.is_empty());
+        assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 0);
     }
 
     /// Test the [`OAuth2DeviceCodeGrantRepository`] implementation
