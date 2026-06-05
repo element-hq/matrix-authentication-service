@@ -37,8 +37,9 @@ pub use self::{
     email::{EmailConfig, EmailSmtpMode, EmailTransportKind},
     experimental::{ExperimentalConfig, SessionLimitConfig as ExperimentalSessionLimitConfig},
     http::{
-        BindConfig as HttpBindConfig, HttpConfig, ListenerConfig as HttpListenerConfig,
-        Resource as HttpResource, TlsConfig as HttpTlsConfig, UnixOrTcp,
+        BindConfig as HttpBindConfig, GraphQLIntrospectionMode, HttpConfig,
+        ListenerConfig as HttpListenerConfig, Resource as HttpResource, TlsConfig as HttpTlsConfig,
+        UnixOrTcp,
     },
     matrix::{HomeserverKind, MatrixConfig},
     oauth::OAuthConfig,

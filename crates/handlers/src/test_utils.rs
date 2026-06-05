@@ -27,7 +27,7 @@ use mas_axum_utils::{
     ErrorWrapper,
     cookies::{CookieJar, CookieManager},
 };
-use mas_config::RateLimitingConfig;
+use mas_config::{GraphQLIntrospectionMode, RateLimitingConfig};
 use mas_data_model::{AppVersion, BoxClock, BoxRng, SiteConfig, clock::MockClock};
 use mas_email::{MailTransport, Mailer};
 use mas_i18n::Translator;
@@ -335,14 +335,29 @@ impl TestState {
         B::Error: std::error::Error + Send + Sync,
         B::Data: Send,
     {
+        self.request_with_graphql_introspection(request, GraphQLIntrospectionMode::Public)
+            .await
+    }
+
+    pub async fn request_with_graphql_introspection<B>(
+        &self,
+        request: Request<B>,
+        introspection: GraphQLIntrospectionMode,
+    ) -> Response<String>
+    where
+        B: HttpBody<Data = Bytes> + Send + 'static,
+        <B as HttpBody>::Error: std::error::Error + Send + Sync,
+        B::Error: std::error::Error + Send + Sync,
+        B::Data: Send,
+    {
         let app = crate::healthcheck_router()
             .merge(crate::discovery_router())
             .merge(crate::api_router())
             .merge(crate::compat_router(self.templates.clone()))
             .merge(crate::human_router(self.templates.clone()))
             // We enable undocumented_oauth2_access for the tests, as it is easier to query the API
-            // with it
-            .merge(crate::graphql_router(false, true))
+            // with it.
+            .merge(crate::graphql_router(false, true, introspection))
             .merge(crate::admin_api_router().1)
             .with_state(self.clone())
             .into_service();

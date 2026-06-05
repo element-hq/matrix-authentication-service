@@ -41,6 +41,7 @@ http:
         # and optionally the GraphQL playground
         - name: graphql
           playground: true
+          introspection: public # or authenticated_only
         # Serve the given folder on the /assets/ path
         - name: assets
           path: ./share/assets/

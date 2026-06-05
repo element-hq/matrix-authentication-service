@@ -10,7 +10,10 @@ use std::{net::IpAddr, ops::Deref, sync::Arc};
 
 use async_graphql::{
     EmptySubscription, InputObject,
-    extensions::Tracing,
+    extensions::{
+        Extension as GraphQLExtension, ExtensionContext, ExtensionFactory, NextResolve,
+        ResolveInfo, Tracing,
+    },
     http::{GraphQLPlaygroundConfig, MultipartOptions, playground_source},
 };
 use axum::{
@@ -28,6 +31,7 @@ use hyper::header::CACHE_CONTROL;
 use mas_axum_utils::{
     InternalError, SessionInfo, SessionInfoExt, cookies::CookieJar, sentry::SentryEventID,
 };
+use mas_config::GraphQLIntrospectionMode;
 use mas_data_model::{
     BoxClock, BoxRng, BrowserSession, Clock, Session, SiteConfig, SystemClock, User,
 };
@@ -66,6 +70,46 @@ mod tests;
 #[derive(Debug, Clone)]
 pub struct ExtraRouterParameters {
     pub undocumented_oauth2_access: bool,
+    pub introspection: GraphQLIntrospectionMode,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct IntrospectionControl;
+
+impl ExtensionFactory for IntrospectionControl {
+    fn create(&self) -> Arc<dyn GraphQLExtension> {
+        Arc::new(*self)
+    }
+}
+
+#[async_trait::async_trait]
+impl GraphQLExtension for IntrospectionControl {
+    async fn resolve(
+        &self,
+        ctx: &ExtensionContext<'_>,
+        info: ResolveInfo<'_>,
+        next: NextResolve<'_>,
+    ) -> async_graphql::ServerResult<Option<async_graphql::Value>> {
+        let allow_anonymous_introspection = ctx
+            .data_opt::<GraphQLIntrospectionMode>()
+            .is_none_or(|mode| matches!(mode, GraphQLIntrospectionMode::Public));
+
+        let is_anonymous = ctx
+            .data_opt::<Requester>()
+            .is_some_and(|requester| requester.is_unauthenticated());
+
+        if !allow_anonymous_introspection
+            && is_anonymous
+            && matches!(info.name, "__schema" | "__type")
+        {
+            return Err(async_graphql::ServerError::new(
+                "GraphQL introspection is not available for anonymous requests",
+                None,
+            ));
+        }
+
+        next.run(ctx, info).await
+    }
 }
 
 struct GraphQLState {
@@ -310,6 +354,7 @@ pub async fn post(
     AxumState(schema): AxumState<Schema>,
     Extension(ExtraRouterParameters {
         undocumented_oauth2_access,
+        introspection,
     }): Extension<ExtraRouterParameters>,
     clock: BoxClock,
     repo: BoxRepository,
@@ -345,7 +390,8 @@ pub async fn post(
         MultipartOptions::default(),
     )
     .await?
-    .data(requester); // XXX: this should probably return another error response?
+    .data(requester)
+    .data(introspection); // XXX: this should probably return another error response?
 
     let span = span_for_graphql_request(&request);
     let mut response = schema.execute(request).instrument(span).await;
@@ -370,6 +416,7 @@ pub async fn get(
     AxumState(schema): AxumState<Schema>,
     Extension(ExtraRouterParameters {
         undocumented_oauth2_access,
+        introspection,
     }): Extension<ExtraRouterParameters>,
     clock: BoxClock,
     repo: BoxRepository,
@@ -395,8 +442,9 @@ pub async fn get(
     )
     .await?;
 
-    let request =
-        async_graphql::http::parse_query_string(&query.unwrap_or_default())?.data(requester);
+    let request = async_graphql::http::parse_query_string(&query.unwrap_or_default())?
+        .data(requester)
+        .data(introspection);
 
     let span = span_for_graphql_request(&request);
     let mut response = schema.execute(request).instrument(span).await;
@@ -429,6 +477,7 @@ pub type SchemaBuilder = async_graphql::SchemaBuilder<Query, Mutation, EmptySubs
 #[must_use]
 pub fn schema_builder() -> SchemaBuilder {
     async_graphql::Schema::build(Query::new(), Mutation::new(), EmptySubscription)
+        .extension(IntrospectionControl)
         .register_output_type::<Node>()
         .register_output_type::<CreationEvent>()
 }
