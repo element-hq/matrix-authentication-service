@@ -37,11 +37,11 @@ struct LoginRequest {
 
 #[derive(Debug, Deserialize)]
 struct LoginResponse {
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     access_token: String,
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     user_id: String,
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     device_id: Option<String>,
     refresh_token: Option<String>,
 }

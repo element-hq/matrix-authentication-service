@@ -126,7 +126,8 @@
       "heading": "E-mailová adresa {{email}} se již používá."
     },
     "end_session_button": {
-      "confirmation_modal_title": "Opravdu chcete ukončit tuto relaci?",
+      "confirmation_modal_body_text": "Ujistěte se, že máte vždy přístup k jinému ověřenému zařízení nebo klíči pro obnovení, abyste předešli ztrátě šifrované historie chatu.",
+      "confirmation_modal_title": "Opravdu chcete toto zařízení odstranit?",
       "text": "Odstranit zařízení"
     },
     "error": {
@@ -146,6 +147,7 @@
       "inactive_90_days": "Neaktivní více než 90 dní"
     },
     "nav": {
+      "device_limit_error": "Device limit reached",
       "devices": "Zařízení",
       "plan": "Plán",
       "profile": "Profil",
@@ -360,11 +362,27 @@
       "active_sessions:one": "{{count}} aktivní relace",
       "active_sessions:few": "{{count}} aktivní relace",
       "active_sessions:other": "{{count}} aktivních relací",
+      "approaching_session_limit_warning_description:one": "You've used {{num_sessions}} of {{count}} device slot. Once you reach your limit, you'll need to remove an existing device to add another.",
+      "approaching_session_limit_warning_description:other": "You've used {{num_sessions}} of {{count}} device slots. Once you reach your limit, you'll need to remove an existing device to add another.",
+      "approaching_session_limit_warning_header": "Heads up, you're close to your device limit",
       "heading": "Kde jste přihlášeni",
+      "hit_session_limit_warning_description:one": "You've used {{num_sessions}} of {{count}} device slot. When you try to sign-in again, you'll need to remove an existing device.",
+      "hit_session_limit_warning_description:other": "You've used {{num_sessions}} of {{count}} device slots. When you try to sign-in again, you'll need to remove an existing device.",
+      "hit_session_limit_warning_header": "You've hit the device limit",
       "no_active_sessions": {
         "default": "Nejste přihlášeni do žádné aplikace.",
         "inactive_90_days": "Všechny vaše relace byly aktivní v posledních 90 dnech."
-      }
+      },
+      "num_sessions_filtered_header": {
+        "header:one": "{{count}} device matches your filter ({{unfiltered_session_total}})",
+        "header:other": "{{count}} devices match your filter ({{unfiltered_session_total}})",
+        "unfiltered_session_total:one": "{{count}} total",
+        "unfiltered_session_total:other": "{{count}} total"
+      },
+      "num_sessions_header:one": "{{count}} device",
+      "num_sessions_header:other": "{{count}} devices",
+      "session_limit_info:one": "You've used {{count}}/{{limit}} device slots",
+      "session_limit_info:other": "You've used {{count}}/{{limit}} device slots"
     },
     "verify_email": {
       "code_expired_alert": {

@@ -108,7 +108,7 @@ impl Header for AcceptLanguage {
                         return Err(Error::invalid());
                     }
 
-                    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
+                    #[expect(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
                     {
                         f64::round(quality * 1000_f64) as u16
                     }

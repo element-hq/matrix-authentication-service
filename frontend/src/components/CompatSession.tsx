@@ -101,7 +101,7 @@ const CompatSession: React.FC<{
 
       {!data.finishedAt && (
         <Card.Action>
-          <EndCompatSessionButton session={data} size="sm" />
+          <EndCompatSessionButton session={data} size="md" />
         </Card.Action>
       )}
     </Card.Root>

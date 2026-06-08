@@ -259,7 +259,6 @@ where
         )
 }
 
-#[allow(clippy::trait_duplication_in_bounds)]
 pub fn compat_router<S>(templates: Templates) -> Router<S>
 where
     S: Clone + Send + Sync + 'static,
@@ -460,7 +459,7 @@ where
         )
         .route(
             mas_router::DeviceCodeLink::route(),
-            get(self::oauth2::device::link::get),
+            get(self::oauth2::device::link::get).post(self::oauth2::device::link::post),
         )
         .route(
             mas_router::DeviceCodeConsent::route(),

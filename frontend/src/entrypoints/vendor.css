@@ -1,0 +1,21 @@
+/* Copyright 2024, 2025 New Vector Ltd.
+ * Copyright 2024 The Matrix.org Foundation C.I.C.
+ *
+ * SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+ * Please see LICENSE files in the repository root for full details.
+ */
+
+/* Third-party styles. Kept out of shared.css because @tailwindcss/vite's
+ * @import bundler drops the nested `@import url(...) layer(cpd-base) screen`
+ * declarations inside compound-design-tokens.css. Loading them from a CSS file
+ * with no Tailwind directives lets Vite resolve them through its normal
+ * Lightning-CSS pipeline, which preserves the layer and media qualifiers. */
+
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/inconsolata/400.css";
+@import "@fontsource/inconsolata/700.css";
+@import "@vector-im/compound-design-tokens/assets/web/css/compound-design-tokens.css";
+@import "@vector-im/compound-web/dist/style.css";

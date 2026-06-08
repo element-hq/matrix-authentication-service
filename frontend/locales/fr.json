@@ -125,6 +125,7 @@
       "heading": "L’adresse e-mail {{email}} est déjà utilisée."
     },
     "end_session_button": {
+      "confirmation_modal_body_text": "Assurez-vous de toujours avoir accès à un autre appareil vérifié ou à votre clé de récupération afin d'éviter de perdre l'historique de vos discussions chiffrées.",
       "confirmation_modal_title": "Êtes-vous sûr de vouloir terminer cette session ?",
       "text": "Supprimer l’appareil"
     },
@@ -145,6 +146,7 @@
       "inactive_90_days": "Inactif depuis plus de 90 jours"
     },
     "nav": {
+      "device_limit_error": "Limite d'appareils atteinte",
       "devices": "Appareil",
       "plan": "Forfait",
       "profile": "Profil",
@@ -357,11 +359,27 @@
     "user_sessions_overview": {
       "active_sessions:one": "{{count}} session active",
       "active_sessions:other": "{{count}} sessions actives",
+      "approaching_session_limit_warning_description:one": "Vous avez utilisé {{num_sessions}} sur {{count}} emplacement disponible pour vos appareils. Une fois cette limite atteinte, vous devrez supprimer un appareil existant pour pouvoir en ajouter un autre.",
+      "approaching_session_limit_warning_description:other": "Vous avez utilisé {{num_sessions}} sur {{count}} emplacements disponibles pour vos appareils. Une fois cette limite atteinte, vous devrez supprimer un appareil existant pour pouvoir en ajouter un autre.",
+      "approaching_session_limit_warning_header": "Attention, vous approchez de la limite du nombre d'appareils autorisés",
       "heading": "Où vous êtes connecté",
+      "hit_session_limit_warning_description:one": "Vous avez utilisé {{num_sessions}} sur {{count}} emplacement disponible pour vos appareils. Si vous essayez de vous reconnecter, vous devrez supprimer un appareil déjà enregistré.",
+      "hit_session_limit_warning_description:other": "Vous avez utilisé {{num_sessions}} sur {{count}} emplacements disponibles pour vos appareils. Si vous essayez de vous reconnecter, vous devrez supprimer un appareil déjà enregistré.",
+      "hit_session_limit_warning_header": "Vous avez atteint la limite du nombre d'appareils",
       "no_active_sessions": {
         "default": "Vous n'êtes connecté à aucune application.",
         "inactive_90_days": "Toutes vos sessions ont été actives au cours des 90 derniers jours."
-      }
+      },
+      "num_sessions_filtered_header": {
+        "header:one": "{{count}} appareil correspond à votre filtre ({{unfiltered_session_total}})",
+        "header:other": "{{count}} appareils correspondent à votre filtre ({{unfiltered_session_total}})",
+        "unfiltered_session_total:one": "{{count}} total",
+        "unfiltered_session_total:other": "{{count}} total"
+      },
+      "num_sessions_header:one": "{{count}} appareil",
+      "num_sessions_header:other": "{{count}} appareils",
+      "session_limit_info:one": "Vous avez utilisé {{count}}/{{limit}} emplacement pour vos appareils",
+      "session_limit_info:other": "Vous avez utilisé {{count}}/{{limit}} emplacements pour vos appareils"
     },
     "verify_email": {
       "code_expired_alert": {

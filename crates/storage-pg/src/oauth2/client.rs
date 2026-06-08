@@ -38,7 +38,7 @@ impl<'c> PgOAuth2ClientRepository<'c> {
     }
 }
 
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 #[derive(Debug)]
 struct OAuth2ClientLookup {
     oauth2_client_id: Uuid,

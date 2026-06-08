@@ -19,7 +19,7 @@ import LoadingSpinner from "../LoadingSpinner/LoadingSpinner";
 const EndSessionButton: React.FC<
   React.PropsWithChildren<{
     mutation: UseMutationResult<unknown, unknown, void>;
-    size: "sm" | "lg";
+    size: "md" | "lg";
   }>
 > = ({ children, mutation, size }) => {
   const [open, setOpen] = useState(false);

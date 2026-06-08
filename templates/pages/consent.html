@@ -11,23 +11,27 @@ Please see LICENSE files in the repository root for full details.
 {% extends "base.html" %}
 
 {% block content %}
-  {% set client_name = client.client_name or client.client_id %}
+  {% set client_display_name = client.client_name or client.client_id %}
+  {# The URI we can display to distinguish this client #}
+  {% set client_display_uri = ((client.client_uri or "") | simplify_url) or "<no client_uri provided>" %}
 
   <header class="page-heading">
-    {% if client.logo_uri %}
-    <img class="consent-client-icon image" referrerpolicy="no-referrer" src="{{ client.logo_uri }}" />
-    {% else %}
-    <div class="consent-client-icon generic">
-      {{ icon.web_browser() }}
+    <div class="flex justify-center">
+      {% if client.logo_uri %}
+      <img class="consent-client-icon image" referrerpolicy="no-referrer" src="{{ client.logo_uri }}" />
+      {% else %}
+      <div class="consent-client-icon generic">
+        {{ icon.web_browser() }}
+      </div>
+      {% endif %}
     </div>
-    {% endif %}
 
     <div class="header">
       <h1 class="title">
-        {{ _('mas.consent.continue_to', client_name=client_name) }}
+        {{ _('mas.consent.continue_to', client_name=client_display_name) }}
       </h1>
       <p class="text [&>span]:whitespace-nowrap [&>span]:text-[var(--cpd-color-text-link-external)]">
-        {{ _("mas.consent.this_will_setup", client_name=client_name, client_uri=((client.client_uri or grant.redirect_uri) | simplify_url), server_name=branding.server_name) }}
+        {{ _("mas.consent.this_will_setup", client_name=client_display_name, client_uri=client_display_uri, server_name=branding.server_name) }}
       </p>
     </div>
   </header>
@@ -36,7 +40,7 @@ Please see LICENSE files in the repository root for full details.
     {% if scopes is not empty %}
       <section class="flex flex-col gap-3">
         <p class="text-center cpd-text-body-md-regular">
-          {{ _('mas.consent.scope_list_preface', client_name=client_name) }}
+          {{ _('mas.consent.scope_list_preface', client_name=client_display_name) }}
         </p>
         <div class="consent-scope-list">
           {{ scope.list(scopes=scopes) }}

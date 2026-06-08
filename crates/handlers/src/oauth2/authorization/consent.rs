@@ -159,7 +159,7 @@ pub(crate) async fn get(
     if !res.valid() {
         repo.save().await?;
 
-        let ctx = PolicyViolationContext::for_authorization_grant(grant, client)
+        let ctx = PolicyViolationContext::for_authorization_grant(grant, client, res.violations)
             .with_session(session)
             .with_csrf(csrf_token.form_value())
             .with_language(locale);
@@ -347,7 +347,7 @@ pub(crate) async fn post(
         .await?;
 
     if !res.valid() {
-        let ctx = PolicyViolationContext::for_authorization_grant(grant, client)
+        let ctx = PolicyViolationContext::for_authorization_grant(grant, client, res.violations)
             .with_session(browser_session)
             .with_csrf(csrf_token.form_value())
             .with_language(locale);

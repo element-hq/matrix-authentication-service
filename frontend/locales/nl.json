@@ -5,7 +5,7 @@
     "clear": "Wissen",
     "close": "Sluiten",
     "collapse": "Collapse",
-    "confirm": "Confirm",
+    "confirm": "Bevestigen",
     "continue": "Doorgaan",
     "edit": "Bewerken",
     "expand": "Expand",
@@ -125,6 +125,7 @@
       "heading": "The email address {{email}} is already in use."
     },
     "end_session_button": {
+      "confirmation_modal_body_text": "Make sure you always have access to another verified device or your recovery key to avoid losing your encrypted chat history.",
       "confirmation_modal_title": "Weet u zeker dat u deze sessie wilt beëindigen?",
       "text": "Uitloggen"
     },
@@ -145,6 +146,7 @@
       "inactive_90_days": "Meer dan 90 dagen inactief"
     },
     "nav": {
+      "device_limit_error": "Device limit reached",
       "devices": "Apparaten",
       "plan": "Plan",
       "profile": "Profiel",
@@ -357,11 +359,27 @@
     "user_sessions_overview": {
       "active_sessions:one": "{{count}} actieve sessie",
       "active_sessions:other": "{{count}} actieve sessies",
+      "approaching_session_limit_warning_description:one": "You've used {{num_sessions}} of {{count}} device slot. Once you reach your limit, you'll need to remove an existing device to add another.",
+      "approaching_session_limit_warning_description:other": "You've used {{num_sessions}} of {{count}} device slots. Once you reach your limit, you'll need to remove an existing device to add another.",
+      "approaching_session_limit_warning_header": "Heads up, you're close to your device limit",
       "heading": "Where you're signed in",
+      "hit_session_limit_warning_description:one": "You've used {{num_sessions}} of {{count}} device slot. When you try to sign-in again, you'll need to remove an existing device.",
+      "hit_session_limit_warning_description:other": "You've used {{num_sessions}} of {{count}} device slots. When you try to sign-in again, you'll need to remove an existing device.",
+      "hit_session_limit_warning_header": "You've hit the device limit",
       "no_active_sessions": {
         "default": "You are not signed in to any application.",
         "inactive_90_days": "All your sessions have been active in the last 90 days."
-      }
+      },
+      "num_sessions_filtered_header": {
+        "header:one": "{{count}} device matches your filter ({{unfiltered_session_total}})",
+        "header:other": "{{count}} devices match your filter ({{unfiltered_session_total}})",
+        "unfiltered_session_total:one": "{{count}} total",
+        "unfiltered_session_total:other": "{{count}} total"
+      },
+      "num_sessions_header:one": "{{count}} device",
+      "num_sessions_header:other": "{{count}} devices",
+      "session_limit_info:one": "You've used {{count}}/{{limit}} device slots",
+      "session_limit_info:other": "You've used {{count}}/{{limit}} device slots"
     },
     "verify_email": {
       "code_expired_alert": {

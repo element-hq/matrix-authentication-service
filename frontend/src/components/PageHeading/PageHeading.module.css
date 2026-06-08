@@ -55,8 +55,8 @@
     text-align: center;
 
     & .title {
-      font: var(--cpd-font-heading-md-semibold);
-      letter-spacing: var(--cpd-font-letter-spacing-heading-xl);
+      font: var(--cpd-font-heading-lg-semibold);
+      letter-spacing: var(--cpd-font-letter-spacing-heading-lg);
       color: var(--cpd-color-text-primary);
       text-wrap: balance;
     }

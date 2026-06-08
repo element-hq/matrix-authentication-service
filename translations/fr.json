@@ -87,23 +87,33 @@
       "access_requested": "Accès demandé",
       "device_code": "Code",
       "generic_device": "Appareil",
-      "ip_address": "Adresse IP"
+      "ip_address": "Adresse IP",
+      "security_code": "Code de sécurité"
     },
     "device_code_link": {
       "description": "Associer un appareil",
-      "headline": "Entrez le code affiché sur votre appareil"
+      "headline": "Entrez le code affiché sur votre appareil",
+      "verification_code": "Code de vérification"
     },
     "device_consent": {
       "another_device_access": "Un autre appareil souhaite accéder à votre compte.",
+      "confirm_device": "Oui, je confirme que cet appareil m'appartient et je souhaite me connecter.",
       "denied": {
         "description": "Vous avez refusé l'accès à %(client_name)s. Vous pouvez fermer cette fenêtre.",
         "heading": "Accès refusé"
       },
+      "description": "<strong>Un autre appareil</strong> souhaite associer %(client_name)s (<span>%(client_uri)s</span>) avec votre compte <span>%(server_name)s</span>. Assurez-vous de reconnaître cet appareil.",
+      "grant_access": "Accorder l'accès",
       "granted": {
         "description": "Vous avez accordé l'accès à %(client_name)s. Vous pouvez fermer cette fenêtre.",
         "heading": "Accès accordé"
       },
-      "this_will_setup": "Un autre appareil souhaite connecter %(client_name)s (<span>%(client_uri)s</span>) avec votre compte <span>%(server_name)s</span>. Assurez-vous de reconnaître cet appareil."
+      "this_will_setup": "Un autre appareil souhaite connecter %(client_name)s (<span>%(client_uri)s</span>) avec votre compte <span>%(server_name)s</span>. Assurez-vous de reconnaître cet appareil.",
+      "title": "Autoriser l'accès à votre compte ?",
+      "warning": {
+        "description": "Êtes-vous sûr qu'il s'agit bien de votre appareil ? Les administrateurs du service ou le support informatique ne vous demanderaient jamais de confirmer cela.",
+        "title": "Vous êtes sur le point d'autoriser un appareil distant à accéder à votre compte"
+      }
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s sur %(device_name)s",
@@ -181,7 +191,12 @@
     "policy_violation": {
       "description": "Cela peut être dû à l'application auteur de la demande, à l'utilisateur actuellement connecté ou à la demande elle-même.",
       "heading": "La demande d'autorisation a été refusée, conformément à la politique appliquée par ce service.",
-      "logged_as": "Connecté en tant que <span class=\"font-semibold\">%(username)s</span>"
+      "logged_as": "Connecté en tant que <span class=\"font-semibold\">%(username)s</span>",
+      "too_many_sessions": {
+        "description": "Vous avez déjà connecté votre compte au nombre maximum d'appareils. Pour continuer, <span class=\"font-semibold\">supprimez %(num_devices_to_remove)s de vos appareils existants</span> et reconnectez-vous.",
+        "heading": "Limite d'appareils atteinte",
+        "manage_devices": "Gérer les appareils"
+      }
     },
     "recovery": {
       "consumed": {

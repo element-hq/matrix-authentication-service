@@ -6,6 +6,9 @@
 # Rust
 target
 
+# Node
+node_modules
+
 # Editors
 .idea
 .nova

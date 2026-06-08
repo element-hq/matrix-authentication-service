@@ -5,12 +5,12 @@
 // Please see LICENSE files in the repository root for full details.
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { notFound, Outlet } from "@tanstack/react-router";
-import { Heading } from "@vector-im/compound-web";
+import { createFileRoute, notFound, Outlet } from "@tanstack/react-router";
+import { Heading, Tooltip } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 import Layout from "../components/Layout";
 import NavBar from "../components/NavBar";
-import NavItem from "../components/NavItem";
+import NavItem, { NavItemErrorIcon } from "../components/NavItem";
 import UserGreeting from "../components/UserGreeting";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
@@ -21,12 +21,20 @@ const QUERY = graphql(/* GraphQL */ `
       __typename
       ... on User {
         ...UserGreeting_user
+
+        # Get the total count of active app sessions before any filtering
+        unfilteredAppSessions: appSessions(first: 1, state: ACTIVE) {
+          totalCount
+        }
       }
     }
 
     siteConfig {
       ...UserGreeting_siteConfig
       planManagementIframeUri
+      sessionLimit {
+        softLimit
+      }
     }
   }
 `);
@@ -36,7 +44,7 @@ const query = queryOptions({
   queryFn: ({ signal }) => graphqlRequest({ query: QUERY, signal }),
 });
 
-export const Route = createFileRoute({
+export const Route = createFileRoute("/_account")({
   loader: ({ context }) => context.queryClient.ensureQueryData(query),
   component: Account,
 });
@@ -47,7 +55,23 @@ function Account(): React.ReactElement {
   const viewer = result.data.viewer;
   if (viewer?.__typename !== "User") throw notFound();
   const { siteConfig } = result.data;
-  const { planManagementIframeUri } = siteConfig;
+  const { planManagementIframeUri, sessionLimit } = siteConfig;
+
+  // We only display an error in the nav bar if they've actually hit the limit. No need
+  // to nag somebody about using their allotment.
+  //
+  // We want to guide their eyes to the area that needs attention
+  let sessionLimitHitIcon = null;
+  if (
+    sessionLimit &&
+    viewer.unfilteredAppSessions.totalCount >= sessionLimit.softLimit
+  ) {
+    sessionLimitHitIcon = (
+      <Tooltip label={t("frontend.nav.device_limit_error")}>
+        <NavItemErrorIcon />
+      </Tooltip>
+    );
+  }
 
   return (
     <Layout wide>
@@ -61,7 +85,10 @@ function Account(): React.ReactElement {
 
           <NavBar>
             <NavItem to="/">{t("frontend.nav.settings")}</NavItem>
-            <NavItem to="/sessions">{t("frontend.nav.devices")}</NavItem>
+            <NavItem to="/sessions">
+              {t("frontend.nav.devices")}
+              {sessionLimitHitIcon}
+            </NavItem>
             {planManagementIframeUri && (
               <NavItem to="/plan">{t("frontend.nav.plan")}</NavItem>
             )}

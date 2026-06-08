@@ -26,7 +26,6 @@ mod template;
 use self::cookie::UpstreamSessions as UpstreamSessionsCookie;
 
 #[derive(Debug, Error)]
-#[allow(clippy::enum_variant_names)]
 enum ProviderCredentialsError {
     #[error("Provider doesn't have a client secret")]
     MissingClientSecret,

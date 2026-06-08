@@ -113,7 +113,7 @@ pub trait OAuth2ClientRepository: Send + Sync {
     /// # Errors
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments)]
     async fn add(
         &mut self,
         rng: &mut (dyn RngCore + Send),
@@ -154,7 +154,7 @@ pub trait OAuth2ClientRepository: Send + Sync {
     /// # Errors
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments)]
     async fn upsert_static(
         &mut self,
         client_id: Ulid,

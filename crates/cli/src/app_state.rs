@@ -240,7 +240,7 @@ impl FromRequestParts<AppState> for BoxRng {
         _state: &AppState,
     ) -> Result<Self, Self::Rejection> {
         // This rng is used to source the local rng
-        #[allow(clippy::disallowed_methods)]
+        #[expect(clippy::disallowed_methods)]
         let rng = rand::thread_rng();
 
         let rng = rand_chacha::ChaChaRng::from_rng(rng).expect("Failed to seed RNG");

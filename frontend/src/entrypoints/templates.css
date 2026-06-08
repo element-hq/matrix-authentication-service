@@ -5,6 +5,7 @@
  * Please see LICENSE files in the repository root for full details.
  */
 
+@import "../styles/cpd-alert.css";
 @import "../styles/cpd-button.css";
 @import "../styles/cpd-form.css";
 @import "../styles/cpd-link.css";
@@ -86,7 +87,6 @@
   display: block;
   height: var(--cpd-space-16x);
   width: var(--cpd-space-16x);
-  margin: 0 auto;
 
   &.generic {
     background-color: var(--cpd-color-bg-subtle-secondary);

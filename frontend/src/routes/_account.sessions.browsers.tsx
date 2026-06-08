@@ -5,7 +5,7 @@
 // Please see LICENSE files in the repository root for full details.
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { H5 } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
 import * as v from "valibot";
@@ -93,7 +93,7 @@ const searchSchema = v.intersect([
   anyPaginationSchema,
 ]);
 
-export const Route = createFileRoute({
+export const Route = createFileRoute("/_account/sessions/browsers")({
   validateSearch: searchSchema,
 
   loaderDeps: ({ search: { inactive, ...pagination } }) => ({
@@ -163,7 +163,7 @@ function BrowserSessions(): React.ReactElement {
         <div className="flex *:flex-1">
           <ButtonLink
             kind="secondary"
-            size="sm"
+            size="md"
             disabled={!forwardPage}
             to="/sessions/browsers"
             search={forwardPage || pagination}
@@ -177,7 +177,7 @@ function BrowserSessions(): React.ReactElement {
 
           <ButtonLink
             kind="secondary"
-            size="sm"
+            size="md"
             disabled={!backwardPage}
             to="/sessions/browsers"
             search={backwardPage || pagination}

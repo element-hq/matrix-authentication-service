@@ -59,7 +59,7 @@
       },
       "password": {
         "change": "Parolni o‘zgartirish",
-        "change_disabled": "Password changes are disabled by the administrator.",
+        "change_disabled": "Parolni o‘zgartirish administrator tomonidan taqiqlangan.",
         "label": "Parol"
       },
       "sign_out": {
@@ -125,7 +125,8 @@
       "heading": "The email address {{email}} is already in use."
     },
     "end_session_button": {
-      "confirmation_modal_title": "Haqiqatan ham bu seansni tugatmoqchimisiz?",
+      "confirmation_modal_body_text": "Make sure you always have access to another verified device or your recovery key to avoid losing your encrypted chat history.",
+      "confirmation_modal_title": "Haqiqatan ham bu qurilmani olib tashlamoqchimisiz?",
       "text": "Qurilmani olib tashlash"
     },
     "error": {
@@ -145,6 +146,7 @@
       "inactive_90_days": "90+ kun davomida faol emas"
     },
     "nav": {
+      "device_limit_error": "Device limit reached",
       "devices": "Qurilmalar",
       "plan": "Plan",
       "profile": "Profil",
@@ -174,26 +176,26 @@
         "description": {
           "account_locked": "Your account is locked and can not be recovered at this time. If this is not expected, please contact your server administrator.",
           "expired_recovery_ticket": "The recovery link has expired. Please start the account recovery process again from the start.",
-          "invalid_new_password": "The new password you chose is invalid; it may not meet the configured security policy.",
-          "no_current_password": "You don't have a current password.",
+          "invalid_new_password": "Siz tanlagan yangi parol yaroqsiz; u sozlangan xavfsizlik siyosatiga mos kelmasligi mumkin.",
+          "no_current_password": "Sizda joriy parol yo‘q.",
           "no_such_recovery_ticket": "The recovery link is invalid. If you copied the link from the recovery e-mail, please check the full link was copied.",
-          "password_changes_disabled": "Password changes are disabled.",
+          "password_changes_disabled": "Parolni o‘zgartirish faolsizlantirildi.",
           "recovery_ticket_already_used": "The recovery link has already been used. It cannot be used again.",
-          "unspecified": "This might be a temporary problem, so please try again later. If the problem persists, please contact your server administrator.",
-          "wrong_password": "The password you supplied as your current password is incorrect. Please try again."
+          "unspecified": "Bu vaqtinchalik muammo bo‘lishi mumkin, keyinroq qayta urining. Agar muammo bartaraf etilmasa, server administratoriga murojaat qiling.",
+          "wrong_password": "Joriy parol sifatida kiritgan parolingiz noto‘g‘ri. Iltimos, qayta urinib ko‘ring."
         },
-        "title": "Failed to update password"
+        "title": "Parolni yangilab bo‘lmadi."
       },
       "new_password_again_label": "Enter new password again",
       "new_password_label": "Yangi parol",
-      "passwords_match": "Passwords match!",
-      "passwords_no_match": "Passwords don't match",
-      "subtitle": "Choose a new password for your account.",
+      "passwords_match": "Parollar mos keldi!",
+      "passwords_no_match": "Parollar mos kelmadi",
+      "subtitle": "Hisobingiz uchun yangi parol tanlang.",
       "success": {
-        "description": "Your password has been updated successfully.",
-        "title": "Password updated"
+        "description": "Parolingiz muvaffaqiyatli yangilandi.",
+        "title": "Parol yangilandi"
       },
-      "title": "Change your password"
+      "title": "Parolingizni o‘zgartiring"
     },
     "password_reset": {
       "consumed": {
@@ -205,7 +207,7 @@
         "subtitle": "Request a new email that will be sent to: {{email}}",
         "title": "The link to reset your password has expired"
       },
-      "subtitle": "Choose a new password for your account.",
+      "subtitle": "Hisobingiz uchun yangi parol tanlang.",
       "title": "Reset your password"
     },
     "password_strength": {
@@ -269,7 +271,7 @@
         "positive_1": "Your account details, contacts, preferences, and chat list will be kept"
       },
       "failure": {
-        "description": "This might be a temporary problem, so please try again later. If the problem persists, please contact your server administrator.",
+        "description": "Bu vaqtinchalik muammo bo‘lishi mumkin, keyinroq qayta urining. Agar muammo bartaraf etilmasa, server administratoriga murojaat qiling.",
         "heading": "Failed to allow digital identity reset",
         "title": "Kripto identifikatsiyasiga ruxsat berilmadi"
       },
@@ -357,11 +359,27 @@
     "user_sessions_overview": {
       "active_sessions:one": "{{count}} ta faol seans",
       "active_sessions:other": "{{count}} ta faol seans",
+      "approaching_session_limit_warning_description:one": "You've used {{num_sessions}} of {{count}} device slot. Once you reach your limit, you'll need to remove an existing device to add another.",
+      "approaching_session_limit_warning_description:other": "You've used {{num_sessions}} of {{count}} device slots. Once you reach your limit, you'll need to remove an existing device to add another.",
+      "approaching_session_limit_warning_header": "Heads up, you're close to your device limit",
       "heading": "Qayerda tizimga kirgansiz",
+      "hit_session_limit_warning_description:one": "You've used {{num_sessions}} of {{count}} device slot. When you try to sign-in again, you'll need to remove an existing device.",
+      "hit_session_limit_warning_description:other": "You've used {{num_sessions}} of {{count}} device slots. When you try to sign-in again, you'll need to remove an existing device.",
+      "hit_session_limit_warning_header": "You've hit the device limit",
       "no_active_sessions": {
         "default": "You are not signed in to any application.",
         "inactive_90_days": "All your sessions have been active in the last 90 days."
-      }
+      },
+      "num_sessions_filtered_header": {
+        "header:one": "{{count}} device matches your filter ({{unfiltered_session_total}})",
+        "header:other": "{{count}} devices match your filter ({{unfiltered_session_total}})",
+        "unfiltered_session_total:one": "{{count}} total",
+        "unfiltered_session_total:other": "{{count}} total"
+      },
+      "num_sessions_header:one": "{{count}} device",
+      "num_sessions_header:other": "{{count}} devices",
+      "session_limit_info:one": "You've used {{count}}/{{limit}} device slots",
+      "session_limit_info:other": "You've used {{count}}/{{limit}} device slots"
     },
     "verify_email": {
       "code_expired_alert": {
