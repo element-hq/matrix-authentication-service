@@ -105,6 +105,9 @@ pub struct UpstreamOAuthProviderParams {
 
     /// The behavior when receiving a backchannel logout notification
     pub on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout,
+
+    /// Whether or not to require a registration token on `OAuth2` auth
+    pub registration_token_required: bool,
 }
 
 /// Filter parameters for listing upstream OAuth 2.0 providers
