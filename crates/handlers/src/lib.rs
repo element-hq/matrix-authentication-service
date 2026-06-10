@@ -33,6 +33,7 @@ use hyper::{
     StatusCode, Version,
     header::{
         ACCEPT, ACCEPT_LANGUAGE, AUTHORIZATION, CONTENT_LANGUAGE, CONTENT_LENGTH, CONTENT_TYPE,
+        X_FRAME_OPTIONS,
     },
 };
 use mas_axum_utils::{InternalError, cookies::CookieJar};
@@ -47,7 +48,10 @@ use mas_templates::{ErrorContext, NotFoundContext, TemplateContext, Templates};
 use opentelemetry::metrics::Meter;
 use sqlx::PgPool;
 use tower::util::AndThenLayer;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::{
+    cors::{Any, CorsLayer},
+    set_header::SetResponseHeaderLayer,
+};
 
 use self::{graphql::ExtraRouterParameters, passwords::PasswordManager};
 
@@ -469,6 +473,10 @@ where
             async move |response: axum::response::Response| {
                 Ok::<_, Infallible>(recover_error(&templates, response))
             },
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            X_FRAME_OPTIONS,
+            http::HeaderValue::from_static("DENY"),
         ))
 }
 
