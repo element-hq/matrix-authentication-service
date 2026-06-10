@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT oauth2_client_id\n                     , metadata_digest\n                     , encrypted_client_secret\n                     , application_type\n                     , redirect_uris\n                     , grant_type_authorization_code\n                     , grant_type_refresh_token\n                     , grant_type_client_credentials\n                     , grant_type_device_code\n                     , client_name\n                     , logo_uri\n                     , client_uri\n                     , policy_uri\n                     , tos_uri\n                     , jwks_uri\n                     , jwks\n                     , id_token_signed_response_alg\n                     , userinfo_signed_response_alg\n                     , token_endpoint_auth_method\n                     , token_endpoint_auth_signing_alg\n                     , initiate_login_uri\n                FROM oauth2_clients c\n\n                WHERE oauth2_client_id = $1\n            ",
+  "query": "\n                SELECT oauth2_client_id\n                     , metadata_digest\n                     , encrypted_client_secret\n                     , application_type\n                     , redirect_uris\n                     , grant_type_authorization_code\n                     , grant_type_refresh_token\n                     , grant_type_client_credentials\n                     , grant_type_device_code\n                     , client_name\n                     , logo_uri\n                     , client_uri\n                     , policy_uri\n                     , tos_uri\n                     , jwks_uri\n                     , jwks\n                     , id_token_signed_response_alg\n                     , userinfo_signed_response_alg\n                     , token_endpoint_auth_method\n                     , token_endpoint_auth_signing_alg\n                     , initiate_login_uri\n                     , skip_consent\n                FROM oauth2_clients c\n                WHERE is_static = TRUE\n            ",
   "describe": {
     "columns": [
       {
@@ -107,12 +107,15 @@
         "ordinal": 20,
         "name": "initiate_login_uri",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 21,
+        "name": "skip_consent",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
-      "Left": [
-        "Uuid"
-      ]
+      "Left": []
     },
     "nullable": [
       false,
@@ -135,8 +138,9 @@
       true,
       true,
       true,
-      true
+      true,
+      false
     ]
   },
-  "hash": "38d0608b7d8ba30927f939491c1d43cfd962c729298ad07ee1ade2f2880c0eb3"
+  "hash": "2dbae768ce3b9068db570ff971b6351d914a3016cc586b0ac9521161f212ba7a"
 }
