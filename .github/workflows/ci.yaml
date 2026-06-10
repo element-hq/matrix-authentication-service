@@ -202,7 +202,7 @@ jobs:
           rustup toolchain install stable
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
+        uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
 
       - uses: ./.github/actions/build-frontend
 
@@ -249,7 +249,7 @@ jobs:
       - uses: ./.github/actions/build-policies
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
+        uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
 
       - name: Run clippy
         run: |
@@ -278,7 +278,7 @@ jobs:
           tool: cargo-nextest
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
+        uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
 
       - name: Build and archive tests
         run: cargo nextest archive --workspace --archive-file nextest-archive.tar.zst
