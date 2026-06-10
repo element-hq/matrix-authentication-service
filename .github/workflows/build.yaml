@@ -583,6 +583,14 @@ jobs:
           REGULAR_TAGS: ${{ needs.compute-image-meta.outputs.regular-tags }}
           DEBUG_TAGS: ${{ needs.compute-image-meta.outputs.debug-tags }}
         run: |
+          # This metadata is only consumed by the release notes, which are
+          # public-facing. The tags reference the internal push registry
+          # (`oci-push.vpn.infra.element.io`, the only writable endpoint), but
+          # users pull from `oci.element.io`, so rewrite the host here. The tags
+          # used for the actual push in `finalize-image` are left untouched.
+          REGULAR_TAGS=${REGULAR_TAGS//oci-push.vpn.infra.element.io/oci.element.io}
+          DEBUG_TAGS=${DEBUG_TAGS//oci-push.vpn.infra.element.io/oci.element.io}
+
           # Convert the newline-separated tag lists into JSON arrays.
           regular_tags=$(jq -Rnc '[inputs | select(length > 0)]' <<< "$REGULAR_TAGS")
           debug_tags=$(jq -Rnc '[inputs | select(length > 0)]' <<< "$DEBUG_TAGS")
