@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -30,7 +31,6 @@ pub struct SiteConfig {
     /// Whether registration tokens are required for password registrations.
     /// Deprecated in favor of `password_registration_token_required`
     #[deprecated = "use `password_registration_token_required` instead"]
-    #[allow(deprecated)]
     pub registration_token_required: bool,
 
     /// Whether users can change their email.
@@ -57,7 +57,7 @@ pub struct SiteConfig {
     pub minimum_password_complexity: u8,
 }
 
-#[allow(deprecated)]
+#[expect(deprecated)]
 pub fn doc(operation: TransformOperation) -> TransformOperation {
     operation
         .id("siteConfig")
@@ -83,7 +83,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
 }
 
 #[tracing::instrument(name = "handler.admin.v1.site_config", skip_all)]
-#[allow(deprecated)]
+#[expect(deprecated)]
 pub async fn handler(
     _: CallContext,
     State(site_config): State<mas_data_model::SiteConfig>,
