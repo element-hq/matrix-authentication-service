@@ -14,7 +14,7 @@ use serde_with::serde_as;
 use super::ConfigurationSection;
 use crate::schema;
 
-#[allow(clippy::unnecessary_wraps)]
+#[expect(clippy::unnecessary_wraps)]
 fn default_connection_string() -> Option<String> {
     Some("postgresql://".to_owned())
 }
@@ -27,12 +27,12 @@ fn default_connect_timeout() -> Duration {
     Duration::from_secs(30)
 }
 
-#[allow(clippy::unnecessary_wraps)]
+#[expect(clippy::unnecessary_wraps)]
 fn default_idle_timeout() -> Option<Duration> {
     Some(Duration::from_secs(10 * 60))
 }
 
-#[allow(clippy::unnecessary_wraps)]
+#[expect(clippy::unnecessary_wraps)]
 fn default_max_lifetime() -> Option<Duration> {
     Some(Duration::from_secs(30 * 60))
 }

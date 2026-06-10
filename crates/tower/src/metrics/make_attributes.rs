@@ -136,7 +136,11 @@ macro_rules! impl_for_tuple {
             $($rest: MetricsAttributes<T> + 'static,)*
         {
             type Iter<'a> = chain_for!($first $(, $rest)*);
+            // Lint-ignore for the `#[allow(...)]` usage below
+            #[expect(clippy::allow_attributes)]
             fn attributes<'a>(&'a self, t: &'a T) -> Self::Iter<'a> {
+                // This has to be an `#[allow(...)]` (vs `#[expect(...)]`) as it doesn't
+                // get fulfilled here but is relevant when the macro expansion occurs.
                 #[allow(non_snake_case)]
                 let (head, $($rest,)*) = self;
                 head.attributes(t)

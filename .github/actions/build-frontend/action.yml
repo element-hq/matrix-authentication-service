@@ -9,17 +9,19 @@ description: Installs Node.js and builds the frontend assets from the frontend d
 runs:
   using: composite
   steps:
+    - name: Install pnpm
+      uses: pnpm/action-setup@v6.0.5
+
     - name: Install Node
-      uses: actions/setup-node@v6.0.0
+      uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
       with:
-        node-version: "24"
+        node-version-file: .node-version
+        cache: "pnpm"
 
     - name: Install dependencies
-      run: npm ci
-      working-directory: ./frontend
+      run: pnpm install --frozen-lockfile
       shell: sh
 
     - name: Build the frontend assets
-      run: npm run build
-      working-directory: ./frontend
+      run: pnpm --filter mas-frontend run build
       shell: sh

@@ -20,6 +20,9 @@ ignore = [
     # RSA key extraction "Marvin Attack". This is only relevant when using
     # PKCS#1 v1.5 encryption, which we don't
     "RUSTSEC-2023-0071",
+    # Rand 0.8.5 unsoundness with custom logger + thread_rng reseeding.
+    # Only triggers when the `log` feature is enabled, which we don't use.
+    "RUSTSEC-2026-0097",
 ]
 
 [licenses]
@@ -53,7 +56,10 @@ multiple-versions = "deny"
 
 skip = [
     { name = "itertools", version = "0.13.0" },      # zxcvbn depends on this old version
-    { name = "hashbrown", version = "0.14.5" },      # a few crates depend on this old version
+    # a few crates depend on old versions of hashbrown
+    { name = "hashbrown", version = "0.14.5" },
+    { name = "hashbrown", version = "0.15.5" },
+    { name = "hashbrown", version = "0.16.1" },
     # a few dependencies depend on the 1.x version of thiserror
     { name = "thiserror", version = "1.0.69" },
     { name = "thiserror-impl", version = "1.0.69" },
@@ -63,15 +69,19 @@ skip = [
     { name = "unicode-width", version = "0.1.14" },
     # cron depends on this old version
     # https://github.com/zslayton/cron/pull/137
-    { name = "winnow", version = "0.6.20" },
+    { name = "winnow", version = "0.6.26" },
     # hyper-util -> system-configuration depends on this old version
     { name = "core-foundation", version = "0.9.4" },
+    # wasmtime pulls in older versions of these
+    { name = "foldhash", version = "0.1.5" },
+    { name = "gimli", version = "0.32.3" },
+    { name = "object", version = "0.37.3" },
 
     # We are still mainly using rand 0.8
     { name = "rand", version = "0.8.5" },
     { name = "rand_chacha", version = "0.3.1" },
     { name = "rand_core", version = "0.6.4" },
-    { name = "getrandom", version = "0.2.15" },
+    { name = "getrandom", version = "0.2.16" },
 ]
 
 skip-tree = []

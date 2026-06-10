@@ -9,7 +9,7 @@ members = ["crates/*"]
 resolver = "2"
 
 # Updated in the CI with a `sed` command
-package.version = "1.15.0"
+package.version = "1.18.0"
 package.license = "AGPL-3.0-only OR LicenseRef-Element-Commercial"
 package.authors = ["Element Backend Team"]
 package.edition = "2024"
@@ -24,9 +24,17 @@ unsafe_code = "deny"
 # We use groups as good defaults, but with a lower priority so that we can override them
 all = { level = "deny", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
-
+# Allowed because it's nice to have temporary semantic names, see
+# https://github.com/rust-lang/rust-clippy/issues/12512#issuecomment-3316736180
+let_and_return = "allow"
 str_to_string = "deny"
 too_many_lines = "allow"
+# Sometimes variables are long and annoying to inline in the format string.
+# And this lint also complains about aliases, https://github.com/rust-lang/rust-clippy/issues/10247
+uninlined_format_args = "allow"
+# Prefer `#[expect(unused_mut)]` over `#[allow(unused_mut)]` because it will complain if
+# the lint ignore is not used.
+allow_attributes = "deny"
 
 [workspace.lints.rustdoc]
 broken_intra_doc_links = "deny"
@@ -34,35 +42,35 @@ broken_intra_doc_links = "deny"
 [workspace.dependencies]
 
 # Workspace crates
-mas-axum-utils = { path = "./crates/axum-utils/", version = "=1.15.0" }
-mas-cli = { path = "./crates/cli/", version = "=1.15.0" }
-mas-config = { path = "./crates/config/", version = "=1.15.0" }
-mas-context = { path = "./crates/context/", version = "=1.15.0" }
-mas-data-model = { path = "./crates/data-model/", version = "=1.15.0" }
-mas-email = { path = "./crates/email/", version = "=1.15.0" }
-mas-graphql = { path = "./crates/graphql/", version = "=1.15.0" }
-mas-handlers = { path = "./crates/handlers/", version = "=1.15.0" }
-mas-http = { path = "./crates/http/", version = "=1.15.0" }
-mas-i18n = { path = "./crates/i18n/", version = "=1.15.0" }
-mas-i18n-scan = { path = "./crates/i18n-scan/", version = "=1.15.0" }
-mas-iana = { path = "./crates/iana/", version = "=1.15.0" }
-mas-iana-codegen = { path = "./crates/iana-codegen/", version = "=1.15.0" }
-mas-jose = { path = "./crates/jose/", version = "=1.15.0" }
-mas-keystore = { path = "./crates/keystore/", version = "=1.15.0" }
-mas-listener = { path = "./crates/listener/", version = "=1.15.0" }
-mas-matrix = { path = "./crates/matrix/", version = "=1.15.0" }
-mas-matrix-synapse = { path = "./crates/matrix-synapse/", version = "=1.15.0" }
-mas-oidc-client = { path = "./crates/oidc-client/", version = "=1.15.0" }
-mas-policy = { path = "./crates/policy/", version = "=1.15.0" }
-mas-router = { path = "./crates/router/", version = "=1.15.0" }
-mas-spa = { path = "./crates/spa/", version = "=1.15.0" }
-mas-storage = { path = "./crates/storage/", version = "=1.15.0" }
-mas-storage-pg = { path = "./crates/storage-pg/", version = "=1.15.0" }
-mas-tasks = { path = "./crates/tasks/", version = "=1.15.0" }
-mas-templates = { path = "./crates/templates/", version = "=1.15.0" }
-mas-tower = { path = "./crates/tower/", version = "=1.15.0" }
-oauth2-types = { path = "./crates/oauth2-types/", version = "=1.15.0" }
-syn2mas = { path = "./crates/syn2mas", version = "=1.15.0" }
+mas-axum-utils = { path = "./crates/axum-utils/", version = "=1.18.0" }
+mas-cli = { path = "./crates/cli/", version = "=1.18.0" }
+mas-config = { path = "./crates/config/", version = "=1.18.0" }
+mas-context = { path = "./crates/context/", version = "=1.18.0" }
+mas-data-model = { path = "./crates/data-model/", version = "=1.18.0" }
+mas-email = { path = "./crates/email/", version = "=1.18.0" }
+mas-graphql = { path = "./crates/graphql/", version = "=1.18.0" }
+mas-handlers = { path = "./crates/handlers/", version = "=1.18.0" }
+mas-http = { path = "./crates/http/", version = "=1.18.0" }
+mas-i18n = { path = "./crates/i18n/", version = "=1.18.0" }
+mas-i18n-scan = { path = "./crates/i18n-scan/", version = "=1.18.0" }
+mas-iana = { path = "./crates/iana/", version = "=1.18.0" }
+mas-iana-codegen = { path = "./crates/iana-codegen/", version = "=1.18.0" }
+mas-jose = { path = "./crates/jose/", version = "=1.18.0" }
+mas-keystore = { path = "./crates/keystore/", version = "=1.18.0" }
+mas-listener = { path = "./crates/listener/", version = "=1.18.0" }
+mas-matrix = { path = "./crates/matrix/", version = "=1.18.0" }
+mas-matrix-synapse = { path = "./crates/matrix-synapse/", version = "=1.18.0" }
+mas-oidc-client = { path = "./crates/oidc-client/", version = "=1.18.0" }
+mas-policy = { path = "./crates/policy/", version = "=1.18.0" }
+mas-router = { path = "./crates/router/", version = "=1.18.0" }
+mas-spa = { path = "./crates/spa/", version = "=1.18.0" }
+mas-storage = { path = "./crates/storage/", version = "=1.18.0" }
+mas-storage-pg = { path = "./crates/storage-pg/", version = "=1.18.0" }
+mas-tasks = { path = "./crates/tasks/", version = "=1.18.0" }
+mas-templates = { path = "./crates/templates/", version = "=1.18.0" }
+mas-tower = { path = "./crates/tower/", version = "=1.18.0" }
+oauth2-types = { path = "./crates/oauth2-types/", version = "=1.18.0" }
+syn2mas = { path = "./crates/syn2mas", version = "=1.18.0" }
 
 # OpenAPI schema generation and validation
 [workspace.dependencies.aide]
@@ -354,7 +362,7 @@ features = ["serde"]
 
 # Email sending
 [workspace.dependencies.lettre]
-version = "0.11.19"
+version = "0.11.22"
 default-features = false
 features = [
     "tokio1-rustls",
@@ -392,7 +400,7 @@ version = "0.3.0"
 
 # Open Policy Agent support through WASM
 [workspace.dependencies.opa-wasm]
-version = "0.1.9"
+version = "0.2.0"
 
 # OpenTelemetry
 [workspace.dependencies.opentelemetry]
@@ -534,7 +542,7 @@ version = "1.13.0"
 
 # Use platform-specific verifier for TLS
 [workspace.dependencies.rustls-platform-verifier]
-version = "0.6.1"
+version = "0.7.0"
 
 # systemd service status notification
 [workspace.dependencies.sd-notify]
@@ -686,10 +694,10 @@ features = ["cors", "fs", "add-extension", "set-header"]
 [workspace.dependencies.tracing]
 version = "0.1.41"
 [workspace.dependencies.tracing-subscriber]
-version = "0.3.22"
+version = "0.3.23"
 features = ["env-filter"]
 [workspace.dependencies.tracing-appender]
-version = "0.2.4"
+version = "0.2.5"
 
 # URL manipulation
 [workspace.dependencies.url]

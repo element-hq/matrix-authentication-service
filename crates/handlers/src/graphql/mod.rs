@@ -114,7 +114,7 @@ impl state::State for GraphQLState {
     }
 
     fn rng(&self) -> BoxRng {
-        #[allow(clippy::disallowed_methods)]
+        #[expect(clippy::disallowed_methods)]
         let rng = thread_rng();
 
         let rng = ChaChaRng::from_rng(rng).expect("Failed to seed rng");

@@ -159,7 +159,7 @@ const AccountDeleteButton: React.FC<Props> = (props) => {
         <Button
           kind="tertiary"
           destructive
-          size="sm"
+          size="md"
           className="self-center"
           Icon={IconDelete}
         >

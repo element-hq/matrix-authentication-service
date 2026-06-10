@@ -170,7 +170,7 @@ impl PasswordsConfig {
     }
 }
 
-#[allow(clippy::trivially_copy_pass_by_ref)]
+#[expect(clippy::trivially_copy_pass_by_ref)]
 const fn is_default_false(value: &bool) -> bool {
     !*value
 }
@@ -209,7 +209,7 @@ pub struct HashingScheme {
     pub secret_file: Option<Utf8PathBuf>,
 }
 
-#[allow(clippy::unnecessary_wraps)]
+#[expect(clippy::unnecessary_wraps)]
 fn default_bcrypt_cost() -> Option<u32> {
     Some(12)
 }

@@ -13,7 +13,7 @@ const fn default_true() -> bool {
     true
 }
 
-#[allow(clippy::trivially_copy_pass_by_ref)]
+#[expect(clippy::trivially_copy_pass_by_ref)]
 const fn is_default_true(value: &bool) -> bool {
     *value == default_true()
 }
@@ -22,13 +22,13 @@ const fn default_false() -> bool {
     false
 }
 
-#[allow(clippy::trivially_copy_pass_by_ref)]
+#[expect(clippy::trivially_copy_pass_by_ref)]
 const fn is_default_false(value: &bool) -> bool {
     *value == default_false()
 }
 
 /// Configuration section to configure features related to account management
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 pub struct AccountConfig {
     /// Whether users are allowed to change their email addresses. Defaults to

@@ -10,7 +10,7 @@ use serde::Serialize;
 
 use crate::admin::call_context::CallContext;
 
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 #[derive(Serialize, JsonSchema)]
 pub struct SiteConfig {
     /// The Matrix server name for which this instance is configured

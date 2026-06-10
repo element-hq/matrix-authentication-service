@@ -29,7 +29,9 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/build-policies
 
@@ -38,7 +40,7 @@ jobs:
         run: make coverage
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v6.0.0
+        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: policies/coverage.json
@@ -54,18 +56,19 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/build-frontend
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Test
-        working-directory: ./frontend
-        run: npm run coverage
+        run: pnpm --filter mas-frontend run coverage
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v6.0.0
+        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: frontend/coverage/
@@ -99,18 +102,22 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: llvm-tools-preview
+        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
+        #
+        # llvm-tools-preview installs some llvm tools, which are needed for `grcov` below.
+        # See https://github.com/rust-lang/rust/issues/85658 for stability tracking issue.
+        run: rustup toolchain install stable --profile minimal --component llvm-tools-preview
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.9
+        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
 
       - name: Install grcov
-        uses: taiki-e/install-action@v2
+        uses: taiki-e/install-action@7ea35f098a7369cd23488403f58be9c491a6c55f # v2
         with:
           tool: grcov
 
@@ -132,7 +139,7 @@ jobs:
           grcov . --binary-path ./target/debug/deps/ -s . -t lcov --branch --ignore-not-existing --ignore '../*' --ignore "/*" -o target/coverage/tests.lcov
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v6.0.0
+        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: target/coverage/*.lcov

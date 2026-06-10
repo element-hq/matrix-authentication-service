@@ -82,12 +82,16 @@ export const handlers = [
           ),
         ),
 
-        siteConfig: makeFragmentData(
-          {
-            displayNameChangeAllowed: true,
-          },
-          USER_GREETING_CONFIG_FRAGMENT,
-        ),
+        siteConfig: {
+          planManagementIframeUri: null,
+          sessionLimit: null,
+          ...makeFragmentData(
+            {
+              displayNameChangeAllowed: true,
+            },
+            USER_GREETING_CONFIG_FRAGMENT,
+          ),
+        },
       },
     }),
   ),
