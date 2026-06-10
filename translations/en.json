@@ -99,7 +99,7 @@
     },
     "username": "Username",
     "@username": {
-      "context": "pages/login.html:50:37-57, pages/register/index.html:30:35-55, pages/register/password.html:34:33-53, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:107:39-59"
+      "context": "pages/login.html:51:39-59, pages/register/index.html:30:35-55, pages/register/password.html:34:33-53, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:107:39-59"
     }
   },
   "error": {
@@ -489,7 +489,7 @@
       },
       "username_or_email": "Username or Email",
       "@username_or_email": {
-        "context": "pages/login.html:46:37-69"
+        "context": "pages/login.html:47:39-71"
       }
     },
     "navbar": {
