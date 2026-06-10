@@ -404,40 +404,40 @@ version = "0.2.0"
 
 # OpenTelemetry
 [workspace.dependencies.opentelemetry]
-version = "0.31.0"
+version = "0.32.0"
 features = ["trace", "metrics"]
 [workspace.dependencies.opentelemetry-http]
-version = "0.31.0"
+version = "0.32.0"
 features = ["reqwest"]
 [workspace.dependencies.opentelemetry-instrumentation-process]
 version = "0.1.2"
 [workspace.dependencies.opentelemetry-instrumentation-tokio]
 version = "0.1.2"
 [workspace.dependencies.opentelemetry-jaeger-propagator]
-version = "0.31.0"
+version = "0.32.0"
 [workspace.dependencies.opentelemetry-otlp]
-version = "0.31.1"
+version = "0.32.0"
 default-features = false
 features = ["trace", "metrics", "http-proto", "tls-provider-agnostic"]
 [workspace.dependencies.opentelemetry-prometheus-text-exporter]
 version = "0.2.1"
 [workspace.dependencies.opentelemetry-resource-detectors]
-version = "0.10.0"
+version = "0.11.0"
 [workspace.dependencies.opentelemetry-semantic-conventions]
-version = "0.31.0"
+version = "0.32.0"
 features = ["semconv_experimental"]
 [workspace.dependencies.opentelemetry-stdout]
-version = "0.31.0"
+version = "0.32.0"
 features = ["trace", "metrics"]
 [workspace.dependencies.opentelemetry_sdk]
-version = "0.31.0"
+version = "0.32.1"
 features = [
     "experimental_trace_batch_span_processor_with_async_runtime",
     "experimental_metrics_periodicreader_with_async_runtime",
     "rt-tokio",
 ]
 [workspace.dependencies.tracing-opentelemetry]
-version = "0.32.1"
+version = "0.33.0"
 default-features = false
 
 # P256 elliptic curve
