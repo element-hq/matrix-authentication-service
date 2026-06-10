@@ -181,7 +181,12 @@
     "policy_violation": {
       "description": "Příčinou může být klient, který požadavek vytvořil, aktuálně přihlášený uživatel nebo samotný požadavek.",
       "heading": "Žádost o autorizaci byla zamítnuta podle zásad prosazovaných touto službou.",
-      "logged_as": "Přihlášen jako<span class=\"font-semibold\">%(username)s</span>"
+      "logged_as": "Přihlášen jako<span class=\"font-semibold\">%(username)s</span>",
+      "too_many_sessions": {
+        "description": "Váš účet je již přihlášen na maximálním počtu zařízení. Chcete-li pokračovat, odeberte <span class=\"font-semibold\">%(num_devices_to_remove)s ze svých stávajících zařízení</span> a znovu se přihlaste.",
+        "heading": "Dosažen limit zařízení",
+        "manage_devices": "Správa zařízení"
+      }
     },
     "recovery": {
       "consumed": {

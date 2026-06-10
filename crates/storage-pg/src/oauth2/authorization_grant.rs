@@ -35,7 +35,6 @@ impl<'c> PgOAuth2AuthorizationGrantRepository<'c> {
     }
 }
 
-#[allow(clippy::struct_excessive_bools)]
 struct GrantLookup {
     oauth2_authorization_grant_id: Uuid,
     created_at: DateTime<Utc>,

@@ -9,8 +9,8 @@ use std::{sync::Arc, time::Duration};
 use anyhow::Context;
 use mas_config::{
     AccountConfig, BrandingConfig, CaptchaConfig, DatabaseConfig, EmailConfig, EmailSmtpMode,
-    EmailTransportKind, ExperimentalConfig, HomeserverKind, MatrixConfig, PasswordsConfig,
-    PolicyConfig, TemplatesConfig,
+    EmailTransportKind, ExperimentalConfig, HomeserverKind, MatrixConfig, OAuthConfig,
+    PasswordsConfig, PolicyConfig, TemplatesConfig,
 };
 use mas_context::LogContext;
 use mas_data_model::{SessionExpirationConfig, SessionLimitConfig, SiteConfig};
@@ -156,6 +156,7 @@ pub async fn policy_factory_from_config(
             .map(|c| SessionLimitConfig {
                 soft_limit: c.soft_limit,
                 hard_limit: c.hard_limit,
+                max_session_threshold: c.max_session_threshold,
                 dangerous_hard_limit_eviction: c.dangerous_hard_limit_eviction,
             });
 
@@ -205,6 +206,7 @@ pub fn site_config_from_config(
     password_config: &PasswordsConfig,
     account_config: &AccountConfig,
     captcha_config: &CaptchaConfig,
+    oauth_config: &OAuthConfig,
 ) -> Result<SiteConfig, anyhow::Error> {
     let captcha = captcha_config_from_config(captcha_config)?;
     let session_expiration = experimental_config
@@ -215,6 +217,14 @@ pub fn site_config_from_config(
             compat_session_inactivity_ttl: c.expire_compat_sessions.then_some(c.ttl),
             user_session_inactivity_ttl: c.expire_user_sessions.then_some(c.ttl),
         });
+
+    if account_config.registration_token_required {
+        tracing::warn!(
+            "`account.registration_token_required` is deprecated. use \
+            `account.password_registration_token_required` and per-provider \
+            `registration_token_required` instead"
+        );
+    }
 
     Ok(SiteConfig {
         access_token_ttl: experimental_config.access_token_ttl,
@@ -227,6 +237,7 @@ pub fn site_config_from_config(
         password_registration_enabled: password_config.enabled()
             && account_config.password_registration_enabled,
         password_registration_email_required: account_config.password_registration_email_required,
+        password_registration_token_required: account_config.password_registration_token_required,
         registration_token_required: account_config.registration_token_required,
         email_change_allowed: account_config.email_change_allowed,
         displayname_change_allowed: account_config.displayname_change_allowed,
@@ -246,8 +257,12 @@ pub fn site_config_from_config(
             .map(|c| SessionLimitConfig {
                 soft_limit: c.soft_limit,
                 hard_limit: c.hard_limit,
+                max_session_threshold: c.max_session_threshold,
                 dangerous_hard_limit_eviction: c.dangerous_hard_limit_eviction,
             }),
+        device_code_grant_enabled: oauth_config.device_code_grant_enabled,
+        device_code_user_code_auto_fill_enabled: oauth_config
+            .device_code_user_code_auto_fill_enabled,
     })
 }
 

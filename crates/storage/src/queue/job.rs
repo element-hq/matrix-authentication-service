@@ -124,7 +124,7 @@ pub trait QueueJobRepository: Send + Sync {
     /// # Errors
     ///
     /// Returns an error if the underlying repository fails.
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments)]
     async fn schedule_later(
         &mut self,
         rng: &mut (dyn RngCore + Send),

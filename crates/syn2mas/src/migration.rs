@@ -141,7 +141,7 @@ struct MigrationState {
 /// - An underlying database access error, either to MAS or to Synapse.
 /// - Invalid data in the Synapse database.
 #[expect(clippy::implicit_hasher)]
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 pub async fn migrate(
     mut synapse: SynapseReader<'_>,
     mas: MasWriter,

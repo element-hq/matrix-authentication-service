@@ -181,7 +181,12 @@
     "policy_violation": {
       "description": "Tämä voi johtua pyynnön laatineesta sovelluksesta, kirjautuneesta käyttäjästä tai itse pyynnöstä.",
       "heading": "Valtuutuspyyntö hylättiin tämän palvelun noudattaman käytännön mukaisesti",
-      "logged_as": "Kirjautuneena käyttäjälle <span class=\"font-semibold\">%(username)s</span>"
+      "logged_as": "Kirjautuneena käyttäjälle <span class=\"font-semibold\">%(username)s</span>",
+      "too_many_sessions": {
+        "description": "Tilisi on jo kirjautunut sisään enimmäismäärälle laitteita. Jatka <span class=\"font-semibold\">poistamalla %(num_devices_to_remove)s olemassa olevista laitteistasi</span> ja kirjautumalla uudelleen sisään.",
+        "heading": "Laiteraja saavutettu",
+        "manage_devices": "Hallitse laitteita"
+      }
     },
     "recovery": {
       "consumed": {

@@ -1,6 +1,6 @@
 {
   "action": {
-    "back": "Powrót",
+    "back": "Wróć",
     "cancel": "Anuluj",
     "continue": "Kontynuuj",
     "create_account": "Utwórz konto",
@@ -181,7 +181,12 @@
     "policy_violation": {
       "description": "Przyczyną może być klient, który zainicjował to żądanie, aktualnie zalogowany użytkownik lub samo żądanie.",
       "heading": "Żądanie autoryzacji zostało odrzucone przez politykę egzekwowaną przez tę usługę",
-      "logged_as": "Zalogowany jako <span class=\"font-semibold\">%(username)s</span>"
+      "logged_as": "Zalogowany jako <span class=\"font-semibold\">%(username)s</span>",
+      "too_many_sessions": {
+        "description": "Twoje konto jest już zalogowane na maksymalnej liczbie urządzeń. Aby kontynuować, <span class=\"font-semibold\">usuń %(num_devices_to_remove)s urządzeń</span> i zaloguj się ponownie.",
+        "heading": "Osiągnięto limit urządzeń",
+        "manage_devices": "Zarządzaj urządzeniami"
+      }
     },
     "recovery": {
       "consumed": {
