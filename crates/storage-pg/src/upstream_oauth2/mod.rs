@@ -79,6 +79,7 @@ mod tests {
                     forward_login_hint: false,
                     ui_order: 0,
                     on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    registration_token_required: false,
                 },
             )
             .await
@@ -359,6 +360,7 @@ mod tests {
                         forward_login_hint: false,
                         ui_order: 0,
                         on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                        registration_token_required: false,
                     },
                 )
                 .await
@@ -497,6 +499,7 @@ mod tests {
                     forward_login_hint: false,
                     ui_order: 0,
                     on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    registration_token_required: false,
                 },
             )
             .await

@@ -80,6 +80,11 @@ pub struct SiteConfig {
     pub password_registration_email_required: bool,
 
     /// Whether registration tokens are required for password registrations.
+    pub password_registration_token_required: bool,
+
+    /// Whether registration tokens are required globally for password
+    /// registrations. Deprecated in favor of
+    /// `password_registration_token_required`
     pub registration_token_required: bool,
 
     /// Whether users can change their email.

@@ -341,6 +341,7 @@ pub async fn config_sync(
                         forward_login_hint: provider.forward_login_hint,
                         ui_order,
                         on_backchannel_logout,
+                        registration_token_required: provider.registration_token_required,
                     },
                 )
                 .await?;

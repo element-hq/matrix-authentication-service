@@ -33,7 +33,7 @@ matrix_authentication_service:
   endpoint: http://localhost:8080/
   secret: "AVeryRandomSecretPleaseUseSomethingSecure"
   # Alternatively, using a file:
-  #secret_file: /path/to/secret.txt
+  #secret_path: /path/to/secret.txt
 ```
 
 The `endpoint` property should be set to the URL of the authentication service.

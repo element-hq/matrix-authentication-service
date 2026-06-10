@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -511,6 +512,7 @@ impl OnBackchannelLogout {
 #[serde_as]
 #[skip_serializing_none]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[expect(clippy::struct_excessive_bools)]
 pub struct Provider {
     /// Whether this provider is enabled.
     ///
@@ -691,6 +693,12 @@ pub struct Provider {
     /// Defaults to `do_nothing`.
     #[serde(default, skip_serializing_if = "OnBackchannelLogout::is_default")]
     pub on_backchannel_logout: OnBackchannelLogout,
+
+    /// Whether or not to require a registration token on `OAuth2` auth
+    ///
+    /// Defaults to `false`
+    #[serde(default)]
+    pub registration_token_required: bool,
 }
 
 impl Provider {
