@@ -87,23 +87,33 @@
       "access_requested": "Zażądano dostępu",
       "device_code": "Kod",
       "generic_device": "Urządzenie",
-      "ip_address": "Adres IP"
+      "ip_address": "Adres IP",
+      "security_code": "Kod bezpieczeństwa"
     },
     "device_code_link": {
-      "description": "Połącz urządzenie",
-      "headline": "Wprowadź kod wyświetlony na Twoim urządzeniu"
+      "description": "Wprowadź kod bezpieczeństwa wyświetlony na drugim urządzeniu",
+      "headline": "Powiąż nowe urządzenie ze swoim kontem",
+      "verification_code": "Kod weryfikacyjny"
     },
     "device_consent": {
       "another_device_access": "Inne urządzenie chce uzyskać dostęp do Twojego konta.",
+      "confirm_device": "Tak, to jest moje urządzenie i chcę się na nim zalogować.",
       "denied": {
         "description": "Odmówiłeś dostępu aplikacji %(client_name)s. Możesz zamknąć to okno.",
         "heading": "Odmowa dostępu"
       },
+      "description": "<strong>Inne urządzenie</strong> chce powiązać %(client_name)s (<span>%(client_uri)s</span>) z Twoim kontem <span>%(server_name)s</span>. Upewnij się, że rozpoznajesz to urządzenie.",
+      "grant_access": "Udziel dostępu",
       "granted": {
         "description": "Udzieliłeś dostępu aplikacji %(client_name)s. Możesz zamknąć to okno.",
         "heading": "Udzielono dostępu"
       },
-      "this_will_setup": "Inne urządzenie chce skonfigurować %(client_name)s (<span>%(client_uri)s</span>) z twoim kontem <span>%(server_name)s</span>. Upewnij się, że rozpoznajesz to urządzenie."
+      "this_will_setup": "Inne urządzenie chce skonfigurować %(client_name)s (<span>%(client_uri)s</span>) z twoim kontem <span>%(server_name)s</span>. Upewnij się, że rozpoznajesz to urządzenie.",
+      "title": "Udzielić dostępu do Twojego konta?",
+      "warning": {
+        "description": "Czy na pewno jest to Twoje urządzenie? Administratorzy ani dział wsparcia IT nigdy nie poprosiliby Cię o potwierdzenie tego.",
+        "title": "Zamierzasz udzielić zdalnemu urządzeniu dostęp do swojego konta"
+      }
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s na %(device_name)s",

@@ -126,8 +126,8 @@
       "heading": "Адреса електронної пошти{{email}} вже використовується."
     },
     "end_session_button": {
-      "confirmation_modal_body_text": "Переконайтеся, що у вас завжди є доступ до іншого підтвердженого пристрою або до ключа відновлення, щоб уникнути втрати зашифрованої історії чатів.",
-      "confirmation_modal_title": "Ви впевнені, що хочете видалити цей пристрій?",
+      "confirmation_modal_body_text": "Make sure you always have access to another verified device or your recovery key to avoid losing your encrypted chat history.",
+      "confirmation_modal_title": "Ви впевнені, що хочете завершити цей сеанс?",
       "text": "Вилучити пристрій"
     },
     "error": {
@@ -147,7 +147,7 @@
       "inactive_90_days": "Неактивний понад 90 днів"
     },
     "nav": {
-      "device_limit_error": "Досягнуто обмеження кількості пристроїв",
+      "device_limit_error": "Device limit reached",
       "devices": "Пристрої",
       "plan": "План",
       "profile": "Профіль",
@@ -362,33 +362,27 @@
       "active_sessions:one": "{{count}} активний сеанс",
       "active_sessions:few": "{{count}} активні сеанси",
       "active_sessions:many": "{{count}} активних сеансів",
-      "approaching_session_limit_warning_description:one": "Ви використали {{num_sessions}} із {{count}} слот пристрою. Коли ви досягнете ліміту, щоб додати новий пристрій, вам доведеться видалити один із наявних.",
-      "approaching_session_limit_warning_description:few": "Ви використали {{num_sessions}} із {{count}} слоти пристроїв. Коли ви досягнете ліміту, щоб додати новий пристрій, вам доведеться видалити один із наявних.",
-      "approaching_session_limit_warning_description:many": "Ви використали {{num_sessions}} із {{count}} слотів пристроїв. Коли ви досягнете ліміту, щоб додати новий пристрій, вам доведеться видалити один із наявних.",
-      "approaching_session_limit_warning_header": "Увага, ви майже вичерпали ліміт пристроїв",
+      "approaching_session_limit_warning_description:one": "You've used {{num_sessions}} of {{count}} device slot. Once you reach your limit, you'll need to remove an existing device to add another.",
+      "approaching_session_limit_warning_description:other": "You've used {{num_sessions}} of {{count}} device slots. Once you reach your limit, you'll need to remove an existing device to add another.",
+      "approaching_session_limit_warning_header": "Heads up, you're close to your device limit",
       "heading": "Де ви ввійшли",
-      "hit_session_limit_warning_description:one": "Ви використали {{num_sessions}} із {{count}} слот пристрою. Щоб увійти знову, вам потрібно видалити один із наявних пристроїв.",
-      "hit_session_limit_warning_description:few": "Ви використали {{num_sessions}} із {{count}} слоти пристроїв. Щоб увійти знову, вам потрібно видалити один із наявних пристроїв.",
-      "hit_session_limit_warning_description:many": "Ви використали {{num_sessions}} із {{count}} слотів пристроїв. Щоб увійти знову, вам потрібно видалити один із наявних пристроїв.",
-      "hit_session_limit_warning_header": "Ви досягли ліміту кількості пристроїв",
+      "hit_session_limit_warning_description:one": "You've used {{num_sessions}} of {{count}} device slot. When you try to sign-in again, you'll need to remove an existing device.",
+      "hit_session_limit_warning_description:other": "You've used {{num_sessions}} of {{count}} device slots. When you try to sign-in again, you'll need to remove an existing device.",
+      "hit_session_limit_warning_header": "You've hit the device limit",
       "no_active_sessions": {
         "default": "Ви не ввійшли в жоден застосунок.",
         "inactive_90_days": "Усі ваші сеанси були активними протягом останніх 90 днів."
       },
       "num_sessions_filtered_header": {
-        "header:one": "За вашими критеріями пошуку знайдено {{count}} пристрій ({{unfiltered_session_total}})",
-        "header:few": "За вашими критеріями пошуку знайдено {{count}} пристрої ({{unfiltered_session_total}})",
-        "header:many": "За вашими критеріями пошуку знайдено {{count}} пристроїв ({{unfiltered_session_total}})",
-        "unfiltered_session_total:one": "Всього {{count}}",
-        "unfiltered_session_total:few": "Всього {{count}}",
-        "unfiltered_session_total:many": "Всього {{count}}"
+        "header:one": "{{count}} device matches your filter ({{unfiltered_session_total}})",
+        "header:other": "{{count}} devices match your filter ({{unfiltered_session_total}})",
+        "unfiltered_session_total:one": "{{count}} total",
+        "unfiltered_session_total:other": "{{count}} total"
       },
-      "num_sessions_header:one": "{{count}} пристрій",
-      "num_sessions_header:few": "{{count}} пристрої",
-      "num_sessions_header:many": "{{count}} пристроїв",
-      "session_limit_info:one": "Ви використали {{count}}/{{limit}} слот пристрою",
-      "session_limit_info:few": "Ви використали {{count}}/{{limit}} слоти пристроїв",
-      "session_limit_info:many": "Ви використали {{count}}/{{limit}} слотів пристроїв"
+      "num_sessions_header:one": "{{count}} device",
+      "num_sessions_header:other": "{{count}} devices",
+      "session_limit_info:one": "You've used {{count}}/{{limit}} device slots",
+      "session_limit_info:other": "You've used {{count}}/{{limit}} device slots"
     },
     "verify_email": {
       "code_expired_alert": {

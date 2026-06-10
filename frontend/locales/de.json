@@ -376,7 +376,7 @@
         "unfiltered_session_total:one": "{{count}} insgesamt",
         "unfiltered_session_total:other": "{{count}} insgesamt"
       },
-      "num_sessions_header:one": "{{count}} Gerät",
+      "num_sessions_header:one": "{{count}} Geräte",
       "num_sessions_header:other": "{{count}} Geräte",
       "session_limit_info:one": "Du hast {{count}} von {{limit}} Geräten belegt",
       "session_limit_info:other": "Du hast {{count}} von {{limit}} Geräten belegt"
