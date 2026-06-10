@@ -87,23 +87,33 @@
       "access_requested": "Přístup byl vyžádán",
       "device_code": "Kód",
       "generic_device": "Zařízení",
-      "ip_address": "IP adresa"
+      "ip_address": "IP adresa",
+      "security_code": "Bezpečnostní kód"
     },
     "device_code_link": {
-      "description": "Propojení zařízení",
-      "headline": "Zadejte kód zobrazený na vašem zařízení"
+      "description": "Zadejte bezpečnostní kód zobrazený na vašem druhém zařízení",
+      "headline": "Propojte nové zařízení s vaším účtem",
+      "verification_code": "Ověřovací kód"
     },
     "device_consent": {
       "another_device_access": "Jiné zařízení chce získat přístup k vašemu účtu.",
+      "confirm_device": "Ano, potvrzuji, že se jedná o mé zařízení a chci se na něm přihlásit.",
       "denied": {
         "description": "Odepřeli jste přístup k %(client_name)s. Toto okno můžete zavřít.",
         "heading": "Přístup odepřen"
       },
+      "description": "<strong>Další zařízení</strong> chce propojit %(client_name)s (<span>%(client_uri)s</span>) s vaším účtem <span>%(server_name)s</span>. Ujistěte se, že toto zařízení poznáváte.",
+      "grant_access": "Udělit přístup",
       "granted": {
         "description": "Udělili jste přístup k %(client_name)s. Toto okno můžete zavřít.",
         "heading": "Přístup udělen"
       },
-      "this_will_setup": "Jiné zařízení chce nastavit %(client_name)s (<span>%(client_uri)s</span>) s vaším <span>%(server_name)s</span> účtem. Ujistěte se, že dané zařízení poznáváte."
+      "this_will_setup": "Jiné zařízení chce nastavit %(client_name)s (<span>%(client_uri)s</span>) s vaším <span>%(server_name)s</span> účtem. Ujistěte se, že dané zařízení poznáváte.",
+      "title": "Udělit přístup k vašemu účtu?",
+      "warning": {
+        "description": "Jste si jisti, že se jedná o vaše zařízení? Správci ani technická podpora by vás nikdy nepožádali o souhlas.",
+        "title": "Chystáte se udělit vzdálenému zařízení přístup k vašemu účtu"
+      }
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s na %(device_name)s",

@@ -87,23 +87,33 @@
       "access_requested": "Pääsyä pyydetty",
       "device_code": "Koodi",
       "generic_device": "Laite",
-      "ip_address": "IP-osoite"
+      "ip_address": "IP-osoite",
+      "security_code": "Turvakoodi"
     },
     "device_code_link": {
-      "description": "Yhdistä laite",
-      "headline": "Syötä laitteessasi näkyvä koodi"
+      "description": "Anna toisessa laitteessasi näkyvä turvakoodi",
+      "headline": "Yhdistä uusi laite tiliisi",
+      "verification_code": "Vahvistuskoodi"
     },
     "device_consent": {
       "another_device_access": "Toinen laite haluaa päästä tilillesi.",
+      "confirm_device": "Kyllä, vahvistan, että tämä on minun laitteeni ja haluan kirjautua sillä sisään.",
       "denied": {
         "description": "Kielsit pääsyn %(client_name)s -sovellukselta. Voit sulkea tämän ikkunan.",
         "heading": "Pääsy kielletty"
       },
+      "description": "<strong>Toinen laite</strong> haluaa yhdistää %(client_name)s (<span>%(client_uri)s</span>) sovelluksen <span>%(server_name)s</span> tiliisi. Varmista, että tunnistat kyseisen laitteen.",
+      "grant_access": "Salli pääsyoikeus",
       "granted": {
         "description": "Annoit pääsyn %(client_name)s -sovellukselle. Voit sulkea tämän ikkunan.",
         "heading": "Pääsy myönnetty"
       },
-      "this_will_setup": "Toinen laite haluaa yhdistää %(client_name)s (<span>%(client_uri)s</span>) sovelluksen <span>%(server_name)s</span> tiliisi. Varmista, että tunnistat kyseisen laitteen."
+      "this_will_setup": "Toinen laite haluaa yhdistää %(client_name)s (<span>%(client_uri)s</span>) sovelluksen <span>%(server_name)s</span> tiliisi. Varmista, että tunnistat kyseisen laitteen.",
+      "title": "Annetaanko pääsy tilillesi?",
+      "warning": {
+        "description": "Oletko varma, että tämä on sinun laitteesi? Ylläpitäjät tai IT-tuki eivät koskaan pyytäisi sinua hyväksymään tätä.",
+        "title": "Olet myöntämässä etälaitteelle pääsyn tilillesi"
+      }
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s %(device_name)s:lla",
