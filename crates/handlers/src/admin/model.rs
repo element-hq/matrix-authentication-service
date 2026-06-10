@@ -181,11 +181,11 @@ pub struct CompatSession {
     pub user_id: Ulid,
 
     /// The Matrix device ID of this session
-    #[schemars(with = "super::schema::Device")]
+    #[schemars(with = "Option<super::schema::Device>")]
     pub device_id: Option<Device>,
 
     /// The ID of the user session that started this session, if any
-    #[schemars(with = "super::schema::Ulid")]
+    #[schemars(with = "Option<super::schema::Ulid>")]
     pub user_session_id: Option<Ulid>,
 
     /// The redirect URI used to login in the client, if it was an SSO login
