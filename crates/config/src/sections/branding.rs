@@ -37,6 +37,12 @@ pub struct BrandingConfig {
     /// Logo displayed in some web pages.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub logo_uri: Option<Url>,
+
+    /// URL of the web client to redirect users to after signing out.
+    /// When set, the "Sign out" button will redirect to this URL instead of
+    /// the MAS login page.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub webclient_url: Option<Url>,
 }
 
 impl BrandingConfig {
@@ -47,6 +53,7 @@ impl BrandingConfig {
             && self.tos_uri.is_none()
             && self.imprint.is_none()
             && self.logo_uri.is_none()
+            && self.webclient_url.is_none()
     }
 }
 

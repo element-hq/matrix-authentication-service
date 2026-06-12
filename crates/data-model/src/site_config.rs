@@ -117,6 +117,9 @@ pub struct SiteConfig {
     /// The iframe URL to show in the plan tab of the UI
     pub plan_management_iframe_uri: Option<String>,
 
+    /// URL of the web client to redirect users to after signing out.
+    pub webclient_url: Option<Url>,
+
     /// Limits on the number of application sessions that each user can have
     pub session_limit: Option<SessionLimitConfig>,
 

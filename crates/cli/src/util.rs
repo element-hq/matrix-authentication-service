@@ -233,6 +233,7 @@ pub fn site_config_from_config(
         policy_uri: branding_config.policy_uri.clone(),
         tos_uri: branding_config.tos_uri.clone(),
         imprint: branding_config.imprint.clone(),
+        webclient_url: branding_config.webclient_url.clone(),
         password_login_enabled: password_config.enabled(),
         password_registration_enabled: password_config.enabled()
             && account_config.password_registration_enabled,

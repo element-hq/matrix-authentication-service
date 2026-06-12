@@ -18,6 +18,7 @@ pub struct SiteBranding {
     policy_uri: Option<Arc<str>>,
     tos_uri: Option<Arc<str>>,
     imprint: Option<Arc<str>>,
+    webclient_url: Option<Arc<str>>,
 }
 
 impl SiteBranding {
@@ -29,6 +30,7 @@ impl SiteBranding {
             policy_uri: None,
             tos_uri: None,
             imprint: None,
+            webclient_url: None,
         }
     }
 
@@ -52,6 +54,19 @@ impl SiteBranding {
         self.imprint = Some(imprint.into());
         self
     }
+
+    /// Set the web client URL for post-logout redirect.
+    #[must_use]
+    pub fn with_webclient_url(mut self, webclient_url: impl Into<Arc<str>>) -> Self {
+        self.webclient_url = Some(webclient_url.into());
+        self
+    }
+
+    /// Return the web client URL, if configured.
+    #[must_use]
+    pub fn webclient_url(&self) -> Option<&str> {
+        self.webclient_url.as_deref()
+    }
 }
 
 impl Object for SiteBranding {
@@ -61,11 +76,12 @@ impl Object for SiteBranding {
             "policy_uri" => Some(Value::from(self.policy_uri.clone())),
             "tos_uri" => Some(Value::from(self.tos_uri.clone())),
             "imprint" => Some(Value::from(self.imprint.clone())),
+            "webclient_url" => Some(Value::from(self.webclient_url.clone())),
             _ => None,
         }
     }
 
     fn enumerate(self: &Arc<Self>) -> Enumerator {
-        Enumerator::Str(&["server_name", "policy_uri", "tos_uri", "imprint"])
+        Enumerator::Str(&["server_name", "policy_uri", "tos_uri", "imprint", "webclient_url"])
     }
 }

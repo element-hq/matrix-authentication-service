@@ -39,6 +39,10 @@ impl SiteConfigExt for SiteConfig {
             branding = branding.with_imprint(imprint.as_str());
         }
 
+        if let Some(webclient_url) = &self.webclient_url {
+            branding = branding.with_webclient_url(webclient_url.as_str());
+        }
+
         branding
     }
 

@@ -6,14 +6,14 @@
 
 use axum::{
     extract::{Form, State},
-    response::IntoResponse,
+    response::{IntoResponse, Redirect},
 };
 use mas_axum_utils::{
     InternalError, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::BoxClock;
+use mas_data_model::{BoxClock, SiteConfig};
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{BoxRepository, user::BrowserSessionRepository};
 
@@ -25,6 +25,7 @@ pub(crate) async fn post(
     mut repo: BoxRepository,
     cookie_jar: CookieJar,
     State(url_builder): State<UrlBuilder>,
+    State(site_config): State<SiteConfig>,
     activity_tracker: BoundActivityTracker,
     Form(form): Form<ProtectedForm<Option<PostAuthAction>>>,
 ) -> Result<impl IntoResponse, InternalError> {
@@ -51,8 +52,13 @@ pub(crate) async fn post(
     // invalid
     let cookie_jar = cookie_jar.update_session_info(&session_info.mark_session_ended());
 
-    let destination = if let Some(action) = form {
+    // If a post_logout_action was requested (e.g. re-link upstream), honour it.
+    // Otherwise, redirect to the configured web client URL (if any), or fall
+    // back to the MAS login page.
+    let destination: Redirect = if let Some(action) = form {
         action.go_next(&url_builder)
+    } else if let Some(webclient_url) = &site_config.webclient_url {
+        Redirect::to(webclient_url.as_str())
     } else {
         url_builder.redirect(&mas_router::Login::default())
     };
