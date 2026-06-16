@@ -32,8 +32,9 @@ use mas_tower::{
 use opentelemetry::{Key, KeyValue};
 use opentelemetry_http::HeaderExtractor;
 use opentelemetry_semantic_conventions::trace::{
-    HTTP_REQUEST_METHOD, HTTP_RESPONSE_STATUS_CODE, HTTP_ROUTE, NETWORK_PROTOCOL_NAME,
-    NETWORK_PROTOCOL_VERSION, URL_PATH, URL_QUERY, URL_SCHEME, USER_AGENT_ORIGINAL,
+    CLIENT_ADDRESS, HTTP_REQUEST_METHOD, HTTP_RESPONSE_STATUS_CODE, HTTP_ROUTE,
+    NETWORK_PROTOCOL_NAME, NETWORK_PROTOCOL_VERSION, URL_PATH, URL_QUERY, URL_SCHEME,
+    USER_AGENT_ORIGINAL,
 };
 use rustls::ServerConfig;
 use sentry_tower::{NewSentryLayer, SentryHttpLayer};
@@ -99,6 +100,14 @@ fn otel_url_scheme<B>(request: &Request<B>) -> &'static str {
 fn make_http_span<B>(req: &Request<B>) -> Span {
     let method = otel_http_method(req);
     let route = otel_http_route(req);
+    // The client IP was inferred by `client_ip_middleware`, which wraps this
+    // layer, so the `ClientIp` extension is already set by the time the span is
+    // created.
+    let client_ip = req
+        .extensions()
+        .get::<ClientIp>()
+        .and_then(|ip| ip.0)
+        .map(tracing::field::display);
 
     let span_name = if let Some(route) = route.as_ref() {
         format!("{method} {route}")
@@ -120,6 +129,7 @@ fn make_http_span<B>(req: &Request<B>) -> Span {
         { URL_QUERY } = tracing::field::Empty,
         { URL_SCHEME } = otel_url_scheme(req),
         { USER_AGENT_ORIGINAL } = tracing::field::Empty,
+        { CLIENT_ADDRESS } = client_ip,
     );
 
     if let Some(route) = route.as_ref() {
@@ -319,15 +329,6 @@ pub fn build_router(
 
     router
         .layer(axum::middleware::from_fn(log_response_middleware))
-        // Infer the client IP once, ahead of `log_response_middleware` and the
-        // handlers, and store it in the request extensions. Placed after
-        // `log_response_middleware` in this list so it wraps it (the first layer
-        // is the innermost), meaning the `ClientIp` extension is set before the
-        // logging middleware and the extractors read it.
-        .layer(axum::middleware::from_fn_with_state(
-            state.clone(),
-            client_ip_middleware,
-        ))
         .layer(
             InFlightCounterLayer::new("http.server.active_requests").on_request((
                 name.map(|name| KeyValue::new(MAS_LISTENER_NAME, name.to_owned())),
@@ -353,6 +354,16 @@ pub fn build_router(
                 span.record("otel.status_code", "OK");
             }),
         )
+        // Infer the client IP once, ahead of the rest of the request handling,
+        // and store it in the request extensions. Placed *after* the `TraceLayer`
+        // in this list so it wraps it (the first layer is the innermost): the
+        // `ClientIp` extension is therefore set before `make_http_span` reads it
+        // to record `client.address` on the span, and before the logging
+        // middleware and the extractors further in read it too.
+        .layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            client_ip_middleware,
+        ))
         .layer(mas_context::LogContextLayer::new(|req| {
             otel_http_method(req).into()
         }))
