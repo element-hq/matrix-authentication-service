@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -312,6 +313,73 @@ mod tests {
         assert_eq!(repo.compat_session().count(active).await.unwrap(), 0);
     }
 
+    /// Test the created-at filters on [`CompatSessionFilter`].
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_list_compat_sessions_by_created_at(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap();
+
+        let user = repo
+            .user()
+            .add(&mut rng, &clock, "alice".to_owned())
+            .await
+            .unwrap();
+
+        // Three sessions created one minute apart, with a cutoff captured
+        // between the second and the third.
+        let device = Device::generate(&mut rng);
+        let session1 = repo
+            .compat_session()
+            .add(&mut rng, &clock, &user, device, None, false, None)
+            .await
+            .unwrap();
+        clock.advance(Duration::try_minutes(1).unwrap());
+
+        let device = Device::generate(&mut rng);
+        let session2 = repo
+            .compat_session()
+            .add(&mut rng, &clock, &user, device, None, false, None)
+            .await
+            .unwrap();
+        clock.advance(Duration::try_minutes(1).unwrap());
+
+        let cutoff = clock.now();
+
+        clock.advance(Duration::try_minutes(1).unwrap());
+        let device = Device::generate(&mut rng);
+        let session3 = repo
+            .compat_session()
+            .add(&mut rng, &clock, &user, device, None, false, None)
+            .await
+            .unwrap();
+
+        let pagination = Pagination::first(10);
+
+        // Sessions created before the cutoff
+        let filter = CompatSessionFilter::new().with_created_before(cutoff);
+        let list = repo
+            .compat_session()
+            .list(filter, pagination)
+            .await
+            .unwrap();
+        assert_eq!(list.edges.len(), 2);
+        assert_eq!(list.edges[0].node.0, session1);
+        assert_eq!(list.edges[1].node.0, session2);
+        assert_eq!(repo.compat_session().count(filter).await.unwrap(), 2);
+
+        // Sessions created after the cutoff
+        let filter = CompatSessionFilter::new().with_created_after(cutoff);
+        let list = repo
+            .compat_session()
+            .list(filter, pagination)
+            .await
+            .unwrap();
+        assert_eq!(list.edges.len(), 1);
+        assert_eq!(list.edges[0].node.0, session3);
+        assert_eq!(repo.compat_session().count(filter).await.unwrap(), 1);
+    }
+
     #[sqlx::test(migrator = "crate::MIGRATOR")]
     async fn test_access_token_repository(pool: PgPool) {
         const FIRST_TOKEN: &str = "first_access_token";
@@ -437,6 +505,7 @@ mod tests {
     async fn test_refresh_token_repository(pool: PgPool) {
         const ACCESS_TOKEN: &str = "access_token";
         const REFRESH_TOKEN: &str = "refresh_token";
+        const REFRESH_TOKEN2: &str = "refresh_token2";
         let mut rng = ChaChaRng::seed_from_u64(42);
         let clock = MockClock::default();
         let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
@@ -508,16 +577,28 @@ mod tests {
         assert!(refresh_token_lookup.is_valid());
         assert!(!refresh_token_lookup.is_consumed());
 
-        // Consume it
+        // Consume the first token, but to do so we need a 2nd to replace it with
+        let refresh_token2 = repo
+            .compat_refresh_token()
+            .add(
+                &mut rng,
+                &clock,
+                &session,
+                &access_token,
+                REFRESH_TOKEN2.to_owned(),
+            )
+            .await
+            .unwrap();
+
         let refresh_token = repo
             .compat_refresh_token()
-            .consume(&clock, refresh_token)
+            .consume_and_replace(&clock, refresh_token, &refresh_token2)
             .await
             .unwrap();
         assert!(!refresh_token.is_valid());
         assert!(refresh_token.is_consumed());
 
-        // Reload it and check again
+        // Reload the first token and check again
         let refresh_token_lookup = repo
             .compat_refresh_token()
             .find_by_token(REFRESH_TOKEN)
@@ -530,7 +611,7 @@ mod tests {
         // Consuming it again should not work
         assert!(
             repo.compat_refresh_token()
-                .consume(&clock, refresh_token)
+                .consume_and_replace(&clock, refresh_token, &refresh_token2)
                 .await
                 .is_err()
         );

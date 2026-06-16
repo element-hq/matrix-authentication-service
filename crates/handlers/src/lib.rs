@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -33,6 +34,7 @@ use hyper::{
     StatusCode, Version,
     header::{
         ACCEPT, ACCEPT_LANGUAGE, AUTHORIZATION, CONTENT_LANGUAGE, CONTENT_LENGTH, CONTENT_TYPE,
+        X_FRAME_OPTIONS,
     },
 };
 use mas_axum_utils::{InternalError, cookies::CookieJar};
@@ -47,7 +49,10 @@ use mas_templates::{ErrorContext, NotFoundContext, TemplateContext, Templates};
 use opentelemetry::metrics::Meter;
 use sqlx::PgPool;
 use tower::util::AndThenLayer;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::{
+    cors::{Any, CorsLayer},
+    set_header::SetResponseHeaderLayer,
+};
 use webauthn::Webauthn;
 
 use self::{graphql::ExtraRouterParameters, passwords::PasswordManager};
@@ -66,6 +71,7 @@ mod activity_tracker;
 mod captcha;
 #[cfg(test)]
 mod cleanup_tests;
+mod client_ip;
 mod preferred_language;
 mod rate_limit;
 mod session;
@@ -103,8 +109,10 @@ use mas_data_model::{BoxClock, BoxRng};
 pub use self::{
     activity_tracker::{ActivityTracker, Bound as BoundActivityTracker},
     admin::router as admin_api_router,
+    client_ip::ClientIp,
     graphql::{
-        Schema as GraphQLSchema, schema as graphql_schema, schema_builder as graphql_schema_builder,
+        GraphQLOperation, Schema as GraphQLSchema, schema as graphql_schema,
+        schema_builder as graphql_schema_builder,
     },
     preferred_language::PreferredLanguage,
     rate_limit::{Limiter, RequesterFingerprint},
@@ -193,7 +201,7 @@ where
                     CONTENT_LANGUAGE,
                     CONTENT_TYPE,
                 ])
-                .max_age(Duration::from_secs(60 * 60)),
+                .max_age(Duration::from_hours(1)),
         )
 }
 
@@ -257,11 +265,10 @@ where
                     // Swagger will send this header, so we have to allow it to avoid CORS errors
                     HeaderName::from_static("x-requested-with"),
                 ])
-                .max_age(Duration::from_secs(60 * 60)),
+                .max_age(Duration::from_hours(1)),
         )
 }
 
-#[allow(clippy::trait_duplication_in_bounds)]
 pub fn compat_router<S>(templates: Templates) -> Router<S>
 where
     S: Clone + Send + Sync + 'static,
@@ -328,7 +335,7 @@ where
                     CONTENT_TYPE,
                     HeaderName::from_static("x-requested-with"),
                 ])
-                .max_age(Duration::from_secs(60 * 60)),
+                .max_age(Duration::from_hours(1)),
         );
 
     Router::new().merge(human_router).merge(api_router)
@@ -463,7 +470,7 @@ where
         )
         .route(
             mas_router::DeviceCodeLink::route(),
-            get(self::oauth2::device::link::get),
+            get(self::oauth2::device::link::get).post(self::oauth2::device::link::post),
         )
         .route(
             mas_router::DeviceCodeConsent::route(),
@@ -473,6 +480,10 @@ where
             async move |response: axum::response::Response| {
                 Ok::<_, Infallible>(recover_error(&templates, response))
             },
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            X_FRAME_OPTIONS,
+            http::HeaderValue::from_static("DENY"),
         ))
 }
 

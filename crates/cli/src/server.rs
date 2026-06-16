@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -20,6 +21,7 @@ use hyper::{Method, Request, Response, StatusCode, Version, header::USER_AGENT};
 use listenfd::ListenFd;
 use mas_config::{HttpBindConfig, HttpResource, HttpTlsConfig, UnixOrTcp};
 use mas_context::LogContext;
+use mas_handlers::{ClientIp, GraphQLOperation};
 use mas_listener::{ConnectionInfo, unix_or_tcp::UnixOrTcpListener};
 use mas_router::Route;
 use mas_templates::Templates;
@@ -30,8 +32,9 @@ use mas_tower::{
 use opentelemetry::{Key, KeyValue};
 use opentelemetry_http::HeaderExtractor;
 use opentelemetry_semantic_conventions::trace::{
-    HTTP_REQUEST_METHOD, HTTP_RESPONSE_STATUS_CODE, HTTP_ROUTE, NETWORK_PROTOCOL_NAME,
-    NETWORK_PROTOCOL_VERSION, URL_PATH, URL_QUERY, URL_SCHEME, USER_AGENT_ORIGINAL,
+    CLIENT_ADDRESS, HTTP_REQUEST_METHOD, HTTP_RESPONSE_STATUS_CODE, HTTP_ROUTE,
+    NETWORK_PROTOCOL_NAME, NETWORK_PROTOCOL_VERSION, URL_PATH, URL_QUERY, URL_SCHEME,
+    USER_AGENT_ORIGINAL,
 };
 use rustls::ServerConfig;
 use sentry_tower::{NewSentryLayer, SentryHttpLayer};
@@ -40,7 +43,7 @@ use tower_http::services::{ServeDir, fs::ServeFileSystemResponseBody};
 use tracing::Span;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
-use crate::app_state::AppState;
+use crate::app_state::{AppState, client_ip_middleware};
 
 const MAS_LISTENER_NAME: Key = Key::from_static_str("mas.listener.name");
 
@@ -97,6 +100,14 @@ fn otel_url_scheme<B>(request: &Request<B>) -> &'static str {
 fn make_http_span<B>(req: &Request<B>) -> Span {
     let method = otel_http_method(req);
     let route = otel_http_route(req);
+    // The client IP was inferred by `client_ip_middleware`, which wraps this
+    // layer, so the `ClientIp` extension is already set by the time the span is
+    // created.
+    let client_ip = req
+        .extensions()
+        .get::<ClientIp>()
+        .and_then(|ip| ip.0)
+        .map(tracing::field::display);
 
     let span_name = if let Some(route) = route.as_ref() {
         format!("{method} {route}")
@@ -118,6 +129,7 @@ fn make_http_span<B>(req: &Request<B>) -> Span {
         { URL_QUERY } = tracing::field::Empty,
         { URL_SCHEME } = otel_url_scheme(req),
         { USER_AGENT_ORIGINAL } = tracing::field::Empty,
+        { CLIENT_ADDRESS } = client_ip,
     );
 
     if let Some(route) = route.as_ref() {
@@ -187,10 +199,30 @@ async fn log_response_middleware(
     let method = otel_http_method(&request);
     let path = request.uri().path().to_owned();
     let version = otel_net_protocol_version(&request);
+    let client_ip = request
+        .extensions()
+        .get::<ClientIp>()
+        .and_then(|ip| ip.0)
+        .map(tracing::field::display);
 
     let response = next.run(request).await;
 
-    let Some(stats) = LogContext::maybe_with(LogContext::stats) else {
+    // If the request went through the GraphQL handler, it will have recorded the
+    // operation type and name in the response extensions.
+    let graphql = response.extensions().get::<GraphQLOperation>();
+    let graphql_operation_type = graphql
+        .and_then(|operation| operation.operation_type)
+        .map(tracing::field::display);
+    let graphql_operation_name = graphql
+        .and_then(|operation| operation.operation_name.as_deref())
+        .map(tracing::field::display);
+
+    let Some((stats, requester)) = LogContext::maybe_with(|ctx| {
+        (
+            ctx.stats(),
+            ctx.requester().cloned().map(tracing::field::display),
+        )
+    }) else {
         tracing::error!("Missing log context for request, this is a bug!");
         return response;
     };
@@ -199,14 +231,32 @@ async fn log_response_middleware(
     match status_code.as_u16() {
         100..=399 => tracing::info!(
             name: "http.server.response",
+            {
+                requester = requester,
+                client.address = client_ip,
+                graphql.operation.type = graphql_operation_type,
+                graphql.operation.name = graphql_operation_name,
+            },
             "\"{method} {path} HTTP/{version}\" {status_code} {user_agent:?} [{stats}]",
         ),
         400..=499 => tracing::warn!(
             name: "http.server.response",
+            {
+                requester = requester,
+                client.address = client_ip,
+                graphql.operation.type = graphql_operation_type,
+                graphql.operation.name = graphql_operation_name,
+            },
             "\"{method} {path} HTTP/{version}\" {status_code} {user_agent:?} [{stats}]",
         ),
         500..=599 => tracing::error!(
             name: "http.server.response",
+            {
+                requester = requester,
+                client.address = client_ip,
+                graphql.operation.type = graphql_operation_type,
+                graphql.operation.name = graphql_operation_name,
+            },
             "\"{method} {path} HTTP/{version}\" {status_code} {user_agent:?} [{stats}]",
         ),
         _ => { /* This shouldn't happen */ }
@@ -258,12 +308,12 @@ pub fn build_router(
                             // Cache 404s for 5 minutes
                             CacheControl::new()
                                 .with_public()
-                                .with_max_age(Duration::from_secs(5 * 60))
+                                .with_max_age(Duration::from_mins(5))
                         } else {
                             // Cache assets for 1 year
                             CacheControl::new()
                                 .with_public()
-                                .with_max_age(Duration::from_secs(365 * 24 * 60 * 60))
+                                .with_max_age(Duration::from_hours(365 * 24))
                                 .with_immutable()
                         };
                         res.headers_mut().typed_insert(cache_control);
@@ -334,6 +384,16 @@ pub fn build_router(
                 span.record("otel.status_code", "OK");
             }),
         )
+        // Infer the client IP once, ahead of the rest of the request handling,
+        // and store it in the request extensions. Placed *after* the `TraceLayer`
+        // in this list so it wraps it (the first layer is the innermost): the
+        // `ClientIp` extension is therefore set before `make_http_span` reads it
+        // to record `client.address` on the span, and before the logging
+        // middleware and the extractors further in read it too.
+        .layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            client_ip_middleware,
+        ))
         .layer(mas_context::LogContextLayer::new(|req| {
             otel_http_method(req).into()
         }))
@@ -388,7 +448,7 @@ pub fn build_listeners(
             HttpBindConfig::Address { address } => {
                 let addr: SocketAddr = address
                     .parse()
-                    .context("could not parse listener address")?;
+                    .with_context(|| format!("could not parse listener address {address}"))?;
                 let listener = TcpListener::bind(addr).context("could not bind address")?;
                 listener.set_nonblocking(true)?;
                 listener.try_into()?

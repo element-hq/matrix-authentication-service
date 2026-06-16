@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -6,15 +7,17 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, Clock, CompatSession, CompatSsoLogin, CompatSsoLoginState};
+use mas_data_model::{
+    BrowserSession, Clock, CompatSession, CompatSsoLogin, CompatSsoLoginState, UlidExt as _,
+};
 use mas_storage::{
     Page, Pagination,
     compat::{CompatSsoLoginFilter, CompatSsoLoginRepository},
     pagination::Node,
 };
 use rand::RngCore;
-use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def};
-use sea_query_binder::SqlxBinder;
+use sea_query::{Expr, ExprTrait, PostgresQueryBuilder, Query, enum_def};
+use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use url::Url;
@@ -277,7 +280,7 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
         redirect_uri: Url,
     ) -> Result<CompatSsoLogin, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("compat_sso_login.id", tracing::field::display(id));
 
         sqlx::query!(

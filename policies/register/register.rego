@@ -49,7 +49,7 @@ violation contains {
 	"field": "username", "code": "username-invalid-chars",
 	"msg": "username contains invalid characters",
 } if {
-	not regex.match(`^[a-z0-9.=_/-]+$`, input.username)
+	not regex.match(`^[a-z0-9.=_/+-]+$`, input.username)
 }
 
 violation contains {

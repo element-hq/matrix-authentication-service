@@ -17,7 +17,11 @@ describe("<CompatSession />", () => {
     id: "session-id",
     deviceId: "abcd1234",
     createdAt: "2023-06-29T03:35:17.451292+00:00",
+    finishedAt: null,
     lastActiveIp: "1.2.3.4",
+    lastActiveAt: null,
+    humanName: null,
+    userAgent: null,
     ssoLogin: {
       id: "test-id",
       redirectUri: "https://element.io/",

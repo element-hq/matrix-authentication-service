@@ -125,7 +125,8 @@
       "heading": "A(z) {{email}} e-mail-cím már használatban van."
     },
     "end_session_button": {
-      "confirmation_modal_title": "Biztos, hogy befejezi a munkamenetet?",
+      "confirmation_modal_body_text": "Győződjön meg róla, hogy mindig hozzáfér egy másik ellenőrzött eszközhöz vagy a helyreállítási kulcsához, hogy elkerülje a titkosított csevegési előzmények elvesztését.",
+      "confirmation_modal_title": "Biztos, hogy eltávolítja ezt az eszközt?",
       "text": "Eszköz eltávolítása"
     },
     "error": {
@@ -145,6 +146,7 @@
       "inactive_90_days": "90+ napja inaktív"
     },
     "nav": {
+      "device_limit_error": "Eszközkorlát elérve",
       "devices": "Eszközök",
       "plan": "Terv",
       "profile": "Profil",
@@ -357,11 +359,27 @@
     "user_sessions_overview": {
       "active_sessions:one": "{{count}} aktív munkamenet",
       "active_sessions:other": "{{count}} aktív munkamenet",
+      "approaching_session_limit_warning_description:one": "{{count}} eszközhelyből eddig ennyit használt fel: {{num_sessions}}. Ha eléri a korlátot, egy új eszköz hozzáadásához el kell távolítania egy meglévőt.",
+      "approaching_session_limit_warning_description:other": "{{count}} eszközhelyből eddig ennyit használt fel: {{num_sessions}}. Ha eléri a korlátot, egy új eszköz hozzáadásához el kell távolítania egy meglévőt.",
+      "approaching_session_limit_warning_header": "Figyelem, hamarosan eléri az eszközei számának korlátját",
       "heading": "Hol jelentkezett be",
+      "hit_session_limit_warning_description:one": "{{count}} eszközhelyből eddig ennyit használt fel: {{num_sessions}}. Ha megint megpróbál bejelentkezni, akkor el kell távolítania egy meglévő eszközt.",
+      "hit_session_limit_warning_description:other": "{{count}} eszközhelyből eddig ennyit használt fel: {{num_sessions}}. Ha megint megpróbál bejelentkezni, akkor el kell távolítania egy meglévő eszközt.",
+      "hit_session_limit_warning_header": "Elérte az eszközkorlátot",
       "no_active_sessions": {
         "default": "Egyetlen alkalmazásba sincs bejelentkezve.",
         "inactive_90_days": "Az összes munkamenete aktív volt az elmúlt 90 napban."
-      }
+      },
+      "num_sessions_filtered_header": {
+        "header:one": "{{count}} eszköz felel meg a szűrőnek ({{unfiltered_session_total}})",
+        "header:other": "{{count}} eszköz felel meg a szűrőnek ({{unfiltered_session_total}})",
+        "unfiltered_session_total:one": "{{count}} összesen",
+        "unfiltered_session_total:other": "{{count}} összesen"
+      },
+      "num_sessions_header:one": "{{count}} eszköz",
+      "num_sessions_header:other": "{{count}} eszköz",
+      "session_limit_info:one": "{{count}} eszközhelyből ennyit használt fel: {{limit}}",
+      "session_limit_info:other": "{{count}} eszközhelyből ennyit használt fel: {{limit}}"
     },
     "verify_email": {
       "code_expired_alert": {

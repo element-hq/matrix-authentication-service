@@ -11,7 +11,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
     BrowserSession, Clock, CompatSession, CompatSessionState, CompatSsoLogin, CompatSsoLoginState,
-    Device, User,
+    Device, UlidExt as _, User,
 };
 use mas_storage::{
     Page, Pagination,
@@ -19,8 +19,8 @@ use mas_storage::{
     pagination::Node,
 };
 use rand::RngCore;
-use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def};
-use sea_query_binder::SqlxBinder;
+use sea_query::{Expr, ExprTrait, PostgresQueryBuilder, Query, enum_def};
+use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use url::Url;
@@ -32,6 +32,7 @@ use crate::{
     iden::{CompatSessions, CompatSsoLogins, UserSessions},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
+    ulid_at::{max_ulid_at, min_ulid_at},
 };
 
 /// An implementation of [`CompatSessionRepository`] for a PostgreSQL connection
@@ -263,6 +264,17 @@ impl Filter for CompatSessionFilter<'_> {
                 Expr::col((CompatSessions::Table, CompatSessions::LastActiveAt))
                     .lt(last_active_before)
             }))
+            .add_option(self.created_after().map(|created_after| {
+                // ULIDs encode the creation time in their high 48 bits, so we
+                // can use the primary key index to filter on creation time
+                // without touching the `created_at` column.
+                Expr::col((CompatSessions::Table, CompatSessions::CompatSessionId))
+                    .gt(max_ulid_at(created_after))
+            }))
+            .add_option(self.created_before().map(|created_before| {
+                Expr::col((CompatSessions::Table, CompatSessions::CompatSessionId))
+                    .lt(min_ulid_at(created_before))
+            }))
             .add_option(self.device().map(|device| {
                 Expr::col((CompatSessions::Table, CompatSessions::DeviceId)).eq(device.as_str())
             }))
@@ -334,7 +346,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
         human_name: Option<String>,
     ) -> Result<CompatSession, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("compat_session.id", tracing::field::display(id));
 
         sqlx::query!(

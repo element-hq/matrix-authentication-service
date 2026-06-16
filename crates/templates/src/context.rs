@@ -21,7 +21,7 @@ use chrono::{DateTime, Duration, Utc};
 use http::{Method, Uri, Version};
 use mas_data_model::{
     AuthorizationGrant, BrowserSession, Client, CompatSsoLogin, CompatSsoLoginState,
-    DeviceCodeGrant, MatrixUser, UpstreamOAuthLink, UpstreamOAuthProvider,
+    DeviceCodeGrant, MatrixUser, UlidExt as _, UpstreamOAuthLink, UpstreamOAuthProvider,
     UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
     UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderPkceMode,
     UpstreamOAuthProviderTokenAuthMethod, User, UserEmailAuthentication,
@@ -29,7 +29,7 @@ use mas_data_model::{
 };
 use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
-use mas_policy::{Violation, ViolationCode};
+use mas_policy::{Violation, ViolationVariant};
 use mas_router::{Account, GraphQL, PostAuthAction, UrlBuilder};
 use oauth2_types::scope::{OPENID, Scope};
 use rand::{
@@ -247,7 +247,7 @@ impl<T: TemplateContext> TemplateContext for WithCsrf<T> {
 }
 
 /// Context with a user session in it
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct WithSession<T> {
     current_session: BrowserSession,
 
@@ -818,7 +818,7 @@ impl ConsentContext {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(tag = "grant_type")]
 enum PolicyViolationGrant {
     #[serde(rename = "authorization_code")]
@@ -828,11 +828,12 @@ enum PolicyViolationGrant {
 }
 
 /// Context used by the `policy_violation.html` template
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct PolicyViolationContext {
     grant: PolicyViolationGrant,
     client: Client,
     action: PostAuthAction,
+    violations: Vec<Violation>,
 }
 
 impl TemplateContext for PolicyViolationContext {
@@ -852,11 +853,14 @@ impl TemplateContext for PolicyViolationContext {
                     // XXX
                     grant.client_id = client.id;
 
-                    let authorization_grant =
-                        PolicyViolationContext::for_authorization_grant(grant, client.clone());
+                    let authorization_grant = PolicyViolationContext::for_authorization_grant(
+                        grant,
+                        client.clone(),
+                        Vec::new(),
+                    );
                     let device_code_grant = PolicyViolationContext::for_device_code_grant(
                         DeviceCodeGrant {
-                            id: Ulid::from_datetime_with_source(now.into(), rng),
+                            id: Ulid::from_datetime_with_rng(now, rng),
                             state: mas_data_model::DeviceCodeGrantState::Pending,
                             client_id: client.id,
                             scope: [OPENID].into_iter().collect(),
@@ -866,8 +870,10 @@ impl TemplateContext for PolicyViolationContext {
                             expires_at: now + Duration::try_minutes(25).unwrap(),
                             ip_address: None,
                             user_agent: None,
+                            locale: None,
                         },
                         client,
+                        Vec::new(),
                     );
 
                     [authorization_grant, device_code_grant]
@@ -881,24 +887,34 @@ impl PolicyViolationContext {
     /// Constructs a context for the policy violation page for an authorization
     /// grant
     #[must_use]
-    pub const fn for_authorization_grant(grant: AuthorizationGrant, client: Client) -> Self {
+    pub const fn for_authorization_grant(
+        grant: AuthorizationGrant,
+        client: Client,
+        violations: Vec<Violation>,
+    ) -> Self {
         let action = PostAuthAction::continue_grant(grant.id);
         Self {
             grant: PolicyViolationGrant::Authorization(grant),
             client,
             action,
+            violations,
         }
     }
 
     /// Constructs a context for the policy violation page for a device code
     /// grant
     #[must_use]
-    pub const fn for_device_code_grant(grant: DeviceCodeGrant, client: Client) -> Self {
+    pub const fn for_device_code_grant(
+        grant: DeviceCodeGrant,
+        client: Client,
+        violations: Vec<Violation>,
+    ) -> Self {
         let action = PostAuthAction::continue_device_code_grant(grant.id);
         Self {
             grant: PolicyViolationGrant::DeviceCode(grant),
             client,
             action,
+            violations,
         }
     }
 }
@@ -925,7 +941,7 @@ impl TemplateContext for CompatLoginPolicyViolationContext {
                     msg: "user has too many active sessions".to_owned(),
                     redirect_uri: None,
                     field: None,
-                    code: Some(ViolationCode::TooManySessions),
+                    variant: Some(ViolationVariant::TooManySessions { need_to_remove: 1 }),
                 }],
             },
         ])
@@ -958,7 +974,7 @@ impl TemplateContext for CompatSsoContext {
     where
         Self: Sized,
     {
-        let id = Ulid::from_datetime_with_source(now.into(), rng);
+        let id = Ulid::from_datetime_with_rng(now, rng);
         sample_list(vec![CompatSsoContext::new(
             CompatSsoLogin {
                 id,
@@ -1032,7 +1048,7 @@ impl TemplateContext for EmailRecoveryContext {
     {
         sample_list(User::samples(now, rng).into_iter().map(|user| {
             let session = UserRecoverySession {
-                id: Ulid::from_datetime_with_source(now.into(), rng),
+                id: Ulid::from_datetime_with_rng(now, rng),
                 email: "hello@example.com".to_owned(),
                 user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_4) AppleWebKit/536.30.1 (KHTML, like Gecko) Version/6.0.5 Safari/536.30.1".to_owned(),
                 ip_address: Some(IpAddr::from([192_u8, 0, 2, 1])),
@@ -1100,11 +1116,8 @@ impl TemplateContext for EmailVerificationContext {
                 .into_iter()
                 .map(|browser_session| {
                     let authentication_code = UserEmailAuthenticationCode {
-                        id: Ulid::from_datetime_with_source(now.into(), rng),
-                        user_email_authentication_id: Ulid::from_datetime_with_source(
-                            now.into(),
-                            rng,
-                        ),
+                        id: Ulid::from_datetime_with_rng(now, rng),
+                        user_email_authentication_id: Ulid::from_datetime_with_rng(now, rng),
                         code: "123456".to_owned(),
                         created_at: now - Duration::try_minutes(5).unwrap(),
                         expires_at: now + Duration::try_minutes(25).unwrap(),
@@ -1171,7 +1184,7 @@ impl TemplateContext for RegisterStepsVerifyEmailContext {
         Self: Sized,
     {
         let authentication = UserEmailAuthentication {
-            id: Ulid::from_datetime_with_source(now.into(), rng),
+            id: Ulid::from_datetime_with_rng(now, rng),
             user_session_id: None,
             user_registration_id: None,
             email: "foobar@example.com".to_owned(),
@@ -1414,7 +1427,7 @@ impl TemplateContext for RecoveryProgressContext {
         Self: Sized,
     {
         let session = UserRecoverySession {
-            id: Ulid::from_datetime_with_source(now.into(), rng),
+            id: Ulid::from_datetime_with_rng(now, rng),
             email: "name@mail.com".to_owned(),
             user_agent: "Mozilla/5.0".to_owned(),
             ip_address: None,
@@ -1460,7 +1473,7 @@ impl TemplateContext for RecoveryExpiredContext {
         Self: Sized,
     {
         let session = UserRecoverySession {
-            id: Ulid::from_datetime_with_source(now.into(), rng),
+            id: Ulid::from_datetime_with_rng(now, rng),
             email: "name@mail.com".to_owned(),
             user_agent: "Mozilla/5.0".to_owned(),
             ip_address: None,
@@ -1610,7 +1623,7 @@ impl TemplateContext for UpstreamSuggestLink {
     where
         Self: Sized,
     {
-        let id = Ulid::from_datetime_with_source(now.into(), rng);
+        let id = Ulid::from_datetime_with_rng(now, rng);
         sample_list(vec![Self::for_link_id(id)])
     }
 }
@@ -1774,6 +1787,7 @@ impl TemplateContext for UpstreamRegister {
                 created_at: now,
                 disabled_at: None,
                 on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                registration_token_required: false,
             },
         )])
     }
@@ -1868,7 +1882,7 @@ impl TemplateContext for DeviceConsentContext {
             .into_iter()
             .map(|client|  {
                 let grant = DeviceCodeGrant {
-                    id: Ulid::from_datetime_with_source(now.into(), rng),
+                    id: Ulid::from_datetime_with_rng(now, rng),
                     state: mas_data_model::DeviceCodeGrantState::Pending,
                     client_id: client.id,
                     scope: [OPENID].into_iter().collect(),
@@ -1878,6 +1892,7 @@ impl TemplateContext for DeviceConsentContext {
                     expires_at: now + Duration::try_minutes(25).unwrap(),
                     ip_address: Some(IpAddr::V4(Ipv4Addr::LOCALHOST)),
                     user_agent: Some("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.0.0 Safari/537.36".to_owned()),
+                    locale: None,
                 };
                 Self {
                     grant,

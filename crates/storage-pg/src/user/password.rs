@@ -6,7 +6,7 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{Clock, Password, User};
+use mas_data_model::{Clock, Password, UlidExt as _, User};
 use mas_storage::user::UserPasswordRepository;
 use rand::RngCore;
 use sqlx::PgConnection;
@@ -116,7 +116,7 @@ impl UserPasswordRepository for PgUserPasswordRepository<'_> {
         upgraded_from: Option<&Password>,
     ) -> Result<Password, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("user_password.id", tracing::field::display(id));
 
         let upgraded_from_id = upgraded_from.map(|p| p.id);

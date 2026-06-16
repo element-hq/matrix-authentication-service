@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -216,7 +217,7 @@ pub enum ImportAction {
 }
 
 impl ImportAction {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
+    #[expect(clippy::trivially_copy_pass_by_ref)]
     const fn is_default(&self) -> bool {
         matches!(self, ImportAction::Ignore)
     }
@@ -243,7 +244,7 @@ pub enum OnConflict {
 }
 
 impl OnConflict {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
+    #[expect(clippy::trivially_copy_pass_by_ref)]
     const fn is_default(&self) -> bool {
         matches!(self, OnConflict::Fail)
     }
@@ -410,7 +411,7 @@ pub enum DiscoveryMode {
 }
 
 impl DiscoveryMode {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
+    #[expect(clippy::trivially_copy_pass_by_ref)]
     const fn is_default(&self) -> bool {
         matches!(self, DiscoveryMode::Oidc)
     }
@@ -435,7 +436,7 @@ pub enum PkceMethod {
 }
 
 impl PkceMethod {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
+    #[expect(clippy::trivially_copy_pass_by_ref)]
     const fn is_default(&self) -> bool {
         matches!(self, PkceMethod::Auto)
     }
@@ -445,17 +446,15 @@ fn default_true() -> bool {
     true
 }
 
-#[allow(clippy::trivially_copy_pass_by_ref)]
+#[expect(clippy::trivially_copy_pass_by_ref)]
 fn is_default_true(value: &bool) -> bool {
     *value
 }
 
-#[allow(clippy::ref_option)]
 fn is_signed_response_alg_default(signed_response_alg: &JsonWebSignatureAlg) -> bool {
     *signed_response_alg == signed_response_alg_default()
 }
 
-#[allow(clippy::unnecessary_wraps)]
 fn signed_response_alg_default() -> JsonWebSignatureAlg {
     JsonWebSignatureAlg::Rs256
 }
@@ -503,7 +502,7 @@ pub enum OnBackchannelLogout {
 }
 
 impl OnBackchannelLogout {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
+    #[expect(clippy::trivially_copy_pass_by_ref)]
     const fn is_default(&self) -> bool {
         matches!(self, OnBackchannelLogout::DoNothing)
     }
@@ -513,6 +512,7 @@ impl OnBackchannelLogout {
 #[serde_as]
 #[skip_serializing_none]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[expect(clippy::struct_excessive_bools)]
 pub struct Provider {
     /// Whether this provider is enabled.
     ///
@@ -675,9 +675,40 @@ pub struct Provider {
     #[serde(default, skip_serializing_if = "ClaimsImports::is_default")]
     pub claims_imports: ClaimsImports,
 
-    /// Additional parameters to include in the authorization request
+    /// Additional parameters to include in the authorization request.
     ///
-    /// Orders of the keys are not preserved.
+    /// Each value is a [`MiniJinja`] template. The template context
+    /// exposes a `params` map containing the raw query parameters from
+    /// the downstream authorization request. The map is empty when the
+    /// upstream login was not initiated by a downstream OAuth/OIDC
+    /// authorization request (e.g. account linking, direct login from
+    /// the login page).
+    ///
+    /// [`MiniJinja`]: https://docs.rs/minijinja
+    ///
+    /// Templates that render to an empty string are dropped — so
+    /// referencing a downstream parameter that wasn't supplied (e.g.
+    /// `{{ params.login_hint }}`) results in no parameter being
+    /// forwarded, rather than an empty one.
+    ///
+    /// Plain strings (without `{{ … }}`) are valid templates that render
+    /// to themselves.
+    ///
+    /// Example:
+    ///
+    /// ```yaml
+    /// additional_authorization_parameters:
+    ///   login_hint: "{{ params.login_hint }}"
+    ///   acr_values: "{{ params.acr_values }}"
+    ///   kc_idp_hint: "saml"
+    /// ```
+    ///
+    /// `params` exposes the entire raw query string of the downstream
+    /// request (including `client_id`, `state`, `code_challenge`, …).
+    /// Forward specific keys deliberately; don't blindly proxy the
+    /// whole map.
+    ///
+    /// Order of keys is not preserved.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub additional_authorization_parameters: BTreeMap<String, String>,
 
@@ -685,6 +716,12 @@ pub struct Provider {
     /// authorization request.
     ///
     /// Defaults to `false`.
+    ///
+    /// Deprecated: prefer adding
+    /// `login_hint: "{{ params.login_hint }}"` to
+    /// `additional_authorization_parameters` instead. When this flag is
+    /// set, a `login_hint` template entry is injected automatically if
+    /// one is not already present.
     #[serde(default)]
     pub forward_login_hint: bool,
 
@@ -693,6 +730,12 @@ pub struct Provider {
     /// Defaults to `do_nothing`.
     #[serde(default, skip_serializing_if = "OnBackchannelLogout::is_default")]
     pub on_backchannel_logout: OnBackchannelLogout,
+
+    /// Whether or not to require a registration token on `OAuth2` auth
+    ///
+    /// Defaults to `false`
+    #[serde(default)]
+    pub registration_token_required: bool,
 }
 
 impl Provider {
@@ -713,6 +756,10 @@ impl Provider {
 
 #[cfg(test)]
 mod tests {
+    // The closures passed to `Jail::expect_with` return `figment::Error`, which is
+    // large, and we can't change figment's API.
+    #![expect(clippy::result_large_err)]
+
     use std::str::FromStr;
 
     use figment::{

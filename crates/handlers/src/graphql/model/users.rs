@@ -150,7 +150,7 @@ impl User {
     }
 
     /// Get the list of compatibility sessions, chronologically sorted
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments)]
     async fn compat_sessions(
         &self,
         ctx: &Context<'_>,
@@ -397,7 +397,7 @@ impl User {
     }
 
     /// Get the list of OAuth 2.0 sessions, chronologically sorted
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments)]
     async fn oauth2_sessions(
         &self,
         ctx: &Context<'_>,
@@ -572,7 +572,7 @@ impl User {
 
     /// Get the list of both compat and OAuth 2.0 sessions, chronologically
     /// sorted
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments)]
     async fn app_sessions(
         &self,
         ctx: &Context<'_>,

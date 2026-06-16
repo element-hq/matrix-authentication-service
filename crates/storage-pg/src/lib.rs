@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -23,6 +24,7 @@
 //! # use ulid::Ulid;
 //! # use rand::RngCore;
 //! # use mas_data_model::Clock;
+//! # use mas_data_model::UlidExt;
 //! # use mas_storage_pg::{DatabaseError, ExecuteExt};
 //! # use sqlx::PgConnection;
 //! # use uuid::Uuid;
@@ -118,7 +120,7 @@
 //!         clock: &dyn Clock,
 //!     ) -> Result<FakeData, Self::Error> {
 //!         let created_at = clock.now();
-//!         let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+//!         let id = Ulid::from_datetime_with_rng(created_at, rng);
 //!         tracing::Span::current().record("fake_data.id", tracing::field::display(id));
 //!
 //!         // Note: here we would use the macro version instead, but it's not possible here in
@@ -186,6 +188,7 @@ pub(crate) mod policy_data;
 pub(crate) mod repository;
 pub(crate) mod telemetry;
 pub(crate) mod tracing;
+pub(crate) mod ulid_at;
 
 pub(crate) use self::errors::DatabaseInconsistencyError;
 pub use self::{
@@ -203,7 +206,7 @@ fn available_migrations() -> BTreeMap<i64, &'static Migration> {
 
 /// This is the list of migrations we've removed from the migration history but
 /// might have been applied in the past
-#[allow(clippy::inconsistent_digit_grouping)]
+#[expect(clippy::inconsistent_digit_grouping)]
 const ALLOWED_MISSING_MIGRATIONS: &[i64] = &[
     // https://github.com/matrix-org/matrix-authentication-service/pull/1585
     20220709_210445,
@@ -219,7 +222,7 @@ fn allowed_missing_migrations() -> BTreeSet<i64> {
 /// migrations. The checksum we store in the database is 48 bytes long. We're
 /// not really concerned with partial hash collisions, and to avoid this file to
 /// be completely unreadable, we only store the upper 16 bytes of that hash.
-#[allow(clippy::inconsistent_digit_grouping)]
+#[expect(clippy::inconsistent_digit_grouping)]
 const ALLOWED_ALTERNATE_CHECKSUMS: &[(i64, u128)] = &[
     // https://github.com/element-hq/matrix-authentication-service/pull/5300
     (20250410_000000, 0x8811_c3ef_dbee_8c00_5b49_25da_5d55_9c3f),

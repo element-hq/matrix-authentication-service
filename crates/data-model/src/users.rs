@@ -14,6 +14,8 @@ use ulid::Ulid;
 use url::Url;
 use webauthn_rp::response::{AuthTransports, CredentialId};
 
+use crate::UlidExt as _;
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct MatrixUser {
     pub mxid: String,
@@ -59,7 +61,7 @@ impl User {
     #[must_use]
     pub fn samples(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self> {
         vec![User {
-            id: Ulid::from_datetime_with_source(now.into(), rng),
+            id: Ulid::from_datetime_with_rng(now, rng),
             username: "john".to_owned(),
             sub: "123-456".to_owned(),
             created_at: now,
@@ -178,7 +180,7 @@ impl BrowserSession {
         User::samples(now, rng)
             .into_iter()
             .map(|user| BrowserSession {
-                id: Ulid::from_datetime_with_source(now.into(), rng),
+                id: Ulid::from_datetime_with_rng(now, rng),
                 user,
                 created_at: now,
                 finished_at: None,
@@ -205,14 +207,14 @@ impl UserEmail {
     pub fn samples(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self> {
         vec![
             Self {
-                id: Ulid::from_datetime_with_source(now.into(), rng),
-                user_id: Ulid::from_datetime_with_source(now.into(), rng),
+                id: Ulid::from_datetime_with_rng(now, rng),
+                user_id: Ulid::from_datetime_with_rng(now, rng),
                 email: "alice@example.com".to_owned(),
                 created_at: now,
             },
             Self {
-                id: Ulid::from_datetime_with_source(now.into(), rng),
-                user_id: Ulid::from_datetime_with_source(now.into(), rng),
+                id: Ulid::from_datetime_with_rng(now, rng),
+                user_id: Ulid::from_datetime_with_rng(now, rng),
                 email: "bob@example.com".to_owned(),
                 created_at: now,
             },

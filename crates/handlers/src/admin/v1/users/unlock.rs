@@ -4,10 +4,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use aide::{OperationIo, transform::TransformOperation};
+use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
+use mas_data_model::BoxRng;
+use mas_storage::queue::{ProvisionUserJob, QueueJobRepositoryExt};
 use ulid::Ulid;
 
 use crate::{
@@ -66,7 +68,10 @@ This DOES NOT reactivate a deactivated user, which will remain unavailable until
 
 #[tracing::instrument(name = "handler.admin.v1.users.unlock", skip_all)]
 pub async fn handler(
-    CallContext { mut repo, .. }: CallContext,
+    CallContext {
+        mut repo, clock, ..
+    }: CallContext,
+    NoApi(mut rng): NoApi<BoxRng>,
     id: UlidPathParam,
 ) -> Result<Json<SingleResponse<User>>, RouteError> {
     let id = *id;
@@ -77,6 +82,12 @@ pub async fn handler(
         .ok_or(RouteError::NotFound(id))?;
 
     let user = repo.user().unlock(user).await?;
+
+    // Schedule a job to provision the user so that the lock flag is propagated
+    // to Synapse
+    repo.queue_job()
+        .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&user))
+        .await?;
 
     repo.save().await?;
 
@@ -91,7 +102,11 @@ mod tests {
     use hyper::{Request, StatusCode};
     use mas_data_model::Clock;
     use mas_matrix::{HomeserverConnection, ProvisionRequest};
-    use mas_storage::{RepositoryAccess, user::UserRepository};
+    use mas_storage::{
+        RepositoryAccess,
+        queue::{ProvisionUserJob, QueueJobRepositoryExt},
+        user::UserRepository,
+    };
     use sqlx::PgPool;
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
@@ -109,15 +124,26 @@ mod tests {
             .await
             .unwrap();
         let user = repo.user().lock(&state.clock, user).await.unwrap();
-        repo.save().await.unwrap();
 
         // Also provision the user on the homeserver, because this endpoint will try to
         // reactivate it
-        state
-            .homeserver_connection
-            .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
+        repo.queue_job()
+            .schedule_job(&mut state.rng(), &state.clock, ProvisionUserJob::new(&user))
             .await
             .unwrap();
+
+        repo.save().await.unwrap();
+
+        state.run_jobs_in_queue().await;
+        assert!(
+            state
+                .homeserver_connection
+                .query_user_raw("alice")
+                .await
+                .unwrap()
+                .locked,
+            "User should be locked at start of test"
+        );
 
         let request = Request::post(format!("/api/admin/v1/users/{}/unlock", user.id))
             .bearer(&token)
@@ -129,6 +155,17 @@ mod tests {
         assert_eq!(
             body["data"]["attributes"]["locked_at"],
             serde_json::Value::Null
+        );
+
+        state.run_jobs_in_queue().await;
+        assert!(
+            !state
+                .homeserver_connection
+                .query_user_raw("alice")
+                .await
+                .unwrap()
+                .locked,
+            "User should not be locked"
         );
     }
 
@@ -151,7 +188,7 @@ mod tests {
         // Provision the user on the homeserver
         state
             .homeserver_connection
-            .provision_user(&ProvisionRequest::new(&user.username, &user.sub))
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub, false))
             .await
             .unwrap();
         // but then deactivate it

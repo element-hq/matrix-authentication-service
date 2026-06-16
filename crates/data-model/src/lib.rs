@@ -61,6 +61,6 @@ pub use self::{
         UserPasskeyChallenge, UserRecoverySession, UserRecoveryTicket, UserRegistration,
         UserRegistrationPassword, UserRegistrationToken,
     },
-    utils::{BoxClock, BoxRng},
+    utils::{BoxClock, BoxRng, UlidExt},
     version::AppVersion,
 };

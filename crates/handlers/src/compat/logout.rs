@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -10,7 +11,7 @@ use axum::{Json, response::IntoResponse};
 use axum_extra::typed_header::TypedHeader;
 use headers::{Authorization, authorization::Bearer};
 use hyper::StatusCode;
-use mas_axum_utils::record_error;
+use mas_axum_utils::{RecordAsRequester, record_error};
 use mas_data_model::{BoxClock, BoxRng, Clock, TokenType};
 use mas_storage::{
     BoxRepository, RepositoryAccess,
@@ -117,12 +118,22 @@ pub(crate) async fn post(
         // XXX: this is probably not the right error
         .ok_or(RouteError::InvalidAuthorization)?;
 
+    user.maybe_record_as_requester();
+
+    // This will make the access token invalid
+    repo.compat_session().finish(&clock, session).await?;
+
     // Schedule a job to sync the devices of the user with the homeserver
+    //
+    // Doing this in a background job is ok as the access token will be invalid
+    // right away (from the session being finished above) and we do actually
+    // want to do a full device list sync (as opposed to
+    // `homeserver.delete_device(...)`), because we're not sure whether we want
+    // to delete the device (if there is for example a concurrent logout and
+    // login with the same device ID).
     repo.queue_job()
         .schedule_job(&mut rng, &clock, SyncDevicesJob::new(&user))
         .await?;
-
-    repo.compat_session().finish(&clock, session).await?;
 
     repo.save().await?;
 

@@ -9,7 +9,7 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
-use mas_data_model::{Clock, UserEmail, UserRecoverySession, UserRecoveryTicket};
+use mas_data_model::{Clock, UlidExt as _, UserEmail, UserRecoverySession, UserRecoveryTicket};
 use mas_storage::user::UserRecoveryRepository;
 use rand::RngCore;
 use sqlx::PgConnection;
@@ -142,7 +142,7 @@ impl UserRecoveryRepository for PgUserRecoveryRepository<'_> {
         locale: String,
     ) -> Result<UserRecoverySession, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("user_recovery_session.id", tracing::field::display(id));
         sqlx::query!(
             r#"
@@ -239,7 +239,7 @@ impl UserRecoveryRepository for PgUserRecoveryRepository<'_> {
         ticket: String,
     ) -> Result<UserRecoveryTicket, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("user_recovery_ticket.id", tracing::field::display(id));
 
         // TODO: move that to a parameter

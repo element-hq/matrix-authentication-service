@@ -148,7 +148,6 @@ impl schemars::JsonSchema for JsonWebSignatureAlg {
         std::borrow::Cow::Borrowed("JsonWebSignatureAlg")
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
@@ -393,7 +392,6 @@ impl schemars::JsonSchema for JsonWebEncryptionAlg {
         std::borrow::Cow::Borrowed("JsonWebEncryptionAlg")
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
@@ -583,7 +581,6 @@ impl schemars::JsonSchema for JsonWebEncryptionEnc {
         std::borrow::Cow::Borrowed("JsonWebEncryptionEnc")
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
@@ -683,7 +680,6 @@ impl schemars::JsonSchema for JsonWebEncryptionCompressionAlgorithm {
         std::borrow::Cow::Borrowed("JsonWebEncryptionCompressionAlgorithm")
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
@@ -773,7 +769,6 @@ impl schemars::JsonSchema for JsonWebKeyType {
         std::borrow::Cow::Borrowed("JsonWebKeyType")
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
@@ -878,7 +873,6 @@ impl schemars::JsonSchema for JsonWebKeyEcEllipticCurve {
         std::borrow::Cow::Borrowed("JsonWebKeyEcEllipticCurve")
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
@@ -983,7 +977,6 @@ impl schemars::JsonSchema for JsonWebKeyOkpEllipticCurve {
         std::borrow::Cow::Borrowed("JsonWebKeyOkpEllipticCurve")
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
@@ -1078,7 +1071,6 @@ impl schemars::JsonSchema for JsonWebKeyUse {
         std::borrow::Cow::Borrowed("JsonWebKeyUse")
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---
@@ -1193,7 +1185,6 @@ impl schemars::JsonSchema for JsonWebKeyOperation {
         std::borrow::Cow::Borrowed("JsonWebKeyOperation")
     }
 
-    #[allow(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         let enums = vec![
             // ---

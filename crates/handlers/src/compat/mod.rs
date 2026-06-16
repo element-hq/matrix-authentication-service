@@ -25,6 +25,9 @@ pub(crate) mod logout;
 pub(crate) mod logout_all;
 pub(crate) mod refresh;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Debug, Serialize)]
 struct MatrixError {
     errcode: &'static str,

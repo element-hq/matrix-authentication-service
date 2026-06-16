@@ -69,15 +69,21 @@ pub trait CompatRefreshTokenRepository: Send + Sync {
         token: String,
     ) -> Result<CompatRefreshToken, Self::Error>;
 
-    /// Consume a compat refresh token.
+    /// Consume the given compat refresh token, as well as all other refresh
+    /// tokens from the same session, except for the given successor compat
+    /// refresh token.
     ///
-    /// This also marks other refresh tokens in the same session as consumed.
+    /// The given successor refresh token will thereafter be the only valid
+    /// refresh token for the session.
+    ///
+    /// # Historical context
+    ///
+    /// When using a refresh token, we must be able to mark multiple other
+    /// refresh tokens in the same session as consumed.
     /// This is desirable because the syn2mas migration process can import
     /// multiple refresh tokens for one device (compat session).
     /// But once the user uses one of those, the others should no longer
     /// be valid.
-    ///
-    /// Returns the consumed compat refresh token
     ///
     /// # Parameters
     ///
@@ -86,11 +92,15 @@ pub trait CompatRefreshTokenRepository: Send + Sync {
     ///
     /// # Errors
     ///
-    /// Returns [`Self::Error`] if the underlying repository fails
-    async fn consume(
+    /// - Returns [`Self::Error`] if the underlying repository fails
+    /// - Returns an error if `compat_refresh_token` is not valid to be
+    ///   consumed.
+    /// - Returns an error if no refresh tokens would be consumed.
+    async fn consume_and_replace(
         &mut self,
         clock: &dyn Clock,
         compat_refresh_token: CompatRefreshToken,
+        successor_compat_refresh_token: &CompatRefreshToken,
     ) -> Result<CompatRefreshToken, Self::Error>;
 }
 
@@ -111,9 +121,10 @@ repository_impl!(CompatRefreshTokenRepository:
         token: String,
     ) -> Result<CompatRefreshToken, Self::Error>;
 
-    async fn consume(
+    async fn consume_and_replace(
         &mut self,
         clock: &dyn Clock,
         compat_refresh_token: CompatRefreshToken,
+        successor_compat_refresh_token: &CompatRefreshToken,
     ) -> Result<CompatRefreshToken, Self::Error>;
 );

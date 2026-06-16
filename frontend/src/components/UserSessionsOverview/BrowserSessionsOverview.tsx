@@ -14,8 +14,6 @@ import styles from "./BrowserSessionsOverview.module.css";
 
 export const FRAGMENT = graphql(/* GraphQL */ `
   fragment BrowserSessionsOverview_user on User {
-    id
-
     browserSessions(first: 0, state: ACTIVE) {
       totalCount
     }

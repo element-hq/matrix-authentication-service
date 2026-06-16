@@ -454,7 +454,7 @@ register_templates! {
     pub fn render_upstream_oauth2_do_register(WithLanguage<WithCsrf<UpstreamRegister>>) { "pages/upstream_oauth2/do_register.html" }
 
     /// Render the device code link page
-    pub fn render_device_link(WithLanguage<DeviceLinkContext>) { "pages/device_link.html" }
+    pub fn render_device_link(WithLanguage<WithCsrf<DeviceLinkContext>>) { "pages/device_link.html" }
 
     /// Render the device code consent page
     pub fn render_device_consent(WithLanguage<WithCsrf<WithSession<DeviceConsentContext>>>) { "pages/device_consent.html" }
@@ -502,7 +502,7 @@ mod tests {
 
     #[tokio::test]
     async fn check_builtin_templates() {
-        #[allow(clippy::disallowed_methods)]
+        #[expect(clippy::disallowed_methods)]
         let now = chrono::Utc::now();
         let rng = rand_chacha::ChaCha8Rng::from_seed([42; 32]);
 

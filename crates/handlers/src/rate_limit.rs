@@ -1,15 +1,19 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::{net::IpAddr, sync::Arc, time::Duration};
+use std::{convert::Infallible, net::IpAddr, sync::Arc, time::Duration};
 
+use axum::extract::FromRequestParts;
 use governor::{RateLimiter, clock::QuantaClock, state::keyed::DashMapStateStore};
 use mas_config::RateLimitingConfig;
 use mas_data_model::{User, UserEmailAuthentication};
 use ulid::Ulid;
+
+use crate::ClientIp;
 
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum AccountRecoveryLimitedError {
@@ -72,6 +76,28 @@ impl RequesterFingerprint {
     #[must_use]
     pub const fn new(ip: IpAddr) -> Self {
         Self { ip: Some(ip) }
+    }
+}
+
+impl<S: Send + Sync> FromRequestParts<S> for RequesterFingerprint {
+    type Rejection = Infallible;
+
+    async fn from_request_parts(
+        parts: &mut axum::http::request::Parts,
+        _state: &S,
+    ) -> Result<Self, Self::Rejection> {
+        let ip = parts.extensions.get::<ClientIp>().and_then(|ip| ip.0);
+
+        if let Some(ip) = ip {
+            Ok(Self::new(ip))
+        } else {
+            // If we can't infer the IP address, we'll just use an empty fingerprint and
+            // warn about it
+            tracing::warn!(
+                "Could not infer client IP address for an operation which rate-limits based on IP addresses"
+            );
+            Ok(Self::EMPTY)
+        }
     }
 }
 
@@ -145,7 +171,7 @@ impl Limiter {
         let this = self.clone();
         tokio::spawn(async move {
             // Run the task every minute
-            let mut interval = tokio::time::interval(Duration::from_secs(60));
+            let mut interval = tokio::time::interval(Duration::from_mins(1));
             interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
 
             loop {
@@ -301,7 +327,7 @@ impl Limiter {
 
 #[cfg(test)]
 mod tests {
-    use mas_data_model::{Clock, User, clock::MockClock};
+    use mas_data_model::{Clock, UlidExt as _, User, clock::MockClock};
     use rand::SeedableRng;
 
     use super::*;
@@ -321,7 +347,7 @@ mod tests {
             .unwrap();
 
         let alice = User {
-            id: Ulid::from_datetime_with_source(now.into(), &mut rng),
+            id: Ulid::from_datetime_with_rng(now, &mut rng),
             username: "alice".to_owned(),
             sub: "123-456".to_owned(),
             created_at: now,
@@ -332,7 +358,7 @@ mod tests {
         };
 
         let bob = User {
-            id: Ulid::from_datetime_with_source(now.into(), &mut rng),
+            id: Ulid::from_datetime_with_rng(now, &mut rng),
             username: "bob".to_owned(),
             sub: "123-456".to_owned(),
             created_at: now,

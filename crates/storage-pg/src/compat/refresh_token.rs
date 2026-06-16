@@ -8,6 +8,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
     Clock, CompatAccessToken, CompatRefreshToken, CompatRefreshTokenState, CompatSession,
+    UlidExt as _,
 };
 use mas_storage::compat::CompatRefreshTokenRepository;
 use rand::RngCore;
@@ -154,7 +155,7 @@ impl CompatRefreshTokenRepository for PgCompatRefreshTokenRepository<'_> {
         token: String,
     ) -> Result<CompatRefreshToken, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("compat_refresh_token.id", tracing::field::display(id));
 
         sqlx::query!(
@@ -185,20 +186,26 @@ impl CompatRefreshTokenRepository for PgCompatRefreshTokenRepository<'_> {
     }
 
     #[tracing::instrument(
-        name = "db.compat_refresh_token.consume",
+        name = "db.compat_refresh_token.consume_and_replace",
         skip_all,
         fields(
             db.query.text,
             %compat_refresh_token.id,
+            %successor_compat_refresh_token.id,
             compat_session.id = %compat_refresh_token.session_id,
         ),
         err,
     )]
-    async fn consume(
+    async fn consume_and_replace(
         &mut self,
         clock: &dyn Clock,
         compat_refresh_token: CompatRefreshToken,
+        successor_compat_refresh_token: &CompatRefreshToken,
     ) -> Result<CompatRefreshToken, Self::Error> {
+        if compat_refresh_token.session_id != successor_compat_refresh_token.session_id {
+            return Err(DatabaseError::invalid_operation());
+        }
+
         let consumed_at = clock.now();
         let res = sqlx::query!(
             r#"
@@ -206,9 +213,11 @@ impl CompatRefreshTokenRepository for PgCompatRefreshTokenRepository<'_> {
                 SET consumed_at = $2
                 WHERE compat_session_id = $1
                   AND consumed_at IS NULL
+                  AND compat_refresh_token_id <> $3
             "#,
             Uuid::from(compat_refresh_token.session_id),
             consumed_at,
+            Uuid::from(successor_compat_refresh_token.id),
         )
         .traced()
         .execute(&mut *self.conn)

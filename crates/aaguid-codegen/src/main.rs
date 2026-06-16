@@ -17,10 +17,16 @@ const AAGUID_URL: &str = "https://raw.githubusercontent.com/passkeydeveloper/pas
 #[derive(Debug, Deserialize)]
 struct AaguidEntry {
     name: String,
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "present in the upstream JSON but unused by codegen"
+    )]
     #[serde(default)]
     icon_light: Option<String>,
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "present in the upstream JSON but unused by codegen"
+    )]
     #[serde(default)]
     icon_dark: Option<String>,
 }

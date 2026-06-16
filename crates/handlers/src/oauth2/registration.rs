@@ -10,7 +10,7 @@ use axum::{Json, extract::State, response::IntoResponse};
 use axum_extra::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_data_model::{BoxClock, BoxRng};
+use mas_data_model::{BoxClock, BoxRng, UlidExt as _};
 use mas_iana::oauth::OAuthClientAuthenticationMethod;
 use mas_keystore::Encrypter;
 use mas_policy::{EvaluationResult, Policy};
@@ -21,6 +21,7 @@ use oauth2_types::{
         ClientMetadata, ClientMetadataVerificationError, ClientRegistrationResponse, Localized,
         VerifiedClientMetadata,
     },
+    requests::GrantType,
 };
 use opentelemetry::{Key, KeyValue, metrics::Counter};
 use psl::Psl;
@@ -31,7 +32,7 @@ use thiserror::Error;
 use tracing::info;
 use url::Url;
 
-use crate::{BoundActivityTracker, METER, impl_from_error_for_route};
+use crate::{BoundActivityTracker, METER, SiteConfig, impl_from_error_for_route};
 
 static REGISTRATION_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
     METER
@@ -222,18 +223,30 @@ pub(crate) async fn post(
     activity_tracker: BoundActivityTracker,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     State(encrypter): State<Encrypter>,
+    State(site_config): State<SiteConfig>,
     body: Result<Json<ClientMetadata>, axum::extract::rejection::JsonRejection>,
 ) -> Result<impl IntoResponse, RouteError> {
     // Propagate any JSON extraction error
     let Json(body) = body?;
 
     // Sort the properties to ensure a stable serialisation order for hashing
-    let body = body.sorted();
+    let mut body = body.sorted();
 
     // We need to serialize the body to compute the hash, and to log it
     let body_json = serde_json::to_string(&body)?;
 
     info!(body = body_json, "Client registration");
+
+    // Drop the device_code grant type if it's disabled
+    if !site_config.device_code_grant_enabled
+        && let Some(grant_types) = &mut body.grant_types
+        && grant_types.contains(&GrantType::DeviceCode)
+    {
+        tracing::warn!(
+            "A client requested the device_code grant type but it's disabled, dropping from the grant types"
+        );
+        grant_types.retain(|t| t != &GrantType::DeviceCode);
+    }
 
     let user_agent = user_agent.map(|ua| ua.to_string());
 
@@ -365,7 +378,7 @@ pub(crate) async fn post(
         client_id: client.client_id.clone(),
         client_secret,
         // XXX: we should have a `created_at` field on the clients
-        client_id_issued_at: Some(client.id.datetime().into()),
+        client_id_issued_at: Some(client.id.datetime_utc()),
         client_secret_expires_at: None,
     };
 
@@ -383,6 +396,8 @@ pub(crate) async fn post(
 #[cfg(test)]
 mod tests {
     use hyper::{Request, StatusCode};
+    use insta::assert_json_snapshot;
+    use mas_data_model::SiteConfig;
     use mas_router::SimpleRoute;
     use oauth2_types::{
         errors::{ClientError, ClientErrorCode},
@@ -393,7 +408,7 @@ mod tests {
 
     use crate::{
         oauth2::registration::host_is_public_suffix,
-        test_utils::{RequestBuilderExt, ResponseExt, TestState, setup},
+        test_utils::{RequestBuilderExt, ResponseExt, TestState, setup, test_site_config},
     };
 
     #[test]
@@ -615,5 +630,43 @@ mod tests {
         response.assert_status(StatusCode::CREATED);
         let response: ClientRegistrationResponse = response.json();
         assert_ne!(response.client_id, client_id);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_registration_device_code_grant_disabled(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                device_code_grant_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        // Registering a client that requests device_code grant should be accepted, but
+        // the device_code grant type should be dropped
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://example.com/",
+                "token_endpoint_auth_method": "none",
+                "grant_types": ["urn:ietf:params:oauth:grant-type:device_code"],
+                "response_types": [],
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+        let client: serde_json::Value = response.json();
+        assert_json_snapshot!(client, @r#"
+        {
+          "client_id": "01FSHN9AG09FE39KETP6F390F8",
+          "client_id_issued_at": 1642344000,
+          "redirect_uris": [],
+          "grant_types": [],
+          "token_endpoint_auth_method": "none",
+          "client_uri": "https://example.com/"
+        }
+        "#);
     }
 }

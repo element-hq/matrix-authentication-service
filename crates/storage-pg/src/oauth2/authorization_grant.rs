@@ -5,16 +5,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use std::collections::BTreeMap;
+
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
     AuthorizationCode, AuthorizationGrant, AuthorizationGrantStage, Client, Clock, Pkce, Session,
+    UlidExt as _,
 };
 use mas_iana::oauth::PkceCodeChallengeMethod;
 use mas_storage::oauth2::OAuth2AuthorizationGrantRepository;
 use oauth2_types::{requests::ResponseMode, scope::Scope};
 use rand::RngCore;
-use sqlx::PgConnection;
+use sqlx::{PgConnection, types::Json};
 use ulid::Ulid;
 use url::Url;
 use uuid::Uuid;
@@ -35,7 +38,6 @@ impl<'c> PgOAuth2AuthorizationGrantRepository<'c> {
     }
 }
 
-#[allow(clippy::struct_excessive_bools)]
 struct GrantLookup {
     oauth2_authorization_grant_id: Uuid,
     created_at: DateTime<Utc>,
@@ -54,6 +56,7 @@ struct GrantLookup {
     code_challenge_method: Option<String>,
     login_hint: Option<String>,
     locale: Option<String>,
+    raw_parameters: Option<Json<BTreeMap<String, String>>>,
     oauth2_client_id: Uuid,
     oauth2_session_id: Option<Uuid>,
 }
@@ -164,6 +167,7 @@ impl TryFrom<GrantLookup> for AuthorizationGrant {
             response_type_id_token: value.response_type_id_token,
             login_hint: value.login_hint,
             locale: value.locale,
+            raw_parameters: value.raw_parameters.map(|Json(x)| x).unwrap_or_default(),
         })
     }
 }
@@ -197,6 +201,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
         response_type_id_token: bool,
         login_hint: Option<String>,
         locale: Option<String>,
+        raw_parameters: BTreeMap<String, String>,
     ) -> Result<AuthorizationGrant, Self::Error> {
         let code_challenge = code
             .as_ref()
@@ -209,7 +214,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
         let code_str = code.as_ref().map(|c| &c.code);
 
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("grant.id", tracing::field::display(id));
 
         sqlx::query!(
@@ -229,10 +234,11 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
                      authorization_code,
                      login_hint,
                      locale,
+                     raw_parameters,
                      created_at
                 )
                 VALUES
-                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
             "#,
             Uuid::from(id),
             Uuid::from(client.id),
@@ -248,6 +254,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             code_str,
             login_hint,
             locale,
+            Json(&raw_parameters) as _,
             created_at,
         )
         .traced()
@@ -268,6 +275,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             response_type_id_token,
             login_hint,
             locale,
+            raw_parameters,
         })
     }
 
@@ -302,6 +310,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
                      , code_challenge_method
                      , login_hint
                      , locale
+                     , raw_parameters AS "raw_parameters: Json<BTreeMap<String, String>>"
                      , oauth2_session_id
                 FROM
                     oauth2_authorization_grants
@@ -352,6 +361,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
                      , code_challenge_method
                      , login_hint
                      , locale
+                     , raw_parameters AS "raw_parameters: Json<BTreeMap<String, String>>"
                      , oauth2_session_id
                 FROM
                     oauth2_authorization_grants

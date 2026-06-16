@@ -42,7 +42,7 @@ impl<'a> UserPasskeyFilter<'a> {
 
 /// A [`UserPasskeyRepository`] helps interacting with [`UserPasskey`] saved in
 /// the storage backend
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 #[async_trait]
 pub trait UserPasskeyRepository: Send + Sync {
     /// The error type returned by the repository

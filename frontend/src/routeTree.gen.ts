@@ -8,8 +8,6 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import type { CreateFileRoute, FileRoutesByPath } from '@tanstack/react-router'
-
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetCrossSigningRouteImport } from './routes/reset-cross-signing'
 import { Route as AccountRouteImport } from './routes/_account'
@@ -117,22 +115,22 @@ const AccountSessionsBrowsersRoute = AccountSessionsBrowsersRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof AccountIndexRoute
   '/reset-cross-signing': typeof ResetCrossSigningRouteWithChildren
   '/clients/$id': typeof ClientsIdRoute
   '/devices/$': typeof DevicesSplatRoute
   '/reset-cross-signing/cancelled': typeof ResetCrossSigningCancelledRoute
   '/reset-cross-signing/success': typeof ResetCrossSigningSuccessRoute
   '/sessions/$id': typeof SessionsIdRoute
-  '/': typeof AccountIndexRoute
   '/reset-cross-signing/': typeof ResetCrossSigningIndexRoute
   '/sessions/browsers': typeof AccountSessionsBrowsersRoute
   '/emails/$id/in-use': typeof EmailsIdInUseRoute
   '/emails/$id/verify': typeof EmailsIdVerifyRoute
   '/password/change/success': typeof PasswordChangeSuccessRoute
-  '/plan': typeof AccountPlanIndexRoute
-  '/sessions': typeof AccountSessionsIndexRoute
-  '/password/change': typeof PasswordChangeIndexRoute
-  '/password/recovery': typeof PasswordRecoveryIndexRoute
+  '/plan/': typeof AccountPlanIndexRoute
+  '/sessions/': typeof AccountSessionsIndexRoute
+  '/password/change/': typeof PasswordChangeIndexRoute
+  '/password/recovery/': typeof PasswordRecoveryIndexRoute
 }
 export interface FileRoutesByTo {
   '/clients/$id': typeof ClientsIdRoute
@@ -174,22 +172,22 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/reset-cross-signing'
     | '/clients/$id'
     | '/devices/$'
     | '/reset-cross-signing/cancelled'
     | '/reset-cross-signing/success'
     | '/sessions/$id'
-    | '/'
     | '/reset-cross-signing/'
     | '/sessions/browsers'
     | '/emails/$id/in-use'
     | '/emails/$id/verify'
     | '/password/change/success'
-    | '/plan'
-    | '/sessions'
-    | '/password/change'
-    | '/password/recovery'
+    | '/plan/'
+    | '/sessions/'
+    | '/password/change/'
+    | '/password/recovery/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/clients/$id'
@@ -253,7 +251,7 @@ declare module '@tanstack/react-router' {
     '/_account': {
       id: '/_account'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -309,28 +307,28 @@ declare module '@tanstack/react-router' {
     '/password/recovery/': {
       id: '/password/recovery/'
       path: '/password/recovery'
-      fullPath: '/password/recovery'
+      fullPath: '/password/recovery/'
       preLoaderRoute: typeof PasswordRecoveryIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/password/change/': {
       id: '/password/change/'
       path: '/password/change'
-      fullPath: '/password/change'
+      fullPath: '/password/change/'
       preLoaderRoute: typeof PasswordChangeIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_account/sessions/': {
       id: '/_account/sessions/'
       path: '/sessions'
-      fullPath: '/sessions'
+      fullPath: '/sessions/'
       preLoaderRoute: typeof AccountSessionsIndexRouteImport
       parentRoute: typeof AccountRoute
     }
     '/_account/plan/': {
       id: '/_account/plan/'
       path: '/plan'
-      fullPath: '/plan'
+      fullPath: '/plan/'
       preLoaderRoute: typeof AccountPlanIndexRouteImport
       parentRoute: typeof AccountRoute
     }
@@ -363,160 +361,6 @@ declare module '@tanstack/react-router' {
       parentRoute: typeof AccountRoute
     }
   }
-}
-
-declare module './routes/_account' {
-  const createFileRoute: CreateFileRoute<
-    '/_account',
-    FileRoutesByPath['/_account']['parentRoute'],
-    FileRoutesByPath['/_account']['id'],
-    FileRoutesByPath['/_account']['path'],
-    FileRoutesByPath['/_account']['fullPath']
-  >
-}
-declare module './routes/reset-cross-signing' {
-  const createFileRoute: CreateFileRoute<
-    '/reset-cross-signing',
-    FileRoutesByPath['/reset-cross-signing']['parentRoute'],
-    FileRoutesByPath['/reset-cross-signing']['id'],
-    FileRoutesByPath['/reset-cross-signing']['path'],
-    FileRoutesByPath['/reset-cross-signing']['fullPath']
-  >
-}
-declare module './routes/clients.$id' {
-  const createFileRoute: CreateFileRoute<
-    '/clients/$id',
-    FileRoutesByPath['/clients/$id']['parentRoute'],
-    FileRoutesByPath['/clients/$id']['id'],
-    FileRoutesByPath['/clients/$id']['path'],
-    FileRoutesByPath['/clients/$id']['fullPath']
-  >
-}
-declare module './routes/devices.$' {
-  const createFileRoute: CreateFileRoute<
-    '/devices/$',
-    FileRoutesByPath['/devices/$']['parentRoute'],
-    FileRoutesByPath['/devices/$']['id'],
-    FileRoutesByPath['/devices/$']['path'],
-    FileRoutesByPath['/devices/$']['fullPath']
-  >
-}
-declare module './routes/reset-cross-signing.cancelled' {
-  const createFileRoute: CreateFileRoute<
-    '/reset-cross-signing/cancelled',
-    FileRoutesByPath['/reset-cross-signing/cancelled']['parentRoute'],
-    FileRoutesByPath['/reset-cross-signing/cancelled']['id'],
-    FileRoutesByPath['/reset-cross-signing/cancelled']['path'],
-    FileRoutesByPath['/reset-cross-signing/cancelled']['fullPath']
-  >
-}
-declare module './routes/reset-cross-signing.success' {
-  const createFileRoute: CreateFileRoute<
-    '/reset-cross-signing/success',
-    FileRoutesByPath['/reset-cross-signing/success']['parentRoute'],
-    FileRoutesByPath['/reset-cross-signing/success']['id'],
-    FileRoutesByPath['/reset-cross-signing/success']['path'],
-    FileRoutesByPath['/reset-cross-signing/success']['fullPath']
-  >
-}
-declare module './routes/sessions.$id' {
-  const createFileRoute: CreateFileRoute<
-    '/sessions/$id',
-    FileRoutesByPath['/sessions/$id']['parentRoute'],
-    FileRoutesByPath['/sessions/$id']['id'],
-    FileRoutesByPath['/sessions/$id']['path'],
-    FileRoutesByPath['/sessions/$id']['fullPath']
-  >
-}
-declare module './routes/_account.index' {
-  const createFileRoute: CreateFileRoute<
-    '/_account/',
-    FileRoutesByPath['/_account/']['parentRoute'],
-    FileRoutesByPath['/_account/']['id'],
-    FileRoutesByPath['/_account/']['path'],
-    FileRoutesByPath['/_account/']['fullPath']
-  >
-}
-declare module './routes/reset-cross-signing.index' {
-  const createFileRoute: CreateFileRoute<
-    '/reset-cross-signing/',
-    FileRoutesByPath['/reset-cross-signing/']['parentRoute'],
-    FileRoutesByPath['/reset-cross-signing/']['id'],
-    FileRoutesByPath['/reset-cross-signing/']['path'],
-    FileRoutesByPath['/reset-cross-signing/']['fullPath']
-  >
-}
-declare module './routes/_account.sessions.browsers' {
-  const createFileRoute: CreateFileRoute<
-    '/_account/sessions/browsers',
-    FileRoutesByPath['/_account/sessions/browsers']['parentRoute'],
-    FileRoutesByPath['/_account/sessions/browsers']['id'],
-    FileRoutesByPath['/_account/sessions/browsers']['path'],
-    FileRoutesByPath['/_account/sessions/browsers']['fullPath']
-  >
-}
-declare module './routes/emails.$id.in-use' {
-  const createFileRoute: CreateFileRoute<
-    '/emails/$id/in-use',
-    FileRoutesByPath['/emails/$id/in-use']['parentRoute'],
-    FileRoutesByPath['/emails/$id/in-use']['id'],
-    FileRoutesByPath['/emails/$id/in-use']['path'],
-    FileRoutesByPath['/emails/$id/in-use']['fullPath']
-  >
-}
-declare module './routes/emails.$id.verify' {
-  const createFileRoute: CreateFileRoute<
-    '/emails/$id/verify',
-    FileRoutesByPath['/emails/$id/verify']['parentRoute'],
-    FileRoutesByPath['/emails/$id/verify']['id'],
-    FileRoutesByPath['/emails/$id/verify']['path'],
-    FileRoutesByPath['/emails/$id/verify']['fullPath']
-  >
-}
-declare module './routes/password.change.success' {
-  const createFileRoute: CreateFileRoute<
-    '/password/change/success',
-    FileRoutesByPath['/password/change/success']['parentRoute'],
-    FileRoutesByPath['/password/change/success']['id'],
-    FileRoutesByPath['/password/change/success']['path'],
-    FileRoutesByPath['/password/change/success']['fullPath']
-  >
-}
-declare module './routes/_account.plan.index' {
-  const createFileRoute: CreateFileRoute<
-    '/_account/plan/',
-    FileRoutesByPath['/_account/plan/']['parentRoute'],
-    FileRoutesByPath['/_account/plan/']['id'],
-    FileRoutesByPath['/_account/plan/']['path'],
-    FileRoutesByPath['/_account/plan/']['fullPath']
-  >
-}
-declare module './routes/_account.sessions.index' {
-  const createFileRoute: CreateFileRoute<
-    '/_account/sessions/',
-    FileRoutesByPath['/_account/sessions/']['parentRoute'],
-    FileRoutesByPath['/_account/sessions/']['id'],
-    FileRoutesByPath['/_account/sessions/']['path'],
-    FileRoutesByPath['/_account/sessions/']['fullPath']
-  >
-}
-declare module './routes/password.change.index' {
-  const createFileRoute: CreateFileRoute<
-    '/password/change/',
-    FileRoutesByPath['/password/change/']['parentRoute'],
-    FileRoutesByPath['/password/change/']['id'],
-    FileRoutesByPath['/password/change/']['path'],
-    FileRoutesByPath['/password/change/']['fullPath']
-  >
-}
-declare module './routes/password.recovery.index' {
-  const createFileRoute: CreateFileRoute<
-    '/password/recovery/',
-    FileRoutesByPath['/password/recovery/']['parentRoute'],
-    FileRoutesByPath['/password/recovery/']['id'],
-    FileRoutesByPath['/password/recovery/']['path'],
-    FileRoutesByPath['/password/recovery/']['fullPath']
-  >
 }
 
 interface AccountRouteChildren {

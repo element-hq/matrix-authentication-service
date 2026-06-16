@@ -667,7 +667,7 @@ upstream_oauth2:
 
       # The client secret to use to authenticate to the provider
       # This is only used by the `client_secret_post`, `client_secret_basic`
-      # and `client_secret_jwk` authentication methods
+      # and `client_secret_jwt` authentication methods
       client_secret_file: secret
       # OR client_secret: f4f6bb68a0269264877e9cb23b1856ab
 
@@ -748,12 +748,30 @@ upstream_oauth2:
       # the response parameters in the request body
       #response_mode: query
 
-      # Additional parameters to include in the authorization request
+      # Additional parameters to include in the authorization request.
+      #
+      # Values are Jinja2 templates rendered against a `params` map
+      # containing the raw query parameters of the downstream
+      # authorization request (empty when the upstream login was not
+      # triggered by a downstream authorization request, e.g. account
+      # linking or direct login). Templates that render to an empty
+      # string are dropped rather than forwarded.
+      #
+      # Plain strings without `{{ … }}` render to themselves, so static
+      # values work as expected.
       #additional_authorization_parameters:
       #  foo: "bar"
+      #  login_hint: "{{ params.login_hint }}"
+      #  acr_values: "{{ params.acr_values }}"
 
       # Whether the `login_hint` should be forwarded to the provider in the
       # authorization request.
+      #
+      # Deprecated: prefer adding
+      # `login_hint: "{{ params.login_hint }}"` to
+      # `additional_authorization_parameters` instead. When this flag is
+      # set, a `login_hint` template entry is injected automatically if
+      # one is not already present.
       #forward_login_hint: false
 
       # What to do when receiving an OIDC Backchannel logout request.
@@ -854,6 +872,33 @@ branding:
 
   # Logo displayed in some web pages.
   #logo_uri:
+```
+
+## `oauth`
+
+Configuration section for OAuth 2.0 protocol options.
+
+```yaml
+oauth:
+  # Whether the Device Authorization Grant (RFC 8628) is enabled. Defaults
+  # to `true`.
+  #
+  # When disabled, the device authorization endpoint will reject requests,
+  # the discovery metadata will not advertise the device authorization
+  # endpoint, and dynamic client registrations requesting the
+  # `urn:ietf:params:oauth:grant-type:device_code` grant type will be
+  # rejected.
+  device_code_grant_enabled: true
+
+  # Whether the device authorization endpoint advertises a
+  # `verification_uri_complete` that auto-fills the user code on the
+  # `/link` page. Defaults to `true`.
+  #
+  # When disabled, the device authorization response will omit
+  # `verification_uri_complete`, and the `/link` route will ignore any
+  # `code` query parameter, forcing users to type their user code
+  # manually.
+  device_code_user_code_auto_fill_enabled: true
 ```
 
 ## `experimental`

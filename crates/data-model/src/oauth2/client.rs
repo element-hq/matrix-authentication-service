@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -17,6 +18,8 @@ use serde::Serialize;
 use thiserror::Error;
 use ulid::Ulid;
 use url::Url;
+
+use crate::UlidExt as _;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -86,6 +89,10 @@ pub struct Client {
     /// URI using the https scheme that a third party can use to initiate a
     /// login by the RP
     pub initiate_login_uri: Option<Url>,
+
+    /// Whether this client is statically configured (defined in the
+    /// configuration file) rather than dynamically registered.
+    pub is_static: bool,
 }
 
 #[derive(Debug, Error)]
@@ -178,7 +185,7 @@ impl Client {
         vec![
             // A client with all the URIs set
             Self {
-                id: Ulid::from_datetime_with_source(now.into(), rng),
+                id: Ulid::from_datetime_with_rng(now, rng),
                 client_id: "client1".to_owned(),
                 metadata_digest: None,
                 encrypted_client_secret: None,
@@ -201,10 +208,11 @@ impl Client {
                 id_token_signed_response_alg: None,
                 userinfo_signed_response_alg: None,
                 jwks: None,
+                is_static: false,
             },
             // Another client without any URIs set
             Self {
-                id: Ulid::from_datetime_with_source(now.into(), rng),
+                id: Ulid::from_datetime_with_rng(now, rng),
                 client_id: "client2".to_owned(),
                 metadata_digest: None,
                 encrypted_client_secret: None,
@@ -222,6 +230,7 @@ impl Client {
                 id_token_signed_response_alg: None,
                 userinfo_signed_response_alg: None,
                 jwks: None,
+                is_static: false,
             },
         ]
     }

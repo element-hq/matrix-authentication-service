@@ -4,9 +4,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-import IconChrome from "@browser-logos/chrome/chrome_64x64.png?url";
-import IconFirefox from "@browser-logos/firefox/firefox_64x64.png?url";
-import IconSafari from "@browser-logos/safari/safari_64x64.png?url";
+import IconChrome from "@browser-logos/chrome/chrome_64x64.png?inline";
+import IconFirefox from "@browser-logos/firefox/firefox_64x64.png?inline";
+import IconSafari from "@browser-logos/safari/safari_64x64.png?inline";
 import { Badge } from "@vector-im/compound-web";
 import { parseISO } from "date-fns";
 import { useTranslation } from "react-i18next";
@@ -125,7 +125,7 @@ const BrowserSession: React.FC<Props> = ({ session, isCurrent }) => {
 
       {!data.finishedAt && (
         <Card.Action>
-          <EndBrowserSessionButton session={data} size="sm" />
+          <EndBrowserSessionButton session={data} size="md" />
         </Card.Action>
       )}
     </Card.Root>

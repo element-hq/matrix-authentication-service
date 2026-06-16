@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -34,12 +35,14 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - uses: ./.github/actions/build-policies
 
       - name: Setup Regal
-        uses: StyraInc/setup-regal@v1
+        uses: StyraInc/setup-regal@33a142b1189004e0f14bf42b15972c67eecce776 # v1
         with:
           # Keep in sync with policies/Makefile
           version: 0.38.1
@@ -61,20 +64,24 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
 
       - name: Install Node
-        uses: actions/setup-node@v6.2.0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 24
+          node-version-file: .node-version
+          cache: "pnpm"
 
-      - name: Install Node dependencies
-        working-directory: ./frontend
-        run: npm ci
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
-        working-directory: ./frontend
-        run: npm run lint
+        run: pnpm --filter mas-frontend run lint
 
   frontend-test:
     name: Run the frontend test suite
@@ -85,20 +92,24 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
 
       - name: Install Node
-        uses: actions/setup-node@v6.2.0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 24
+          node-version-file: .node-version
+          cache: "pnpm"
 
-      - name: Install Node dependencies
-        working-directory: ./frontend
-        run: npm ci
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Test
-        working-directory: ./frontend
-        run: npm test
+        run: pnpm --filter mas-frontend test
 
   frontend-knip:
     name: Check the frontend for unused dependencies
@@ -109,20 +120,24 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
 
       - name: Install Node
-        uses: actions/setup-node@v6.2.0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: 24
+          node-version-file: .node-version
+          cache: "pnpm"
 
-      - name: Install Node dependencies
-        working-directory: ./frontend
-        run: npm ci
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Check for unused dependencies
-        working-directory: ./frontend
-        run: npm run knip
+        run: pnpm --filter mas-frontend run knip
 
   rustfmt:
     name: Check Rust style
@@ -133,12 +148,17 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@nightly
-        with:
-          components: rustfmt
+        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
+        # Then install rustfmt for `cargo fmt`.
+        #
+        # --override sets this as the default rust toolchain version in this directory.
+        run: |
+          rustup toolchain install nightly --profile minimal --component rustfmt --override
 
       - name: Check style
         run: cargo fmt --all -- --check
@@ -156,10 +176,12 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Run `cargo-deny`
-        uses: EmbarkStudios/cargo-deny-action@v2.0.15
+        uses: EmbarkStudios/cargo-deny-action@175dc7fd4fb85ec8f46948fb98f44db001149081 # v2.0.16
         with:
           rust-version: stable
 
@@ -172,15 +194,16 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Install Rust toolchain
         run: |
           rustup toolchain install stable
-          rustup default stable
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.9
+        uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
 
       - uses: ./.github/actions/build-frontend
 
@@ -213,17 +236,21 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@1.93.0
-        with:
-          components: clippy
+        # Install the minimal toolchain with clippy, pinned to a version kept in
+        # sync with Dockerfile.
+        #
+        # --override sets this as the default rust toolchain version in this directory.
+        run: rustup toolchain install 1.96.0 --profile minimal --component clippy --override
 
       - uses: ./.github/actions/build-policies
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.9
+        uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
 
       - name: Run clippy
         run: |
@@ -238,18 +265,21 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
+        run: rustup toolchain install stable --profile minimal
 
       - name: Install nextest
-        uses: taiki-e/install-action@v2
+        uses: taiki-e/install-action@213ccc1a076163c093f914550b94feb90fab916d # v2
         with:
           tool: cargo-nextest
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.9
+        uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
 
       - name: Build and archive tests
         run: cargo nextest archive --workspace --archive-file nextest-archive.tar.zst
@@ -257,7 +287,7 @@ jobs:
           SQLX_OFFLINE: "1"
 
       - name: Upload archive to workflow
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: nextest-archive
           path: nextest-archive.tar.zst
@@ -291,13 +321,16 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
+        run: rustup toolchain install stable --profile minimal
 
       - name: Install nextest
-        uses: taiki-e/install-action@v2
+        uses: taiki-e/install-action@213ccc1a076163c093f914550b94feb90fab916d # v2
         with:
           tool: cargo-nextest
 
@@ -305,7 +338,7 @@ jobs:
       - uses: ./.github/actions/build-policies
 
       - name: Download archive
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: nextest-archive
 
@@ -316,6 +349,62 @@ jobs:
           ~/.cargo/bin/cargo-nextest nextest run \
             --archive-file nextest-archive.tar.zst \
             --partition count:${{ matrix.partition }}/3
+
+  ess:
+    if: "${{ !failure() && !cancelled() }}"
+    needs: [rustfmt, opa-lint, compile-test-artifacts]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Get current branch name
+        id: current-branch
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+
+      - name: Check if branch exists in element-hq/ess-helm
+        id: check-branch
+        env:
+          BRANCH_NAME: ${{ steps.current-branch.outputs.branch }}
+        run: |
+          API_URL="https://api.github.com/repos/element-hq/ess-helm/branches/$BRANCH_NAME"
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $API_URL)
+          if [ "$RESPONSE" = "200" ]; then
+            echo "ref=$BRANCH_NAME" | tee -a $GITHUB_OUTPUT
+          else
+            echo "ref=main" | tee -a $GITHUB_OUTPUT
+          fi
+
+      - name: Install ESS test dependencies
+        uses: element-hq/setup-ess-cluster-action@23c5b953699591752a7385e143af59607a68c85e # release/v2
+        with:
+          ess-helm-ref: ${{ steps.check-branch.outputs.ref }}
+
+      - name: Build MAS docker image to local registry
+        run: |
+          docker build -t localhost:5000/matrix-authentication-service:ci -f ./Dockerfile .
+          docker push localhost:5000/matrix-authentication-service:ci
+
+      - name: Build Additional values file
+        run: >
+          yq eval -n '.matrixAuthenticationService.image.registry = "localhost:5000" |
+          .matrixAuthenticationService.image.repository = "matrix-authentication-service" |
+          .matrixAuthenticationService.image.tag = "ci"' > ci-values.yml
+
+      - name: Run ESS tests
+        run: pytest-ess --test-suite "matrix-authentication-service" --additional-test-values-file ci-values.yml -- -vv
+
+      - name: Collect ESS logs
+        if: ${{ failure() }}
+        run: collect-ess-logs
+
+      - name: Upload logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        with:
+          name: ess-helm-logs
+          path: ess-helm-logs
+          retention-days: 1
 
   tests-done:
     name: Tests done
@@ -329,10 +418,11 @@ jobs:
       - cargo-deny
       - clippy
       - check-schema
+      - ess
       - test
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: matrix-org/done-action@v3
+      - uses: matrix-org/done-action@3409aa904e8a2aaf2220f09bc954d3d0b0a2ee67 # v3
         with:
           needs: ${{ toJSON(needs) }}

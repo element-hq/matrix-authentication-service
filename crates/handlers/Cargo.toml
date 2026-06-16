@@ -34,6 +34,7 @@ futures-util.workspace = true
 governor.workspace = true
 headers.workspace = true
 hex.workspace = true
+http.workspace = true
 hyper.workspace = true
 icu_normalizer.workspace = true
 indexmap.workspace = true
@@ -49,6 +50,7 @@ psl.workspace = true
 rand_chacha.workspace = true
 rand.workspace = true
 reqwest.workspace = true
+ruma-common.workspace = true
 rustls.workspace = true
 schemars.workspace = true
 sentry.workspace = true
@@ -93,6 +95,7 @@ oauth2-types.workspace = true
 zxcvbn.workspace = true
 
 [dev-dependencies]
+assert_matches.workspace = true
 insta.workspace = true
 tracing-subscriber.workspace = true
 cookie_store.workspace = true

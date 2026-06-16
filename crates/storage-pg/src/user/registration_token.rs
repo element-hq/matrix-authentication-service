@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -5,15 +6,15 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{Clock, UserRegistrationToken};
+use mas_data_model::{Clock, UlidExt as _, UserRegistrationToken};
 use mas_storage::{
     Page, Pagination,
     pagination::Node,
     user::{UserRegistrationTokenFilter, UserRegistrationTokenRepository},
 };
 use rand::RngCore;
-use sea_query::{Condition, Expr, PostgresQueryBuilder, Query, enum_def};
-use sea_query_binder::SqlxBinder;
+use sea_query::{Condition, Expr, ExprTrait, PostgresQueryBuilder, Query, enum_def};
+use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
@@ -441,7 +442,7 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
         expires_at: Option<DateTime<Utc>>,
     ) -> Result<UserRegistrationToken, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
 
         let usage_limit_i32 = usage_limit
             .map(i32::try_from)

@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -165,9 +166,7 @@ impl Scope {
     /// Whether this `Scope` contains the given value.
     #[must_use]
     pub fn contains(&self, token: &str) -> bool {
-        ScopeToken::from_str(token)
-            .map(|token| self.0.contains(&token))
-            .unwrap_or(false)
+        ScopeToken::from_str(token).is_ok_and(|token| self.0.contains(&token))
     }
 
     /// Inserts the given token in this `Scope`.

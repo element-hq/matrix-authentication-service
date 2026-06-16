@@ -16,11 +16,11 @@ use axum_extra::{extract::Query, typed_header::TypedHeader};
 use cookie::UserPasskeyChallenges;
 use hyper::StatusCode;
 use mas_axum_utils::{
-    InternalError, SessionInfoExt,
+    InternalError, RecordAsRequester, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::{BoxClock, BoxRng, Clock, Password, UserPasskey, oauth2::LoginHint};
+use mas_data_model::{BoxClock, BoxRng, Clock, Password, UserPasskey};
 use mas_i18n::DataLocale;
 use mas_matrix::HomeserverConnection;
 use mas_router::{UpstreamOAuth2Authorize, UrlBuilder};
@@ -31,8 +31,7 @@ use mas_storage::{
 };
 use mas_templates::{
     AccountInactiveContext, FieldError, FormError, FormState, LoginContext, LoginFormField,
-    PostAuthContext, PostAuthContextInner, TemplateContext, Templates, ToFormState,
-    WebAuthnContext,
+    TemplateContext, Templates, ToFormState, WebAuthnContext,
 };
 use opentelemetry::{Key, KeyValue, metrics::Counter};
 use rand::RngCore;
@@ -40,7 +39,7 @@ use serde::{Deserialize, Serialize};
 use ulid::Ulid;
 use zeroize::Zeroizing;
 
-use super::shared::OptionalPostAuthAction;
+use super::shared::{LoginHint, OptionalPostAuthAction, QueryLoginHint};
 use crate::{
     BoundActivityTracker, Limiter, METER, PreferredLanguage, RequesterFingerprint, SiteConfig,
     passwords::{PasswordManager, PasswordVerificationResult},
@@ -94,6 +93,7 @@ pub(crate) async fn get(
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
     Query(query): Query<OptionalPostAuthAction>,
+    Query(query_login_hint): Query<QueryLoginHint>,
     cookie_jar: CookieJar,
 ) -> Result<Response, InternalError> {
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
@@ -147,6 +147,7 @@ pub(crate) async fn get(
         &homeserver,
         &site_config,
         webauthn,
+        &query_login_hint,
     )
     .await
 }
@@ -165,7 +166,7 @@ pub(crate) async fn post(
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
     requester: RequesterFingerprint,
-    Query(query): Query<OptionalPostAuthAction>,
+    (Query(query), Query(query_login_hint)): (Query<OptionalPostAuthAction>, Query<QueryLoginHint>),
     mut cookie_jar: CookieJar,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     Form(form): Form<ProtectedForm<LoginForm>>,
@@ -207,6 +208,7 @@ pub(crate) async fn post(
                     &homeserver,
                     &site_config,
                     webauthn,
+                    &query_login_hint,
                 )
                 .await;
             }
@@ -233,6 +235,7 @@ pub(crate) async fn post(
                     &homeserver,
                     &site_config,
                     webauthn,
+                    &query_login_hint,
                 )
                 .await;
             };
@@ -254,6 +257,7 @@ pub(crate) async fn post(
                     &homeserver,
                     &site_config,
                     webauthn,
+                    &query_login_hint,
                 )
                 .await;
             }
@@ -277,6 +281,7 @@ pub(crate) async fn post(
                     &homeserver,
                     &site_config,
                     webauthn,
+                    &query_login_hint,
                 )
                 .await;
             };
@@ -323,6 +328,7 @@ pub(crate) async fn post(
                         &homeserver,
                         &site_config,
                         webauthn,
+                        &query_login_hint,
                     )
                     .await;
                 }
@@ -352,6 +358,7 @@ pub(crate) async fn post(
                     &homeserver,
                     &site_config,
                     webauthn,
+                    &query_login_hint,
                 )
                 .await;
             }
@@ -394,6 +401,7 @@ pub(crate) async fn post(
                 &homeserver,
                 &site_config,
                 webauthn,
+                &query_login_hint,
             )
             .await;
         }
@@ -450,6 +458,10 @@ pub(crate) async fn post(
 
     repo.save().await?;
 
+    // Attribute the rest of this request (and its log line) to the user that
+    // just logged in.
+    user.maybe_record_as_requester();
+
     PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "success")]);
 
     activity_tracker
@@ -485,7 +497,7 @@ async fn get_user_by_email_or_by_username<R: RepositoryAccess>(
 
 fn handle_login_hint(
     mut ctx: LoginContext,
-    next: &PostAuthContext,
+    query_login_hint: &QueryLoginHint,
     homeserver: &dyn HomeserverConnection,
     site_config: &SiteConfig,
 ) -> LoginContext {
@@ -496,16 +508,12 @@ fn handle_login_hint(
         return ctx;
     }
 
-    if let PostAuthContextInner::ContinueAuthorizationGrant { ref grant } = next.ctx {
-        let value = match grant.parse_login_hint(homeserver.homeserver()) {
-            LoginHint::MXID(mxid) => Some(mxid.localpart().to_owned()),
-            LoginHint::Email(email) if site_config.login_with_email_allowed => {
-                Some(email.to_string())
-            }
-            _ => None,
-        };
-        form_state.set_value(LoginFormField::Username, value);
-    }
+    let value = match query_login_hint.parse_login_hint(homeserver.homeserver()) {
+        LoginHint::Mxid(mxid) => Some(mxid.localpart().to_owned()),
+        LoginHint::Email(email) if site_config.login_with_email_allowed => Some(email.to_string()),
+        _ => None,
+    };
+    form_state.set_value(LoginFormField::Username, value);
 
     ctx
 }
@@ -522,6 +530,7 @@ async fn render(
     homeserver: &dyn HomeserverConnection,
     site_config: &SiteConfig,
     webauthn: Webauthn,
+    query_login_hint: &QueryLoginHint,
 ) -> Result<Response, InternalError> {
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(clock, &mut *rng);
     let providers = repo.upstream_oauth_provider().all_enabled().await?;
@@ -552,12 +561,13 @@ async fn render(
         .with_form_state(form_state)
         .with_upstream_providers(providers);
 
+    let ctx = handle_login_hint(ctx, query_login_hint, homeserver, site_config);
+
     let next = action
         .load_context(&mut repo)
         .await
         .map_err(InternalError::from_anyhow)?;
     let ctx = if let Some(next) = next {
-        let ctx = handle_login_hint(ctx, &next, homeserver, site_config);
         ctx.with_post_action(next)
     } else {
         ctx
@@ -574,7 +584,7 @@ async fn render(
 mod test {
     use hyper::{
         Request, StatusCode,
-        header::{CONTENT_TYPE, LOCATION},
+        header::{CONTENT_TYPE, LOCATION, X_FRAME_OPTIONS},
     };
     use mas_data_model::{
         UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderOnBackchannelLogout,
@@ -655,6 +665,7 @@ mod test {
                     forward_login_hint: false,
                     ui_order: 0,
                     on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    registration_token_required: false,
                 },
             )
             .await
@@ -698,6 +709,7 @@ mod test {
                     forward_login_hint: false,
                     ui_order: 1,
                     on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    registration_token_required: false,
                 },
             )
             .await
@@ -1067,5 +1079,17 @@ mod test {
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
         assert!(!response.body().contains("Account deleted"));
         assert!(response.body().contains("Invalid credentials"));
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_x_frame_options(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        // GET /login should include X-Frame-Options: DENY so the page cannot be
+        // embedded in an iframe on another origin.
+        let response = state.request(Request::get("/login").empty()).await;
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(X_FRAME_OPTIONS, "DENY");
     }
 }

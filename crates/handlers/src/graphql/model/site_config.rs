@@ -14,7 +14,7 @@ pub const CAPTCHA_CONFIG_ID: &str = "captcha_config";
 
 #[derive(SimpleObject)]
 #[graphql(complex)]
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 pub struct SiteConfig {
     /// The configuration of CAPTCHA provider.
     captcha_config: Option<CaptchaConfig>,
@@ -62,6 +62,9 @@ pub struct SiteConfig {
 
     /// Whether passkeys are enabled
     passkeys_enabled: bool,
+
+    /// Limits on the number of application sessions that each user can have
+    session_limit: Option<SessionLimitConfig>,
 }
 
 #[derive(SimpleObject)]
@@ -80,6 +83,26 @@ pub enum CaptchaService {
     RecaptchaV2,
     CloudflareTurnstile,
     HCaptcha,
+}
+
+/// See [`mas_config::ExperimentalSessionLimitConfig`]
+#[derive(SimpleObject)]
+pub struct SessionLimitConfig {
+    pub soft_limit: u64,
+    pub hard_limit: u64,
+    pub dangerous_hard_limit_eviction: bool,
+}
+
+impl SessionLimitConfig {
+    /// Create a new [`SessionLimitConfig`] from the data model
+    /// [`mas_data_model::SessionLimitConfig`].
+    pub fn new(data_model: &mas_data_model::SessionLimitConfig) -> Self {
+        Self {
+            soft_limit: data_model.soft_limit.get(),
+            hard_limit: data_model.hard_limit.get(),
+            dangerous_hard_limit_eviction: data_model.dangerous_hard_limit_eviction,
+        }
+    }
 }
 
 #[ComplexObject]
@@ -110,6 +133,10 @@ impl SiteConfig {
             login_with_email_allowed: data_model.login_with_email_allowed,
             plan_management_iframe_uri: data_model.plan_management_iframe_uri.clone(),
             passkeys_enabled: data_model.passkeys_enabled,
+            session_limit: data_model
+                .session_limit
+                .as_ref()
+                .map(SessionLimitConfig::new),
         }
     }
 }

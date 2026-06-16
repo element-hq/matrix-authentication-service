@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -344,7 +345,7 @@ impl Object for TranslateFunc {
                 })?;
 
                 // TODO: grab the clock somewhere
-                #[allow(clippy::disallowed_methods)]
+                #[expect(clippy::disallowed_methods)]
                 let now = chrono::Utc::now();
 
                 let diff = (date - now).num_days();
@@ -526,7 +527,7 @@ impl Object for IncludeAsset {
                 // When a JSON is included at the top level (a translation), we preload it
                 let src = main.src(assets_base);
                 if tracker.mark_preloaded(&src) {
-                    writeln!(output, r#"<link rel="preload" href="{src}" as="fetch" />"#,).unwrap();
+                    writeln!(output, r#"<link rel="preload" href="{src}" as="fetch" />"#).unwrap();
                 }
             }
 

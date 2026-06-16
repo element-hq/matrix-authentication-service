@@ -1,6 +1,6 @@
 {
   "action": {
-    "back": "Powrót",
+    "back": "Wróć",
     "cancel": "Anuluj",
     "clear": "Wyczyść",
     "close": "Zamknij",
@@ -71,9 +71,9 @@
     "add_email_form": {
       "email_denied_alert": {
         "text": "Wprowadzony adres e-mail nie jest dozwolony przez politykę serwera.",
-        "title": "E-mail odrzucony zgodnie z polityką"
+        "title": "E-mail odrzucony przez zasady serwera"
       },
-      "email_denied_error": "Podany adres e-mail nie jest dozwolony przez politykę serwera",
+      "email_denied_error": "Wprowadzony adres e-mail nie jest dozwolony przez politykę serwera",
       "email_exists_alert": {
         "text": "Podany adres e-mail został już dodany do tego konta",
         "title": "Adres e-mail już istnieje"
@@ -126,7 +126,8 @@
       "heading": "Adres e-mail {{email}} jest już używany."
     },
     "end_session_button": {
-      "confirmation_modal_title": "Czy na pewno chcesz zakończyć tę sesję?",
+      "confirmation_modal_body_text": "Upewnij się, że zawsze masz dostęp do innego zweryfikowanego urządzenia lub klucza przywracania, aby nie stracić zaszyfrowanej historii czatów.",
+      "confirmation_modal_title": "Czy na pewno chcesz usunąć to urządzenie?",
       "text": "Usuń urządzenie"
     },
     "error": {
@@ -146,6 +147,7 @@
       "inactive_90_days": "Nieaktywny przez ponad 90 dni"
     },
     "nav": {
+      "device_limit_error": "Osiągnięto limit urządzeń",
       "devices": "Urządzenia",
       "plan": "Plan",
       "profile": "Profil",
@@ -188,7 +190,7 @@
       "new_password_again_label": "Wprowadź ponownie nowe hasło",
       "new_password_label": "Nowe hasło",
       "passwords_match": "Hasła są zgodne!",
-      "passwords_no_match": "Hasła nie pasują",
+      "passwords_no_match": "Hasła nie pasują do siebie",
       "subtitle": "Wybierz nowe hasło do swojego konta.",
       "success": {
         "description": "Twoje hasło zostało pomyślnie zaktualizowane.",
@@ -360,11 +362,33 @@
       "active_sessions:one": "{{count}} aktywna sesja",
       "active_sessions:few": "{{count}} aktywne sesje",
       "active_sessions:many": "{{count}} aktywnych sesji",
+      "approaching_session_limit_warning_description:one": "Wykorzystano {{num_sessions}} z {{count}} miejsc na urządzenia. Po osiągnięciu limitu konieczne będzie usunięcie istniejącego urządzenia, aby dodać kolejne.",
+      "approaching_session_limit_warning_description:few": "Wykorzystano {{num_sessions}} z {{count}} miejsc na urządzenia. Po osiągnięciu limitu konieczne będzie usunięcie istniejącego urządzenia, aby dodać kolejne.",
+      "approaching_session_limit_warning_description:many": "Wykorzystano {{num_sessions}} z {{count}} miejsc na urządzenia. Po osiągnięciu limitu konieczne będzie usunięcie istniejącego urządzenia, aby dodać kolejne.",
+      "approaching_session_limit_warning_header": "Uwaga, zbliżasz się do limitu urządzeń",
       "heading": "Gdzie jesteś zalogowany",
+      "hit_session_limit_warning_description:one": "Wykorzystano {{num_sessions}} z {{count}} miejsca na urządzenia. Przy ponownej próbie logowania konieczne będzie usunięcie istniejącego urządzenia.",
+      "hit_session_limit_warning_description:few": "Wykorzystano {{num_sessions}} z {{count}} miejsc na urządzenia. Przy ponownej próbie logowania konieczne będzie usunięcie istniejącego urządzenia.",
+      "hit_session_limit_warning_description:many": "Wykorzystano {{num_sessions}} z {{count}} miejsc na urządzenia. Przy ponownej próbie logowania konieczne będzie usunięcie istniejącego urządzenia.",
+      "hit_session_limit_warning_header": "Osiągnąłeś limit urządzeń",
       "no_active_sessions": {
         "default": "Nie jesteś zalogowany w żadnej aplikacji.",
         "inactive_90_days": "Wszystkie Twoje sesje były aktywne w ciągu ostatnich 90 dni."
-      }
+      },
+      "num_sessions_filtered_header": {
+        "header:one": "{{count}} urządzenie spełnia kryteria filtrowania ({{unfiltered_session_total}})",
+        "header:few": "{{count}} urządzenia spełniają kryteria filtrowania ({{unfiltered_session_total}})",
+        "header:many": "{{count}} urządzeń spełnia kryteria filtrowania ({{unfiltered_session_total}})",
+        "unfiltered_session_total:one": "{{count}} ogółem",
+        "unfiltered_session_total:few": "{{count}} ogółem",
+        "unfiltered_session_total:many": "{{count}} ogółem"
+      },
+      "num_sessions_header:one": "{{count}} urządzenie",
+      "num_sessions_header:few": "{{count}} urządzenia",
+      "num_sessions_header:many": "{{count}} urządzeń",
+      "session_limit_info:one": "Wykorzystano {{count}}/{{limit}} miejsc na urządzenia",
+      "session_limit_info:few": "Wykorzystano {{count}}/{{limit}} miejsc na urządzenia",
+      "session_limit_info:many": "Wykorzystano {{count}}/{{limit}} miejsc na urządzenia"
     },
     "verify_email": {
       "code_expired_alert": {

@@ -126,7 +126,8 @@
       "heading": "E-mailová adresa {{email}} se již používá."
     },
     "end_session_button": {
-      "confirmation_modal_title": "Opravdu chcete ukončit tuto relaci?",
+      "confirmation_modal_body_text": "Ujistěte se, že máte vždy přístup k jinému ověřenému zařízení nebo klíči pro obnovení, abyste předešli ztrátě šifrované historie chatu.",
+      "confirmation_modal_title": "Opravdu chcete toto zařízení odstranit?",
       "text": "Odstranit zařízení"
     },
     "error": {
@@ -146,6 +147,7 @@
       "inactive_90_days": "Neaktivní více než 90 dní"
     },
     "nav": {
+      "device_limit_error": "Dosažen limit zařízení",
       "devices": "Zařízení",
       "plan": "Plán",
       "profile": "Profil",
@@ -360,11 +362,33 @@
       "active_sessions:one": "{{count}} aktivní relace",
       "active_sessions:few": "{{count}} aktivní relace",
       "active_sessions:other": "{{count}} aktivních relací",
+      "approaching_session_limit_warning_description:one": "Použili jste {{num_sessions}} z {{count}} slotů zařízení. Jakmile dosáhnete limitu, budete muset odebrat existující zařízení, abyste mohli přidat další.",
+      "approaching_session_limit_warning_description:few": "",
+      "approaching_session_limit_warning_description:other": "Použili jste {{num_sessions}} z {{count}} slotů zařízení. Jakmile dosáhnete limitu, budete muset odebrat existující zařízení, abyste mohli přidat další.",
+      "approaching_session_limit_warning_header": "Pozor, blížíte se k limitu zařízení",
       "heading": "Kde jste přihlášeni",
+      "hit_session_limit_warning_description:one": "Použili jste {{num_sessions}} z {{count}} slotů zařízení. Při dalším pokusu o přihlášení budete muset odebrat stávající zařízení.",
+      "hit_session_limit_warning_description:few": "",
+      "hit_session_limit_warning_description:other": "Použili jste {{num_sessions}} z {{count}} slotů zařízení. Při dalším pokusu o přihlášení budete muset odebrat stávající zařízení.",
+      "hit_session_limit_warning_header": "Dosáhli jste limitu zařízení",
       "no_active_sessions": {
         "default": "Nejste přihlášeni do žádné aplikace.",
         "inactive_90_days": "Všechny vaše relace byly aktivní v posledních 90 dnech."
-      }
+      },
+      "num_sessions_filtered_header": {
+        "header:one": "{{count}} zařízení odpovídá vašemu filtru ({{unfiltered_session_total}})",
+        "header:few": "{{count}} zařízení odpovídají vašemu filtru ({{unfiltered_session_total}})",
+        "header:other": "{{count}} zařízení odpovídá vašemu filtru ({{unfiltered_session_total}})",
+        "unfiltered_session_total:one": "Celkem {{count}}",
+        "unfiltered_session_total:few": "",
+        "unfiltered_session_total:other": "Celkem {{count}}"
+      },
+      "num_sessions_header:one": "{{count}} zařízení",
+      "num_sessions_header:few": "",
+      "num_sessions_header:other": "{{count}} zařízení",
+      "session_limit_info:one": "Použili jste {{count}}/{{limit}} slot zařízení",
+      "session_limit_info:few": "Použili jste {{count}}/{{limit}} sloty zařízení",
+      "session_limit_info:other": "Použili jste {{count}}/{{limit}} slotů zařízení"
     },
     "verify_email": {
       "code_expired_alert": {

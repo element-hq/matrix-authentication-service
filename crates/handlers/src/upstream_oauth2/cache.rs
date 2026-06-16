@@ -147,7 +147,6 @@ impl<'a> LazyProviderInfos<'a> {
 /// It never evicts entries, does not cache failures and has no locking.
 /// It can also be refreshed in the background, and warmed up on startup.
 /// It is good enough for our use case.
-#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone, Default)]
 pub struct MetadataCache {
     cache: Arc<RwLock<HashMap<String, Arc<VerifiedProviderMetadata>>>>,
@@ -434,6 +433,7 @@ mod tests {
             additional_authorization_parameters: Vec::new(),
             forward_login_hint: false,
             on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+            registration_token_required: false,
         };
 
         // Without any override, it should just use discovery

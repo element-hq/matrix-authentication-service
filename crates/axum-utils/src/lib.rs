@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -14,6 +15,7 @@ pub mod error_wrapper;
 pub mod fancy_error;
 pub mod jwt;
 pub mod language_detection;
+pub mod log_context;
 pub mod sentry;
 pub mod session;
 pub mod user_authorization;
@@ -23,5 +25,6 @@ pub use axum;
 pub use self::{
     error_wrapper::ErrorWrapper,
     fancy_error::{GenericError, InternalError},
+    log_context::RecordAsRequester,
     session::{SessionInfo, SessionInfoExt},
 };

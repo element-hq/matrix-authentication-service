@@ -8,7 +8,7 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    BrowserSession, Clock, UpstreamOAuthAuthorizationSession,
+    BrowserSession, Clock, UlidExt as _, UpstreamOAuthAuthorizationSession,
     UpstreamOAuthAuthorizationSessionState, UpstreamOAuthLink, UpstreamOAuthProvider,
 };
 use mas_storage::{
@@ -17,8 +17,10 @@ use mas_storage::{
     upstream_oauth2::{UpstreamOAuthSessionFilter, UpstreamOAuthSessionRepository},
 };
 use rand::RngCore;
-use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def, extension::postgres::PgExpr};
-use sea_query_binder::SqlxBinder;
+use sea_query::{
+    Expr, ExprTrait, PostgresQueryBuilder, Query, enum_def, extension::postgres::PgExpr,
+};
+use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
@@ -259,7 +261,7 @@ impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
         nonce: Option<String>,
     ) -> Result<UpstreamOAuthAuthorizationSession, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record(
             "upstream_oauth_authorization_session.id",
             tracing::field::display(id),

@@ -36,7 +36,7 @@ const RESULT: Key = Key::from_static_str("result");
 #[derive(Clone, Copy, Debug)]
 struct ActivityRecord {
     // XXX: We don't actually use the start time for now
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     start_time: DateTime<Utc>,
     end_time: DateTime<Utc>,
     ip: Option<IpAddr>,

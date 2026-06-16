@@ -5,15 +5,15 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
-use mas_data_model::{BrowserSession, Clock, User, UserPasskey, UserPasskeyChallenge};
+use mas_data_model::{BrowserSession, Clock, UlidExt as _, User, UserPasskey, UserPasskeyChallenge};
 use mas_storage::{
     Page, Pagination,
     pagination::Node,
     user::{UserPasskeyFilter, UserPasskeyRepository},
 };
 use rand::RngCore;
-use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def};
-use sea_query_binder::SqlxBinder;
+use sea_query::{Expr, ExprTrait, PostgresQueryBuilder, Query, enum_def};
+use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
@@ -364,7 +364,7 @@ impl UserPasskeyRepository for PgUserPasskeyRepository<'_> {
         metadata: Vec<u8>,
     ) -> Result<UserPasskey, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("user_passkey.id", tracing::field::display(id));
 
         sqlx::query!(
@@ -515,7 +515,7 @@ impl UserPasskeyRepository for PgUserPasskeyRepository<'_> {
         session: &BrowserSession,
     ) -> Result<UserPasskeyChallenge, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("user_passkey_challenge.id", tracing::field::display(id));
 
         sqlx::query!(
@@ -562,7 +562,7 @@ impl UserPasskeyRepository for PgUserPasskeyRepository<'_> {
         state: Vec<u8>,
     ) -> Result<UserPasskeyChallenge, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("user_passkey_challenge.id", tracing::field::display(id));
 
         sqlx::query!(

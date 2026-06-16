@@ -5,15 +5,34 @@
  * Please see LICENSE files in the repository root for full details.
  */
 
-@import "@fontsource/inter/400.css";
-@import "@fontsource/inter/500.css";
-@import "@fontsource/inter/600.css";
-@import "@fontsource/inter/700.css";
-@import "@fontsource/inconsolata/400.css";
-@import "@fontsource/inconsolata/700.css";
-@import "@vector-im/compound-design-tokens/assets/web/css/compound-design-tokens.css";
-@import "@vector-im/compound-web/dist/style.css";
+@import "tailwindcss";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* The SSR templates live outside the frontend root, so they aren't picked up by
+ * Tailwind's automatic content detection. */
+@source "../../../templates/**/*.html";
+
+@theme {
+  /* Replace the default palette and font weights with our own tokens. */
+  --color-*: initial;
+  --font-weight-*: initial;
+
+  --color-white: #ffffff;
+  --color-primary: var(--cpd-color-text-primary);
+  --color-secondary: var(--cpd-color-text-secondary);
+  --color-critical: var(--cpd-color-text-critical-primary);
+  --color-alert: #ff5b55;
+  --color-links: #0086e6;
+  --color-grey-25: #f4f6fa;
+  --color-grey-50: #e3e8f0;
+  --color-grey-100: #c1c6cd;
+  --color-grey-150: #8d97a5;
+  --color-grey-200: #737d8c;
+  --color-grey-250: #a9b2bc;
+  --color-grey-300: #8e99a4;
+  --color-grey-400: #6f7882;
+  --color-grey-450: #394049;
+
+  --font-weight-semibold: var(--cpd-font-weight-semibold);
+  --font-weight-medium: var(--cpd-font-weight-medium);
+  --font-weight-regular: var(--cpd-font-weight-regular);
+}

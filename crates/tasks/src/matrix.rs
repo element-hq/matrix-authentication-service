@@ -60,8 +60,12 @@ impl RunnableJob for ProvisionUserJob {
             .into_iter()
             .map(|email| email.email)
             .collect();
-        let mut request =
-            ProvisionRequest::new(user.username.clone(), user.sub.clone()).set_emails(emails);
+        let mut request = ProvisionRequest::new(
+            user.username.clone(),
+            user.sub.clone(),
+            user.locked_at.is_some(),
+        )
+        .set_emails(emails);
 
         if let Some(display_name) = self.display_name_to_set() {
             request = request.set_displayname(display_name.to_owned());

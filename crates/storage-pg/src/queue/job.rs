@@ -9,7 +9,7 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
-use mas_data_model::Clock;
+use mas_data_model::{Clock, UlidExt as _};
 use mas_storage::queue::{Job, QueueJobRepository, Worker};
 use opentelemetry_semantic_conventions::trace::DB_QUERY_TEXT;
 use rand::RngCore;
@@ -97,7 +97,7 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
         metadata: serde_json::Value,
     ) -> Result<(), Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("queue_job.id", tracing::field::display(id));
 
         sqlx::query!(
@@ -141,7 +141,7 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
         schedule_name: Option<&str>,
     ) -> Result<(), Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("queue_job.id", tracing::field::display(id));
 
         sqlx::query!(
@@ -342,7 +342,7 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
     ) -> Result<(), Self::Error> {
         let now = clock.now();
         let scheduled_at = now + delay;
-        let new_id = Ulid::from_datetime_with_source(now.into(), rng);
+        let new_id = Ulid::from_datetime_with_rng(now, rng);
 
         let span = tracing::info_span!(
             "db.queue_job.retry.insert_job",

@@ -4,10 +4,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use std::collections::BTreeMap;
+
 use axum::{
-    extract::{Form, State},
+    extract::State,
     response::{IntoResponse, Response},
 };
+use axum_extra::extract::Query;
 use hyper::StatusCode;
 use mas_axum_utils::{GenericError, InternalError, SessionInfoExt, cookies::CookieJar};
 use mas_data_model::{AuthorizationCode, BoxClock, BoxRng, Pkce};
@@ -118,7 +121,10 @@ pub(crate) async fn get(
     activity_tracker: BoundActivityTracker,
     mut repo: BoxRepository,
     cookie_jar: CookieJar,
-    Form(params): Form<Params>,
+    // Extract the query parameters twice: once to get the raw query string,
+    // and once to parse it into a structured `Params` object.
+    Query(raw_parameters): Query<BTreeMap<String, String>>,
+    Query(params): Query<Params>,
 ) -> Result<Response, RouteError> {
     // First, figure out what client it is
     let client = repo
@@ -260,6 +266,7 @@ pub(crate) async fn get(
                     response_type.has_id_token(),
                     params.auth.login_hint,
                     Some(locale.to_string()),
+                    raw_parameters,
                 )
                 .await?;
             let continue_grant = PostAuthAction::continue_grant(grant.id);
@@ -278,9 +285,15 @@ pub(crate) async fn get(
                     // Other cases where we don't have a session, ask for a login
                     repo.save().await?;
 
-                    url_builder
-                        .redirect(&mas_router::Login::and_then(continue_grant))
-                        .into_response()
+                    let mut url = mas_router::Login::and_then(continue_grant);
+
+                    url = if let Some(login_hint) = grant.login_hint {
+                        url.with_login_hint(login_hint)
+                    } else {
+                        url
+                    };
+
+                    url_builder.redirect(&url).into_response()
                 }
 
                 Some(user_session) => {
