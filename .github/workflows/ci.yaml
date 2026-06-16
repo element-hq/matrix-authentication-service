@@ -244,7 +244,7 @@ jobs:
         # sync with Dockerfile.
         #
         # --override sets this as the default rust toolchain version in this directory.
-        run: rustup toolchain install 1.93.0 --profile minimal --component clippy --override
+        run: rustup toolchain install 1.96.0 --profile minimal --component clippy --override
 
       - uses: ./.github/actions/build-policies
 

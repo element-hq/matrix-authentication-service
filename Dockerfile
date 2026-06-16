@@ -14,7 +14,7 @@
 ARG DEBIAN_VERSION=13
 ARG DEBIAN_VERSION_NAME=trixie
 # Keep in sync with .github/workflows/ci.yaml
-ARG RUSTC_VERSION=1.93.0
+ARG RUSTC_VERSION=1.96.0
 # Keep in sync with .node-version
 ARG NODEJS_VERSION=24.15.0
 # Keep in sync with .github/actions/build-policies/action.yml and policies/Makefile
