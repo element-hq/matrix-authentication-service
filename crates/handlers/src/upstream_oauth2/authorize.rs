@@ -189,8 +189,8 @@ fn render_additional_authorization_parameters<'a>(
     let ctx = context! { params => raw_parameters };
 
     templates.iter().filter_map(move |(key, template)| {
-        match env.render_str(template, &ctx) {
-            Ok(value) if !value.trim().is_empty() => Some((key.as_str(), value)),
+        match env.render_str(template, &ctx).map(|v| v.trim().to_owned()) {
+            Ok(value) if !value.is_empty() => Some((key.as_str(), value)),
             Ok(_) => {
                 // Empty render — drop the parameter rather than forwarding
                 // `?key=`.
