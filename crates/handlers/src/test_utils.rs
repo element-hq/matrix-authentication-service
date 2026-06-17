@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -244,7 +245,7 @@ impl TestState {
 
         let activity_tracker = ActivityTracker::new(
             PgRepositoryFactory::new(pool.clone()).boxed(),
-            std::time::Duration::from_secs(60),
+            std::time::Duration::from_mins(1),
             &task_tracker,
             shutdown_token.child_token(),
         );

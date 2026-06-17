@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -456,7 +457,7 @@ pub async fn load_policy_factory_dynamic_data_continuously(
     load_policy_factory_dynamic_data(&policy_factory, &*repository_factory).await?;
 
     task_tracker.spawn(async move {
-        let mut interval = tokio::time::interval(Duration::from_secs(60));
+        let mut interval = tokio::time::interval(Duration::from_mins(1));
 
         loop {
             tokio::select! {

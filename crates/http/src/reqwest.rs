@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -102,7 +103,7 @@ pub fn client() -> reqwest::Client {
         .dns_resolver(Arc::new(TracingResolver::new()))
         .use_preconfigured_tls(tls_config)
         .user_agent(USER_AGENT)
-        .timeout(Duration::from_secs(60))
+        .timeout(Duration::from_mins(1))
         .connect_timeout(Duration::from_secs(30))
         .build()
         .expect("failed to create HTTP client")

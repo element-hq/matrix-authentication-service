@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -204,7 +205,7 @@ impl Options {
         // Activity is flushed every minute
         let activity_tracker = ActivityTracker::new(
             PgRepositoryFactory::new(pool.clone()).boxed(),
-            Duration::from_secs(60),
+            Duration::from_mins(1),
             shutdown.task_tracker(),
             shutdown.soft_shutdown_token(),
         );

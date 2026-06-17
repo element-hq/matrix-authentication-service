@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -257,6 +258,10 @@ impl ConfigurationSection for ClientsConfig {
 
 #[cfg(test)]
 mod tests {
+    // The closures passed to `Jail::expect_with` return `figment::Error`, which is
+    // large, and we can't change figment's API.
+    #![expect(clippy::result_large_err)]
+
     use std::str::FromStr;
 
     use figment::{
