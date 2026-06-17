@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -186,6 +187,7 @@ pub(crate) mod policy_data;
 pub(crate) mod repository;
 pub(crate) mod telemetry;
 pub(crate) mod tracing;
+pub(crate) mod ulid_at;
 
 pub(crate) use self::errors::DatabaseInconsistencyError;
 pub use self::{

@@ -5,12 +5,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::{net::IpAddr, sync::Arc, time::Duration};
+use std::{convert::Infallible, net::IpAddr, sync::Arc, time::Duration};
 
+use axum::extract::FromRequestParts;
 use governor::{RateLimiter, clock::QuantaClock, state::keyed::DashMapStateStore};
 use mas_config::RateLimitingConfig;
 use mas_data_model::{User, UserEmailAuthentication};
 use ulid::Ulid;
+
+use crate::ClientIp;
 
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum AccountRecoveryLimitedError {
@@ -73,6 +76,28 @@ impl RequesterFingerprint {
     #[must_use]
     pub const fn new(ip: IpAddr) -> Self {
         Self { ip: Some(ip) }
+    }
+}
+
+impl<S: Send + Sync> FromRequestParts<S> for RequesterFingerprint {
+    type Rejection = Infallible;
+
+    async fn from_request_parts(
+        parts: &mut axum::http::request::Parts,
+        _state: &S,
+    ) -> Result<Self, Self::Rejection> {
+        let ip = parts.extensions.get::<ClientIp>().and_then(|ip| ip.0);
+
+        if let Some(ip) = ip {
+            Ok(Self::new(ip))
+        } else {
+            // If we can't infer the IP address, we'll just use an empty fingerprint and
+            // warn about it
+            tracing::warn!(
+                "Could not infer client IP address for an operation which rate-limits based on IP addresses"
+            );
+            Ok(Self::EMPTY)
+        }
     }
 }
 

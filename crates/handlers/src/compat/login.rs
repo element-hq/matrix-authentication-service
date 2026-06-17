@@ -1265,6 +1265,53 @@ mod tests {
         assert_eq!(requester, None);
     }
 
+    /// Test that the client IP injected on the request (as the IP-detection
+    /// middleware would in production) is recorded against the session by the
+    /// activity tracker.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_login_records_client_ip(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let user = user_with_password(&state, "alice", "password", false).await;
+
+        let client_ip = std::net::IpAddr::from([1, 2, 3, 4]);
+        let request = Request::post("/_matrix/client/v3/login")
+            .client_ip(client_ip)
+            .json(serde_json::json!({
+                "type": "m.login.password",
+                "identifier": {
+                    "type": "m.id.user",
+                    "user": "alice",
+                },
+                "password": "password",
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+
+        // Flush the activity tracker so the recorded IP is persisted
+        state.activity_tracker.flush().await;
+
+        let mut repo = state.repository().await.unwrap();
+        let compat_session_page = repo
+            .compat_session()
+            .list(
+                CompatSessionFilter::new().for_user(&user).active_only(),
+                Pagination::first(1),
+            )
+            .await
+            .unwrap();
+        let (compat_session, _) = compat_session_page
+            .edges
+            .into_iter()
+            .next()
+            .expect("a compat session should have been created")
+            .node;
+
+        assert_eq!(compat_session.last_active_ip, Some(client_ip));
+    }
+
     /// Test that a user can login with a password using the Matrix
     /// compatibility API.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

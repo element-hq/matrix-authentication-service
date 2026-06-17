@@ -748,12 +748,30 @@ upstream_oauth2:
       # the response parameters in the request body
       #response_mode: query
 
-      # Additional parameters to include in the authorization request
+      # Additional parameters to include in the authorization request.
+      #
+      # Values are Jinja2 templates rendered against a `params` map
+      # containing the raw query parameters of the downstream
+      # authorization request (empty when the upstream login was not
+      # triggered by a downstream authorization request, e.g. account
+      # linking or direct login). Templates that render to an empty
+      # string are dropped rather than forwarded.
+      #
+      # Plain strings without `{{ … }}` render to themselves, so static
+      # values work as expected.
       #additional_authorization_parameters:
       #  foo: "bar"
+      #  login_hint: "{{ params.login_hint }}"
+      #  acr_values: "{{ params.acr_values }}"
 
       # Whether the `login_hint` should be forwarded to the provider in the
       # authorization request.
+      #
+      # Deprecated: prefer adding
+      # `login_hint: "{{ params.login_hint }}"` to
+      # `additional_authorization_parameters` instead. When this flag is
+      # set, a `login_hint` template entry is injected automatically if
+      # one is not already present.
       #forward_login_hint: false
 
       # What to do when receiving an OIDC Backchannel logout request.

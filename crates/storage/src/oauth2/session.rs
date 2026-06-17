@@ -53,11 +53,14 @@ pub struct OAuth2SessionFilter<'a> {
     browser_session_filter: Option<BrowserSessionFilter<'a>>,
     device: Option<&'a Device>,
     client: Option<&'a Client>,
+    clients: Option<&'a [&'a Client]>,
     client_kind: Option<ClientKind>,
     state: Option<OAuth2SessionState>,
     scope: Option<&'a Scope>,
     last_active_before: Option<DateTime<Utc>>,
     last_active_after: Option<DateTime<Utc>>,
+    created_before: Option<DateTime<Utc>>,
+    created_after: Option<DateTime<Utc>>,
 }
 
 impl<'a> OAuth2SessionFilter<'a> {
@@ -152,6 +155,25 @@ impl<'a> OAuth2SessionFilter<'a> {
         self.client
     }
 
+    /// List sessions for a set of clients
+    ///
+    /// This filter is independent of [`Self::for_client`]: if both are set,
+    /// the conditions are `AND`-ed together. In practice an API caller uses
+    /// one or the other.
+    #[must_use]
+    pub fn for_clients(mut self, clients: &'a [&'a Client]) -> Self {
+        self.clients = Some(clients);
+        self
+    }
+
+    /// Get the multi-client filter
+    ///
+    /// Returns [`None`] if no multi-client filter was set
+    #[must_use]
+    pub fn clients(&self) -> Option<&'a [&'a Client]> {
+        self.clients
+    }
+
     /// List only static clients
     #[must_use]
     pub fn only_static_clients(mut self) -> Self {
@@ -202,6 +224,36 @@ impl<'a> OAuth2SessionFilter<'a> {
     #[must_use]
     pub fn last_active_after(&self) -> Option<DateTime<Utc>> {
         self.last_active_after
+    }
+
+    /// Only return sessions created before the given time
+    #[must_use]
+    pub fn with_created_before(mut self, created_before: DateTime<Utc>) -> Self {
+        self.created_before = Some(created_before);
+        self
+    }
+
+    /// Only return sessions created after the given time
+    #[must_use]
+    pub fn with_created_after(mut self, created_after: DateTime<Utc>) -> Self {
+        self.created_after = Some(created_after);
+        self
+    }
+
+    /// Get the created-before filter
+    ///
+    /// Returns [`None`] if no filter was set
+    #[must_use]
+    pub fn created_before(&self) -> Option<DateTime<Utc>> {
+        self.created_before
+    }
+
+    /// Get the created-after filter
+    ///
+    /// Returns [`None`] if no filter was set
+    #[must_use]
+    pub fn created_after(&self) -> Option<DateTime<Utc>> {
+        self.created_after
     }
 
     /// Only return active sessions

@@ -675,9 +675,40 @@ pub struct Provider {
     #[serde(default, skip_serializing_if = "ClaimsImports::is_default")]
     pub claims_imports: ClaimsImports,
 
-    /// Additional parameters to include in the authorization request
+    /// Additional parameters to include in the authorization request.
     ///
-    /// Orders of the keys are not preserved.
+    /// Each value is a [`MiniJinja`] template. The template context
+    /// exposes a `params` map containing the raw query parameters from
+    /// the downstream authorization request. The map is empty when the
+    /// upstream login was not initiated by a downstream OAuth/OIDC
+    /// authorization request (e.g. account linking, direct login from
+    /// the login page).
+    ///
+    /// [`MiniJinja`]: https://docs.rs/minijinja
+    ///
+    /// Templates that render to an empty string are dropped — so
+    /// referencing a downstream parameter that wasn't supplied (e.g.
+    /// `{{ params.login_hint }}`) results in no parameter being
+    /// forwarded, rather than an empty one.
+    ///
+    /// Plain strings (without `{{ … }}`) are valid templates that render
+    /// to themselves.
+    ///
+    /// Example:
+    ///
+    /// ```yaml
+    /// additional_authorization_parameters:
+    ///   login_hint: "{{ params.login_hint }}"
+    ///   acr_values: "{{ params.acr_values }}"
+    ///   kc_idp_hint: "saml"
+    /// ```
+    ///
+    /// `params` exposes the entire raw query string of the downstream
+    /// request (including `client_id`, `state`, `code_challenge`, …).
+    /// Forward specific keys deliberately; don't blindly proxy the
+    /// whole map.
+    ///
+    /// Order of keys is not preserved.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub additional_authorization_parameters: BTreeMap<String, String>,
 
@@ -685,6 +716,12 @@ pub struct Provider {
     /// authorization request.
     ///
     /// Defaults to `false`.
+    ///
+    /// Deprecated: prefer adding
+    /// `login_hint: "{{ params.login_hint }}"` to
+    /// `additional_authorization_parameters` instead. When this flag is
+    /// set, a `login_hint` template entry is injected automatically if
+    /// one is not already present.
     #[serde(default)]
     pub forward_login_hint: bool,
 
