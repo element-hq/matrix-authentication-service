@@ -264,7 +264,7 @@ pub fn build_router(
                             // Cache assets for 1 year
                             CacheControl::new()
                                 .with_public()
-                                .with_max_age(Duration::from_hours(8760))
+                                .with_max_age(Duration::from_hours(365 * 24))
                                 .with_immutable()
                         };
                         res.headers_mut().typed_insert(cache_control);
