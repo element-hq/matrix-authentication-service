@@ -2975,6 +2975,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ipnetwork"
+version = "0.21.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf370abdafd54d13e54a620e8c3e1145f28e46cc9d704bc6d94414559df41763"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "iri-string"
 version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3370,7 +3379,7 @@ dependencies = [
  "headers",
  "http-body-util",
  "hyper",
- "ipnetwork",
+ "ipnetwork 0.21.1",
  "itertools 0.15.0",
  "listenfd",
  "mas-config",
@@ -3440,7 +3449,7 @@ dependencies = [
  "governor",
  "hex",
  "indoc",
- "ipnetwork",
+ "ipnetwork 0.21.1",
  "lettre",
  "mas-iana",
  "mas-jose",
@@ -6214,7 +6223,7 @@ dependencies = [
  "hashbrown 0.15.5",
  "hashlink",
  "indexmap 2.14.0",
- "ipnetwork",
+ "ipnetwork 0.20.0",
  "log",
  "memchr",
  "once_cell",
@@ -6336,7 +6345,7 @@ dependencies = [
  "hkdf",
  "hmac 0.12.1",
  "home",
- "ipnetwork",
+ "ipnetwork 0.20.0",
  "itoa",
  "log",
  "md-5 0.10.6",
