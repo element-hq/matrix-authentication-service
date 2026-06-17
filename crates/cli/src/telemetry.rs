@@ -83,6 +83,12 @@ fn match_propagator(propagator: Propagator) -> Box<dyn TextMapPropagator + Send 
     match propagator {
         P::TraceContext => Box::new(TraceContextPropagator::new()),
         P::Baggage => Box::new(BaggagePropagator::new()),
+        // opentelemetry-jaeger-propagator is deprecated upstream but still
+        // published; we keep supporting the Jaeger format until it's removed.
+        #[expect(
+            deprecated,
+            reason = "the Jaeger propagator is deprecated upstream but we still expose it as an option"
+        )]
         P::Jaeger => Box::new(opentelemetry_jaeger_propagator::Propagator::new()),
     }
 }
