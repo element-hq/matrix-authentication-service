@@ -22,7 +22,7 @@ use opentelemetry_semantic_conventions::trace::DB_QUERY_TEXT;
 use sea_query::{
     Alias, ColumnRef, CommonTableExpression, Expr, PostgresQueryBuilder, Query, UnionType,
 };
-use sea_query_binder::SqlxBinder;
+use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
 use tracing::Instrument;
 use ulid::Ulid;
@@ -416,7 +416,7 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
         let with_clause = Query::with().cte(common_table_expression).clone();
 
         let select = Query::select()
-            .column(ColumnRef::Asterisk)
+            .column(ColumnRef::Asterisk(None))
             .from(Alias::new("sessions"))
             .generate_pagination(AppSessionLookupIden::Cursor, pagination)
             .clone();

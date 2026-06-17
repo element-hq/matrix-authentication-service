@@ -561,14 +561,13 @@ features = ["std"]
 
 # Query builder
 [workspace.dependencies.sea-query]
-version = "0.32.7"
+version = "1.0.1"
 features = ["derive", "attr", "with-uuid", "with-chrono", "postgres-array"]
 
-# Query builder
-[workspace.dependencies.sea-query-binder]
-version = "0.7.0"
+# Query builder integration with SQLx
+[workspace.dependencies.sea-query-sqlx]
+version = "0.8.1"
 features = [
-    "sqlx",
     "sqlx-postgres",
     "with-uuid",
     "with-chrono",

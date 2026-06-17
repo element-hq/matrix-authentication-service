@@ -12,8 +12,10 @@ use async_trait::async_trait;
 use mas_data_model::{Clock, User};
 use mas_storage::user::{UserFilter, UserRepository};
 use rand::RngCore;
-use sea_query::{Expr, PostgresQueryBuilder, Query, SimpleExpr, extension::postgres::PgExpr as _};
-use sea_query_binder::SqlxBinder;
+use sea_query::{
+    Expr, ExprTrait, PostgresQueryBuilder, Query, SimpleExpr, extension::postgres::PgExpr as _,
+};
+use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
@@ -134,10 +136,8 @@ impl Filter for UserFilter<'_> {
             }))
             .add_option(self.active_oauth2_session_for_any_of_clients().map(
                 |clients| -> SimpleExpr {
-                    let client_ids: Vec<SimpleExpr> = clients
-                        .iter()
-                        .map(|c| Expr::val(Uuid::from(*c)).into())
-                        .collect();
+                    let client_ids: Vec<SimpleExpr> =
+                        clients.iter().map(|c| Expr::val(Uuid::from(*c))).collect();
                     Expr::exists(
                         Query::select()
                             .expr(Expr::cust("1"))

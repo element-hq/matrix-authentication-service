@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -23,10 +24,10 @@ use oauth2_types::scope::Scope;
 use opentelemetry_semantic_conventions::trace::DB_QUERY_TEXT;
 use rand::RngCore;
 use sea_query::{
-    Cond, Condition, Expr, PgFunc, PostgresQueryBuilder, Query, SimpleExpr, enum_def,
+    Cond, Condition, Expr, ExprTrait, PgFunc, PostgresQueryBuilder, Query, SimpleExpr, enum_def,
     extension::postgres::PgExpr as _,
 };
-use sea_query_binder::SqlxBinder as _;
+use sea_query_sqlx::SqlxBinder as _;
 use sqlx::PgConnection;
 use tracing::{Instrument as _, info_span};
 use ulid::Ulid;
@@ -657,7 +658,7 @@ impl Filter for PersonalSessionFilter<'_> {
                         .into()
                 } else {
                     // If the device ID can't be encoded as a scope token, match no rows
-                    Expr::val(false).into()
+                    Expr::val(false)
                 }
             }))
             .add_option(self.state().map(|state| match state {

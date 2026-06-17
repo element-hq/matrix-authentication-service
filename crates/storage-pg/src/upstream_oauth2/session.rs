@@ -17,8 +17,10 @@ use mas_storage::{
     upstream_oauth2::{UpstreamOAuthSessionFilter, UpstreamOAuthSessionRepository},
 };
 use rand::RngCore;
-use sea_query::{Expr, PostgresQueryBuilder, Query, enum_def, extension::postgres::PgExpr};
-use sea_query_binder::SqlxBinder;
+use sea_query::{
+    Expr, ExprTrait, PostgresQueryBuilder, Query, enum_def, extension::postgres::PgExpr,
+};
+use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;

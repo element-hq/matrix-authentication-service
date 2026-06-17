@@ -18,10 +18,10 @@ use mas_storage::{
 use oauth2_types::scope::{Scope, ScopeToken};
 use rand::RngCore;
 use sea_query::{
-    Condition, Expr, PgFunc, PostgresQueryBuilder, Query, SimpleExpr, enum_def,
+    Condition, Expr, ExprTrait, PgFunc, PostgresQueryBuilder, Query, SimpleExpr, enum_def,
     extension::postgres::PgExpr,
 };
-use sea_query_binder::SqlxBinder;
+use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
@@ -131,7 +131,7 @@ impl Filter for OAuth2SessionFilter<'_> {
                         OAuth2Clients::Table,
                         OAuth2Clients::OAuth2ClientId,
                     )))
-                    .and_where(Expr::col((OAuth2Clients::Table, OAuth2Clients::IsStatic)).into())
+                    .and_where(Expr::col((OAuth2Clients::Table, OAuth2Clients::IsStatic)))
                     .from(OAuth2Clients::Table)
                     .take();
                 if client_kind.is_static() {
@@ -157,7 +157,7 @@ impl Filter for OAuth2SessionFilter<'_> {
                         .into()
                 } else {
                     // If the device ID can't be encoded as a scope token, match no rows
-                    Expr::val(false).into()
+                    Expr::val(false)
                 }
             }))
             .add_option(self.browser_session().map(|browser_session| {
