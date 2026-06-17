@@ -18,10 +18,21 @@ use url::Url;
 
 use crate::{Page, Pagination, repository_impl};
 
+/// The kind of OAuth 2.0 client, used by [`OAuth2ClientFilter`]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum OAuth2ClientKind {
+    /// Static clients, declared in the configuration file
+    Static,
+
+    /// Dynamic clients, registered through the dynamic client registration
+    /// endpoint
+    Dynamic,
+}
+
 /// Filter parameters for listing OAuth 2.0 clients
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct OAuth2ClientFilter<'a> {
-    state: Option<bool>,
+    kind: Option<OAuth2ClientKind>,
     client_name: Option<&'a str>,
     client_uri: Option<&'a str>,
     grant_type: Option<&'a GrantType>,
@@ -38,7 +49,7 @@ impl<'a> OAuth2ClientFilter<'a> {
     /// Only return static clients (those declared in the configuration)
     #[must_use]
     pub fn only_static_clients(mut self) -> Self {
-        self.state = Some(true);
+        self.kind = Some(OAuth2ClientKind::Static);
         self
     }
 
@@ -46,18 +57,16 @@ impl<'a> OAuth2ClientFilter<'a> {
     /// dynamic-client-registration endpoint)
     #[must_use]
     pub fn only_dynamic_clients(mut self) -> Self {
-        self.state = Some(false);
+        self.kind = Some(OAuth2ClientKind::Dynamic);
         self
     }
 
-    /// Get the static/dynamic state filter
+    /// Get the client kind filter
     ///
-    /// Returns `Some(true)` if only static clients should be returned,
-    /// `Some(false)` if only dynamic clients should be returned, and
-    /// `None` if no filter was set.
+    /// Returns [`None`] if no client kind filter was set
     #[must_use]
-    pub fn state(&self) -> Option<bool> {
-        self.state
+    pub fn kind(&self) -> Option<OAuth2ClientKind> {
+        self.kind
     }
 
     /// Only return clients whose `client_name` matches the given substring

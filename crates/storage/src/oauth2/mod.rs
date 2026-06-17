@@ -17,7 +17,7 @@ mod session;
 pub use self::{
     access_token::OAuth2AccessTokenRepository,
     authorization_grant::OAuth2AuthorizationGrantRepository,
-    client::{OAuth2ClientFilter, OAuth2ClientRepository},
+    client::{OAuth2ClientFilter, OAuth2ClientKind, OAuth2ClientRepository},
     device_code_grant::{OAuth2DeviceCodeGrantParams, OAuth2DeviceCodeGrantRepository},
     refresh_token::OAuth2RefreshTokenRepository,
     session::{OAuth2SessionFilter, OAuth2SessionRepository},

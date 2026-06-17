@@ -16,7 +16,7 @@ use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod
 use mas_jose::jwk::PublicJsonWebKeySet;
 use mas_storage::{
     Page, Pagination,
-    oauth2::{OAuth2ClientFilter, OAuth2ClientRepository},
+    oauth2::{OAuth2ClientFilter, OAuth2ClientKind, OAuth2ClientRepository},
     pagination::Node,
 };
 use oauth2_types::{oidc::ApplicationType, requests::GrantType};
@@ -90,7 +90,8 @@ impl Node<Ulid> for OAuth2ClientLookup {
 impl Filter for OAuth2ClientFilter<'_> {
     fn generate_condition(&self, _has_joins: bool) -> impl sea_query::IntoCondition {
         sea_query::Condition::all()
-            .add_option(self.state().map(|is_static| {
+            .add_option(self.kind().map(|kind| {
+                let is_static = matches!(kind, OAuth2ClientKind::Static);
                 Expr::col((OAuth2Clients::Table, OAuth2Clients::IsStatic)).eq(is_static)
             }))
             .add_option(self.client_name().map(|client_name| {
