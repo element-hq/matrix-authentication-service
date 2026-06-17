@@ -42,13 +42,25 @@ jobs:
         # Only the minimal profile is required here to run `cargo metadata`
         run: rustup toolchain install stable --profile minimal
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
+
+      - name: Install Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Compute the new minor RC
         id: next
         env:
           BUMP: pre${{ inputs.kind }}
         run: |
           CURRENT_VERSION="$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[] | select(.name == "mas-cli") | .version')"
-          NEXT_VERSION="$(npx --yes semver@7.5.4 -i "$BUMP" --preid rc "${CURRENT_VERSION}")"
+          NEXT_VERSION="$(pnpm exec semver -i "$BUMP" --preid rc "${CURRENT_VERSION}")"
           # compute the short minor version, e.g. 0.1.0-rc.1 -> 0.1
           SHORT_VERSION="$(echo "${NEXT_VERSION}" | cut -d. -f1-2)"
           echo "full=${NEXT_VERSION}" >> "$GITHUB_OUTPUT"
@@ -68,16 +80,20 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install Node
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          node-version: 24
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
 
-      - name: Install Localazy CLI
-        run: npm install -g @localazy/cli
+      - name: Install Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .node-version
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Create a new branch in Localazy
-        run: localazy branch -w "$LOCALAZY_WRITE_KEY" create main "$BRANCH"
+        run: pnpm exec localazy branch -w "$LOCALAZY_WRITE_KEY" create main "$BRANCH"
         env:
           LOCALAZY_WRITE_KEY: ${{ secrets.LOCALAZY_WRITE_KEY }}
           # Localazy doesn't like slashes in branch names, so we just use the short version

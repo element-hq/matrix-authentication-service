@@ -143,14 +143,16 @@ impl ConfigurationSection for ExperimentalConfig {
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 pub struct SessionLimitConfig {
     /// Upon login in interactive contexts (like OAuth 2.0 sessions, or
-    /// `m.login.sso` compability login flow), if the soft limit is reached,
+    /// `m.login.sso` compatibility login flow), if the soft limit is reached,
     /// it will display a policy violation screen (web UI) to remove
     /// sessions before creating the new session.
     ///
     /// This is not enforced in non-interactive contexts (like
-    /// `m.login.password` login with the compability API) as there is no
+    /// `m.login.password` login with the compatibility API) as there is no
     /// opportunity for us to show some UI for people remove some sessions.
     /// See [`hard_limit`] for enforcement on that side.
+    ///
+    /// This is the limit that is displayed in the UI
     ///
     /// [`hard_limit`]: Self::hard_limit
     pub soft_limit: NonZeroU64,
@@ -163,6 +165,17 @@ pub struct SessionLimitConfig {
     ///
     /// [`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction
     pub hard_limit: NonZeroU64,
+    /// When set, only accounts with <= `max_session_threshold` sessions have
+    /// the session limits applied.
+    ///
+    /// This is most applicable in scenarios where your homeserver has many
+    /// legacy bots/scripts that login over and over (which ideally should
+    /// be using [personal access
+    /// tokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))
+    /// and you want to avoid breaking their operation while maintaining some
+    /// level of sanity with the number of devices that people can have.
+    /// This will prevent anyone else from crossing the limit.
+    pub max_session_threshold: Option<NonZeroU64>,
     /// Whether we should automatically choose the least recently used devices
     /// to remove when the [`Self::hard_limit`] is reached; in order to
     /// allow the new login to continue.
@@ -186,14 +199,34 @@ pub struct SessionLimitConfig {
     /// and you want to avoid breaking their operation while maintaining some
     /// level of sanity with the number of devices that people can have.
     ///
+    /// Removing devices is a non-trivial task for some homeservers to tackle
+    /// and can cause lots of device list changes, `/sync`, federation, and
+    /// replication traffic. Consider using [`max_session_threshold`] to
+    /// limit the size of accounts that are acted upon.
+    ///
     /// [`hard_limit`]: Self::hard_limit
     /// [`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction
+    /// [`max_session_threshold`]: Self::max_session_threshold
     #[serde(default = "default_false")]
     pub dangerous_hard_limit_eviction: bool,
 }
 
 impl SessionLimitConfig {
     fn validate(&self) -> Result<(), Box<figment::error::Error>> {
+        // We assume the `hard_limit` is >= the `soft_limit`
+        //
+        // Why? The UI only shows the soft_limit to users. If hard_limit were smaller
+        // than soft_limit, users could hit the hard_limit without ever reaching the
+        // visible soft_limit threshold — making the actual limit invisible and the
+        // failure confusing.
+        if self.hard_limit < self.soft_limit {
+            return Err(figment::error::Error::from(
+                "Session `hard_limit` must be greater than or equal to the user-facing `soft_limit`.",
+            )
+            .with_path("hard_limit")
+            .into());
+        }
+
         // See [`SessionLimitConfig::dangerous_hard_limit_eviction`] docstring
         if self.dangerous_hard_limit_eviction && self.hard_limit.get() < 2 {
             return Err(figment::error::Error::from(

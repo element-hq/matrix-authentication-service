@@ -56,9 +56,9 @@ exports[`<OAuth2ClientDetail> > renders client details 1`] = `
             class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50 text-ellipsis overflow-hidden"
           >
             <a
-              class="_link_1v5rz_8 _externalLink_94c115"
+              class="_link_k9ljz_8 _externalLink_94c115"
               data-kind="primary"
-              data-size="medium"
+              data-size="md"
               href="https://client.org/tos"
               rel="noreferrer noopener"
               target="_blank"
@@ -79,9 +79,9 @@ exports[`<OAuth2ClientDetail> > renders client details 1`] = `
             class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50 text-ellipsis overflow-hidden"
           >
             <a
-              class="_link_1v5rz_8 _externalLink_94c115"
+              class="_link_k9ljz_8 _externalLink_94c115"
               data-kind="primary"
-              data-size="medium"
+              data-size="md"
               href="https://client.org/policy"
               rel="noreferrer noopener"
               target="_blank"

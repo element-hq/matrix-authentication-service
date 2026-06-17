@@ -302,3 +302,35 @@ test_session_limiting_no_limit if {
 	result.allow
 	result.need_to_remove_sessions == 0
 }
+
+test_session_limiting_under_max_session_threshold if {
+	result := {
+		"allow": authorization_grant.allow,
+		"need_to_remove_sessions": need_to_remove_sessions(authorization_grant.violation),
+	} with input.user as user
+		with input.session_counts as {"total": 42} # Some value above `soft_limit` but below `max_session_threshold`
+		with data.session_limit as {
+			"soft_limit": 32,
+			"hard_limit": 64,
+			# The main thing we're trying to test
+			"max_session_threshold": 64,
+		}
+	not result.allow
+	result.need_to_remove_sessions == 11
+}
+
+test_no_session_limiting_past_max_session_threshold if {
+	result := {
+		"allow": authorization_grant.allow,
+		"need_to_remove_sessions": need_to_remove_sessions(authorization_grant.violation),
+	} with input.user as user
+		with input.session_counts as {"total": 128} # Some value above the limits and `max_session_threshold`
+		with data.session_limit as {
+			"soft_limit": 32,
+			"hard_limit": 64,
+			# The main thing we're trying to test
+			"max_session_threshold": 64,
+		}
+	result.allow
+	result.need_to_remove_sessions == 0
+}

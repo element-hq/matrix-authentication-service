@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -542,7 +543,7 @@ impl HomeserverConnection for SynapseConnection {
             .post(&format!("_synapse/admin/v1/deactivate/{encoded_mxid}"))
             .json(&SynapseDeactivateUserRequest { erase })
             // Deactivation can take a while, so we set a longer timeout
-            .timeout(Duration::from_secs(60 * 5))
+            .timeout(Duration::from_mins(5))
             .send_traced()
             .await
             .context("Failed to deactivate user in Synapse")?;
@@ -591,7 +592,7 @@ impl HomeserverConnection for SynapseConnection {
 
         match response.status() {
             StatusCode::CREATED | StatusCode::OK => Ok(()),
-            code => bail!("Unexpected HTTP code while reactivating user in Synapse: {code}",),
+            code => bail!("Unexpected HTTP code while reactivating user in Synapse: {code}"),
         }
     }
 

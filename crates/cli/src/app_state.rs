@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -100,7 +101,7 @@ impl AppState {
                     if let Err(e) = metadata_cache
                         .warm_up_and_run(
                             &http_client,
-                            std::time::Duration::from_secs(60 * 15),
+                            std::time::Duration::from_mins(15),
                             &mut repo,
                         )
                         .await
@@ -240,7 +241,7 @@ impl FromRequestParts<AppState> for BoxRng {
         _state: &AppState,
     ) -> Result<Self, Self::Rejection> {
         // This rng is used to source the local rng
-        #[allow(clippy::disallowed_methods)]
+        #[expect(clippy::disallowed_methods)]
         let rng = rand::thread_rng();
 
         let rng = rand_chacha::ChaChaRng::from_rng(rng).expect("Failed to seed RNG");

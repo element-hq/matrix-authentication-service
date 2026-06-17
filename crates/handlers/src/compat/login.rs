@@ -457,6 +457,17 @@ pub(crate) async fn post(
 
     // Now we can create the device on the homeserver, without holding the
     // transaction
+    //
+    // Normally, devices get synced to the homeserver in a `SyncDevicesJob` but we
+    // want the device to be created synchronously on the homeserver, so that
+    // when we respond, the access token works completely. If the device doesn't
+    // exist on the homeserver side, token introspection from Synapse to MAS
+    // will work but Synapse will return a 401 because it doesn't see the
+    // device.
+    //
+    // We're using an upsert so if the device already exists for some reason (like
+    // when we're replacing it, or a concurrent device sync happening) it won't
+    // have any effect.
     if let Err(err) = homeserver
         .upsert_device(
             &user.username,
@@ -499,28 +510,33 @@ pub(crate) async fn post(
     }))
 }
 
-/// Given the violations from [`Policy::evaluate_compat_login`], return the
-/// appropriate `RouteError` response.
+/// Given the evaluation result/violations from
+/// [`Policy::evaluate_compat_login`], return the appropriate `RouteError`
+/// response.
 async fn process_violations_for_compat_login(
+    rng: &mut (dyn RngCore + Send),
     clock: &dyn Clock,
     repo: &mut BoxRepository,
     session_limit_config: Option<&SessionLimitConfig>,
     user: &User,
-    violations: Vec<Violation>,
+    res: mas_policy::EvaluationResult,
 ) -> Result<(), RouteError> {
     // We're using slice syntax here so we can match easily
-    match &violations[..] {
+    match (res.valid(), &res.violations[..]) {
         // If the only violation is having reached the session limit, we might be
         // able to resolve the situation.
         //
         // We don't trigger this if there was some other violation anyway, since
         // that means that removing a session wouldn't actually unblock the login.
-        [
-            Violation {
-                variant: Some(ViolationVariant::TooManySessions { need_to_remove }),
-                ..
-            },
-        ] => {
+        (
+            false,
+            [
+                Violation {
+                    variant: Some(ViolationVariant::TooManySessions { need_to_remove }),
+                    ..
+                },
+            ],
+        ) => {
             // Normally, if we are seeing a `TooManySessions` violation,  we would
             // expect `session_limit_config` to be filled in but if someone created
             // their own policies which emit a `TooManySessions` violation that isn't
@@ -596,6 +612,11 @@ async fn process_violations_for_compat_login(
                                 .finish(clock, compat_session.to_owned())
                                 .await?;
                         }
+
+                        // Schedule a device sync with the homeserver
+                        repo.queue_job()
+                            .schedule_job(rng, clock, SyncDevicesJob::new_for_id(user.id))
+                            .await?;
                     } else {
                         // Tell the user about the limit
                         return Err(RouteError::PolicyHardSessionLimitReached);
@@ -613,9 +634,9 @@ async fn process_violations_for_compat_login(
             }
         }
         // Nothing is wrong
-        [] => return Ok(()),
+        (true, _) => return Ok(()),
         // Just throw an error for any other violation
-        _violations => {
+        (false, _violations) => {
             // FIXME: We should be exposing the violations to the user
             return Err(RouteError::PolicyRejected);
         }
@@ -840,11 +861,12 @@ async fn token_login(
         })
         .await?;
     process_violations_for_compat_login(
+        rng,
         clock,
         repo,
         session_limit_config,
         &browser_session.user,
-        res.violations,
+        res,
     )
     .await?;
 
@@ -966,8 +988,7 @@ async fn user_password_login(
             requester: policy_requester,
         })
         .await?;
-    process_violations_for_compat_login(clock, repo, session_limit_config, &user, res.violations)
-        .await?;
+    process_violations_for_compat_login(rng, clock, repo, session_limit_config, &user, res).await?;
 
     let session = repo
         .compat_session()
@@ -993,13 +1014,16 @@ mod tests {
         ops::{Mul, Sub},
     };
 
+    use assert_matches::assert_matches;
     use hyper::Request;
     use mas_matrix::{HomeserverConnection, ProvisionRequest};
     use rand::distributions::{Alphanumeric, DistString};
     use sqlx::PgPool;
 
     use super::*;
-    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup, test_site_config};
+    use crate::test_utils::{
+        CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup, test_site_config,
+    };
 
     /// Test that the server advertises the right login flows.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -1742,13 +1766,252 @@ mod tests {
         token
     }
 
-    /// Test that the `soft_limit` is not enforced for compat login.
+    /// The kind of page shown when encountering a 403 forbidden at the constent
+    /// stage of the `m.login.sso` flow.
+    #[derive(Debug, PartialEq)]
+    pub enum ConsentForbiddenPageType {
+        DeviceLimitReached,
+        GenericPolicyViolation,
+        Unknown,
+    }
+
+    /// Errors we might encounter while going through the `m.login.sso` login
+    /// flow.
     ///
-    /// `soft_limit` is for when we allow the user to remove devices in
-    /// interactive contexts. With the compatibility login API, there is no
-    /// opportunity for us to present a web UI.
+    /// These are things that are a) possible and expected under certain
+    /// conditions b) we want to distinguish and detect in a test
+    #[derive(Debug, Error)]
+    pub enum MatrixCompatSsoLoginError {
+        #[error("Consent page returned 403 forbidden ({page_type:?})\npage_html:\n{page_html}")]
+        ConsentForbidden {
+            page_type: ConsentForbiddenPageType,
+            // Useful to understand what the page looked like at the time
+            page_html: String,
+        },
+        // InvalidUsernamePassword
+        // UserLocked
+        // etc
+    }
+
+    /// Extract the CSRF token value from an HTML page that contains
+    /// `<input type="hidden" name="csrf" value="…">`.
+    /// (cheeky HTML parsing)
+    fn extract_csrf_token_from_page_html(body: &str) -> Option<String> {
+        let after_name = body.split("name=\"csrf\" value=\"").nth(1)?;
+        let value = after_name.split('"').next()?;
+        Some(value.to_owned())
+    }
+
+    /// Drive the `m.login.sso` login flow (act like an actual user going
+    /// through the process in their browser)
+    ///
+    /// Return the `loginToken` (if the login flow was successful) which will
+    /// need to be exchanged for an access token using the `m.login.token`
+    /// flow.
+    ///
+    /// Returns proper errors for some problems but we also have some
+    /// expectations that will panic (fail the test). Feel free to add more
+    /// [`MatrixCompatSsoLoginError`] for specific scenarios that you may
+    /// need to detect more specifically.
+    async fn matrix_compat_sso_login(
+        state: &TestState,
+        username: &str,
+        password: &str,
+    ) -> Result<String, MatrixCompatSsoLoginError> {
+        let cookies = CookieHelper::new();
+
+        // Step #1: Initiate the `m.login.sso` login flow (the browser navigates to
+        // `/login/sso/redirect/{idpId}`)
+        let request =
+            Request::get("/_matrix/client/v3/login/sso/redirect?redirectUrl=http://test-login/")
+                .empty();
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        // We expect to be redirected to `/login` (with the typical MAS flow this will
+        // be a couple of hops -> `/complete-compat-sso/{id}` -> `/login`)
+        response.assert_status(StatusCode::SEE_OTHER);
+        let location = response
+            .headers()
+            .get(http::header::LOCATION)
+            .expect("Expected `Location` header for redirect response")
+            .to_str()
+            .expect("Expected `Location` header to be a valid string");
+        let parsed_location_uri = location
+            .parse::<http::Uri>()
+            .expect("Expected `Location` header to be a valid URI");
+        // Follow redirect (`/complete-compat-sso/{id}`)
+        let request = Request::get(parsed_location_uri).empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        let location = response
+            .headers()
+            .get(http::header::LOCATION)
+            .expect("Expected `Location` header for redirect response")
+            .to_str()
+            .expect("Expected `Location` header to be a valid string");
+        let parsed_location_uri = location
+            .parse::<http::Uri>()
+            .expect("Expected `Location` header to be a valid URI");
+        // Expect to see the `/login` page at this point
+        assert_eq!(parsed_location_uri.path(), "/login");
+        let login_uri = parsed_location_uri;
+
+        // Step 2: GET the /login page to obtain a CSRF token and establish cookies.
+        let request = cookies.with_cookies(Request::get(login_uri.clone()).empty());
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        // Collect any extra <form> data we need to submit alongside
+        // `username`/`password`
+        //
+        // Extract the `csrf` from the page. We're looking for `<input type="hidden"
+        // name="csrf" value="xxx">`
+        let Some(csrf) = extract_csrf_token_from_page_html(response.body()) else {
+            panic!(
+                "Unable to find csrf token as part of <form> on the `/login` page. \
+                We need this in order to submit the form and login.\npage_html:\n{page_html}",
+                page_html = response.body()
+            )
+        };
+
+        // Step #3: Submit the login form
+        let request = cookies.with_cookies(Request::post(login_uri).form(serde_json::json!({
+            "csrf": csrf,
+            "username": username,
+            "password": password,
+        })));
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        // We expect to be redirected to the consent screen
+        // (`/complete-compat-sso/{id}`)
+        response.assert_status(StatusCode::SEE_OTHER);
+        let location = response
+            .headers()
+            .get(http::header::LOCATION)
+            .expect("Expected `Location` header for redirect response")
+            .to_str()
+            .expect("Expected `Location` header to be a valid string");
+        let parsed_location_uri = location
+            .parse::<http::Uri>()
+            .expect("Expected `Location` header to be a valid URI");
+        let complete_sso_path = match parsed_location_uri.query() {
+            Some(query_string) => format!("{}?{}", parsed_location_uri.path(), query_string),
+            None => parsed_location_uri.path().to_owned(),
+        };
+
+        // Step 4: Go to the consent screen, `GET /complete-compat-sso/{id}` with the
+        // browser session cookie. -> 200: consent page (user must approve the
+        // login) -> 403: policy rejected (e.g. could be a generic policy
+        // rejection or more specifically device limit reached)
+        let request = cookies.with_cookies(Request::get(&complete_sso_path).empty());
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+
+        match response.status() {
+            // Policy rejection
+            StatusCode::FORBIDDEN => {
+                // Detect whether this is the "device limit reached" page
+                //
+                // FIXME: Ideally, we'd use something like `getByRole('heading', { name:
+                // 'Device limit reached'})` instead to determine what kind of page
+                // we're looking at but we don't have the `testing-library` utilities on
+                // the Rust side here.
+                let page_type = if response
+                    .body()
+                    .contains("data-testid=\"device-limit-reached\"")
+                {
+                    ConsentForbiddenPageType::DeviceLimitReached
+                } else if response
+                    .body()
+                    .contains("data-testid=\"generic-policy-violation\"")
+                {
+                    ConsentForbiddenPageType::GenericPolicyViolation
+                } else {
+                    ConsentForbiddenPageType::Unknown
+                };
+                return Err(MatrixCompatSsoLoginError::ConsentForbidden {
+                    page_type,
+                    page_html: response.body().to_owned(),
+                });
+            }
+            StatusCode::OK => {
+                // Consent screen rendered
+            }
+            status => panic!(
+                "Unexpected status from /complete-compat-sso consent page: {status}. \
+                Body: {}",
+                response.body()
+            ),
+        }
+
+        // Step 5: Press "Continue" on the consent page (submit the form)
+        //
+        // Collect any extra <form> data we need to submit
+        //
+        // Extract the `csrf` from the page. We're looking for `<input type="hidden"
+        // name="csrf" value="xxx">`
+        let Some(csrf) = extract_csrf_token_from_page_html(response.body()) else {
+            panic!(
+                "Unable to find csrf token as part of <form> on the consent page. \
+                We need this in order to submit the form and continue.\npage_html:\n{page_html}",
+                page_html = response.body()
+            );
+        };
+        let request = cookies.with_cookies(
+            Request::post(&complete_sso_path).form(serde_json::json!({ "csrf": csrf })),
+        );
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        // We expect to be redirected to the `redirectUrl` (from the first step) with a
+        // `?loginToken=xxx` query parameter.
+        response.assert_status(StatusCode::SEE_OTHER);
+        let location = response
+            .headers()
+            .get(http::header::LOCATION)
+            .expect("Expected `Location` header for redirect response")
+            .to_str()
+            .expect("Expected `Location` header to be a valid string");
+
+        // Extract the `?loginToken=xxx` query parameter.
+        let parsed_location_uri = location
+            .parse::<http::Uri>()
+            .expect("Expected `Location` header to be a valid URI");
+        let query_string = parsed_location_uri.query().expect(
+            "Expected to be redirected to URI with some query parameters (`?loginToken=xxx`)",
+        );
+        let query_map: HashMap<_, _> = url::form_urlencoded::parse(query_string.as_bytes())
+            .into_owned()
+            .fold(
+                HashMap::new(),
+                |mut hm: HashMap<String, Vec<String>>, (k, v)| {
+                    hm.entry(k).or_default().push(v);
+                    hm
+                },
+            );
+        // Make sure we only see one `loginToken` parameter
+        let login_token = match query_map
+            .get("loginToken")
+            // We're using slice syntax here so we can match easily
+            .map_or(&[] as &[String], |v| v.as_slice())
+        {
+            [login_token] => login_token.to_owned(),
+            [] => {
+                panic!("Expected `loginToken` query parameter in uri={parsed_location_uri}");
+            }
+            _ => {
+                panic!(
+                    "Expected one but found multiple `loginToken` query parameters in uri={parsed_location_uri}"
+                );
+            }
+        };
+
+        Ok(login_token)
+    }
+
+    /// Test that `soft_limit` works against interactive login (like the
+    /// `m.login.sso` compat Matrix login flow)
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_soft_limit_does_not_affect_compat_login(pool: PgPool) {
+    async fn test_session_soft_limit_interactive_login(pool: PgPool) {
         setup();
         let state = TestState::from_pool_with_site_config(
             pool,
@@ -1759,6 +2022,72 @@ mod tests {
                     soft_limit: NonZeroU64::new(1).unwrap(),
                     // Some arbitrary high value (more than we login)
                     hard_limit: NonZeroU64::new(5).unwrap(),
+                    max_session_threshold: None,
+                    dangerous_hard_limit_eviction: false,
+                }),
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let session_limit_config = state
+            .site_config
+            .session_limit
+            .as_ref()
+            .expect("Expected `session_limit` configured for this test");
+
+        let _user = user_with_password(&state, "alice", "password", false).await;
+
+        // Keep logging in to add more sessions, up to the `soft_limit`. We use the
+        // interactive SSO login and exchange each loginToken to create an actual compat
+        // session that counts toward the limit.
+        for _ in 0..session_limit_config.soft_limit.get() {
+            let login_token = matrix_compat_sso_login(&state, "alice", "password")
+                .await
+                .expect("Should be able to login without issue when under the session limit");
+
+            // Exchange the `loginToken` for an access token. This is what actually
+            // creates the session.
+            let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+                "type": "m.login.token",
+                "token": login_token,
+            }));
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::OK);
+        }
+
+        // One more interactive SSO login will tip us over the `soft_limit`. The
+        // consent page should return 403 forbidden (device limit reached).
+        assert_matches!(
+            matrix_compat_sso_login(&state, "alice", "password").await,
+            Err(MatrixCompatSsoLoginError::ConsentForbidden {
+                page_type: ConsentForbiddenPageType::DeviceLimitReached,
+                ..
+            })
+        );
+    }
+
+    /// Test that the `soft_limit` is not enforced for non-interactive login
+    /// (like the `m.login.password` compat Matrix login flow).
+    ///
+    /// `soft_limit` is for when we allow the user to remove devices in
+    /// interactive contexts. If someone uses the `m.login.password`
+    /// compatibility login API, there is no opportunity for us to present a
+    /// web UI.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_session_soft_limit_does_not_affect_non_interactive_login(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                session_limit: Some(SessionLimitConfig {
+                    // Lowest non-zero value so we don't have to login a bunch (lower
+                    // than `hard_limit`)
+                    soft_limit: NonZeroU64::new(1).unwrap(),
+                    // Some arbitrary high value (more than we login)
+                    hard_limit: NonZeroU64::new(5).unwrap(),
+                    max_session_threshold: None,
                     dangerous_hard_limit_eviction: false,
                 }),
                 ..test_site_config()
@@ -1782,7 +2111,9 @@ mod tests {
         let _user = user_with_password(&state, "alice", "password", false).await;
 
         // Keep logging in to add more sessions, more than the `soft_limit`
-        #[allow(clippy::range_plus_one)]
+        //
+        // We're using `m.login.password` login flow which is non-interactive
+        #[expect(clippy::range_plus_one)]
         for _ in 0..(session_limit_config.soft_limit.get() + 1) {
             let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
                 "type": "m.login.password",
@@ -1799,7 +2130,7 @@ mod tests {
 
     /// Test that the `hard_limit` prevents more sessions
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_hard_limit_compat_login(pool: PgPool) {
+    async fn test_session_hard_limit_compat_login(pool: PgPool) {
         setup();
         let state = TestState::from_pool_with_site_config(
             pool,
@@ -1809,6 +2140,7 @@ mod tests {
                     soft_limit: NonZeroU64::new(1).unwrap(),
                     // Lowest non-zero value so we don't have to login a bunch
                     hard_limit: NonZeroU64::new(1).unwrap(),
+                    max_session_threshold: None,
                     dangerous_hard_limit_eviction: false,
                 }),
                 ..test_site_config()
@@ -1824,46 +2156,309 @@ mod tests {
             .expect("Expected `session_limit` configured for this test");
 
         let _user = user_with_password(&state, "alice", "password", false).await;
-
-        // Keep logging in to add more sessions, up to the `hard_limit`
-        #[allow(clippy::range_plus_one)]
-        for _ in 0..session_limit_config.hard_limit.get() {
-            let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
-                "type": "m.login.password",
-                "identifier": {
-                    "type": "m.id.user",
-                    "user": "alice",
-                },
-                "password": "password",
-            }));
-            let response = state.request(request.clone()).await;
-            response.assert_status(StatusCode::OK);
-        }
-
-        // One more login will tip us over the `hard_limit`
-        let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+        let password_login_json = serde_json::json!({
             "type": "m.login.password",
             "identifier": {
                 "type": "m.id.user",
                 "user": "alice",
             },
             "password": "password",
-        }));
+        });
+
+        // Keep logging in to add more sessions, up to the `hard_limit`
+        for _ in 0..session_limit_config.hard_limit.get() {
+            let request =
+                Request::post("/_matrix/client/v3/login").json(password_login_json.clone());
+            let response = state.request(request.clone()).await;
+            response.assert_status(StatusCode::OK);
+        }
+
+        // One more login will tip us over the `hard_limit`
+        let request = Request::post("/_matrix/client/v3/login").json(password_login_json);
         let response = state.request(request.clone()).await;
         response.assert_status(StatusCode::FORBIDDEN);
         let body: serde_json::Value = response.json();
         assert_eq!(
             body.get("errcode")
-                .expect("Expected errror response to include an `errcode`"),
+                .expect("Expected error response to include an `errcode`"),
             "M_FORBIDDEN",
             "Expected `errcode` to be `M_FORBIDDEN`"
         );
     }
 
+    /// Test that session limits are enforced for anyone who is *under* the
+    /// `max_session_threshold` (when using interactive login methods)
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_session_limit_under_max_session_threshold_interactive(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                session_limit: Some(SessionLimitConfig {
+                    // Lowest non-zero value so we don't have to login a bunch
+                    soft_limit: NonZeroU64::new(1).unwrap(),
+                    hard_limit: NonZeroU64::new(1).unwrap(),
+                    // The main thing we're trying to test
+                    max_session_threshold: Some(NonZeroU64::new(1).unwrap()),
+                    dangerous_hard_limit_eviction: false,
+                }),
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let session_limit_config = state
+            .site_config
+            .session_limit
+            .as_ref()
+            .expect("Expected `session_limit` configured for this test");
+        // Make sure this is configured as its the main differentiator we're trying to
+        // test
+        session_limit_config.max_session_threshold.as_ref().expect("Expected `session_limit.max_session_threshold` to be configured at this point in the test");
+
+        let _user = user_with_password(&state, "alice", "password", false).await;
+
+        // Keep logging in to add more sessions, up to the `hard_limit`
+        for _ in 0..session_limit_config.hard_limit.get() {
+            let login_token = matrix_compat_sso_login(&state, "alice", "password")
+                .await
+                .expect("Should be able to login without issue when under the session limit");
+
+            // Exchange the `loginToken` for an access token. This is what actually
+            // creates the session.
+            let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+                "type": "m.login.token",
+                "token": login_token,
+            }));
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::OK);
+        }
+
+        // One more login will tip us over the `hard_limit`
+        //
+        // Session limits are enforced because we're <= `max_session_threshold`
+        assert_matches!(
+            matrix_compat_sso_login(&state, "alice", "password").await,
+            Err(MatrixCompatSsoLoginError::ConsentForbidden {
+                page_type: ConsentForbiddenPageType::DeviceLimitReached,
+                ..
+            })
+        );
+    }
+
+    /// Test that session limits are enforced for anyone who is *under* the
+    /// `max_session_threshold` (when using non-interactive login methods)
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_session_limit_under_max_session_threshold_non_interactive(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                session_limit: Some(SessionLimitConfig {
+                    // Lowest non-zero value so we don't have to login a bunch
+                    soft_limit: NonZeroU64::new(1).unwrap(),
+                    hard_limit: NonZeroU64::new(1).unwrap(),
+                    // The main thing we're trying to test
+                    max_session_threshold: Some(NonZeroU64::new(1).unwrap()),
+                    dangerous_hard_limit_eviction: false,
+                }),
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let session_limit_config = state
+            .site_config
+            .session_limit
+            .as_ref()
+            .expect("Expected `session_limit` configured for this test");
+        // Make sure this is configured as its the main differentiator we're trying to
+        // test
+        session_limit_config.max_session_threshold.as_ref().expect("Expected `session_limit.max_session_threshold` to be configured at this point in the test");
+
+        let _user = user_with_password(&state, "alice", "password", false).await;
+        let password_login_json = serde_json::json!({
+            "type": "m.login.password",
+            "identifier": {
+                "type": "m.id.user",
+                "user": "alice",
+            },
+            "password": "password",
+        });
+
+        // Keep logging in to add more sessions, up to the `hard_limit`
+        for _ in 0..session_limit_config.hard_limit.get() {
+            let request =
+                Request::post("/_matrix/client/v3/login").json(password_login_json.clone());
+            let response = state.request(request.clone()).await;
+            response.assert_status(StatusCode::OK);
+        }
+
+        // One more login will tip us over the `hard_limit`
+        //
+        // Session limits are enforced because we're <= `max_session_threshold`
+        let request = Request::post("/_matrix/client/v3/login").json(password_login_json);
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::FORBIDDEN);
+        let body: serde_json::Value = response.json();
+        assert_eq!(
+            body.get("errcode")
+                .expect("Expected error response to include an `errcode`"),
+            "M_FORBIDDEN",
+            "Expected `errcode` to be `M_FORBIDDEN`"
+        );
+    }
+
+    /// Test that session limits are not enforced (logins are allowed) for
+    /// anyone who is already *past* the `max_session_threshold` (when using
+    /// interactive login methods)
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_session_limit_past_max_session_threshold_interactive(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool_with_site_config(
+            pool.clone(),
+            SiteConfig {
+                // Setup an account with a few sessions before we add a `session_limit`
+                session_limit: None,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        // Lowest non-zero value so we don't have to login a bunch
+        let upcoming_hard_limit = 1;
+
+        // Setup a user that has more sessions than the `max_session_threshold`.
+        //
+        // Keep logging in to add more sessions. We want to be past the
+        // `hard_limit`/`max_session_threshold`
+        let _user = user_with_password(&state, "alice", "password", false).await;
+        #[expect(clippy::range_plus_one)]
+        for _ in 0..(upcoming_hard_limit + 1) {
+            let login_token = matrix_compat_sso_login(&state, "alice", "password")
+                .await
+                .expect("Should be able to login without issue when under the session limit");
+
+            // Exchange the `loginToken` for an access token. This is what actually
+            // creates the session.
+            let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+                "type": "m.login.token",
+                "token": login_token,
+            }));
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::OK);
+        }
+
+        // Update the app state to configure a `max_session_threshold`
+        state.site_config.session_limit = Some(SessionLimitConfig {
+            soft_limit: NonZeroU64::new(upcoming_hard_limit).unwrap(),
+            hard_limit: NonZeroU64::new(upcoming_hard_limit).unwrap(),
+            // The main thing we're trying to test
+            max_session_threshold: Some(NonZeroU64::new(upcoming_hard_limit).unwrap()),
+            dangerous_hard_limit_eviction: false,
+        });
+        let state = state.restart().await;
+
+        let session_limit_config = state
+            .site_config
+            .session_limit
+            .as_ref()
+            .expect("Expected `session_limit` to be configured at this point in the test");
+        // Make sure this is configured as its the main differentiator we're trying to
+        // test
+        session_limit_config.max_session_threshold.as_ref().expect("Expected `session_limit.max_session_threshold` to be configured at this point in the test");
+
+        // Since we're already above `max_session_threshold`, the `session_limit` won't
+        // stop us from adding another session.
+        let login_token = matrix_compat_sso_login(&state, "alice", "password")
+            .await
+            .expect("Should be able to login since we're past the `max_session_threshold`");
+
+        // Exchange the `loginToken` for an access token. This is what actually
+        // creates the session.
+        let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+            "type": "m.login.token",
+            "token": login_token,
+        }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+    }
+
+    /// Test that session limits are not enforced (logins are allowed) for
+    /// anyone who is already *past* the `max_session_threshold` (when using
+    /// non-interactive login methods)
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_session_limit_past_max_session_threshold_non_interactive(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool_with_site_config(
+            pool.clone(),
+            SiteConfig {
+                // Setup an account with a few sessions before we add a `session_limit`
+                session_limit: None,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        // Lowest non-zero value so we don't have to login a bunch
+        let upcoming_hard_limit = 1;
+
+        // Setup a user that has more sessions than the `max_session_threshold`.
+        //
+        // Keep logging in to add more sessions. We want to be past the
+        // `hard_limit`/`max_session_threshold`
+        let _user = user_with_password(&state, "alice", "password", false).await;
+        let password_login_json = serde_json::json!({
+            "type": "m.login.password",
+            "identifier": {
+                "type": "m.id.user",
+                "user": "alice",
+            },
+            "password": "password",
+        });
+        #[expect(clippy::range_plus_one)]
+        for _ in 0..(upcoming_hard_limit + 1) {
+            let request = Request::post("/_matrix/client/v3/login")
+                .json(serde_json::json!(password_login_json.clone()));
+            let response = state.request(request.clone()).await;
+            response.assert_status(StatusCode::OK);
+        }
+
+        // Update the app state to configure a `max_session_threshold`
+        state.site_config.session_limit = Some(SessionLimitConfig {
+            soft_limit: NonZeroU64::new(upcoming_hard_limit).unwrap(),
+            hard_limit: NonZeroU64::new(upcoming_hard_limit).unwrap(),
+            // The main thing we're trying to test
+            max_session_threshold: Some(NonZeroU64::new(upcoming_hard_limit).unwrap()),
+            dangerous_hard_limit_eviction: false,
+        });
+        let state = state.restart().await;
+
+        let session_limit_config = state
+            .site_config
+            .session_limit
+            .as_ref()
+            .expect("Expected `session_limit` to be configured at this point in the test");
+        // Make sure this is configured as its the main differentiator we're trying to
+        // test
+        session_limit_config.max_session_threshold.as_ref().expect("Expected `session_limit.max_session_threshold` to be configured at this point in the test");
+
+        // Since we're already above `max_session_threshold`, the `session_limit` won't
+        // stop us from adding another session.
+        let request = Request::post("/_matrix/client/v3/login")
+            .json(serde_json::json!(password_login_json.clone()));
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::OK);
+    }
+
     /// Test that the `dangerous_hard_limit_eviction` will automatically drop
     /// old sessions when we go over the limit
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_dangerous_hard_limit_eviction_old_compat_login(pool: PgPool) {
+    async fn test_session_dangerous_hard_limit_eviction_old_compat_login(pool: PgPool) {
         setup();
         let state = TestState::from_pool_with_site_config(
             pool,
@@ -1873,6 +2468,7 @@ mod tests {
                     soft_limit: NonZeroU64::new(1).unwrap(),
                     // Must be at least 2 when `dangerous_hard_limit_eviction`
                     hard_limit: NonZeroU64::new(2).unwrap(),
+                    max_session_threshold: None,
                     // Option under test
                     dangerous_hard_limit_eviction: true,
                 }),
@@ -1922,7 +2518,6 @@ mod tests {
         };
 
         // Keep logging in to add more sessions, up to the `hard_limit`.
-        #[allow(clippy::range_plus_one)]
         for _ in 0..session_limit_config.hard_limit.get() {
             let device_id = do_login().await;
             login_device_ids.push(device_id);
@@ -2030,7 +2625,7 @@ mod tests {
     /// the oldest sessions when we go over the limit even if all of the
     /// sessions are recent.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_dangerous_hard_limit_eviction_recent_compat_login(pool: PgPool) {
+    async fn test_session_dangerous_hard_limit_eviction_recent_compat_login(pool: PgPool) {
         setup();
         let state = TestState::from_pool_with_site_config(
             pool,
@@ -2040,6 +2635,7 @@ mod tests {
                     soft_limit: NonZeroU64::new(1).unwrap(),
                     // Must be at least 2 when `dangerous_hard_limit_eviction`
                     hard_limit: NonZeroU64::new(2).unwrap(),
+                    max_session_threshold: None,
                     // Option under test
                     dangerous_hard_limit_eviction: true,
                 }),
@@ -2061,7 +2657,7 @@ mod tests {
 
         // Keep logging in to add more sessions, up to the `hard_limit`. Then one more
         // login will drop one of our old sessions to make room for the new login
-        #[allow(clippy::range_plus_one)]
+        #[expect(clippy::range_plus_one)]
         for _ in 0..(session_limit_config.hard_limit.get() + 1) {
             let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
                 "type": "m.login.password",

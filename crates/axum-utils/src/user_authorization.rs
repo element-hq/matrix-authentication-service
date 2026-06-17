@@ -150,7 +150,7 @@ pub enum AuthorizationVerificationError<E> {
 enum BearerError {
     InvalidRequest,
     InvalidToken,
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     InsufficientScope {
         scope: Option<HeaderValue>,
     },
@@ -178,7 +178,7 @@ impl BearerError {
 }
 
 enum WwwAuthenticate {
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     Basic { realm: HeaderValue },
     Bearer {
         realm: Option<HeaderValue>,

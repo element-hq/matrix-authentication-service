@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -58,7 +59,7 @@ use crate::{
 };
 
 /// Setup rustcrypto and tracing for tests.
-#[allow(unused_must_use)]
+#[expect(unused_must_use)]
 pub(crate) fn setup() {
     rustls::crypto::aws_lc_rs::default_provider().install_default();
 
@@ -115,7 +116,7 @@ pub(crate) struct TestState {
     pub task_tracker: TaskTracker,
     queue_worker: Arc<tokio::sync::Mutex<QueueWorker>>,
 
-    #[allow(dead_code)] // It is used, as it will cancel the CancellationToken when dropped
+    #[expect(dead_code)] // It is used, as it will cancel the CancellationToken when dropped
     cancellation_drop_guard: Arc<DropGuard>,
 }
 
@@ -137,6 +138,7 @@ pub fn test_site_config() -> SiteConfig {
         imprint: None,
         password_login_enabled: true,
         password_registration_enabled: true,
+        password_registration_token_required: false,
         registration_token_required: false,
         email_change_allowed: true,
         displayname_change_allowed: true,
@@ -151,6 +153,7 @@ pub fn test_site_config() -> SiteConfig {
         plan_management_iframe_uri: None,
         session_limit: None,
         device_code_grant_enabled: true,
+        device_code_user_code_auto_fill_enabled: true,
     }
 }
 
@@ -242,7 +245,7 @@ impl TestState {
 
         let activity_tracker = ActivityTracker::new(
             PgRepositoryFactory::new(pool.clone()).boxed(),
-            std::time::Duration::from_secs(60),
+            std::time::Duration::from_mins(1),
             &task_tracker,
             shutdown_token.child_token(),
         );

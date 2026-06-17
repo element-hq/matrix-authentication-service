@@ -41,6 +41,18 @@ jobs:
         # Only the minimal profile is required here to run `cargo`
         run: rustup toolchain install stable --profile minimal
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
+
+      - name: Install Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Extract the current version
         id: current
         run: echo "version=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[] | select(.name == "mas-cli") | .version')" >> "$GITHUB_OUTPUT"
@@ -50,7 +62,7 @@ jobs:
         env:
           BUMP: ${{ inputs.rc && 'prerelease' || 'patch' }}
           VERSION: ${{ steps.current.outputs.version }}
-        run: echo "version=$(npx --yes semver@7.5.4 -i "$BUMP" --preid rc "$VERSION")" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(pnpm exec semver -i "$BUMP" --preid rc "$VERSION")" >> "$GITHUB_OUTPUT"
 
   tag:
     uses: ./.github/workflows/tag.yaml

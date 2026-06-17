@@ -40,8 +40,8 @@ export const Route = createRootRouteWithContext<{
     </>
   ),
 
-  loader({ context }) {
-    context.queryClient.ensureQueryData(query);
+  async loader({ context }) {
+    await context.queryClient.prefetchQuery(query);
   },
 
   errorComponent: ErrorComponent,

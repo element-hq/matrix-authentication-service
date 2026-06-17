@@ -203,7 +203,7 @@ fn available_migrations() -> BTreeMap<i64, &'static Migration> {
 
 /// This is the list of migrations we've removed from the migration history but
 /// might have been applied in the past
-#[allow(clippy::inconsistent_digit_grouping)]
+#[expect(clippy::inconsistent_digit_grouping)]
 const ALLOWED_MISSING_MIGRATIONS: &[i64] = &[
     // https://github.com/matrix-org/matrix-authentication-service/pull/1585
     20220709_210445,
@@ -219,7 +219,7 @@ fn allowed_missing_migrations() -> BTreeSet<i64> {
 /// migrations. The checksum we store in the database is 48 bytes long. We're
 /// not really concerned with partial hash collisions, and to avoid this file to
 /// be completely unreadable, we only store the upper 16 bytes of that hash.
-#[allow(clippy::inconsistent_digit_grouping)]
+#[expect(clippy::inconsistent_digit_grouping)]
 const ALLOWED_ALTERNATE_CHECKSUMS: &[(i64, u128)] = &[
     // https://github.com/element-hq/matrix-authentication-service/pull/5300
     (20250410_000000, 0x8811_c3ef_dbee_8c00_5b49_25da_5d55_9c3f),

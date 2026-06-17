@@ -36,6 +36,7 @@
                   "password_login_enabled": true,
                   "password_registration_enabled": true,
                   "password_registration_email_required": true,
+                  "password_registration_token_required": true,
                   "registration_token_required": true,
                   "email_change_allowed": true,
                   "displayname_change_allowed": true,
@@ -4685,7 +4686,8 @@
                         "human_name": "Google",
                         "brand_name": "google",
                         "created_at": "1970-01-01T00:00:00Z",
-                        "disabled_at": null
+                        "disabled_at": null,
+                        "registration_token_required": false
                       },
                       "links": {
                         "self": "/api/admin/v1/upstream-oauth-providers/01040G2081040G2081040G2081"
@@ -4704,7 +4706,8 @@
                         "human_name": "Apple ID",
                         "brand_name": "apple",
                         "created_at": "1970-01-01T00:00:00Z",
-                        "disabled_at": "1970-01-01T00:00:00Z"
+                        "disabled_at": "1970-01-01T00:00:00Z",
+                        "registration_token_required": false
                       },
                       "links": {
                         "self": "/api/admin/v1/upstream-oauth-providers/02081040G2081040G2081040G2"
@@ -4723,7 +4726,8 @@
                         "human_name": "Custom OAuth Provider",
                         "brand_name": null,
                         "created_at": "1970-01-01T00:00:00Z",
-                        "disabled_at": null
+                        "disabled_at": null,
+                        "registration_token_required": true
                       },
                       "links": {
                         "self": "/api/admin/v1/upstream-oauth-providers/030C1G60R30C1G60R30C1G60R3"
@@ -4784,7 +4788,8 @@
                       "human_name": "Google",
                       "brand_name": "google",
                       "created_at": "1970-01-01T00:00:00Z",
-                      "disabled_at": null
+                      "disabled_at": null,
+                      "registration_token_required": false
                     },
                     "links": {
                       "self": "/api/admin/v1/upstream-oauth-providers/01040G2081040G2081040G2081"
@@ -4859,9 +4864,13 @@
             "description": "Whether a valid email address is required for password registrations.",
             "type": "boolean"
           },
-          "registration_token_required": {
-            "description": "Whether registration tokens are required for password registrations.",
+          "password_registration_token_required": {
             "type": "boolean"
+          },
+          "registration_token_required": {
+            "description": "Whether registration tokens are required for password registrations.\n Deprecated in favor of `password_registration_token_required`",
+            "type": "boolean",
+            "deprecated": true
           },
           "email_change_allowed": {
             "description": "Whether users can change their email.",
@@ -4900,6 +4909,7 @@
           "password_login_enabled",
           "password_registration_enabled",
           "password_registration_email_required",
+          "password_registration_token_required",
           "registration_token_required",
           "email_change_allowed",
           "displayname_change_allowed",
@@ -6301,6 +6311,20 @@
             "description": "Skip checking with the homeserver whether the username is available.\n\n Use this with caution! The main reason to use this, is when a user used\n by an application service needs to exist in MAS to craft special\n tokens (like with admin access) for them",
             "type": "boolean",
             "default": false
+          },
+          "displayname": {
+            "description": "The displayname of the user to add.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "avatar_url": {
+            "description": "The avatar URL of the user to add.",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -7368,10 +7392,15 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "registration_token_required": {
+            "description": "Whether a registration token is required for registrations via this\n provider.",
+            "type": "boolean"
           }
         },
         "required": [
-          "created_at"
+          "created_at",
+          "registration_token_required"
         ]
       },
       "SingleResponse_for_UpstreamOAuthProvider": {

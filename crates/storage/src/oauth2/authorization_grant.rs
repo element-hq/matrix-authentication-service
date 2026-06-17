@@ -51,7 +51,7 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
     /// # Errors
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments)]
     async fn add(
         &mut self,
         rng: &mut (dyn RngCore + Send),

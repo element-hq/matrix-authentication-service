@@ -221,7 +221,7 @@ impl RootConfig {
 }
 
 /// Partial configuration actually used by the server
-#[allow(missing_docs)]
+#[expect(missing_docs)]
 #[derive(Debug, Deserialize)]
 pub struct AppConfig {
     #[serde(default)]
@@ -290,7 +290,7 @@ impl ConfigurationSection for AppConfig {
 }
 
 /// Partial config used by the `mas-cli config sync` command
-#[allow(missing_docs)]
+#[expect(missing_docs)]
 #[derive(Debug, Deserialize)]
 pub struct SyncConfig {
     #[serde(default)]
@@ -358,7 +358,7 @@ impl ClientSecret {
     /// Returns an error when the client secret could not be read from file.
     pub async fn value(&self) -> anyhow::Result<String> {
         Ok(match self {
-            ClientSecret::File(path) => tokio::fs::read_to_string(path).await?,
+            ClientSecret::File(path) => tokio::fs::read_to_string(path).await?.trim().to_owned(),
             ClientSecret::Value(client_secret) => client_secret.clone(),
         })
     }

@@ -82,7 +82,7 @@ impl HomeserverConnection for SynapseConnection {
     )]
     async fn query_user(&self, localpart: &str) -> Result<MatrixUser, anyhow::Error> {
         #[derive(Deserialize)]
-        #[allow(dead_code)]
+        #[expect(dead_code)]
         struct Response {
             user_id: String,
             display_name: Option<String>,

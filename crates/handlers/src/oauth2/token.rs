@@ -573,6 +573,15 @@ async fn authorization_code_grant(
     // Look for device to provision
     for scope in &*session.scope {
         if let Some(device) = Device::from_scope_token(scope) {
+            // Normally, devices get synced to the homeserver in a `SyncDevicesJob` but we
+            // want the device to be created synchronously on the homeserver, so
+            // that when we respond, the access token works completely. If the
+            // device doesn't exist on the homeserver side, token introspection
+            // from Synapse to MAS will work but Synapse will return a 401
+            // because it doesn't see the device.
+            //
+            // We're using an upsert so if the device already exists for some reason
+            // (like when a concurrent device sync happening) it won't have any effect.
             homeserver
                 .upsert_device(
                     &browser_session.user.username,
@@ -977,6 +986,15 @@ async fn device_code_grant(
     // Look for device to provision
     for scope in &*session.scope {
         if let Some(device) = Device::from_scope_token(scope) {
+            // Normally, devices get synced to the homeserver in a `SyncDevicesJob` but we
+            // want the device to be created synchronously on the homeserver, so
+            // that when we respond, the access token works completely. If the
+            // device doesn't exist on the homeserver side, token introspection
+            // from Synapse to MAS will work but Synapse will return a 401
+            // because it doesn't see the device.
+            //
+            // We're using an upsert so if the device already exists for some reason
+            // (like when a concurrent device sync happening) it won't have any effect.
             homeserver
                 .upsert_device(&browser_session.user.username, device.as_str(), None)
                 .await

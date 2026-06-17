@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -216,7 +217,7 @@ pub enum ImportAction {
 }
 
 impl ImportAction {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
+    #[expect(clippy::trivially_copy_pass_by_ref)]
     const fn is_default(&self) -> bool {
         matches!(self, ImportAction::Ignore)
     }
@@ -243,7 +244,7 @@ pub enum OnConflict {
 }
 
 impl OnConflict {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
+    #[expect(clippy::trivially_copy_pass_by_ref)]
     const fn is_default(&self) -> bool {
         matches!(self, OnConflict::Fail)
     }
@@ -410,7 +411,7 @@ pub enum DiscoveryMode {
 }
 
 impl DiscoveryMode {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
+    #[expect(clippy::trivially_copy_pass_by_ref)]
     const fn is_default(&self) -> bool {
         matches!(self, DiscoveryMode::Oidc)
     }
@@ -435,7 +436,7 @@ pub enum PkceMethod {
 }
 
 impl PkceMethod {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
+    #[expect(clippy::trivially_copy_pass_by_ref)]
     const fn is_default(&self) -> bool {
         matches!(self, PkceMethod::Auto)
     }
@@ -445,17 +446,15 @@ fn default_true() -> bool {
     true
 }
 
-#[allow(clippy::trivially_copy_pass_by_ref)]
+#[expect(clippy::trivially_copy_pass_by_ref)]
 fn is_default_true(value: &bool) -> bool {
     *value
 }
 
-#[allow(clippy::ref_option)]
 fn is_signed_response_alg_default(signed_response_alg: &JsonWebSignatureAlg) -> bool {
     *signed_response_alg == signed_response_alg_default()
 }
 
-#[allow(clippy::unnecessary_wraps)]
 fn signed_response_alg_default() -> JsonWebSignatureAlg {
     JsonWebSignatureAlg::Rs256
 }
@@ -503,7 +502,7 @@ pub enum OnBackchannelLogout {
 }
 
 impl OnBackchannelLogout {
-    #[allow(clippy::trivially_copy_pass_by_ref)]
+    #[expect(clippy::trivially_copy_pass_by_ref)]
     const fn is_default(&self) -> bool {
         matches!(self, OnBackchannelLogout::DoNothing)
     }
@@ -513,6 +512,7 @@ impl OnBackchannelLogout {
 #[serde_as]
 #[skip_serializing_none]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[expect(clippy::struct_excessive_bools)]
 pub struct Provider {
     /// Whether this provider is enabled.
     ///
@@ -730,6 +730,12 @@ pub struct Provider {
     /// Defaults to `do_nothing`.
     #[serde(default, skip_serializing_if = "OnBackchannelLogout::is_default")]
     pub on_backchannel_logout: OnBackchannelLogout,
+
+    /// Whether or not to require a registration token on `OAuth2` auth
+    ///
+    /// Defaults to `false`
+    #[serde(default)]
+    pub registration_token_required: bool,
 }
 
 impl Provider {
@@ -750,6 +756,10 @@ impl Provider {
 
 #[cfg(test)]
 mod tests {
+    // The closures passed to `Jail::expect_with` return `figment::Error`, which is
+    // large, and we can't change figment's API.
+    #![expect(clippy::result_large_err)]
+
     use std::str::FromStr;
 
     use figment::{

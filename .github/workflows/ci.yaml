@@ -67,18 +67,20 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install Node
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          node-version: 24
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
 
-      - name: Install Node dependencies
-        working-directory: ./frontend
-        run: npm ci
+      - name: Install Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .node-version
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
-        working-directory: ./frontend
-        run: npm run lint
+        run: pnpm --filter mas-frontend run lint
 
   frontend-test:
     name: Run the frontend test suite
@@ -93,18 +95,20 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install Node
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          node-version: 24
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
 
-      - name: Install Node dependencies
-        working-directory: ./frontend
-        run: npm ci
+      - name: Install Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .node-version
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Test
-        working-directory: ./frontend
-        run: npm test
+        run: pnpm --filter mas-frontend test
 
   frontend-knip:
     name: Check the frontend for unused dependencies
@@ -119,18 +123,20 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install Node
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          node-version: 24
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.5
 
-      - name: Install Node dependencies
-        working-directory: ./frontend
-        run: npm ci
+      - name: Install Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .node-version
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Check for unused dependencies
-        working-directory: ./frontend
-        run: npm run knip
+        run: pnpm --filter mas-frontend run knip
 
   rustfmt:
     name: Check Rust style
@@ -196,7 +202,7 @@ jobs:
           rustup toolchain install stable
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
+        uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
 
       - uses: ./.github/actions/build-frontend
 
@@ -238,12 +244,12 @@ jobs:
         # sync with Dockerfile.
         #
         # --override sets this as the default rust toolchain version in this directory.
-        run: rustup toolchain install 1.93.0 --profile minimal --component clippy --override
+        run: rustup toolchain install 1.96.0 --profile minimal --component clippy --override
 
       - uses: ./.github/actions/build-policies
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
+        uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
 
       - name: Run clippy
         run: |
@@ -267,12 +273,12 @@ jobs:
         run: rustup toolchain install stable --profile minimal
 
       - name: Install nextest
-        uses: taiki-e/install-action@7ea35f098a7369cd23488403f58be9c491a6c55f # v2
+        uses: taiki-e/install-action@213ccc1a076163c093f914550b94feb90fab916d # v2
         with:
           tool: cargo-nextest
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
+        uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
 
       - name: Build and archive tests
         run: cargo nextest archive --workspace --archive-file nextest-archive.tar.zst
@@ -280,7 +286,7 @@ jobs:
           SQLX_OFFLINE: "1"
 
       - name: Upload archive to workflow
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: nextest-archive
           path: nextest-archive.tar.zst
@@ -323,7 +329,7 @@ jobs:
         run: rustup toolchain install stable --profile minimal
 
       - name: Install nextest
-        uses: taiki-e/install-action@7ea35f098a7369cd23488403f58be9c491a6c55f # v2
+        uses: taiki-e/install-action@213ccc1a076163c093f914550b94feb90fab916d # v2
         with:
           tool: cargo-nextest
 
@@ -343,6 +349,62 @@ jobs:
             --archive-file nextest-archive.tar.zst \
             --partition count:${{ matrix.partition }}/3
 
+  ess:
+    if: "${{ !failure() && !cancelled() }}"
+    needs: [rustfmt, opa-lint, compile-test-artifacts]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Get current branch name
+        id: current-branch
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+
+      - name: Check if branch exists in element-hq/ess-helm
+        id: check-branch
+        env:
+          BRANCH_NAME: ${{ steps.current-branch.outputs.branch }}
+        run: |
+          API_URL="https://api.github.com/repos/element-hq/ess-helm/branches/$BRANCH_NAME"
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $API_URL)
+          if [ "$RESPONSE" = "200" ]; then
+            echo "ref=$BRANCH_NAME" | tee -a $GITHUB_OUTPUT
+          else
+            echo "ref=main" | tee -a $GITHUB_OUTPUT
+          fi
+
+      - name: Install ESS test dependencies
+        uses: element-hq/setup-ess-cluster-action@release/v2
+        with:
+          ess-helm-ref: ${{ steps.check-branch.outputs.ref }}
+
+      - name: Build MAS docker image to local registry
+        run: |
+          docker build -t localhost:5000/matrix-authentication-service:ci -f ./Dockerfile .
+          docker push localhost:5000/matrix-authentication-service:ci
+
+      - name: Build Additional values file
+        run: >
+          yq eval -n '.matrixAuthenticationService.image.registry = "localhost:5000" |
+          .matrixAuthenticationService.image.repository = "matrix-authentication-service" |
+          .matrixAuthenticationService.image.tag = "ci"' > ci-values.yml
+
+      - name: Run ESS tests
+        run: pytest-ess --test-suite "matrix-authentication-service" --additional-test-values-file ci-values.yml -- -vv
+
+      - name: Collect ESS logs
+        if: ${{ failure() }}
+        run: collect-ess-logs
+
+      - name: Upload logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        with:
+          name: ess-helm-logs
+          path: ess-helm-logs
+          retention-days: 1
+
   tests-done:
     name: Tests done
     if: ${{ always() }}
@@ -355,6 +417,7 @@ jobs:
       - cargo-deny
       - clippy
       - check-schema
+      - ess
       - test
     runs-on: ubuntu-24.04
 
