@@ -367,7 +367,7 @@
       "approaching_session_limit_warning_description:many": "Wykorzystano {{num_sessions}} z {{count}} miejsc na urządzenia. Po osiągnięciu limitu konieczne będzie usunięcie istniejącego urządzenia, aby dodać kolejne.",
       "approaching_session_limit_warning_header": "Uwaga, zbliżasz się do limitu urządzeń",
       "heading": "Gdzie jesteś zalogowany",
-      "hit_session_limit_warning_description:one": "Wykorzystano {{num_sessions}} z {{count}} miejsc na urządzenia. Przy ponownej próbie logowania konieczne będzie usunięcie istniejącego urządzenia.",
+      "hit_session_limit_warning_description:one": "Wykorzystano {{num_sessions}} z {{count}} miejsca na urządzenia. Przy ponownej próbie logowania konieczne będzie usunięcie istniejącego urządzenia.",
       "hit_session_limit_warning_description:few": "Wykorzystano {{num_sessions}} z {{count}} miejsc na urządzenia. Przy ponownej próbie logowania konieczne będzie usunięcie istniejącego urządzenia.",
       "hit_session_limit_warning_description:many": "Wykorzystano {{num_sessions}} z {{count}} miejsc na urządzenia. Przy ponownej próbie logowania konieczne będzie usunięcie istniejącego urządzenia.",
       "hit_session_limit_warning_header": "Osiągnąłeś limit urządzeń",
@@ -377,7 +377,7 @@
       },
       "num_sessions_filtered_header": {
         "header:one": "{{count}} urządzenie spełnia kryteria filtrowania ({{unfiltered_session_total}})",
-        "header:few": "{{count}} urządzenia spełnia kryteria filtrowania ({{unfiltered_session_total}})",
+        "header:few": "{{count}} urządzenia spełniają kryteria filtrowania ({{unfiltered_session_total}})",
         "header:many": "{{count}} urządzeń spełnia kryteria filtrowania ({{unfiltered_session_total}})",
         "unfiltered_session_total:one": "{{count}} ogółem",
         "unfiltered_session_total:few": "{{count}} ogółem",
