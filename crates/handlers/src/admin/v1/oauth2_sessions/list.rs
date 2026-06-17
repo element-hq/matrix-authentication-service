@@ -72,10 +72,13 @@ pub struct FilterParams {
     #[schemars(with = "Option<crate::admin::schema::Ulid>")]
     user: Option<Ulid>,
 
-    /// Retrieve the items for the given client
-    #[serde(rename = "filter[client]")]
-    #[schemars(with = "Option<crate::admin::schema::Ulid>")]
-    client: Option<Ulid>,
+    /// Retrieve the items for the given client(s)
+    ///
+    /// This parameter may be repeated to filter on multiple clients at
+    /// once (sessions matching any of the given clients are returned).
+    #[serde(default, rename = "filter[client]")]
+    #[schemars(with = "Vec<crate::admin::schema::Ulid>")]
+    client: Vec<Ulid>,
 
     /// Retrieve the items only for a specific client kind
     #[serde(rename = "filter[client-kind]")]
@@ -126,7 +129,7 @@ impl std::fmt::Display for FilterParams {
             sep = '&';
         }
 
-        if let Some(client) = self.client {
+        for client in &self.client {
             write!(f, "{sep}filter[client]={client}")?;
             sep = '&';
         }
@@ -237,7 +240,8 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         .summary("List OAuth 2.0 sessions")
         .description("Retrieve a list of OAuth 2.0 sessions.
 Note that by default, all sessions, including finished ones are returned, with the oldest first.
-Use the `filter[status]` parameter to filter the sessions by their status and `page[last]` parameter to retrieve the last N sessions.")
+Use the `filter[status]` parameter to filter the sessions by their status and `page[last]` parameter to retrieve the last N sessions.
+The `filter[client]` parameter may be repeated to filter on multiple clients at once.")
         .tag("oauth2-session")
         .response_with::<200, Json<PaginatedResponse<OAuth2Session>>, _>(|t| {
             let sessions = OAuth2Session::samples();
@@ -300,21 +304,21 @@ pub async fn handler(
         None => filter,
     };
 
-    let client = if let Some(client_id) = params.client {
+    let mut clients = Vec::with_capacity(params.client.len());
+    for client_id in params.client {
         let client = repo
             .oauth2_client()
             .lookup(client_id)
             .await?
             .ok_or(RouteError::ClientNotFound(client_id))?;
+        clients.push(client);
+    }
+    let client_refs: Vec<&_> = clients.iter().collect();
 
-        Some(client)
+    let filter = if client_refs.is_empty() {
+        filter
     } else {
-        None
-    };
-
-    let filter = match &client {
-        Some(client) => filter.for_client(client),
-        None => filter,
+        filter.for_clients(&client_refs)
     };
 
     let filter = match params.client_kind {
@@ -688,5 +692,113 @@ mod tests {
             .map(|v| v["id"].as_str().unwrap())
             .collect();
         assert_eq!(ids, vec![new_session.id.to_string()]);
+    }
+
+    /// Provisions two extra clients and a session for each, then verifies
+    /// that listing with two `filter[client]` query parameters returns both
+    /// sessions (and excludes the admin session for the third, unrelated
+    /// client).
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_oauth2_session_list_multiple_clients(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+        let mut rng = state.rng();
+
+        // Provision two clients and a session for each, both using the
+        // client_credentials flow so that they don't depend on a user.
+        let mut repo = state.repository().await.unwrap();
+        let client_a = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &state.clock,
+                vec!["https://a.example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::ClientCredentials],
+                Some("client a".to_owned()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+        let client_b = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &state.clock,
+                vec!["https://b.example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::ClientCredentials],
+                Some("client b".to_owned()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let scope: Scope = "urn:mas:admin".parse().unwrap();
+        let session_a = repo
+            .oauth2_session()
+            .add_from_client_credentials(&mut rng, &state.clock, &client_a, scope.clone())
+            .await
+            .unwrap();
+        let session_b = repo
+            .oauth2_session()
+            .add_from_client_credentials(&mut rng, &state.clock, &client_b, scope.clone())
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        // Filter on both new clients. The admin session (a third client) must
+        // not appear in the result.
+        let url = format!(
+            "/api/admin/v1/oauth2-sessions?filter[client]={}&filter[client]={}",
+            client_a.id, client_b.id,
+        );
+        let request = Request::get(&url).bearer(&token).empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+
+        assert_eq!(body["meta"]["count"], 2);
+        let ids: Vec<&str> = body["data"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v["id"].as_str().unwrap())
+            .collect();
+        let session_a_id = session_a.id.to_string();
+        let session_b_id = session_b.id.to_string();
+        assert!(ids.contains(&session_a_id.as_str()));
+        assert!(ids.contains(&session_b_id.as_str()));
+        assert_eq!(ids.len(), 2);
+
+        // The self/first/last links should preserve both filter[client] segments
+        let self_link = body["links"]["self"].as_str().unwrap();
+        assert!(self_link.contains(&format!("filter[client]={}", client_a.id)));
+        assert!(self_link.contains(&format!("filter[client]={}", client_b.id)));
     }
 }

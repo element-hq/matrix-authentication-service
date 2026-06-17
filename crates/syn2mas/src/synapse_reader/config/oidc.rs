@@ -347,6 +347,7 @@ impl OidcProvider {
             additional_authorization_parameters,
             forward_login_hint: self.forward_login_hint,
             on_backchannel_logout,
+            registration_token_required: false,
         })
     }
 }

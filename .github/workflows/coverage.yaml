@@ -114,10 +114,10 @@ jobs:
         run: rustup toolchain install stable --profile minimal --component llvm-tools-preview
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
+        uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
 
       - name: Install grcov
-        uses: taiki-e/install-action@7ea35f098a7369cd23488403f58be9c491a6c55f # v2
+        uses: taiki-e/install-action@213ccc1a076163c093f914550b94feb90fab916d # v2
         with:
           tool: grcov
 

@@ -28,7 +28,7 @@
 .cpd-form-inline-field {
   display: flex;
   flex-direction: row;
-  gap: var(--cpd-space-5x);
+  gap: var(--cpd-space-3x);
 }
 
 .cpd-form-inline-field-body {

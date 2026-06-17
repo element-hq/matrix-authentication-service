@@ -17,6 +17,14 @@ Please see LICENSE files in the repository root for full details.
   {% set user_agent = grant.user_agent | parse_user_agent() %}
 
   {% if grant.state == "pending" %}
+    {% set initial -%}
+      {%- if matrix_user.display_name -%}
+        {{- matrix_user.display_name[0] | upper -}}
+      {%- else -%}
+        {{- matrix_user.mxid[1] | upper -}}
+      {%- endif -%}
+    {%- endset %}
+
     <header class="page-heading">
       <div class="flex justify-center">
         {% if client.logo_uri %}
@@ -30,72 +38,96 @@ Please see LICENSE files in the repository root for full details.
 
       <div class="header">
         <h1 class="title">
-          {{ _('mas.consent.continue_to', client_name=client_display_name) }}
+          {{ _('mas.device_consent.title') }}
         </h1>
 
         <p class="text [&>span]:whitespace-nowrap [&>span]:text-[var(--cpd-color-text-link-external)]">
-          {{ _("mas.device_consent.this_will_setup", client_name=client_display_name, client_uri=client_display_uri, server_name=branding.server_name) }}
+          {{ _("mas.device_consent.description", client_name=client_display_name, client_uri=client_display_uri, server_name=branding.server_name) }}
         </p>
+      </div>
 
-        <div class="session-card mt-4">
-          <div class="card-header" {%- if user_agent %} title="{{ user_agent.raw }}"{% endif %}>
-            <div class="device-type-icon">
-              {% if user_agent.device_type == "mobile" %}
-                {{ icon.mobile() }}
-              {% elif user_agent.device_type == "tablet" %}
-                {{ icon.web_browser() }}
-              {% elif user_agent.device_type == "pc" %}
-                {{ icon.computer() }}
-              {% else %}
-                {{ icon.unknown_solid() }}
-              {% endif %}
-            </div>
+      <section class="flex items-center p-4 gap-4 border border-[var(--cpd-color-gray-400)] rounded-xl">
+        <div class="avatar-placeholder" data-color="{{ matrix_user.mxid | id_color_hash }}">{{ initial }}</div>
+        <div class="flex flex-col">
+          <div class="text-primary cpd-text-body-lg-semibold">{{ matrix_user.display_name or current_session.user.username }}</div>
+          <div class="text-secondary cpd-text-body-md-regular">{{ matrix_user.mxid }}</div>
+        </div>
+      </section>
 
-            <div class="content auto">
-              {% if user_agent.model %}
-                <div>{{ user_agent.model }}</div>
-              {% endif %}
-
-              {% if user_agent.os %}
-                <div>
-                  {{ user_agent.os }}
-                  {% if user_agent.os_version %}
-                    {{ user_agent.os_version }}
-                  {% endif %}
-                </div>
-              {% endif %}
-
-              {# If we haven't detected a model, it's probably a browser, so show the name #}
-              {% if not user_agent.model and user_agent.name %}
-                <div>
-                  {{ user_agent.name }}
-                  {% if user_agent.version %}
-                    {{ user_agent.version }}
-                  {% endif %}
-                </div>
-              {% endif %}
-
-              {# If we couldn't detect anything, show a generic "Device" #}
-              {% if not user_agent.model and not user_agent.name and not user_agent.os %}
-              <div>{{ _("mas.device_card.generic_device") }}</div>
-              {% endif %}
-            </div>
+      <section class="cpd-alert" data-type="critical">
+        <div class="cpd-alert-icon">
+          {{ icon.error_solid() }}
+        </div>
+        <div class="cpd-alert-content">
+          <div class="cpd-alert-text-content">
+            <p class="cpd-alert-title cpd-text-body-md-semibold">
+              {{ _("mas.device_consent.warning.title") }}
+            </p>
+            <p class="cpd-text-body-sm-regular">
+              {{ _("mas.device_consent.warning.description") }}
+            </p>
           </div>
-          <div class="metadata">
-            {% if grant.ip_address %}
+        </div>
+      </section>
+
+      <div class="session-card">
+        <div class="card-header" {%- if user_agent %} title="{{ user_agent.raw }}"{% endif %}>
+          <div class="device-type-icon">
+            {% if user_agent.device_type == "mobile" %}
+              {{ icon.mobile() }}
+            {% elif user_agent.device_type == "tablet" %}
+              {{ icon.web_browser() }}
+            {% elif user_agent.device_type == "pc" %}
+              {{ icon.computer() }}
+            {% else %}
+              {{ icon.unknown_solid() }}
+            {% endif %}
+          </div>
+
+          <div class="content auto">
+            {% if user_agent.model %}
+              <div>{{ user_agent.model }}</div>
+            {% endif %}
+
+            {% if user_agent.os %}
               <div>
-                <div class="key">{{ _("mas.device_card.ip_address") }}</div>
-                <div class="value">{{ grant.ip_address }}</div>
+                {{ user_agent.os }}
+                {% if user_agent.os_version %}
+                  {{ user_agent.os_version }}
+                {% endif %}
               </div>
             {% endif %}
+
+            {# If we haven't detected a model, it's probably a browser, so show the name #}
+            {% if not user_agent.model and user_agent.name %}
+              <div>
+                {{ user_agent.name }}
+                {% if user_agent.version %}
+                  {{ user_agent.version }}
+                {% endif %}
+              </div>
+            {% endif %}
+
+            {# If we couldn't detect anything, show a generic "Device" #}
+            {% if not user_agent.model and not user_agent.name and not user_agent.os %}
+            <div>{{ _("mas.device_card.generic_device") }}</div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="metadata">
+          {% if grant.ip_address %}
             <div>
-              <div class="key">{{ _("mas.device_card.access_requested") }}</div>
-              <div class="value">{{ _.relative_date(grant.created_at) | title }} {{ _.short_time(grant.created_at) }}</div>
+              <div class="key">{{ _("mas.device_card.ip_address") }}</div>
+              <div class="value">{{ grant.ip_address }}</div>
             </div>
-            <div>
-              <div class="key">{{ _("mas.device_card.device_code") }}</div>
-              <div class="value">{{ grant.user_code }}</div>
-            </div>
+          {% endif %}
+          <div>
+            <div class="key">{{ _("mas.device_card.access_requested") }}</div>
+            <div class="value">{{ _.relative_date(grant.created_at) | title }} {{ _.short_time(grant.created_at) }}</div>
+          </div>
+          <div>
+            <div class="key">{{ _("mas.device_card.security_code") }}</div>
+            <div class="value">{{ grant.user_code }}</div>
           </div>
         </div>
       </div>
@@ -114,27 +146,26 @@ Please see LICENSE files in the repository root for full details.
       {% endif %}
     {% endcall %}
 
-    {% set initial -%}
-      {%- if matrix_user.display_name -%}
-        {{- matrix_user.display_name[0] | upper -}}
-      {%- else -%}
-        {{- matrix_user.mxid[1] | upper -}}
-      {%- endif -%}
-    {%- endset %}
-
-    <section class="flex items-center p-4 gap-4 border border-[var(--cpd-color-gray-400)] rounded-xl">
-      <div class="avatar-placeholder" data-color="{{ matrix_user.mxid | id_color_hash }}">{{ initial }}</div>
-      <div class="flex flex-col">
-        <div class="text-primary cpd-text-body-lg-semibold">{{ matrix_user.display_name or current_session.user.username }}</div>
-        <div class="text-secondary cpd-text-body-md-regular">{{ matrix_user.mxid }}</div>
-      </div>
-    </section>
-
     <section class="flex flex-col gap-6">
-      <form method="POST" class="cpd-form-root">
+      <form method="POST" class="flex flex-col gap-8">
         <input type="hidden" name="csrf" value="{{ csrf_token }}" />
+        <div class="cpd-form-inline-field">
+          <div class="cpd-form-inline-field-control">
+            <div class="cpd-checkbox-container">
+              <input class="cpd-checkbox-input" type="checkbox" name="confirm_device" id="confirm_device" required />
+              <div class="cpd-checkbox-ui">
+                {{ icon.check() }}
+              </div>
+            </div>
+          </div>
+          <div class="cpd-form-inline-field-body">
+            <label class="cpd-form-label" for="confirm_device">
+              {{ _("mas.device_consent.confirm_device") }}
+            </label>
+          </div>
+        </div>
         <button type="submit" name="action" value="consent" class="cpd-button" data-kind="primary" data-size="lg">
-          {{ _("action.continue") }}
+          {{ _("mas.device_consent.grant_access") }}
         </button>
       </form>
 

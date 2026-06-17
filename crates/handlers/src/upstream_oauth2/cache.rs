@@ -433,6 +433,7 @@ mod tests {
             additional_authorization_parameters: Vec::new(),
             forward_login_hint: false,
             on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+            registration_token_required: false,
         };
 
         // Without any override, it should just use discovery

@@ -69,6 +69,15 @@ pub struct AccountConfig {
     #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
     pub password_recovery_enabled: bool,
 
+    /// Whether registration tokens are required for password registrations.
+    /// Defaults to `false`.
+    ///
+    /// When enabled, users must provide a valid registration token during
+    /// password registration. This has no effect if password registration
+    /// is disabled.
+    #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
+    pub password_registration_token_required: bool,
+
     /// Whether users are allowed to delete their own account. Defaults to
     /// `true`.
     #[serde(default = "default_true", skip_serializing_if = "is_default_true")]
@@ -80,12 +89,8 @@ pub struct AccountConfig {
     #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
     pub login_with_email_allowed: bool,
 
-    /// Whether registration tokens are required for password registrations.
-    /// Defaults to `false`.
-    ///
-    /// When enabled, users must provide a valid registration token during
-    /// password registration. This has no effect if password registration
-    /// is disabled.
+    /// Whether registration tokens are required for password registrations
+    /// This is deprecated in favor of `password_registration_token_required`
     #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
     pub registration_token_required: bool,
 }
@@ -99,9 +104,10 @@ impl Default for AccountConfig {
             password_registration_email_required: default_true(),
             password_change_allowed: default_true(),
             password_recovery_enabled: default_false(),
+            password_registration_token_required: default_false(),
+            registration_token_required: default_false(),
             account_deactivation_allowed: default_true(),
             login_with_email_allowed: default_false(),
-            registration_token_required: default_false(),
         }
     }
 }
@@ -114,9 +120,10 @@ impl AccountConfig {
             && is_default_true(&self.displayname_change_allowed)
             && is_default_true(&self.password_change_allowed)
             && is_default_false(&self.password_recovery_enabled)
+            && is_default_false(&self.password_registration_token_required)
+            && is_default_false(&self.registration_token_required)
             && is_default_true(&self.account_deactivation_allowed)
             && is_default_false(&self.login_with_email_allowed)
-            && is_default_false(&self.registration_token_required)
     }
 }
 

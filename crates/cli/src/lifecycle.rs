@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -83,7 +84,7 @@ impl LifecycleManager {
         let sigterm = tokio::signal::unix::signal(SignalKind::terminate())?;
         let sigint = tokio::signal::unix::signal(SignalKind::interrupt())?;
         let sighup = tokio::signal::unix::signal(SignalKind::hangup())?;
-        let timeout = Duration::from_secs(60);
+        let timeout = Duration::from_mins(1);
         let task_tracker = TaskTracker::new();
 
         notify(&[sd_notify::NotifyState::MainPid(std::process::id())]);

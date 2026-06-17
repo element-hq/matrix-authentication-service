@@ -723,6 +723,10 @@ pub struct UpstreamOAuthProvider {
 
     /// When the provider was disabled. If null, the provider is enabled.
     disabled_at: Option<DateTime<Utc>>,
+
+    /// Whether a registration token is required for registrations via this
+    /// provider.
+    registration_token_required: bool,
 }
 
 impl From<mas_data_model::UpstreamOAuthProvider> for UpstreamOAuthProvider {
@@ -734,6 +738,7 @@ impl From<mas_data_model::UpstreamOAuthProvider> for UpstreamOAuthProvider {
             brand_name: provider.brand_name,
             created_at: provider.created_at,
             disabled_at: provider.disabled_at,
+            registration_token_required: provider.registration_token_required,
         }
     }
 }
@@ -758,6 +763,7 @@ impl UpstreamOAuthProvider {
                 brand_name: Some("google".to_owned()),
                 created_at: DateTime::default(),
                 disabled_at: None,
+                registration_token_required: false,
             },
             Self {
                 id: Ulid::from_bytes([0x02; 16]),
@@ -766,6 +772,7 @@ impl UpstreamOAuthProvider {
                 brand_name: Some("apple".to_owned()),
                 created_at: DateTime::default(),
                 disabled_at: Some(DateTime::default()),
+                registration_token_required: false,
             },
             Self {
                 id: Ulid::from_bytes([0x03; 16]),
@@ -774,6 +781,7 @@ impl UpstreamOAuthProvider {
                 brand_name: None,
                 created_at: DateTime::default(),
                 disabled_at: None,
+                registration_token_required: true,
             },
         ]
     }

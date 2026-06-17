@@ -36,6 +36,7 @@
                   "password_login_enabled": true,
                   "password_registration_enabled": true,
                   "password_registration_email_required": true,
+                  "password_registration_token_required": true,
                   "registration_token_required": true,
                   "email_change_allowed": true,
                   "displayname_change_allowed": true,
@@ -561,7 +562,7 @@
           "oauth2-session"
         ],
         "summary": "List OAuth 2.0 sessions",
-        "description": "Retrieve a list of OAuth 2.0 sessions.\nNote that by default, all sessions, including finished ones are returned, with the oldest first.\nUse the `filter[status]` parameter to filter the sessions by their status and `page[last]` parameter to retrieve the last N sessions.",
+        "description": "Retrieve a list of OAuth 2.0 sessions.\nNote that by default, all sessions, including finished ones are returned, with the oldest first.\nUse the `filter[status]` parameter to filter the sessions by their status and `page[last]` parameter to retrieve the last N sessions.\nThe `filter[client]` parameter may be repeated to filter on multiple clients at once.",
         "operationId": "listOAuth2Sessions",
         "parameters": [
           {
@@ -665,17 +666,14 @@
           {
             "in": "query",
             "name": "filter[client]",
-            "description": "Retrieve the items for the given client",
+            "description": "Retrieve the items for the given client(s)\n\n This parameter may be repeated to filter on multiple clients at\n once (sessions matching any of the given clients are returned).",
             "schema": {
-              "description": "Retrieve the items for the given client",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "description": "Retrieve the items for the given client(s)\n\n This parameter may be repeated to filter on multiple clients at\n once (sessions matching any of the given clients are returned).",
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ULID"
+              },
+              "default": []
             },
             "style": "form"
           },
@@ -4853,7 +4851,8 @@
                         "human_name": "Google",
                         "brand_name": "google",
                         "created_at": "1970-01-01T00:00:00Z",
-                        "disabled_at": null
+                        "disabled_at": null,
+                        "registration_token_required": false
                       },
                       "links": {
                         "self": "/api/admin/v1/upstream-oauth-providers/01040G2081040G2081040G2081"
@@ -4872,7 +4871,8 @@
                         "human_name": "Apple ID",
                         "brand_name": "apple",
                         "created_at": "1970-01-01T00:00:00Z",
-                        "disabled_at": "1970-01-01T00:00:00Z"
+                        "disabled_at": "1970-01-01T00:00:00Z",
+                        "registration_token_required": false
                       },
                       "links": {
                         "self": "/api/admin/v1/upstream-oauth-providers/02081040G2081040G2081040G2"
@@ -4891,7 +4891,8 @@
                         "human_name": "Custom OAuth Provider",
                         "brand_name": null,
                         "created_at": "1970-01-01T00:00:00Z",
-                        "disabled_at": null
+                        "disabled_at": null,
+                        "registration_token_required": true
                       },
                       "links": {
                         "self": "/api/admin/v1/upstream-oauth-providers/030C1G60R30C1G60R30C1G60R3"
@@ -4952,7 +4953,8 @@
                       "human_name": "Google",
                       "brand_name": "google",
                       "created_at": "1970-01-01T00:00:00Z",
-                      "disabled_at": null
+                      "disabled_at": null,
+                      "registration_token_required": false
                     },
                     "links": {
                       "self": "/api/admin/v1/upstream-oauth-providers/01040G2081040G2081040G2081"
@@ -5027,9 +5029,13 @@
             "description": "Whether a valid email address is required for password registrations.",
             "type": "boolean"
           },
-          "registration_token_required": {
-            "description": "Whether registration tokens are required for password registrations.",
+          "password_registration_token_required": {
             "type": "boolean"
+          },
+          "registration_token_required": {
+            "description": "Whether registration tokens are required for password registrations.\n Deprecated in favor of `password_registration_token_required`",
+            "type": "boolean",
+            "deprecated": true
           },
           "email_change_allowed": {
             "description": "Whether users can change their email.",
@@ -5068,6 +5074,7 @@
           "password_login_enabled",
           "password_registration_enabled",
           "password_registration_email_required",
+          "password_registration_token_required",
           "registration_token_required",
           "email_change_allowed",
           "displayname_change_allowed",
@@ -5612,15 +5619,12 @@
             ]
           },
           "filter[client]": {
-            "description": "Retrieve the items for the given client",
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ULID"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "description": "Retrieve the items for the given client(s)\n\n This parameter may be repeated to filter on multiple clients at\n once (sessions matching any of the given clients are returned).",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ULID"
+            },
+            "default": []
           },
           "filter[client-kind]": {
             "description": "Retrieve the items only for a specific client kind",
@@ -7646,10 +7650,15 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "registration_token_required": {
+            "description": "Whether a registration token is required for registrations via this\n provider.",
+            "type": "boolean"
           }
         },
         "required": [
-          "created_at"
+          "created_at",
+          "registration_token_required"
         ]
       },
       "SingleResponse_for_UpstreamOAuthProvider": {

@@ -43,6 +43,10 @@ enum Action {
 #[derive(Deserialize, Debug)]
 pub(crate) struct ConsentForm {
     action: Action,
+
+    // HTML form checkboxes are only sent when ticked, hence the Option.
+    #[serde(default)]
+    confirm_device: Option<String>,
 }
 
 #[tracing::instrument(name = "handlers.oauth2.device.consent.get", skip_all)]
@@ -291,6 +295,15 @@ pub(crate) async fn post(
     let grant = if grant.is_pending() {
         match form.action {
             Action::Consent => {
+                // The user must explicitly tick the "confirm this is my device" box.
+                // The browser enforces `required` client-side; this is the
+                // server-side safety net.
+                if form.confirm_device.is_none() {
+                    return Err(InternalError::from_anyhow(anyhow::anyhow!(
+                        "The device must be confirmed before consent can be granted"
+                    )));
+                }
+
                 repo.oauth2_device_code_grant()
                     .fulfill(&clock, grant, &session)
                     .await?

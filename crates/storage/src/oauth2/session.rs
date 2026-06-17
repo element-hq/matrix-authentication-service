@@ -53,6 +53,7 @@ pub struct OAuth2SessionFilter<'a> {
     browser_session_filter: Option<BrowserSessionFilter<'a>>,
     device: Option<&'a Device>,
     client: Option<&'a Client>,
+    clients: Option<&'a [&'a Client]>,
     client_kind: Option<ClientKind>,
     state: Option<OAuth2SessionState>,
     scope: Option<&'a Scope>,
@@ -152,6 +153,25 @@ impl<'a> OAuth2SessionFilter<'a> {
     #[must_use]
     pub fn client(&self) -> Option<&'a Client> {
         self.client
+    }
+
+    /// List sessions for a set of clients
+    ///
+    /// This filter is independent of [`Self::for_client`]: if both are set,
+    /// the conditions are `AND`-ed together. In practice an API caller uses
+    /// one or the other.
+    #[must_use]
+    pub fn for_clients(mut self, clients: &'a [&'a Client]) -> Self {
+        self.clients = Some(clients);
+        self
+    }
+
+    /// Get the multi-client filter
+    ///
+    /// Returns [`None`] if no multi-client filter was set
+    #[must_use]
+    pub fn clients(&self) -> Option<&'a [&'a Client]> {
+        self.clients
     }
 
     /// List only static clients

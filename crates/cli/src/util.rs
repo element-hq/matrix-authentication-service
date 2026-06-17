@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -218,6 +219,14 @@ pub fn site_config_from_config(
             user_session_inactivity_ttl: c.expire_user_sessions.then_some(c.ttl),
         });
 
+    if account_config.registration_token_required {
+        tracing::warn!(
+            "`account.registration_token_required` is deprecated. use \
+            `account.password_registration_token_required` and per-provider \
+            `registration_token_required` instead"
+        );
+    }
+
     Ok(SiteConfig {
         access_token_ttl: experimental_config.access_token_ttl,
         compat_token_ttl: experimental_config.compat_token_ttl,
@@ -229,6 +238,7 @@ pub fn site_config_from_config(
         password_registration_enabled: password_config.enabled()
             && account_config.password_registration_enabled,
         password_registration_email_required: account_config.password_registration_email_required,
+        password_registration_token_required: account_config.password_registration_token_required,
         registration_token_required: account_config.registration_token_required,
         email_change_allowed: account_config.email_change_allowed,
         displayname_change_allowed: account_config.displayname_change_allowed,
@@ -252,6 +262,8 @@ pub fn site_config_from_config(
                 dangerous_hard_limit_eviction: c.dangerous_hard_limit_eviction,
             }),
         device_code_grant_enabled: oauth_config.device_code_grant_enabled,
+        device_code_user_code_auto_fill_enabled: oauth_config
+            .device_code_user_code_auto_fill_enabled,
     })
 }
 
@@ -445,7 +457,7 @@ pub async fn load_policy_factory_dynamic_data_continuously(
     load_policy_factory_dynamic_data(&policy_factory, &*repository_factory).await?;
 
     task_tracker.spawn(async move {
-        let mut interval = tokio::time::interval(Duration::from_secs(60));
+        let mut interval = tokio::time::interval(Duration::from_mins(1));
 
         loop {
             tokio::select! {
