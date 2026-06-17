@@ -400,7 +400,7 @@ upstream_oauth2:
           template: "{{ userinfo_claims.id }}"
         displayname:
           action: suggest
-          template: "{{`{{ userinfo_claims.name }}"
+          template: "{{ userinfo_claims.name }}"
         localpart:
           action: ignore
         email:
