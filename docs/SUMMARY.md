@@ -29,6 +29,7 @@
 - [Configuration file reference](./reference/configuration.md)
 - [Admin API](./api/index.html)
 - [OAuth 2.0 scopes](./reference/scopes.md)
+- [Request log format](./reference/request-log.md)
 - [Command line tool](./reference/cli/README.md)
     - [`config`](./reference/cli/config.md)
     - [`database`](./reference/cli/database.md)
