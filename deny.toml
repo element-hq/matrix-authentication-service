@@ -124,6 +124,9 @@ skip = [
     { name = "base64", version = "0.22.1" },
     # zerovec-derive (via icu) moved to syn 3, everything else is on syn 2
     { name = "syn", version = "2.0.106" },
+
+    # sqlx 0.8 depends on this old version
+    { name = "ipnetwork", version = "0.20.0" },
 ]
 
 skip-tree = []

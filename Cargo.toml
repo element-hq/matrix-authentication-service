@@ -337,7 +337,7 @@ features = ["yaml", "json"]
 
 # IP network address types
 [workspace.dependencies.ipnetwork]
-version = "0.20.0"
+version = "0.21.1"
 features = ["serde"]
 
 # Iterator utilities
