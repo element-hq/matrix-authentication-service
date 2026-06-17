@@ -26,9 +26,13 @@ pub use self::{
 mod tests {
     use chrono::Duration;
     use mas_data_model::{AuthorizationCode, Clock, clock::MockClock};
+    use mas_iana::oauth::OAuthClientAuthenticationMethod;
     use mas_storage::{
         Pagination,
-        oauth2::{OAuth2DeviceCodeGrantParams, OAuth2SessionFilter, OAuth2SessionRepository},
+        oauth2::{
+            OAuth2ClientFilter, OAuth2DeviceCodeGrantParams, OAuth2SessionFilter,
+            OAuth2SessionRepository,
+        },
     };
     use oauth2_types::{
         requests::{GrantType, ResponseMode},
@@ -1084,5 +1088,368 @@ mod tests {
             .exchange(&clock, grant, &session)
             .await;
         assert!(res.is_err());
+    }
+
+    /// Test the [`OAuth2ClientRepository::list`] and
+    /// [`OAuth2ClientRepository::count`] methods.
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_list_clients(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+
+        // Empty initially
+        let filter = OAuth2ClientFilter::new();
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 0);
+
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert!(page.edges.is_empty());
+        assert!(!page.has_next_page);
+
+        // Add a couple of clients
+        let client1 = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &clock,
+                vec!["https://first.example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::AuthorizationCode],
+                Some("First client".to_owned()),
+                None,
+                Some("https://first.example.com/".parse().unwrap()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+        clock.advance(Duration::try_minutes(1).unwrap());
+
+        let client2 = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &clock,
+                vec!["https://second.example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::AuthorizationCode],
+                Some("Second client".to_owned()),
+                None,
+                Some("https://second.example.com/".parse().unwrap()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 2);
+
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert!(!page.has_next_page);
+        assert_eq!(page.edges.len(), 2);
+        assert_eq!(page.edges[0].node, client1);
+        assert_eq!(page.edges[1].node, client2);
+
+        // Add a static client
+        let static_id = Ulid::from_datetime_with_source(clock.now().into(), &mut rng);
+        repo.oauth2_client()
+            .upsert_static(
+                static_id,
+                Some("Static client".to_owned()),
+                OAuthClientAuthenticationMethod::None,
+                None,
+                None,
+                None,
+                vec!["https://static.example.com/redirect".parse().unwrap()],
+            )
+            .await
+            .unwrap();
+        // Re-read via lookup so we have the canonical representation
+        let static_client = repo
+            .oauth2_client()
+            .lookup(static_id)
+            .await
+            .unwrap()
+            .expect("static client just inserted");
+
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 3);
+
+        // Only static clients
+        let filter = OAuth2ClientFilter::new().only_static_clients();
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 1);
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert_eq!(page.edges.len(), 1);
+        assert_eq!(page.edges[0].node, static_client);
+
+        // Only dynamic clients
+        let filter = OAuth2ClientFilter::new().only_dynamic_clients();
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 2);
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert_eq!(page.edges.len(), 2);
+        assert_eq!(page.edges[0].node, client1);
+        assert_eq!(page.edges[1].node, client2);
+
+        // Substring match on client_name
+        let filter = OAuth2ClientFilter::new().matching_client_name("first");
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 1);
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert_eq!(page.edges.len(), 1);
+        assert_eq!(page.edges[0].node, client1);
+
+        // Case-insensitive match on client_name
+        let filter = OAuth2ClientFilter::new().matching_client_name("CLIENT");
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 3);
+
+        // Substring match on client_uri
+        let filter = OAuth2ClientFilter::new().matching_client_uri("second");
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 1);
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert_eq!(page.edges.len(), 1);
+        assert_eq!(page.edges[0].node, client2);
+
+        // Case-insensitive match on client_uri
+        let filter = OAuth2ClientFilter::new().matching_client_uri("EXAMPLE.COM");
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 2);
+    }
+
+    /// Test the grant-type filter on [`OAuth2ClientFilter`].
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_list_clients_by_grant_type(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+
+        // A client supporting authorization_code (+ refresh_token)
+        let auth_code_client = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &clock,
+                vec!["https://code.example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::AuthorizationCode, GrantType::RefreshToken],
+                Some("Authorization code client".to_owned()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        // A client supporting only client_credentials
+        let client_credentials_client = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &clock,
+                vec![],
+                None,
+                None,
+                None,
+                vec![GrantType::ClientCredentials],
+                Some("Client credentials client".to_owned()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        // authorization_code: only the first client
+        let filter = OAuth2ClientFilter::new().with_grant_type(&GrantType::AuthorizationCode);
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 1);
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert_eq!(page.edges.len(), 1);
+        assert_eq!(page.edges[0].node, auth_code_client);
+
+        // client_credentials: only the second client
+        let filter = OAuth2ClientFilter::new().with_grant_type(&GrantType::ClientCredentials);
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 1);
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert_eq!(page.edges.len(), 1);
+        assert_eq!(page.edges[0].node, client_credentials_client);
+
+        // refresh_token: only the first client
+        let filter = OAuth2ClientFilter::new().with_grant_type(&GrantType::RefreshToken);
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 1);
+
+        // device_code: no client supports it
+        let filter = OAuth2ClientFilter::new().with_grant_type(&GrantType::DeviceCode);
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 0);
+
+        // A grant type without a dedicated column matches nothing
+        let filter = OAuth2ClientFilter::new().with_grant_type(&GrantType::Implicit);
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 0);
+    }
+
+    /// Test the active-sessions filter on [`OAuth2ClientFilter`].
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_list_clients_by_active_sessions(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+
+        // A client that will have an active session
+        let with_session = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &clock,
+                vec![],
+                None,
+                None,
+                None,
+                vec![GrantType::ClientCredentials],
+                Some("Client with session".to_owned()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        // A client without any session
+        let without_session = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &clock,
+                vec![],
+                None,
+                None,
+                None,
+                vec![GrantType::ClientCredentials],
+                Some("Client without session".to_owned()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let session = repo
+            .oauth2_session()
+            .add_from_client_credentials(
+                &mut rng,
+                &clock,
+                &with_session,
+                Scope::from_iter([OPENID]),
+            )
+            .await
+            .unwrap();
+
+        // Has an active session: only the first client
+        let filter = OAuth2ClientFilter::new().with_active_sessions(true);
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 1);
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert_eq!(page.edges.len(), 1);
+        assert_eq!(page.edges[0].node, with_session);
+
+        // Has no active session: only the second client
+        let filter = OAuth2ClientFilter::new().with_active_sessions(false);
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 1);
+        let page = repo
+            .oauth2_client()
+            .list(filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert_eq!(page.edges.len(), 1);
+        assert_eq!(page.edges[0].node, without_session);
+
+        // Once the session is finished, the first client no longer has one
+        repo.oauth2_session().finish(&clock, session).await.unwrap();
+
+        let filter = OAuth2ClientFilter::new().with_active_sessions(true);
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 0);
+        let filter = OAuth2ClientFilter::new().with_active_sessions(false);
+        assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 2);
     }
 }

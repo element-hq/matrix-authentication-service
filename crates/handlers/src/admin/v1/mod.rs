@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -19,6 +20,7 @@ use super::call_context::CallContext;
 use crate::passwords::PasswordManager;
 
 mod compat_sessions;
+mod oauth2_clients;
 mod oauth2_sessions;
 mod personal_sessions;
 mod policy_data;
@@ -65,6 +67,14 @@ where
                 self::compat_sessions::finish,
                 self::compat_sessions::finish_doc,
             ),
+        )
+        .api_route(
+            "/oauth2-clients",
+            get_with(self::oauth2_clients::list, self::oauth2_clients::list_doc),
+        )
+        .api_route(
+            "/oauth2-clients/{id}",
+            get_with(self::oauth2_clients::get, self::oauth2_clients::get_doc),
         )
         .api_route(
             "/oauth2-sessions",

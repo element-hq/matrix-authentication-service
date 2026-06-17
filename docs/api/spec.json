@@ -500,6 +500,330 @@
         }
       }
     },
+    "/api/admin/v1/oauth2-clients": {
+      "get": {
+        "tags": [
+          "oauth2-client"
+        ],
+        "summary": "List OAuth 2.0 clients",
+        "description": "Retrieve a paginated list of OAuth 2.0 clients registered with this service.\nUse the `filter[client-kind]` parameter to restrict the response to either static (configured) or dynamic (registered at runtime) clients,\nthe `filter[client-name]`/`filter[client-uri]` parameters for a case-insensitive substring search,\nthe `filter[grant-type]` parameter to restrict to clients which support a given grant type,\nand the `filter[has-active-sessions]` parameter to restrict to clients which have (or don't have) an active session.",
+        "operationId": "listOAuth2Clients",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page[before]",
+            "description": "Retrieve the items before the given ID",
+            "schema": {
+              "description": "Retrieve the items before the given ID",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[after]",
+            "description": "Retrieve the items after the given ID",
+            "schema": {
+              "description": "Retrieve the items after the given ID",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ULID"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[first]",
+            "description": "Retrieve the first N items",
+            "schema": {
+              "description": "Retrieve the first N items",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint",
+              "minimum": 1
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[last]",
+            "description": "Retrieve the last N items",
+            "schema": {
+              "description": "Retrieve the last N items",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint",
+              "minimum": 1
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/IncludeCount"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[client-kind]",
+            "description": "Retrieve only clients of the given kind\n\n * `dynamic`: clients registered via the dynamic-client-registration\n   endpoint\n\n * `static`: clients declared in the configuration file",
+            "schema": {
+              "description": "Retrieve only clients of the given kind\n\n * `dynamic`: clients registered via the dynamic-client-registration\n   endpoint\n\n * `static`: clients declared in the configuration file",
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/OAuth2ClientKind"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[client-name]",
+            "description": "Substring (case-insensitive) match on the client's `client_name`",
+            "schema": {
+              "description": "Substring (case-insensitive) match on the client's `client_name`",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[client-uri]",
+            "description": "Substring (case-insensitive) match on the client's `client_uri`",
+            "schema": {
+              "description": "Substring (case-insensitive) match on the client's `client_uri`",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[grant-type]",
+            "description": "Retrieve only clients which support the given grant type\n\n e.g. `authorization_code`, `client_credentials`,\n `urn:ietf:params:oauth:grant-type:device_code`",
+            "schema": {
+              "description": "Retrieve only clients which support the given grant type\n\n e.g. `authorization_code`, `client_credentials`,\n `urn:ietf:params:oauth:grant-type:device_code`",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[has-active-sessions]",
+            "description": "Retrieve only clients which have (`true`) or don't have (`false`) at\n least one active OAuth 2.0 session",
+            "schema": {
+              "description": "Retrieve only clients which have (`true`) or don't have (`false`) at\n least one active OAuth 2.0 session",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "style": "form"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated response of OAuth 2.0 clients",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_for_OAuth2Client"
+                },
+                "example": {
+                  "meta": {
+                    "count": 42
+                  },
+                  "data": [
+                    {
+                      "type": "oauth2-client",
+                      "id": "01040G2081040G2081040G2081",
+                      "attributes": {
+                        "client_id": "01040G2081040G2081040G2081",
+                        "client_name": "Example dynamic client",
+                        "client_uri": "https://example.com/",
+                        "logo_uri": "https://example.com/logo.png",
+                        "redirect_uris": [
+                          "https://example.com/oauth/callback"
+                        ],
+                        "grant_types": [
+                          "authorization_code",
+                          "refresh_token"
+                        ],
+                        "is_static": false
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/oauth2-clients/01040G2081040G2081040G2081"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01040G2081040G2081040G2081"
+                        }
+                      }
+                    },
+                    {
+                      "type": "oauth2-client",
+                      "id": "02081040G2081040G2081040G2",
+                      "attributes": {
+                        "client_id": "static-client",
+                        "client_name": "Configured static client",
+                        "client_uri": null,
+                        "logo_uri": null,
+                        "redirect_uris": [
+                          "https://static.example.com/callback"
+                        ],
+                        "grant_types": [
+                          "client_credentials"
+                        ],
+                        "is_static": true
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/oauth2-clients/02081040G2081040G2081040G2"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "02081040G2081040G2081040G2"
+                        }
+                      }
+                    }
+                  ],
+                  "links": {
+                    "self": "/api/admin/v1/oauth2-clients?page[first]=2",
+                    "first": "/api/admin/v1/oauth2-clients?page[first]=2",
+                    "last": "/api/admin/v1/oauth2-clients?page[last]=2",
+                    "next": "/api/admin/v1/oauth2-clients?page[after]=02081040G2081040G2081040G2&page[first]=2"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid filter parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/oauth2-clients/{id}": {
+      "get": {
+        "tags": [
+          "oauth2-client"
+        ],
+        "summary": "Get an OAuth 2.0 client",
+        "operationId": "getOAuth2Client",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OAuth 2.0 client was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_OAuth2Client"
+                },
+                "example": {
+                  "data": {
+                    "type": "oauth2-client",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "client_id": "01040G2081040G2081040G2081",
+                      "client_name": "Example dynamic client",
+                      "client_uri": "https://example.com/",
+                      "logo_uri": "https://example.com/logo.png",
+                      "redirect_uris": [
+                        "https://example.com/oauth/callback"
+                      ],
+                      "grant_types": [
+                        "authorization_code",
+                        "refresh_token"
+                      ],
+                      "is_static": false
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/oauth2-clients/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/oauth2-clients/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "OAuth 2.0 client was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "OAuth 2.0 client ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/oauth2-sessions": {
       "get": {
         "tags": [
@@ -629,7 +953,7 @@
               "description": "Retrieve the items only for a specific client kind",
               "anyOf": [
                 {
-                  "$ref": "#/components/schemas/OAuth2ClientKind"
+                  "$ref": "#/components/schemas/OAuth2ClientKind2"
                 },
                 {
                   "type": "null"
@@ -5179,17 +5503,23 @@
           },
           "device_id": {
             "description": "The Matrix device ID of this session",
-            "allOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/DeviceID"
+              },
+              {
+                "type": "null"
               }
             ]
           },
           "user_session_id": {
             "description": "The ID of the user session that started this session, if any",
-            "allOf": [
+            "anyOf": [
               {
                 "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "type": "null"
               }
             ]
           },
@@ -5247,8 +5577,6 @@
         },
         "required": [
           "user_id",
-          "device_id",
-          "user_session_id",
           "created_at"
         ]
       },
@@ -5404,6 +5732,220 @@
           "links"
         ]
       },
+      "OAuth2ClientFilter": {
+        "type": "object",
+        "properties": {
+          "filter[client-kind]": {
+            "description": "Retrieve only clients of the given kind\n\n * `dynamic`: clients registered via the dynamic-client-registration\n   endpoint\n\n * `static`: clients declared in the configuration file",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OAuth2ClientKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "filter[client-name]": {
+            "description": "Substring (case-insensitive) match on the client's `client_name`",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "filter[client-uri]": {
+            "description": "Substring (case-insensitive) match on the client's `client_uri`",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "filter[grant-type]": {
+            "description": "Retrieve only clients which support the given grant type\n\n e.g. `authorization_code`, `client_credentials`,\n `urn:ietf:params:oauth:grant-type:device_code`",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "filter[has-active-sessions]": {
+            "description": "Retrieve only clients which have (`true`) or don't have (`false`) at\n least one active OAuth 2.0 session",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      },
+      "OAuth2ClientKind": {
+        "type": "string",
+        "enum": [
+          "dynamic",
+          "static"
+        ]
+      },
+      "PaginatedResponse_for_OAuth2Client": {
+        "description": "A top-level response with a page of resources",
+        "type": "object",
+        "properties": {
+          "meta": {
+            "description": "Response metadata",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMeta"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "data": {
+            "description": "The list of resources",
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/SingleResource_for_OAuth2Client"
+            }
+          },
+          "links": {
+            "description": "Related links",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationLinks"
+              }
+            ]
+          }
+        },
+        "required": [
+          "links"
+        ]
+      },
+      "SingleResource_for_OAuth2Client": {
+        "description": "A single resource, with its type, ID, attributes and related links",
+        "type": "object",
+        "properties": {
+          "type": {
+            "description": "The type of the resource",
+            "type": "string"
+          },
+          "id": {
+            "description": "The ID of the resource",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
+          },
+          "attributes": {
+            "description": "The attributes of the resource",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OAuth2Client"
+              }
+            ]
+          },
+          "links": {
+            "description": "Related links",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SingleResourceMeta"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "attributes",
+          "links"
+        ]
+      },
+      "OAuth2Client": {
+        "description": "An OAuth 2.0 client registered with this service",
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "description": "The OAuth 2.0 client identifier",
+            "type": "string"
+          },
+          "client_name": {
+            "description": "The human-readable name of the client, if registered",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "client_uri": {
+            "description": "The homepage URL of the client, if registered",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "logo_uri": {
+            "description": "The URL of the client's logo, if registered",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "redirect_uris": {
+            "description": "The list of redirect URIs registered by the client",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "grant_types": {
+            "description": "The list of grant types the client is allowed to use",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "is_static": {
+            "description": "Whether the client is statically configured (defined in the\n configuration file) rather than dynamically registered.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "client_id",
+          "redirect_uris",
+          "grant_types",
+          "is_static"
+        ]
+      },
+      "SingleResponse_for_OAuth2Client": {
+        "description": "A top-level response with a single resource",
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SingleResource_for_OAuth2Client"
+          },
+          "links": {
+            "$ref": "#/components/schemas/SelfLinks"
+          }
+        },
+        "required": [
+          "data",
+          "links"
+        ]
+      },
       "OAuth2SessionFilter": {
         "type": "object",
         "properties": {
@@ -5430,7 +5972,7 @@
             "description": "Retrieve the items only for a specific client kind",
             "anyOf": [
               {
-                "$ref": "#/components/schemas/OAuth2ClientKind"
+                "$ref": "#/components/schemas/OAuth2ClientKind2"
               },
               {
                 "type": "null"
@@ -5469,7 +6011,7 @@
           }
         }
       },
-      "OAuth2ClientKind": {
+      "OAuth2ClientKind2": {
         "type": "string",
         "enum": [
           "dynamic",
@@ -7439,6 +7981,10 @@
     {
       "name": "policy-data",
       "description": "Manage the dynamic policy data"
+    },
+    {
+      "name": "oauth2-client",
+      "description": "Manage OAuth 2.0 clients"
     },
     {
       "name": "oauth2-session",
