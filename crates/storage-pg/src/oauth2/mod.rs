@@ -173,11 +173,19 @@ mod tests {
             .await
             .unwrap();
 
+        // mark the grant as fulfilled with the browser session
+        let grant = repo
+            .oauth2_authorization_grant()
+            .fulfill(&clock, &user_session, grant)
+            .await
+            .unwrap();
+        assert!(grant.is_fulfilled());
+
         // Lookup a non-existing session
         let session = repo.oauth2_session().lookup(Ulid::nil()).await.unwrap();
         assert_eq!(session, None);
 
-        // Create an OAuth session
+        // Create an OAuth session at exchange time
         let session = repo
             .oauth2_session()
             .add_from_browser_session(
@@ -190,13 +198,13 @@ mod tests {
             .await
             .unwrap();
 
-        // Mark the grant as fulfilled
+        // Mark the grant as exchanged with the `OAuth2` session
         let grant = repo
             .oauth2_authorization_grant()
-            .fulfill(&clock, &session, grant)
+            .exchange(&clock, grant, &session)
             .await
             .unwrap();
-        assert!(grant.is_fulfilled());
+        assert!(grant.is_exchanged());
 
         // Lookup the same session by id
         let session_lookup = repo
@@ -206,14 +214,6 @@ mod tests {
             .unwrap()
             .expect("session not found");
         assert_eq!(session, session_lookup);
-
-        // Mark the grant as exchanged
-        let grant = repo
-            .oauth2_authorization_grant()
-            .exchange(&clock, grant)
-            .await
-            .unwrap();
-        assert!(grant.is_exchanged());
 
         // Lookup a non-existing token
         let token = repo
