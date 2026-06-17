@@ -7,7 +7,7 @@
 
 use async_trait::async_trait;
 use mas_data_model::{Clock, PolicyData};
-use rand_core::RngCore;
+use rand_core::Rng;
 
 use crate::repository_impl;
 
@@ -43,7 +43,7 @@ pub trait PolicyDataRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn set(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         data: serde_json::Value,
     ) -> Result<PolicyData, Self::Error>;
@@ -67,7 +67,7 @@ repository_impl!(PolicyDataRepository:
 
     async fn set(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         data: serde_json::Value,
     ) -> Result<PolicyData, Self::Error>;

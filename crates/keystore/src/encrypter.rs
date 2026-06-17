@@ -8,8 +8,7 @@ use std::sync::Arc;
 
 use aead::Aead;
 use base64ct::{Base64, Encoding};
-use chacha20poly1305::{ChaCha20Poly1305, KeyInit};
-use generic_array::GenericArray;
+use chacha20poly1305::{ChaCha20Poly1305, Key, KeyInit, Nonce};
 use thiserror::Error;
 
 /// Helps encrypting and decrypting data
@@ -30,8 +29,7 @@ impl Encrypter {
     /// Creates an [`Encrypter`] out of an encryption key
     #[must_use]
     pub fn new(key: &[u8; 32]) -> Self {
-        let key = GenericArray::from_slice(key);
-        let aead = ChaCha20Poly1305::new(key);
+        let aead = ChaCha20Poly1305::new(&Key::from(*key));
         let aead = Arc::new(aead);
         Self { aead }
     }
@@ -42,8 +40,8 @@ impl Encrypter {
     ///
     /// Will return `Err` when the payload failed to encrypt
     pub fn encrypt(&self, nonce: &[u8; 12], decrypted: &[u8]) -> Result<Vec<u8>, aead::Error> {
-        let nonce = GenericArray::from_slice(&nonce[..]);
-        let encrypted = self.aead.encrypt(nonce, decrypted)?;
+        let nonce = Nonce::from(*nonce);
+        let encrypted = self.aead.encrypt(&nonce, decrypted)?;
         Ok(encrypted)
     }
 
@@ -53,8 +51,8 @@ impl Encrypter {
     ///
     /// Will return `Err` when the payload failed to decrypt
     pub fn decrypt(&self, nonce: &[u8; 12], encrypted: &[u8]) -> Result<Vec<u8>, aead::Error> {
-        let nonce = GenericArray::from_slice(&nonce[..]);
-        let encrypted = self.aead.decrypt(nonce, encrypted)?;
+        let nonce = Nonce::from(*nonce);
+        let encrypted = self.aead.decrypt(&nonce, encrypted)?;
         Ok(encrypted)
     }
 

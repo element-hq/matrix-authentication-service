@@ -33,8 +33,8 @@ use mas_storage::{
 };
 use mas_storage_pg::{DatabaseError, PgRepository};
 use rand::{
-    RngCore, SeedableRng,
-    distributions::{Alphanumeric, DistString as _},
+    Rng, SeedableRng,
+    distr::{Alphanumeric, SampleString as _},
 };
 use sqlx::{Acquire, types::Uuid};
 use tracing::{error, info, info_span, warn};
@@ -222,8 +222,10 @@ impl Options {
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
         use Subcommand as SC;
         let clock = SystemClock::default();
-        // XXX: we should disallow SeedableRng::from_entropy
-        let mut rng = rand_chacha::ChaChaRng::from_entropy();
+        // Seed the RNG from the thread RNG. `rand::rng()` is normally disallowed
+        // (we inject RNGs), but this is a top-level entry point.
+        #[expect(clippy::disallowed_methods)]
+        let mut rng = rand_chacha::ChaChaRng::from_rng(&mut rand::rng());
 
         match self.subcommand {
             SC::SetPassword {
@@ -1112,7 +1114,7 @@ impl UserCreationRequest<'_> {
     async fn do_register<E: std::error::Error + Send + Sync + 'static>(
         self,
         repo: &mut dyn RepositoryAccess<Error = E>,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
     ) -> Result<User, E> {
         let Self {

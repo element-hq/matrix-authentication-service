@@ -14,7 +14,7 @@ use mas_config::{
     UpstreamOAuth2Config,
 };
 use mas_data_model::SystemClock;
-use rand::thread_rng;
+use rand::rng;
 use sqlx::{Connection, Either, PgConnection, postgres::PgConnectOptions, types::Uuid};
 use syn2mas::{
     LockedMasDatabase, MasWriter, Progress, ProgressStage, SynapseReader, synapse_config,
@@ -257,7 +257,7 @@ impl Options {
                 let clock = SystemClock::default();
                 // TODO is this rng ok?
                 #[expect(clippy::disallowed_methods)]
-                let mut rng = thread_rng();
+                let mut rng = rng();
 
                 let progress = Progress::default();
 

@@ -16,7 +16,7 @@ use mas_data_model::{
 use mas_iana::oauth::PkceCodeChallengeMethod;
 use mas_storage::oauth2::OAuth2AuthorizationGrantRepository;
 use oauth2_types::{requests::ResponseMode, scope::Scope};
-use rand::RngCore;
+use rand::Rng;
 use sqlx::{PgConnection, types::Json};
 use ulid::Ulid;
 use url::Url;
@@ -189,7 +189,7 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
     )]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         client: &Client,
         redirect_uri: Url,

@@ -23,7 +23,7 @@ use oauth2_types::{
     requests::{DeviceAuthorizationRequest, DeviceAuthorizationResponse, GrantType},
     scope::ScopeToken,
 };
-use rand::distributions::{Alphanumeric, DistString};
+use rand::distr::{Alphanumeric, SampleString};
 use thiserror::Error;
 use ulid::Ulid;
 

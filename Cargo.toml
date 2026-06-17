@@ -117,13 +117,13 @@ version = "0.5.1"
 
 # AEAD (Authenticated Encryption with Associated Data)
 [workspace.dependencies.aead]
-version = "0.5.2"
-features = ["std"]
+version = "0.6.1"
+features = ["alloc", "getrandom"]
 
 # Argon2 password hashing
 [workspace.dependencies.argon2]
-version = "0.5.3"
-features = ["password-hash", "std"]
+version = "0.6.0-rc.8"
+features = ["alloc", "password-hash", "rand_core"]
 
 # Constant-time base64
 [workspace.dependencies.base64ct]
@@ -132,7 +132,7 @@ features = ["std"]
 
 # Bcrypt password hashing
 [workspace.dependencies.bcrypt]
-version = "0.18.0"
+version = "0.19.2"
 default-features = true
 
 # Packed bitfields
@@ -150,8 +150,8 @@ features = ["serde1"]
 
 # ChaCha20Poly1305 AEAD
 [workspace.dependencies.chacha20poly1305]
-version = "0.10.1"
-features = ["std"]
+version = "0.11.0-rc.3"
+features = ["alloc", "getrandom"]
 
 # Memory optimisation for short strings
 [workspace.dependencies.compact_str]
@@ -180,8 +180,8 @@ features = ["derive"]
 
 # Object Identifiers (OIDs) as constants
 [workspace.dependencies.const-oid]
-version = "0.9.6"
-features = ["std"]
+version = "0.10.2"
+features = ["db"]
 
 # Utility for converting between different cases
 [workspace.dependencies.convert_case]
@@ -201,7 +201,7 @@ version = "1.4.0"
 
 # DER encoding
 [workspace.dependencies.der]
-version = "0.7.10"
+version = "0.8.0"
 features = ["std"]
 
 # Interactive CLI dialogs
@@ -212,7 +212,7 @@ features = ["fuzzy-select", "password"]
 
 # Cryptographic digest algorithms
 [workspace.dependencies.digest]
-version = "0.10.7"
+version = "0.11.3"
 
 # Load environment variables from .env files
 [workspace.dependencies.dotenvy]
@@ -220,13 +220,13 @@ version = "0.15.7"
 
 # ECDSA algorithms
 [workspace.dependencies.ecdsa]
-version = "0.16.9"
-features = ["signing", "verifying"]
+version = "0.17.0-rc.20"
+features = ["alloc", "der", "pem", "pkcs8", "std"]
 
 # Elliptic curve cryptography
 [workspace.dependencies.elliptic-curve]
-version = "0.13.8"
-features = ["std", "pem", "sec1"]
+version = "0.14.0-rc.35"
+features = ["std", "pem", "pkcs8", "arithmetic"]
 
 # Configuration loading
 [workspace.dependencies.figment]
@@ -253,7 +253,7 @@ features = ["std", "dashmap", "quanta"]
 
 # HMAC calculation
 [workspace.dependencies.hmac]
-version = "0.12.1"
+version = "0.13.0"
 
 # HTTP headers
 [workspace.dependencies.headers]
@@ -349,8 +349,8 @@ version = "0.15.0"
 
 # K256 elliptic curve
 [workspace.dependencies.k256]
-version = "0.13.4"
-features = ["std"]
+version = "0.14.0-rc.12"
+features = ["std", "ecdsa", "pem", "pkcs8"]
 
 # RFC 5646 language tags
 [workspace.dependencies.language-tags]
@@ -439,13 +439,13 @@ default-features = false
 
 # P256 elliptic curve
 [workspace.dependencies.p256]
-version = "0.13.2"
-features = ["std"]
+version = "0.14.0-rc.12"
+features = ["std", "ecdsa", "pem", "pkcs8"]
 
 # P384 elliptic curve
 [workspace.dependencies.p384]
-version = "0.13.1"
-features = ["std"]
+version = "0.14.0-rc.12"
+features = ["std", "ecdsa", "pem", "pkcs8"]
 
 # Text padding utilities
 [workspace.dependencies.pad]
@@ -453,8 +453,8 @@ version = "0.1.6"
 
 # PBKDF2 password hashing
 [workspace.dependencies.pbkdf2]
-version = "0.12.2"
-features = ["password-hash", "std", "simple", "parallel"]
+version = "0.13.0"
+features = ["phc", "sha2", "alloc"]
 
 # PEM encoding/decoding
 [workspace.dependencies.pem-rfc7468]
@@ -475,13 +475,13 @@ version = "0.2.16"
 
 # PKCS#1 encoding
 [workspace.dependencies.pkcs1]
-version = "0.7.5"
+version = "0.8.0-rc.4"
 features = ["std"]
 
 # PKCS#8 encoding
 [workspace.dependencies.pkcs8]
-version = "0.10.2"
-features = ["std", "pkcs5", "encryption"]
+version = "0.11.0"
+features = ["std", "pem", "encryption"]
 
 # Public Suffix List
 [workspace.dependencies.psl]
@@ -493,11 +493,11 @@ version = "0.12.6"
 
 # Random values
 [workspace.dependencies.rand]
-version = "0.8.5"
+version = "0.10.1"
 [workspace.dependencies.rand_chacha]
-version = "0.3.1"
+version = "0.10.0"
 [workspace.dependencies.rand_core]
-version = "0.6.4"
+version = "0.10.1"
 
 # Regular expressions
 [workspace.dependencies.regex]
@@ -519,8 +519,8 @@ features = [
 
 # RSA cryptography
 [workspace.dependencies.rsa]
-version = "0.9.10"
-features = ["std", "pem"]
+version = "0.10.0-rc.18"
+features = ["std", "encoding"]
 
 # Fast hash algorithm for HashMap
 [workspace.dependencies.rustc-hash]
@@ -549,7 +549,7 @@ features = ["url2", "chrono04", "preserve_order"]
 
 # SEC1 encoding format
 [workspace.dependencies.sec1]
-version = "0.7.3"
+version = "0.8.1"
 features = ["std"]
 
 # Query builder
@@ -607,12 +607,13 @@ version = "0.9.34"
 
 # SHA-2 cryptographic hash algorithm
 [workspace.dependencies.sha2]
-version = "0.10.9"
+version = "0.11.0"
 features = ["oid"]
 
 # Digital signature traits
 [workspace.dependencies.signature]
-version = "2.2.0"
+version = "3.0.0"
+features = ["alloc", "rand_core"]
 
 # Low-level socket manipulation
 [workspace.dependencies.socket2]
@@ -620,7 +621,7 @@ version = "0.6.2"
 
 # Subject Public Key Info
 [workspace.dependencies.spki]
-version = "0.7.3"
+version = "0.8.0"
 features = ["std"]
 
 # SQL database support
@@ -762,3 +763,9 @@ rayon.opt-level = 3
 regalloc2.opt-level = 3
 sha2.opt-level = 3
 sqlx-macros.opt-level = 3
+
+# Temporary: consume the rand 0.9 branch of rust-opa-wasm until 0.2.2 is released.
+# Drop this patch (and bump [workspace.dependencies.opa-wasm] to 0.2.2) once the
+# release is out. See https://github.com/matrix-org/rust-opa-wasm/tree/quenting/rand-0.9
+[patch.crates-io]
+opa-wasm = { git = "https://github.com/matrix-org/rust-opa-wasm.git", branch = "quenting/rand-0.9" }

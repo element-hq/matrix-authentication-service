@@ -5,9 +5,9 @@
 // Please see LICENSE files in the repository root for full details.
 
 use base64ct::{Base64UrlUnpadded, Encoding};
-use rand::thread_rng;
+use rand::rng;
 use serde::{Serialize, de::DeserializeOwned};
-use signature::{RandomizedSigner, SignatureEncoding, Verifier, rand_core::CryptoRngCore};
+use signature::{RandomizedSigner, SignatureEncoding, Verifier, rand_core::CryptoRng};
 use thiserror::Error;
 
 use super::{header::JsonWebSignatureHeader, raw::RawJwt};
@@ -325,7 +325,7 @@ impl<T> Jwt<'static, T> {
         T: Serialize,
     {
         #[expect(clippy::disallowed_methods)]
-        Self::sign_with_rng(&mut thread_rng(), header, payload, key)
+        Self::sign_with_rng(&mut rng(), header, payload, key)
     }
 
     /// Sign the given payload with the given key using the given RNG.
@@ -341,7 +341,7 @@ impl<T> Jwt<'static, T> {
         key: &K,
     ) -> Result<Self, JwtSignatureError>
     where
-        R: CryptoRngCore,
+        R: CryptoRng,
         K: RandomizedSigner<S>,
         S: SignatureEncoding,
         T: Serialize,
@@ -378,7 +378,7 @@ impl<T> Jwt<'static, T> {
 mod tests {
     #![allow(clippy::disallowed_methods)]
     use mas_iana::jose::JsonWebSignatureAlg;
-    use rand::thread_rng;
+    use rand::rng;
 
     use super::*;
 
@@ -406,7 +406,7 @@ mod tests {
         let header = JsonWebSignatureHeader::new(JsonWebSignatureAlg::Es256);
         let payload = serde_json::json!({"hello": "world"});
 
-        let key = ecdsa::SigningKey::<p256::NistP256>::random(&mut thread_rng());
+        let key = ecdsa::SigningKey::<p256::NistP256>::random(&mut rng());
         let signed = Jwt::sign::<_, ecdsa::Signature<_>>(header, payload, &key).unwrap();
         signed
             .verify::<_, ecdsa::Signature<_>>(key.verifying_key())

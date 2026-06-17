@@ -12,7 +12,10 @@ use camino::Utf8PathBuf;
 use futures_util::future::{try_join, try_join_all};
 use mas_jose::jwk::{JsonWebKey, JsonWebKeySet, Thumbprint};
 use mas_keystore::{Encrypter, Keystore, PrivateKey};
-use rand::{Rng, SeedableRng, distributions::Standard, prelude::Distribution as _};
+use rand::{
+    RngExt, SeedableRng,
+    distr::{Distribution as _, StandardUniform},
+};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
@@ -347,12 +350,12 @@ impl SecretsConfig {
     #[tracing::instrument(skip_all)]
     pub(crate) async fn generate<R>(mut rng: R) -> anyhow::Result<Self>
     where
-        R: Rng + Send,
+        R: RngExt + Send,
     {
         info!("Generating keys...");
 
         let span = tracing::info_span!("rsa");
-        let key_rng = rand_chacha::ChaChaRng::from_rng(&mut rng)?;
+        let key_rng = rand_chacha::ChaChaRng::from_rng(&mut rng);
         let rsa_key = task::spawn_blocking(move || {
             let _entered = span.enter();
             let ret = PrivateKey::generate_rsa(key_rng).unwrap();
@@ -368,7 +371,7 @@ impl SecretsConfig {
         };
 
         let span = tracing::info_span!("ec_p256");
-        let key_rng = rand_chacha::ChaChaRng::from_rng(&mut rng)?;
+        let key_rng = rand_chacha::ChaChaRng::from_rng(&mut rng);
         let ec_p256_key = task::spawn_blocking(move || {
             let _entered = span.enter();
             let ret = PrivateKey::generate_ec_p256(key_rng);
@@ -384,7 +387,7 @@ impl SecretsConfig {
         };
 
         let span = tracing::info_span!("ec_p384");
-        let key_rng = rand_chacha::ChaChaRng::from_rng(&mut rng)?;
+        let key_rng = rand_chacha::ChaChaRng::from_rng(&mut rng);
         let ec_p384_key = task::spawn_blocking(move || {
             let _entered = span.enter();
             let ret = PrivateKey::generate_ec_p384(key_rng);
@@ -400,7 +403,7 @@ impl SecretsConfig {
         };
 
         let span = tracing::info_span!("ec_k256");
-        let key_rng = rand_chacha::ChaChaRng::from_rng(&mut rng)?;
+        let key_rng = rand_chacha::ChaChaRng::from_rng(&mut rng);
         let ec_k256_key = task::spawn_blocking(move || {
             let _entered = span.enter();
             let ret = PrivateKey::generate_ec_k256(key_rng);
@@ -416,7 +419,7 @@ impl SecretsConfig {
         };
 
         Ok(Self {
-            encryption: Encryption::Value(Standard.sample(&mut rng)),
+            encryption: Encryption::Value(StandardUniform.sample(&mut rng)),
             keys: Some(vec![rsa_key, ec_p256_key, ec_p384_key, ec_k256_key]),
             keys_dir: None,
         })

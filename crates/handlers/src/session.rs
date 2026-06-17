@@ -17,7 +17,7 @@ use mas_storage::{
     personal::PersonalSessionFilter,
 };
 use mas_templates::{AccountInactiveContext, TemplateContext, Templates};
-use rand::RngCore;
+use rand::Rng;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -43,7 +43,7 @@ pub enum SessionOrFallback {
 pub async fn load_session_or_fallback(
     cookie_jar: CookieJar,
     clock: &impl Clock,
-    rng: impl RngCore,
+    rng: impl Rng,
     templates: &Templates,
     locale: &DataLocale,
     repo: &mut BoxRepository,

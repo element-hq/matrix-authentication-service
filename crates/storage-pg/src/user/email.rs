@@ -16,7 +16,7 @@ use mas_storage::{
     pagination::Node,
     user::{UserEmailFilter, UserEmailRepository},
 };
-use rand::RngCore;
+use rand::Rng;
 use sea_query::{Expr, ExprTrait, Func, PostgresQueryBuilder, Query, SimpleExpr, enum_def};
 use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
@@ -354,7 +354,7 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
     )]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user: &User,
         email: String,
@@ -448,7 +448,7 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
     )]
     async fn add_authentication_for_session(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         email: String,
         session: &BrowserSession,
@@ -500,7 +500,7 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
     )]
     async fn add_authentication_for_registration(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         email: String,
         user_registration: &UserRegistration,
@@ -553,7 +553,7 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
     )]
     async fn add_authentication_code(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         duration: chrono::Duration,
         user_email_authentication: &UserEmailAuthentication,

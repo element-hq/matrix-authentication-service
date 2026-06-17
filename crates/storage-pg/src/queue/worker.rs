@@ -10,7 +10,7 @@ use async_trait::async_trait;
 use chrono::Duration;
 use mas_data_model::{Clock, UlidExt as _};
 use mas_storage::queue::{QueueWorkerRepository, Worker};
-use rand::RngCore;
+use rand::Rng;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
@@ -46,7 +46,7 @@ impl QueueWorkerRepository for PgQueueWorkerRepository<'_> {
     )]
     async fn register(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
     ) -> Result<Worker, Self::Error> {
         let now = clock.now();

@@ -131,7 +131,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::CREATED);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "data": {
             "type": "policy-data",
@@ -150,6 +150,6 @@ mod tests {
             "self": "/api/admin/v1/policy-data/01FSHN9AG0MZAA6S4AF7CTV32E"
           }
         }
-        "###);
+        "#);
     }
 }

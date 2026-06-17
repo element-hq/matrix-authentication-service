@@ -10,7 +10,7 @@ use mas_data_model::{
     BrowserSession, Clock, UpstreamOAuthAuthorizationSession, User, UserEmail,
     UserEmailAuthentication, UserEmailAuthenticationCode, UserRegistration,
 };
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 
 use crate::{Pagination, pagination::Page, repository_impl};
@@ -167,7 +167,7 @@ pub trait UserEmailRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user: &User,
         email: String,
@@ -212,7 +212,7 @@ pub trait UserEmailRepository: Send + Sync {
     /// Returns an error if the underlying repository fails
     async fn add_authentication_for_session(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         email: String,
         session: &BrowserSession,
@@ -233,7 +233,7 @@ pub trait UserEmailRepository: Send + Sync {
     /// Returns an error if the underlying repository fails
     async fn add_authentication_for_registration(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         email: String,
         registration: &UserRegistration,
@@ -257,7 +257,7 @@ pub trait UserEmailRepository: Send + Sync {
     /// already exists for this session
     async fn add_authentication_code(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         duration: chrono::Duration,
         authentication: &UserEmailAuthentication,
@@ -378,7 +378,7 @@ repository_impl!(UserEmailRepository:
 
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user: &User,
         email: String,
@@ -389,7 +389,7 @@ repository_impl!(UserEmailRepository:
 
     async fn add_authentication_for_session(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         email: String,
         session: &BrowserSession,
@@ -397,7 +397,7 @@ repository_impl!(UserEmailRepository:
 
     async fn add_authentication_for_registration(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         email: String,
         registration: &UserRegistration,
@@ -405,7 +405,7 @@ repository_impl!(UserEmailRepository:
 
     async fn add_authentication_code(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         duration: chrono::Duration,
         authentication: &UserEmailAuthentication,

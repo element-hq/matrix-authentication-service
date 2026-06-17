@@ -78,9 +78,9 @@ macro_rules! register_templates {
             /// # Errors
             ///
             /// Returns an error if any template fails to render with any of the sample.
-            pub(crate) fn all<R: Rng + Clone>(templates: &Templates, now: chrono::DateTime<chrono::Utc>, rng: &R) -> anyhow::Result<::std::collections::BTreeMap<(&'static str, SampleIdentifier), String>> {
+            pub(crate) fn all<R: RngExt + Clone>(templates: &Templates, now: chrono::DateTime<chrono::Utc>, rng: &R) -> anyhow::Result<::std::collections::BTreeMap<(&'static str, SampleIdentifier), String>> {
                 let mut out = ::std::collections::BTreeMap::new();
-                // TODO shouldn't the Rng be independent for each render?
+                // TODO shouldn't the RngExt be independent for each render?
                 $(
                     {
                         let mut rng = rng.clone();
@@ -104,7 +104,7 @@ macro_rules! register_templates {
                 ///
                 /// Returns an error if the template fails to render with any of the sample.
                 pub(crate) fn $name
-                    < __R: Rng + Clone $( , $( $lt $( : $clt $(+ $dlt )* + TemplateContext )? ),+ )? >
+                    < __R: RngExt + Clone $( , $( $lt $( : $clt $(+ $dlt )* + TemplateContext )? ),+ )? >
                     (templates: &Templates, now: chrono::DateTime<chrono::Utc>, rng: &mut __R)
                 -> anyhow::Result<BTreeMap<SampleIdentifier, String>> {
                     let locales = templates.translator().available_locales();

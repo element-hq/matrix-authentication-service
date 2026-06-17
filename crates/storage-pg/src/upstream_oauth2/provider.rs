@@ -18,7 +18,7 @@ use mas_storage::{
     },
 };
 use opentelemetry_semantic_conventions::attribute::DB_QUERY_TEXT;
-use rand::RngCore;
+use rand::Rng;
 use sea_query::{Expr, ExprTrait, PostgresQueryBuilder, Query, enum_def};
 use sea_query_sqlx::SqlxBinder;
 use sqlx::{PgConnection, types::Json};
@@ -330,7 +330,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
     )]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         params: UpstreamOAuthProviderParams,
     ) -> Result<UpstreamOAuthProvider, Self::Error> {

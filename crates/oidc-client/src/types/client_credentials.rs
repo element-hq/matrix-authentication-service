@@ -18,7 +18,7 @@ use mas_jose::{
     jwt::{JsonWebSignatureHeader, Jwt},
 };
 use mas_keystore::Keystore;
-use rand::Rng;
+use rand::RngExt;
 use serde::Serialize;
 use serde_json::Value;
 use url::Url;
@@ -135,7 +135,7 @@ impl ClientCredentials {
         request: reqwest::RequestBuilder,
         form: &T,
         now: DateTime<Utc>,
-        rng: &mut impl Rng,
+        rng: &mut impl RngExt,
     ) -> Result<reqwest::RequestBuilder, CredentialsError> {
         let request = match self {
             ClientCredentials::None { client_id } => request.form(&RequestWithClientCredentials {
@@ -331,7 +331,7 @@ fn prepare_claims(
     iss: String,
     aud: String,
     now: DateTime<Utc>,
-    rng: &mut impl Rng,
+    rng: &mut impl RngExt,
 ) -> Result<HashMap<String, Value>, ClaimError> {
     let mut claims = HashMap::new();
 

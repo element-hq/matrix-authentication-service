@@ -9,7 +9,7 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use mas_data_model::{Clock, UserEmail, UserRecoverySession, UserRecoveryTicket};
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 
 use crate::repository_impl;
@@ -57,7 +57,7 @@ pub trait UserRecoveryRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add_session(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         email: String,
         user_agent: String,
@@ -97,7 +97,7 @@ pub trait UserRecoveryRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add_ticket(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user_recovery_session: &UserRecoverySession,
         user_email: &UserEmail,
@@ -154,7 +154,7 @@ repository_impl!(UserRecoveryRepository:
 
     async fn add_session(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         email: String,
         user_agent: String,
@@ -169,7 +169,7 @@ repository_impl!(UserRecoveryRepository:
 
     async fn add_ticket(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user_recovery_session: &UserRecoverySession,
         user_email: &UserEmail,

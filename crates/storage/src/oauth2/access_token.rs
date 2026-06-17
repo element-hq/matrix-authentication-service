@@ -8,7 +8,7 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
 use mas_data_model::{AccessToken, Clock, Session};
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 
 use crate::repository_impl;
@@ -67,7 +67,7 @@ pub trait OAuth2AccessTokenRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         session: &Session,
         access_token: String,
@@ -163,7 +163,7 @@ repository_impl!(OAuth2AccessTokenRepository:
 
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         session: &Session,
         access_token: String,

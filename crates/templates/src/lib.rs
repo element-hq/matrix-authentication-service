@@ -21,7 +21,7 @@ use mas_i18n::Translator;
 use mas_router::UrlBuilder;
 use mas_spa::ViteManifest;
 use minijinja::{UndefinedBehavior, Value};
-use rand::Rng;
+use rand::RngExt;
 use serde::Serialize;
 use thiserror::Error;
 use tokio::task::JoinError;
@@ -484,7 +484,7 @@ impl Templates {
     /// # Errors
     ///
     /// Returns an error if any of the templates fails to render
-    pub fn check_render<R: Rng + Clone>(
+    pub fn check_render<R: RngExt + Clone>(
         &self,
         now: chrono::DateTime<chrono::Utc>,
         rng: &R,

@@ -11,7 +11,7 @@ use minijinja::{
     Value,
     value::{Enumerator, Object},
 };
-use rand::Rng;
+use rand::RngExt;
 use serde::Serialize;
 
 use crate::{TemplateContext, context::SampleIdentifier};
@@ -59,7 +59,7 @@ impl<T> WithCaptcha<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithCaptcha<T> {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<chrono::prelude::Utc>,
         rng: &mut R,
         locales: &[DataLocale],

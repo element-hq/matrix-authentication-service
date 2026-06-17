@@ -58,7 +58,7 @@
 //!     /// Returns [`Self::Error`] if the underlying repository fails
 //!     async fn add(
 //!         &mut self,
-//!         rng: &mut (dyn RngCore + Send),
+//!         rng: &mut (dyn Rng + Send),
 //!         clock: &dyn Clock,
 //!     ) -> Result<FakeData, Self::Error>;
 //! }
@@ -67,7 +67,7 @@
 //!     async fn lookup(&mut self, id: Ulid) -> Result<Option<FakeData>, Self::Error>;
 //!     async fn add(
 //!         &mut self,
-//!         rng: &mut (dyn RngCore + Send),
+//!         rng: &mut (dyn Rng + Send),
 //!         clock: &dyn Clock,
 //!     ) -> Result<FakeData, Self::Error>;
 //! );

@@ -18,7 +18,7 @@ use mas_storage::{
     pagination::Node,
     user::{BrowserSessionFilter, BrowserSessionRepository},
 };
-use rand::RngCore;
+use rand::Rng;
 use sea_query::{Expr, ExprTrait, PostgresQueryBuilder, Query};
 use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
@@ -240,7 +240,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
     )]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user: &User,
         user_agent: Option<String>,
@@ -469,7 +469,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
     )]
     async fn authenticate_with_password(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user_session: &BrowserSession,
         user_password: &Password,
@@ -518,7 +518,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
     )]
     async fn authenticate_with_upstream(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user_session: &BrowserSession,
         upstream_oauth_session: &UpstreamOAuthAuthorizationSession,

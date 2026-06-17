@@ -31,7 +31,7 @@ use mas_storage::{
     user::{UserPasswordRepository, UserRepository},
 };
 use opentelemetry::{Key, KeyValue, metrics::Counter};
-use rand::{CryptoRng, RngCore};
+use rand::{CryptoRng, Rng};
 use serde::{Deserialize, Serialize};
 use serde_with::{DurationMilliSeconds, serde_as, skip_serializing_none};
 use thiserror::Error;
@@ -517,7 +517,7 @@ pub(crate) async fn post(
 /// [`Policy::evaluate_compat_login`], return the appropriate `RouteError`
 /// response.
 async fn process_violations_for_compat_login(
-    rng: &mut (dyn RngCore + Send),
+    rng: &mut (dyn Rng + Send),
     clock: &dyn Clock,
     repo: &mut BoxRepository,
     session_limit_config: Option<&SessionLimitConfig>,
@@ -756,7 +756,7 @@ async fn find_lru_compat_sessions_flawed(
 }
 
 async fn token_login(
-    rng: &mut (dyn RngCore + Send),
+    rng: &mut (dyn Rng + Send),
     clock: &dyn Clock,
     repo: &mut BoxRepository,
     policy: &mut Policy,
@@ -897,7 +897,7 @@ async fn token_login(
 }
 
 async fn user_password_login(
-    mut rng: &mut (impl RngCore + CryptoRng + Send),
+    mut rng: &mut (impl CryptoRng + Send),
     clock: &impl Clock,
     password_manager: &PasswordManager,
     limiter: &Limiter,
@@ -1020,7 +1020,7 @@ mod tests {
     use assert_matches::assert_matches;
     use hyper::Request;
     use mas_matrix::{HomeserverConnection, ProvisionRequest};
-    use rand::distributions::{Alphanumeric, DistString};
+    use rand::distr::{Alphanumeric, SampleString};
     use sqlx::PgPool;
 
     use super::*;
@@ -1351,13 +1351,13 @@ mod tests {
         response.assert_status(StatusCode::OK);
 
         let body: serde_json::Value = response.json();
-        insta::assert_json_snapshot!(body, @r###"
+        insta::assert_json_snapshot!(body, @r#"
         {
           "access_token": "mct_cxG6gZXyvelQWW9XqfNbm5KAQovodf_XvJz43",
           "device_id": "42oTpLoieH",
           "user_id": "@alice:example.com"
         }
-        "###);
+        "#);
 
         // Do the same, but this time ask for a refresh token.
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
@@ -1374,7 +1374,7 @@ mod tests {
         response.assert_status(StatusCode::OK);
 
         let body: serde_json::Value = response.json();
-        insta::assert_json_snapshot!(body, @r###"
+        insta::assert_json_snapshot!(body, @r#"
         {
           "access_token": "mct_PGMLvvMXC4Ds1A3lCWc6Hx4l9DGzqG_lVEIV2",
           "device_id": "Yp7FM44zJN",
@@ -1382,7 +1382,7 @@ mod tests {
           "refresh_token": "mcr_LoYqtrtBUBcWlE4RX6o47chBCGkadB_9gzpc1",
           "expires_in_ms": 300000
         }
-        "###);
+        "#);
 
         // Try logging in with the 'user' property
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
@@ -1395,13 +1395,13 @@ mod tests {
         response.assert_status(StatusCode::OK);
 
         let body: serde_json::Value = response.json();
-        insta::assert_json_snapshot!(body, @r###"
+        insta::assert_json_snapshot!(body, @r#"
         {
           "access_token": "mct_Xl3bbpfh9yNy9NzuRxyR3b3PLW0rqd_DiXAH2",
           "device_id": "6cq7FqNSYo",
           "user_id": "@alice:example.com"
         }
-        "###);
+        "#);
 
         // Restart, to reset rate limits
         let state = state.restart().await;
@@ -1507,13 +1507,13 @@ mod tests {
         response.assert_status(StatusCode::OK);
 
         let body: serde_json::Value = response.json();
-        insta::assert_json_snapshot!(body, @r###"
+        insta::assert_json_snapshot!(body, @r#"
         {
           "access_token": "mct_16tugBE5Ta9LIWoSJaAEHHq2g3fx8S_alcBB4",
           "device_id": "ZGpSvYQqlq",
           "user_id": "@alice:example.com"
         }
-        "###);
+        "#);
     }
 
     /// Test that a user can login with a password using the Matrix
@@ -1554,13 +1554,13 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        insta::assert_json_snapshot!(body, @r###"
+        insta::assert_json_snapshot!(body, @r#"
         {
           "access_token": "mct_cxG6gZXyvelQWW9XqfNbm5KAQovodf_XvJz43",
           "device_id": "42oTpLoieH",
           "user_id": "@alice:example.com"
         }
-        "###);
+        "#);
 
         // With a MXID, but with the wrong server name
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({

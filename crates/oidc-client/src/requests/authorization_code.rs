@@ -25,8 +25,8 @@ use oauth2_types::{
     scope::{OPENID, Scope},
 };
 use rand::{
-    Rng,
-    distributions::{Alphanumeric, DistString},
+    RngExt,
+    distr::{Alphanumeric, SampleString},
 };
 use serde::Serialize;
 use url::Url;
@@ -214,7 +214,7 @@ struct FullAuthorizationRequest {
 /// Build the authorization request.
 fn build_authorization_request(
     authorization_data: AuthorizationRequestData,
-    rng: &mut impl Rng,
+    rng: &mut impl RngExt,
 ) -> Result<(FullAuthorizationRequest, AuthorizationValidationData), AuthorizationError> {
     let AuthorizationRequestData {
         client_id,
@@ -327,7 +327,7 @@ fn build_authorization_request(
 pub fn build_authorization_url(
     authorization_endpoint: Url,
     authorization_data: AuthorizationRequestData,
-    rng: &mut impl Rng,
+    rng: &mut impl RngExt,
 ) -> Result<(Url, AuthorizationValidationData), AuthorizationError> {
     tracing::debug!(
         scope = ?authorization_data.scope,
@@ -403,7 +403,7 @@ pub async fn access_token_with_authorization_code(
     validation_data: AuthorizationValidationData,
     id_token_verification_data: Option<JwtVerificationData<'_>>,
     now: DateTime<Utc>,
-    rng: &mut impl Rng,
+    rng: &mut impl RngExt,
 ) -> Result<(AccessTokenResponse, Option<IdToken<'static>>), TokenAuthorizationCodeError> {
     tracing::debug!("Exchanging authorization code for access token...");
 

@@ -10,7 +10,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
 use mas_data_model::Clock;
 use opentelemetry::trace::TraceContextExt;
-use rand_core::RngCore;
+use rand_core::Rng;
 use serde::{Deserialize, Serialize};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 use ulid::Ulid;
@@ -101,7 +101,7 @@ pub trait QueueJobRepository: Send + Sync {
     /// Returns an error if the underlying repository fails.
     async fn schedule(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         queue_name: &str,
         payload: serde_json::Value,
@@ -127,7 +127,7 @@ pub trait QueueJobRepository: Send + Sync {
     #[expect(clippy::too_many_arguments)]
     async fn schedule_later(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         queue_name: &str,
         payload: serde_json::Value,
@@ -199,7 +199,7 @@ pub trait QueueJobRepository: Send + Sync {
     /// Returns an error if the underlying repository fails.
     async fn retry(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         id: Ulid,
         delay: Duration,
@@ -243,7 +243,7 @@ pub trait QueueJobRepository: Send + Sync {
 repository_impl!(QueueJobRepository:
     async fn schedule(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         queue_name: &str,
         payload: serde_json::Value,
@@ -252,7 +252,7 @@ repository_impl!(QueueJobRepository:
 
     async fn schedule_later(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         queue_name: &str,
         payload: serde_json::Value,
@@ -279,7 +279,7 @@ repository_impl!(QueueJobRepository:
 
     async fn retry(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         id: Ulid,
         delay: Duration,
@@ -313,7 +313,7 @@ pub trait QueueJobRepositoryExt: QueueJobRepository {
     /// Returns an error if the underlying repository fails.
     async fn schedule_job<J: InsertableJob>(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         job: J,
     ) -> Result<(), Self::Error>;
@@ -332,7 +332,7 @@ pub trait QueueJobRepositoryExt: QueueJobRepository {
     /// Returns an error if the underlying repository fails.
     async fn schedule_job_later<J: InsertableJob>(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         job: J,
         scheduled_at: DateTime<Utc>,
@@ -353,7 +353,7 @@ where
     )]
     async fn schedule_job<J: InsertableJob>(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         job: J,
     ) -> Result<(), Self::Error> {
@@ -380,7 +380,7 @@ where
     )]
     async fn schedule_job_later<J: InsertableJob>(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         job: J,
         scheduled_at: DateTime<Utc>,

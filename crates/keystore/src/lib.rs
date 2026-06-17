@@ -8,19 +8,18 @@
 
 use std::{ops::Deref, sync::Arc};
 
-use der::{Decode, Encode, EncodePem, zeroize::Zeroizing};
-use elliptic_curve::{pkcs8::EncodePrivateKey, sec1::ToEncodedPoint};
+use der::{Decode, Encode, EncodePem, pem::PemLabel, zeroize::Zeroizing};
+use elliptic_curve::{pkcs8::EncodePrivateKey, sec1::ToSec1Point};
 use mas_iana::jose::{JsonWebKeyType, JsonWebSignatureAlg};
 pub use mas_jose::jwk::{JsonWebKey, JsonWebKeySet};
 use mas_jose::{
     jwa::{AsymmetricSigningKey, AsymmetricVerifyingKey},
     jwk::{JsonWebKeyPublicParameters, ParametersInfo, PublicJsonWebKeySet, Thumbprint},
 };
-use pem_rfc7468::PemLabel;
 use pkcs1::EncodeRsaPrivateKey;
-use pkcs8::{AssociatedOid, PrivateKeyInfo};
-use rand::{CryptoRng, RngCore};
-use rsa::BigUint;
+use pkcs8::{AssociatedOid, PrivateKeyInfoRef};
+use rand::CryptoRng;
+use rsa::BoxedUint;
 use thiserror::Error;
 
 mod encrypter;
@@ -141,17 +140,17 @@ impl PrivateKey {
             return Err(pkcs1::Error::Version.into());
         }
 
-        let n = BigUint::from_bytes_be(pkcs1_key.modulus.as_bytes());
-        let e = BigUint::from_bytes_be(pkcs1_key.public_exponent.as_bytes());
-        let d = BigUint::from_bytes_be(pkcs1_key.private_exponent.as_bytes());
-        let first_prime = BigUint::from_bytes_be(pkcs1_key.prime1.as_bytes());
-        let second_prime = BigUint::from_bytes_be(pkcs1_key.prime2.as_bytes());
+        let n = BoxedUint::from_be_slice_vartime(pkcs1_key.modulus.as_bytes());
+        let e = BoxedUint::from_be_slice_vartime(pkcs1_key.public_exponent.as_bytes());
+        let d = BoxedUint::from_be_slice_vartime(pkcs1_key.private_exponent.as_bytes());
+        let first_prime = BoxedUint::from_be_slice_vartime(pkcs1_key.prime1.as_bytes());
+        let second_prime = BoxedUint::from_be_slice_vartime(pkcs1_key.prime2.as_bytes());
         let primes = vec![first_prime, second_prime];
         let key = rsa::RsaPrivateKey::from_components(n, e, d, primes)?;
         Ok(Self::Rsa(Box::new(key)))
     }
 
-    fn from_private_key_info(info: PrivateKeyInfo) -> Result<Self, LoadError> {
+    fn from_private_key_info(info: PrivateKeyInfoRef<'_>) -> Result<Self, LoadError> {
         match info.algorithm.oid {
             pkcs1::ALGORITHM_OID => Ok(Self::Rsa(Box::new(info.try_into()?))),
             elliptic_curve::ALGORITHM_OID => match info.algorithm.parameters_oid()? {
@@ -287,14 +286,14 @@ impl PrivateKey {
     ///   - the key could not be decrypted
     ///   - the PKCS8 key could not be loaded
     pub fn load_encrypted_der(der: &[u8], password: impl AsRef<[u8]>) -> Result<Self, LoadError> {
-        if let Ok(info) = pkcs8::EncryptedPrivateKeyInfo::from_der(der) {
+        if let Ok(info) = pkcs8::EncryptedPrivateKeyInfoRef::from_der(der) {
             let decrypted = info.decrypt(password)?;
             return Self::load_der(decrypted.as_bytes()).map_err(|inner| LoadError::InEncrypted {
                 inner: Box::new(inner),
             });
         }
 
-        if pkcs8::PrivateKeyInfo::from_der(der).is_ok()
+        if pkcs8::PrivateKeyInfoRef::from_der(der).is_ok()
             || sec1::EcPrivateKey::from_der(der).is_ok()
             || pkcs1::RsaPrivateKey::from_der(der).is_ok()
         {
@@ -317,11 +316,11 @@ impl PrivateKey {
     ///   - the PKCS8/SEC1/PKCS1 key could not be loaded
     pub fn load_der(der: &[u8]) -> Result<Self, LoadError> {
         // Let's try evey known DER format one after the other
-        if pkcs8::EncryptedPrivateKeyInfo::from_der(der).is_ok() {
+        if pkcs8::EncryptedPrivateKeyInfoRef::from_der(der).is_ok() {
             return Err(LoadError::Encrypted);
         }
 
-        if let Ok(info) = pkcs8::PrivateKeyInfo::from_der(der) {
+        if let Ok(info) = pkcs8::PrivateKeyInfoRef::from_der(der) {
             return Self::from_private_key_info(info);
         }
 
@@ -351,8 +350,8 @@ impl PrivateKey {
         let (label, doc) = pem_rfc7468::decode_vec(pem.as_bytes())?;
 
         match label {
-            pkcs8::EncryptedPrivateKeyInfo::PEM_LABEL => {
-                let info = pkcs8::EncryptedPrivateKeyInfo::from_der(&doc)?;
+            pkcs8::EncryptedPrivateKeyInfoRef::PEM_LABEL => {
+                let info = pkcs8::EncryptedPrivateKeyInfoRef::from_der(&doc)?;
                 let decrypted = info.decrypt(password)?;
                 Self::load_der(decrypted.as_bytes()).map_err(|inner| LoadError::InEncrypted {
                     inner: Box::new(inner),
@@ -360,7 +359,7 @@ impl PrivateKey {
             }
 
             pkcs1::RsaPrivateKey::PEM_LABEL
-            | pkcs8::PrivateKeyInfo::PEM_LABEL
+            | pkcs8::PrivateKeyInfoRef::PEM_LABEL
             | sec1::EcPrivateKey::PEM_LABEL => Err(LoadError::Unencrypted),
 
             label => Err(LoadError::UnsupportedPemLabel {
@@ -388,8 +387,8 @@ impl PrivateKey {
                 Self::from_pkcs1_private_key(&pkcs1_key)
             }
 
-            pkcs8::PrivateKeyInfo::PEM_LABEL => {
-                let info = pkcs8::PrivateKeyInfo::from_der(&doc)?;
+            pkcs8::PrivateKeyInfoRef::PEM_LABEL => {
+                let info = pkcs8::PrivateKeyInfoRef::from_der(&doc)?;
                 Self::from_private_key_info(info)
             }
 
@@ -398,7 +397,7 @@ impl PrivateKey {
                 Self::from_ec_private_key(key)
             }
 
-            pkcs8::EncryptedPrivateKeyInfo::PEM_LABEL => Err(LoadError::Encrypted),
+            pkcs8::EncryptedPrivateKeyInfoRef::PEM_LABEL => Err(LoadError::Encrypted),
 
             label => Err(LoadError::UnsupportedPemLabel {
                 label: label.to_owned(),
@@ -495,25 +494,25 @@ impl PrivateKey {
     /// # Errors
     ///
     /// Returns any error from the underlying key generator
-    pub fn generate_rsa<R: RngCore + CryptoRng>(mut rng: R) -> Result<Self, rsa::errors::Error> {
+    pub fn generate_rsa<R: CryptoRng>(mut rng: R) -> Result<Self, rsa::errors::Error> {
         let key = rsa::RsaPrivateKey::new(&mut rng, 2048)?;
         Ok(Self::Rsa(Box::new(key)))
     }
 
     /// Generate an Elliptic Curve key for the P-256 curve
-    pub fn generate_ec_p256<R: RngCore + CryptoRng>(mut rng: R) -> Self {
+    pub fn generate_ec_p256<R: CryptoRng>(mut rng: R) -> Self {
         let key = elliptic_curve::SecretKey::random(&mut rng);
         Self::EcP256(Box::new(key))
     }
 
     /// Generate an Elliptic Curve key for the P-384 curve
-    pub fn generate_ec_p384<R: RngCore + CryptoRng>(mut rng: R) -> Self {
+    pub fn generate_ec_p384<R: CryptoRng>(mut rng: R) -> Self {
         let key = elliptic_curve::SecretKey::random(&mut rng);
         Self::EcP384(Box::new(key))
     }
 
     /// Generate an Elliptic Curve key for the secp256k1 curve
-    pub fn generate_ec_k256<R: RngCore + CryptoRng>(mut rng: R) -> Self {
+    pub fn generate_ec_k256<R: CryptoRng>(mut rng: R) -> Self {
         let key = elliptic_curve::SecretKey::random(&mut rng);
         Self::EcK256(Box::new(key))
     }
@@ -525,11 +524,11 @@ impl PrivateKey {
 fn to_sec1_der<C>(key: &elliptic_curve::SecretKey<C>) -> Result<Zeroizing<Vec<u8>>, der::Error>
 where
     C: elliptic_curve::Curve + elliptic_curve::CurveArithmetic + AssociatedOid,
-    elliptic_curve::PublicKey<C>: elliptic_curve::sec1::ToEncodedPoint<C>,
+    elliptic_curve::PublicKey<C>: elliptic_curve::sec1::ToSec1Point<C>,
     C::FieldBytesSize: elliptic_curve::sec1::ModulusSize,
 {
     let private_key_bytes = Zeroizing::new(key.to_bytes());
-    let public_key_bytes = key.public_key().to_encoded_point(false);
+    let public_key_bytes = key.public_key().to_sec1_point(false);
     Ok(Zeroizing::new(
         sec1::EcPrivateKey {
             private_key: &private_key_bytes,
@@ -546,11 +545,11 @@ fn to_sec1_pem<C>(
 ) -> Result<Zeroizing<String>, der::Error>
 where
     C: elliptic_curve::Curve + elliptic_curve::CurveArithmetic + AssociatedOid,
-    elliptic_curve::PublicKey<C>: elliptic_curve::sec1::ToEncodedPoint<C>,
+    elliptic_curve::PublicKey<C>: elliptic_curve::sec1::ToSec1Point<C>,
     C::FieldBytesSize: elliptic_curve::sec1::ModulusSize,
 {
     let private_key_bytes = Zeroizing::new(key.to_bytes());
-    let public_key_bytes = key.public_key().to_encoded_point(false);
+    let public_key_bytes = key.public_key().to_sec1_point(false);
     Ok(Zeroizing::new(
         sec1::EcPrivateKey {
             private_key: &private_key_bytes,

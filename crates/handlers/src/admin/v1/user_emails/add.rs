@@ -193,7 +193,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::CREATED);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "data": {
             "type": "user-email",
@@ -211,7 +211,7 @@ mod tests {
             "self": "/api/admin/v1/user-emails/01FSHN9AG07HNEZXNQM2KNBNF6"
           }
         }
-        "###);
+        "#);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

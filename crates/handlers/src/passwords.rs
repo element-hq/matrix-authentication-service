@@ -8,10 +8,13 @@
 use std::{collections::HashMap, sync::Arc};
 
 use anyhow::Context;
-use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash::SaltString};
+use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use futures_util::future::OptionFuture;
 use pbkdf2::{Pbkdf2, password_hash};
-use rand::{CryptoRng, RngCore, SeedableRng, distributions::Standard, prelude::Distribution};
+use rand::{
+    CryptoRng, SeedableRng,
+    distr::{Distribution, StandardUniform},
+};
 use thiserror::Error;
 use zeroize::Zeroizing;
 use zxcvbn::zxcvbn;
@@ -163,17 +166,18 @@ impl PasswordManager {
     /// Returns an error if the hashing failed or if the password manager is
     /// disabled
     #[tracing::instrument(name = "passwords.hash", skip_all)]
-    pub async fn hash<R: CryptoRng + RngCore + Send>(
+    pub async fn hash<R: CryptoRng + Send>(
         &self,
-        rng: R,
+        mut rng: R,
         password: Zeroizing<String>,
     ) -> Result<(SchemeVersion, String), anyhow::Error> {
         let inner = self.get_inner()?;
 
         // Seed a future-local RNG so the RNG passed in parameters doesn't have to be
         // 'static
-        let rng = rand_chacha::ChaChaRng::from_rng(rng)?;
+        let rng = rand_chacha::ChaChaRng::from_rng(&mut rng);
         let span = tracing::Span::current();
+        // (rng is now an owned, seeded ChaChaRng)
 
         // `inner` is being moved in the blocking task, so we need to copy the version
         // first
@@ -230,7 +234,7 @@ impl PasswordManager {
     /// Returns an error if the password hash verification failed or if the
     /// password manager is disabled
     #[tracing::instrument(name = "passwords.verify_and_upgrade", skip_all, fields(%scheme))]
-    pub async fn verify_and_upgrade<R: CryptoRng + RngCore + Send>(
+    pub async fn verify_and_upgrade<R: CryptoRng + Send>(
         &self,
         rng: R,
         scheme: SchemeVersion,
@@ -311,7 +315,7 @@ impl Hasher {
         }
     }
 
-    fn hash_blocking<R: CryptoRng + RngCore>(
+    fn hash_blocking<R: CryptoRng>(
         &self,
         rng: R,
         password: Zeroizing<String>,
@@ -342,7 +346,7 @@ enum Algorithm {
 }
 
 impl Algorithm {
-    fn hash_blocking<R: CryptoRng + RngCore>(
+    fn hash_blocking<R: CryptoRng>(
         self,
         mut rng: R,
         password: &[u8],
@@ -355,7 +359,7 @@ impl Algorithm {
                     password.extend_from_slice(pepper);
                 }
 
-                let salt = Standard.sample(&mut rng);
+                let salt = StandardUniform.sample(&mut rng);
 
                 let hashed = bcrypt::hash_with_salt(password, cost.unwrap_or(12), salt)?;
                 Ok(hashed.format_for_version(bcrypt::Version::TwoB))
@@ -372,8 +376,7 @@ impl Algorithm {
                     Argon2::new(algorithm, version, params)
                 };
 
-                let salt = SaltString::generate(rng);
-                let hashed = phf.hash_password(password.as_ref(), &salt)?;
+                let hashed = phf.hash_password_with_rng(&mut rng, password.as_ref())?;
                 Ok(hashed.to_string())
             }
 
@@ -383,8 +386,8 @@ impl Algorithm {
                     password.extend_from_slice(pepper);
                 }
 
-                let salt = SaltString::generate(rng);
-                let hashed = Pbkdf2.hash_password(password.as_ref(), &salt)?;
+                let hashed =
+                    Pbkdf2::default().hash_password_with_rng(&mut rng, password.as_ref())?;
                 Ok(hashed.to_string())
             }
         }
@@ -422,7 +425,9 @@ impl Algorithm {
 
                 match phf.verify_password(password.as_ref(), &hashed_password) {
                     Ok(()) => PasswordVerificationResult::success(),
-                    Err(password_hash::Error::Password) => PasswordVerificationResult::failure(),
+                    Err(password_hash::Error::PasswordInvalid) => {
+                        PasswordVerificationResult::failure()
+                    }
                     Err(e) => Err(e)?,
                 }
             }
@@ -435,9 +440,11 @@ impl Algorithm {
 
                 let hashed_password = PasswordHash::new(hashed_password)?;
 
-                match Pbkdf2.verify_password(password.as_ref(), &hashed_password) {
+                match Pbkdf2::default().verify_password(password.as_ref(), &hashed_password) {
                     Ok(()) => PasswordVerificationResult::success(),
-                    Err(password_hash::Error::Password) => PasswordVerificationResult::failure(),
+                    Err(password_hash::Error::PasswordInvalid) => {
+                        PasswordVerificationResult::failure()
+                    }
                     Err(e) => Err(e)?,
                 }
             }

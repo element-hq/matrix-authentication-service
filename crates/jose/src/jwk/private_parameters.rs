@@ -200,7 +200,7 @@ struct RsaOtherPrimeInfo {
 }
 
 mod rsa_impls {
-    use rsa::{BigUint, RsaPrivateKey};
+    use rsa::{BoxedUint, RsaPrivateKey};
 
     use super::RsaPrivateParameters;
 
@@ -215,14 +215,14 @@ mod rsa_impls {
         type Error = rsa::errors::Error;
 
         fn try_from(value: &RsaPrivateParameters) -> Result<Self, Self::Error> {
-            let n = BigUint::from_bytes_be(value.n.as_bytes());
-            let e = BigUint::from_bytes_be(value.e.as_bytes());
-            let d = BigUint::from_bytes_be(value.d.as_bytes());
+            let n = BoxedUint::from_be_slice_vartime(value.n.as_bytes());
+            let e = BoxedUint::from_be_slice_vartime(value.e.as_bytes());
+            let d = BoxedUint::from_be_slice_vartime(value.d.as_bytes());
 
             let primes = [&value.p, &value.q]
                 .into_iter()
                 .chain(value.oth.iter().flatten().map(|o| &o.r))
-                .map(|i| BigUint::from_bytes_be(i.as_bytes()))
+                .map(|i| BoxedUint::from_be_slice_vartime(i.as_bytes()))
                 .collect();
 
             let key = RsaPrivateKey::from_components(n, e, d, primes)?;
@@ -273,7 +273,7 @@ impl From<EcPrivateParameters> for super::public_parameters::EcPublicParameters 
 mod ec_impls {
     use elliptic_curve::{
         AffinePoint, Curve, SecretKey,
-        sec1::{Coordinates, FromEncodedPoint, ModulusSize, ToEncodedPoint},
+        sec1::{Coordinates, FromSec1Point, ModulusSize, ToSec1Point},
     };
 
     use super::{super::JwkEcCurve, EcPrivateParameters};
@@ -303,7 +303,7 @@ mod ec_impls {
     impl<C> From<SecretKey<C>> for EcPrivateParameters
     where
         C: elliptic_curve::CurveArithmetic + JwkEcCurve,
-        AffinePoint<C>: FromEncodedPoint<C> + ToEncodedPoint<C>,
+        AffinePoint<C>: FromSec1Point<C> + ToSec1Point<C>,
         C::FieldBytesSize: ModulusSize,
     {
         fn from(key: SecretKey<C>) -> Self {
@@ -314,11 +314,11 @@ mod ec_impls {
     impl<C> From<&SecretKey<C>> for EcPrivateParameters
     where
         C: elliptic_curve::CurveArithmetic + JwkEcCurve,
-        AffinePoint<C>: FromEncodedPoint<C> + ToEncodedPoint<C>,
+        AffinePoint<C>: FromSec1Point<C> + ToSec1Point<C>,
         C::FieldBytesSize: ModulusSize,
     {
         fn from(key: &SecretKey<C>) -> Self {
-            let point = key.public_key().to_encoded_point(false);
+            let point = key.public_key().to_sec1_point(false);
             let Coordinates::Uncompressed { x, y } = point.coordinates() else {
                 unreachable!()
             };

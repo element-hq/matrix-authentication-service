@@ -9,7 +9,7 @@ use chrono::Duration;
 use mas_email::{Address, EmailVerificationContext, Mailbox};
 use mas_storage::queue::{SendEmailAuthenticationCodeJob, VerifyEmailJob};
 use mas_templates::TemplateContext as _;
-use rand::{Rng, distributions::Uniform};
+use rand::{RngExt, distr::Uniform};
 use tracing::info;
 
 use crate::{
@@ -93,7 +93,7 @@ impl RunnableJob for SendEmailAuthenticationCodeJob {
             };
 
         // Generate a new 6-digit authentication code
-        let range = Uniform::<u32>::from(0..1_000_000);
+        let range = Uniform::<u32>::new(0, 1_000_000).expect("valid range");
         let code = rng.sample(range);
         let code = format!("{code:06}");
         let code = repo

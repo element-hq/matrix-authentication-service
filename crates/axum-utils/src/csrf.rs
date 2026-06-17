@@ -7,7 +7,10 @@
 use base64ct::{Base64UrlUnpadded, Encoding};
 use chrono::{DateTime, Duration, Utc};
 use mas_data_model::Clock;
-use rand::{Rng, RngCore, distributions::Standard, prelude::Distribution as _};
+use rand::{
+    Rng, RngExt,
+    distr::{Distribution as _, StandardUniform},
+};
 use serde::{Deserialize, Serialize};
 use serde_with::{TimestampSeconds, serde_as};
 use thiserror::Error;
@@ -55,8 +58,8 @@ impl CsrfToken {
     }
 
     /// Generate a new random token valid for a specified duration
-    fn generate(now: DateTime<Utc>, mut rng: impl Rng, ttl: Duration) -> Self {
-        let token = Standard.sample(&mut rng);
+    fn generate(now: DateTime<Utc>, mut rng: impl RngExt, ttl: Duration) -> Self {
+        let token = StandardUniform.sample(&mut rng);
         Self::new(token, now, ttl)
     }
 
@@ -108,7 +111,7 @@ pub trait CsrfExt {
     /// if necessary
     fn csrf_token<C, R>(self, clock: &C, rng: R) -> (CsrfToken, Self)
     where
-        R: RngCore,
+        R: Rng,
         C: Clock;
 
     /// Verify that the given CSRF-protected form is valid, returning the inner
@@ -126,7 +129,7 @@ pub trait CsrfExt {
 impl CsrfExt for CookieJar {
     fn csrf_token<C, R>(self, clock: &C, rng: R) -> (CsrfToken, Self)
     where
-        R: RngCore,
+        R: Rng,
         C: Clock,
     {
         let now = clock.now();

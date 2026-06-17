@@ -6,8 +6,8 @@
 
 use oauth2_types::scope::ScopeToken;
 use rand::{
-    RngCore,
-    distributions::{Alphanumeric, DistString},
+    Rng,
+    distr::{Alphanumeric, SampleString},
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -58,7 +58,7 @@ impl Device {
     }
 
     /// Generate a random device ID
-    pub fn generate<R: RngCore + ?Sized>(rng: &mut R) -> Self {
+    pub fn generate<R: Rng + ?Sized>(rng: &mut R) -> Self {
         let id: String = Alphanumeric.sample_string(rng, GENERATED_DEVICE_ID_LENGTH);
         Self { id }
     }

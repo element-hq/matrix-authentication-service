@@ -41,7 +41,7 @@ use mas_storage::{BoxRepository, BoxRepositoryFactory, RepositoryError};
 use opentelemetry_semantic_conventions::trace::{
     GRAPHQL_DOCUMENT, GRAPHQL_OPERATION_NAME, GRAPHQL_OPERATION_TYPE,
 };
-use rand::{SeedableRng, thread_rng};
+use rand::{SeedableRng, rng};
 use rand_chacha::ChaChaRng;
 use state::has_session_ended;
 use tracing::{Instrument, info_span};
@@ -120,9 +120,9 @@ impl state::State for GraphQLState {
 
     fn rng(&self) -> BoxRng {
         #[expect(clippy::disallowed_methods)]
-        let rng = thread_rng();
+        let mut rng = rng();
 
-        let rng = ChaChaRng::from_rng(rng).expect("Failed to seed rng");
+        let rng = ChaChaRng::from_rng(&mut rng);
         Box::new(rng)
     }
 }

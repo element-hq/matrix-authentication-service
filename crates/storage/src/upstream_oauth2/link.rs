@@ -7,7 +7,7 @@
 
 use async_trait::async_trait;
 use mas_data_model::{Clock, UpstreamOAuthLink, UpstreamOAuthProvider, User};
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 
 use crate::{Pagination, pagination::Page, repository_impl};
@@ -150,7 +150,7 @@ pub trait UpstreamOAuthLinkRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         upstream_oauth_provider: &UpstreamOAuthProvider,
         subject: String,
@@ -254,7 +254,7 @@ repository_impl!(UpstreamOAuthLinkRepository:
 
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         upstream_oauth_provider: &UpstreamOAuthProvider,
         subject: String,

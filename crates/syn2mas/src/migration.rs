@@ -17,7 +17,7 @@ use chrono::{DateTime, Utc};
 use compact_str::CompactString;
 use futures_util::{SinkExt, StreamExt as _, TryFutureExt, TryStreamExt as _};
 use mas_data_model::{Clock, UlidExt as _};
-use rand::{RngCore, SeedableRng};
+use rand::{Rng, SeedableRng};
 use thiserror::Error;
 use thiserror_ext::ContextInto;
 use tokio_util::sync::PollSender;
@@ -147,7 +147,7 @@ pub async fn migrate(
     mas: MasWriter,
     server_name: String,
     clock: &dyn Clock,
-    rng: &mut impl RngCore,
+    rng: &mut impl Rng,
     provider_id_mapping: std::collections::HashMap<String, Uuid>,
     progress: &Progress,
     ignore_missing_auth_providers: bool,
@@ -217,7 +217,7 @@ async fn migrate_users(
     synapse: &mut SynapseReader<'_>,
     mut mas: MasWriter,
     mut state: MigrationState,
-    rng: &mut impl RngCore,
+    rng: &mut impl Rng,
     progress_counter: ProgressCounter,
 ) -> Result<(MasWriter, MigrationState), Error> {
     let start = Instant::now();
@@ -227,7 +227,7 @@ async fn migrate_users(
 
     // create a new RNG seeded from the passed RNG so that we can move it into the
     // spawned task
-    let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
+    let mut rng = rand_chacha::ChaChaRng::from_rng(&mut *rng);
     let task = tokio::spawn(
         async move {
             let mut user_buffer = MasWriteBuffer::new(&mas);
@@ -341,7 +341,7 @@ async fn migrate_users(
 async fn migrate_threepids(
     synapse: &mut SynapseReader<'_>,
     mut mas: MasWriter,
-    rng: &mut impl RngCore,
+    rng: &mut impl Rng,
     state: MigrationState,
     progress_counter: ProgressCounter,
 ) -> Result<(MasWriter, MigrationState), Error> {
@@ -352,7 +352,7 @@ async fn migrate_threepids(
 
     // create a new RNG seeded from the passed RNG so that we can move it into the
     // spawned task
-    let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
+    let mut rng = rand_chacha::ChaChaRng::from_rng(&mut *rng);
     let task = tokio::spawn(
         async move {
             let mut email_buffer = MasWriteBuffer::new(&mas);
@@ -457,7 +457,7 @@ async fn migrate_threepids(
 async fn migrate_external_ids(
     synapse: &mut SynapseReader<'_>,
     mut mas: MasWriter,
-    rng: &mut impl RngCore,
+    rng: &mut impl Rng,
     state: MigrationState,
     progress_counter: ProgressCounter,
     ignore_missing_auth_providers: bool,
@@ -469,7 +469,7 @@ async fn migrate_external_ids(
 
     // create a new RNG seeded from the passed RNG so that we can move it into the
     // spawned task
-    let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
+    let mut rng = rand_chacha::ChaChaRng::from_rng(&mut *rng);
     let task = tokio::spawn(
         async move {
             let mut write_buffer = MasWriteBuffer::new(&mas);
@@ -576,7 +576,7 @@ async fn migrate_external_ids(
 async fn migrate_devices(
     synapse: &mut SynapseReader<'_>,
     mut mas: MasWriter,
-    rng: &mut impl RngCore,
+    rng: &mut impl Rng,
     mut state: MigrationState,
     progress_counter: ProgressCounter,
 ) -> Result<(MasWriter, MigrationState), Error> {
@@ -587,7 +587,7 @@ async fn migrate_devices(
 
     // create a new RNG seeded from the passed RNG so that we can move it into the
     // spawned task
-    let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
+    let mut rng = rand_chacha::ChaChaRng::from_rng(&mut *rng);
     let task = tokio::spawn(
         async move {
             let mut write_buffer = MasWriteBuffer::new(&mas);
@@ -719,7 +719,7 @@ async fn migrate_unrefreshable_access_tokens(
     synapse: &mut SynapseReader<'_>,
     mut mas: MasWriter,
     clock: &dyn Clock,
-    rng: &mut impl RngCore,
+    rng: &mut impl Rng,
     mut state: MigrationState,
     progress_counter: ProgressCounter,
 ) -> Result<(MasWriter, MigrationState), Error> {
@@ -731,7 +731,7 @@ async fn migrate_unrefreshable_access_tokens(
     let now = clock.now();
     // create a new RNG seeded from the passed RNG so that we can move it into the
     // spawned task
-    let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
+    let mut rng = rand_chacha::ChaChaRng::from_rng(&mut *rng);
     let task = tokio::spawn(
         async move {
             let mut write_buffer = MasWriteBuffer::new(&mas);
@@ -871,7 +871,7 @@ async fn migrate_refreshable_token_pairs(
     synapse: &mut SynapseReader<'_>,
     mut mas: MasWriter,
     clock: &dyn Clock,
-    rng: &mut impl RngCore,
+    rng: &mut impl Rng,
     mut state: MigrationState,
     progress_counter: ProgressCounter,
 ) -> Result<(MasWriter, MigrationState), Error> {
@@ -882,7 +882,7 @@ async fn migrate_refreshable_token_pairs(
 
     // create a new RNG seeded from the passed RNG so that we can move it into the
     // spawned task
-    let mut rng = rand_chacha::ChaChaRng::from_rng(rng).expect("failed to seed rng");
+    let mut rng = rand_chacha::ChaChaRng::from_rng(&mut *rng);
     let now = clock.now();
     let task = tokio::spawn(
         async move {
@@ -1011,7 +1011,7 @@ async fn migrate_refreshable_token_pairs(
 fn transform_user(
     user: &SynapseUser,
     server_name: &str,
-    rng: &mut impl RngCore,
+    rng: &mut impl Rng,
 ) -> Result<(MasNewUser, Option<MasNewUserPassword>), Error> {
     let username = user
         .name

@@ -80,9 +80,9 @@ impl From<super::Hs512Key> for SymmetricKey {
 }
 
 impl signature::RandomizedSigner<Signature> for SymmetricKey {
-    fn try_sign_with_rng(
+    fn try_sign_with_rng<R: signature::rand_core::TryCryptoRng + ?Sized>(
         &self,
-        _rng: &mut (impl rand::CryptoRng + rand::RngCore),
+        _rng: &mut R,
         msg: &[u8],
     ) -> Result<Signature, signature::Error> {
         // XXX: is that implementation alright?

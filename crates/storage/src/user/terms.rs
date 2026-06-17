@@ -6,7 +6,7 @@
 
 use async_trait::async_trait;
 use mas_data_model::{Clock, User};
-use rand_core::RngCore;
+use rand_core::Rng;
 use url::Url;
 
 use crate::repository_impl;
@@ -32,7 +32,7 @@ pub trait UserTermsRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn accept_terms(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user: &User,
         terms_url: Url,
@@ -42,7 +42,7 @@ pub trait UserTermsRepository: Send + Sync {
 repository_impl!(UserTermsRepository:
     async fn accept_terms(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user: &User,
         terms_url: Url,

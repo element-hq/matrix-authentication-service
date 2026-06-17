@@ -221,7 +221,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::CREATED);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "data": {
             "type": "upstream-oauth-link",
@@ -241,7 +241,7 @@ mod tests {
             "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG07HNEZXNQM2KNBNF6"
           }
         }
-        "###);
+        "#);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -292,7 +292,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "data": {
             "type": "upstream-oauth-link",
@@ -312,7 +312,7 @@ mod tests {
             "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG09NMZYX8MFYH578R9"
           }
         }
-        "###);
+        "#);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -374,7 +374,7 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::CONFLICT);
         let body: serde_json::Value = response.json();
-        assert_json_snapshot!(body, @r###"
+        assert_json_snapshot!(body, @r#"
         {
           "errors": [
             {
@@ -382,7 +382,7 @@ mod tests {
             }
           ]
         }
-        "###);
+        "#);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

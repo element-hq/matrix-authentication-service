@@ -12,7 +12,7 @@ use chrono::{DateTime, Utc};
 use mas_data_model::{
     Authentication, BrowserSession, Clock, Password, UpstreamOAuthAuthorizationSession, User,
 };
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 
 use crate::{
@@ -200,7 +200,7 @@ pub trait BrowserSessionRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user: &User,
         user_agent: Option<String>,
@@ -283,7 +283,7 @@ pub trait BrowserSessionRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn authenticate_with_password(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user_session: &BrowserSession,
         user_password: &Password,
@@ -305,7 +305,7 @@ pub trait BrowserSessionRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn authenticate_with_upstream(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user_session: &BrowserSession,
         upstream_oauth_session: &UpstreamOAuthAuthorizationSession,
@@ -393,7 +393,7 @@ repository_impl!(BrowserSessionRepository:
     async fn lookup(&mut self, id: Ulid) -> Result<Option<BrowserSession>, Self::Error>;
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user: &User,
         user_agent: Option<String>,
@@ -420,7 +420,7 @@ repository_impl!(BrowserSessionRepository:
 
     async fn authenticate_with_password(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user_session: &BrowserSession,
         user_password: &Password,
@@ -428,7 +428,7 @@ repository_impl!(BrowserSessionRepository:
 
     async fn authenticate_with_upstream(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user_session: &BrowserSession,
         upstream_oauth_session: &UpstreamOAuthAuthorizationSession,

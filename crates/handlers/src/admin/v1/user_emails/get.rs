@@ -115,7 +115,7 @@ mod tests {
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
         assert_eq!(body["data"]["type"], "user-email");
-        insta::assert_json_snapshot!(body, @r###"
+        insta::assert_json_snapshot!(body, @r#"
         {
           "data": {
             "type": "user-email",
@@ -133,7 +133,7 @@ mod tests {
             "self": "/api/admin/v1/user-emails/01FSHN9AG0AJ6AC5HQ9X6H4RP4"
           }
         }
-        "###);
+        "#);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

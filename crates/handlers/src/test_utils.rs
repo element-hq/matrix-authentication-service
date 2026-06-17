@@ -468,7 +468,7 @@ impl TestState {
     /// Panics if the RNG is already locked.
     pub fn rng(&self) -> ChaChaRng {
         let mut parent_rng = self.rng.try_lock().expect("Failed to lock RNG");
-        ChaChaRng::from_rng(&mut *parent_rng).unwrap()
+        ChaChaRng::from_rng(&mut *parent_rng)
     }
 
     /// Do a call to the userinfo endpoint to check if the given token is valid.
@@ -545,7 +545,7 @@ impl graphql::State for TestGraphQLState {
 
     fn rng(&self) -> BoxRng {
         let mut parent_rng = self.rng.lock().expect("Failed to lock RNG");
-        let rng = ChaChaRng::from_rng(&mut *parent_rng).expect("Failed to seed RNG");
+        let rng = ChaChaRng::from_rng(&mut *parent_rng);
         Box::new(rng)
     }
 }
@@ -682,7 +682,7 @@ impl FromRequestParts<TestState> for BoxRng {
         state: &TestState,
     ) -> Result<Self, Self::Rejection> {
         let mut parent_rng = state.rng.lock().expect("Failed to lock RNG");
-        let rng = ChaChaRng::from_rng(&mut *parent_rng).expect("Failed to seed RNG");
+        let rng = ChaChaRng::from_rng(&mut *parent_rng);
         Ok(Box::new(rng))
     }
 }

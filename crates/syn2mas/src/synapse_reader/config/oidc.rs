@@ -14,7 +14,7 @@ use mas_config::{
 use mas_data_model::UlidExt as _;
 use mas_iana::jose::JsonWebSignatureAlg;
 use oauth2_types::scope::{OPENID, Scope, ScopeToken};
-use rand::Rng;
+use rand::RngExt;
 use serde::Deserialize;
 use tracing::warn;
 use ulid::Ulid;
@@ -196,7 +196,7 @@ impl OidcProvider {
     /// Map this Synapse OIDC provider config to a MAS upstream provider config.
     pub(crate) fn into_mas_config(
         self,
-        rng: &mut impl Rng,
+        rng: &mut impl RngExt,
         now: DateTime<Utc>,
     ) -> Option<mas_config::UpstreamOAuth2Provider> {
         let client_id = self.client_id?;

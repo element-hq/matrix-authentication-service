@@ -27,7 +27,7 @@ use oauth2_types::{
     requests::{AuthorizationRequest, GrantType, Prompt, ResponseMode},
     response_type::ResponseType,
 };
-use rand::{Rng, distributions::Alphanumeric};
+use rand::{RngExt, distr::Alphanumeric};
 use serde::Deserialize;
 use thiserror::Error;
 

@@ -73,11 +73,13 @@ impl Options {
                 } else {
                     SystemClock::default().now()
                 };
+                // `rand::rng()` is normally disallowed (we inject RNGs), but this
+                // is a top-level entry point.
+                #[expect(clippy::disallowed_methods)]
                 let rng = if stabilise {
                     rand_chacha::ChaChaRng::from_seed([42; 32])
                 } else {
-                    // XXX: we should disallow SeedableRng::from_entropy
-                    rand_chacha::ChaChaRng::from_entropy()
+                    rand_chacha::ChaChaRng::from_rng(&mut rand::rng())
                 };
                 let url_builder =
                     mas_router::UrlBuilder::new("https://example.com/".parse()?, None, None);

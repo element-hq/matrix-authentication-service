@@ -155,7 +155,7 @@ mod tests {
         assert_eq!(body["data"]["id"], provider.id.to_string());
         assert_eq!(body["data"]["attributes"]["human_name"], "Google");
 
-        insta::assert_json_snapshot!(body, @r###"
+        insta::assert_json_snapshot!(body, @r#"
         {
           "data": {
             "type": "upstream-oauth-provider",
@@ -176,7 +176,7 @@ mod tests {
             "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG0MZAA6S4AF7CTV32E"
           }
         }
-        "###);
+        "#);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
