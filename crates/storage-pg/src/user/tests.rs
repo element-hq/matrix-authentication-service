@@ -889,3 +889,67 @@ async fn test_user_terms(pool: PgPool) {
         .unwrap();
     assert_eq!(res, 2);
 }
+
+/// Test the created-at filters on [`BrowserSessionFilter`].
+#[sqlx::test(migrator = "crate::MIGRATOR")]
+async fn test_list_browser_sessions_by_created_at(pool: PgPool) {
+    let mut rng = ChaChaRng::seed_from_u64(42);
+    let clock = MockClock::default();
+    let mut repo = PgRepository::from_pool(&pool).await.unwrap();
+
+    let user = repo
+        .user()
+        .add(&mut rng, &clock, "alice".to_owned())
+        .await
+        .unwrap();
+
+    // Three sessions created one minute apart, with a cutoff captured
+    // between the second and the third.
+    let session1 = repo
+        .browser_session()
+        .add(&mut rng, &clock, &user, None)
+        .await
+        .unwrap();
+    clock.advance(Duration::try_minutes(1).unwrap());
+
+    let session2 = repo
+        .browser_session()
+        .add(&mut rng, &clock, &user, None)
+        .await
+        .unwrap();
+    clock.advance(Duration::try_minutes(1).unwrap());
+
+    let cutoff = clock.now();
+
+    clock.advance(Duration::try_minutes(1).unwrap());
+    let session3 = repo
+        .browser_session()
+        .add(&mut rng, &clock, &user, None)
+        .await
+        .unwrap();
+
+    let pagination = Pagination::first(10);
+
+    // Sessions created before the cutoff
+    let filter = BrowserSessionFilter::new().with_created_before(cutoff);
+    let list = repo
+        .browser_session()
+        .list(filter, pagination)
+        .await
+        .unwrap();
+    assert_eq!(list.edges.len(), 2);
+    assert_eq!(list.edges[0].node, session1);
+    assert_eq!(list.edges[1].node, session2);
+    assert_eq!(repo.browser_session().count(filter).await.unwrap(), 2);
+
+    // Sessions created after the cutoff
+    let filter = BrowserSessionFilter::new().with_created_after(cutoff);
+    let list = repo
+        .browser_session()
+        .list(filter, pagination)
+        .await
+        .unwrap();
+    assert_eq!(list.edges.len(), 1);
+    assert_eq!(list.edges[0].node, session3);
+    assert_eq!(repo.browser_session().count(filter).await.unwrap(), 1);
+}

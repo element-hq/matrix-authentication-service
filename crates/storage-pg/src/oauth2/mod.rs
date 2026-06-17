@@ -727,6 +727,102 @@ mod tests {
         );
     }
 
+    /// Test the created-at filters on [`OAuth2SessionFilter`].
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_list_sessions_by_created_at(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+
+        let user = repo
+            .user()
+            .add(&mut rng, &clock, "alice".to_owned())
+            .await
+            .unwrap();
+        let user_session = repo
+            .browser_session()
+            .add(&mut rng, &clock, &user, None)
+            .await
+            .unwrap();
+        let client = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &clock,
+                vec!["https://example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::AuthorizationCode],
+                Some("Test client".to_owned()),
+                Some("https://example.com/logo.png".parse().unwrap()),
+                Some("https://example.com/".parse().unwrap()),
+                Some("https://example.com/policy".parse().unwrap()),
+                Some("https://example.com/tos".parse().unwrap()),
+                Some("https://example.com/jwks.json".parse().unwrap()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some("https://example.com/login".parse().unwrap()),
+            )
+            .await
+            .unwrap();
+
+        let scope = Scope::from_iter([OPENID]);
+
+        // Create three sessions, one per minute, capturing the cutoff timestamp
+        // between the second and the third.
+        let session1 = repo
+            .oauth2_session()
+            .add_from_browser_session(&mut rng, &clock, &client, &user_session, scope.clone())
+            .await
+            .unwrap();
+        clock.advance(Duration::try_minutes(1).unwrap());
+
+        let session2 = repo
+            .oauth2_session()
+            .add_from_browser_session(&mut rng, &clock, &client, &user_session, scope.clone())
+            .await
+            .unwrap();
+        clock.advance(Duration::try_minutes(1).unwrap());
+
+        let cutoff = clock.now();
+
+        clock.advance(Duration::try_minutes(1).unwrap());
+        let session3 = repo
+            .oauth2_session()
+            .add_from_browser_session(&mut rng, &clock, &client, &user_session, scope.clone())
+            .await
+            .unwrap();
+
+        let pagination = Pagination::first(10);
+
+        // Sessions created before the cutoff
+        let filter = OAuth2SessionFilter::new().with_created_before(cutoff);
+        let list = repo
+            .oauth2_session()
+            .list(filter, pagination)
+            .await
+            .unwrap();
+        assert_eq!(list.edges.len(), 2);
+        assert_eq!(list.edges[0].node, session1);
+        assert_eq!(list.edges[1].node, session2);
+        assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 2);
+
+        // Sessions created after the cutoff
+        let filter = OAuth2SessionFilter::new().with_created_after(cutoff);
+        let list = repo
+            .oauth2_session()
+            .list(filter, pagination)
+            .await
+            .unwrap();
+        assert_eq!(list.edges.len(), 1);
+        assert_eq!(list.edges[0].node, session3);
+        assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 1);
+    }
+
     /// Test the multi-client filter on [`OAuth2SessionFilter`].
     #[sqlx::test(migrator = "crate::MIGRATOR")]
     async fn test_list_sessions_for_clients(pool: PgPool) {
