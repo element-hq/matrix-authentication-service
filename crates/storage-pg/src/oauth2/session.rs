@@ -117,6 +117,10 @@ impl Filter for OAuth2SessionFilter<'_> {
                 Expr::col((OAuth2Sessions::Table, OAuth2Sessions::OAuth2ClientId))
                     .eq(Uuid::from(client.id))
             }))
+            .add_option(self.clients().map(|clients| {
+                Expr::col((OAuth2Sessions::Table, OAuth2Sessions::OAuth2ClientId))
+                    .is_in(clients.iter().map(|c| Uuid::from(c.id)))
+            }))
             .add_option(self.client_kind().map(|client_kind| {
                 // This builds either a:
                 // `WHERE oauth2_client_id = ANY(...)`
