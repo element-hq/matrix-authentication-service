@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -6,7 +7,7 @@
 
 use async_trait::async_trait;
 use mas_data_model::{Clock, Password, User};
-use rand_core::RngCore;
+use rand_core::Rng;
 
 use crate::repository_impl;
 
@@ -48,7 +49,7 @@ pub trait UserPasswordRepository: Send + Sync {
     /// Returns [`Self::Error`] if underlying repository fails
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user: &User,
         version: u16,
@@ -61,7 +62,7 @@ repository_impl!(UserPasswordRepository:
     async fn active(&mut self, user: &User) -> Result<Option<Password>, Self::Error>;
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user: &User,
         version: u16,

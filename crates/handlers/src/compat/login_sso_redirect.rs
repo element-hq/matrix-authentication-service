@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -11,7 +12,7 @@ use mas_axum_utils::{GenericError, InternalError};
 use mas_data_model::{BoxClock, BoxRng};
 use mas_router::{CompatLoginSsoAction, CompatLoginSsoComplete, UrlBuilder};
 use mas_storage::{BoxRepository, compat::CompatSsoLoginRepository};
-use rand::distributions::{Alphanumeric, DistString};
+use rand::distr::{Alphanumeric, SampleString};
 use serde::Deserialize;
 use thiserror::Error;
 use url::Url;

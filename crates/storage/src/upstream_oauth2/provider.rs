@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -15,7 +16,7 @@ use mas_data_model::{
 };
 use mas_iana::jose::JsonWebSignatureAlg;
 use oauth2_types::scope::Scope;
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 use url::Url;
 
@@ -186,7 +187,7 @@ pub trait UpstreamOAuthProviderRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         params: UpstreamOAuthProviderParams,
     ) -> Result<UpstreamOAuthProvider, Self::Error>;
@@ -294,7 +295,7 @@ repository_impl!(UpstreamOAuthProviderRepository:
 
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         params: UpstreamOAuthProviderParams
     ) -> Result<UpstreamOAuthProvider, Self::Error>;

@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -8,7 +9,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{Clock, Password, UlidExt as _, User};
 use mas_storage::user::UserPasswordRepository;
-use rand::RngCore;
+use rand::Rng;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
@@ -108,7 +109,7 @@ impl UserPasswordRepository for PgUserPasswordRepository<'_> {
     )]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user: &User,
         version: u16,

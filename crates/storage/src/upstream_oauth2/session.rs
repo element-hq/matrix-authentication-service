@@ -10,7 +10,7 @@ use mas_data_model::{
     BrowserSession, Clock, UpstreamOAuthAuthorizationSession, UpstreamOAuthLink,
     UpstreamOAuthProvider,
 };
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 
 use crate::{Pagination, pagination::Page, repository_impl};
@@ -120,7 +120,7 @@ pub trait UpstreamOAuthSessionRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         upstream_oauth_provider: &UpstreamOAuthProvider,
         state: String,
@@ -245,7 +245,7 @@ repository_impl!(UpstreamOAuthSessionRepository:
 
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         upstream_oauth_provider: &UpstreamOAuthProvider,
         state: String,

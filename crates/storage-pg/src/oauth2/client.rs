@@ -21,7 +21,7 @@ use mas_storage::{
 };
 use oauth2_types::{oidc::ApplicationType, requests::GrantType};
 use opentelemetry_semantic_conventions::attribute::DB_QUERY_TEXT;
-use rand::RngCore;
+use rand::Rng;
 use sea_query::{
     Expr, ExprTrait, PostgresQueryBuilder, Query, SimpleExpr, enum_def,
     extension::postgres::PgExpr as _,
@@ -492,7 +492,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
     )]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         redirect_uris: Vec<Url>,
         metadata_digest: Option<String>,

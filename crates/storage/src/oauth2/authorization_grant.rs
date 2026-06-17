@@ -12,7 +12,7 @@ use mas_data_model::{
     AuthorizationCode, AuthorizationGrant, BrowserSession, Client, Clock, Session,
 };
 use oauth2_types::{requests::ResponseMode, scope::Scope};
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 use url::Url;
 
@@ -56,7 +56,7 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
     #[expect(clippy::too_many_arguments)]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         client: &Client,
         redirect_uri: Url,
@@ -167,7 +167,7 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
 repository_impl!(OAuth2AuthorizationGrantRepository:
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         client: &Client,
         redirect_uri: Url,

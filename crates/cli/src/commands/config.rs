@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -98,8 +99,10 @@ impl Options {
                 let _span = info_span!("cli.config.generate").entered();
                 let clock = SystemClock::default();
 
-                // XXX: we should disallow SeedableRng::from_entropy
-                let mut rng = rand_chacha::ChaChaRng::from_entropy();
+                // Seed the RNG from the thread RNG. `rand::rng()` is normally
+                // disallowed (we inject RNGs), but this is a top-level entry point.
+                #[expect(clippy::disallowed_methods)]
+                let mut rng = rand_chacha::ChaChaRng::from_rng(&mut rand::rng());
                 let mut config = RootConfig::generate(&mut rng).await?;
 
                 if !synapse_config.is_empty() {

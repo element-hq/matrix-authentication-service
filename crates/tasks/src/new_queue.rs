@@ -20,7 +20,7 @@ use opentelemetry::{
     KeyValue,
     metrics::{Counter, Histogram, UpDownCounter},
 };
-use rand::{Rng, RngCore, distributions::Uniform};
+use rand::{Rng, RngExt, distr::Uniform};
 use serde::de::DeserializeOwned;
 use sqlx::{
     Acquire, Either,
@@ -472,7 +472,8 @@ impl QueueWorker {
         // This is to make sure we wake up every second to do the maintenance tasks
         // We add a little bit of random jitter to the duration, so that we don't get
         // fully synced workers waking up at the same time after each notification
-        let sleep_duration = rng.sample(Uniform::new(MIN_SLEEP_DURATION, MAX_SLEEP_DURATION));
+        let sleep_duration =
+            rng.sample(Uniform::new(MIN_SLEEP_DURATION, MAX_SLEEP_DURATION).expect("valid range"));
         let wakeup_sleep = tokio::time::sleep(sleep_duration);
 
         tokio::select! {
@@ -1026,7 +1027,7 @@ impl JobTracker {
     /// already finished jobs.
     async fn process_jobs<E: std::error::Error + Send + Sync + 'static>(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         repo: &mut dyn RepositoryAccess<Error = E>,
         blocking: bool,

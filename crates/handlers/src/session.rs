@@ -18,7 +18,7 @@ use mas_storage::{
     personal::PersonalSessionFilter,
 };
 use mas_templates::{AccountInactiveContext, TemplateContext, Templates};
-use rand::RngCore;
+use rand::Rng;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -60,7 +60,7 @@ pub fn render_account_inactive(
     templates: &Templates,
     locale: &DataLocale,
     clock: &impl Clock,
-    rng: impl RngCore,
+    rng: impl Rng,
     cookie_jar: CookieJar,
     user: User,
     action: Option<PostAuthAction>,
@@ -93,7 +93,7 @@ pub fn render_account_inactive(
 pub async fn load_session_or_fallback(
     cookie_jar: CookieJar,
     clock: &impl Clock,
-    rng: impl RngCore,
+    rng: impl Rng,
     templates: &Templates,
     locale: &DataLocale,
     action: Option<PostAuthAction>,

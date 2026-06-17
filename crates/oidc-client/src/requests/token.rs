@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 Kévin Commaille.
 //
@@ -11,7 +12,7 @@ use http::header::ACCEPT;
 use mas_http::RequestBuilderExt;
 use mime::APPLICATION_JSON;
 use oauth2_types::requests::{AccessTokenRequest, AccessTokenResponse};
-use rand::Rng;
+use rand::RngExt;
 use url::Url;
 
 use crate::{
@@ -46,7 +47,7 @@ pub async fn request_access_token(
     token_endpoint: &Url,
     request: AccessTokenRequest,
     now: DateTime<Utc>,
-    rng: &mut impl Rng,
+    rng: &mut impl RngExt,
 ) -> Result<AccessTokenResponse, TokenRequestError> {
     tracing::debug!(?request, "Requesting access token...");
 

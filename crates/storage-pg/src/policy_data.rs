@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -9,7 +10,7 @@
 use async_trait::async_trait;
 use mas_data_model::{Clock, PolicyData, UlidExt as _};
 use mas_storage::policy_data::PolicyDataRepository;
-use rand::RngCore;
+use rand::Rng;
 use serde_json::Value;
 use sqlx::{PgConnection, types::Json};
 use ulid::Ulid;
@@ -90,7 +91,7 @@ impl PolicyDataRepository for PgPolicyDataRepository<'_> {
     )]
     async fn set(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         data: Value,
     ) -> Result<PolicyData, Self::Error> {

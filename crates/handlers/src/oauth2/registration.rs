@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -25,7 +26,7 @@ use oauth2_types::{
 };
 use opentelemetry::{Key, KeyValue, metrics::Counter};
 use psl::Psl;
-use rand::distributions::{Alphanumeric, DistString};
+use rand::distr::{Alphanumeric, SampleString};
 use serde::Serialize;
 use sha2::Digest as _;
 use thiserror::Error;

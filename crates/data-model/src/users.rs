@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -7,7 +8,7 @@
 use std::net::IpAddr;
 
 use chrono::{DateTime, Utc};
-use rand::Rng;
+use rand::RngExt;
 use serde::Serialize;
 use ulid::Ulid;
 use url::Url;
@@ -57,7 +58,7 @@ impl User {
 impl User {
     #[doc(hidden)]
     #[must_use]
-    pub fn samples(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self> {
+    pub fn samples(now: chrono::DateTime<Utc>, rng: &mut impl RngExt) -> Vec<Self> {
         vec![User {
             id: Ulid::from_datetime_with_rng(now, rng),
             username: "john".to_owned(),
@@ -173,7 +174,7 @@ impl BrowserSession {
 
 impl BrowserSession {
     #[must_use]
-    pub fn samples(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self> {
+    pub fn samples(now: chrono::DateTime<Utc>, rng: &mut impl RngExt) -> Vec<Self> {
         User::samples(now, rng)
             .into_iter()
             .map(|user| BrowserSession {
@@ -201,7 +202,7 @@ pub struct UserEmail {
 
 impl UserEmail {
     #[must_use]
-    pub fn samples(now: chrono::DateTime<Utc>, rng: &mut impl Rng) -> Vec<Self> {
+    pub fn samples(now: chrono::DateTime<Utc>, rng: &mut impl RngExt) -> Vec<Self> {
         vec![
             Self {
                 id: Ulid::from_datetime_with_rng(now, rng),

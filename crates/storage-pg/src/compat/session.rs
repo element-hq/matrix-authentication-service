@@ -18,7 +18,7 @@ use mas_storage::{
     compat::{CompatSessionFilter, CompatSessionRepository},
     pagination::Node,
 };
-use rand::RngCore;
+use rand::Rng;
 use sea_query::{Expr, ExprTrait, PostgresQueryBuilder, Query, enum_def};
 use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
@@ -337,7 +337,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
     )]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user: &User,
         device: Device,

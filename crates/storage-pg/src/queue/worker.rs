@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -10,7 +11,7 @@ use async_trait::async_trait;
 use chrono::Duration;
 use mas_data_model::{Clock, UlidExt as _};
 use mas_storage::queue::{QueueWorkerRepository, Worker};
-use rand::RngCore;
+use rand::Rng;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
@@ -46,7 +47,7 @@ impl QueueWorkerRepository for PgQueueWorkerRepository<'_> {
     )]
     async fn register(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
     ) -> Result<Worker, Self::Error> {
         let now = clock.now();

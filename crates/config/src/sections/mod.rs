@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -6,7 +7,7 @@
 
 use anyhow::bail;
 use camino::Utf8PathBuf;
-use rand::Rng;
+use rand::RngExt;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -172,7 +173,7 @@ impl RootConfig {
     /// Returns an error if the secrets could not be generated
     pub async fn generate<R>(mut rng: R) -> anyhow::Result<Self>
     where
-        R: Rng + Send,
+        R: RngExt + Send,
     {
         Ok(Self {
             clients: ClientsConfig::default(),

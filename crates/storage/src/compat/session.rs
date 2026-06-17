@@ -10,7 +10,7 @@ use std::net::IpAddr;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{BrowserSession, Clock, CompatSession, CompatSsoLogin, Device, User};
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 
 use crate::{Page, Pagination, repository_impl, user::BrowserSessionFilter};
@@ -274,7 +274,7 @@ pub trait CompatSessionRepository: Send + Sync {
     #[expect(clippy::too_many_arguments)]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user: &User,
         device: Device,
@@ -449,7 +449,7 @@ repository_impl!(CompatSessionRepository:
 
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user: &User,
         device: Device,
