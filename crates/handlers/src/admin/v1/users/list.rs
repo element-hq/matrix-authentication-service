@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -13,6 +14,7 @@ use mas_axum_utils::record_error;
 use mas_storage::{Page, user::UserFilter};
 use schemars::JsonSchema;
 use serde::Deserialize;
+use ulid::Ulid;
 
 use crate::{
     admin::{
@@ -73,6 +75,26 @@ pub struct FilterParams {
     /// * `deactivated`: Only retrieve deactivated users
     #[serde(rename = "filter[status]")]
     status: Option<UserStatus>,
+
+    /// Retrieve users which have at least one active OAuth 2.0 session
+    /// belonging to any of the given client IDs.
+    ///
+    /// This filter may be repeated; the semantics are OR across the supplied
+    /// clients (a user matches if they have an active session for *any* of
+    /// them).
+    #[serde(default, rename = "filter[active-oauth2-client]")]
+    #[schemars(with = "Vec<crate::admin::schema::Ulid>")]
+    active_oauth2_client: Vec<Ulid>,
+
+    /// Retrieve users which have (or don't have) at least one active
+    /// (non-finished) OAuth 2.0 session, regardless of the client.
+    #[serde(rename = "filter[has-active-oauth2-session]")]
+    has_active_oauth2_session: Option<bool>,
+
+    /// Retrieve users which have (or don't have) at least one active
+    /// (non-finished) compatibility session.
+    #[serde(rename = "filter[has-active-compat-session]")]
+    has_active_compat_session: Option<bool>,
 }
 
 impl std::fmt::Display for FilterParams {
@@ -95,6 +117,18 @@ impl std::fmt::Display for FilterParams {
             write!(f, "{sep}filter[status]={status}")?;
             sep = '&';
         }
+        for client in &self.active_oauth2_client {
+            write!(f, "{sep}filter[active-oauth2-client]={client}")?;
+            sep = '&';
+        }
+        if let Some(has) = self.has_active_oauth2_session {
+            write!(f, "{sep}filter[has-active-oauth2-session]={has}")?;
+            sep = '&';
+        }
+        if let Some(has) = self.has_active_compat_session {
+            write!(f, "{sep}filter[has-active-compat-session]={has}")?;
+            sep = '&';
+        }
 
         let _ = sep;
         Ok(())
@@ -109,6 +143,9 @@ pub enum RouteError {
 
     #[error("Invalid filter parameters")]
     InvalidFilter(#[from] QueryRejection),
+
+    #[error("Client ID {0} not found")]
+    ClientNotFound(Ulid),
 }
 
 impl_from_error_for_route!(mas_storage::RepositoryError);
@@ -120,6 +157,7 @@ impl IntoResponse for RouteError {
         let status = match self {
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::InvalidFilter(_) => StatusCode::BAD_REQUEST,
+            Self::ClientNotFound(_) => StatusCode::NOT_FOUND,
         };
         (status, sentry_event_id, Json(error)).into_response()
     }
@@ -152,6 +190,10 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
                     Some(42),
                     User::PATH,
                 ))
+        })
+        .response_with::<404, RouteError, _>(|t| {
+            let response = ErrorResponse::from_error(&RouteError::ClientNotFound(Ulid::nil()));
+            t.description("Client was not found").example(response)
         })
 }
 
@@ -189,6 +231,31 @@ pub async fn handler(
         None => filter,
     };
 
+    // Validate every client ID before applying the filter, so that a
+    // mistyped/non-existent client ID produces a 404 rather than silently
+    // matching no users.
+    for client_id in &params.active_oauth2_client {
+        if repo.oauth2_client().lookup(*client_id).await?.is_none() {
+            return Err(RouteError::ClientNotFound(*client_id));
+        }
+    }
+
+    let filter = if params.active_oauth2_client.is_empty() {
+        filter
+    } else {
+        filter.with_active_oauth2_session_for_any_of_clients(&params.active_oauth2_client)
+    };
+
+    let filter = match params.has_active_oauth2_session {
+        Some(has) => filter.with_active_oauth2_session(has),
+        None => filter,
+    };
+
+    let filter = match params.has_active_compat_session {
+        Some(has) => filter.with_active_compat_session(has),
+        None => filter,
+    };
+
     let response = match include_count {
         IncludeCount::True => {
             let page = repo.user().list(filter, pagination).await?;
@@ -211,7 +278,18 @@ pub async fn handler(
 #[cfg(test)]
 mod tests {
     use hyper::{Request, StatusCode};
+    use mas_data_model::Device;
+    use mas_storage::{
+        RepositoryAccess,
+        compat::CompatSessionRepository,
+        oauth2::{OAuth2ClientRepository, OAuth2SessionRepository},
+    };
+    use oauth2_types::{
+        requests::GrantType,
+        scope::{OPENID, Scope},
+    };
     use sqlx::PgPool;
+    use ulid::Ulid;
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
 
@@ -427,5 +505,327 @@ mod tests {
           }
         }
         "#);
+    }
+
+    /// Test the `filter[active-oauth2-client]` repeatable filter.
+    ///
+    /// Sets up two users with active `OAuth2` sessions on two distinct
+    /// clients (plus a third user with no session). Filtering on *both*
+    /// clients should return both users.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_list_users_filter_active_oauth2_client(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+        let mut rng = state.rng();
+
+        let mut repo = state.repository().await.unwrap();
+
+        let alice = repo
+            .user()
+            .add(&mut rng, &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+        let alice_session = repo
+            .browser_session()
+            .add(&mut rng, &state.clock, &alice, None)
+            .await
+            .unwrap();
+
+        let bob = repo
+            .user()
+            .add(&mut rng, &state.clock, "bob".to_owned())
+            .await
+            .unwrap();
+        let bob_session = repo
+            .browser_session()
+            .add(&mut rng, &state.clock, &bob, None)
+            .await
+            .unwrap();
+
+        // Carol exists but has no session — she should never be returned.
+        repo.user()
+            .add(&mut rng, &state.clock, "carol".to_owned())
+            .await
+            .unwrap();
+
+        let make_client = async |repo: &mut mas_storage::BoxRepository,
+                                 rng: &mut rand_chacha::ChaChaRng,
+                                 host: &str| {
+            repo.oauth2_client()
+                .add(
+                    rng,
+                    &state.clock,
+                    vec![format!("https://{host}/redirect").parse().unwrap()],
+                    None,
+                    None,
+                    None,
+                    vec![GrantType::AuthorizationCode],
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                )
+                .await
+                .unwrap()
+        };
+
+        let client_x = make_client(&mut repo, &mut rng, "x.example.com").await;
+        let client_y = make_client(&mut repo, &mut rng, "y.example.com").await;
+
+        // Alice has an active session for client_x
+        repo.oauth2_session()
+            .add_from_browser_session(
+                &mut rng,
+                &state.clock,
+                &client_x,
+                &alice_session,
+                Scope::from_iter([OPENID]),
+            )
+            .await
+            .unwrap();
+
+        // Bob has an active session for client_y
+        repo.oauth2_session()
+            .add_from_browser_session(
+                &mut rng,
+                &state.clock,
+                &client_y,
+                &bob_session,
+                Scope::from_iter([OPENID]),
+            )
+            .await
+            .unwrap();
+
+        repo.save().await.unwrap();
+
+        // Filter on both clients: should return alice and bob (but not carol)
+        let request = Request::get(format!(
+            "/api/admin/v1/users?count=only&filter[active-oauth2-client]={x}&filter[active-oauth2-client]={y}",
+            x = client_x.id,
+            y = client_y.id,
+        ))
+        .bearer(&token)
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_eq!(body["meta"]["count"], 2);
+
+        // Filter on client_x only: just alice
+        let request = Request::get(format!(
+            "/api/admin/v1/users?count=only&filter[active-oauth2-client]={x}",
+            x = client_x.id
+        ))
+        .bearer(&token)
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_eq!(body["meta"]["count"], 1);
+
+        // An unknown client ID -> 404
+        let unknown = Ulid::nil();
+        let request = Request::get(format!(
+            "/api/admin/v1/users?filter[active-oauth2-client]={unknown}"
+        ))
+        .bearer(&token)
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::NOT_FOUND);
+    }
+
+    /// Test the `filter[has-active-compat-session]` filter in both
+    /// directions.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_list_users_filter_has_active_compat_session(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+        let mut rng = state.rng();
+
+        let mut repo = state.repository().await.unwrap();
+
+        // Alice has an active compat session.
+        let alice = repo
+            .user()
+            .add(&mut rng, &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+        let device = Device::generate(&mut rng);
+        repo.compat_session()
+            .add(&mut rng, &state.clock, &alice, device, None, false, None)
+            .await
+            .unwrap();
+
+        // Bob has a finished compat session.
+        let bob = repo
+            .user()
+            .add(&mut rng, &state.clock, "bob".to_owned())
+            .await
+            .unwrap();
+        let device = Device::generate(&mut rng);
+        let bob_session = repo
+            .compat_session()
+            .add(&mut rng, &state.clock, &bob, device, None, false, None)
+            .await
+            .unwrap();
+        repo.compat_session()
+            .finish(&state.clock, bob_session)
+            .await
+            .unwrap();
+
+        // Carol has no compat session.
+        repo.user()
+            .add(&mut rng, &state.clock, "carol".to_owned())
+            .await
+            .unwrap();
+
+        repo.save().await.unwrap();
+
+        // has-active-compat-session=true -> 1 (alice)
+        let request =
+            Request::get("/api/admin/v1/users?count=only&filter[has-active-compat-session]=true")
+                .bearer(&token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_eq!(body["meta"]["count"], 1);
+
+        // has-active-compat-session=false -> 2 (bob + carol). The admin
+        // token is created via client-credentials and does not provision a
+        // user.
+        let request =
+            Request::get("/api/admin/v1/users?count=only&filter[has-active-compat-session]=false")
+                .bearer(&token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_eq!(body["meta"]["count"], 2);
+    }
+
+    /// Test the `filter[has-active-oauth2-session]` filter in both directions.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_list_users_filter_has_active_oauth2_session(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+        let mut rng = state.rng();
+
+        let mut repo = state.repository().await.unwrap();
+
+        let client = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &state.clock,
+                vec!["https://example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::AuthorizationCode],
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        // Alice has an active OAuth2 session.
+        let alice = repo
+            .user()
+            .add(&mut rng, &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+        let alice_session = repo
+            .browser_session()
+            .add(&mut rng, &state.clock, &alice, None)
+            .await
+            .unwrap();
+        repo.oauth2_session()
+            .add_from_browser_session(
+                &mut rng,
+                &state.clock,
+                &client,
+                &alice_session,
+                Scope::from_iter([OPENID]),
+            )
+            .await
+            .unwrap();
+
+        // Bob has a finished OAuth2 session.
+        let bob = repo
+            .user()
+            .add(&mut rng, &state.clock, "bob".to_owned())
+            .await
+            .unwrap();
+        let bob_session = repo
+            .browser_session()
+            .add(&mut rng, &state.clock, &bob, None)
+            .await
+            .unwrap();
+        let bob_oauth2 = repo
+            .oauth2_session()
+            .add_from_browser_session(
+                &mut rng,
+                &state.clock,
+                &client,
+                &bob_session,
+                Scope::from_iter([OPENID]),
+            )
+            .await
+            .unwrap();
+        repo.oauth2_session()
+            .finish(&state.clock, bob_oauth2)
+            .await
+            .unwrap();
+
+        // Carol has no OAuth2 session.
+        repo.user()
+            .add(&mut rng, &state.clock, "carol".to_owned())
+            .await
+            .unwrap();
+
+        repo.save().await.unwrap();
+
+        // has-active-oauth2-session=true -> 1 (alice)
+        let request =
+            Request::get("/api/admin/v1/users?count=only&filter[has-active-oauth2-session]=true")
+                .bearer(&token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_eq!(body["meta"]["count"], 1);
+
+        // has-active-oauth2-session=false -> 2 (bob + carol). The admin token
+        // is created via client-credentials and does not provision a user.
+        let request =
+            Request::get("/api/admin/v1/users?count=only&filter[has-active-oauth2-session]=false")
+                .bearer(&token)
+                .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_eq!(body["meta"]["count"], 2);
     }
 }

@@ -74,7 +74,7 @@
     "tailwindcss": "^4.3.0",
     "tinyglobby": "^0.2.16",
     "typescript": "^6.0.3",
-    "vite": "8.0.14",
+    "vite": "8.0.16",
     "vite-plugin-graphql-codegen": "^3.9.1",
     "vitest": "^4.1.7"
   },

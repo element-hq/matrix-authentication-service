@@ -7,6 +7,7 @@
 
 use std::{
     convert::Infallible,
+    net::IpAddr,
     sync::{Arc, Mutex, RwLock},
     task::{Context, Poll},
 };
@@ -53,7 +54,7 @@ use tower::{Layer, Service, ServiceExt};
 use url::Url;
 
 use crate::{
-    ActivityTracker, BoundActivityTracker, Limiter, RequesterFingerprint, graphql,
+    ActivityTracker, ClientIp, Limiter, graphql,
     passwords::{Hasher, PasswordManager},
     upstream_oauth2::cache::MetadataCache,
 };
@@ -619,29 +620,6 @@ impl FromRequestParts<TestState> for ActivityTracker {
     }
 }
 
-impl FromRequestParts<TestState> for BoundActivityTracker {
-    type Rejection = Infallible;
-
-    async fn from_request_parts(
-        _parts: &mut axum::http::request::Parts,
-        state: &TestState,
-    ) -> Result<Self, Self::Rejection> {
-        let ip = None;
-        Ok(state.activity_tracker.clone().bind(ip))
-    }
-}
-
-impl FromRequestParts<TestState> for RequesterFingerprint {
-    type Rejection = Infallible;
-
-    async fn from_request_parts(
-        _parts: &mut axum::http::request::Parts,
-        _state: &TestState,
-    ) -> Result<Self, Self::Rejection> {
-        Ok(RequesterFingerprint::EMPTY)
-    }
-}
-
 impl FromRequestParts<TestState> for BoxClock {
     type Rejection = Infallible;
 
@@ -704,6 +682,14 @@ pub(crate) trait RequestBuilderExt {
     /// credentials.
     fn basic_auth(self, username: &str, password: &str) -> Self;
 
+    /// Sets the client IP address that the extractors will see for this
+    /// request.
+    ///
+    /// This mirrors what the IP-detection middleware does in production: it
+    /// stores a [`ClientIp`] in the request extensions, which is then read by
+    /// the `BoundActivityTracker` and `RequesterFingerprint` extractors.
+    fn client_ip(self, ip: IpAddr) -> Self;
+
     /// Builds the request with an empty body.
     fn empty(self) -> hyper::Request<String>;
 }
@@ -738,6 +724,10 @@ impl RequestBuilderExt for hyper::http::request::Builder {
             .unwrap()
             .typed_insert(Authorization::basic(username, password));
         self
+    }
+
+    fn client_ip(self, ip: IpAddr) -> Self {
+        self.extension(ClientIp(Some(ip)))
     }
 
     fn empty(self) -> hyper::Request<String> {

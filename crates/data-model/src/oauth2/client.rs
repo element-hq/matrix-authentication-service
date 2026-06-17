@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -86,6 +87,10 @@ pub struct Client {
     /// URI using the https scheme that a third party can use to initiate a
     /// login by the RP
     pub initiate_login_uri: Option<Url>,
+
+    /// Whether this client is statically configured (defined in the
+    /// configuration file) rather than dynamically registered.
+    pub is_static: bool,
 }
 
 #[derive(Debug, Error)]
@@ -201,6 +206,7 @@ impl Client {
                 id_token_signed_response_alg: None,
                 userinfo_signed_response_alg: None,
                 jwks: None,
+                is_static: false,
             },
             // Another client without any URIs set
             Self {
@@ -222,6 +228,7 @@ impl Client {
                 id_token_signed_response_alg: None,
                 userinfo_signed_response_alg: None,
                 jwks: None,
+                is_static: false,
             },
         ]
     }

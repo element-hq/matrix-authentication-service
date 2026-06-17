@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use std::collections::BTreeMap;
+
 use chrono::{DateTime, Utc};
 use mas_iana::oauth::PkceCodeChallengeMethod;
 use oauth2_types::{
@@ -155,6 +157,9 @@ pub struct AuthorizationGrant {
     pub created_at: DateTime<Utc>,
     pub login_hint: Option<String>,
     pub locale: Option<String>,
+    /// Raw query parameters from the downstream authorization request, used
+    /// to template the parameters forwarded to the upstream provider.
+    pub raw_parameters: BTreeMap<String, String>,
 }
 
 impl std::ops::Deref for AuthorizationGrant {
@@ -229,6 +234,7 @@ impl AuthorizationGrant {
             created_at: now,
             login_hint: Some(String::from("mxid:@example-user:example.com")),
             locale: Some(String::from("fr")),
+            raw_parameters: BTreeMap::new(),
         }
     }
 }

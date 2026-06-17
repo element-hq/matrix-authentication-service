@@ -69,6 +69,7 @@ mod activity_tracker;
 mod captcha;
 #[cfg(test)]
 mod cleanup_tests;
+mod client_ip;
 mod preferred_language;
 mod rate_limit;
 mod session;
@@ -106,6 +107,7 @@ use mas_data_model::{BoxClock, BoxRng};
 pub use self::{
     activity_tracker::{ActivityTracker, Bound as BoundActivityTracker},
     admin::router as admin_api_router,
+    client_ip::ClientIp,
     graphql::{
         GraphQLOperation, Schema as GraphQLSchema, schema as graphql_schema,
         schema_builder as graphql_schema_builder,

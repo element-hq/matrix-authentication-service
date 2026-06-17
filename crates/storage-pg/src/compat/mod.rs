@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -310,6 +311,73 @@ mod tests {
         assert_eq!(affected, 1);
         assert_eq!(repo.compat_session().count(finished).await.unwrap(), 2);
         assert_eq!(repo.compat_session().count(active).await.unwrap(), 0);
+    }
+
+    /// Test the created-at filters on [`CompatSessionFilter`].
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_list_compat_sessions_by_created_at(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap();
+
+        let user = repo
+            .user()
+            .add(&mut rng, &clock, "alice".to_owned())
+            .await
+            .unwrap();
+
+        // Three sessions created one minute apart, with a cutoff captured
+        // between the second and the third.
+        let device = Device::generate(&mut rng);
+        let session1 = repo
+            .compat_session()
+            .add(&mut rng, &clock, &user, device, None, false, None)
+            .await
+            .unwrap();
+        clock.advance(Duration::try_minutes(1).unwrap());
+
+        let device = Device::generate(&mut rng);
+        let session2 = repo
+            .compat_session()
+            .add(&mut rng, &clock, &user, device, None, false, None)
+            .await
+            .unwrap();
+        clock.advance(Duration::try_minutes(1).unwrap());
+
+        let cutoff = clock.now();
+
+        clock.advance(Duration::try_minutes(1).unwrap());
+        let device = Device::generate(&mut rng);
+        let session3 = repo
+            .compat_session()
+            .add(&mut rng, &clock, &user, device, None, false, None)
+            .await
+            .unwrap();
+
+        let pagination = Pagination::first(10);
+
+        // Sessions created before the cutoff
+        let filter = CompatSessionFilter::new().with_created_before(cutoff);
+        let list = repo
+            .compat_session()
+            .list(filter, pagination)
+            .await
+            .unwrap();
+        assert_eq!(list.edges.len(), 2);
+        assert_eq!(list.edges[0].node.0, session1);
+        assert_eq!(list.edges[1].node.0, session2);
+        assert_eq!(repo.compat_session().count(filter).await.unwrap(), 2);
+
+        // Sessions created after the cutoff
+        let filter = CompatSessionFilter::new().with_created_after(cutoff);
+        let list = repo
+            .compat_session()
+            .list(filter, pagination)
+            .await
+            .unwrap();
+        assert_eq!(list.edges.len(), 1);
+        assert_eq!(list.edges[0].node.0, session3);
+        assert_eq!(repo.compat_session().count(filter).await.unwrap(), 1);
     }
 
     #[sqlx::test(migrator = "crate::MIGRATOR")]
