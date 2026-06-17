@@ -988,9 +988,6 @@ branding:
 
   # Legal imprint, displayed in the footer in the footer of web pages and emails.
   #imprint:
-
-  # Logo displayed in some web pages.
-  #logo_uri:
 ```
 
 ## `oauth`

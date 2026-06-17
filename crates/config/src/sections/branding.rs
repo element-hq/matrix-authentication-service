@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -33,10 +34,6 @@ pub struct BrandingConfig {
     /// emails.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub imprint: Option<String>,
-
-    /// Logo displayed in some web pages.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub logo_uri: Option<Url>,
 }
 
 impl BrandingConfig {
@@ -46,7 +43,6 @@ impl BrandingConfig {
             && self.policy_uri.is_none()
             && self.tos_uri.is_none()
             && self.imprint.is_none()
-            && self.logo_uri.is_none()
     }
 }
 
