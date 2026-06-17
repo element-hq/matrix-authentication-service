@@ -102,16 +102,16 @@
         "description": "Odmówiłeś dostępu aplikacji %(client_name)s. Możesz zamknąć to okno.",
         "heading": "Odmowa dostępu"
       },
-      "description": "<strong>Inne urządzenie</strong> chce powiązać %(client_name)s (<span>%(client_uri)s</span>) z Twoim kontem <span>%(server_name)s</span>. Upewnij się, że rozpoznajesz to urządzenie.",
+      "description": "<strong>Inne urządzenie</strong> chce połączyć %(client_name)s (<span>%(client_uri)s</span>) z Twoim kontem <span>%(server_name)s</span>. Upewnij się, że rozpoznajesz to urządzenie.",
       "grant_access": "Udziel dostępu",
       "granted": {
         "description": "Udzieliłeś dostępu aplikacji %(client_name)s. Możesz zamknąć to okno.",
         "heading": "Udzielono dostępu"
       },
       "this_will_setup": "Inne urządzenie chce skonfigurować %(client_name)s (<span>%(client_uri)s</span>) z twoim kontem <span>%(server_name)s</span>. Upewnij się, że rozpoznajesz to urządzenie.",
-      "title": "Udzielić dostępu do Twojego konta?",
+      "title": "Udzielić dostępu do swojego konta?",
       "warning": {
-        "description": "Czy na pewno jest to Twoje urządzenie? Administratorzy ani dział wsparcia IT nigdy nie poprosiliby Cię o potwierdzenie tego.",
+        "description": "Czy na pewno to Twoje urządzenie? Administratorzy ani dział wsparcia IT nigdy nie poprosiliby Cię o wyrażenie zgody na to.",
         "title": "Zamierzasz udzielić zdalnemu urządzeniu dostęp do swojego konta"
       }
     },

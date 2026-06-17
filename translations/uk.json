@@ -181,7 +181,12 @@
     "policy_violation": {
       "description": "Це може бути пов'язано з клієнтом, який створив запит, користувачем, який зараз ввійшов у систему, або самим запитом.",
       "heading": "Запит на авторизацію відхилений політикою, застосованою цим сервісом",
-      "logged_as": "Зареєстровано як <span class=\"font-semibold\"> %(username)s </span>"
+      "logged_as": "Зареєстровано як <span class=\"font-semibold\"> %(username)s </span>",
+      "too_many_sessions": {
+        "description": "Ви увійшли на максимальній кількості пристроїв під цим обліковим записом. Щоб продовжити, <span class=\"font-semibold\">видаліть %(num_devices_to_remove)s пристроїв</span> і спробуйте увійти знову.",
+        "heading": "Досягнуто обмеження кількості пристроїв",
+        "manage_devices": "Керування пристроями"
+      }
     },
     "recovery": {
       "consumed": {
