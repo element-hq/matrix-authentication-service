@@ -67,6 +67,38 @@ The template has the following variables available:
  - `extra_callback_parameters`: an object with the additional parameters the provider sent to the redirect URL
 
 
+## Forwarding parameters to the upstream provider
+
+The `additional_authorization_parameters` per-provider option lets you add extra parameters to the authorization request sent to the upstream provider.
+Each value is a Jinja2 template, with the same engine and filters used by `claims_imports`.
+
+The template has a single variable available:
+
+ - `params`: a map of the raw query parameters from the downstream authorization request that initiated this upstream login.
+   When the upstream login was not triggered by a downstream authorization request (e.g. account linking from the account UI, direct login from the login page), this map is empty.
+
+Templates that render to an empty string are dropped rather than forwarded, so referencing a downstream parameter that was not supplied does not produce a stray empty query parameter.
+
+Plain strings without `{{ … }}` are valid templates that render to themselves, so static values continue to work without changes.
+
+```yaml
+upstream_oauth2:
+  providers:
+    - id: …
+      additional_authorization_parameters:
+        # Static value
+        kc_idp_hint: "saml"
+        # Forward the downstream `login_hint`, if any
+        login_hint: "{{ params.login_hint }}"
+        # Forward the downstream `acr_values`, if any
+        acr_values: "{{ params.acr_values }}"
+```
+
+> ⚠️ The `params` map exposes the entire raw query string of the downstream authorization request (including `client_id`, `state`, `code_challenge`, …). Forward specific keys deliberately; do not blindly proxy values you have not chosen.
+
+The older `forward_login_hint: true` flag is still accepted as a shortcut and is automatically translated to `login_hint: "{{ params.login_hint }}"` at config sync time, but it is deprecated in favour of an explicit template entry.
+
+
 ## Allow linking existing user accounts
 
 The authentication service supports linking external provider identities to existing local user accounts if the `localpart` matches.
