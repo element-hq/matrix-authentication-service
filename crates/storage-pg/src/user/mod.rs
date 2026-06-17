@@ -134,11 +134,6 @@ impl Filter for UserFilter<'_> {
             }))
             .add_option(self.active_oauth2_session_for_any_of_clients().map(
                 |clients| -> SimpleExpr {
-                    if clients.is_empty() {
-                        // "Has an active OAuth2 session for any of these
-                        // zero clients" matches no row.
-                        return Expr::val(false).into();
-                    }
                     let client_ids: Vec<SimpleExpr> = clients
                         .iter()
                         .map(|c| Expr::val(Uuid::from(*c)).into())
