@@ -176,11 +176,15 @@ Add a client for MAS to Authelia's `configuration.yaml` (see the [Authelia OIDC 
 ```yaml
 identity_providers:
   oidc:
+    claims_policies:
+      matrix:
+        id_token: ['email', 'name', 'groups', 'preferred_username']
     clients:
       - client_id: "<client-id>" # TO BE FILLED
           client_name: Matrix
           client_secret: "<client-secret>" # TO BE FILLED
           public: false
+          claims_policy: 'matrix'
           redirect_uris:
             - https://<mas-fqdn>/upstream/callback/<id>
           scopes:
