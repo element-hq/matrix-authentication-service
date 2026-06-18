@@ -7,7 +7,7 @@
 //! storage.
 
 use async_trait::async_trait;
-use mas_data_model::{Clock, PolicyData};
+use mas_data_model::{Clock, PolicyData, UlidExt as _};
 use mas_storage::policy_data::PolicyDataRepository;
 use rand::RngCore;
 use serde_json::Value;
@@ -95,7 +95,7 @@ impl PolicyDataRepository for PgPolicyDataRepository<'_> {
         data: Value,
     ) -> Result<PolicyData, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
 
         sqlx::query!(
             r#"

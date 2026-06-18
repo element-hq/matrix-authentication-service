@@ -11,6 +11,7 @@ use mas_config::{
     UpstreamOAuth2ImportAction, UpstreamOAuth2OnBackchannelLogout, UpstreamOAuth2PkceMethod,
     UpstreamOAuth2ResponseMode, UpstreamOAuth2TokenAuthMethod,
 };
+use mas_data_model::UlidExt as _;
 use mas_iana::jose::JsonWebSignatureAlg;
 use oauth2_types::scope::{OPENID, Scope, ScopeToken};
 use rand::Rng;
@@ -238,7 +239,7 @@ impl OidcProvider {
                 .collect(),
         };
 
-        let id = Ulid::from_datetime_with_source(now.into(), rng);
+        let id = Ulid::from_datetime_with_rng(now, rng);
 
         let token_endpoint_auth_method = self.client_auth_method.unwrap_or_else(|| {
             // The token auth method defaults to 'none' if no client_secret is set and

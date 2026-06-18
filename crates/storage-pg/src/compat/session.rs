@@ -11,7 +11,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
     BrowserSession, Clock, CompatSession, CompatSessionState, CompatSsoLogin, CompatSsoLoginState,
-    Device, User,
+    Device, UlidExt as _, User,
 };
 use mas_storage::{
     Page, Pagination,
@@ -346,7 +346,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
         human_name: Option<String>,
     ) -> Result<CompatSession, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("compat_session.id", tracing::field::display(id));
 
         sqlx::query!(

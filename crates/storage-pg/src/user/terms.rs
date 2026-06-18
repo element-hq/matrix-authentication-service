@@ -5,7 +5,7 @@
 // Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
-use mas_data_model::{Clock, User};
+use mas_data_model::{Clock, UlidExt as _, User};
 use mas_storage::user::UserTermsRepository;
 use rand::RngCore;
 use sqlx::PgConnection;
@@ -51,7 +51,7 @@ impl UserTermsRepository for PgUserTermsRepository<'_> {
         terms_url: Url,
     ) -> Result<(), Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("user_terms.id", tracing::field::display(id));
 
         sqlx::query!(

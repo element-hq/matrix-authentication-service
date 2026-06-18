@@ -9,7 +9,9 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, Clock, DeviceCodeGrant, DeviceCodeGrantState, Session};
+use mas_data_model::{
+    BrowserSession, Clock, DeviceCodeGrant, DeviceCodeGrantState, Session, UlidExt as _,
+};
 use mas_storage::oauth2::{OAuth2DeviceCodeGrantParams, OAuth2DeviceCodeGrantRepository};
 use oauth2_types::scope::Scope;
 use rand::RngCore;
@@ -157,7 +159,7 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
         params: OAuth2DeviceCodeGrantParams<'_>,
     ) -> Result<DeviceCodeGrant, Self::Error> {
         let now = clock.now();
-        let id = Ulid::from_datetime_with_source(now.into(), rng);
+        let id = Ulid::from_datetime_with_rng(now, rng);
         tracing::Span::current().record("oauth2_device_code.id", tracing::field::display(id));
 
         let created_at = now;

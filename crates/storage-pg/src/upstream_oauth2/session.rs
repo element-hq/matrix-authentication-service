@@ -8,7 +8,7 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    BrowserSession, Clock, UpstreamOAuthAuthorizationSession,
+    BrowserSession, Clock, UlidExt as _, UpstreamOAuthAuthorizationSession,
     UpstreamOAuthAuthorizationSessionState, UpstreamOAuthLink, UpstreamOAuthProvider,
 };
 use mas_storage::{
@@ -259,7 +259,7 @@ impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
         nonce: Option<String>,
     ) -> Result<UpstreamOAuthAuthorizationSession, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record(
             "upstream_oauth_authorization_session.id",
             tracing::field::display(id),

@@ -239,7 +239,7 @@ pub async fn handler(
 #[cfg(test)]
 mod tests {
     use hyper::{Request, StatusCode};
-    use mas_data_model::Clock;
+    use mas_data_model::{Clock, UlidExt as _};
     use mas_iana::oauth::OAuthClientAuthenticationMethod;
     use mas_storage::RepositoryAccess;
     use oauth2_types::requests::GrantType;
@@ -303,8 +303,7 @@ mod tests {
             .unwrap();
 
         // Add a static client
-        let static_id =
-            ulid::Ulid::from_datetime_with_source(state.clock.now().into(), &mut state.rng());
+        let static_id = ulid::Ulid::from_datetime_with_rng(state.clock.now(), &mut state.rng());
         repo.oauth2_client()
             .upsert_static(
                 static_id,

@@ -11,7 +11,7 @@ use std::{
 };
 
 use async_trait::async_trait;
-use mas_data_model::{Client, Clock, JwksOrJwksUri};
+use mas_data_model::{Client, Clock, JwksOrJwksUri, UlidExt as _};
 use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
 use mas_jose::jwk::PublicJsonWebKeySet;
 use mas_storage::{
@@ -512,7 +512,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
         initiate_login_uri: Option<Url>,
     ) -> Result<Client, Self::Error> {
         let now = clock.now();
-        let id = Ulid::from_datetime_with_source(now.into(), rng);
+        let id = Ulid::from_datetime_with_rng(now, rng);
         tracing::Span::current().record("client.id", tracing::field::display(id));
 
         let jwks_json = jwks

@@ -7,7 +7,7 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{Clock, UpstreamOAuthLink, UpstreamOAuthProvider, User};
+use mas_data_model::{Clock, UlidExt as _, UpstreamOAuthLink, UpstreamOAuthProvider, User};
 use mas_storage::{
     Page, Pagination,
     pagination::Node,
@@ -219,7 +219,7 @@ impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
         human_account_name: Option<String>,
     ) -> Result<UpstreamOAuthLink, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("upstream_oauth_link.id", tracing::field::display(id));
 
         sqlx::query!(

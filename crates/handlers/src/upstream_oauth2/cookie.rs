@@ -158,6 +158,7 @@ impl UpstreamSessions {
 #[cfg(test)]
 mod tests {
     use chrono::TimeZone;
+    use mas_data_model::UlidExt as _;
     use rand::SeedableRng;
     use rand_chacha::ChaChaRng;
 
@@ -172,16 +173,16 @@ mod tests {
 
         let sessions = UpstreamSessions::default();
 
-        let provider_a = Ulid::from_datetime_with_source(now.into(), &mut rng);
-        let provider_b = Ulid::from_datetime_with_source(now.into(), &mut rng);
+        let provider_a = Ulid::from_datetime_with_rng(now, &mut rng);
+        let provider_b = Ulid::from_datetime_with_rng(now, &mut rng);
 
-        let first_session = Ulid::from_datetime_with_source(now.into(), &mut rng);
+        let first_session = Ulid::from_datetime_with_rng(now, &mut rng);
         let first_state = "first-state";
         let sessions = sessions.add(first_session, provider_a, first_state.into(), None);
 
         let now = now + Duration::microseconds(5 * 60 * 1000 * 1000);
 
-        let second_session = Ulid::from_datetime_with_source(now.into(), &mut rng);
+        let second_session = Ulid::from_datetime_with_rng(now, &mut rng);
         let second_state = "second-state";
         let sessions = sessions.add(second_session, provider_b, second_state.into(), None);
 
@@ -207,7 +208,7 @@ mod tests {
         );
 
         // Associate a link with the second
-        let second_link = Ulid::from_datetime_with_source(now.into(), &mut rng);
+        let second_link = Ulid::from_datetime_with_rng(now, &mut rng);
         let sessions = sessions
             .add_link_to_session(second_session, second_link)
             .unwrap();

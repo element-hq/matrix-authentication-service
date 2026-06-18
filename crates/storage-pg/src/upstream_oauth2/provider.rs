@@ -6,7 +6,9 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{Clock, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports};
+use mas_data_model::{
+    Clock, UlidExt as _, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports,
+};
 use mas_storage::{
     Page, Pagination,
     pagination::Node,
@@ -332,7 +334,7 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
         params: UpstreamOAuthProviderParams,
     ) -> Result<UpstreamOAuthProvider, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("upstream_oauth_provider.id", tracing::field::display(id));
 
         sqlx::query!(

@@ -327,7 +327,7 @@ impl Limiter {
 
 #[cfg(test)]
 mod tests {
-    use mas_data_model::{Clock, User, clock::MockClock};
+    use mas_data_model::{Clock, UlidExt as _, User, clock::MockClock};
     use rand::SeedableRng;
 
     use super::*;
@@ -347,7 +347,7 @@ mod tests {
             .unwrap();
 
         let alice = User {
-            id: Ulid::from_datetime_with_source(now.into(), &mut rng),
+            id: Ulid::from_datetime_with_rng(now, &mut rng),
             username: "alice".to_owned(),
             sub: "123-456".to_owned(),
             created_at: now,
@@ -358,7 +358,7 @@ mod tests {
         };
 
         let bob = User {
-            id: Ulid::from_datetime_with_source(now.into(), &mut rng),
+            id: Ulid::from_datetime_with_rng(now, &mut rng),
             username: "bob".to_owned(),
             sub: "123-456".to_owned(),
             created_at: now,

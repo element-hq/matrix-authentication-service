@@ -16,7 +16,7 @@ use std::time::Instant;
 use chrono::{DateTime, Utc};
 use compact_str::CompactString;
 use futures_util::{SinkExt, StreamExt as _, TryFutureExt, TryStreamExt as _};
-use mas_data_model::Clock;
+use mas_data_model::{Clock, UlidExt as _};
 use rand::{RngCore, SeedableRng};
 use thiserror::Error;
 use thiserror_ext::ContextInto;
@@ -389,9 +389,8 @@ async fn migrate_threepids(
                             &mut mas,
                             MasNewEmailThreepid {
                                 user_id: mas_user_id,
-                                user_email_id: Uuid::from(Ulid::from_datetime_with_source(
-                                    created_at.into(),
-                                    &mut rng,
+                                user_email_id: Uuid::from(Ulid::from_datetime_with_rng(
+                                    created_at, &mut rng,
                                 )),
                                 email: address,
                                 created_at,
@@ -511,10 +510,9 @@ async fn migrate_external_ids(
 
                 // To save having to store user creation times, extract it from the ULID
                 // This gives millisecond precision — good enough.
-                let user_created_ts = Ulid::from(mas_user_id.get()).datetime();
+                let user_created_ts = Ulid::from(mas_user_id.get()).datetime_utc();
 
-                let link_id: Uuid =
-                    Ulid::from_datetime_with_source(user_created_ts, &mut rng).into();
+                let link_id: Uuid = Ulid::from_datetime_with_rng(user_created_ts, &mut rng).into();
 
                 write_buffer
                     .write(
@@ -524,7 +522,7 @@ async fn migrate_external_ids(
                             user_id: mas_user_id,
                             upstream_provider_id,
                             subject,
-                            created_at: user_created_ts.into(),
+                            created_at: user_created_ts,
                         },
                     )
                     .await
@@ -629,11 +627,17 @@ async fn migrate_devices(
                 let session_id = *state
                     .devices_to_compat_sessions
                     .entry((mas_user_id, CompactString::new(&device_id)))
-                    .or_insert_with(||
-                // We don't have a creation time for this device (as it has no access token),
-                // so use now as a least-evil fallback.
-                Ulid::with_source(&mut rng).into());
-                let created_at = Ulid::from(session_id).datetime().into();
+                    .or_insert_with(|| {
+                        // We don't have a creation time for this device (as it has no access
+                        // token), so use now as a least-evil fallback.
+                        Ulid::from_datetime_with_rng(
+                            #[expect(clippy::disallowed_methods)]
+                            Utc::now(),
+                            &mut rng,
+                        )
+                        .into()
+                    });
+                let created_at = Ulid::from(session_id).datetime_utc();
 
                 // As we're using a real IP type in the MAS database, it is possible
                 // that we encounter invalid IP addresses in the Synapse database.
@@ -776,13 +780,13 @@ async fn migrate_unrefreshable_access_tokens(
                         .devices_to_compat_sessions
                         .entry((mas_user_id, CompactString::new(&device_id)))
                         .or_insert_with(|| {
-                            Uuid::from(Ulid::from_datetime_with_source(created_at.into(), &mut rng))
+                            Uuid::from(Ulid::from_datetime_with_rng(created_at, &mut rng))
                         })
                 } else {
                     // If this is a deviceless access token, create a deviceless compat session
                     // for it (since otherwise we won't create one whilst migrating devices)
                     let deviceless_session_id =
-                        Uuid::from(Ulid::from_datetime_with_source(created_at.into(), &mut rng));
+                        Uuid::from(Ulid::from_datetime_with_rng(created_at, &mut rng));
 
                     deviceless_session_write_buffer
                         .write(
@@ -805,8 +809,7 @@ async fn migrate_unrefreshable_access_tokens(
                     deviceless_session_id
                 };
 
-                let token_id =
-                    Uuid::from(Ulid::from_datetime_with_source(created_at.into(), &mut rng));
+                let token_id = Uuid::from(Ulid::from_datetime_with_rng(created_at, &mut rng));
 
                 write_buffer
                     .write(
@@ -930,13 +933,13 @@ async fn migrate_refreshable_token_pairs(
                     .devices_to_compat_sessions
                     .entry((mas_user_id, CompactString::new(&device_id)))
                     .or_insert_with(|| {
-                        Uuid::from(Ulid::from_datetime_with_source(created_at.into(), &mut rng))
+                        Uuid::from(Ulid::from_datetime_with_rng(created_at, &mut rng))
                     });
 
                 let access_token_id =
-                    Uuid::from(Ulid::from_datetime_with_source(created_at.into(), &mut rng));
+                    Uuid::from(Ulid::from_datetime_with_rng(created_at, &mut rng));
                 let refresh_token_id =
-                    Uuid::from(Ulid::from_datetime_with_source(created_at.into(), &mut rng));
+                    Uuid::from(Ulid::from_datetime_with_rng(created_at, &mut rng));
 
                 access_token_write_buffer
                     .write(
@@ -1016,8 +1019,8 @@ fn transform_user(
         .into_extract_localpart(user.name.clone())?
         .to_owned();
 
-    let user_id = Uuid::from(Ulid::from_datetime_with_source(
-        DateTime::<Utc>::from(user.creation_ts).into(),
+    let user_id = Uuid::from(Ulid::from_datetime_with_rng(
+        DateTime::<Utc>::from(user.creation_ts),
         rng,
     ))
     .try_into()
@@ -1037,8 +1040,8 @@ fn transform_user(
         .password_hash
         .clone()
         .map(|password_hash| MasNewUserPassword {
-            user_password_id: Uuid::from(Ulid::from_datetime_with_source(
-                DateTime::<Utc>::from(user.creation_ts).into(),
+            user_password_id: Uuid::from(Ulid::from_datetime_with_rng(
+                DateTime::<Utc>::from(user.creation_ts),
                 rng,
             )),
             user_id: new_user.user_id,
