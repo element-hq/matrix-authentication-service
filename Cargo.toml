@@ -404,40 +404,40 @@ version = "0.2.0"
 
 # OpenTelemetry
 [workspace.dependencies.opentelemetry]
-version = "0.31.0"
+version = "0.32.0"
 features = ["trace", "metrics"]
 [workspace.dependencies.opentelemetry-http]
-version = "0.31.0"
+version = "0.32.0"
 features = ["reqwest"]
 [workspace.dependencies.opentelemetry-instrumentation-process]
-version = "0.1.2"
+version = "0.2.0"
 [workspace.dependencies.opentelemetry-instrumentation-tokio]
-version = "0.1.2"
+version = "0.2.0"
 [workspace.dependencies.opentelemetry-jaeger-propagator]
-version = "0.31.0"
+version = "0.32.0"
 [workspace.dependencies.opentelemetry-otlp]
-version = "0.31.1"
+version = "0.32.0"
 default-features = false
 features = ["trace", "metrics", "http-proto", "tls-provider-agnostic"]
 [workspace.dependencies.opentelemetry-prometheus-text-exporter]
-version = "0.2.1"
+version = "0.3.0"
 [workspace.dependencies.opentelemetry-resource-detectors]
-version = "0.10.0"
+version = "0.11.0"
 [workspace.dependencies.opentelemetry-semantic-conventions]
-version = "0.31.0"
+version = "0.32.0"
 features = ["semconv_experimental"]
 [workspace.dependencies.opentelemetry-stdout]
-version = "0.31.0"
+version = "0.32.0"
 features = ["trace", "metrics"]
 [workspace.dependencies.opentelemetry_sdk]
-version = "0.31.0"
+version = "0.32.1"
 features = [
     "experimental_trace_batch_span_processor_with_async_runtime",
     "experimental_metrics_periodicreader_with_async_runtime",
     "rt-tokio",
 ]
 [workspace.dependencies.tracing-opentelemetry]
-version = "0.32.1"
+version = "0.33.0"
 default-features = false
 
 # P256 elliptic curve
@@ -508,13 +508,14 @@ version = "1.12.2"
 
 # High-level HTTP client
 [workspace.dependencies.reqwest]
-version = "0.12.24"
+version = "0.13.4"
 default-features = false
 features = [
     "http2",
-    "rustls-tls-manual-roots-no-provider",
+    "rustls-no-provider",
     "charset",
     "json",
+    "form",
     "socks",
     "system-proxy",
 ]
@@ -576,18 +577,18 @@ features = [
 
 # Sentry error tracking
 [workspace.dependencies.sentry]
-version = "0.46.2"
+version = "0.48.2"
 default-features = false
-features = ["backtrace", "contexts", "panic", "tower", "reqwest"]
+features = ["backtrace", "contexts", "panic", "tower", "reqwest", "rustls-no-provider"]
 
 # Sentry tower layer
 [workspace.dependencies.sentry-tower]
-version = "0.46.0"
+version = "0.48.2"
 features = ["http", "axum-matched-path"]
 
 # Sentry tracing integration
 [workspace.dependencies.sentry-tracing]
-version = "0.46.0"
+version = "0.48.2"
 
 # Serialization and deserialization
 [workspace.dependencies.serde]

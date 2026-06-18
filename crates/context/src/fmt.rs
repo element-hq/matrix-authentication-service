@@ -129,7 +129,7 @@ where
         // If we have a OTEL span, we can add the trace ID to the end of the log line
         if let Some(span) = ctx.lookup_current()
             && let Some(trace_id) = tracing::dispatcher::get_default(|dispatch| {
-                let otel_cx = get_otel_context(&mut span.extensions_mut(), dispatch)?;
+                let otel_cx = get_otel_context(&span.id(), dispatch)?;
                 let trace_id = otel_cx.span().span_context().trace_id();
                 Some(trace_id)
             })
