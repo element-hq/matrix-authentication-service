@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -375,7 +376,7 @@ jobs:
           fi
 
       - name: Install ESS test dependencies
-        uses: element-hq/setup-ess-cluster-action@release/v2
+        uses: element-hq/setup-ess-cluster-action@23c5b953699591752a7385e143af59607a68c85e # release/v2
         with:
           ess-helm-ref: ${{ steps.check-branch.outputs.ref }}
 
