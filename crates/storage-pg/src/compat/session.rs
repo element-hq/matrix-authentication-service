@@ -308,7 +308,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
                      , is_synapse_admin
                      , user_agent
                      , last_active_at
-                     , last_active_ip as "last_active_ip: IpAddr"
+                     , last_active_ip
                 FROM compat_sessions
                 WHERE compat_session_id = $1
             "#,

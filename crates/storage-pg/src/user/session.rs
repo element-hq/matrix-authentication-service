@@ -204,7 +204,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
                      , s.finished_at           AS "user_session_finished_at"
                      , s.user_agent            AS "user_session_user_agent"
                      , s.last_active_at        AS "user_session_last_active_at"
-                     , s.last_active_ip        AS "user_session_last_active_ip: IpAddr"
+                     , s.last_active_ip        AS "user_session_last_active_ip"
                      , u.user_id
                      , u.username              AS "user_username"
                      , u.created_at            AS "user_created_at"
