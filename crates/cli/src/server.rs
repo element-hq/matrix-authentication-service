@@ -260,10 +260,12 @@ pub fn build_router(
             }
             mas_config::HttpResource::GraphQL {
                 playground,
+                introspection,
                 undocumented_oauth2_access,
             } => router.merge(mas_handlers::graphql_router::<AppState>(
                 *playground,
                 *undocumented_oauth2_access,
+                *introspection,
             )),
             mas_config::HttpResource::Assets { path } => {
                 let static_service = ServeDir::new(path)

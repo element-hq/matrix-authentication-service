@@ -38,6 +38,7 @@ use hyper::{
     },
 };
 use mas_axum_utils::{InternalError, cookies::CookieJar};
+use mas_config::GraphQLIntrospectionMode;
 use mas_data_model::SiteConfig;
 use mas_http::CorsLayerExt;
 use mas_keystore::{Encrypter, Keystore};
@@ -124,7 +125,11 @@ where
     Router::new().route(mas_router::Healthcheck::route(), get(self::health::get))
 }
 
-pub fn graphql_router<S>(playground: bool, undocumented_oauth2_access: bool) -> Router<S>
+pub fn graphql_router<S>(
+    playground: bool,
+    undocumented_oauth2_access: bool,
+    introspection: GraphQLIntrospectionMode,
+) -> Router<S>
 where
     S: Clone + Send + Sync + 'static,
     graphql::Schema: FromRef<S>,
@@ -145,6 +150,7 @@ where
         // per-listener
         .layer(Extension(ExtraRouterParameters {
             undocumented_oauth2_access,
+            introspection,
         }))
         .layer(
             CorsLayer::new()

@@ -835,6 +835,14 @@
               "description": "Enabled the GraphQL playground",
               "type": "boolean"
             },
+            "introspection": {
+              "description": "Controls who can introspect the GraphQL schema.",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/GraphQLIntrospectionMode"
+                }
+              ]
+            },
             "undocumented_oauth2_access": {
               "description": "Allow access for OAuth 2.0 clients (undocumented)",
               "type": "boolean"
@@ -916,6 +924,21 @@
           "required": [
             "name"
           ]
+        }
+      ]
+    },
+    "GraphQLIntrospectionMode": {
+      "description": "Controls who can use GraphQL schema introspection.",
+      "oneOf": [
+        {
+          "description": "Allow anonymous and authenticated requests to introspect the schema.",
+          "type": "string",
+          "const": "public"
+        },
+        {
+          "description": "Only allow authenticated requests to introspect the schema.",
+          "type": "string",
+          "const": "authenticated_only"
         }
       ]
     },
