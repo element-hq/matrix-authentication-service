@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -13,7 +14,7 @@ use axum::{Json, extract::State, response::IntoResponse};
 use axum_extra::typed_header::TypedHeader;
 use chrono::Duration;
 use hyper::StatusCode;
-use mas_axum_utils::record_error;
+use mas_axum_utils::{RecordAsRequester, record_error};
 use mas_data_model::{
     BoxClock, BoxRng, Clock, CompatSession, CompatSsoLoginState, Device, SessionLimitConfig,
     SiteConfig, TokenType, User,
@@ -404,6 +405,8 @@ pub(crate) async fn post(
             .record_user_agent(session, user_agent)
             .await?;
     }
+
+    user.maybe_record_as_requester();
 
     let user_id = homeserver.mxid(&user.username);
 
@@ -1200,6 +1203,66 @@ mod tests {
 
         repo.save().await.unwrap();
         user
+    }
+
+    /// A successful compat password login records the acting user, with their
+    /// username, as the requester on the log context.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_login_records_requester(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let user = user_with_password(&state, "alice", "password", false).await;
+
+        let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+            "type": "m.login.password",
+            "identifier": { "type": "m.id.user", "user": "alice" },
+            "password": "password",
+        }));
+        let (response, requester) = state.request_capturing_requester(request).await;
+        response.assert_status(StatusCode::OK);
+
+        assert_eq!(requester, Some(format!("user:{}(alice)", user.id)));
+    }
+
+    /// A compat token refresh records the acting user too, but without the
+    /// username (it isn't loaded on that path) — exercising the id-only form.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_refresh_records_requester_id_only(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let user = user_with_password(&state, "alice", "password", false).await;
+
+        // Login first, asking for a refresh token.
+        let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+            "type": "m.login.password",
+            "identifier": { "type": "m.id.user", "user": "alice" },
+            "password": "password",
+            "refresh_token": true,
+        }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        let refresh_token = body["refresh_token"].as_str().unwrap().to_owned();
+
+        let request = Request::post("/_matrix/client/v3/refresh")
+            .json(serde_json::json!({ "refresh_token": refresh_token }));
+        let (response, requester) = state.request_capturing_requester(request).await;
+        response.assert_status(StatusCode::OK);
+
+        assert_eq!(requester, Some(format!("user:{}", user.id)));
+    }
+
+    /// A request that doesn't authenticate records no requester.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_unauthenticated_request_records_no_requester(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let request = Request::get("/_matrix/client/v3/login").empty();
+        let (response, requester) = state.request_capturing_requester(request).await;
+        response.assert_status(StatusCode::OK);
+
+        assert_eq!(requester, None);
     }
 
     /// Test that the client IP injected on the request (as the IP-detection

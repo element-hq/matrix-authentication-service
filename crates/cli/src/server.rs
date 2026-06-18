@@ -217,7 +217,12 @@ async fn log_response_middleware(
         .and_then(|operation| operation.operation_name.as_deref())
         .map(tracing::field::display);
 
-    let Some(stats) = LogContext::maybe_with(LogContext::stats) else {
+    let Some((stats, requester)) = LogContext::maybe_with(|ctx| {
+        (
+            ctx.stats(),
+            ctx.requester().cloned().map(tracing::field::display),
+        )
+    }) else {
         tracing::error!("Missing log context for request, this is a bug!");
         return response;
     };
@@ -227,6 +232,7 @@ async fn log_response_middleware(
         100..=399 => tracing::info!(
             name: "http.server.response",
             {
+                requester = requester,
                 client.address = client_ip,
                 graphql.operation.type = graphql_operation_type,
                 graphql.operation.name = graphql_operation_name,
@@ -236,6 +242,7 @@ async fn log_response_middleware(
         400..=499 => tracing::warn!(
             name: "http.server.response",
             {
+                requester = requester,
                 client.address = client_ip,
                 graphql.operation.type = graphql_operation_type,
                 graphql.operation.name = graphql_operation_name,
@@ -245,6 +252,7 @@ async fn log_response_middleware(
         500..=599 => tracing::error!(
             name: "http.server.response",
             {
+                requester = requester,
                 client.address = client_ip,
                 graphql.operation.type = graphql_operation_type,
                 graphql.operation.name = graphql_operation_name,

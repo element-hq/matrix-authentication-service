@@ -30,6 +30,7 @@ use mas_axum_utils::{
     cookies::{CookieJar, CookieManager},
 };
 use mas_config::RateLimitingConfig;
+use mas_context::LogContext;
 use mas_data_model::{AppVersion, BoxClock, BoxRng, SiteConfig, clock::MockClock};
 use mas_email::{MailTransport, Mailer};
 use mas_i18n::Translator;
@@ -331,7 +332,10 @@ impl TestState {
         state
     }
 
-    pub async fn request<B>(&self, request: Request<B>) -> Response<String>
+    /// Dispatch a request through the router, without setting up a log context.
+    /// Use [`TestState::request`] instead — it mirrors production by running
+    /// inside a [`LogContext`].
+    async fn dispatch<B>(&self, request: Request<B>) -> Response<String>
     where
         B: HttpBody<Data = Bytes> + Send + 'static,
         <B as HttpBody>::Error: std::error::Error + Send + Sync,
@@ -364,6 +368,40 @@ impl TestState {
             .to_owned();
 
         Response::from_parts(parts, body)
+    }
+
+    pub async fn request<B>(&self, request: Request<B>) -> Response<String>
+    where
+        B: HttpBody<Data = Bytes> + Send + 'static,
+        <B as HttpBody>::Error: std::error::Error + Send + Sync,
+        B::Error: std::error::Error + Send + Sync,
+        B::Data: Send,
+    {
+        // Mirror production: every request is served inside a `LogContext`
+        // (set up by the `LogContextLayer` in the real server).
+        LogContext::new("test-request")
+            .run(|| self.dispatch(request))
+            .await
+    }
+
+    /// Like [`TestState::request`], but additionally returns the requester that
+    /// the handlers recorded on the request's [`LogContext`] (formatted via its
+    /// `Display`), so tests can assert how a request was attributed. `None`
+    /// means no requester was recorded.
+    pub async fn request_capturing_requester<B>(
+        &self,
+        request: Request<B>,
+    ) -> (Response<String>, Option<String>)
+    where
+        B: HttpBody<Data = Bytes> + Send + 'static,
+        <B as HttpBody>::Error: std::error::Error + Send + Sync,
+        B::Error: std::error::Error + Send + Sync,
+        B::Data: Send,
+    {
+        let log_context = LogContext::new("test-request");
+        let response = log_context.run(|| self.dispatch(request)).await;
+        let requester = log_context.requester().map(ToString::to_string);
+        (response, requester)
     }
 
     /// Get a token with the given scope

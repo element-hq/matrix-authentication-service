@@ -7,6 +7,7 @@
 use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::{
+    RecordAsRequester,
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
     record_error,
 };
@@ -156,6 +157,8 @@ pub(crate) async fn post(
                 }
             }
         })?;
+
+    client.maybe_record_as_requester();
 
     let Some(form) = client_authorization.form else {
         return Err(RouteError::BadRequest);

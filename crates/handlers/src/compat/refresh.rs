@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -7,7 +8,7 @@
 use axum::{Json, extract::State, response::IntoResponse};
 use chrono::Duration;
 use hyper::StatusCode;
-use mas_axum_utils::record_error;
+use mas_axum_utils::{RecordAsRequester, record_error};
 use mas_data_model::{BoxClock, BoxRng, Clock, SiteConfig, TokenFormatError, TokenType};
 use mas_storage::{
     BoxRepository,
@@ -119,6 +120,8 @@ pub(crate) async fn post(
     if !session.is_valid() {
         return Err(RouteError::InvalidSession(refresh_token.session_id));
     }
+
+    session.maybe_record_as_requester();
 
     activity_tracker
         .record_compat_session(&clock, &session)

@@ -13,6 +13,7 @@ use chrono::Duration;
 use headers::{CacheControl, HeaderMap, HeaderMapExt, Pragma};
 use hyper::StatusCode;
 use mas_axum_utils::{
+    RecordAsRequester,
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
     record_error,
 };
@@ -318,6 +319,10 @@ pub(crate) async fn post(
                 }
             }
         })?;
+
+    // The authenticated client is the entity making this request, regardless of
+    // the grant type or whether a user session is later minted.
+    client.maybe_record_as_requester();
 
     let form = client_authorization.form.ok_or(RouteError::BadRequest)?;
 
