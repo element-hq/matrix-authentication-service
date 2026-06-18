@@ -31,12 +31,16 @@ Preparing this flat file is done through `sqlx-cli`, and should be done everytim
 
 ```sh
 # Install the CLI, matching the version of `sqlx` in Cargo.lock
-cargo install sqlx-cli@0.9.0 --no-default-features --features postgres
+cargo install sqlx-cli@0.9.0 --no-default-features --features postgres,sqlx-toml
 
 cd crates/storage-pg/ # Must be in the mas-storage-pg crate folder
 export DATABASE_URL=postgresql:///matrix_auth
 cargo sqlx prepare
 ```
+
+Both `mas-storage-pg` and `syn2mas` use the query macros, each with its own
+`.sqlx` directory. `misc/sqlx_update.sh` prepares both, including the temporary
+tables `syn2mas` needs.
 
 ## Migrations
 

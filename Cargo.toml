@@ -636,6 +636,7 @@ features = [
     "json",
     "uuid",
     "ipnetwork",
+    "sqlx-toml",
 ]
 
 # Custom error types
