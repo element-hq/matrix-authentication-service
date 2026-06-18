@@ -6,32 +6,68 @@
       {
         "ordinal": 0,
         "name": "upstream_oauth_link_id",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "upstream_oauth_links",
+            "name": "upstream_oauth_link_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "upstream_oauth_provider_id",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "upstream_oauth_links",
+            "name": "upstream_oauth_provider_id"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "user_id",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "upstream_oauth_links",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "subject",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "upstream_oauth_links",
+            "name": "subject"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "human_account_name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "upstream_oauth_links",
+            "name": "human_account_name"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "created_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "upstream_oauth_links",
+            "name": "created_at"
+          }
+        }
       }
     ],
     "parameters": {

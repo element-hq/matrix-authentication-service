@@ -6,7 +6,13 @@
       {
         "ordinal": 0,
         "name": "oauth2_device_code_grant_id",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "oauth2_device_code_grant",
+            "name": "oauth2_device_code_grant_id"
+          }
+        }
       }
     ],
     "parameters": {

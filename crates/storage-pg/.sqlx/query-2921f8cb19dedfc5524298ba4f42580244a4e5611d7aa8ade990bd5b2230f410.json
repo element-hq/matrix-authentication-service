@@ -6,107 +6,233 @@
       {
         "ordinal": 0,
         "name": "oauth2_authorization_grant_id",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "oauth2_authorization_grant_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "created_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "created_at"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "cancelled_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "cancelled_at"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "fulfilled_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "fulfilled_at"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "exchanged_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "exchanged_at"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "scope",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "scope"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "state",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "state"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "redirect_uri",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "redirect_uri"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "response_mode",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "response_mode"
+          }
+        }
       },
       {
         "ordinal": 9,
         "name": "nonce",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "nonce"
+          }
+        }
       },
       {
         "ordinal": 10,
         "name": "oauth2_client_id",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "oauth2_client_id"
+          }
+        }
       },
       {
         "ordinal": 11,
         "name": "authorization_code",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "authorization_code"
+          }
+        }
       },
       {
         "ordinal": 12,
         "name": "response_type_code",
-        "type_info": "Bool"
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "response_type_code"
+          }
+        }
       },
       {
         "ordinal": 13,
         "name": "response_type_id_token",
-        "type_info": "Bool"
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "response_type_id_token"
+          }
+        }
       },
       {
         "ordinal": 14,
         "name": "code_challenge",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "code_challenge"
+          }
+        }
       },
       {
         "ordinal": 15,
         "name": "code_challenge_method",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "code_challenge_method"
+          }
+        }
       },
       {
         "ordinal": 16,
         "name": "login_hint",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "login_hint"
+          }
+        }
       },
       {
         "ordinal": 17,
         "name": "locale",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "locale"
+          }
+        }
       },
       {
         "ordinal": 18,
         "name": "raw_parameters: Json<BTreeMap<String, String>>",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "raw_parameters"
+          }
+        }
       },
       {
         "ordinal": 19,
         "name": "user_session_id",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "user_session_id"
+          }
+        }
       },
       {
         "ordinal": 20,
         "name": "oauth2_session_id",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "oauth2_authorization_grants",
+            "name": "oauth2_session_id"
+          }
+        }
       }
     ],
     "parameters": {

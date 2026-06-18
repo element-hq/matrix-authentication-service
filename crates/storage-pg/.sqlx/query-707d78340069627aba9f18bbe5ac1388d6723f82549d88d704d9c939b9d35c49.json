@@ -6,27 +6,57 @@
       {
         "ordinal": 0,
         "name": "queue_job_id",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "queue_jobs",
+            "name": "queue_job_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "queue_name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "queue_jobs",
+            "name": "queue_name"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "payload",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "queue_jobs",
+            "name": "payload"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "metadata",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "queue_jobs",
+            "name": "metadata"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "attempt",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "queue_jobs",
+            "name": "attempt"
+          }
+        }
       }
     ],
     "parameters": {

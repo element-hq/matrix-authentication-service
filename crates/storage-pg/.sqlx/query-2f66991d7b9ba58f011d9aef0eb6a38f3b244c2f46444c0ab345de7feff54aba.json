@@ -6,7 +6,8 @@
       {
         "ordinal": 0,
         "name": "current_database!",
-        "type_info": "Name"
+        "type_info": "Name",
+        "origin": "Expression"
       }
     ],
     "parameters": {
