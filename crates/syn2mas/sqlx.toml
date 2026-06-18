@@ -1,0 +1,12 @@
+# Copyright 2026 Element Creations Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
+# Read by the `sqlx` query macros and by `sqlx-cli`, both of which need the
+# `sqlx-toml` feature.
+
+[macros.preferred-crates]
+# Keeps the macros on `chrono` if another date/time crate enters the dependency
+# graph.
+date-time = "chrono"

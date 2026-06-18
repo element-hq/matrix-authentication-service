@@ -30,13 +30,18 @@ Usually it does so by having the database available at compile time, but to avoi
 Preparing this flat file is done through `sqlx-cli`, and should be done everytime the database schema or the queries changed.
 
 ```sh
-# Install the CLI
-cargo install sqlx-cli --no-default-features --features postgres
+# Install the CLI. The `sqlx-toml` feature is required because the CLI refuses
+# to run in a crate directory that contains a `sqlx.toml` file without it.
+cargo install sqlx-cli --no-default-features --features postgres,sqlx-toml
 
 cd crates/storage-pg/ # Must be in the mas-storage-pg crate folder
 export DATABASE_URL=postgresql:///matrix_auth
 cargo sqlx prepare
 ```
+
+Both `mas-storage-pg` and `syn2mas` use the query macros and have their own
+`.sqlx` cache and `sqlx.toml`. The `misc/sqlx_update.sh` script regenerates both
+in one go (it also sets up the temporary tables `syn2mas` needs).
 
 ## Migrations
 

@@ -215,7 +215,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
                      , revoked_at
                      , human_name
                      , last_active_at
-                     , last_active_ip as "last_active_ip: IpAddr"
+                     , last_active_ip
                 FROM personal_sessions
 
                 WHERE personal_session_id = $1

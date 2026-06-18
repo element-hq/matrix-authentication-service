@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT compat_session_id\n                     , device_id\n                     , human_name\n                     , user_id\n                     , user_session_id\n                     , created_at\n                     , finished_at\n                     , is_synapse_admin\n                     , user_agent\n                     , last_active_at\n                     , last_active_ip as \"last_active_ip: IpAddr\"\n                FROM compat_sessions\n                WHERE compat_session_id = $1\n            ",
+  "query": "\n                SELECT compat_session_id\n                     , device_id\n                     , human_name\n                     , user_id\n                     , user_session_id\n                     , created_at\n                     , finished_at\n                     , is_synapse_admin\n                     , user_agent\n                     , last_active_at\n                     , last_active_ip\n                FROM compat_sessions\n                WHERE compat_session_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -115,7 +115,7 @@
       },
       {
         "ordinal": 10,
-        "name": "last_active_ip: IpAddr",
+        "name": "last_active_ip",
         "type_info": "Inet",
         "origin": {
           "Table": {
@@ -144,5 +144,5 @@
       true
     ]
   },
-  "hash": "9b7363000017fa3dee46441bc0679cb16f9f8df08fa258cc907007fb9bcd0bc7"
+  "hash": "3d240e280f1f207fc652ab3d1977279de2bf12d2b35c568769b97cc7559d428a"
 }

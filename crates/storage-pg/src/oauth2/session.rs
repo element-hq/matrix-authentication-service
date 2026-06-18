@@ -242,7 +242,7 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
                      , finished_at
                      , user_agent
                      , last_active_at
-                     , last_active_ip as "last_active_ip: IpAddr"
+                     , last_active_ip
                      , human_name
                 FROM oauth2_sessions
 

@@ -239,7 +239,7 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
                      , exchanged_at
                      , user_session_id
                      , oauth2_session_id
-                     , ip_address as "ip_address: IpAddr"
+                     , ip_address
                      , user_agent
                      , locale
                 FROM
@@ -286,7 +286,7 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
                      , exchanged_at
                      , user_session_id
                      , oauth2_session_id
-                     , ip_address as "ip_address: IpAddr"
+                     , ip_address
                      , user_agent
                      , locale
                 FROM
@@ -333,7 +333,7 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
                      , exchanged_at
                      , user_session_id
                      , oauth2_session_id
-                     , ip_address as "ip_address: IpAddr"
+                     , ip_address
                      , user_agent
                      , locale
                 FROM
