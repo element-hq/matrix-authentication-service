@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT\n                      user_recovery_session_id\n                    , email\n                    , user_agent\n                    , ip_address as \"ip_address: IpAddr\"\n                    , locale\n                    , created_at\n                    , consumed_at\n                FROM user_recovery_sessions\n                WHERE user_recovery_session_id = $1\n            ",
+  "query": "\n                SELECT\n                      user_recovery_session_id\n                    , email\n                    , user_agent\n                    , ip_address\n                    , locale\n                    , created_at\n                    , consumed_at\n                FROM user_recovery_sessions\n                WHERE user_recovery_session_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -38,7 +38,7 @@
       },
       {
         "ordinal": 3,
-        "name": "ip_address: IpAddr",
+        "name": "ip_address",
         "type_info": "Inet",
         "origin": {
           "Table": {
@@ -96,5 +96,5 @@
       true
     ]
   },
-  "hash": "f46e87bbb149b35e1d13b2b3cd2bdeab3c28a56a395f52f001a7bb013a5dfece"
+  "hash": "b07561f6f443417590054f1a5986639c51800e986b0fd08d9c9759792478bc0b"
 }
