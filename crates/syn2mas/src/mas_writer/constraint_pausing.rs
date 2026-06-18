@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -86,10 +87,12 @@ pub async fn drop_constraint(
     let name = &constraint.name;
     let table_name = &constraint.table_name;
     debug!("dropping constraint {name} on table {table_name}");
-    sqlx::query(&format!("ALTER TABLE {table_name} DROP CONSTRAINT {name};"))
-        .execute(&mut *conn)
-        .await
-        .into_database_with(|| format!("failed to drop constraint {name} on {table_name}"))?;
+    sqlx::query(sqlx::AssertSqlSafe(format!(
+        "ALTER TABLE {table_name} DROP CONSTRAINT {name};"
+    )))
+    .execute(&mut *conn)
+    .await
+    .into_database_with(|| format!("failed to drop constraint {name} on {table_name}"))?;
 
     Ok(())
 }
@@ -100,7 +103,7 @@ pub async fn drop_constraint(
 pub async fn drop_index(conn: &mut PgConnection, index: &IndexDescription) -> Result<(), Error> {
     let index_name = &index.name;
     debug!("dropping index {index_name}");
-    sqlx::query(&format!("DROP INDEX {index_name};"))
+    sqlx::query(sqlx::AssertSqlSafe(format!("DROP INDEX {index_name};")))
         .execute(&mut *conn)
         .await
         .into_database_with(|| format!("failed to temporarily drop {index_name}"))?;
@@ -124,9 +127,9 @@ pub async fn restore_constraint(
         definition,
     } = &constraint;
 
-    sqlx::query(&format!(
+    sqlx::query(sqlx::AssertSqlSafe(format!(
         "ALTER TABLE {table_name} ADD CONSTRAINT {name} {definition};"
-    ))
+    )))
     .execute(conn)
     .await
     .into_database_with(|| {
@@ -154,7 +157,7 @@ pub async fn restore_index(conn: &mut PgConnection, index: &IndexDescription) ->
         definition,
     } = &index;
 
-    sqlx::query(&format!("{definition};"))
+    sqlx::query(sqlx::AssertSqlSafe(format!("{definition};")))
         .execute(conn)
         .await
         .into_database_with(|| {

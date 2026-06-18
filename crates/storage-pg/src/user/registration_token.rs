@@ -303,10 +303,11 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             )
             .build_sqlx(PostgresQueryBuilder);
 
-        let edges: Vec<UserRegistrationTokenLookup> = sqlx::query_as_with(&sql, arguments)
-            .traced()
-            .fetch_all(&mut *self.conn)
-            .await?;
+        let edges: Vec<UserRegistrationTokenLookup> =
+            sqlx::query_as_with(sqlx::AssertSqlSafe(sql), arguments)
+                .traced()
+                .fetch_all(&mut *self.conn)
+                .await?;
 
         let page = pagination
             .process(edges)
@@ -337,7 +338,7 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             .apply_filter(filter)
             .build_sqlx(PostgresQueryBuilder);
 
-        let count: i64 = sqlx::query_scalar_with(&sql, values)
+        let count: i64 = sqlx::query_scalar_with(sqlx::AssertSqlSafe(sql), values)
             .traced()
             .fetch_one(&mut *self.conn)
             .await?;

@@ -449,10 +449,11 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
             )
             .build_sqlx(PostgresQueryBuilder);
 
-        let edges: Vec<CompatSsoLoginLookup> = sqlx::query_as_with(&sql, arguments)
-            .traced()
-            .fetch_all(&mut *self.conn)
-            .await?;
+        let edges: Vec<CompatSsoLoginLookup> =
+            sqlx::query_as_with(sqlx::AssertSqlSafe(sql), arguments)
+                .traced()
+                .fetch_all(&mut *self.conn)
+                .await?;
 
         let page = pagination.process(edges).try_map(TryFrom::try_from)?;
 
@@ -474,7 +475,7 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
             .apply_filter(filter)
             .build_sqlx(PostgresQueryBuilder);
 
-        let count: i64 = sqlx::query_scalar_with(&sql, arguments)
+        let count: i64 = sqlx::query_scalar_with(sqlx::AssertSqlSafe(sql), arguments)
             .traced()
             .fetch_one(&mut *self.conn)
             .await?;

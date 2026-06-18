@@ -200,6 +200,9 @@ pub use self::{
 /// Embedded migrations in the binary
 pub static MIGRATOR: Migrator = sqlx::migrate!();
 
+/// Name of the table tracking applied migrations, the `sqlx` default
+const MIGRATIONS_TABLE: &str = "_sqlx_migrations";
+
 fn available_migrations() -> BTreeMap<i64, &'static Migration> {
     MIGRATOR.iter().map(|m| (m.version, m)).collect()
 }
@@ -293,7 +296,7 @@ async fn applied_migrations_map(
     conn: &mut PgConnection,
 ) -> Result<BTreeMap<i64, AppliedMigration>, MigrateError> {
     let applied_migrations = conn
-        .list_applied_migrations()
+        .list_applied_migrations(MIGRATIONS_TABLE)
         .await?
         .into_iter()
         .map(|m| (m.version, m))
@@ -303,6 +306,7 @@ async fn applied_migrations_map(
 }
 
 /// Checks if the migration table exists
+// The table name in the query must match `MIGRATIONS_TABLE`
 async fn migration_table_exists(conn: &mut PgConnection) -> Result<bool, sqlx::Error> {
     sqlx::query_scalar!(
         r#"
@@ -371,7 +375,10 @@ pub async fn migrate(conn: &mut PgConnection) -> Result<(), MigrateError> {
     // We check if the table exists before calling `ensure_migrations_table` to
     // avoid the pesky 'relation "_sqlx_migrations" already exists, skipping' notice
     if !migration_table_exists(locked_connection.as_mut()).await? {
-        locked_connection.as_mut().ensure_migrations_table().await?;
+        locked_connection
+            .as_mut()
+            .ensure_migrations_table(MIGRATIONS_TABLE)
+            .await?;
     }
 
     for migration in pending_migrations(locked_connection.as_mut()).await? {
@@ -382,12 +389,12 @@ pub async fn migrate(conn: &mut PgConnection) -> Result<(), MigrateError> {
         );
         locked_connection
             .as_mut()
-            .apply(migration)
+            .apply(MIGRATIONS_TABLE, migration)
             .instrument(info_span!(
                 "db.migrate.run_migration",
                 db.migration.version = migration.version,
                 db.migration.description = &*migration.description,
-                { DB_QUERY_TEXT } = &*migration.sql,
+                { DB_QUERY_TEXT } = migration.sql.as_str(),
             ))
             .await?;
     }
@@ -483,4 +490,23 @@ fn generate_lock_id(database_name: &str) -> i64 {
     const CRC_IEEE: crc::Crc<u32> = crc::Crc::<u32>::new(&crc::CRC_32_ISO_HDLC);
     // 0x3d32ad9e chosen by fair dice roll
     0x3d32_ad9e * i64::from(CRC_IEEE.checksum(database_name.as_bytes()))
+}
+
+#[cfg(test)]
+mod tests {
+    use sqlx::postgres::PgConnectOptions;
+
+    #[test]
+    fn default_username_is_not_whoami_stub() {
+        // whoami's stub backend, used when its `std` feature is off, always
+        // returns this name
+        assert_ne!(whoami::username().ok().as_deref(), Some("anonymous"));
+
+        if std::env::var_os("PGUSER").is_none() {
+            assert_ne!(
+                PgConnectOptions::new_without_pgpass().get_username(),
+                "anonymous"
+            );
+        }
+    }
 }

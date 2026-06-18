@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -16,7 +17,7 @@ static SYN2MAS_ADVISORY_LOCK: LazyLock<PgAdvisoryLock> =
 /// A wrapper around a Postgres connection which holds a session-wide advisory
 /// lock preventing concurrent access by other syn2mas instances.
 pub struct LockedMasDatabase {
-    inner: PgAdvisoryLockGuard<'static, PgConnection>,
+    inner: PgAdvisoryLockGuard<PgConnection>,
 }
 
 impl LockedMasDatabase {

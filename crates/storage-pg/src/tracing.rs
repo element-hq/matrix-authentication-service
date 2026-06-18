@@ -16,6 +16,7 @@
 //! runs.
 
 use std::{
+    future::ready,
     pin::Pin,
     task::{Context, Poll, ready},
     time::Instant,
@@ -31,7 +32,7 @@ use opentelemetry_semantic_conventions::{
     attribute::DB_QUERY_TEXT, trace::DB_RESPONSE_RETURNED_ROWS,
 };
 use sqlx::{
-    Database, Describe, Either, Error, Execute, Executor, IntoArguments,
+    Database, Describe, Either, Error, Execute, Executor, IntoArguments, SqlStr, Statement,
     query::{Map, Query, QueryAs, QueryScalar},
 };
 use tracing::Span;
@@ -125,7 +126,7 @@ where
 
     fn fetch_many<'e, 'q: 'e, Q>(
         self,
-        query: Q,
+        mut query: Q,
     ) -> BoxStream<
         'e,
         Result<
@@ -137,10 +138,28 @@ where
         'c: 'e,
         Q: 'q + Execute<'q, E::Database>,
     {
-        self.span.record(DB_QUERY_TEXT, query.sql());
+        let inner = if let Some(statement) = query.statement() {
+            // If the query is a cached prepared statement, we can inspect its
+            // SQL without consuming the query
+            self.span.record(DB_QUERY_TEXT, statement.sql().as_str());
+            self.inner.fetch_many(query)
+        } else {
+            // Query::sql consumes the query, so we need to essentially recreate
+            // it, in case the query isn't a prepared statement
+            let arguments = match query.take_arguments() {
+                Ok(arguments) => arguments,
+                Err(err) => {
+                    return futures_util::stream::once(ready(Err(Error::Encode(err)))).boxed();
+                }
+            };
+
+            let sql = query.sql();
+            self.span.record(DB_QUERY_TEXT, sql.as_str());
+            self.inner.fetch_many((sql, arguments))
+        };
 
         RecordingStream {
-            inner: self.inner.fetch_many(query),
+            inner,
             database: std::marker::PhantomData::<E::Database>,
             span: self.span,
             start: Instant::now(),
@@ -151,14 +170,30 @@ where
 
     fn fetch_optional<'e, 'q: 'e, Q>(
         self,
-        query: Q,
+        mut query: Q,
     ) -> BoxFuture<'e, Result<Option<<Self::Database as Database>::Row>, Error>>
     where
         'c: 'e,
-        Q: 'q + Execute<'q, E::Database>,
+        Q: 'q + Execute<'q, Self::Database>,
     {
-        self.span.record(DB_QUERY_TEXT, query.sql());
-        let inner = self.inner.fetch_optional(query);
+        let inner = if let Some(statement) = query.statement() {
+            // If the query is a cached prepared statement, we can inspect its
+            // SQL without consuming the query
+            self.span.record(DB_QUERY_TEXT, statement.sql().as_str());
+            self.inner.fetch_optional(query)
+        } else {
+            // Query::sql consumes the query, so we need to essentially recreate
+            // it, in case the query isn't a prepared statement
+            let arguments = match query.take_arguments() {
+                Ok(arguments) => arguments,
+                Err(err) => return ready(Err(Error::Encode(err))).boxed(),
+            };
+
+            let sql = query.sql();
+            self.span.record(DB_QUERY_TEXT, sql.as_str());
+            self.inner.fetch_optional((sql, arguments))
+        };
+
         async move {
             let start = Instant::now();
             let result = inner.await?;
@@ -172,21 +207,18 @@ where
         .boxed()
     }
 
-    fn prepare_with<'e, 'q: 'e>(
+    fn prepare_with<'e>(
         self,
-        sql: &'q str,
+        sql: SqlStr,
         parameters: &'e [<Self::Database as Database>::TypeInfo],
-    ) -> BoxFuture<'e, Result<<Self::Database as Database>::Statement<'q>, Error>>
+    ) -> BoxFuture<'e, Result<<Self::Database as Database>::Statement, Error>>
     where
         'c: 'e,
     {
         self.inner.prepare_with(sql, parameters)
     }
 
-    fn describe<'e, 'q: 'e>(
-        self,
-        sql: &'q str,
-    ) -> BoxFuture<'e, Result<Describe<Self::Database>, Error>>
+    fn describe<'e>(self, sql: SqlStr) -> BoxFuture<'e, Result<Describe<Self::Database>, Error>>
     where
         'c: 'e,
     {
@@ -215,7 +247,7 @@ impl<DB: Database, F, A> ExecuteExt for Map<'_, DB, F, A> {}
 
 impl<'q, DB: Database, A> Traced<Query<'q, DB, A>>
 where
-    A: 'q + Send + IntoArguments<'q, DB>,
+    A: 'q + Send + IntoArguments<DB>,
 {
     pub async fn execute<'e, 'c, E>(self, executor: E) -> Result<DB::QueryResult, Error>
     where
@@ -270,7 +302,7 @@ impl<'q, DB: Database, F, O, A> Traced<Map<'q, DB, F, A>>
 where
     F: FnMut(DB::Row) -> Result<O, Error> + Send,
     O: Send + Unpin,
-    A: 'q + Send + IntoArguments<'q, DB>,
+    A: 'q + Send + IntoArguments<DB>,
 {
     pub async fn fetch_one<'e, 'c, E>(self, executor: E) -> Result<O, Error>
     where
@@ -314,7 +346,7 @@ where
 
 impl<'q, DB: Database, O, A> Traced<QueryAs<'q, DB, O, A>>
 where
-    A: 'q + IntoArguments<'q, DB>,
+    A: 'q + IntoArguments<DB>,
     O: Send + Unpin + for<'r> sqlx::FromRow<'r, DB::Row>,
 {
     pub async fn fetch_one<'e, 'c, E>(self, executor: E) -> Result<O, Error>
@@ -360,7 +392,7 @@ where
 impl<'q, DB: Database, O, A> Traced<QueryScalar<'q, DB, O, A>>
 where
     O: Send + Unpin,
-    A: 'q + IntoArguments<'q, DB>,
+    A: 'q + IntoArguments<DB>,
     (O,): Send + Unpin + for<'r> sqlx::FromRow<'r, DB::Row>,
 {
     pub async fn fetch_one<'e, 'c, E>(self, executor: E) -> Result<O, Error>
@@ -405,10 +437,73 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::sync::{Arc, Mutex};
+
     use mas_context::LogContext;
+    use opentelemetry_semantic_conventions::attribute::DB_QUERY_TEXT;
     use sqlx::PgPool;
+    use tracing::{
+        Subscriber,
+        field::{Field, Visit},
+        span::{Id, Record},
+    };
+    use tracing_subscriber::{
+        layer::{Context, Layer, SubscriberExt},
+        registry::Registry,
+    };
 
     use crate::tracing::ExecuteExt;
+
+    /// Collects every value recorded as `db.query.text` on any span.
+    #[derive(Clone, Default)]
+    struct QueryTextCollector(Arc<Mutex<Vec<String>>>);
+
+    impl Visit for &QueryTextCollector {
+        fn record_str(&mut self, field: &Field, value: &str) {
+            if field.name() == DB_QUERY_TEXT {
+                self.0.lock().unwrap().push(value.to_owned());
+            }
+        }
+
+        fn record_debug(&mut self, _field: &Field, _value: &dyn std::fmt::Debug) {}
+    }
+
+    impl<S: Subscriber> Layer<S> for QueryTextCollector {
+        fn on_record(&self, _id: &Id, values: &Record<'_>, _ctx: Context<'_, S>) {
+            values.record(&mut &*self);
+        }
+    }
+
+    /// The SQL of a query with bound arguments should be recorded on the span,
+    /// through both `fetch_optional` and `fetch_many`.
+    #[sqlx::test]
+    async fn test_query_text_recorded(pool: PgPool) {
+        let collector = QueryTextCollector::default();
+        let _guard = tracing::subscriber::set_default(Registry::default().with(collector.clone()));
+
+        let span = tracing::info_span!("test", { DB_QUERY_TEXT } = tracing::field::Empty);
+        let value: i32 = sqlx::query_scalar("SELECT $1::INT4")
+            .bind(42_i32)
+            .record(&span)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+        assert_eq!(value, 42);
+
+        let span = tracing::info_span!("test", { DB_QUERY_TEXT } = tracing::field::Empty);
+        let values: Vec<i32> = sqlx::query_scalar("SELECT UNNEST($1::INT4[])")
+            .bind([1_i32, 2])
+            .record(&span)
+            .fetch_all(&pool)
+            .await
+            .unwrap();
+        assert_eq!(values, [1, 2]);
+
+        assert_eq!(
+            *collector.0.lock().unwrap(),
+            ["SELECT $1::INT4", "SELECT UNNEST($1::INT4[])"]
+        );
+    }
 
     /// Each executed query should be counted (and timed) on the surrounding
     /// [`LogContext`].
