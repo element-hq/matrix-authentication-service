@@ -109,7 +109,8 @@ pub use self::{
     admin::router as admin_api_router,
     client_ip::ClientIp,
     graphql::{
-        Schema as GraphQLSchema, schema as graphql_schema, schema_builder as graphql_schema_builder,
+        GraphQLOperation, Schema as GraphQLSchema, schema as graphql_schema,
+        schema_builder as graphql_schema_builder,
     },
     preferred_language::PreferredLanguage,
     rate_limit::{Limiter, RequesterFingerprint},
