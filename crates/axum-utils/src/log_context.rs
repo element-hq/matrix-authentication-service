@@ -15,11 +15,12 @@
 use mas_context::{LogContext, Requester};
 use mas_data_model::{BrowserSession, Client, CompatSession, Session, User};
 
-/// Record `self` as the [`Requester`] on the current [`LogContext`], if any.
-///
-/// First writer wins — calling on a request that already has a requester
-/// recorded is a no-op.
 pub trait RecordAsRequester {
+    /// Record `self` as the [`Requester`] on the current [`LogContext`], if
+    /// any.
+    ///
+    /// First writer wins — calling on a request that already has a requester
+    /// recorded is a no-op.
     fn maybe_record_as_requester(&self);
 }
 
