@@ -9,16 +9,11 @@ status code:
 - `WARN` for `4xx` responses,
 - `ERROR` for `5xx` responses.
 
-They are designed to be ingested by a log aggregation or SIEM system, both to
-keep an audit trail and to classify activity such as logins, logouts and token
-issuance. Combined with the [`client.address`](#fields) and
-[`requester`](#fields) fields, each request can be attributed to a client IP and
-to the user or client that made it.
-
-> The exact textual rendering depends on how logging is configured (see
-> [Running the service](../setup/running.md)); the example below uses the
-> default human-readable format. When logs are emitted as JSON, each field
-> described here is a top-level property instead.
+They are designed to be ingested by log analysis systems, to keep an audit trail
+and to classify activity such as logins, logouts and token issuance.
+Combined with the [`client.address`](#fields) and [`requester`](#fields) fields,
+each request can be attributed to a client IP and to the user or client that
+made it.
 
 ## Example
 
