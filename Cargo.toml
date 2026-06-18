@@ -557,7 +557,7 @@ features = ["derive", "attr", "with-uuid", "with-chrono", "postgres-array"]
 
 # Query builder integration with SQLx
 [workspace.dependencies.sea-query-sqlx]
-version = "0.8.1"
+version = "0.9.1"
 features = [
     "sqlx-postgres",
     "with-uuid",
@@ -624,8 +624,9 @@ version = "0.8.0"
 features = ["std"]
 
 # SQL database support
+# Keep the `sqlx-cli` version in docs/development/database.md in sync
 [workspace.dependencies.sqlx]
-version = "0.8.6"
+version = "0.9.0"
 features = [
     "runtime-tokio",
     "tls-rustls-aws-lc-rs",
@@ -760,7 +761,6 @@ cranelift-codegen.opt-level = 3
 digest.opt-level = 3
 hmac.opt-level = 3
 generic-array.opt-level = 3
-num-bigint-dig.opt-level = 3
 pbkdf2.opt-level = 3
 rayon.opt-level = 3
 regalloc2.opt-level = 3

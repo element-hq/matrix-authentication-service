@@ -30,8 +30,8 @@ Usually it does so by having the database available at compile time, but to avoi
 Preparing this flat file is done through `sqlx-cli`, and should be done everytime the database schema or the queries changed.
 
 ```sh
-# Install the CLI
-cargo install sqlx-cli --no-default-features --features postgres
+# Install the CLI, matching the version of `sqlx` in Cargo.lock
+cargo install sqlx-cli@0.9.0 --no-default-features --features postgres
 
 cd crates/storage-pg/ # Must be in the mas-storage-pg crate folder
 export DATABASE_URL=postgresql:///matrix_auth

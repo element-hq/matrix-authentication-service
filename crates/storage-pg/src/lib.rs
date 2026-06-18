@@ -293,7 +293,7 @@ async fn applied_migrations_map(
     conn: &mut PgConnection,
 ) -> Result<BTreeMap<i64, AppliedMigration>, MigrateError> {
     let applied_migrations = conn
-        .list_applied_migrations()
+        .list_applied_migrations(&MIGRATOR.table_name)
         .await?
         .into_iter()
         .map(|m| (m.version, m))
@@ -309,9 +309,10 @@ async fn migration_table_exists(conn: &mut PgConnection) -> Result<bool, sqlx::E
             SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.tables
-                WHERE table_name = '_sqlx_migrations'
+                WHERE table_name = $1::TEXT
             ) AS "exists!"
         "#,
+        &*MIGRATOR.table_name,
     )
     .fetch_one(conn)
     .await
@@ -371,7 +372,10 @@ pub async fn migrate(conn: &mut PgConnection) -> Result<(), MigrateError> {
     // We check if the table exists before calling `ensure_migrations_table` to
     // avoid the pesky 'relation "_sqlx_migrations" already exists, skipping' notice
     if !migration_table_exists(locked_connection.as_mut()).await? {
-        locked_connection.as_mut().ensure_migrations_table().await?;
+        locked_connection
+            .as_mut()
+            .ensure_migrations_table(&MIGRATOR.table_name)
+            .await?;
     }
 
     for migration in pending_migrations(locked_connection.as_mut()).await? {
@@ -382,12 +386,12 @@ pub async fn migrate(conn: &mut PgConnection) -> Result<(), MigrateError> {
         );
         locked_connection
             .as_mut()
-            .apply(migration)
+            .apply(&MIGRATOR.table_name, migration)
             .instrument(info_span!(
                 "db.migrate.run_migration",
                 db.migration.version = migration.version,
                 db.migration.description = &*migration.description,
-                { DB_QUERY_TEXT } = &*migration.sql,
+                { DB_QUERY_TEXT } = migration.sql.as_str(),
             ))
             .await?;
     }
