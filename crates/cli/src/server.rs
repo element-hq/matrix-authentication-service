@@ -21,7 +21,7 @@ use hyper::{Method, Request, Response, StatusCode, Version, header::USER_AGENT};
 use listenfd::ListenFd;
 use mas_config::{HttpBindConfig, HttpResource, HttpTlsConfig, UnixOrTcp};
 use mas_context::LogContext;
-use mas_handlers::ClientIp;
+use mas_handlers::{ClientIp, GraphQLOperation};
 use mas_listener::{ConnectionInfo, unix_or_tcp::UnixOrTcpListener};
 use mas_router::Route;
 use mas_templates::Templates;
@@ -207,6 +207,16 @@ async fn log_response_middleware(
 
     let response = next.run(request).await;
 
+    // If the request went through the GraphQL handler, it will have recorded the
+    // operation type and name in the response extensions.
+    let graphql = response.extensions().get::<GraphQLOperation>();
+    let graphql_operation_type = graphql
+        .and_then(|operation| operation.operation_type)
+        .map(tracing::field::display);
+    let graphql_operation_name = graphql
+        .and_then(|operation| operation.operation_name.as_deref())
+        .map(tracing::field::display);
+
     let Some(stats) = LogContext::maybe_with(LogContext::stats) else {
         tracing::error!("Missing log context for request, this is a bug!");
         return response;
@@ -216,17 +226,29 @@ async fn log_response_middleware(
     match status_code.as_u16() {
         100..=399 => tracing::info!(
             name: "http.server.response",
-            { client.address = client_ip },
+            {
+                client.address = client_ip,
+                graphql.operation.type = graphql_operation_type,
+                graphql.operation.name = graphql_operation_name,
+            },
             "\"{method} {path} HTTP/{version}\" {status_code} {user_agent:?} [{stats}]",
         ),
         400..=499 => tracing::warn!(
             name: "http.server.response",
-            { client.address = client_ip },
+            {
+                client.address = client_ip,
+                graphql.operation.type = graphql_operation_type,
+                graphql.operation.name = graphql_operation_name,
+            },
             "\"{method} {path} HTTP/{version}\" {status_code} {user_agent:?} [{stats}]",
         ),
         500..=599 => tracing::error!(
             name: "http.server.response",
-            { client.address = client_ip },
+            {
+                client.address = client_ip,
+                graphql.operation.type = graphql_operation_type,
+                graphql.operation.name = graphql_operation_name,
+            },
             "\"{method} {path} HTTP/{version}\" {status_code} {user_agent:?} [{stats}]",
         ),
         _ => { /* This shouldn't happen */ }
