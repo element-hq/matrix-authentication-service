@@ -417,7 +417,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
             )
             .build_sqlx(PostgresQueryBuilder);
 
-        let res = sqlx::query_with(&sql, arguments)
+        let res = sqlx::query_with(sqlx::AssertSqlSafe(sql), arguments)
             .traced()
             .execute(&mut *self.conn)
             .await?;
@@ -522,10 +522,11 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
             )
             .build_sqlx(PostgresQueryBuilder);
 
-        let edges: Vec<PersonalSessionAndAccessTokenLookup> = sqlx::query_as_with(&sql, arguments)
-            .traced()
-            .fetch_all(&mut *self.conn)
-            .await?;
+        let edges: Vec<PersonalSessionAndAccessTokenLookup> =
+            sqlx::query_as_with(sqlx::AssertSqlSafe(sql), arguments)
+                .traced()
+                .fetch_all(&mut *self.conn)
+                .await?;
 
         let page = pagination.process(edges).try_map(TryFrom::try_from)?;
 
@@ -564,7 +565,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
             .apply_filter(filter)
             .build_sqlx(PostgresQueryBuilder);
 
-        let count: i64 = sqlx::query_scalar_with(&sql, arguments)
+        let count: i64 = sqlx::query_scalar_with(sqlx::AssertSqlSafe(sql), arguments)
             .traced()
             .fetch_one(&mut *self.conn)
             .await?;

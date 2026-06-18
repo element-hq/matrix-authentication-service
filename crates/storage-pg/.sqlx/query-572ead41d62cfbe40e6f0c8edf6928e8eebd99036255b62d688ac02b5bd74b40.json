@@ -6,67 +6,145 @@
       {
         "ordinal": 0,
         "name": "user_session_id",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "user_session_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "user_session_created_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "created_at"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "user_session_finished_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "finished_at"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "user_session_user_agent",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "user_agent"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "user_session_last_active_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "last_active_at"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "user_session_last_active_ip: IpAddr",
-        "type_info": "Inet"
+        "type_info": "Inet",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "last_active_ip"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "user_id",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "user_id"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "user_username",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "username"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "user_created_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "created_at"
+          }
+        }
       },
       {
         "ordinal": 9,
         "name": "user_locked_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "locked_at"
+          }
+        }
       },
       {
         "ordinal": 10,
         "name": "user_deactivated_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "deactivated_at"
+          }
+        }
       },
       {
         "ordinal": 11,
         "name": "user_can_request_admin",
-        "type_info": "Bool"
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "can_request_admin"
+          }
+        }
       },
       {
         "ordinal": 12,
         "name": "user_is_guest",
-        "type_info": "Bool"
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "is_guest"
+          }
+        }
       }
     ],
     "parameters": {

@@ -6,72 +6,156 @@
       {
         "ordinal": 0,
         "name": "user_registration_id",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "user_registration_id"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "ip_address: IpAddr",
-        "type_info": "Inet"
+        "type_info": "Inet",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "ip_address"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "user_agent",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "user_agent"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "post_auth_action",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "post_auth_action"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "username",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "username"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "display_name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "display_name"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "terms_url",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "terms_url"
+          }
+        }
       },
       {
         "ordinal": 7,
         "name": "email_authentication_id",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "email_authentication_id"
+          }
+        }
       },
       {
         "ordinal": 8,
         "name": "user_registration_token_id",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "user_registration_token_id"
+          }
+        }
       },
       {
         "ordinal": 9,
         "name": "hashed_password",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "hashed_password"
+          }
+        }
       },
       {
         "ordinal": 10,
         "name": "hashed_password_version",
-        "type_info": "Int4"
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "hashed_password_version"
+          }
+        }
       },
       {
         "ordinal": 11,
         "name": "upstream_oauth_authorization_session_id",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "upstream_oauth_authorization_session_id"
+          }
+        }
       },
       {
         "ordinal": 12,
         "name": "created_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "created_at"
+          }
+        }
       },
       {
         "ordinal": 13,
         "name": "completed_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "completed_at"
+          }
+        }
       }
     ],
     "parameters": {
