@@ -82,6 +82,9 @@ skip = [
     { name = "serde_html_form", version = "0.2.8" },  # axum-extra
     { name = "toml_datetime", version = "0.6.11" },   # proc-macro-crate -> toml_edit
     { name = "winnow", version = "0.7.13" },          # cron, toml_edit
+    # sqlx-core's `sqlx-toml` feature is still on toml 0.8
+    { name = "toml", version = "0.8.23" },
+    { name = "serde_spanned", version = "0.6.9" },
     # hyper-util -> system-configuration depends on this old version
     { name = "core-foundation", version = "0.9.4" },
     # wasmtime pulls in older versions of these

@@ -129,7 +129,7 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
             UserRegistrationLookup,
             r#"
                 SELECT user_registration_id
-                     , ip_address as "ip_address: IpAddr"
+                     , ip_address
                      , user_agent
                      , post_auth_action
                      , username
