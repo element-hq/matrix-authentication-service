@@ -18,7 +18,7 @@ made it.
 ## Example
 
 ```
-2026-06-17T10:49:22.419912Z  INFO http.server.response POST-71 - "POST /login HTTP/2.0" 303 See Other "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Safari/605.1.15" [polls: 12, cpu: 5.5ms, elapsed: 57.9ms] requester=user:01H8VZ…(alice) client.address=2a01:e0a:f5c:5b02:85c9:3849:4811:4383 trace.id=c8c8fc32288a76693e028ee97a6030a0
+2026-06-17T10:49:22.419912Z  INFO http.server.response POST-71 - "POST /login HTTP/2.0" 303 See Other "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Safari/605.1.15" [polls: 12, cpu: 4.7ms, db: 10.9ms, elapsed: 46.9ms, queries: 4, fetched: 2] requester=user:01H8VZ…(alice) client.address=2a01:e0a:f5c:5b02:85c9:3849:4811:4383 trace.id=c8c8fc32288a76693e028ee97a6030a0
 ```
 
 Broken down:
@@ -32,7 +32,21 @@ Broken down:
 | Request line | `"POST /login HTTP/2.0"` | The HTTP method, path and protocol version. The path does **not** include the query string. |
 | Status | `303 See Other` | The response status code and its reason phrase. |
 | User agent | `"Mozilla/5.0 …"` | The `User-Agent` header, or `"-"` if absent. |
-| Stats | `[polls: 12, cpu: 5.5ms, elapsed: 57.9ms]` | How many times the request task was polled, the CPU time it used, and the wall-clock time elapsed handling it. |
+| Stats | `[polls: 12, …]` | Log context statistics, see below. |
+
+## Log context statistics
+
+Each request log line includes statistics about the request task in brackets,
+such as the number of polls, CPU time used, and wall-clock time elapsed.
+
+| Field | Example | Meaning |
+| --- | --- | --- |
+| `polls` | `12` | The number of times the request task was polled. |
+| `cpu` | `0.5ms` | The CPU time used by the request task, in milliseconds. |
+| `db` | `0.3ms` | The time spent querying the database, in milliseconds. |
+| `elapsed` | `1.2ms` | The wall-clock time elapsed handling the request, in milliseconds. |
+| `queries` | `3` | The number of database queries executed. |
+| `fetched` | `2` | The number of rows fetched from the database. |
 
 ## Fields
 
