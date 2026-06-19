@@ -40,6 +40,7 @@ use zeroize::Zeroizing;
 use super::{MatrixError, MatrixJsonBody};
 use crate::{
     BoundActivityTracker, Limiter, METER, RequesterFingerprint, impl_from_error_for_route,
+    normalize_username,
     passwords::{PasswordManager, PasswordVerificationResult},
     rate_limit::PasswordCheckLimitedError,
     session::count_user_sessions_for_limiting,
@@ -352,8 +353,11 @@ pub(crate) async fn post(
                 }
             };
 
-            // Try getting the localpart out of the MXID
-            let username = homeserver.localpart(&user).unwrap_or(&user);
+            // Try getting the localpart out of the MXID (and normalize whitespace)
+            let normalized = normalize_username(&user);
+            let username = homeserver
+                .localpart(&normalized)
+                .map_or_else(|| normalized.clone(), std::string::ToString::to_string);
 
             user_password_login(
                 &mut rng,
@@ -368,7 +372,7 @@ pub(crate) async fn post(
                     user_agent: user_agent.clone(),
                 },
                 site_config.session_limit.as_ref(),
-                username,
+                &username,
                 password,
                 input.device_id, // TODO check for validity
                 input.initial_device_display_name,

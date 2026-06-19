@@ -124,9 +124,10 @@ pub async fn handler(
         .ok_or(RouteError::UserNotFound(params.user_id))?;
 
     // Validate the email
-    if let Err(source) = lettre::Address::from_str(&params.email) {
+    let email = params.email.trim().to_owned();
+    if let Err(source) = lettre::Address::from_str(&email) {
         return Err(RouteError::EmailNotValid {
-            email: params.email,
+            email: email.clone(),
             source,
         });
     }
@@ -134,17 +135,17 @@ pub async fn handler(
     // Check if the email already exists
     let count = repo
         .user_email()
-        .count(UserEmailFilter::new().for_email(&params.email))
+        .count(UserEmailFilter::new().for_email(&email))
         .await?;
 
     if count > 0 {
-        return Err(RouteError::EmailAlreadyInUse(params.email));
+        return Err(RouteError::EmailAlreadyInUse(email));
     }
 
     // Add the email to the user
     let user_email = repo
         .user_email()
-        .add(&mut rng, &clock, &user, params.email)
+        .add(&mut rng, &clock, &user, email)
         .await?;
 
     // Schedule a job to update the user
