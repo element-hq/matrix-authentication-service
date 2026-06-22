@@ -1122,6 +1122,8 @@ mod tests {
                 None,
                 None,
                 std::collections::BTreeMap::new(),
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -1147,10 +1149,23 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
 
-        let AccessTokenResponse { access_token, .. } = response.json();
+        let AccessTokenResponse {
+            access_token,
+            id_token,
+            ..
+        } = response.json();
 
         // Check that the token is valid
         assert!(state.is_access_token_valid(&access_token).await);
+
+        // We asked for the openid scope, so we should have an ID token, and it
+        // should carry a `sid` claim equal to the browser session ID.
+        let id_token = id_token.expect("an ID token should be present for the openid scope");
+        let id_token: mas_jose::jwt::Jwt<std::collections::HashMap<String, serde_json::Value>> =
+            id_token.as_str().try_into().unwrap();
+        let (_, mut claims) = id_token.into_parts();
+        let sid = mas_jose::claims::SID.extract_required(&mut claims).unwrap();
+        assert_eq!(sid, browser_session.id.to_string());
 
         // Exchange it again, this it should fail
         let request =
@@ -1211,6 +1226,8 @@ mod tests {
                 None,
                 None,
                 std::collections::BTreeMap::new(),
+                None,
+                None,
             )
             .await
             .unwrap();

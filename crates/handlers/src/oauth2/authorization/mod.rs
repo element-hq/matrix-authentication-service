@@ -267,6 +267,8 @@ pub(crate) async fn get(
                     params.auth.login_hint,
                     Some(locale.to_string()),
                     raw_parameters,
+                    None,
+                    None,
                 )
                 .await?;
             let continue_grant = PostAuthAction::continue_grant(grant.id);

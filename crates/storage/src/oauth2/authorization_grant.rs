@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 
 use async_trait::async_trait;
 use mas_data_model::{
-    AuthorizationCode, AuthorizationGrant, BrowserSession, Client, Clock, Session,
+    AuthorizationCode, AuthorizationGrant, BrowserSession, Client, Clock, Session, User,
 };
 use oauth2_types::{requests::ResponseMode, scope::Scope};
 use rand_core::RngCore;
@@ -49,6 +49,9 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
     /// * `raw_parameters`: The raw query parameters of the authorization
     ///   request, used to template the parameters forwarded to the upstream
     ///   provider
+    /// * `target_user`: The user resolved from a valid hint, if any
+    /// * `target_user_session`: The browser session resolved from the `sid`
+    ///   claim of a valid hint, if any
     ///
     /// # Errors
     ///
@@ -69,6 +72,8 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
         login_hint: Option<String>,
         locale: Option<String>,
         raw_parameters: BTreeMap<String, String>,
+        target_user: Option<&User>,
+        target_user_session: Option<&BrowserSession>,
     ) -> Result<AuthorizationGrant, Self::Error>;
 
     /// Lookup an authorization grant by its ID
@@ -180,6 +185,8 @@ repository_impl!(OAuth2AuthorizationGrantRepository:
         login_hint: Option<String>,
         locale: Option<String>,
         raw_parameters: BTreeMap<String, String>,
+        target_user: Option<&User>,
+        target_user_session: Option<&BrowserSession>,
     ) -> Result<AuthorizationGrant, Self::Error>;
 
     async fn lookup(&mut self, id: Ulid) -> Result<Option<AuthorizationGrant>, Self::Error>;

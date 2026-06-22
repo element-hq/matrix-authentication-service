@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -126,6 +127,7 @@ pub(crate) async fn get(
     let claims_supported = Some(vec![
         "iss".to_owned(),
         "sub".to_owned(),
+        "sid".to_owned(),
         "aud".to_owned(),
         "iat".to_owned(),
         "exp".to_owned(),

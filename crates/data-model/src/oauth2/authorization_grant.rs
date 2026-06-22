@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -164,6 +165,15 @@ pub struct AuthorizationGrant {
     /// Raw query parameters from the downstream authorization request, used
     /// to template the parameters forwarded to the upstream provider.
     pub raw_parameters: BTreeMap<String, String>,
+    /// The user resolved from a valid `id_token_hint`, if one was given and
+    /// verified at authorize time. The raw hint itself stays in
+    /// [`Self::raw_parameters`]; this is the resolved outcome.
+    pub target_user_id: Option<Ulid>,
+    /// The browser session resolved from the `sid` claim of a valid
+    /// `id_token_hint`, if present and still existing at authorize time. May
+    /// dangle after the session is reaped by retention;
+    /// [`Self::target_user_id`] is the stable anchor.
+    pub target_user_session_id: Option<Ulid>,
 }
 
 impl std::ops::Deref for AuthorizationGrant {
@@ -243,6 +253,8 @@ impl AuthorizationGrant {
             login_hint: Some(String::from("mxid:@example-user:example.com")),
             locale: Some(String::from("fr")),
             raw_parameters: BTreeMap::new(),
+            target_user_id: None,
+            target_user_session_id: None,
         }
     }
 }

@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -59,6 +60,7 @@ pub(crate) fn generate_id_token(
     let now = clock.now();
     claims::ISS.insert(&mut claims, url_builder.oidc_issuer().to_string())?;
     claims::SUB.insert(&mut claims, &browser_session.user.sub)?;
+    claims::SID.insert(&mut claims, browser_session.id.to_string())?;
     claims::AUD.insert(&mut claims, client.client_id.clone())?;
     claims::IAT.insert(&mut claims, now)?;
     claims::EXP.insert(&mut claims, now + Duration::try_hours(1).unwrap())?;

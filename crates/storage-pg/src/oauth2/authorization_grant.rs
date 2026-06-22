@@ -11,7 +11,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
     AuthorizationCode, AuthorizationGrant, AuthorizationGrantStage, BrowserSession, Client, Clock,
-    Pkce, Session, UlidExt as _,
+    Pkce, Session, UlidExt as _, User,
 };
 use mas_iana::oauth::PkceCodeChallengeMethod;
 use mas_storage::oauth2::OAuth2AuthorizationGrantRepository;
@@ -57,6 +57,8 @@ struct GrantLookup {
     login_hint: Option<String>,
     locale: Option<String>,
     raw_parameters: Option<Json<BTreeMap<String, String>>>,
+    target_user_id: Option<Uuid>,
+    target_user_session_id: Option<Uuid>,
     oauth2_client_id: Uuid,
     user_session_id: Option<Uuid>,
     oauth2_session_id: Option<Uuid>,
@@ -179,6 +181,8 @@ impl TryFrom<GrantLookup> for AuthorizationGrant {
             login_hint: value.login_hint,
             locale: value.locale,
             raw_parameters: value.raw_parameters.map(|Json(x)| x).unwrap_or_default(),
+            target_user_id: value.target_user_id.map(Into::into),
+            target_user_session_id: value.target_user_session_id.map(Into::into),
         })
     }
 }
@@ -213,6 +217,8 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
         login_hint: Option<String>,
         locale: Option<String>,
         raw_parameters: BTreeMap<String, String>,
+        target_user: Option<&User>,
+        target_user_session: Option<&BrowserSession>,
     ) -> Result<AuthorizationGrant, Self::Error> {
         let code_challenge = code
             .as_ref()
@@ -223,6 +229,8 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             .and_then(|c| c.pkce.as_ref())
             .map(|p| p.challenge_method.to_string());
         let code_str = code.as_ref().map(|c| &c.code);
+        let target_user_id = target_user.map(|u| u.id);
+        let target_user_session_id = target_user_session.map(|s| s.id);
 
         let created_at = clock.now();
         let id = Ulid::from_datetime_with_rng(created_at, rng);
@@ -246,10 +254,12 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
                      login_hint,
                      locale,
                      raw_parameters,
+                     target_user_id,
+                     target_user_session_id,
                      created_at
                 )
                 VALUES
-                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
             "#,
             Uuid::from(id),
             Uuid::from(client.id),
@@ -266,6 +276,8 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             login_hint,
             locale,
             Json(&raw_parameters) as _,
+            target_user_id.map(Uuid::from),
+            target_user_session_id.map(Uuid::from),
             created_at,
         )
         .traced()
@@ -287,6 +299,8 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             login_hint,
             locale,
             raw_parameters,
+            target_user_id,
+            target_user_session_id,
         })
     }
 
@@ -322,6 +336,8 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
                      , login_hint
                      , locale
                      , raw_parameters AS "raw_parameters: Json<BTreeMap<String, String>>"
+                     , target_user_id
+                     , target_user_session_id
                      , user_session_id
                      , oauth2_session_id
                 FROM
@@ -374,6 +390,8 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
                      , login_hint
                      , locale
                      , raw_parameters AS "raw_parameters: Json<BTreeMap<String, String>>"
+                     , target_user_id
+                     , target_user_session_id
                      , user_session_id
                      , oauth2_session_id
                 FROM

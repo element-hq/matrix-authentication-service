@@ -788,9 +788,9 @@ impl ConsentContext {
 #[serde(tag = "grant_type")]
 enum PolicyViolationGrant {
     #[serde(rename = "authorization_code")]
-    Authorization(AuthorizationGrant),
+    Authorization(Box<AuthorizationGrant>),
     #[serde(rename = "urn:ietf:params:oauth:grant-type:device_code")]
-    DeviceCode(DeviceCodeGrant),
+    DeviceCode(Box<DeviceCodeGrant>),
 }
 
 /// Context used by the `policy_violation.html` template
@@ -853,14 +853,14 @@ impl PolicyViolationContext {
     /// Constructs a context for the policy violation page for an authorization
     /// grant
     #[must_use]
-    pub const fn for_authorization_grant(
+    pub fn for_authorization_grant(
         grant: AuthorizationGrant,
         client: Client,
         violations: Vec<Violation>,
     ) -> Self {
         let action = PostAuthAction::continue_grant(grant.id);
         Self {
-            grant: PolicyViolationGrant::Authorization(grant),
+            grant: PolicyViolationGrant::Authorization(Box::new(grant)),
             client,
             action,
             violations,
@@ -870,14 +870,14 @@ impl PolicyViolationContext {
     /// Constructs a context for the policy violation page for a device code
     /// grant
     #[must_use]
-    pub const fn for_device_code_grant(
+    pub fn for_device_code_grant(
         grant: DeviceCodeGrant,
         client: Client,
         violations: Vec<Violation>,
     ) -> Self {
         let action = PostAuthAction::continue_device_code_grant(grant.id);
         Self {
-            grant: PolicyViolationGrant::DeviceCode(grant),
+            grant: PolicyViolationGrant::DeviceCode(Box::new(grant)),
             client,
             action,
             violations,
