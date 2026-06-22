@@ -5,6 +5,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+//! Records each executed SQL statement as `db.query.text` on the current
+//! tracing span, and accumulates per-context DB query count and timing onto the
+//! [`LogContext`].
+//!
+//! Recording happens at the *executor* layer rather than at `.traced()` time:
+//! [`ExecuteExt::traced`] wraps the query in a [`Traced`], whose `fetch_*` /
+//! `execute` methods substitute a [`RecordingExecutor`] for the real executor.
+//! The recording executor reads the SQL, records it, and times the query as it
+//! runs.
+
 use std::{
     pin::Pin,
     task::{Context, Poll, ready},
@@ -20,31 +30,35 @@ use mas_context::LogContext;
 use opentelemetry_semantic_conventions::{
     attribute::DB_QUERY_TEXT, trace::DB_RESPONSE_RETURNED_ROWS,
 };
-use sqlx::{Database, Describe, Either, Error, Execute, Executor};
+use sqlx::{
+    Database, Describe, Either, Error, Execute, Executor, IntoArguments,
+    query::{Map, Query, QueryAs, QueryScalar},
+};
 use tracing::Span;
 
-/// An extension trait for [`sqlx::Execute`] that records the SQL statement as
-/// `db.query.text` in a tracing span
-pub trait ExecuteExt<'q, DB>: Sized {
-    /// Records the statement as `db.query.text` in the current span
+/// An extension trait that wraps a sqlx query so its SQL and timing get
+/// recorded when it is executed.
+///
+/// The span attached should have the `db.query.text` and
+/// `db.response.returned_rows` attribute set.
+pub trait ExecuteExt: Sized {
+    /// Wrap the query so that, when executed, its SQL is recorded as
+    /// `db.query.text` on the current span and its count/timing are added to
+    /// the current [`LogContext`].
     #[must_use]
-    fn traced(self) -> Self {
+    fn traced(self) -> Traced<Self> {
         self.record(&Span::current())
     }
 
-    /// Records the statement as `db.query.text` in the given span
+    /// Like [`ExecuteExt::traced`], but records onto the given span instead of
+    /// the current one. Use when the query runs under a span other than the
+    /// one current at the call site.
     #[must_use]
-    fn record(self, span: &Span) -> Self;
-}
-
-impl<'q, DB, T> ExecuteExt<'q, DB> for T
-where
-    T: sqlx::Execute<'q, DB>,
-    DB: sqlx::Database,
-{
-    fn record(self, span: &Span) -> Self {
-        span.record(DB_QUERY_TEXT, self.sql());
-        self
+    fn record(self, span: &Span) -> Traced<Self> {
+        Traced {
+            query: self,
+            span: span.clone(),
+        }
     }
 }
 
@@ -177,5 +191,249 @@ where
         'c: 'e,
     {
         self.inner.describe(sql)
+    }
+}
+
+/// A query wrapped by [`ExecuteExt::traced`], carrying the span to record onto.
+pub struct Traced<Q> {
+    query: Q,
+    span: Span,
+}
+
+// Implementation of the [`ExecuteExt`] trait for each concrete query type we
+// care about. We avoid a blanket impl to avoid the methods being available on
+// all types.
+impl<DB: Database, A> ExecuteExt for Query<'_, DB, A> {}
+impl<DB: Database, O, A> ExecuteExt for QueryAs<'_, DB, O, A> {}
+impl<DB: Database, O, A> ExecuteExt for QueryScalar<'_, DB, O, A> {}
+impl<DB: Database, F, A> ExecuteExt for Map<'_, DB, F, A> {}
+
+// Each concrete query type needs its own delegating impl: `Map`/`QueryAs`/
+// `QueryScalar` apply their row-mapping in their *own* inherent `fetch_*`
+// methods (returning the mapped output), so we must call those, wrapping the
+// executor with a [`RecordingExecutor`] to record the span.
+
+impl<'q, DB: Database, A> Traced<Query<'q, DB, A>>
+where
+    A: 'q + Send + IntoArguments<'q, DB>,
+{
+    pub async fn execute<'e, 'c, E>(self, executor: E) -> Result<DB::QueryResult, Error>
+    where
+        'c: 'e,
+        'q: 'e,
+        A: 'e,
+        E: Executor<'c, Database = DB>,
+    {
+        self.query
+            .execute(RecordingExecutor::new(executor, self.span))
+            .await
+    }
+
+    pub async fn fetch_one<'e, 'c, E>(self, executor: E) -> Result<DB::Row, Error>
+    where
+        'c: 'e,
+        'q: 'e,
+        A: 'e,
+        E: Executor<'c, Database = DB>,
+    {
+        self.query
+            .fetch_one(RecordingExecutor::new(executor, self.span))
+            .await
+    }
+
+    pub async fn fetch_optional<'e, 'c, E>(self, executor: E) -> Result<Option<DB::Row>, Error>
+    where
+        'c: 'e,
+        'q: 'e,
+        A: 'e,
+        E: Executor<'c, Database = DB>,
+    {
+        self.query
+            .fetch_optional(RecordingExecutor::new(executor, self.span))
+            .await
+    }
+
+    pub async fn fetch_all<'e, 'c, E>(self, executor: E) -> Result<Vec<DB::Row>, Error>
+    where
+        'c: 'e,
+        'q: 'e,
+        A: 'e,
+        E: Executor<'c, Database = DB>,
+    {
+        self.query
+            .fetch_all(RecordingExecutor::new(executor, self.span))
+            .await
+    }
+}
+
+impl<'q, DB: Database, F, O, A> Traced<Map<'q, DB, F, A>>
+where
+    F: FnMut(DB::Row) -> Result<O, Error> + Send,
+    O: Send + Unpin,
+    A: 'q + Send + IntoArguments<'q, DB>,
+{
+    pub async fn fetch_one<'e, 'c, E>(self, executor: E) -> Result<O, Error>
+    where
+        'c: 'e,
+        'q: 'e,
+        E: 'e + Executor<'c, Database = DB>,
+        F: 'e,
+        O: 'e,
+    {
+        self.query
+            .fetch_one(RecordingExecutor::new(executor, self.span))
+            .await
+    }
+
+    pub async fn fetch_optional<'e, 'c, E>(self, executor: E) -> Result<Option<O>, Error>
+    where
+        'c: 'e,
+        'q: 'e,
+        E: 'e + Executor<'c, Database = DB>,
+        F: 'e,
+        O: 'e,
+    {
+        self.query
+            .fetch_optional(RecordingExecutor::new(executor, self.span))
+            .await
+    }
+
+    pub async fn fetch_all<'e, 'c, E>(self, executor: E) -> Result<Vec<O>, Error>
+    where
+        'c: 'e,
+        'q: 'e,
+        E: 'e + Executor<'c, Database = DB>,
+        F: 'e,
+        O: 'e,
+    {
+        self.query
+            .fetch_all(RecordingExecutor::new(executor, self.span))
+            .await
+    }
+}
+
+impl<'q, DB: Database, O, A> Traced<QueryAs<'q, DB, O, A>>
+where
+    A: 'q + IntoArguments<'q, DB>,
+    O: Send + Unpin + for<'r> sqlx::FromRow<'r, DB::Row>,
+{
+    pub async fn fetch_one<'e, 'c, E>(self, executor: E) -> Result<O, Error>
+    where
+        'c: 'e,
+        'q: 'e,
+        O: 'e,
+        A: 'e,
+        E: 'e + Executor<'c, Database = DB>,
+    {
+        self.query
+            .fetch_one(RecordingExecutor::new(executor, self.span))
+            .await
+    }
+
+    pub async fn fetch_optional<'e, 'c, E>(self, executor: E) -> Result<Option<O>, Error>
+    where
+        'c: 'e,
+        'q: 'e,
+        O: 'e,
+        A: 'e,
+        E: 'e + Executor<'c, Database = DB>,
+    {
+        self.query
+            .fetch_optional(RecordingExecutor::new(executor, self.span))
+            .await
+    }
+
+    pub async fn fetch_all<'e, 'c, E>(self, executor: E) -> Result<Vec<O>, Error>
+    where
+        'c: 'e,
+        'q: 'e,
+        O: 'e,
+        A: 'e,
+        E: 'e + Executor<'c, Database = DB>,
+    {
+        self.query
+            .fetch_all(RecordingExecutor::new(executor, self.span))
+            .await
+    }
+}
+
+impl<'q, DB: Database, O, A> Traced<QueryScalar<'q, DB, O, A>>
+where
+    O: Send + Unpin,
+    A: 'q + IntoArguments<'q, DB>,
+    (O,): Send + Unpin + for<'r> sqlx::FromRow<'r, DB::Row>,
+{
+    pub async fn fetch_one<'e, 'c, E>(self, executor: E) -> Result<O, Error>
+    where
+        'c: 'e,
+        'q: 'e,
+        O: 'e,
+        A: 'e,
+        E: 'e + Executor<'c, Database = DB>,
+    {
+        self.query
+            .fetch_one(RecordingExecutor::new(executor, self.span))
+            .await
+    }
+
+    pub async fn fetch_optional<'e, 'c, E>(self, executor: E) -> Result<Option<O>, Error>
+    where
+        'c: 'e,
+        'q: 'e,
+        O: 'e,
+        A: 'e,
+        E: 'e + Executor<'c, Database = DB>,
+    {
+        self.query
+            .fetch_optional(RecordingExecutor::new(executor, self.span))
+            .await
+    }
+
+    pub async fn fetch_all<'e, 'c, E>(self, executor: E) -> Result<Vec<O>, Error>
+    where
+        'c: 'e,
+        'q: 'e,
+        O: 'e,
+        A: 'e,
+        E: 'e + Executor<'c, Database = DB>,
+    {
+        self.query
+            .fetch_all(RecordingExecutor::new(executor, self.span))
+            .await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use mas_context::LogContext;
+    use sqlx::PgPool;
+
+    use crate::tracing::ExecuteExt;
+
+    /// Each executed query should be counted (and timed) on the surrounding
+    /// [`LogContext`].
+    #[sqlx::test]
+    async fn test_db_stats_recorded(pool: PgPool) {
+        let log_context = LogContext::new("test");
+        log_context
+            .run(|| async {
+                sqlx::query("SELECT 1")
+                    .traced()
+                    .fetch_one(&pool)
+                    .await
+                    .unwrap();
+
+                sqlx::query("SELECT 1 FROM UNNEST(ARRAY[1, 2, 3])")
+                    .traced()
+                    .fetch_all(&pool)
+                    .await
+                    .unwrap();
+            })
+            .await;
+
+        let stats = log_context.stats();
+        assert_eq!(stats.db_queries, 2);
+        assert_eq!(stats.db_rows_fetched, 4);
+        assert!(stats.to_string().contains("queries: 2, fetched: 4"));
     }
 }
