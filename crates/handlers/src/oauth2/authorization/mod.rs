@@ -15,6 +15,7 @@ use axum_extra::extract::Query;
 use hyper::StatusCode;
 use mas_axum_utils::{GenericError, InternalError, SessionInfoExt, cookies::CookieJar};
 use mas_data_model::{AuthorizationCode, BoxClock, BoxRng, Pkce};
+use mas_keystore::Keystore;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
     BoxRepository,
@@ -36,6 +37,7 @@ use crate::{BoundActivityTracker, PreferredLanguage, impl_from_error_for_route};
 
 mod callback;
 pub(crate) mod consent;
+mod id_token_hint;
 
 #[derive(Debug, Error)]
 pub enum RouteError {
@@ -119,6 +121,7 @@ pub(crate) async fn get(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
+    State(key_store): State<Keystore>,
     activity_tracker: BoundActivityTracker,
     mut repo: BoxRepository,
     cookie_jar: CookieJar,
@@ -251,6 +254,22 @@ pub(crate) async fn get(
                 None
             };
 
+            // If the client passed an `id_token_hint`, verify and resolve it so
+            // we can record the target user (and session) on the grant. The hint
+            // is advisory, so one we can't act on simply resolves to nothing.
+            let (target_user, target_user_session) = match params.auth.id_token_hint.as_deref() {
+                Some(raw_hint) => id_token_hint::resolve_id_token_hint(
+                    &mut repo,
+                    &clock,
+                    &key_store,
+                    &url_builder,
+                    raw_hint,
+                )
+                .await?
+                .map_or((None, None), |hint| (Some(hint.user), hint.browser_session)),
+                None => (None, None),
+            };
+
             let grant = repo
                 .oauth2_authorization_grant()
                 .add(
@@ -267,8 +286,8 @@ pub(crate) async fn get(
                     params.auth.login_hint,
                     Some(locale.to_string()),
                     raw_parameters,
-                    None,
-                    None,
+                    target_user.as_ref(),
+                    target_user_session.as_ref(),
                 )
                 .await?;
             let continue_grant = PostAuthAction::continue_grant(grant.id);
