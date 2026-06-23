@@ -1055,14 +1055,15 @@ mod tests {
             .unwrap();
         assert_eq!(lookup.as_ref(), Some(&grant));
 
-        // Let's mark it as fulfilled
+        // Let's mark it as fulfilled, with a locale captured from the browser
         let grant = repo
             .oauth2_device_code_grant()
-            .fulfill(&clock, grant, &browser_session)
+            .fulfill(&clock, grant, &browser_session, Some("en".to_owned()))
             .await
             .unwrap();
         assert!(!grant.is_pending());
         assert!(grant.is_fulfilled());
+        assert_eq!(grant.locale.as_deref(), Some("en"));
 
         // Check that we can't mark it as rejected now
         let res = repo
@@ -1079,10 +1080,13 @@ mod tests {
             .unwrap()
             .unwrap();
 
+        // The locale was persisted
+        assert_eq!(grant.locale.as_deref(), Some("en"));
+
         // We can't mark it as fulfilled again
         let res = repo
             .oauth2_device_code_grant()
-            .fulfill(&clock, grant, &browser_session)
+            .fulfill(&clock, grant, &browser_session, None)
             .await;
         assert!(res.is_err());
 
@@ -1166,7 +1170,7 @@ mod tests {
         // We can't mark it as fulfilled
         let res = repo
             .oauth2_device_code_grant()
-            .fulfill(&clock, grant, &browser_session)
+            .fulfill(&clock, grant, &browser_session, None)
             .await;
         assert!(res.is_err());
 

@@ -1787,7 +1787,7 @@ mod tests {
         // And fulfill it
         let grant = repo
             .oauth2_device_code_grant()
-            .fulfill(&state.clock, grant, &browser_session)
+            .fulfill(&state.clock, grant, &browser_session, Some("en".to_owned()))
             .await
             .unwrap();
 
