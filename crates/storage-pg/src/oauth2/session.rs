@@ -9,7 +9,7 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, Client, Clock, Session, SessionState, User};
+use mas_data_model::{BrowserSession, Client, Clock, Session, SessionState, UlidExt as _, User};
 use mas_storage::{
     Page, Pagination,
     oauth2::{OAuth2SessionFilter, OAuth2SessionRepository},
@@ -280,7 +280,7 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
         scope: Scope,
     ) -> Result<Session, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("session.id", tracing::field::display(id));
 
         let scope_list: Vec<String> = scope.iter().map(|s| s.as_str().to_owned()).collect();

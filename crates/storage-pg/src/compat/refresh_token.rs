@@ -8,6 +8,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
     Clock, CompatAccessToken, CompatRefreshToken, CompatRefreshTokenState, CompatSession,
+    UlidExt as _,
 };
 use mas_storage::compat::CompatRefreshTokenRepository;
 use rand::RngCore;
@@ -154,7 +155,7 @@ impl CompatRefreshTokenRepository for PgCompatRefreshTokenRepository<'_> {
         token: String,
     ) -> Result<CompatRefreshToken, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("compat_refresh_token.id", tracing::field::display(id));
 
         sqlx::query!(

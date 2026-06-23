@@ -19,6 +19,8 @@ use thiserror::Error;
 use ulid::Ulid;
 use url::Url;
 
+use crate::UlidExt as _;
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum JwksOrJwksUri {
@@ -183,7 +185,7 @@ impl Client {
         vec![
             // A client with all the URIs set
             Self {
-                id: Ulid::from_datetime_with_source(now.into(), rng),
+                id: Ulid::from_datetime_with_rng(now, rng),
                 client_id: "client1".to_owned(),
                 metadata_digest: None,
                 encrypted_client_secret: None,
@@ -210,7 +212,7 @@ impl Client {
             },
             // Another client without any URIs set
             Self {
-                id: Ulid::from_datetime_with_source(now.into(), rng),
+                id: Ulid::from_datetime_with_rng(now, rng),
                 client_id: "client2".to_owned(),
                 metadata_digest: None,
                 encrypted_client_secret: None,

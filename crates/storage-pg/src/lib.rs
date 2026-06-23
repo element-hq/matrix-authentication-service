@@ -24,6 +24,7 @@
 //! # use ulid::Ulid;
 //! # use rand::RngCore;
 //! # use mas_data_model::Clock;
+//! # use mas_data_model::UlidExt;
 //! # use mas_storage_pg::{DatabaseError, ExecuteExt};
 //! # use sqlx::PgConnection;
 //! # use uuid::Uuid;
@@ -119,7 +120,7 @@
 //!         clock: &dyn Clock,
 //!     ) -> Result<FakeData, Self::Error> {
 //!         let created_at = clock.now();
-//!         let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+//!         let id = Ulid::from_datetime_with_rng(created_at, rng);
 //!         tracing::Span::current().record("fake_data.id", tracing::field::display(id));
 //!
 //!         // Note: here we would use the macro version instead, but it's not possible here in

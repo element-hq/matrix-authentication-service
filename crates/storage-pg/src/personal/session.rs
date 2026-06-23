@@ -8,7 +8,7 @@ use std::net::IpAddr;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    Clock, User,
+    Clock, UlidExt as _, User,
     personal::{
         PersonalAccessToken,
         session::{PersonalSession, PersonalSessionOwner, SessionState},
@@ -250,7 +250,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
         scope: Scope,
     ) -> Result<PersonalSession, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("session.id", tracing::field::display(id));
 
         let scope_list: Vec<String> = scope.iter().map(|s| s.as_str().to_owned()).collect();

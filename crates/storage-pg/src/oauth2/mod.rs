@@ -25,7 +25,7 @@ pub use self::{
 #[cfg(test)]
 mod tests {
     use chrono::Duration;
-    use mas_data_model::{AuthorizationCode, Clock, clock::MockClock};
+    use mas_data_model::{AuthorizationCode, Clock, UlidExt as _, clock::MockClock};
     use mas_iana::oauth::OAuthClientAuthenticationMethod;
     use mas_storage::{
         Pagination,
@@ -1273,7 +1273,7 @@ mod tests {
         assert_eq!(page.edges[1].node, client2);
 
         // Add a static client
-        let static_id = Ulid::from_datetime_with_source(clock.now().into(), &mut rng);
+        let static_id = Ulid::from_datetime_with_rng(clock.now(), &mut rng);
         repo.oauth2_client()
             .upsert_static(
                 static_id,

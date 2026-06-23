@@ -6,7 +6,7 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    Clock,
+    Clock, UlidExt as _,
     personal::{PersonalAccessToken, session::PersonalSession},
 };
 use mas_storage::personal::PersonalAccessTokenRepository;
@@ -184,7 +184,7 @@ impl PersonalAccessTokenRepository for PgPersonalAccessTokenRepository<'_> {
         expires_after: Option<chrono::Duration>,
     ) -> Result<PersonalAccessToken, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("personal_access_token.id", tracing::field::display(id));
 
         let token_sha256 = Sha256::digest(access_token.as_bytes()).to_vec();

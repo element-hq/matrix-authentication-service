@@ -10,7 +10,7 @@ use std::net::IpAddr;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    Authentication, AuthenticationMethod, BrowserSession, Clock, Password,
+    Authentication, AuthenticationMethod, BrowserSession, Clock, Password, UlidExt as _,
     UpstreamOAuthAuthorizationSession, User,
 };
 use mas_storage::{
@@ -246,7 +246,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
         user_agent: Option<String>,
     ) -> Result<BrowserSession, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("user_session.id", tracing::field::display(id));
 
         sqlx::query!(
@@ -475,7 +475,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
         user_password: &Password,
     ) -> Result<Authentication, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record(
             "user_session_authentication.id",
             tracing::field::display(id),
@@ -524,7 +524,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
         upstream_oauth_session: &UpstreamOAuthAuthorizationSession,
     ) -> Result<Authentication, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record(
             "user_session_authentication.id",
             tracing::field::display(id),

@@ -21,7 +21,7 @@ use chrono::{DateTime, Duration, Utc};
 use http::{Method, Uri, Version};
 use mas_data_model::{
     AuthorizationGrant, BrowserSession, Client, CompatSsoLogin, CompatSsoLoginState,
-    DeviceCodeGrant, MatrixUser, UpstreamOAuthLink, UpstreamOAuthProvider,
+    DeviceCodeGrant, MatrixUser, UlidExt as _, UpstreamOAuthLink, UpstreamOAuthProvider,
     UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
     UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderPkceMode,
     UpstreamOAuthProviderTokenAuthMethod, User, UserEmailAuthentication,
@@ -825,7 +825,7 @@ impl TemplateContext for PolicyViolationContext {
                     );
                     let device_code_grant = PolicyViolationContext::for_device_code_grant(
                         DeviceCodeGrant {
-                            id: Ulid::from_datetime_with_source(now.into(), rng),
+                            id: Ulid::from_datetime_with_rng(now, rng),
                             state: mas_data_model::DeviceCodeGrantState::Pending,
                             client_id: client.id,
                             scope: [OPENID].into_iter().collect(),
@@ -938,7 +938,7 @@ impl TemplateContext for CompatSsoContext {
     where
         Self: Sized,
     {
-        let id = Ulid::from_datetime_with_source(now.into(), rng);
+        let id = Ulid::from_datetime_with_rng(now, rng);
         sample_list(vec![CompatSsoContext::new(
             CompatSsoLogin {
                 id,
@@ -1012,7 +1012,7 @@ impl TemplateContext for EmailRecoveryContext {
     {
         sample_list(User::samples(now, rng).into_iter().map(|user| {
             let session = UserRecoverySession {
-                id: Ulid::from_datetime_with_source(now.into(), rng),
+                id: Ulid::from_datetime_with_rng(now, rng),
                 email: "hello@example.com".to_owned(),
                 user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_4) AppleWebKit/536.30.1 (KHTML, like Gecko) Version/6.0.5 Safari/536.30.1".to_owned(),
                 ip_address: Some(IpAddr::from([192_u8, 0, 2, 1])),
@@ -1080,11 +1080,8 @@ impl TemplateContext for EmailVerificationContext {
                 .into_iter()
                 .map(|browser_session| {
                     let authentication_code = UserEmailAuthenticationCode {
-                        id: Ulid::from_datetime_with_source(now.into(), rng),
-                        user_email_authentication_id: Ulid::from_datetime_with_source(
-                            now.into(),
-                            rng,
-                        ),
+                        id: Ulid::from_datetime_with_rng(now, rng),
+                        user_email_authentication_id: Ulid::from_datetime_with_rng(now, rng),
                         code: "123456".to_owned(),
                         created_at: now - Duration::try_minutes(5).unwrap(),
                         expires_at: now + Duration::try_minutes(25).unwrap(),
@@ -1151,7 +1148,7 @@ impl TemplateContext for RegisterStepsVerifyEmailContext {
         Self: Sized,
     {
         let authentication = UserEmailAuthentication {
-            id: Ulid::from_datetime_with_source(now.into(), rng),
+            id: Ulid::from_datetime_with_rng(now, rng),
             user_session_id: None,
             user_registration_id: None,
             email: "foobar@example.com".to_owned(),
@@ -1394,7 +1391,7 @@ impl TemplateContext for RecoveryProgressContext {
         Self: Sized,
     {
         let session = UserRecoverySession {
-            id: Ulid::from_datetime_with_source(now.into(), rng),
+            id: Ulid::from_datetime_with_rng(now, rng),
             email: "name@mail.com".to_owned(),
             user_agent: "Mozilla/5.0".to_owned(),
             ip_address: None,
@@ -1440,7 +1437,7 @@ impl TemplateContext for RecoveryExpiredContext {
         Self: Sized,
     {
         let session = UserRecoverySession {
-            id: Ulid::from_datetime_with_source(now.into(), rng),
+            id: Ulid::from_datetime_with_rng(now, rng),
             email: "name@mail.com".to_owned(),
             user_agent: "Mozilla/5.0".to_owned(),
             ip_address: None,
@@ -1590,7 +1587,7 @@ impl TemplateContext for UpstreamSuggestLink {
     where
         Self: Sized,
     {
-        let id = Ulid::from_datetime_with_source(now.into(), rng);
+        let id = Ulid::from_datetime_with_rng(now, rng);
         sample_list(vec![Self::for_link_id(id)])
     }
 }
@@ -1849,7 +1846,7 @@ impl TemplateContext for DeviceConsentContext {
             .into_iter()
             .map(|client|  {
                 let grant = DeviceCodeGrant {
-                    id: Ulid::from_datetime_with_source(now.into(), rng),
+                    id: Ulid::from_datetime_with_rng(now, rng),
                     state: mas_data_model::DeviceCodeGrantState::Pending,
                     client_id: client.id,
                     scope: [OPENID].into_iter().collect(),

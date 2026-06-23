@@ -10,7 +10,7 @@ use axum::{Json, extract::State, response::IntoResponse};
 use axum_extra::TypedHeader;
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
-use mas_data_model::{BoxClock, BoxRng};
+use mas_data_model::{BoxClock, BoxRng, UlidExt as _};
 use mas_iana::oauth::OAuthClientAuthenticationMethod;
 use mas_keystore::Encrypter;
 use mas_policy::{EvaluationResult, Policy};
@@ -378,7 +378,7 @@ pub(crate) async fn post(
         client_id: client.client_id.clone(),
         client_secret,
         // XXX: we should have a `created_at` field on the clients
-        client_id_issued_at: Some(client.id.datetime().into()),
+        client_id_issued_at: Some(client.id.datetime_utc()),
         client_secret_expires_at: None,
     };
 

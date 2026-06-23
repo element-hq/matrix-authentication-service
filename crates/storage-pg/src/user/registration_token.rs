@@ -5,7 +5,7 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{Clock, UserRegistrationToken};
+use mas_data_model::{Clock, UlidExt as _, UserRegistrationToken};
 use mas_storage::{
     Page, Pagination,
     pagination::Node,
@@ -441,7 +441,7 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
         expires_at: Option<DateTime<Utc>>,
     ) -> Result<UserRegistrationToken, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
 
         let usage_limit_i32 = usage_limit
             .map(i32::try_from)
