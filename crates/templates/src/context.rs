@@ -678,6 +678,58 @@ impl WelcomeBackContext {
     }
 }
 
+/// Context used by the `pages/account_selection.html` template
+///
+/// Rendered when continuing an authorization grant whose requested identity
+/// doesn't match the active session: a verified `id_token_hint` target
+/// (`trusted = true`, the resolved username) or an untrusted `login_hint`
+/// (`trusted = false`, the raw client-supplied string echoed back).
+///
+/// For a trusted mismatch the only options are "sign in as the requested user"
+/// or "cancel" — per OIDC Core, MAS must not return a token for a different
+/// user. An untrusted mismatch additionally offers "continue as the current
+/// user", since `login_hint` is purely advisory.
+#[derive(Serialize)]
+pub struct SelectAccountContext {
+    /// The requested identity, as a display string. For a trusted target this
+    /// is the resolved username; for an untrusted hint it is the raw
+    /// client-supplied `login_hint` string echoed verbatim.
+    requested: String,
+    /// Whether the requested identity came from a verified `id_token_hint`.
+    trusted: bool,
+    /// The username of the currently-active session.
+    current_username: String,
+}
+
+impl TemplateContext for SelectAccountContext {
+    fn sample<R: Rng>(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut R,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
+    where
+        Self: Sized,
+    {
+        sample_list(vec![SelectAccountContext {
+            requested: "@alice:example.com".to_owned(),
+            trusted: true,
+            current_username: "bob".to_owned(),
+        }])
+    }
+}
+
+impl SelectAccountContext {
+    /// Construct a context for the account-mismatch interstitial.
+    #[must_use]
+    pub fn new(requested: String, trusted: bool, current_username: String) -> Self {
+        Self {
+            requested,
+            trusted,
+            current_username,
+        }
+    }
+}
+
 /// Fields of the registration form
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]

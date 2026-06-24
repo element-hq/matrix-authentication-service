@@ -8,16 +8,69 @@
 
 use std::collections::HashMap;
 
-use mas_data_model::{BrowserSession, Clock, User};
+use mas_data_model::{AuthorizationGrant, BrowserSession, Clock, User};
 use mas_jose::{
     claims::{self, TimeOptions},
     jwt::Jwt,
 };
 use mas_keystore::Keystore;
 use mas_router::UrlBuilder;
-use mas_storage::{BoxRepository, RepositoryAccess, RepositoryError};
+use mas_storage::{BoxRepository, RepositoryAccess, RepositoryError, user::UserEmailRepository};
 use serde_json::Value;
 use ulid::Ulid;
+
+use crate::views::shared::{LoginHint, parse_login_hint};
+
+/// Decide whether the active browser session matches the identity the client
+/// requested on the grant.
+///
+/// The match key is the **user**, not the session: a stale `sid` whose user is
+/// still logged in is a match. The trust ladder mirrors §4 of the design:
+///
+/// * a verified `id_token_hint` target (`grant.target_user_id`) is **trusted**
+///   and compared by user id;
+/// * otherwise an untrusted `grant.login_hint` is parsed and compared against
+///   the *current* session's own data only (we never look up the hinted
+///   account): an `mxid:` hint matches on localpart + homeserver, a bare email
+///   matches iff the current user owns that email;
+/// * an unparseable or absent hint is treated as no constraint (a match).
+///
+/// Returns `Ok(true)` when there is no mismatch (proceed to consent),
+/// `Ok(false)` when the active session is a different account than requested.
+pub(crate) async fn session_matches_requested_identity(
+    repo: &mut BoxRepository,
+    homeserver: &str,
+    grant: &AuthorizationGrant,
+    session: &BrowserSession,
+) -> Result<bool, RepositoryError> {
+    // Trusted target wins: compare by user id.
+    if let Some(target) = grant.target_user_id {
+        return Ok(session.user.id == target);
+    }
+
+    // Otherwise fall back to the untrusted `login_hint`, compared only against
+    // the current session's own data.
+    let Some(login_hint) = &grant.login_hint else {
+        return Ok(true);
+    };
+
+    match parse_login_hint(login_hint, homeserver) {
+        // `parse_login_hint` only resolves mxids on our own homeserver, so
+        // comparing localparts is enough.
+        LoginHint::Mxid(mxid) => Ok(mxid.localpart() == session.user.username),
+        LoginHint::Email(email) => {
+            // Look up the email on the *current* user only — their own data.
+            let found = repo
+                .user_email()
+                .find(&session.user, email.as_ref())
+                .await?;
+            Ok(found.is_some())
+        }
+        // Unparseable hint (including an mxid on another homeserver): no
+        // constraint we can act on, treat as a match.
+        LoginHint::None => Ok(true),
+    }
+}
 
 /// The resolved outcome of verifying an `id_token_hint`.
 pub(crate) struct ResolvedHint {

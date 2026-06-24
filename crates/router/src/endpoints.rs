@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -585,6 +586,52 @@ impl Route for Consent {
 
     fn path(&self) -> std::borrow::Cow<'static, str> {
         format!("/consent/{}", self.0).into()
+    }
+}
+
+/// `GET|POST /account-selection`
+///
+/// The account-mismatch interstitial shown while continuing a post-auth action
+/// (currently only an authorization grant) whose requested identity (a verified
+/// `id_token_hint` target, or an untrusted `login_hint`) doesn't match the
+/// active session. The action it should continue is carried as a query
+/// parameter, mirroring the `Login`/`Register` routes.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SelectAccount {
+    #[serde(flatten)]
+    post_auth_action: PostAuthAction,
+}
+
+impl SelectAccount {
+    /// Build a `SelectAccount` route for the given post-auth action.
+    #[must_use]
+    pub const fn new(action: PostAuthAction) -> Self {
+        Self {
+            post_auth_action: action,
+        }
+    }
+
+    /// Build a `SelectAccount` route continuing the given authorization grant.
+    #[must_use]
+    pub const fn continue_grant(id: Ulid) -> Self {
+        Self::new(PostAuthAction::continue_grant(id))
+    }
+
+    /// Get the post-auth action this route should continue.
+    #[must_use]
+    pub fn post_auth_action(&self) -> &PostAuthAction {
+        &self.post_auth_action
+    }
+}
+
+impl Route for SelectAccount {
+    type Query = PostAuthAction;
+    fn route() -> &'static str {
+        "/account-selection"
+    }
+
+    fn query(&self) -> Option<&Self::Query> {
+        Some(&self.post_auth_action)
     }
 }
 

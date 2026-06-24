@@ -49,10 +49,10 @@ pub use self::{
         RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
         RegisterStepsEmailInUseContext, RegisterStepsRegistrationTokenContext,
         RegisterStepsRegistrationTokenFormField, RegisterStepsVerifyEmailContext,
-        RegisterStepsVerifyEmailFormField, SiteBranding, SiteConfigExt, SiteFeatures,
-        TemplateContext, UpstreamExistingLinkContext, UpstreamRegister, UpstreamRegisterFormField,
-        UpstreamSuggestLink, WelcomeBackContext, WithCaptcha, WithCsrf, WithLanguage,
-        WithOptionalSession, WithSession,
+        RegisterStepsVerifyEmailFormField, SelectAccountContext, SiteBranding, SiteConfigExt,
+        SiteFeatures, TemplateContext, UpstreamExistingLinkContext, UpstreamRegister,
+        UpstreamRegisterFormField, UpstreamSuggestLink, WelcomeBackContext, WithCaptcha, WithCsrf,
+        WithLanguage, WithOptionalSession, WithSession,
     },
     forms::{FieldError, FormError, FormField, FormState, ToFormState},
 };
@@ -374,6 +374,9 @@ register_templates! {
 
     /// Render the streamlined "welcome back" re-authentication page
     pub fn render_welcome_back(WithLanguage<WithCsrf<WelcomeBackContext>>) { "pages/login/welcome_back.html" }
+
+    /// Render the account-mismatch interstitial
+    pub fn render_select_account(WithLanguage<WithCsrf<SelectAccountContext>>) { "pages/account_selection.html" }
 
     /// Render the registration page
     pub fn render_register(WithLanguage<WithCsrf<RegisterContext>>) { "pages/register/index.html" }

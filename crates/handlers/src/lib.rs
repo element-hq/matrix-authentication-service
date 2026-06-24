@@ -480,6 +480,11 @@ where
                 .post(self::oauth2::authorization::consent::post),
         )
         .route(
+            mas_router::SelectAccount::route(),
+            get(self::oauth2::authorization::select_account::get)
+                .post(self::oauth2::authorization::select_account::post),
+        )
+        .route(
             mas_router::CompatLoginSsoComplete::route(),
             get(self::compat::login_sso_complete::get).post(self::compat::login_sso_complete::post),
         )

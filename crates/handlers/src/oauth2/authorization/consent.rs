@@ -145,6 +145,24 @@ pub(crate) async fn get(
         .record_browser_session(&clock, &session)
         .await;
 
+    // Trusted-mismatch guard: for a grant with a verified `id_token_hint`
+    // target, OIDC Core forbids returning a token for a different user. If the
+    // active session is for someone else, divert to the account-selection
+    // screen rather than rendering consent. We only enforce the *trusted* case;
+    // an untrusted `login_hint` stays advisory (enforcing it here would loop
+    // consent → select-account → "continue" → consent → …).
+    if grant
+        .target_user_id
+        .is_some_and(|target| target != session.user.id)
+    {
+        repo.save().await?;
+        return Ok((
+            cookie_jar,
+            url_builder.redirect(&mas_router::SelectAccount::continue_grant(grant_id)),
+        )
+            .into_response());
+    }
+
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
 
     let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
@@ -249,6 +267,21 @@ pub(crate) async fn post(
     activity_tracker
         .record_browser_session(&clock, &browser_session)
         .await;
+
+    // Trusted-mismatch guard (see the GET handler): never fulfil a grant with a
+    // verified `id_token_hint` target as a different user. Divert to the
+    // account-selection screen instead. Untrusted `login_hint` stays advisory.
+    if grant
+        .target_user_id
+        .is_some_and(|target| target != browser_session.user.id)
+    {
+        repo.save().await?;
+        return Ok((
+            cookie_jar,
+            url_builder.redirect(&mas_router::SelectAccount::continue_grant(grant_id)),
+        )
+            .into_response());
+    }
 
     let client = repo
         .oauth2_client()

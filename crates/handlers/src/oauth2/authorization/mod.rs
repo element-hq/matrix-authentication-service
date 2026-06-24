@@ -5,7 +5,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, sync::Arc};
 
 use axum::{
     extract::State,
@@ -16,6 +16,7 @@ use hyper::StatusCode;
 use mas_axum_utils::{GenericError, InternalError, SessionInfoExt, cookies::CookieJar};
 use mas_data_model::{AuthorizationCode, BoxClock, BoxRng, Pkce};
 use mas_keystore::Keystore;
+use mas_matrix::HomeserverConnection;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
     BoxRepository,
@@ -38,6 +39,7 @@ use crate::{BoundActivityTracker, PreferredLanguage, impl_from_error_for_route};
 mod callback;
 pub(crate) mod consent;
 mod id_token_hint;
+pub(crate) mod select_account;
 
 #[derive(Debug, Error)]
 pub enum RouteError {
@@ -122,6 +124,7 @@ pub(crate) async fn get(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(key_store): State<Keystore>,
+    State(homeserver): State<Arc<dyn HomeserverConnection>>,
     activity_tracker: BoundActivityTracker,
     mut repo: BoxRepository,
     cookie_jar: CookieJar,
@@ -319,14 +322,34 @@ pub(crate) async fn get(
 
                 Some(user_session) => {
                     // TODO: better support for prompt=create when we have a session
-                    repo.save().await?;
-
                     activity_tracker
                         .record_browser_session(&clock, &user_session)
                         .await;
-                    url_builder
-                        .redirect(&mas_router::Consent(grant.id))
-                        .into_response()
+
+                    // If the client requested a specific identity (via a verified
+                    // `id_token_hint` target or an untrusted `login_hint`) that
+                    // doesn't match the active session, divert to the
+                    // account-mismatch interstitial. Consent re-enforces this
+                    // authoritatively; this branch is only early UX routing.
+                    let matches = id_token_hint::session_matches_requested_identity(
+                        &mut repo,
+                        homeserver.homeserver(),
+                        &grant,
+                        &user_session,
+                    )
+                    .await?;
+
+                    repo.save().await?;
+
+                    if matches {
+                        url_builder
+                            .redirect(&mas_router::Consent(grant.id))
+                            .into_response()
+                    } else {
+                        url_builder
+                            .redirect(&mas_router::SelectAccount::continue_grant(grant.id))
+                            .into_response()
+                    }
                 }
             };
 

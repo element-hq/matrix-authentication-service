@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -123,28 +124,34 @@ pub(crate) struct QueryLoginHint {
 }
 
 impl QueryLoginHint {
-    /// Parse a `login_hint`
-    ///
-    /// Returns `LoginHint::MXID` for valid mxid 'mxid:@john.doe:example.com'
-    ///
-    /// Returns `LoginHint::Email` for valid email 'john.doe@example.com'
-    ///
-    /// Otherwise returns `LoginHint::None`
+    /// Parse the `login_hint` query parameter, if any
     pub fn parse_login_hint(&self, homeserver: &str) -> LoginHint<'_> {
         let Some(login_hint) = &self.login_hint else {
             return LoginHint::None;
         };
 
-        if let Some(value) = login_hint.strip_prefix("mxid:")
-            && let Ok(mxid) = <&UserId>::try_from(value)
-            && mxid.server_name() == homeserver
-        {
-            LoginHint::Mxid(mxid)
-        } else if let Ok(email) = lettre::Address::from_str(login_hint) {
-            LoginHint::Email(email)
-        } else {
-            LoginHint::None
-        }
+        parse_login_hint(login_hint, homeserver)
+    }
+}
+
+/// Parse a `login_hint`
+///
+/// Returns `LoginHint::Mxid` for a valid mxid on this homeserver
+/// ('mxid:@john.doe:example.com')
+///
+/// Returns `LoginHint::Email` for a valid email ('john.doe@example.com')
+///
+/// Otherwise returns `LoginHint::None`
+pub(crate) fn parse_login_hint<'a>(login_hint: &'a str, homeserver: &str) -> LoginHint<'a> {
+    if let Some(value) = login_hint.strip_prefix("mxid:")
+        && let Ok(mxid) = <&UserId>::try_from(value)
+        && mxid.server_name() == homeserver
+    {
+        LoginHint::Mxid(mxid)
+    } else if let Ok(email) = lettre::Address::from_str(login_hint) {
+        LoginHint::Email(email)
+    } else {
+        LoginHint::None
     }
 }
 

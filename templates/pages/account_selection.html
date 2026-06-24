@@ -1,0 +1,43 @@
+{#
+Copyright 2026 Element Creations Ltd.
+
+SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE files in the repository root for full details.
+-#}
+
+{% extends "base.html" %}
+
+{% block content %}
+  <header class="page-heading">
+    <div class="icon">
+      {{ icon.user_profile_solid() }}
+    </div>
+
+    <div class="header">
+      <h1 class="title">{{ _("mas.select_account.headline") }}</h1>
+      <p class="text">
+        {{ _("mas.select_account.description", current=current_username, requested=requested) }}
+      </p>
+    </div>
+  </header>
+
+  <main class="flex flex-col gap-6">
+    <form method="POST" class="cpd-form-root flex flex-col gap-4">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}" />
+
+      <button class="cpd-button" data-kind="primary" data-size="lg" type="submit" name="action" value="switch">
+        {{ _("mas.select_account.sign_in_as", username=requested) }}
+      </button>
+
+      {% if not trusted %}
+        <button class="cpd-button" data-kind="secondary" data-size="lg" type="submit" name="action" value="continue">
+          {{ _("mas.select_account.continue_as", username=current_username) }}
+        </button>
+      {% endif %}
+
+      <button class="cpd-button destructive" data-kind="tertiary" data-size="lg" type="submit" name="action" value="cancel">
+        {{ _("action.cancel") }}
+      </button>
+    </form>
+  </main>
+{% endblock content %}
