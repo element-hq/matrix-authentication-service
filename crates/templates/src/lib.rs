@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -51,7 +51,8 @@ pub use self::{
         RegisterStepsRegistrationTokenFormField, RegisterStepsVerifyEmailContext,
         RegisterStepsVerifyEmailFormField, SiteBranding, SiteConfigExt, SiteFeatures,
         TemplateContext, UpstreamExistingLinkContext, UpstreamRegister, UpstreamRegisterFormField,
-        UpstreamSuggestLink, WithCaptcha, WithCsrf, WithLanguage, WithOptionalSession, WithSession,
+        UpstreamSuggestLink, WelcomeBackContext, WithCaptcha, WithCsrf, WithLanguage,
+        WithOptionalSession, WithSession,
     },
     forms::{FieldError, FormError, FormField, FormState, ToFormState},
 };
@@ -370,6 +371,9 @@ register_templates! {
 
     /// Render the login page
     pub fn render_login(WithLanguage<WithCsrf<LoginContext>>) { "pages/login.html" }
+
+    /// Render the streamlined "welcome back" re-authentication page
+    pub fn render_welcome_back(WithLanguage<WithCsrf<WelcomeBackContext>>) { "pages/login/welcome_back.html" }
 
     /// Render the registration page
     pub fn render_register(WithLanguage<WithCsrf<RegisterContext>>) { "pages/register/index.html" }

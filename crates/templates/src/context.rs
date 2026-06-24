@@ -616,6 +616,68 @@ impl LoginContext {
     }
 }
 
+/// Context used by the `login/welcome_back.html` template
+///
+/// Rendered for the streamlined re-authentication of a known, trusted target
+/// user (resolved from an `id_token_hint`) when their last authentication was
+/// password-based.
+#[derive(Serialize)]
+pub struct WelcomeBackContext {
+    username: String,
+    matrix_user: MatrixUser,
+    form: FormState<LoginFormField>,
+    next: Option<PostAuthContext>,
+}
+
+impl TemplateContext for WelcomeBackContext {
+    fn sample<R: Rng>(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut R,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
+    where
+        Self: Sized,
+    {
+        sample_list(vec![WelcomeBackContext {
+            username: "alice".to_owned(),
+            matrix_user: MatrixUser {
+                mxid: "@alice:example.com".to_owned(),
+                display_name: Some("Alice".to_owned()),
+            },
+            form: FormState::default(),
+            next: None,
+        }])
+    }
+}
+
+impl WelcomeBackContext {
+    /// Create a new context for the given target username and Matrix user
+    #[must_use]
+    pub fn new(username: String, matrix_user: MatrixUser) -> Self {
+        Self {
+            username,
+            matrix_user,
+            form: FormState::default(),
+            next: None,
+        }
+    }
+
+    /// Set the form state
+    #[must_use]
+    pub fn with_form_state(self, form: FormState<LoginFormField>) -> Self {
+        Self { form, ..self }
+    }
+
+    /// Add a post authentication action to the context
+    #[must_use]
+    pub fn with_post_action(self, context: PostAuthContext) -> Self {
+        Self {
+            next: Some(context),
+            ..self
+        }
+    }
+}
+
 /// Fields of the registration form
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
