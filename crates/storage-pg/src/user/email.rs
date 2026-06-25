@@ -17,8 +17,8 @@ use mas_storage::{
     user::{UserEmailFilter, UserEmailRepository},
 };
 use rand::RngCore;
-use sea_query::{Expr, Func, PostgresQueryBuilder, Query, SimpleExpr, enum_def};
-use sea_query_binder::SqlxBinder;
+use sea_query::{Expr, ExprTrait, Func, PostgresQueryBuilder, Query, SimpleExpr, enum_def};
+use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
