@@ -122,6 +122,16 @@ struct LogContextInner {
     /// nanoseconds
     cpu_time: AtomicU64,
 
+    /// The number of database queries executed in the context
+    db_queries: AtomicU64,
+
+    /// The cumulative wall-clock time spent executing database queries in the
+    /// context, in nanoseconds
+    db_time: AtomicU64,
+
+    /// The number of rows fetched from the database in the context
+    db_rows_fetched: AtomicU64,
+
     /// The identified principal making the request, if it has been resolved.
     /// Set once per context, first writer wins.
     requester: OnceLock<Requester>,
@@ -137,6 +147,9 @@ impl LogContext {
             start: Instant::now(),
             polls: AtomicU64::new(0),
             cpu_time: AtomicU64::new(0),
+            db_queries: AtomicU64::new(0),
+            db_rows_fetched: AtomicU64::new(0),
+            db_time: AtomicU64::new(0),
             requester: OnceLock::new(),
         };
 
@@ -170,6 +183,21 @@ impl LogContext {
         result
     }
 
+    /// Record the stats of a query on the current log context.
+    pub fn maybe_record_query_stats(fetched: usize, duration: Duration) {
+        LogContext::maybe_with(|ctx| ctx.record_query_stats(fetched, duration));
+    }
+
+    /// Record the stats of a query
+    pub fn record_query_stats(&self, fetched: usize, duration: Duration) {
+        let nanos = duration.as_nanos().try_into().unwrap_or(u64::MAX);
+        self.inner.db_time.fetch_add(nanos, Ordering::Relaxed);
+        self.inner
+            .db_rows_fetched
+            .fetch_add(fetched as u64, Ordering::Relaxed);
+        self.inner.db_queries.fetch_add(1, Ordering::Relaxed);
+    }
+
     /// Associate a [`Requester`] with this log context. Silently does nothing
     /// if a requester has already been recorded (first writer wins).
     pub fn set_requester(&self, requester: Requester) {
@@ -195,10 +223,16 @@ impl LogContext {
         let cpu_time = self.inner.cpu_time.load(Ordering::Relaxed);
         let cpu_time = Duration::from_nanos(cpu_time);
         let elapsed = self.inner.start.elapsed();
+        let db_queries = self.inner.db_queries.load(Ordering::Relaxed);
+        let db_rows_fetched = self.inner.db_rows_fetched.load(Ordering::Relaxed);
+        let db_time = Duration::from_nanos(self.inner.db_time.load(Ordering::Relaxed));
         LogContextStats {
             polls,
             cpu_time,
             elapsed,
+            db_queries,
+            db_rows_fetched,
+            db_time,
         }
     }
 }
@@ -222,6 +256,15 @@ pub struct LogContextStats {
 
     /// How much time elapsed since the context was created
     pub elapsed: Duration,
+
+    /// How many database queries were executed in the context
+    pub db_queries: u64,
+
+    /// The number of rows fetched from the database in the context
+    pub db_rows_fetched: u64,
+
+    /// The cumulative wall-clock time spent executing database queries
+    pub db_time: Duration,
 }
 
 impl std::fmt::Display for LogContextStats {
@@ -231,9 +274,13 @@ impl std::fmt::Display for LogContextStats {
         let cpu_time_ms = self.cpu_time.as_nanos() as f64 / 1_000_000.;
         #[expect(clippy::cast_precision_loss)]
         let elapsed_ms = self.elapsed.as_nanos() as f64 / 1_000_000.;
+        let db_queries = self.db_queries;
+        let db_rows_fetched = self.db_rows_fetched;
+        #[expect(clippy::cast_precision_loss)]
+        let db_time_ms = self.db_time.as_nanos() as f64 / 1_000_000.;
         write!(
             f,
-            "polls: {polls}, cpu: {cpu_time_ms:.1}ms, elapsed: {elapsed_ms:.1}ms",
+            "polls: {polls}, cpu: {cpu_time_ms:.1}ms, db: {db_time_ms:.1}ms, elapsed: {elapsed_ms:.1}ms, queries: {db_queries}, fetched: {db_rows_fetched}",
         )
     }
 }
