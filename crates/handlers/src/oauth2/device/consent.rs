@@ -305,7 +305,7 @@ pub(crate) async fn post(
                 }
 
                 repo.oauth2_device_code_grant()
-                    .fulfill(&clock, grant, &session)
+                    .fulfill(&clock, grant, &session, Some(locale.to_string()))
                     .await?
             }
             Action::Reject => {

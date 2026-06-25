@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT oauth2_device_code_grant_id\n                     , oauth2_client_id\n                     , scope\n                     , device_code\n                     , user_code\n                     , created_at\n                     , expires_at\n                     , fulfilled_at\n                     , rejected_at\n                     , exchanged_at\n                     , user_session_id\n                     , oauth2_session_id\n                     , ip_address as \"ip_address: IpAddr\"\n                     , user_agent\n                FROM\n                    oauth2_device_code_grant\n\n                WHERE user_code = $1\n            ",
+  "query": "\n                SELECT oauth2_device_code_grant_id\n                     , oauth2_client_id\n                     , scope\n                     , device_code\n                     , user_code\n                     , created_at\n                     , expires_at\n                     , fulfilled_at\n                     , rejected_at\n                     , exchanged_at\n                     , user_session_id\n                     , oauth2_session_id\n                     , ip_address as \"ip_address: IpAddr\"\n                     , user_agent\n                     , locale\n                FROM\n                    oauth2_device_code_grant\n\n                WHERE device_code = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -72,6 +72,11 @@
         "ordinal": 13,
         "name": "user_agent",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "locale",
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -93,8 +98,9 @@
       true,
       true,
       true,
+      true,
       true
     ]
   },
-  "hash": "bb141d28c0c82244f31d542038c314d05ceb3a7b8f35397c0faef3b36d2d14a7"
+  "hash": "ca8db2854f873a17f0ead6adfefe658aa71cade3ee70d17ee09a334599edc561"
 }

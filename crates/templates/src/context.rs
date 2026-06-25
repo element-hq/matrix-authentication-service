@@ -835,6 +835,7 @@ impl TemplateContext for PolicyViolationContext {
                             expires_at: now + Duration::try_minutes(25).unwrap(),
                             ip_address: None,
                             user_agent: None,
+                            locale: None,
                         },
                         client,
                         Vec::new(),
@@ -1856,6 +1857,7 @@ impl TemplateContext for DeviceConsentContext {
                     expires_at: now + Duration::try_minutes(25).unwrap(),
                     ip_address: Some(IpAddr::V4(Ipv4Addr::LOCALHOST)),
                     user_agent: Some("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.0.0 Safari/537.36".to_owned()),
+                    locale: None,
                 };
                 Self {
                     grant,

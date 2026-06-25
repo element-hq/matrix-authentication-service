@@ -382,6 +382,7 @@ pub(crate) async fn post(
                 &client,
                 &key_store,
                 &url_builder,
+                &templates,
                 &site_config,
                 repo,
                 &homeserver,
@@ -870,6 +871,7 @@ async fn device_code_grant(
     client: &Client,
     key_store: &Keystore,
     url_builder: &UrlBuilder,
+    templates: &Templates,
     site_config: &SiteConfig,
     mut repo: BoxRepository,
     homeserver: &Arc<dyn HomeserverConnection>,
@@ -923,6 +925,12 @@ async fn device_code_grant(
         .lookup(browser_session_id)
         .await?
         .ok_or(RouteError::NoSuchBrowserSession(browser_session_id))?;
+
+    // Generate a device name, using the locale captured from the browser which
+    // fulfilled the grant
+    let lang: DataLocale = grant.locale.as_deref().unwrap_or("en").parse()?;
+    let ctx = DeviceNameContext::new(client.clone(), user_agent.clone()).with_language(lang);
+    let device_name = templates.render_device_name(&ctx)?;
 
     // Start the session
     let mut session = repo
@@ -1001,7 +1009,11 @@ async fn device_code_grant(
             // We're using an upsert so if the device already exists for some reason
             // (like when a concurrent device sync happening) it won't have any effect.
             homeserver
-                .upsert_device(&browser_session.user.username, device.as_str(), None)
+                .upsert_device(
+                    &browser_session.user.username,
+                    device.as_str(),
+                    Some(&device_name),
+                )
                 .await
                 .map_err(RouteError::ProvisionDeviceFailed)?;
         }
@@ -1787,7 +1799,7 @@ mod tests {
         // And fulfill it
         let grant = repo
             .oauth2_device_code_grant()
-            .fulfill(&state.clock, grant, &browser_session)
+            .fulfill(&state.clock, grant, &browser_session, Some("en".to_owned()))
             .await
             .unwrap();
 
