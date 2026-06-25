@@ -76,6 +76,11 @@ skip = [
     { name = "foldhash", version = "0.1.5" },
     { name = "gimli", version = "0.32.3" },
     { name = "object", version = "0.37.3" },
+    # async-graphql, zxcvbn's derive_builder and sea-query still use an old
+    # darling; aide-macros 0.16 moved on to 0.23
+    { name = "darling", version = "0.20.11" },
+    { name = "darling_core", version = "0.20.11" },
+    { name = "darling_macro", version = "0.20.11" },
 
     # We are still mainly using rand 0.8
     { name = "rand", version = "0.8.5" },
