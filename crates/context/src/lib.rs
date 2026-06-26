@@ -23,7 +23,7 @@ use tokio::task_local;
 use ulid::Ulid;
 
 pub use self::{
-    fmt::EventFormatter,
+    fmt::{EventFormatter, JsonEventFormatter},
     future::{LogContextFuture, PollRecordingFuture},
     layer::LogContextLayer,
     service::LogContextService,
