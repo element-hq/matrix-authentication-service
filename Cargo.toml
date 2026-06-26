@@ -301,31 +301,28 @@ default-features = false
 
 # ICU libraries for internationalization
 [workspace.dependencies.icu_calendar]
-version = "1.5.2"
-features = ["compiled_data", "std"]
+version = "2.2.1"
+features = ["compiled_data"]
 [workspace.dependencies.icu_datetime]
-version = "1.5.1"
-features = ["compiled_data", "std"]
+version = "2.2.0"
+features = ["compiled_data"]
 [workspace.dependencies.icu_experimental]
-version = "0.1.0"
-features = ["compiled_data", "std"]
-[workspace.dependencies.icu_locid]
-version = "1.5.0"
-features = ["std"]
-[workspace.dependencies.icu_locid_transform]
-version = "1.5.0"
-features = ["compiled_data", "std"]
+version = "0.5.0"
+features = ["compiled_data"]
+[workspace.dependencies.icu_locale]
+version = "2.2.0"
+features = ["compiled_data"]
+[workspace.dependencies.icu_locale_core]
+version = "2.2.0"
 [workspace.dependencies.icu_normalizer]
-version = "1.5.0"
+version = "2.2.0"
+features = ["compiled_data"]
 [workspace.dependencies.icu_plurals]
-version = "1.5.0"
-features = ["compiled_data", "std"]
+version = "2.2.0"
+features = ["compiled_data"]
 [workspace.dependencies.icu_provider]
-version = "1.5.0"
+version = "2.2.0"
 features = ["std", "sync"]
-[workspace.dependencies.icu_provider_adapters]
-version = "1.5.0"
-features = ["std"]
 
 # HashMap which preserves insertion order
 [workspace.dependencies.indexmap]
@@ -740,7 +737,7 @@ version = "0.13.0"
 
 # String writing interface
 [workspace.dependencies.writeable]
-version = "0.5.5"
+version = "0.6.3"
 
 # Zero memory after use
 [workspace.dependencies.zeroize]
