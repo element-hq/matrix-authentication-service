@@ -82,7 +82,10 @@ In the future, it will help building OpenTelemetry-compatible distributed traces
 By itself it will do nothing unless a subscriber is installed to -for example- log the events to the console.
 
 The CLI installs [`tracing-subcriber`](https://docs.rs/tracing-subscriber/*/tracing_subscriber/) on startup to log in the console.
-It looks for a `RUST_LOG` environment variable to determine what event should be logged.
+The log filter, output format (text or JSON) and destination are driven by the
+[`telemetry.logging`](../reference/configuration.md#telemetry) configuration
+section; the `RUST_LOG` environment variable, when set, overrides the configured
+filter.
 
 ### Error management: `thiserror` / `anyhow`
 

@@ -4,9 +4,19 @@ The command line interface provides subcommands that helps running the service.
 
 ## Logging
 
-The overall log level of the CLI can be changed via the `RUST_LOG` environment variable.
+The log filter can be set either in the configuration file, under
+[`telemetry.logging`](../configuration.md#telemetry), or via the `RUST_LOG`
+environment variable. When `RUST_LOG` is set, it takes precedence over the
+configuration file.
+
 Default log level is `info`.
 Valid levels from least to most verbose are `error`, `warn`, `info`, `debug` and `trace`.
+The filter also accepts per-module directives, e.g. `info,mas_handlers=debug`.
+
+The [`telemetry.logging`](../configuration.md#telemetry) configuration section
+additionally allows switching the output format to structured JSON
+(`format: json`), controlling ANSI colors (`color`), and choosing whether logs
+are written to `stderr` (the default) or `stdout` (`output`).
 
 ## Global flags
 

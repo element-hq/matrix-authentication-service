@@ -660,10 +660,33 @@ rate_limiting:
 
 ## `telemetry`
 
-Settings related to metrics and traces
+Settings related to logs, metrics and traces
 
 ```yaml
 telemetry:
+  logging:
+    # The log filter to apply.
+    # Uses the same syntax as the `RUST_LOG` environment variable, e.g. `info`
+    # or `info,mas_handlers=debug`. Defaults to `info`.
+    # The `RUST_LOG` environment variable, when set, takes precedence over this.
+    filter: info
+
+    # The format used when writing the logs
+    #  - `text` (default): human-readable text, one event per line
+    #  - `json`: structured JSON, one object per line, for machine consumption
+    format: text
+
+    # Whether to use ANSI colors and styling in the output
+    #  - `auto` (default): only when the output is an interactive terminal
+    #  - `always`
+    #  - `never`
+    color: auto
+
+    # Where to write the logs
+    #  - `stderr` (default)
+    #  - `stdout`
+    output: stderr
+
   tracing:
     # List of propagators to use for extracting and injecting trace contexts
     propagators:

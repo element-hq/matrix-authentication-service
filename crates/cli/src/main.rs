@@ -7,23 +7,19 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use std::{io::IsTerminal, process::ExitCode, sync::Arc};
+use std::{process::ExitCode, sync::Arc};
 
 use anyhow::Context;
 use clap::Parser;
 use figment::Figment;
 use mas_config::{ConfigurationSectionExt, TelemetryConfig};
 use sentry_tracing::EventFilter;
-use tracing_subscriber::{
-    EnvFilter, Layer, Registry,
-    filter::{LevelFilter, filter_fn},
-    layer::SubscriberExt,
-    util::SubscriberInitExt,
-};
+use tracing_subscriber::{Layer as _, filter::LevelFilter};
 
 mod app_state;
 mod commands;
 mod lifecycle;
+mod logging;
 mod server;
 mod sync;
 mod telemetry;
@@ -114,23 +110,6 @@ async fn try_main(
     figment: Figment,
     telemetry_config: TelemetryConfig,
 ) -> anyhow::Result<ExitCode> {
-    // Setup logging
-    // This writes logs to stderr
-    let output = std::io::stderr();
-    let with_ansi = output.is_terminal();
-    let (log_writer, _guard) = tracing_appender::non_blocking(output);
-    let fmt_layer = tracing_subscriber::fmt::layer()
-        .with_writer(log_writer)
-        .event_format(mas_context::EventFormatter)
-        .with_ansi(with_ansi);
-    let filter_layer = EnvFilter::try_from_default_env()
-        .or_else(|_| EnvFilter::try_new("info"))
-        .context("could not setup logging filter")?;
-
-    // Suppress the following warning from the Jaeger propagator:
-    //   Invalid jaeger header format header_value=""
-    let suppress_layer = filter_fn(|metadata| metadata.name() != "JaegerPropagator.InvalidHeader");
-
     // Setup the rustls crypto provider
     rustls::crypto::aws_lc_rs::default_provider()
         .install_default()
@@ -175,15 +154,12 @@ async fn try_main(
         .with_tracked_inactivity(false)
         .with_filter(LevelFilter::INFO);
 
-    let subscriber = Registry::default()
-        .with(suppress_layer)
-        .with(sentry_layer)
-        .with(telemetry_layer)
-        .with(filter_layer)
-        .with(fmt_layer);
-    subscriber
-        .try_init()
-        .context("could not initialize logging")?;
+    let mut layers: Vec<self::logging::BoxLayer> = vec![Box::new(telemetry_layer)];
+    if let Some(sentry_layer) = sentry_layer {
+        layers.push(Box::new(sentry_layer));
+    }
+
+    let _guard = self::logging::init(&telemetry_config.logging, layers)?;
 
     // Log about the .env loading
     match dotenv_path {
