@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -142,7 +143,7 @@ async fn handle_code(
     let ctx = DeviceLinkContext::new()
         .with_form_state(form_state)
         .with_csrf(csrf_token.form_value())
-        .with_language(locale.clone());
+        .with_language(*locale);
 
     let content = templates.render_device_link(&ctx)?;
 
