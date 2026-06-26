@@ -1291,6 +1291,14 @@
       "description": "Configuration related to sending monitoring data",
       "type": "object",
       "properties": {
+        "logging": {
+          "description": "Configuration related to the logs written to the output",
+          "allOf": [
+            {
+              "$ref": "#/definitions/LoggingConfig"
+            }
+          ]
+        },
         "tracing": {
           "description": "Configuration related to exporting traces",
           "allOf": [
@@ -1316,6 +1324,100 @@
           ]
         }
       }
+    },
+    "LoggingConfig": {
+      "description": "Configuration related to the logs written to the output",
+      "type": "object",
+      "properties": {
+        "filter": {
+          "description": "The log filter to apply\n\nThis uses the same syntax as the `RUST_LOG` environment variable, e.g.\n`info` or `info,mas_handlers=debug`. Defaults to `info` if not set.\n\nThe `RUST_LOG` environment variable, when set, takes precedence over\nthis option.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "examples": [
+            "info",
+            "info,mas_handlers=debug"
+          ]
+        },
+        "format": {
+          "description": "The format used when writing the logs",
+          "default": "text",
+          "allOf": [
+            {
+              "$ref": "#/definitions/LogFormat"
+            }
+          ]
+        },
+        "color": {
+          "description": "Whether to use ANSI colors and styling in the output",
+          "default": "auto",
+          "allOf": [
+            {
+              "$ref": "#/definitions/LogColor"
+            }
+          ]
+        },
+        "output": {
+          "description": "Where to write the logs",
+          "default": "stderr",
+          "allOf": [
+            {
+              "$ref": "#/definitions/LogOutput"
+            }
+          ]
+        }
+      }
+    },
+    "LogFormat": {
+      "description": "Format used when writing logs to the output",
+      "oneOf": [
+        {
+          "description": "Human-readable text, one event per line (default)",
+          "type": "string",
+          "const": "text"
+        },
+        {
+          "description": "Structured JSON, one object per line. Meant for machine consumption,\ne.g. ingestion into a log aggregator.",
+          "type": "string",
+          "const": "json"
+        }
+      ]
+    },
+    "LogColor": {
+      "description": "Whether to use ANSI colors and styling in the log output",
+      "oneOf": [
+        {
+          "description": "Enable colors only when the output is an interactive terminal (default)",
+          "type": "string",
+          "const": "auto"
+        },
+        {
+          "description": "Always enable colors",
+          "type": "string",
+          "const": "always"
+        },
+        {
+          "description": "Never enable colors",
+          "type": "string",
+          "const": "never"
+        }
+      ]
+    },
+    "LogOutput": {
+      "description": "Where to write the logs",
+      "oneOf": [
+        {
+          "description": "Write logs to the standard error stream (default)",
+          "type": "string",
+          "const": "stderr"
+        },
+        {
+          "description": "Write logs to the standard output stream",
+          "type": "string",
+          "const": "stdout"
+        }
+      ]
     },
     "TracingConfig": {
       "description": "Configuration related to exporting traces",

@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -119,6 +120,83 @@ impl MetricsConfig {
     }
 }
 
+/// Format used when writing logs to the output
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, JsonSchema, Default, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum LogFormat {
+    /// Human-readable text, one event per line (default)
+    #[default]
+    Text,
+
+    /// Structured JSON, one object per line. Meant for machine consumption,
+    /// e.g. ingestion into a log aggregator.
+    Json,
+}
+
+/// Whether to use ANSI colors and styling in the log output
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, JsonSchema, Default, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum LogColor {
+    /// Enable colors only when the output is an interactive terminal (default)
+    #[default]
+    Auto,
+
+    /// Always enable colors
+    Always,
+
+    /// Never enable colors
+    Never,
+}
+
+/// Where to write the logs
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, JsonSchema, Default, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum LogOutput {
+    /// Write logs to the standard error stream (default)
+    #[default]
+    Stderr,
+
+    /// Write logs to the standard output stream
+    Stdout,
+}
+
+/// Configuration related to the logs written to the output
+#[derive(Clone, Debug, Default, Serialize, Deserialize, JsonSchema)]
+pub struct LoggingConfig {
+    /// The log filter to apply
+    ///
+    /// This uses the same syntax as the `RUST_LOG` environment variable, e.g.
+    /// `info` or `info,mas_handlers=debug`. Defaults to `info` if not set.
+    ///
+    /// The `RUST_LOG` environment variable, when set, takes precedence over
+    /// this option.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"info", example = &"info,mas_handlers=debug")]
+    pub filter: Option<String>,
+
+    /// The format used when writing the logs
+    #[serde(default)]
+    pub format: LogFormat,
+
+    /// Whether to use ANSI colors and styling in the output
+    #[serde(default)]
+    pub color: LogColor,
+
+    /// Where to write the logs
+    #[serde(default)]
+    pub output: LogOutput,
+}
+
+impl LoggingConfig {
+    /// Returns true if all fields are at their default values
+    fn is_default(&self) -> bool {
+        self.filter.is_none()
+            && self.format == LogFormat::default()
+            && self.color == LogColor::default()
+            && self.output == LogOutput::default()
+    }
+}
+
 /// Configuration related to the Sentry integration
 #[derive(Clone, Debug, Default, Serialize, Deserialize, JsonSchema)]
 pub struct SentryConfig {
@@ -159,6 +237,10 @@ impl SentryConfig {
 /// Configuration related to sending monitoring data
 #[derive(Clone, Debug, Default, Serialize, Deserialize, JsonSchema)]
 pub struct TelemetryConfig {
+    /// Configuration related to the logs written to the output
+    #[serde(default, skip_serializing_if = "LoggingConfig::is_default")]
+    pub logging: LoggingConfig,
+
     /// Configuration related to exporting traces
     #[serde(default, skip_serializing_if = "TracingConfig::is_default")]
     pub tracing: TracingConfig,
@@ -175,7 +257,10 @@ pub struct TelemetryConfig {
 impl TelemetryConfig {
     /// Returns true if all fields are at their default values
     pub(crate) fn is_default(&self) -> bool {
-        self.tracing.is_default() && self.metrics.is_default() && self.sentry.is_default()
+        self.logging.is_default()
+            && self.tracing.is_default()
+            && self.metrics.is_default()
+            && self.sentry.is_default()
     }
 }
 

@@ -50,8 +50,8 @@ pub use self::{
     rate_limiting::RateLimitingConfig,
     secrets::SecretsConfig,
     telemetry::{
-        MetricsConfig, MetricsExporterKind, Propagator, TelemetryConfig, TracingConfig,
-        TracingExporterKind,
+        LogColor, LogFormat, LogOutput, LoggingConfig, MetricsConfig, MetricsExporterKind,
+        Propagator, TelemetryConfig, TracingConfig, TracingExporterKind,
     },
     templates::TemplatesConfig,
     upstream_oauth2::{
