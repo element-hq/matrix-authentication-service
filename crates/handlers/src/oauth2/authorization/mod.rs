@@ -146,7 +146,8 @@ pub(crate) async fn get(
         &response_mode,
         redirect_uri.clone(),
         params.auth.state.clone(),
-    )?;
+    )?
+    .with_client(client.clone());
 
     // Get the session info from the cookie
     let (session_info, cookie_jar) = cookie_jar.session_info();
@@ -156,8 +157,21 @@ pub(crate) async fn get(
         let templates = templates.clone();
         let callback_destination = callback_destination.clone();
         async move {
-            let maybe_session = session_info.load_active_session(&mut repo).await?;
             let prompt = params.auth.prompt.as_deref().unwrap_or_default();
+
+            // We never fulfill prompt=none silently, so the answer is always
+            // login_required. prompt=none runs in a hidden iframe and the router sets
+            // `X-Frame-Options: DENY`, so the HTML interstitial would never render:
+            // answer with the immediate 303 instead.
+            if prompt.contains(&Prompt::None) {
+                return Ok(callback_destination.go_immediate(
+                    &templates,
+                    &locale,
+                    ClientError::from(ClientErrorCode::LoginRequired),
+                )?);
+            }
+
+            let maybe_session = session_info.load_active_session(&mut repo).await?;
 
             // Check if the request/request_uri/registration params are used. If so, reply
             // with the right error since we don't support them.
@@ -202,15 +216,6 @@ pub(crate) async fn get(
                     &templates,
                     &locale,
                     ClientError::from(ClientErrorCode::RegistrationNotSupported),
-                )?);
-            }
-
-            // Fail early if prompt=none; we never let it go through
-            if prompt.contains(&Prompt::None) {
-                return Ok(callback_destination.go(
-                    &templates,
-                    &locale,
-                    ClientError::from(ClientErrorCode::LoginRequired),
                 )?);
             }
 

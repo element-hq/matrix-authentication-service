@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -9,9 +10,11 @@
 use std::collections::HashMap;
 
 use axum::response::{Html, IntoResponse, Redirect, Response};
-use mas_data_model::AuthorizationGrant;
+use axum_extra::typed_header::TypedHeader;
+use headers::{CacheControl, Pragma};
+use mas_data_model::{AuthorizationGrant, Client};
 use mas_i18n::DataLocale;
-use mas_templates::{FormPostContext, Templates};
+use mas_templates::{FormPostContext, RedirectContext, Templates};
 use oauth2_types::requests::ResponseMode;
 use serde::Serialize;
 use thiserror::Error;
@@ -31,6 +34,7 @@ pub struct CallbackDestination {
     mode: CallbackDestinationMode,
     safe_redirect_uri: Url,
     state: Option<String>,
+    client: Option<Client>,
 }
 
 #[derive(Debug, Error)]
@@ -47,8 +51,8 @@ pub enum IntoCallbackDestinationError {
 
 #[derive(Debug, Error)]
 pub enum CallbackDestinationError {
-    #[error("Failed to render the form_post template")]
-    FormPostRender(#[from] mas_templates::TemplateError),
+    #[error("Failed to render the callback destination template")]
+    TemplateRender(#[from] mas_templates::TemplateError),
 
     #[error("Failed to serialize parameters query string")]
     ParamsSerialization(#[from] serde_urlencoded::ser::Error),
@@ -98,14 +102,55 @@ impl CallbackDestination {
             mode,
             safe_redirect_uri: redirect_uri,
             state,
+            client: None,
         })
     }
 
+    /// Set the client shown on the redirect interstitial.
+    #[must_use]
+    pub fn with_client(mut self, client: Client) -> Self {
+        self.client = Some(client);
+        self
+    }
+
+    /// Hand the parameters back to the client via the branded interstitial
+    /// page (query/fragment modes) or the auto-submitting form (`form_post`).
+    ///
+    /// This is the interactive path: for query/fragment modes the link on the
+    /// interstitial works better than a bare 302 for native-scheme redirect
+    /// URIs.
     pub fn go<T: Serialize + Send + Sync>(
         self,
         templates: &Templates,
         locale: &DataLocale,
         params: T,
+    ) -> Result<Response, CallbackDestinationError> {
+        self.respond(templates, locale, params, true)
+    }
+
+    /// Hand the parameters back to the client with the original immediate 303
+    /// redirect (query/fragment modes), bypassing the interstitial.
+    ///
+    /// Used for `prompt=none`: silent token renewal runs `/authorize` in a
+    /// hidden iframe, but the router sets `X-Frame-Options: DENY`, so a framed
+    /// browser refuses to render the HTML interstitial and the renewal breaks.
+    /// The redirect must stay immediate. `form_post` is always an HTML page, so
+    /// it is unaffected.
+    pub fn go_immediate<T: Serialize + Send + Sync>(
+        self,
+        templates: &Templates,
+        locale: &DataLocale,
+        params: T,
+    ) -> Result<Response, CallbackDestinationError> {
+        self.respond(templates, locale, params, false)
+    }
+
+    fn respond<T: Serialize + Send + Sync>(
+        self,
+        templates: &Templates,
+        locale: &DataLocale,
+        params: T,
+        interstitial: bool,
     ) -> Result<Response, CallbackDestinationError> {
         #[derive(Serialize)]
         struct AllParams<'s, T> {
@@ -121,6 +166,7 @@ impl CallbackDestination {
 
         let mut redirect_uri = self.safe_redirect_uri;
         let state = self.state;
+        let client = self.client;
 
         match self.mode {
             CallbackDestinationMode::Query { existing_params } => {
@@ -154,7 +200,11 @@ impl CallbackDestination {
                     redirect_uri.set_fragment(Some(""));
                 }
 
-                Ok(Redirect::to(redirect_uri.as_str()).into_response())
+                if interstitial {
+                    render_redirect(templates, locale, redirect_uri, client)
+                } else {
+                    Ok(Redirect::to(redirect_uri.as_str()).into_response())
+                }
             }
 
             CallbackDestinationMode::Fragment => {
@@ -168,7 +218,11 @@ impl CallbackDestination {
 
                 redirect_uri.set_fragment(Some(&new_qs));
 
-                Ok(Redirect::to(redirect_uri.as_str()).into_response())
+                if interstitial {
+                    render_redirect(templates, locale, redirect_uri, client)
+                } else {
+                    Ok(Redirect::to(redirect_uri.as_str()).into_response())
+                }
             }
 
             CallbackDestinationMode::FormPost => {
@@ -177,35 +231,68 @@ impl CallbackDestination {
                     state,
                     params,
                 };
-                let ctx = FormPostContext::new_for_url(redirect_uri, merged).with_language(locale);
-                let rendered = templates.render_form_post(&ctx)?;
-                Ok(Html(rendered).into_response())
+                let mut ctx = FormPostContext::new_for_url(redirect_uri, merged);
+                if let Some(client) = client {
+                    ctx = ctx.with_client(client);
+                }
+                let rendered = templates.render_form_post(&ctx.with_language(locale))?;
+                // The body embeds the authorization code / tokens; keep it out of caches
+                // (RFC 6749 §5.1).
+                Ok((
+                    TypedHeader(CacheControl::new().with_no_store()),
+                    TypedHeader(Pragma::no_cache()),
+                    Html(rendered),
+                )
+                    .into_response())
             }
         }
     }
 }
 
+/// Render the `redirect.html` interstitial (query and fragment response modes).
+fn render_redirect(
+    templates: &Templates,
+    locale: &DataLocale,
+    redirect_uri: Url,
+    client: Option<Client>,
+) -> Result<Response, CallbackDestinationError> {
+    let mut ctx = RedirectContext::new(redirect_uri);
+    if let Some(client) = client {
+        ctx = ctx.with_client(client);
+    }
+    let rendered = templates.render_redirect(&ctx.with_language(locale))?;
+    // The body embeds the authorization code / tokens; keep it out of caches
+    // (RFC 6749 §5.1).
+    Ok((
+        TypedHeader(CacheControl::new().with_no_store()),
+        TypedHeader(Pragma::no_cache()),
+        Html(rendered),
+    )
+        .into_response())
+}
+
 #[cfg(test)]
 mod tests {
-    use hyper::{Request, StatusCode};
-    use mas_router::SimpleRoute;
-    use oauth2_types::registration::ClientRegistrationResponse;
+    use std::collections::BTreeMap;
+
+    use hyper::{
+        Request, StatusCode,
+        header::{CACHE_CONTROL, LOCATION},
+    };
+    use mas_axum_utils::SessionInfoExt;
+    use mas_data_model::AuthorizationCode;
+    use mas_router::{Route, SimpleRoute};
+    use oauth2_types::{
+        registration::ClientRegistrationResponse,
+        requests::ResponseMode,
+        scope::{OPENID, Scope},
+    };
     use sqlx::PgPool;
 
-    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
+    use crate::test_utils::{CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup};
 
-    /// Test that checks the content of the `Location` header
-    /// in response to an authorization request.
-    ///
-    /// Specifically, we expect to see an empty fragment (`#`)
-    /// at the end of the URL in order to overwrite any fragment
-    /// that the browser might otherwise preserve across the redirect.
-    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_query_mode_location_header(pool: PgPool) {
-        setup();
-        let state = TestState::from_pool(pool).await.unwrap();
-
-        // Register an OAuth2 client
+    /// Register a bare `authorization_code` client and return its client ID.
+    async fn register_client(state: &TestState) -> String {
         let request =
             Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
                 "client_uri": "https://example.com/",
@@ -217,15 +304,90 @@ mod tests {
 
         let response = state.request(request).await;
         response.assert_status(StatusCode::CREATED);
-
         let registration: ClientRegistrationResponse = response.json();
-        let client_id = registration.client_id;
+        registration.client_id
+    }
 
-        // Send an authorization request with response_mode=query and prompt=none.
-        // prompt=none always fails with login_required since there is no session,
-        // which exercises the CallbackDestinationMode::Query path.
+    /// An interactive (no `prompt=none`) query-mode error renders the redirect
+    /// interstitial that bounces to the callback URL. Checks it carries that
+    /// URL, keeps the empty-fragment (`#`) guard, and is marked `no-store`.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_query_mode_interstitial_redirect(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let client_id = register_client(&state).await;
 
-        // Build /authorize query parameters
+        // The `request` parameter is unsupported, so this fails interactively with
+        // `request_not_supported` through the CallbackDestinationMode::Query path.
+        let query = url::form_urlencoded::Serializer::new(String::new())
+            .append_pair("response_type", "code")
+            .append_pair("client_id", &client_id)
+            .append_pair("redirect_uri", "https://example.com/callback")
+            .append_pair("scope", "openid")
+            .append_pair("state", "test-state-value")
+            .append_pair("response_mode", "query")
+            .append_pair("request", "unsupported")
+            .finish();
+
+        let response = state
+            .request(Request::get(format!("https://example.com/authorize?{query}")).empty())
+            .await;
+
+        response.assert_status(StatusCode::OK);
+        // Token-bearing HTML must not be cached (RFC 6749 §5.1).
+        response.assert_header_value(CACHE_CONTROL, "no-store");
+
+        let body = response.body();
+        // The page bounces to the callback URL carrying the error...
+        assert!(body.contains("window.location.replace("));
+        assert!(body.contains("error=request_not_supported"));
+        // ...and the embedded URL keeps the trailing empty fragment guard: the
+        // error_description ends with "parameter." immediately followed by `#`.
+        assert!(body.contains("parameter.#"));
+    }
+
+    /// An interactive fragment-mode error renders the interstitial with the
+    /// parameters in the URL fragment.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_fragment_mode_interstitial_redirect(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let client_id = register_client(&state).await;
+
+        let query = url::form_urlencoded::Serializer::new(String::new())
+            .append_pair("response_type", "code")
+            .append_pair("client_id", &client_id)
+            .append_pair("redirect_uri", "https://example.com/callback")
+            .append_pair("scope", "openid")
+            .append_pair("state", "test-state-value")
+            .append_pair("response_mode", "fragment")
+            .append_pair("request", "unsupported")
+            .finish();
+
+        let response = state
+            .request(Request::get(format!("https://example.com/authorize?{query}")).empty())
+            .await;
+
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(CACHE_CONTROL, "no-store");
+
+        let body = response.body();
+        assert!(body.contains("window.location.replace("));
+        // Parameters land in the fragment (after the `#`), not the query.
+        assert!(body.contains("callback#"));
+        assert!(body.contains("error=request_not_supported"));
+    }
+
+    /// `prompt=none` bypasses the interstitial and keeps the original immediate
+    /// 303 redirect, so silent token renewal in a hidden iframe still works
+    /// (the router sets `X-Frame-Options: DENY`, which would block the framed
+    /// interstitial).
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_prompt_none_immediate_redirect(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let client_id = register_client(&state).await;
+
         let query = url::form_urlencoded::Serializer::new(String::new())
             .append_pair("response_type", "code")
             .append_pair("client_id", &client_id)
@@ -240,12 +402,101 @@ mod tests {
             .request(Request::get(format!("https://example.com/authorize?{query}")).empty())
             .await;
 
+        // No session + prompt=none => login_required, delivered as an immediate
+        // redirect rather than the HTML interstitial.
         response.assert_status(StatusCode::SEE_OTHER);
+        let location = response
+            .headers()
+            .get(LOCATION)
+            .expect("missing Location header")
+            .to_str()
+            .unwrap();
+        assert!(location.contains("error=login_required"), "{location}");
+    }
 
-        // Check the form of the Location redirect
-        response.assert_header_value(
-            hyper::header::LOCATION,
-            "https://example.com/callback?state=test-state-value&error=login_required&error_description=The+Authorization+Server+requires+End-User+authentication.#",
+    /// The consent POST success path is always interactive and renders the
+    /// interstitial carrying the authorization code.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_consent_post_success_interstitial(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+        let client_id = register_client(&state).await;
+
+        // Provision a user, session and a pending grant directly via the repository.
+        let mut repo = state.repository().await.unwrap();
+        let user = repo
+            .user()
+            .add(&mut state.rng(), &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+        let browser_session = repo
+            .browser_session()
+            .add(&mut state.rng(), &state.clock, &user, None)
+            .await
+            .unwrap();
+        let client = repo
+            .oauth2_client()
+            .find_by_client_id(&client_id)
+            .await
+            .unwrap()
+            .unwrap();
+        let grant = repo
+            .oauth2_authorization_grant()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                &client,
+                "https://example.com/callback".parse().unwrap(),
+                Scope::from_iter([OPENID]),
+                Some(AuthorizationCode {
+                    code: "thisisaverysecurecode".to_owned(),
+                    pkce: None,
+                }),
+                Some("test-state-value".to_owned()),
+                None,
+                ResponseMode::Query,
+                false,
+                None,
+                None,
+                BTreeMap::new(),
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        // Authenticate the browser session via its cookie.
+        cookies.import(state.cookie_jar().set_session(&browser_session));
+
+        let consent_path = mas_router::Consent(grant.id).path().into_owned();
+
+        // Render the consent page to get a CSRF token.
+        let request = cookies.with_cookies(Request::get(&consent_path).empty());
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        let csrf_token = response
+            .body()
+            .split("name=\"csrf\" value=\"")
+            .nth(1)
+            .unwrap()
+            .split('\"')
+            .next()
+            .unwrap()
+            .to_owned();
+
+        // Submit the consent form.
+        let request = cookies.with_cookies(
+            Request::post(&consent_path).form(serde_json::json!({ "csrf": csrf_token })),
         );
+        let response = state.request(request).await;
+
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(CACHE_CONTROL, "no-store");
+        let body = response.body();
+        assert!(body.contains("window.location.replace("));
+        assert!(body.contains("code=thisisaverysecurecode"));
+        // The interstitial heading ("Opening …").
+        assert!(body.contains("Opening"));
     }
 }
