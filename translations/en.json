@@ -10,7 +10,7 @@
     },
     "continue": "Continue",
     "@continue": {
-      "context": "form_post.html:25:28-48, pages/consent.html:71:28-48, pages/device_link.html:42:28-48, pages/login.html:68:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:77:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:52:28-48"
+      "context": "form_post.html:42:28-48, pages/consent.html:71:28-48, pages/device_link.html:42:28-48, pages/login.html:68:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:77:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:52:28-48, redirect.html:37:71-91"
     },
     "create_account": "Create Account",
     "@create_account": {
@@ -83,7 +83,7 @@
     },
     "loading": "Loading…",
     "@loading": {
-      "context": "form_post.html:14:27-46"
+      "context": "form_post.html:30:29-48, redirect.html:28:29-48"
     },
     "mxid": "Matrix ID",
     "@mxid": {
@@ -655,6 +655,13 @@
           "context": "pages/recovery/start.html:18:27-58",
           "description": "The title of the page to initiate an account recovery"
         }
+      }
+    },
+    "redirect": {
+      "heading": "Opening %(client_name)s…",
+      "@heading": {
+        "context": "form_post.html:26:29-106, redirect.html:24:29-106",
+        "description": "Heading of the interstitial page shown while the browser is redirected back to the client application after authorization."
       }
     },
     "register": {

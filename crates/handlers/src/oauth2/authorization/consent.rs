@@ -253,7 +253,7 @@ pub(crate) async fn post(
         .lookup(grant_id)
         .await?
         .ok_or(RouteError::GrantNotFound)?;
-    let callback_destination = CallbackDestination::try_from(&grant)?;
+    let mut callback_destination = CallbackDestination::try_from(&grant)?;
 
     let Some(browser_session) = maybe_session else {
         let next = PostAuthAction::continue_grant(grant_id);
@@ -270,6 +270,9 @@ pub(crate) async fn post(
         .lookup(grant.client_id)
         .await?
         .ok_or(RouteError::NoSuchClient(grant.client_id))?;
+
+    // Brand the redirect interstitial with the client (logo + name).
+    callback_destination = callback_destination.with_client(client.clone());
 
     if !matches!(grant.stage, AuthorizationGrantStage::Pending) {
         return Err(RouteError::GrantNotPending(grant.id));

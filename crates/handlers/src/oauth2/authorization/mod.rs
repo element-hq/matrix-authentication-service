@@ -140,12 +140,15 @@ pub(crate) async fn get(
     let response_type = params.auth.response_type;
     let response_mode = resolve_response_mode(&response_type, params.auth.response_mode)?;
 
-    // Now we have a proper callback destination to go to on error
+    // Callback destination for error responses, branded with the client: errors
+    // still hand off to the client's redirect URI (often a native scheme or
+    // App-/Universal-Link), where the interstitial's link beats a bare 302.
     let callback_destination = CallbackDestination::try_new(
         &response_mode,
         redirect_uri.clone(),
         params.auth.state.clone(),
-    )?;
+    )?
+    .with_client(client.clone());
 
     // Get the session info from the cookie
     let (session_info, cookie_jar) = cookie_jar.session_info();

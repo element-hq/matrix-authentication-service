@@ -1,7 +1,5 @@
 {#
 Copyright 2026 Element Creations Ltd.
-Copyright 2024, 2025 New Vector Ltd.
-Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 
 SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 Please see LICENSE files in the repository root for full details.
@@ -32,18 +30,13 @@ Please see LICENSE files in the repository root for full details.
     {% endif %}
   </header>
 
-  <form method="post" class="flex flex-col"{% if redirect_uri is not none %} action="{{ redirect_uri }}"{% endif %}>
-    {% for key, value in params|items %}
-      <input type="hidden" name="{{ key }}" value="{{ value }}" />
-    {% endfor %}
+  <noscript>
+    <meta http-equiv="refresh" content="0;url={{ redirect_uri }}">
+  </noscript>
 
-    <noscript>
-      {# Display a button to submit the form in case JavaScript is disabled #}
-      {{ button.button(text=_("action.continue")) }}
-    </noscript>
-  </form>
+  <a href="{{ redirect_uri }}" class="cpd-link" data-kind="primary">{{ _("action.continue") }}</a>
 
-  {# Submit the form in JavaScript on the next tick, so that if the browser
+  {# Redirect the user to the client using JavaScript, so that if the browser
      wants to display the placeholder instead of a blank page, it can #}
-  <script>setTimeout(function() { document.forms[0].submit(); }, 0);</script>
+  <script>window.location.replace({{ redirect_uri | tojson }});</script>
 {% endblock %}
