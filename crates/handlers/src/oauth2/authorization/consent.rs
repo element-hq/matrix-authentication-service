@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -305,21 +306,11 @@ pub(crate) async fn post(
         return Ok((cookie_jar, Html(content)).into_response());
     }
 
-    // All good, let's start the session
-    let session = repo
-        .oauth2_session()
-        .add_from_browser_session(
-            &mut rng,
-            &clock,
-            &client,
-            &browser_session,
-            grant.scope.clone(),
-        )
-        .await?;
-
+    // Fulfill the grant, recording the consenting browser session. The OAuth 2.0
+    // session is created later, at code exchange, so abandoned grants leave none.
     let grant = repo
         .oauth2_authorization_grant()
-        .fulfill(&clock, &session, grant)
+        .fulfill(&clock, &browser_session, grant)
         .await?;
 
     let mut params = AuthorizationResponse::default();
@@ -351,10 +342,6 @@ pub(crate) async fn post(
     }
 
     repo.save().await?;
-
-    activity_tracker
-        .record_oauth2_session(&clock, &session)
-        .await;
 
     Ok((
         cookie_jar,
