@@ -33,7 +33,6 @@ use opentelemetry_semantic_conventions::{
     },
 };
 use reqwest::Response;
-use rustls_platform_verifier::ConfigVerifierExt;
 use tokio::time::Instant;
 use tower::{BoxError, Service as _};
 use tracing::Instrument;
@@ -107,16 +106,9 @@ fn otel_net_protocol_version(response: &Response) -> &'static str {
 #[must_use]
 pub fn client() -> reqwest::Client {
     // TODO: can/should we limit in-flight requests?
-
-    // The explicit typing here is because `use_preconfigured_tls` accepts
-    // `Any`, but wants a `ClientConfig` under the hood. This helps us detect
-    // breaking changes in the rustls-platform-verifier API.
-    let tls_config: rustls::ClientConfig =
-        rustls::ClientConfig::with_platform_verifier().expect("failed to create TLS config");
-
     reqwest::Client::builder()
         .dns_resolver(Arc::new(TracingResolver::new()))
-        .use_preconfigured_tls(tls_config)
+        .tls_backend_rustls()
         .user_agent(USER_AGENT)
         .timeout(Duration::from_mins(1))
         .connect_timeout(Duration::from_secs(30))
