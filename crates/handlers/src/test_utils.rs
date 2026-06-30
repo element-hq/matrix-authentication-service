@@ -170,6 +170,11 @@ impl TestState {
         pool: PgPool,
         site_config: SiteConfig,
     ) -> Result<Self, anyhow::Error> {
+        // Make sure the rustls crypto provider and tracing are set up, as
+        // building the HTTP client below requires a process-level provider to
+        // be installed.
+        setup();
+
         let workspace_root = workspace_root();
 
         let task_tracker = TaskTracker::new();
