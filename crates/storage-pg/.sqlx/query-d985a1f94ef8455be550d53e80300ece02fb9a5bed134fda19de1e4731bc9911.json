@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE user_passkeys\n                SET name = $2\n                WHERE user_passkey_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d985a1f94ef8455be550d53e80300ece02fb9a5bed134fda19de1e4731bc9911"
+}

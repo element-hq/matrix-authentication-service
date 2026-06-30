@@ -240,9 +240,11 @@ impl BaseQuery {
 
         let ret = match node_type {
             // TODO
-            NodeType::Authentication | NodeType::CompatSsoLogin | NodeType::UserRecoveryTicket => {
-                None
-            }
+            NodeType::Authentication
+            | NodeType::CompatSsoLogin
+            | NodeType::UserRecoveryTicket
+            | NodeType::UserPasskey
+            | NodeType::UserPasskeyChallenge => None,
 
             NodeType::UpstreamOAuth2Provider => UpstreamOAuthQuery
                 .upstream_oauth2_provider(ctx, id)

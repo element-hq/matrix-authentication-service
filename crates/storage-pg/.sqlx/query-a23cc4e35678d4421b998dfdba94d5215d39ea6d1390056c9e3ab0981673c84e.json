@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                DELETE FROM user_passkeys\n                WHERE user_passkey_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a23cc4e35678d4421b998dfdba94d5215d39ea6d1390056c9e3ab0981673c84e"
+}

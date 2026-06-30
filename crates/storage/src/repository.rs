@@ -26,9 +26,9 @@ use crate::{
         UpstreamOAuthSessionRepository,
     },
     user::{
-        BrowserSessionRepository, UserEmailRepository, UserPasswordRepository,
-        UserRecoveryRepository, UserRegistrationRepository, UserRegistrationTokenRepository,
-        UserRepository, UserTermsRepository,
+        BrowserSessionRepository, UserEmailRepository, UserPasskeyRepository,
+        UserPasswordRepository, UserRecoveryRepository, UserRegistrationRepository,
+        UserRegistrationTokenRepository, UserRepository, UserTermsRepository,
     },
 };
 
@@ -136,6 +136,9 @@ pub trait RepositoryAccess: Send {
 
     /// Get an [`UserEmailRepository`]
     fn user_email<'c>(&'c mut self) -> Box<dyn UserEmailRepository<Error = Self::Error> + 'c>;
+
+    /// Get an [`UserPasskeyRepository`]
+    fn user_passkey<'c>(&'c mut self) -> Box<dyn UserPasskeyRepository<Error = Self::Error> + 'c>;
 
     /// Get an [`UserPasswordRepository`]
     fn user_password<'c>(&'c mut self)
@@ -266,9 +269,9 @@ mod impls {
             UpstreamOAuthSessionRepository,
         },
         user::{
-            BrowserSessionRepository, UserEmailRepository, UserPasswordRepository,
-            UserRegistrationRepository, UserRegistrationTokenRepository, UserRepository,
-            UserTermsRepository,
+            BrowserSessionRepository, UserEmailRepository, UserPasskeyRepository,
+            UserPasswordRepository, UserRegistrationRepository, UserRegistrationTokenRepository,
+            UserRepository, UserTermsRepository,
         },
     };
 
@@ -344,6 +347,12 @@ mod impls {
 
         fn user_email<'c>(&'c mut self) -> Box<dyn UserEmailRepository<Error = Self::Error> + 'c> {
             Box::new(MapErr::new(self.inner.user_email(), &mut self.mapper))
+        }
+
+        fn user_passkey<'c>(
+            &'c mut self,
+        ) -> Box<dyn UserPasskeyRepository<Error = Self::Error> + 'c> {
+            Box::new(MapErr::new(self.inner.user_passkey(), &mut self.mapper))
         }
 
         fn user_password<'c>(
@@ -535,6 +544,12 @@ mod impls {
 
         fn user_email<'c>(&'c mut self) -> Box<dyn UserEmailRepository<Error = Self::Error> + 'c> {
             (**self).user_email()
+        }
+
+        fn user_passkey<'c>(
+            &'c mut self,
+        ) -> Box<dyn UserPasskeyRepository<Error = Self::Error> + 'c> {
+            (**self).user_passkey()
         }
 
         fn user_password<'c>(

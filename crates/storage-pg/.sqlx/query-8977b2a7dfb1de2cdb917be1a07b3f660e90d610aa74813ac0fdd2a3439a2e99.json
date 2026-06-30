@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                DELETE FROM user_passkey_challenges\n                WHERE created_at < $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8977b2a7dfb1de2cdb917be1a07b3f660e90d610aa74813ac0fdd2a3439a2e99"
+}

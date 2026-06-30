@@ -11,7 +11,7 @@ use mas_policy::Policy;
 use mas_router::UrlBuilder;
 use mas_storage::{BoxRepository, RepositoryError};
 
-use crate::{Limiter, graphql::Requester, passwords::PasswordManager};
+use crate::{Limiter, graphql::Requester, passwords::PasswordManager, webauthn::Webauthn};
 
 const CLEAR_SESSION_SENTINEL: &str = "__CLEAR_SESSION__";
 
@@ -26,6 +26,7 @@ pub trait State {
     fn site_config(&self) -> &SiteConfig;
     fn url_builder(&self) -> &UrlBuilder;
     fn limiter(&self) -> &Limiter;
+    fn webauthn(&self) -> &Webauthn;
 }
 
 pub type BoxState = Box<dyn State + Send + Sync + 'static>;

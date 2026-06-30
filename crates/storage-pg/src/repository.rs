@@ -28,9 +28,9 @@ use mas_storage::{
         UpstreamOAuthSessionRepository,
     },
     user::{
-        BrowserSessionRepository, UserEmailRepository, UserPasswordRepository,
-        UserRecoveryRepository, UserRegistrationRepository, UserRegistrationTokenRepository,
-        UserRepository, UserTermsRepository,
+        BrowserSessionRepository, UserEmailRepository, UserPasskeyRepository,
+        UserPasswordRepository, UserRecoveryRepository, UserRegistrationRepository,
+        UserRegistrationTokenRepository, UserRepository, UserTermsRepository,
     },
 };
 use sqlx::{PgConnection, PgPool, Postgres, Transaction};
@@ -60,9 +60,9 @@ use crate::{
         PgUpstreamOAuthSessionRepository,
     },
     user::{
-        PgBrowserSessionRepository, PgUserEmailRepository, PgUserPasswordRepository,
-        PgUserRecoveryRepository, PgUserRegistrationRepository, PgUserRegistrationTokenRepository,
-        PgUserRepository, PgUserTermsRepository,
+        PgBrowserSessionRepository, PgUserEmailRepository, PgUserPasskeyRepository,
+        PgUserPasswordRepository, PgUserRecoveryRepository, PgUserRegistrationRepository,
+        PgUserRegistrationTokenRepository, PgUserRepository, PgUserTermsRepository,
     },
 };
 
@@ -228,6 +228,10 @@ where
 
     fn user_email<'c>(&'c mut self) -> Box<dyn UserEmailRepository<Error = Self::Error> + 'c> {
         Box::new(PgUserEmailRepository::new(self.conn.as_mut()))
+    }
+
+    fn user_passkey<'c>(&'c mut self) -> Box<dyn UserPasskeyRepository<Error = Self::Error> + 'c> {
+        Box::new(PgUserPasskeyRepository::new(self.conn.as_mut()))
     }
 
     fn user_password<'c>(

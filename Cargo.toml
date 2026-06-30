@@ -42,6 +42,8 @@ broken_intra_doc_links = "deny"
 [workspace.dependencies]
 
 # Workspace crates
+mas-aaguid = { path = "./crates/aaguid/", version = "=1.19.0" }
+mas-aaguid-codegen = { path = "./crates/aaguid-codegen/", version = "=1.19.0" }
 mas-axum-utils = { path = "./crates/axum-utils/", version = "=1.19.0" }
 mas-cli = { path = "./crates/cli/", version = "=1.19.0" }
 mas-config = { path = "./crates/config/", version = "=1.19.0" }
@@ -283,15 +285,7 @@ features = ["client", "server", "http1", "http2"]
 # Additional Hyper utilties
 [workspace.dependencies.hyper-util]
 version = "0.1.18"
-features = [
-    "client",
-    "server",
-    "server-auto",
-    "service",
-    "http1",
-    "http2",
-    "tokio",
-]
+features = ["client", "server", "server-auto", "service", "http1", "http2", "tokio"]
 
 # Hyper Rustls support
 [workspace.dependencies.hyper-rustls]
@@ -365,15 +359,15 @@ features = ["serde"]
 version = "0.11.22"
 default-features = false
 features = [
-    "tokio1-rustls",
-    "rustls-platform-verifier",
-    "aws-lc-rs",
-    "hostname",
-    "builder",
-    "tracing",
-    "pool",
-    "smtp-transport",
-    "sendmail-transport",
+  "tokio1-rustls",
+  "rustls-platform-verifier",
+  "aws-lc-rs",
+  "hostname",
+  "builder",
+  "tracing",
+  "pool",
+  "smtp-transport",
+  "sendmail-transport",
 ]
 
 # Listening on passed FDs
@@ -432,9 +426,9 @@ features = ["trace", "metrics"]
 [workspace.dependencies.opentelemetry_sdk]
 version = "0.32.1"
 features = [
-    "experimental_trace_batch_span_processor_with_async_runtime",
-    "experimental_metrics_periodicreader_with_async_runtime",
-    "rt-tokio",
+  "experimental_trace_batch_span_processor_with_async_runtime",
+  "experimental_metrics_periodicreader_with_async_runtime",
+  "rt-tokio",
 ]
 [workspace.dependencies.tracing-opentelemetry]
 version = "0.33.0"
@@ -510,15 +504,7 @@ version = "1.12.2"
 [workspace.dependencies.reqwest]
 version = "0.13.4"
 default-features = false
-features = [
-    "http2",
-    "rustls-no-provider",
-    "charset",
-    "json",
-    "form",
-    "socks",
-    "system-proxy",
-]
+features = ["http2", "rustls-no-provider", "charset", "json", "form", "socks", "system-proxy"]
 
 # RSA cryptography
 [workspace.dependencies.rsa]
@@ -567,12 +553,7 @@ features = ["derive", "attr", "with-uuid", "with-chrono", "postgres-array"]
 # Query builder integration with SQLx
 [workspace.dependencies.sea-query-sqlx]
 version = "0.8.1"
-features = [
-    "sqlx-postgres",
-    "with-uuid",
-    "with-chrono",
-    "postgres-array",
-]
+features = ["sqlx-postgres", "with-uuid", "with-chrono", "postgres-array"]
 
 # Sentry error tracking
 [workspace.dependencies.sentry]
@@ -634,14 +615,14 @@ features = ["std"]
 [workspace.dependencies.sqlx]
 version = "0.8.6"
 features = [
-    "runtime-tokio",
-    "tls-rustls-aws-lc-rs",
-    "postgres",
-    "migrate",
-    "chrono",
-    "json",
-    "uuid",
-    "ipnetwork",
+  "runtime-tokio",
+  "tls-rustls-aws-lc-rs",
+  "postgres",
+  "migrate",
+  "chrono",
+  "json",
+  "uuid",
+  "ipnetwork",
 ]
 
 # Custom error types
@@ -716,6 +697,7 @@ features = ["serde", "uuid"]
 # UUID support
 [workspace.dependencies.uuid]
 version = "1.18.1"
+features = ["macro-diagnostics"]
 
 # HTML escaping
 [workspace.dependencies.v_htmlescape]
@@ -729,6 +711,10 @@ features = ["rustc"]
 # Directory traversal
 [workspace.dependencies.walkdir]
 version = "2.5.0"
+
+[workspace.dependencies.webauthn_rp]
+version = "0.3.0"
+features = ["bin", "serde_relaxed", "custom", "serializable_server_state"]
 
 # HTTP mock server
 [workspace.dependencies.wiremock]
@@ -752,7 +738,7 @@ version = "3.1.0"
 
 [profile.release]
 codegen-units = 1 # Reduce the number of codegen units to increase optimizations
-lto = true        # Enable fat LTO
+lto = true # Enable fat LTO
 
 # A few profile opt-level tweaks to make the test suite run faster
 [profile.dev.package]

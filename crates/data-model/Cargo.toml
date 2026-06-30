@@ -29,6 +29,7 @@ rand.workspace = true
 rand_chacha.workspace = true
 regex.workspace = true
 woothee.workspace = true
+webauthn_rp.workspace = true
 
 mas-iana.workspace = true
 # Added for rustdoc links

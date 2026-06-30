@@ -60,6 +60,9 @@ pub struct SiteConfig {
     /// Experimental plan management iframe URI.
     plan_management_iframe_uri: Option<String>,
 
+    /// Whether passkeys are enabled
+    passkeys_enabled: bool,
+
     /// Limits on the number of application sessions that each user can have
     session_limit: Option<SessionLimitConfig>,
 }
@@ -129,6 +132,7 @@ impl SiteConfig {
             minimum_password_complexity: data_model.minimum_password_complexity,
             login_with_email_allowed: data_model.login_with_email_allowed,
             plan_management_iframe_uri: data_model.plan_management_iframe_uri.clone(),
+            passkeys_enabled: data_model.passkeys_enabled,
             session_limit: data_model
                 .session_limit
                 .as_ref()

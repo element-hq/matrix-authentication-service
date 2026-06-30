@@ -81,7 +81,7 @@ const Backend = {
   },
 } satisfies BackendModule;
 
-export const setupI18n = () => {
+export const setupI18n = () =>
   i18n
     .use(Backend)
     .use(LanguageDetector)
@@ -96,7 +96,6 @@ export const setupI18n = () => {
         escapeValue: false, // React has built-in XSS protections
       },
     } satisfies InitOptions);
-};
 
 import.meta.hot?.on("locales-update", () => {
   i18n.reloadResources().then(() => {

@@ -15,6 +15,7 @@ use ulid::Ulid;
 use crate::{Page, Pagination, repository_impl};
 
 mod email;
+mod passkey;
 mod password;
 mod recovery;
 mod registration;
@@ -24,6 +25,7 @@ mod terms;
 
 pub use self::{
     email::{UserEmailFilter, UserEmailRepository},
+    passkey::{UserPasskeyFilter, UserPasskeyRepository},
     password::UserPasswordRepository,
     recovery::UserRecoveryRepository,
     registration::UserRegistrationRepository,
