@@ -102,7 +102,42 @@ macro_rules! impl_from_error_for_route {
 }
 
 pub use mas_axum_utils::{ErrorWrapper, cookies::CookieManager};
-use mas_data_model::{BoxClock, BoxRng};
+use mas_data_model::{BoxClock, BoxRng, MatrixUser};
+
+/// Fetch information about the user from the homeserver, to build a
+/// [`MatrixUser`] shown on a page. This is purely cosmetic, so failures are
+/// tolerated and queries are capped at 1s: on error or timeout the
+/// [`MatrixUser`] simply has no display name.
+pub(crate) async fn best_effort_matrix_user(
+    homeserver: &dyn HomeserverConnection,
+    localpart: &str,
+) -> MatrixUser {
+    let display_name = match tokio::time::timeout(
+        std::time::Duration::from_secs(1),
+        homeserver.query_user(localpart),
+    )
+    .await
+    {
+        Ok(Ok(user)) => user.displayname,
+        Ok(Err(err)) => {
+            tracing::warn!(
+                error = &*err as &dyn std::error::Error,
+                localpart,
+                "Failed to query user"
+            );
+            None
+        }
+        Err(_) => {
+            tracing::warn!(localpart, "Timed out while querying user");
+            None
+        }
+    };
+
+    MatrixUser {
+        mxid: homeserver.mxid(localpart),
+        display_name,
+    }
+}
 
 pub use self::{
     activity_tracker::{ActivityTracker, Bound as BoundActivityTracker},

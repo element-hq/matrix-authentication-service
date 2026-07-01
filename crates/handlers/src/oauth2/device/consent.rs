@@ -5,7 +5,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 
 use anyhow::Context;
 use axum::{
@@ -19,7 +19,7 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::{BoxClock, BoxRng, MatrixUser};
+use mas_data_model::{BoxClock, BoxRng};
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::{PostAuthAction, UrlBuilder};
@@ -157,35 +157,7 @@ pub(crate) async fn get(
         return Ok((cookie_jar, Html(content)).into_response());
     }
 
-    // Fetch informations about the user. This is purely cosmetic, so we let it
-    // fail and put a 1s timeout to it in case we fail to query it
-    // XXX: we're likely to need this in other places
-    let localpart = &session.user.username;
-    let display_name = match tokio::time::timeout(
-        Duration::from_secs(1),
-        homeserver.query_user(localpart),
-    )
-    .await
-    {
-        Ok(Ok(user)) => user.displayname,
-        Ok(Err(err)) => {
-            tracing::warn!(
-                error = &*err as &dyn std::error::Error,
-                localpart,
-                "Failed to query user"
-            );
-            None
-        }
-        Err(_) => {
-            tracing::warn!(localpart, "Timed out while querying user");
-            None
-        }
-    };
-
-    let matrix_user = MatrixUser {
-        mxid: homeserver.mxid(localpart),
-        display_name,
-    };
+    let matrix_user = crate::best_effort_matrix_user(&*homeserver, &session.user.username).await;
 
     let ctx = DeviceConsentContext::new(grant, client, matrix_user)
         .with_session(session)
@@ -341,35 +313,7 @@ pub(crate) async fn post(
 
     repo.save().await?;
 
-    // Fetch informations about the user. This is purely cosmetic, so we let it
-    // fail and put a 1s timeout to it in case we fail to query it
-    // XXX: we're likely to need this in other places
-    let localpart = &session.user.username;
-    let display_name = match tokio::time::timeout(
-        Duration::from_secs(1),
-        homeserver.query_user(localpart),
-    )
-    .await
-    {
-        Ok(Ok(user)) => user.displayname,
-        Ok(Err(err)) => {
-            tracing::warn!(
-                error = &*err as &dyn std::error::Error,
-                localpart,
-                "Failed to query user"
-            );
-            None
-        }
-        Err(_) => {
-            tracing::warn!(localpart, "Timed out while querying user");
-            None
-        }
-    };
-
-    let matrix_user = MatrixUser {
-        mxid: homeserver.mxid(localpart),
-        display_name,
-    };
+    let matrix_user = crate::best_effort_matrix_user(&*homeserver, &session.user.username).await;
 
     let ctx = DeviceConsentContext::new(grant, client, matrix_user)
         .with_session(session)
