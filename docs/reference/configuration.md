@@ -58,6 +58,7 @@ http:
 
         # Third option: listen on the given UNIX socket
         - socket: /tmp/mas.sock
+          mode: "660" # permissions to set on the socket, optional
 
         # Fourth option: grab an already open file descriptor given by the parent process
         # This is useful when using systemd socket activation
