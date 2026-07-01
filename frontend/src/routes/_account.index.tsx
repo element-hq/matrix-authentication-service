@@ -18,6 +18,11 @@ import * as v from "valibot";
 import AccountDeleteButton from "../components/AccountDeleteButton";
 import AccountManagementPasswordPreview from "../components/AccountManagementPasswordPreview";
 import { ButtonLink } from "../components/ButtonLink";
+import {
+  HCaptchaWidget,
+  ReCaptchaWidget,
+  TurnstileWidget,
+} from "../components/Captcha";
 import * as Collapsible from "../components/Collapsible";
 import * as Dialog from "../components/Dialog";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -235,6 +240,22 @@ function Index(): React.ReactElement {
           <Separator kind="section" />
         </>
       )}
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const data = new FormData(e.currentTarget);
+          const str = new URLSearchParams(
+            Object.fromEntries(data) as Record<string, string>,
+          );
+          console.log(str.toString());
+        }}
+      >
+        <ReCaptchaWidget siteKey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" />
+        <TurnstileWidget siteKey="1x00000000000000000000AA" />
+        <HCaptchaWidget siteKey="10000000-ffff-ffff-ffff-000000000001" />
+        <input type="submit" />
+      </form>
 
       {siteConfig.passwordLoginEnabled && viewerSession.user.hasPassword && (
         <>

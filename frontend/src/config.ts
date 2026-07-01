@@ -9,8 +9,9 @@ type AppConfig = {
   graphqlEndpoint: string;
 };
 
-interface IWindow {
+export interface IWindow {
   APP_CONFIG?: AppConfig;
+  RENDER_DATA?: object;
 }
 
 const config: AppConfig = (typeof window !== "undefined" &&
