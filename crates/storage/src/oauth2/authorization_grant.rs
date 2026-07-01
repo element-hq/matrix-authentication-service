@@ -8,7 +8,9 @@
 use std::collections::BTreeMap;
 
 use async_trait::async_trait;
-use mas_data_model::{AuthorizationCode, AuthorizationGrant, Client, Clock, Session};
+use mas_data_model::{
+    AuthorizationCode, AuthorizationGrant, BrowserSession, Client, Clock, Session,
+};
 use oauth2_types::{requests::ResponseMode, scope::Scope};
 use rand_core::RngCore;
 use ulid::Ulid;
@@ -96,15 +98,15 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
     async fn find_by_code(&mut self, code: &str)
     -> Result<Option<AuthorizationGrant>, Self::Error>;
 
-    /// Fulfill an authorization grant, by giving the [`Session`] that it
-    /// created
+    /// Fulfill an authorization grant, recording the [`BrowserSession`] that
+    /// gave consent. The OAuth 2.0 session is created later, at code exchange.
     ///
     /// Returns the updated authorization grant
     ///
     /// # Parameters
     ///
     /// * `clock`: The clock used to generate timestamps
-    /// * `session`: The session that was created using this authorization grant
+    /// * `browser_session`: The browser session that gave consent
     /// * `authorization_grant`: The authorization grant to fulfill
     ///
     /// # Errors
@@ -113,17 +115,19 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
     async fn fulfill(
         &mut self,
         clock: &dyn Clock,
-        session: &Session,
+        browser_session: &BrowserSession,
         authorization_grant: AuthorizationGrant,
     ) -> Result<AuthorizationGrant, Self::Error>;
 
-    /// Mark an authorization grant as exchanged
+    /// Mark an authorization grant as exchanged, linking the [`Session`] that
+    /// was created when the client exchanged the code for tokens.
     ///
     /// Returns the updated authorization grant
     ///
     /// # Parameters
     ///
     /// * `clock`: The clock used to generate timestamps
+    /// * `session`: The OAuth 2.0 session created during the code exchange
     /// * `authorization_grant`: The authorization grant to mark as exchanged
     ///
     /// # Errors
@@ -132,6 +136,7 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
     async fn exchange(
         &mut self,
         clock: &dyn Clock,
+        session: &Session,
         authorization_grant: AuthorizationGrant,
     ) -> Result<AuthorizationGrant, Self::Error>;
 
@@ -186,13 +191,14 @@ repository_impl!(OAuth2AuthorizationGrantRepository:
     async fn fulfill(
         &mut self,
         clock: &dyn Clock,
-        session: &Session,
+        browser_session: &BrowserSession,
         authorization_grant: AuthorizationGrant,
     ) -> Result<AuthorizationGrant, Self::Error>;
 
     async fn exchange(
         &mut self,
         clock: &dyn Clock,
+        session: &Session,
         authorization_grant: AuthorizationGrant,
     ) -> Result<AuthorizationGrant, Self::Error>;
 

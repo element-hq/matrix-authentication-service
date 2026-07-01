@@ -201,10 +201,11 @@ mod tests {
             .await
             .unwrap();
 
-        // Mark the grant as fulfilled
+        // Mark the grant as fulfilled, recording the browser session that
+        // consented (the OAuth 2.0 session is linked at exchange time instead)
         let grant = repo
             .oauth2_authorization_grant()
-            .fulfill(&clock, &session, grant)
+            .fulfill(&clock, &user_session, grant)
             .await
             .unwrap();
         assert!(grant.is_fulfilled());
@@ -218,10 +219,10 @@ mod tests {
             .expect("session not found");
         assert_eq!(session, session_lookup);
 
-        // Mark the grant as exchanged
+        // Mark the grant as exchanged, linking the OAuth 2.0 session
         let grant = repo
             .oauth2_authorization_grant()
-            .exchange(&clock, grant)
+            .exchange(&clock, &session, grant)
             .await
             .unwrap();
         assert!(grant.is_exchanged());

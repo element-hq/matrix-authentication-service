@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -8,10 +9,10 @@
 
 use std::collections::HashMap;
 
-use axum::response::{Html, IntoResponse, Redirect, Response};
-use mas_data_model::AuthorizationGrant;
+use axum::response::{Html, IntoResponse, Response};
+use mas_data_model::{AuthorizationGrant, Client};
 use mas_i18n::DataLocale;
-use mas_templates::{FormPostContext, Templates};
+use mas_templates::{FormPostContext, RedirectContext, Templates};
 use oauth2_types::requests::ResponseMode;
 use serde::Serialize;
 use thiserror::Error;
@@ -31,6 +32,7 @@ pub struct CallbackDestination {
     mode: CallbackDestinationMode,
     safe_redirect_uri: Url,
     state: Option<String>,
+    client: Option<Client>,
 }
 
 #[derive(Debug, Error)]
@@ -98,7 +100,15 @@ impl CallbackDestination {
             mode,
             safe_redirect_uri: redirect_uri,
             state,
+            client: None,
         })
+    }
+
+    /// Set the client shown on the redirect interstitial.
+    #[must_use]
+    pub fn with_client(mut self, client: Client) -> Self {
+        self.client = Some(client);
+        self
     }
 
     pub fn go<T: Serialize + Send + Sync>(
@@ -121,6 +131,7 @@ impl CallbackDestination {
 
         let mut redirect_uri = self.safe_redirect_uri;
         let state = self.state;
+        let client = self.client;
 
         match self.mode {
             CallbackDestinationMode::Query { existing_params } => {
@@ -154,7 +165,7 @@ impl CallbackDestination {
                     redirect_uri.set_fragment(Some(""));
                 }
 
-                Ok(Redirect::to(redirect_uri.as_str()).into_response())
+                Ok(render_redirect(templates, locale, redirect_uri, client)?)
             }
 
             CallbackDestinationMode::Fragment => {
@@ -168,7 +179,7 @@ impl CallbackDestination {
 
                 redirect_uri.set_fragment(Some(&new_qs));
 
-                Ok(Redirect::to(redirect_uri.as_str()).into_response())
+                Ok(render_redirect(templates, locale, redirect_uri, client)?)
             }
 
             CallbackDestinationMode::FormPost => {
@@ -177,12 +188,30 @@ impl CallbackDestination {
                     state,
                     params,
                 };
-                let ctx = FormPostContext::new_for_url(redirect_uri, merged).with_language(locale);
-                let rendered = templates.render_form_post(&ctx)?;
+                let mut ctx = FormPostContext::new_for_url(redirect_uri, merged);
+                if let Some(client) = client {
+                    ctx = ctx.with_client(client);
+                }
+                let rendered = templates.render_form_post(&ctx.with_language(locale))?;
                 Ok(Html(rendered).into_response())
             }
         }
     }
+}
+
+/// Render the `redirect.html` interstitial (query and fragment response modes).
+fn render_redirect(
+    templates: &Templates,
+    locale: &DataLocale,
+    redirect_uri: Url,
+    client: Option<Client>,
+) -> Result<Response, CallbackDestinationError> {
+    let mut ctx = RedirectContext::new(redirect_uri);
+    if let Some(client) = client {
+        ctx = ctx.with_client(client);
+    }
+    let rendered = templates.render_redirect(&ctx.with_language(locale))?;
+    Ok(Html(rendered).into_response())
 }
 
 #[cfg(test)]
@@ -194,14 +223,11 @@ mod tests {
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
 
-    /// Test that checks the content of the `Location` header
-    /// in response to an authorization request.
-    ///
-    /// Specifically, we expect to see an empty fragment (`#`)
-    /// at the end of the URL in order to overwrite any fragment
-    /// that the browser might otherwise preserve across the redirect.
+    /// The query response mode renders the interstitial page that bounces to
+    /// the callback URL. Checks it carries that URL and keeps the
+    /// empty-fragment (`#`) guard against fragment preservation.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_query_mode_location_header(pool: PgPool) {
+    async fn test_query_mode_interstitial_redirect(pool: PgPool) {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
 
@@ -240,12 +266,14 @@ mod tests {
             .request(Request::get(format!("https://example.com/authorize?{query}")).empty())
             .await;
 
-        response.assert_status(StatusCode::SEE_OTHER);
+        // The query response mode now renders the redirect interstitial page
+        response.assert_status(StatusCode::OK);
 
-        // Check the form of the Location redirect
-        response.assert_header_value(
-            hyper::header::LOCATION,
-            "https://example.com/callback?state=test-state-value&error=login_required&error_description=The+Authorization+Server+requires+End-User+authentication.#",
-        );
+        let body = response.body();
+        // The page bounces to the callback URL carrying the error...
+        assert!(body.contains("window.location.replace("));
+        assert!(body.contains("error=login_required"));
+        // ...and the embedded URL keeps the trailing empty fragment guard.
+        assert!(body.contains("authentication.#"));
     }
 }

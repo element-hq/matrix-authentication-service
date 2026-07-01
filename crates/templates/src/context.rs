@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -1947,6 +1948,7 @@ impl TemplateContext for DeviceNameContext {
 pub struct FormPostContext<T> {
     redirect_uri: Option<Url>,
     params: T,
+    client: Option<Client>,
 }
 
 impl<T: TemplateContext> TemplateContext for FormPostContext<T> {
@@ -1959,6 +1961,7 @@ impl<T: TemplateContext> TemplateContext for FormPostContext<T> {
         Self: Sized,
     {
         let sample_params = T::sample(now, rng, locales);
+        let client = Client::samples(now, rng).into_iter().next();
         sample_params
             .into_iter()
             .map(|(k, params)| {
@@ -1967,6 +1970,7 @@ impl<T: TemplateContext> TemplateContext for FormPostContext<T> {
                     FormPostContext {
                         redirect_uri: "https://example.com/callback".parse().ok(),
                         params,
+                        client: client.clone(),
                     },
                 )
             })
@@ -1981,6 +1985,7 @@ impl<T> FormPostContext<T> {
         Self {
             redirect_uri: Some(redirect_uri),
             params,
+            client: None,
         }
     }
 
@@ -1990,13 +1995,87 @@ impl<T> FormPostContext<T> {
         Self {
             redirect_uri: None,
             params,
+            client: None,
         }
+    }
+
+    /// Set the client shown on the page.
+    #[must_use]
+    pub fn with_client(mut self, client: Client) -> Self {
+        self.client = Some(client);
+        self
     }
 
     /// Add the language to the context
     ///
     /// This is usually implemented by the [`TemplateContext`] trait, but it is
     /// annoying to make it work because of the generic parameter
+    pub fn with_language(self, lang: &DataLocale) -> WithLanguage<Self> {
+        WithLanguage {
+            lang: lang.to_string(),
+            inner: self,
+        }
+    }
+}
+
+/// Context used by the `redirect.html` template
+#[derive(Serialize)]
+pub struct RedirectContext {
+    redirect_uri: Url,
+    client: Option<Client>,
+}
+
+impl TemplateContext for RedirectContext {
+    fn sample<R: Rng>(
+        now: chrono::DateTime<Utc>,
+        rng: &mut R,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
+    where
+        Self: Sized,
+    {
+        // One context per client shape (logo / no logo / …), plus a no-client one.
+        let mut contexts: Vec<RedirectContext> = Client::samples(now, rng)
+            .into_iter()
+            .map(|client| RedirectContext {
+                redirect_uri: "https://app.example.com/callback?code=abc123&state=xyz"
+                    .parse()
+                    .unwrap(),
+                client: Some(client),
+            })
+            .collect();
+        contexts.push(RedirectContext {
+            redirect_uri: "com.example.app://callback?code=abc123&state=xyz"
+                .parse()
+                .unwrap(),
+            client: None,
+        });
+        sample_list(contexts)
+    }
+}
+
+impl RedirectContext {
+    /// Constructs a redirect context for the given URL
+    #[must_use]
+    pub fn new(redirect_uri: Url) -> Self {
+        Self {
+            redirect_uri,
+            client: None,
+        }
+    }
+
+    /// Set the client shown on the page.
+    #[must_use]
+    pub fn with_client(mut self, client: Client) -> Self {
+        self.client = Some(client);
+        self
+    }
+
+    /// Add the language to the context
+    ///
+    /// This is usually implemented by the [`TemplateContext`] trait, but it is
+    /// annoying to make it work because of the generic parameter
+    #[must_use]
     pub fn with_language(self, lang: &DataLocale) -> WithLanguage<Self> {
         WithLanguage {
             lang: lang.to_string(),

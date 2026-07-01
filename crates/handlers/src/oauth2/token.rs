@@ -439,7 +439,7 @@ async fn authorization_code_grant(
 
     let now = clock.now();
 
-    let session_id = match authz_grant.stage {
+    let browser_session_id = match authz_grant.stage {
         AuthorizationGrantStage::Cancelled { cancelled_at } => {
             debug!(%cancelled_at, "Authorization grant was cancelled");
             return Err(RouteError::InvalidGrant(authz_grant.id));
@@ -460,10 +460,8 @@ async fn authorization_code_grant(
                     .await?
                     .ok_or(RouteError::NoSuchOAuthSession(session_id))?;
 
-                //if !session.is_finished() {
                 repo.oauth2_session().finish(clock, session).await?;
                 repo.save().await?;
-                //}
             }
 
             return Err(RouteError::InvalidGrant(authz_grant.id));
@@ -473,7 +471,7 @@ async fn authorization_code_grant(
             return Err(RouteError::InvalidGrant(authz_grant.id));
         }
         AuthorizationGrantStage::Fulfilled {
-            session_id,
+            browser_session_id,
             fulfilled_at,
         } => {
             if now - fulfilled_at > Duration::microseconds(10 * 60 * 1000 * 1000) {
@@ -481,27 +479,9 @@ async fn authorization_code_grant(
                 return Err(RouteError::InvalidGrant(authz_grant.id));
             }
 
-            session_id
+            browser_session_id
         }
     };
-
-    let mut session = repo
-        .oauth2_session()
-        .lookup(session_id)
-        .await?
-        .ok_or(RouteError::NoSuchOAuthSession(session_id))?;
-
-    // Generate a device name
-    let lang: DataLocale = authz_grant.locale.as_deref().unwrap_or("en").parse()?;
-    let ctx = DeviceNameContext::new(client.clone(), user_agent.clone()).with_language(lang);
-    let device_name = templates.render_device_name(&ctx)?;
-
-    if let Some(user_agent) = user_agent {
-        session = repo
-            .oauth2_session()
-            .record_user_agent(session, user_agent)
-            .await?;
-    }
 
     // This should never happen, since we looked up in the database using the code
     let code = authz_grant
@@ -509,10 +489,11 @@ async fn authorization_code_grant(
         .as_ref()
         .ok_or(RouteError::InvalidGrant(authz_grant.id))?;
 
-    if client.id != session.client_id {
+    // The session doesn't exist yet, so check the client against the grant.
+    if client.id != authz_grant.client_id {
         return Err(RouteError::UnexptectedClient {
             was: client.id,
-            expected: session.client_id,
+            expected: authz_grant.client_id,
         });
     }
 
@@ -526,16 +507,46 @@ async fn authorization_code_grant(
         }
     }
 
-    let Some(user_session_id) = session.user_session_id else {
-        tracing::warn!("No user session associated with this OAuth2 session");
-        return Err(RouteError::InvalidGrant(authz_grant.id));
-    };
-
     let browser_session = repo
         .browser_session()
-        .lookup(user_session_id)
+        .lookup(browser_session_id)
         .await?
-        .ok_or(RouteError::NoSuchBrowserSession(user_session_id))?;
+        .ok_or(RouteError::NoSuchBrowserSession(browser_session_id))?;
+
+    // The consenting session may have been terminated between consent and
+    // exchange (e.g. back-channel logout); don't mint tokens off a dead session.
+    if !browser_session.active() {
+        warn!(
+            user_session.id = %browser_session_id,
+            "Browser session that consented is no longer active, rejecting code exchange"
+        );
+        return Err(RouteError::InvalidGrant(authz_grant.id));
+    }
+
+    // Create the OAuth 2.0 session now the code has been presented (deferred
+    // from consent, so abandoned grants leave no session behind).
+    let mut session = repo
+        .oauth2_session()
+        .add_from_browser_session(
+            &mut rng,
+            clock,
+            client,
+            &browser_session,
+            authz_grant.scope.clone(),
+        )
+        .await?;
+
+    // Generate a device name, using the locale captured at authorization time
+    let lang: DataLocale = authz_grant.locale.as_deref().unwrap_or("en").parse()?;
+    let ctx = DeviceNameContext::new(client.clone(), user_agent.clone()).with_language(lang);
+    let device_name = templates.render_device_name(&ctx)?;
+
+    if let Some(user_agent) = user_agent {
+        session = repo
+            .oauth2_session()
+            .record_user_agent(session, user_agent)
+            .await?;
+    }
 
     let last_authentication = repo
         .browser_session()
@@ -600,7 +611,7 @@ async fn authorization_code_grant(
     }
 
     repo.oauth2_authorization_grant()
-        .exchange(clock, authz_grant)
+        .exchange(clock, &session, authz_grant)
         .await?;
 
     // XXX: there is a potential (but unlikely) race here, where the activity for
@@ -1118,22 +1129,11 @@ mod tests {
             .await
             .unwrap();
 
-        let session = repo
-            .oauth2_session()
-            .add_from_browser_session(
-                &mut state.rng(),
-                &state.clock,
-                &client,
-                &browser_session,
-                grant.scope.clone(),
-            )
-            .await
-            .unwrap();
-
-        // And fulfill it
+        // Fulfill with the consenting browser session; the session is created at
+        // exchange.
         let grant = repo
             .oauth2_authorization_grant()
-            .fulfill(&state.clock, &session, grant)
+            .fulfill(&state.clock, &browser_session, grant)
             .await
             .unwrap();
 
@@ -1219,22 +1219,11 @@ mod tests {
             .await
             .unwrap();
 
-        let session = repo
-            .oauth2_session()
-            .add_from_browser_session(
-                &mut state.rng(),
-                &state.clock,
-                &client,
-                &browser_session,
-                grant.scope.clone(),
-            )
-            .await
-            .unwrap();
-
-        // And fulfill it
+        // Fulfill with the consenting browser session; the session is created at
+        // exchange.
         let grant = repo
             .oauth2_authorization_grant()
-            .fulfill(&state.clock, &session, grant)
+            .fulfill(&state.clock, &browser_session, grant)
             .await
             .unwrap();
 
@@ -1258,6 +1247,111 @@ mod tests {
         response.assert_status(StatusCode::BAD_REQUEST);
         let ClientError { error, .. } = response.json();
         assert_eq!(error, ClientErrorCode::InvalidGrant);
+    }
+
+    /// If the consenting browser session is terminated before the code is
+    /// exchanged, the exchange must fail and (since the session is only created
+    /// at exchange time) no OAuth 2.0 session must be left behind.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_auth_code_grant_terminated_browser_session(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        // Provision a client
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://example.com/",
+                "redirect_uris": ["https://example.com/callback"],
+                "token_endpoint_auth_method": "none",
+                "response_types": ["code"],
+                "grant_types": ["authorization_code"],
+            }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+        let ClientRegistrationResponse { client_id, .. } = response.json();
+
+        let mut repo = state.repository().await.unwrap();
+
+        let user = repo
+            .user()
+            .add(&mut state.rng(), &state.clock, "bob".to_owned())
+            .await
+            .unwrap();
+
+        let browser_session = repo
+            .browser_session()
+            .add(&mut state.rng(), &state.clock, &user, None)
+            .await
+            .unwrap();
+
+        let client = repo
+            .oauth2_client()
+            .find_by_client_id(&client_id)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Start and fulfill a grant with that browser session
+        let code = "thisisaverysecurecode";
+        let grant = repo
+            .oauth2_authorization_grant()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                &client,
+                "https://example.com/redirect".parse().unwrap(),
+                Scope::from_iter([OPENID]),
+                Some(AuthorizationCode {
+                    code: code.to_owned(),
+                    pkce: None,
+                }),
+                Some("state".to_owned()),
+                Some("nonce".to_owned()),
+                ResponseMode::Query,
+                false,
+                None,
+                None,
+                std::collections::BTreeMap::new(),
+            )
+            .await
+            .unwrap();
+
+        let grant = repo
+            .oauth2_authorization_grant()
+            .fulfill(&state.clock, &browser_session, grant)
+            .await
+            .unwrap();
+
+        // Terminate the consenting browser session before the code is exchanged
+        repo.browser_session()
+            .finish(&state.clock, browser_session)
+            .await
+            .unwrap();
+
+        repo.save().await.unwrap();
+
+        // Exchanging the code must fail with invalid_grant
+        let request =
+            Request::post(mas_router::OAuth2TokenEndpoint::PATH).form(serde_json::json!({
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": grant.redirect_uri,
+                "client_id": client.client_id,
+            }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::BAD_REQUEST);
+        let ClientError { error, .. } = response.json();
+        assert_eq!(error, ClientErrorCode::InvalidGrant);
+
+        // ...and no OAuth 2.0 session must have been created
+        let mut repo = state.repository().await.unwrap();
+        let count = repo
+            .oauth2_session()
+            .count(mas_storage::oauth2::OAuth2SessionFilter::new())
+            .await
+            .unwrap();
+        assert_eq!(count, 0, "no OAuth 2.0 session should have been created");
+        repo.save().await.unwrap();
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
