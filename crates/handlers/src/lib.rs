@@ -434,6 +434,10 @@ where
             mas_router::Login::route(),
             get(self::views::login::get).post(self::views::login::post),
         )
+        .route(
+            mas_router::LoginComplete::route(),
+            get(self::views::login_complete::get),
+        )
         .route(mas_router::Logout::route(), post(self::views::logout::post))
         .route(
             mas_router::Register::route(),

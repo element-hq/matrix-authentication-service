@@ -8,7 +8,7 @@
 
 use std::collections::HashMap;
 
-use mas_data_model::{AuthorizationGrant, BrowserSession, Clock, User};
+use mas_data_model::{BrowserSession, Clock, User};
 use mas_jose::{
     claims::{self, TimeOptions},
     jwt::Jwt,
@@ -22,35 +22,36 @@ use ulid::Ulid;
 use crate::views::shared::{LoginHint, parse_login_hint};
 
 /// Decide whether the active browser session matches the identity the client
-/// requested on the grant.
+/// requested (on an authorization grant or a login session).
 ///
 /// The match key is the **user**, not the session: a stale `sid` whose user is
 /// still logged in is a match. The trust ladder mirrors §4 of the design:
 ///
-/// * a verified `id_token_hint` target (`grant.target_user_id`) is **trusted**
-///   and compared by user id;
-/// * otherwise an untrusted `grant.login_hint` is parsed and compared against
-///   the *current* session's own data only (we never look up the hinted
-///   account): an `mxid:` hint matches on localpart + homeserver, a bare email
-///   matches iff the current user owns that email;
+/// * a verified `id_token_hint` target (`target_user_id`) is **trusted** and
+///   compared by user id;
+/// * otherwise an untrusted `login_hint` is parsed and compared against the
+///   *current* session's own data only (we never look up the hinted account):
+///   an `mxid:` hint matches on localpart + homeserver, a bare email matches
+///   iff the current user owns that email;
 /// * an unparseable or absent hint is treated as no constraint (a match).
 ///
-/// Returns `Ok(true)` when there is no mismatch (proceed to consent),
+/// Returns `Ok(true)` when there is no mismatch (proceed with the flow),
 /// `Ok(false)` when the active session is a different account than requested.
 pub(crate) async fn session_matches_requested_identity(
     repo: &mut BoxRepository,
     homeserver: &str,
-    grant: &AuthorizationGrant,
+    target_user_id: Option<Ulid>,
+    login_hint: Option<&str>,
     session: &BrowserSession,
 ) -> Result<bool, RepositoryError> {
     // Trusted target wins: compare by user id.
-    if let Some(target) = grant.target_user_id {
+    if let Some(target) = target_user_id {
         return Ok(session.user.id == target);
     }
 
     // Otherwise fall back to the untrusted `login_hint`, compared only against
     // the current session's own data.
-    let Some(login_hint) = &grant.login_hint else {
+    let Some(login_hint) = login_hint else {
         return Ok(true);
     };
 

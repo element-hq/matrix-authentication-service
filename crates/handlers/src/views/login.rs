@@ -26,7 +26,9 @@ use mas_storage::{
     BoxRepository, RepositoryAccess,
     oauth2::OAuth2AuthorizationGrantRepository,
     upstream_oauth2::{UpstreamOAuthProviderRepository, UpstreamOAuthSessionRepository},
-    user::{BrowserSessionRepository, UserPasswordRepository, UserRepository},
+    user::{
+        BrowserSessionRepository, LoginSessionRepository, UserPasswordRepository, UserRepository,
+    },
 };
 use mas_templates::{
     FieldError, FormError, FormState, LoginContext, LoginFormField, TemplateContext, Templates,
@@ -441,66 +443,87 @@ enum WelcomeBackMethod {
 }
 
 /// A trusted welcome-back target: the user resolved from a verified
-/// `id_token_hint`, how they last authenticated, and the grant being
+/// `id_token_hint`, how they last authenticated, and the action being
 /// continued.
 struct WelcomeBackTarget {
     user: mas_data_model::User,
     method: WelcomeBackMethod,
-    grant_id: ulid::Ulid,
+    action: PostAuthAction,
 }
 
-/// Resolve the trusted welcome-back target of the grant this `/login` request
+/// Resolve the trusted welcome-back target of the flow this `/login` request
 /// continues, if any.
 ///
-/// Returns `None` when there is nothing to streamline: the request doesn't
-/// continue an authorization grant, the grant carries no *trusted*
-/// `target_user_id` (an untrusted `login_hint` never resolves one), or the
-/// target user vanished since authorize time.
+/// A resolved target can come off an authorization grant (`id_token_hint` on
+/// `/authorize`) or a login session (`id_token_hint` on the
+/// account-management deeplink). Returns `None` when there is nothing to
+/// streamline: the request doesn't continue either flow, the flow carries no
+/// *trusted* `target_user_id` (an untrusted `login_hint` never resolves one),
+/// the login session is no longer valid, or the target user vanished since
+/// the flow started.
 ///
 /// This is the single resolution shared by the GET ([`maybe_welcome_back`])
 /// and POST ([`render_credential_failure`]) paths so they stay in lockstep.
 async fn welcome_back_target(
     repo: &mut BoxRepository,
+    clock: &impl Clock,
     query: &OptionalPostAuthAction,
 ) -> Result<Option<WelcomeBackTarget>, InternalError> {
-    // Only authorization grants carry a resolved target.
-    let Some(PostAuthAction::ContinueAuthorizationGrant { id }) = query.post_auth_action else {
-        return Ok(None);
-    };
-
-    let Some(grant) = repo.oauth2_authorization_grant().lookup(id).await? else {
-        return Ok(None);
+    // Only authorization grants and login sessions carry a resolved target.
+    let target_user_ids = match query.post_auth_action {
+        Some(PostAuthAction::ContinueAuthorizationGrant { id }) => {
+            let Some(grant) = repo.oauth2_authorization_grant().lookup(id).await? else {
+                return Ok(None);
+            };
+            (grant.target_user_id, grant.target_user_session_id)
+        }
+        Some(PostAuthAction::ContinueLoginSession { id }) => {
+            let Some(login_session) = repo.login_session().lookup(id).await? else {
+                return Ok(None);
+            };
+            if !login_session.is_valid(clock.now()) {
+                return Ok(None);
+            }
+            (
+                login_session.target_user_id,
+                login_session.target_user_session_id,
+            )
+        }
+        _ => return Ok(None),
     };
 
     // Only act on a *trusted* target (`id_token_hint`); an untrusted `login_hint`
     // has no resolved `target_user_id`.
-    let Some(target_user_id) = grant.target_user_id else {
+    let (Some(target_user_id), target_user_session_id) = target_user_ids else {
         return Ok(None);
     };
 
     let Some(user) = repo.user().lookup(target_user_id).await? else {
-        // The target user vanished since authorize time.
+        // The target user vanished since the flow started.
         return Ok(None);
     };
 
-    let method = welcome_back_method(repo, &grant).await?;
+    let method = welcome_back_method(repo, target_user_session_id).await?;
 
     Ok(Some(WelcomeBackTarget {
         user,
         method,
-        grant_id: id,
+        action: query
+            .post_auth_action
+            .clone()
+            .expect("checked to be a continue action above"),
     }))
 }
 
-/// Recover how the trusted target last authenticated, following the grant's
+/// Recover how the trusted target last authenticated, following the flow's
 /// `target_user_session_id` to its most-recent [`Authentication`].
 ///
 /// [`Authentication`]: mas_data_model::Authentication
 async fn welcome_back_method(
     repo: &mut BoxRepository,
-    grant: &mas_data_model::AuthorizationGrant,
+    target_user_session_id: Option<ulid::Ulid>,
 ) -> Result<WelcomeBackMethod, InternalError> {
-    let Some(session_id) = grant.target_user_session_id else {
+    let Some(session_id) = target_user_session_id else {
         return Ok(WelcomeBackMethod::Unknown);
     };
     let Some(session) = repo.browser_session().lookup(session_id).await? else {
@@ -554,6 +577,7 @@ async fn welcome_back_method(
 /// it is disabled).
 async fn welcome_back_password_target(
     repo: &mut BoxRepository,
+    clock: &impl Clock,
     site_config: &SiteConfig,
     query: &OptionalPostAuthAction,
 ) -> Result<Option<mas_data_model::User>, InternalError> {
@@ -561,7 +585,7 @@ async fn welcome_back_password_target(
         return Ok(None);
     }
 
-    Ok(welcome_back_target(repo, query)
+    Ok(welcome_back_target(repo, clock, query)
         .await?
         .filter(|target| matches!(target.method, WelcomeBackMethod::Password))
         .map(|target| target.user))
@@ -646,8 +670,8 @@ async fn maybe_welcome_back(
     let Some(WelcomeBackTarget {
         user,
         method,
-        grant_id,
-    }) = welcome_back_target(repo, query).await?
+        action,
+    }) = welcome_back_target(repo, clock, query).await?
     else {
         return Ok(Err((cookie_jar, FormState::default())));
     };
@@ -666,8 +690,7 @@ async fn maybe_welcome_back(
         // still enabled: auto-redirect to that provider — mirroring the
         // password-disabled single-provider shortcut in `get`.
         WelcomeBackMethod::Upstream { provider_id } => {
-            let destination = UpstreamOAuth2Authorize::new(provider_id)
-                .and_then(PostAuthAction::ContinueAuthorizationGrant { id: grant_id });
+            let destination = UpstreamOAuth2Authorize::new(provider_id).and_then(action);
             Ok(Ok(
                 (cookie_jar, url_builder.redirect(&destination)).into_response()
             ))
@@ -784,7 +807,7 @@ async fn render_credential_failure(
     site_config: &SiteConfig,
     query_login_hint: QueryLoginHint,
 ) -> Result<Response, InternalError> {
-    let maybe_user = welcome_back_password_target(repo, site_config, &query).await?;
+    let maybe_user = welcome_back_password_target(repo, clock, site_config, &query).await?;
     if let Some(user) = maybe_user {
         return render_welcome_back(
             rng, clock, locale, templates, repo, homeserver, cookie_jar, &query, &user, form_state,

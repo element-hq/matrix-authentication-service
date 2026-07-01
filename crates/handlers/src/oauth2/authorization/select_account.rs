@@ -5,11 +5,13 @@
 
 //! The account-mismatch interstitial.
 //!
-//! Shown while continuing an authorization grant whose requested identity (a
-//! verified `id_token_hint` target, or an untrusted `login_hint`) doesn't match
-//! the active browser session. It is always scoped to a grant — never reachable
-//! as a standalone endpoint — which keeps it from being a generic phishing
-//! surface.
+//! Shown while continuing a flow whose requested identity (a verified
+//! `id_token_hint` target, or an untrusted `login_hint`) doesn't match the
+//! active browser session. Two flows carry a requested identity: an
+//! authorization grant (`id_token_hint`/`login_hint` on `/authorize`) and a
+//! login session (the same hints on the account-management deeplink). The
+//! screen is always scoped to one of them — never reachable as a standalone
+//! endpoint — which keeps it from being a generic phishing surface.
 
 use std::sync::Arc;
 
@@ -24,11 +26,13 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::{AuthorizationGrantStage, BoxClock, BoxRng};
+use mas_data_model::{AuthorizationGrant, AuthorizationGrantStage, BoxClock, BoxRng, LoginSession};
 use mas_matrix::HomeserverConnection;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
-    BoxRepository, oauth2::OAuth2AuthorizationGrantRepository, user::BrowserSessionRepository,
+    BoxRepository,
+    oauth2::OAuth2AuthorizationGrantRepository,
+    user::{BrowserSessionRepository, LoginSessionRepository},
 };
 use mas_templates::{SelectAccountContext, TemplateContext, Templates};
 use oauth2_types::errors::{ClientError, ClientErrorCode};
@@ -52,6 +56,9 @@ pub enum RouteError {
 
     #[error("Authorization grant {0} already used")]
     GrantNotPending(Ulid),
+
+    #[error("Login session not found")]
+    LoginSessionNotFound,
 }
 
 impl_from_error_for_route!(mas_templates::TemplateError);
@@ -63,7 +70,9 @@ impl IntoResponse for RouteError {
     fn into_response(self) -> Response {
         match self {
             Self::Internal(e) => InternalError::new(e).into_response(),
-            e @ Self::GrantNotFound => GenericError::new(StatusCode::NOT_FOUND, e).into_response(),
+            e @ (Self::GrantNotFound | Self::LoginSessionNotFound) => {
+                GenericError::new(StatusCode::NOT_FOUND, e).into_response()
+            }
             e @ Self::GrantNotPending(_) => {
                 GenericError::new(StatusCode::CONFLICT, e).into_response()
             }
@@ -72,7 +81,102 @@ impl IntoResponse for RouteError {
     }
 }
 
-/// Build the requested-identity display string and trust flag for the grant.
+/// The flow the interstitial is scoped to: the carrier of the requested
+/// identity, and where to send the user once the mismatch is resolved.
+enum Flow {
+    Grant(Box<AuthorizationGrant>),
+    LoginSession(Box<LoginSession>),
+}
+
+impl Flow {
+    fn target_user_id(&self) -> Option<Ulid> {
+        match self {
+            Self::Grant(grant) => grant.target_user_id,
+            Self::LoginSession(login_session) => login_session.target_user_id,
+        }
+    }
+
+    fn login_hint(&self) -> Option<&str> {
+        match self {
+            Self::Grant(grant) => grant.login_hint.as_deref(),
+            Self::LoginSession(login_session) => login_session.login_hint.as_deref(),
+        }
+    }
+
+    /// Where to continue when there is no mismatch (or the user explicitly
+    /// accepted one): consent for a grant, the completion handler for a login
+    /// session.
+    fn continue_destination(&self, url_builder: &UrlBuilder) -> axum::response::Redirect {
+        match self {
+            Self::Grant(grant) => url_builder.redirect(&mas_router::Consent(grant.id)),
+            Self::LoginSession(login_session) => {
+                url_builder.redirect(&mas_router::LoginComplete(login_session.id))
+            }
+        }
+    }
+}
+
+/// The result of loading the flow behind the interstitial's post-auth action.
+enum LoadedFlow {
+    Flow(Flow),
+    /// The action doesn't (or no longer) drives the interstitial; redirect
+    /// there instead.
+    Divert(axum::response::Redirect),
+}
+
+/// Load the flow the interstitial is scoped to, handling the stale cases.
+async fn load_flow(
+    repo: &mut BoxRepository,
+    clock: &BoxClock,
+    url_builder: &UrlBuilder,
+    action: &PostAuthAction,
+) -> Result<LoadedFlow, RouteError> {
+    match *action {
+        PostAuthAction::ContinueAuthorizationGrant { id } => {
+            tracing::Span::current().record("grant.id", tracing::field::display(id));
+            let grant = repo
+                .oauth2_authorization_grant()
+                .lookup(id)
+                .await?
+                .ok_or(RouteError::GrantNotFound)?;
+
+            if !matches!(grant.stage, AuthorizationGrantStage::Pending) {
+                return Err(RouteError::GrantNotPending(grant.id));
+            }
+
+            Ok(LoadedFlow::Flow(Flow::Grant(Box::new(grant))))
+        }
+
+        PostAuthAction::ContinueLoginSession { id } => {
+            tracing::Span::current().record("login_session.id", tracing::field::display(id));
+            let login_session = repo
+                .login_session()
+                .lookup(id)
+                .await?
+                .ok_or(RouteError::LoginSessionNotFound)?;
+
+            // A completed or expired login session can't drive the
+            // interstitial anymore; the completion handler deals with both
+            // (idempotent continue, or an "expired" error page).
+            if !login_session.is_valid(clock.now()) {
+                return Ok(LoadedFlow::Divert(
+                    url_builder.redirect(&mas_router::LoginComplete(login_session.id)),
+                ));
+            }
+
+            Ok(LoadedFlow::Flow(Flow::LoginSession(Box::new(
+                login_session,
+            ))))
+        }
+
+        // Other flows (device-code, manage-account) don't populate a
+        // requested identity yet, so the account-selection screen is a no-op
+        // passthrough for them; just continue the flow.
+        _ => Ok(LoadedFlow::Divert(action.go_next(url_builder))),
+    }
+}
+
+/// Build the requested-identity display string and trust flag for the flow.
 ///
 /// For a trusted target we look up the resolved user (allowed — the hint was
 /// cryptographically verified) and show its mxid. For an untrusted `login_hint`
@@ -80,17 +184,16 @@ impl IntoResponse for RouteError {
 async fn requested_identity(
     repo: &mut BoxRepository,
     homeserver: &dyn HomeserverConnection,
-    grant: &mas_data_model::AuthorizationGrant,
+    flow: &Flow,
 ) -> Result<Option<(String, bool)>, RouteError> {
-    if let Some(target) = grant.target_user_id {
+    if let Some(target) = flow.target_user_id() {
         let user = repo.user().lookup(target).await?;
         return Ok(user.map(|user| (homeserver.mxid(&user.username), true)));
     }
 
-    Ok(grant
-        .login_hint
-        .clone()
-        .map(|hint| (login_hint_display(&hint), false)))
+    Ok(flow
+        .login_hint()
+        .map(|hint| (login_hint_display(hint), false)))
 }
 
 /// Turn a raw `login_hint` into something friendlier to echo, while still being
@@ -101,7 +204,7 @@ fn login_hint_display(hint: &str) -> String {
 
 #[tracing::instrument(
     name = "handlers.oauth2.authorization.select_account.get",
-    fields(grant.id = tracing::field::Empty),
+    fields(grant.id = tracing::field::Empty, login_session.id = tracing::field::Empty),
     skip_all,
 )]
 pub(crate) async fn get(
@@ -117,31 +220,18 @@ pub(crate) async fn get(
     Query(params): Query<mas_router::SelectAccount>,
 ) -> Result<Response, RouteError> {
     let action = params.post_auth_action();
-    let PostAuthAction::ContinueAuthorizationGrant { id: grant_id } = *action else {
-        // Other flows (device-code, manage-account) don't populate a requested
-        // identity yet, so the account-selection screen is a no-op passthrough
-        // for them; just continue the flow.
-        return Ok((cookie_jar, action.go_next(&url_builder)).into_response());
+    let flow = match load_flow(&mut repo, &clock, &url_builder, action).await? {
+        LoadedFlow::Flow(flow) => flow,
+        LoadedFlow::Divert(redirect) => return Ok((cookie_jar, redirect).into_response()),
     };
-    tracing::Span::current().record("grant.id", tracing::field::display(grant_id));
 
     let (session_info, cookie_jar) = cookie_jar.session_info();
     let maybe_session = session_info.load_active_session(&mut repo).await?;
 
-    let grant = repo
-        .oauth2_authorization_grant()
-        .lookup(grant_id)
-        .await?
-        .ok_or(RouteError::GrantNotFound)?;
-
-    if !matches!(grant.stage, AuthorizationGrantStage::Pending) {
-        return Err(RouteError::GrantNotPending(grant.id));
-    }
-
     // No active session: nothing to mismatch against, send them to login
-    // continuing the grant.
+    // continuing the flow.
     let Some(session) = maybe_session else {
-        let login = mas_router::Login::and_continue_grant(grant_id);
+        let login = mas_router::Login::and_then(action.clone());
         return Ok((cookie_jar, url_builder.redirect(&login)).into_response());
     };
 
@@ -150,33 +240,46 @@ pub(crate) async fn get(
         .await;
 
     // Defensive: if the session actually matches (or there is no constraint),
-    // don't show the interstitial — go straight to consent. Entry routing
-    // should already prevent landing here on a match.
-    if session_matches_requested_identity(&mut repo, homeserver.homeserver(), &grant, &session)
-        .await?
+    // don't show the interstitial — continue the flow. Entry routing should
+    // already prevent landing here on a match.
+    if session_matches_requested_identity(
+        &mut repo,
+        homeserver.homeserver(),
+        flow.target_user_id(),
+        flow.login_hint(),
+        &session,
+    )
+    .await?
     {
         repo.save().await?;
-        return Ok((
-            cookie_jar,
-            url_builder.redirect(&mas_router::Consent(grant_id)),
-        )
-            .into_response());
+        return Ok((cookie_jar, flow.continue_destination(&url_builder)).into_response());
     }
 
-    let Some((requested, trusted)) = requested_identity(&mut repo, &*homeserver, &grant).await?
+    let Some((requested, trusted)) = requested_identity(&mut repo, &*homeserver, &flow).await?
     else {
-        // Only reachable when a trusted target vanished since authorize time
-        // (an absent hint counted as a match above). Per OIDC Core the grant
-        // can never be fulfilled as a different user, so return
-        // `login_required` to the client rather than redirecting to consent,
-        // which would divert straight back here.
-        let callback_destination = CallbackDestination::try_from(&grant)?;
+        // Only reachable when a trusted target vanished since the flow
+        // started (an absent hint counted as a match above). The flow can
+        // never be finished as a different user, and continuing would loop
+        // right back here — bail out of it instead.
         repo.save().await?;
-        let response = callback_destination.go(
-            &templates,
-            &locale,
-            ClientError::from(ClientErrorCode::LoginRequired),
-        )?;
+        let response = match &flow {
+            // Per OIDC Core, return `login_required` to the client.
+            Flow::Grant(grant) => {
+                let callback_destination = CallbackDestination::try_from(&**grant)?;
+                callback_destination
+                    .go(
+                        &templates,
+                        &locale,
+                        ClientError::from(ClientErrorCode::LoginRequired),
+                    )?
+                    .into_response()
+            }
+            // No client callback to signal: drop the deeplinked action and
+            // land on the account-management home as the current user.
+            Flow::LoginSession(_) => url_builder
+                .redirect(&mas_router::Account::default())
+                .into_response(),
+        };
         return Ok((cookie_jar, response).into_response());
     };
 
@@ -201,13 +304,13 @@ pub(crate) enum FormAction {
     Switch,
     /// Continue as the current account (untrusted hint only).
     Continue,
-    /// Abandon the flow and return an error to the client.
+    /// Abandon the flow.
     Cancel,
 }
 
 #[tracing::instrument(
     name = "handlers.oauth2.authorization.select_account.post",
-    fields(grant.id = tracing::field::Empty),
+    fields(grant.id = tracing::field::Empty, login_session.id = tracing::field::Empty),
     skip_all,
 )]
 pub(crate) async fn post(
@@ -222,37 +325,23 @@ pub(crate) async fn post(
     Form(form): Form<ProtectedForm<FormAction>>,
 ) -> Result<Response, RouteError> {
     let action = params.post_auth_action();
-    let PostAuthAction::ContinueAuthorizationGrant { id: grant_id } = *action else {
-        // Other flows (device-code, manage-account) don't populate a requested
-        // identity yet, so the account-selection screen is a no-op passthrough
-        // for them; just continue the flow.
-        return Ok((cookie_jar, action.go_next(&url_builder)).into_response());
+    let flow = match load_flow(&mut repo, &clock, &url_builder, action).await? {
+        LoadedFlow::Flow(flow) => flow,
+        LoadedFlow::Divert(redirect) => return Ok((cookie_jar, redirect).into_response()),
     };
-    tracing::Span::current().record("grant.id", tracing::field::display(grant_id));
 
     let form = cookie_jar.verify_form(&clock, form)?;
 
     let (session_info, cookie_jar) = cookie_jar.session_info();
 
-    let grant = repo
-        .oauth2_authorization_grant()
-        .lookup(grant_id)
-        .await?
-        .ok_or(RouteError::GrantNotFound)?;
-
-    if !matches!(grant.stage, AuthorizationGrantStage::Pending) {
-        return Err(RouteError::GrantNotPending(grant.id));
-    }
-
     match form {
         FormAction::Continue => {
             // "Continue as current" only exists for an untrusted hint. For a
-            // trusted target (a verified `id_token_hint`) OIDC Core forbids
-            // returning a token for a different user, and the screen never
-            // offers this action — so a crafted POST must not be allowed to
-            // complete the grant as the current account. Divert back to the
-            // account-selection screen instead of proceeding to consent.
-            if grant.target_user_id.is_some() {
+            // trusted target (a verified `id_token_hint`) the flow must never
+            // be finished as a different user, and the screen never offers
+            // this action — so a crafted POST must not be allowed to proceed.
+            // Divert back to the account-selection screen instead.
+            if flow.target_user_id().is_some() {
                 repo.save().await?;
                 return Ok((
                     cookie_jar,
@@ -262,20 +351,18 @@ pub(crate) async fn post(
             }
 
             // Untrusted hint only: the user explicitly chooses to keep their
-            // current account. Proceed to consent (it re-enforces the match).
+            // current account. Continue the flow (it re-enforces the trusted
+            // match on its own).
             repo.save().await?;
-            Ok((
-                cookie_jar,
-                url_builder.redirect(&mas_router::Consent(grant_id)),
-            )
-                .into_response())
+            Ok((cookie_jar, flow.continue_destination(&url_builder)).into_response())
         }
 
         FormAction::Switch => {
             // Sign out the current session (mirroring logout), then send the
-            // user to login continuing the grant. Slice 1's welcome-back handles
-            // a trusted target; a generic pre-fill handles the untrusted case,
-            // for which we carry the original `login_hint` along.
+            // user to login continuing the flow. The welcome-back mode
+            // handles a trusted target; a generic pre-fill handles the
+            // untrusted case, for which we carry the original `login_hint`
+            // along.
             if let Some(session_id) = session_info.current_session_id() {
                 let maybe_session = repo.browser_session().lookup(session_id).await?;
                 if let Some(session) = maybe_session
@@ -293,27 +380,38 @@ pub(crate) async fn post(
             let cookie_jar =
                 cookie_jar.update_session_info(&session_info.mark_session_ended(clock.now()));
 
-            let mut login = mas_router::Login::and_continue_grant(grant_id);
+            let mut login = mas_router::Login::and_then(action.clone());
             // Only the untrusted case needs the hint forwarded; for a trusted
-            // target the resolved identity is already on the grant.
-            if grant.target_user_id.is_none()
-                && let Some(login_hint) = grant.login_hint
+            // target the resolved identity is already on the flow.
+            if flow.target_user_id().is_none()
+                && let Some(login_hint) = flow.login_hint()
             {
-                login = login.with_login_hint(login_hint);
+                login = login.with_login_hint(login_hint.to_owned());
             }
 
             Ok((cookie_jar, url_builder.redirect(&login)).into_response())
         }
 
         FormAction::Cancel => {
-            // Bail out: return an `access_denied` error to the client.
-            let callback_destination = CallbackDestination::try_from(&grant)?;
             repo.save().await?;
-            let response = callback_destination.go(
-                &templates,
-                &locale,
-                ClientError::from(ClientErrorCode::AccessDenied),
-            )?;
+            let response = match &flow {
+                // Bail out: return an `access_denied` error to the client.
+                Flow::Grant(grant) => {
+                    let callback_destination = CallbackDestination::try_from(&**grant)?;
+                    callback_destination
+                        .go(
+                            &templates,
+                            &locale,
+                            ClientError::from(ClientErrorCode::AccessDenied),
+                        )?
+                        .into_response()
+                }
+                // No client callback to signal: drop the deeplinked action
+                // and land on the account-management home as-is.
+                Flow::LoginSession(_) => url_builder
+                    .redirect(&mas_router::Account::default())
+                    .into_response(),
+            };
             Ok((cookie_jar, response).into_response())
         }
     }

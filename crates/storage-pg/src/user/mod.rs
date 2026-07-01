@@ -41,8 +41,8 @@ mod terms;
 mod tests;
 
 pub use self::{
-    email::PgUserEmailRepository, password::PgUserPasswordRepository,
-    login_session::PgLoginSessionRepository, recovery::PgUserRecoveryRepository,
+    email::PgUserEmailRepository, login_session::PgLoginSessionRepository,
+    password::PgUserPasswordRepository, recovery::PgUserRecoveryRepository,
     registration::PgUserRegistrationRepository,
     registration_token::PgUserRegistrationTokenRepository, session::PgBrowserSessionRepository,
     terms::PgUserTermsRepository,

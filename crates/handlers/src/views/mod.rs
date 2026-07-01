@@ -7,6 +7,7 @@
 pub mod app;
 pub mod index;
 pub mod login;
+pub mod login_complete;
 pub mod logout;
 pub mod recovery;
 pub mod register;

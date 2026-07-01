@@ -38,7 +38,7 @@ use crate::{BoundActivityTracker, PreferredLanguage, impl_from_error_for_route};
 
 mod callback;
 pub(crate) mod consent;
-mod id_token_hint;
+pub(crate) mod id_token_hint;
 pub(crate) mod select_account;
 
 #[derive(Debug, Error)]
@@ -334,7 +334,8 @@ pub(crate) async fn get(
                     let matches = id_token_hint::session_matches_requested_identity(
                         &mut repo,
                         homeserver.homeserver(),
-                        &grant,
+                        grant.target_user_id,
+                        grant.login_hint.as_deref(),
                         &user_session,
                     )
                     .await?;
