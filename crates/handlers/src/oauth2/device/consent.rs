@@ -130,6 +130,7 @@ pub(crate) async fn get(
             session_counts: Some(session_counts),
             scope: &grant.scope,
             user: Some(&session.user),
+            upstream_provider: None,
             requester: mas_policy::Requester {
                 ip_address: activity_tracker.ip(),
                 user_agent,
@@ -272,6 +273,7 @@ pub(crate) async fn post(
             session_counts: Some(session_counts),
             scope: &grant.scope,
             user: Some(&session.user),
+            upstream_provider: None,
             requester: mas_policy::Requester {
                 ip_address: activity_tracker.ip(),
                 user_agent,

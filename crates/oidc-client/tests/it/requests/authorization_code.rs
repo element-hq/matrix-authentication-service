@@ -215,6 +215,7 @@ async fn pass_access_token_with_authorization_code() {
                 token_type: OAuthAccessTokenType::Bearer,
                 expires_in: None,
                 scope: Some([OPENID].into_iter().collect()),
+                issued_token_type: None,
             }),
         )
         .mount(&mock_server)
@@ -273,6 +274,7 @@ async fn fail_access_token_with_authorization_code_wrong_nonce() {
                 token_type: OAuthAccessTokenType::Bearer,
                 expires_in: None,
                 scope: Some([OPENID].into_iter().collect()),
+                issued_token_type: None,
             }),
         )
         .mount(&mock_server)
@@ -334,6 +336,7 @@ async fn fail_access_token_with_authorization_code_no_id_token() {
                 token_type: OAuthAccessTokenType::Bearer,
                 expires_in: None,
                 scope: Some([OPENID].into_iter().collect()),
+                issued_token_type: None,
             }),
         )
         .mount(&mock_server)
