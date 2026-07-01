@@ -14,6 +14,7 @@ use mas_storage::{
     compat::CompatSsoLoginRepository,
     oauth2::OAuth2AuthorizationGrantRepository,
     upstream_oauth2::{UpstreamOAuthLinkRepository, UpstreamOAuthProviderRepository},
+    user::LoginSessionRepository,
 };
 use mas_templates::{PostAuthContext, PostAuthContextInner};
 use ruma_common::UserId;
@@ -103,6 +104,15 @@ impl OptionalPostAuthAction {
             }
 
             PostAuthAction::ManageAccount { .. } => PostAuthContextInner::ManageAccount,
+
+            PostAuthAction::ContinueLoginSession { id } => {
+                let Some(login_session) = repo.login_session().lookup(id).await? else {
+                    warn!(%id, "Failed to load login session, it was likely deleted or is an invalid ID");
+                    return Ok(None);
+                };
+                let login_session = Box::new(login_session);
+                PostAuthContextInner::ContinueLoginSession { login_session }
+            }
         };
 
         Ok(Some(PostAuthContext {

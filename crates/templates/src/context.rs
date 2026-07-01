@@ -22,8 +22,8 @@ use chrono::{DateTime, Duration, Utc};
 use http::{Method, Uri, Version};
 use mas_data_model::{
     AuthorizationGrant, BrowserSession, Client, CompatSsoLogin, CompatSsoLoginState,
-    DeviceCodeGrant, MatrixUser, UlidExt as _, UpstreamOAuthLink, UpstreamOAuthProvider,
-    UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
+    DeviceCodeGrant, LoginSession, MatrixUser, UlidExt as _, UpstreamOAuthLink,
+    UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
     UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderPkceMode,
     UpstreamOAuthProviderTokenAuthMethod, User, UserEmailAuthentication,
     UserEmailAuthenticationCode, UserRecoverySession, UserRegistration,
@@ -523,6 +523,12 @@ pub enum PostAuthContextInner {
 
     /// Go to the account management page
     ManageAccount,
+
+    /// Complete a persisted login session
+    ContinueLoginSession {
+        /// The login session that will be completed after authentication
+        login_session: Box<LoginSession>,
+    },
 }
 
 /// Context used in login screen, for the post-auth action to do

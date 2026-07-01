@@ -31,6 +31,9 @@ pub enum PostAuthAction {
         #[serde(flatten)]
         action: Option<AccountAction>,
     },
+    ContinueLoginSession {
+        id: Ulid,
+    },
 }
 
 impl PostAuthAction {
@@ -59,6 +62,11 @@ impl PostAuthAction {
         PostAuthAction::ManageAccount { action }
     }
 
+    #[must_use]
+    pub const fn continue_login_session(id: Ulid) -> Self {
+        PostAuthAction::ContinueLoginSession { id }
+    }
+
     pub fn go_next(&self, url_builder: &UrlBuilder) -> axum::response::Redirect {
         match self {
             Self::ContinueAuthorizationGrant { id } => url_builder.redirect(&Consent(*id)),
@@ -73,6 +81,7 @@ impl PostAuthAction {
             Self::ManageAccount { action } => url_builder.redirect(&Account {
                 action: action.clone(),
             }),
+            Self::ContinueLoginSession { id } => url_builder.redirect(&LoginComplete(*id)),
         }
     }
 }
@@ -586,6 +595,25 @@ impl Route for Consent {
 
     fn path(&self) -> std::borrow::Cow<'static, str> {
         format!("/consent/{}", self.0).into()
+    }
+}
+
+/// `GET /login/complete/{id}`
+///
+/// Finishes a persisted login session: re-checks the requested identity
+/// against the now-active browser session, marks the login session
+/// completed, and continues to its recorded post-auth action.
+#[derive(Debug, Clone)]
+pub struct LoginComplete(pub Ulid);
+
+impl Route for LoginComplete {
+    type Query = ();
+    fn route() -> &'static str {
+        "/login/complete/{id}"
+    }
+
+    fn path(&self) -> std::borrow::Cow<'static, str> {
+        format!("/login/complete/{}", self.0).into()
     }
 }
 
