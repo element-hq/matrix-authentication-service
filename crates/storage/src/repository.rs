@@ -26,9 +26,9 @@ use crate::{
         UpstreamOAuthSessionRepository,
     },
     user::{
-        BrowserSessionRepository, UserEmailRepository, UserPasswordRepository,
-        UserRecoveryRepository, UserRegistrationRepository, UserRegistrationTokenRepository,
-        UserRepository, UserTermsRepository,
+        BrowserSessionRepository, LoginSessionRepository, UserEmailRepository,
+        UserPasswordRepository, UserRecoveryRepository, UserRegistrationRepository,
+        UserRegistrationTokenRepository, UserRepository, UserTermsRepository,
     },
 };
 
@@ -150,6 +150,10 @@ pub trait RepositoryAccess: Send {
         &'c mut self,
     ) -> Box<dyn UserRegistrationRepository<Error = Self::Error> + 'c>;
 
+    /// Get a [`LoginSessionRepository`]
+    fn login_session<'c>(&'c mut self)
+    -> Box<dyn LoginSessionRepository<Error = Self::Error> + 'c>;
+
     /// Get an [`UserRegistrationTokenRepository`]
     fn user_registration_token<'c>(
         &'c mut self,
@@ -266,9 +270,9 @@ mod impls {
             UpstreamOAuthSessionRepository,
         },
         user::{
-            BrowserSessionRepository, UserEmailRepository, UserPasswordRepository,
-            UserRegistrationRepository, UserRegistrationTokenRepository, UserRepository,
-            UserTermsRepository,
+            BrowserSessionRepository, LoginSessionRepository, UserEmailRepository,
+            UserPasswordRepository, UserRegistrationRepository, UserRegistrationTokenRepository,
+            UserRepository, UserTermsRepository,
         },
     };
 
@@ -365,6 +369,12 @@ mod impls {
                 self.inner.user_registration(),
                 &mut self.mapper,
             ))
+        }
+
+        fn login_session<'c>(
+            &'c mut self,
+        ) -> Box<dyn LoginSessionRepository<Error = Self::Error> + 'c> {
+            Box::new(MapErr::new(self.inner.login_session(), &mut self.mapper))
         }
 
         fn user_registration_token<'c>(
@@ -553,6 +563,12 @@ mod impls {
             &'c mut self,
         ) -> Box<dyn UserRegistrationRepository<Error = Self::Error> + 'c> {
             (**self).user_registration()
+        }
+
+        fn login_session<'c>(
+            &'c mut self,
+        ) -> Box<dyn LoginSessionRepository<Error = Self::Error> + 'c> {
+            (**self).login_session()
         }
 
         fn user_registration_token<'c>(

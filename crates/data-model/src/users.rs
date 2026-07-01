@@ -271,6 +271,48 @@ impl UserRegistrationToken {
     }
 }
 
+/// An in-progress login flow that needs state persisted across its steps —
+/// created when the flow starts with context worth carrying (today: an
+/// account-management deeplink with an `id_token_hint`/`login_hint`), and
+/// completed when a browser session finishes it.
+///
+/// The login-flow analogue of [`UserRegistration`].
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct LoginSession {
+    pub id: Ulid,
+    /// Where to go once the flow completes: a serialized
+    /// `mas_router::PostAuthAction`
+    pub post_auth_action: Option<serde_json::Value>,
+    /// The untrusted client-supplied `login_hint`, only ever echoed or
+    /// compared against the current session's own data — never looked up
+    pub login_hint: Option<String>,
+    /// The user resolved from a verified `id_token_hint`, if one was given
+    pub target_user_id: Option<Ulid>,
+    /// The browser session resolved from the `sid` claim of a verified
+    /// `id_token_hint`, if it still existed when the flow started. May be
+    /// nulled once the session is reaped by retention; `target_user_id` is
+    /// the stable anchor
+    pub target_user_session_id: Option<Ulid>,
+    pub ip_address: Option<IpAddr>,
+    pub user_agent: Option<String>,
+    pub created_at: DateTime<Utc>,
+    pub completed_at: Option<DateTime<Utc>>,
+    /// The browser session which completed the flow
+    pub user_session_id: Option<Ulid>,
+}
+
+impl LoginSession {
+    /// How long a login session stays actionable after it was created
+    pub const VALIDITY: chrono::Duration = chrono::Duration::minutes(30);
+
+    /// Whether this login session can still drive a login flow: not yet
+    /// completed and not expired
+    #[must_use]
+    pub fn is_valid(&self, now: DateTime<Utc>) -> bool {
+        self.completed_at.is_none() && now < self.created_at + Self::VALIDITY
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UserRegistration {
     pub id: Ulid,

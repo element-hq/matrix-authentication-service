@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT login_session_id\n                     , ip_address as \"ip_address: IpAddr\"\n                     , user_agent\n                     , post_auth_action\n                     , login_hint\n                     , target_user_id\n                     , target_user_session_id\n                     , created_at\n                     , completed_at\n                     , user_session_id\n                FROM login_sessions\n                WHERE login_session_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "login_session_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "ip_address: IpAddr",
+        "type_info": "Inet"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_agent",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "post_auth_action",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 4,
+        "name": "login_hint",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "target_user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "target_user_session_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "completed_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "user_session_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "7885594522258591959cd35d809f3784ab0032c864c2ff3b5e96dda3ac7af2c1"
+}
