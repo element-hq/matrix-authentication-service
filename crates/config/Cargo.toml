@@ -5,6 +5,7 @@
 
 [package]
 name = "mas-config"
+default-run = "schema"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -34,6 +35,7 @@ rustls-pki-types.workspace = true
 schemars.workspace = true
 serde_json.workspace = true
 serde_with.workspace = true
+serde_yaml.workspace = true
 serde.workspace = true
 tokio.workspace = true
 tracing.workspace = true
@@ -50,4 +52,8 @@ dist = []
 
 [[bin]]
 name = "schema"
+doc = false
+
+[[bin]]
+name = "docs"
 doc = false

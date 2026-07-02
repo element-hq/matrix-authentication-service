@@ -1,4 +1,5 @@
 #!/bin/sh
+# Copyright 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -9,12 +10,14 @@ set -eu
 export SQLX_OFFLINE=1
 BASE_DIR="$(dirname "$0")/.."
 CONFIG_SCHEMA="${BASE_DIR}/docs/config.schema.json"
+CONFIG_REFERENCE="${BASE_DIR}/docs/reference/configuration.md"
 API_SCHEMA="${BASE_DIR}/docs/api/spec.json"
 GRAPHQL_SCHEMA="${BASE_DIR}/frontend/schema.graphql"
 POLICIES_SCHEMA="${BASE_DIR}/policies/schema/"
 
 set -x
 cargo run -p mas-config > "${CONFIG_SCHEMA}"
+cargo run -p mas-config --bin docs > "${CONFIG_REFERENCE}"
 cargo run -p mas-handlers --bin graphql-schema > "${GRAPHQL_SCHEMA}"
 cargo run -p mas-handlers --bin api-schema > "${API_SCHEMA}"
 cargo run -p mas-i18n-scan -- --update "${BASE_DIR}/templates/" "${BASE_DIR}/translations/en.json"
