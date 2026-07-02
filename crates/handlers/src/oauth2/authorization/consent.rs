@@ -18,7 +18,11 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::{AuthorizationGrantStage, BoxClock, BoxRng, MatrixUser};
+use mas_data_model::{
+    AuthorizationGrant, AuthorizationGrantStage, BoxClock, BoxRng, BrowserSession, Client,
+    MatrixUser,
+};
+use mas_i18n::DataLocale;
 use mas_keystore::Keystore;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
@@ -78,6 +82,73 @@ impl IntoResponse for RouteError {
             e @ Self::Csrf(_) => GenericError::new(StatusCode::BAD_REQUEST, e).into_response(),
         }
     }
+}
+
+async fn fulfill_grant_and_redirect(
+    rng: &mut BoxRng,
+    clock: &BoxClock,
+    mut repo: BoxRepository,
+    key_store: &Keystore,
+    url_builder: &UrlBuilder,
+    templates: &Templates,
+    locale: &DataLocale,
+    activity_tracker: &BoundActivityTracker,
+    client: &Client,
+    browser_session: &BrowserSession,
+    grant: AuthorizationGrant,
+) -> Result<Response, RouteError> {
+    let callback_destination = CallbackDestination::try_from(&grant)?;
+
+    let session = repo
+        .oauth2_session()
+        .add_from_browser_session(
+            &mut *rng,
+            clock,
+            client,
+            browser_session,
+            grant.scope.clone(),
+        )
+        .await?;
+
+    let grant = repo
+        .oauth2_authorization_grant()
+        .fulfill(clock, &browser_session, grant)
+        .await?;
+
+    let mut params = AuthorizationResponse::default();
+
+    // Did they request an ID token?
+    if grant.response_type_id_token {
+        // Fetch the last authentication
+        let last_authentication = repo
+            .browser_session()
+            .get_last_authentication(browser_session)
+            .await?;
+
+        params.id_token = Some(generate_id_token(
+            &mut *rng,
+            clock,
+            url_builder,
+            key_store,
+            client,
+            Some(&grant),
+            browser_session,
+            None,
+            last_authentication.as_ref(),
+        )?);
+    }
+
+    if let Some(code) = grant.code {
+        params.code = Some(code.code);
+    }
+
+    repo.save().await?;
+
+    activity_tracker
+        .record_oauth2_session(clock, &session)
+        .await;
+
+    Ok(callback_destination.go(templates, locale, params)?)
 }
 
 #[tracing::instrument(
@@ -176,45 +247,22 @@ pub(crate) async fn get(
 
     // check if client configured to skip consent. if so, fulfill grant directly
     if client.skip_consent {
-        let callback_destination = CallbackDestination::try_from(&grant)?;
-
-        let grant = repo
-            .oauth2_authorization_grant()
-            .fulfill(&clock, &session, grant)
-            .await?;
-
-        let mut params = AuthorizationResponse::default();
-
-        if grant.response_type_id_token {
-            let last_authentication = repo
-                .browser_session()
-                .get_last_authentication(&session)
-                .await?;
-
-            params.id_token = Some(generate_id_token(
-                &mut rng,
-                &clock,
-                &url_builder,
-                &key_store,
-                &client,
-                Some(&grant),
-                &session,
-                None,
-                last_authentication.as_ref(),
-            )?);
-        }
-
-        if let Some(code) = grant.code {
-            params.code = Some(code.code);
-        }
-
-        repo.save().await?;
-
-        return Ok((
-            cookie_jar,
-            callback_destination.go(&templates, &locale, params)?,
+        let response = fulfill_grant_and_redirect(
+            &mut rng,
+            &clock,
+            repo,
+            &key_store,
+            &url_builder,
+            &templates,
+            &locale,
+            &activity_tracker,
+            &client,
+            &session,
+            grant,
         )
-            .into_response());
+        .await?;
+
+        return Ok((cookie_jar, response).into_response());
     }
 
     // Close the repository, we don't need it for rendering the consent page
@@ -310,7 +358,6 @@ pub(crate) async fn post(
         .lookup(grant_id)
         .await?
         .ok_or(RouteError::GrantNotFound)?;
-    let callback_destination = CallbackDestination::try_from(&grant)?;
 
     let Some(browser_session) = maybe_session else {
         let next = PostAuthAction::continue_grant(grant_id);
@@ -359,46 +406,21 @@ pub(crate) async fn post(
         return Ok((cookie_jar, Html(content)).into_response());
     }
 
-    // All good, let's fulfill the grant with the browser session.
-    // The OAuth2 session will be created later at token exchange time.
-    let grant = repo
-        .oauth2_authorization_grant()
-        .fulfill(&clock, &browser_session, grant)
-        .await?;
-
-    let mut params = AuthorizationResponse::default();
-
-    // Did they request an ID token?
-    if grant.response_type_id_token {
-        // Fetch the last authentication
-        let last_authentication = repo
-            .browser_session()
-            .get_last_authentication(&browser_session)
-            .await?;
-
-        params.id_token = Some(generate_id_token(
-            &mut rng,
-            &clock,
-            &url_builder,
-            &key_store,
-            &client,
-            Some(&grant),
-            &browser_session,
-            None,
-            last_authentication.as_ref(),
-        )?);
-    }
-
-    // Did they request an auth code?
-    if let Some(code) = grant.code {
-        params.code = Some(code.code);
-    }
-
-    repo.save().await?;
-
-    Ok((
-        cookie_jar,
-        callback_destination.go(&templates, &locale, params)?,
+    // All good, let's start the session
+    let response = fulfill_grant_and_redirect(
+        &mut rng,
+        &clock,
+        repo,
+        &key_store,
+        &url_builder,
+        &templates,
+        &locale,
+        &activity_tracker,
+        &client,
+        &browser_session,
+        grant,
     )
-        .into_response())
+    .await?;
+
+    Ok((cookie_jar, response).into_response())
 }
