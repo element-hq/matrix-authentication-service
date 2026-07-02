@@ -1030,6 +1030,10 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                 OAuth2ClientLookupIden::InitiateLoginUri,
             )
             .expr_as(
+                Expr::cust("skip_consent"),
+                OAuth2ClientLookupIden::SkipConsent,
+            )
+            .expr_as(
                 Expr::col((OAuth2Clients::Table, OAuth2Clients::IsStatic)),
                 OAuth2ClientLookupIden::IsStatic,
             )
