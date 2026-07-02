@@ -549,7 +549,7 @@ features = ["url2", "chrono04", "preserve_order"]
 
 # SEC1 encoding format
 [workspace.dependencies.sec1]
-version = "0.7.3"
+version = "0.8.1"
 features = ["std"]
 
 # Query builder
