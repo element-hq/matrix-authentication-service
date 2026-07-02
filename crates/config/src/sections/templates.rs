@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -67,28 +68,36 @@ fn is_default_translations_path(value: &Utf8PathBuf) -> bool {
     *value == default_translations_path()
 }
 
-/// Configuration related to templates
+/// Allows loading custom templates
 #[derive(Debug, Serialize, Deserialize, JsonSchema, Clone)]
 pub struct TemplatesConfig {
-    /// Path to the folder which holds the templates
+    /// From where to load the templates
+    ///
+    /// This is relative to the current working directory, *not* the config
+    /// file
     #[serde(default = "default_path", skip_serializing_if = "is_default_path")]
-    #[schemars(with = "Option<String>")]
+    #[schemars(with = "Option<String>", example = &"/to/templates")]
     pub path: Utf8PathBuf,
 
-    /// Path to the assets manifest
+    /// Path to the frontend assets manifest file
     #[serde(
         default = "default_assets_path",
         skip_serializing_if = "is_default_assets_path"
     )]
-    #[schemars(with = "Option<String>")]
+    #[schemars(with = "Option<String>", example = &"/to/manifest.json")]
     pub assets_manifest: Utf8PathBuf,
 
-    /// Path to the translations
+    /// From where to load the translation files
+    ///
+    /// The default depends on how the service is distributed:
+    ///  - Docker distribution: `/usr/local/share/mas-cli/translations/`
+    ///  - pre-built binaries: `./share/translations/`
+    ///  - locally-built binaries: `./translations/`
     #[serde(
         default = "default_translations_path",
         skip_serializing_if = "is_default_translations_path"
     )]
-    #[schemars(with = "Option<String>")]
+    #[schemars(with = "Option<String>", example = &"/to/translations")]
     pub translations_path: Utf8PathBuf,
 }
 

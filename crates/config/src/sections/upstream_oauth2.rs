@@ -17,10 +17,17 @@ use url::Url;
 
 use crate::{ClientSecret, ClientSecretRaw, ConfigurationSection};
 
-/// Upstream OAuth 2.0 providers configuration
+/// Settings related to upstream OAuth 2.0/OIDC providers.
+/// Additions and modifications within this section are synced with the database
+/// on server startup. Removed entries are only removed with the [`config sync
+/// --prune`](./cli/config.md#config-sync---prune---dry-run) command.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct UpstreamOAuth2Config {
-    /// List of OAuth 2.0 providers
+    /// A list of upstream OAuth 2.0/OIDC providers to use to authenticate
+    /// users.
+    ///
+    /// Sample configurations for popular providers can be found in the
+    /// [upstream provider setup](../setup/sso.md#sample-configurations) guide.
     pub providers: Vec<Provider>,
 }
 
@@ -160,14 +167,12 @@ impl ConfigurationSection for UpstreamOAuth2Config {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ResponseMode {
-    /// `query`: The provider will send the response as a query string in the
-    /// URL search parameters
+    /// The provider will send the response as a query string in the URL search
+    /// parameters. This is the default.
     Query,
 
-    /// `form_post`: The provider will send the response as a POST request with
-    /// the response parameters in the request body
-    ///
-    /// <https://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html>
+    /// The provider will send the response as a POST request with the response
+    /// parameters in the request body
     FormPost,
 }
 
@@ -175,26 +180,24 @@ pub enum ResponseMode {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum TokenAuthMethod {
-    /// `none`: No authentication
+    /// No authentication
     None,
 
-    /// `client_secret_basic`: `client_id` and `client_secret` used as basic
-    /// authorization credentials
+    /// `client_id` and `client_secret` used as basic authorization credentials
     ClientSecretBasic,
 
-    /// `client_secret_post`: `client_id` and `client_secret` sent in the
-    /// request body
+    /// `client_id` and `client_secret` sent in the request body
     ClientSecretPost,
 
-    /// `client_secret_jwt`: a `client_assertion` sent in the request body and
-    /// signed using the `client_secret`
+    /// a `client_assertion` sent in the request body and signed using the
+    /// `client_secret`
     ClientSecretJwt,
 
-    /// `private_key_jwt`: a `client_assertion` sent in the request body and
-    /// signed by an asymmetric key
+    /// a `client_assertion` sent in the request body and signed by an
+    /// asymmetric key, using the keys defined in the `secrets.keys` section
     PrivateKeyJwt,
 
-    /// `sign_in_with_apple`: a special method for Signin with Apple
+    /// a special authentication method for Sign-in with Apple
     SignInWithApple,
 }
 
@@ -227,19 +230,20 @@ impl ImportAction {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum OnConflict {
-    /// Fails the upstream OAuth 2.0 login on conflict
+    /// Fails the upstream OAuth 2.0 login.
     #[default]
     Fail,
 
-    /// Adds the upstream OAuth 2.0 identity link, regardless of whether there
-    /// is an existing link or not
+    /// Adds the upstream account link to the existing user, regardless of
+    /// whether there is an existing link or not.
     Add,
 
-    /// Replace any existing upstream OAuth 2.0 identity link
+    /// Replace any existing upstream OAuth 2.0 identity link for this provider
+    /// on the matching user.
     Replace,
 
-    /// Adds the upstream OAuth 2.0 identity link *only* if there is no existing
-    /// link for this provider on the matching user
+    /// Adds the upstream account link *only* if there is no existing link for
+    /// this provider on the matching user.
     Set,
 }
 
@@ -257,6 +261,7 @@ pub struct SubjectImportPreference {
     ///
     /// If not provided, the default template is `{{ user.sub }}`
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"{{ user.sub }}", extend("x-doc" = {"commented": true}))]
     pub template: Option<String>,
 }
 
@@ -271,16 +276,19 @@ impl SubjectImportPreference {
 pub struct LocalpartImportPreference {
     /// How to handle the attribute
     #[serde(default, skip_serializing_if = "ImportAction::is_default")]
+    #[schemars(example = &ImportAction::Force, extend("x-doc" = {"commented": true}))]
     pub action: ImportAction,
 
     /// The Jinja2 template to use for the localpart attribute
     ///
     /// If not provided, the default template is `{{ user.preferred_username }}`
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"{{ user.preferred_username }}", extend("x-doc" = {"commented": true}))]
     pub template: Option<String>,
 
-    /// How to handle conflicts on the claim, default value is `Fail`
+    /// How to handle when localpart already exists.
     #[serde(default, skip_serializing_if = "OnConflict::is_default")]
+    #[schemars(example = &OnConflict::Fail, extend("x-doc" = {"commented": true}))]
     pub on_conflict: OnConflict,
 }
 
@@ -295,12 +303,14 @@ impl LocalpartImportPreference {
 pub struct DisplaynameImportPreference {
     /// How to handle the attribute
     #[serde(default, skip_serializing_if = "ImportAction::is_default")]
+    #[schemars(example = &ImportAction::Suggest, extend("x-doc" = {"commented": true}))]
     pub action: ImportAction,
 
     /// The Jinja2 template to use for the displayname attribute
     ///
     /// If not provided, the default template is `{{ user.name }}`
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"{{ user.name }}", extend("x-doc" = {"commented": true}))]
     pub template: Option<String>,
 }
 
@@ -315,12 +325,14 @@ impl DisplaynameImportPreference {
 pub struct EmailImportPreference {
     /// How to handle the claim
     #[serde(default, skip_serializing_if = "ImportAction::is_default")]
+    #[schemars(example = &ImportAction::Suggest, extend("x-doc" = {"commented": true}))]
     pub action: ImportAction,
 
     /// The Jinja2 template to use for the email address attribute
     ///
     /// If not provided, the default template is `{{ user.email }}`
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"{{ user.email }}", extend("x-doc" = {"commented": true}))]
     pub template: Option<String>,
 }
 
@@ -338,6 +350,7 @@ pub struct AccountNameImportPreference {
     ///
     /// If not provided, it will be ignored.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"@{{ user.preferred_username }}", extend("x-doc" = {"commented": true}))]
     pub template: Option<String>,
 }
 
@@ -350,33 +363,43 @@ impl AccountNameImportPreference {
 /// How claims should be imported
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema)]
 pub struct ClaimsImports {
-    /// How to determine the subject of the user
+    /// The subject is an internal identifier used to link the user's provider
+    /// identity to local accounts.
+    /// By default it uses the `sub` claim as per the OIDC spec, which should
+    /// fit most use cases.
     #[serde(default, skip_serializing_if = "SubjectImportPreference::is_default")]
     pub subject: SubjectImportPreference,
 
-    /// Whether to skip the interactive screen prompting the user to confirm the
-    /// attributes that are being imported. This requires `localpart.action` to
-    /// be `require` and other attribute actions to be either `ignore`, `force`
-    /// or `require`
+    /// By default, new users will see a screen confirming the attributes they
+    /// are about to have on their account.
+    ///
+    /// Setting this to `true` allows skipping this screen, but requires the
+    /// `localpart.action` to be set to `require` and the other attributes
+    /// actions to be set to `ignore`, `force` or `require`.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[schemars(example = &false, extend("x-doc" = {"commented": true}))]
     pub skip_confirmation: bool,
 
-    /// Import the localpart of the MXID
+    /// The localpart is the local part of the user's Matrix ID.
+    /// For example, on the `example.com` server, if the localpart is `alice`,
+    /// the user's Matrix ID will be `@alice:example.com`.
     #[serde(default, skip_serializing_if = "LocalpartImportPreference::is_default")]
     pub localpart: LocalpartImportPreference,
 
-    /// Import the displayname of the user.
+    /// The display name is the user's display name.
     #[serde(
         default,
         skip_serializing_if = "DisplaynameImportPreference::is_default"
     )]
     pub displayname: DisplaynameImportPreference,
 
-    /// Import the email address of the user
+    /// An email address to import.
     #[serde(default, skip_serializing_if = "EmailImportPreference::is_default")]
     pub email: EmailImportPreference,
 
-    /// Set a human-readable name for the upstream account for display purposes
+    /// An account name, for display purposes only.
+    ///
+    /// This helps the end user identify what account they are using
     #[serde(
         default,
         skip_serializing_if = "AccountNameImportPreference::is_default"
@@ -399,14 +422,15 @@ impl ClaimsImports {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum DiscoveryMode {
-    /// Use OIDC discovery with strict metadata verification
+    /// discover the provider through OIDC discovery, with strict metadata
+    /// validation (default)
     #[default]
     Oidc,
 
-    /// Use OIDC discovery with relaxed metadata verification
+    /// discover through OIDC discovery, but skip metadata validation
     Insecure,
 
-    /// Use a static configuration
+    /// don't discover the provider and use the endpoints below
     Disabled,
 }
 
@@ -422,16 +446,15 @@ impl DiscoveryMode {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum PkceMethod {
-    /// Use PKCE if the provider supports it
-    ///
-    /// Defaults to no PKCE if provider discovery is disabled
+    /// use PKCE if the provider supports it (default).
+    /// Determined through discovery, and disabled if discovery is disabled
     #[default]
     Auto,
 
-    /// Always use PKCE with the S256 challenge method
+    /// always use PKCE (with the S256 method)
     Always,
 
-    /// Never use PKCE
+    /// never use PKCE
     Never,
 }
 
@@ -463,17 +486,20 @@ fn signed_response_alg_default() -> JsonWebSignatureAlg {
 pub struct SignInWithApple {
     /// The private key file used to sign the `id_token`
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(with = "Option<String>")]
+    #[schemars(with = "Option<String>", example = &"/path/to/private.key")]
     pub private_key_file: Option<Utf8PathBuf>,
 
     /// The private key used to sign the `id_token`
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----")]
     pub private_key: Option<String>,
 
     /// The Team ID of the Apple Developer Portal
+    #[schemars(example = &"<team-id>")]
     pub team_id: String,
 
     /// The key ID of the Apple Developer Portal
+    #[schemars(example = &"<key-id>")]
     pub key_id: String,
 }
 
@@ -489,7 +515,7 @@ fn is_default_scope(scope: &str) -> bool {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum OnBackchannelLogout {
-    /// Do nothing
+    /// do nothing, other than validating and logging the request
     #[default]
     DoNothing,
 
@@ -514,52 +540,48 @@ impl OnBackchannelLogout {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[expect(clippy::struct_excessive_bools)]
 pub struct Provider {
-    /// Whether this provider is enabled.
+    /// A unique identifier for the provider.
     ///
-    /// Defaults to `true`
-    #[serde(default = "default_true", skip_serializing_if = "is_default_true")]
-    pub enabled: bool,
-
-    /// An internal unique identifier for this provider
+    /// Must be a valid ULID
     #[schemars(
         with = "String",
         regex(pattern = r"^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$"),
-        description = "A ULID as per https://github.com/ulid/spec"
+        description = "A unique identifier for the provider.\n\nMust be a valid ULID",
+        example = &"01HFVBY12TMNTYTBV8W921M5FA"
     )]
     pub id: Ulid,
 
+    /// Whether this provider is enabled. Defaults to `true`.
+    #[serde(default = "default_true", skip_serializing_if = "is_default_true")]
+    #[schemars(example = &true, extend("x-doc" = {"commented": true}))]
+    pub enabled: bool,
+
     /// The ID of the provider that was used by Synapse.
-    /// In order to perform a Synapse-to-MAS migration, this must be specified.
-    ///
-    /// ## For providers that used OAuth 2.0 or OpenID Connect in Synapse
-    ///
-    /// ### For `oidc_providers`:
-    /// This should be specified as `oidc-` followed by the ID that was
-    /// configured as `idp_id` in one of the `oidc_providers` in the Synapse
-    /// configuration.
-    /// For example, if Synapse's configuration contained `idp_id: wombat` for
-    /// this provider, then specify `oidc-wombat` here.
-    ///
-    /// ### For `oidc_config` (legacy):
-    /// Specify `oidc` here.
+    /// Only required when performing a Synapse-to-MAS migration.
+    /// For Synapse's `oidc_providers`, this is `oidc-<idp_id>`; for the legacy
+    /// `oidc_config`, this is `oidc`.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"oidc-github", extend("x-doc" = {"commented": true}))]
     pub synapse_idp_id: Option<String>,
 
-    /// The OIDC issuer URL
-    ///
-    /// This is required if OIDC discovery is enabled (which is the default)
+    /// The issuer URL, which will be used to discover the provider's
+    /// configuration. If discovery is enabled, this *must* exactly match the
+    /// `issuer` field advertised in
+    /// `<issuer>/.well-known/openid-configuration`. It must be set if OIDC
+    /// discovery is enabled (which is the default).
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"https://example.com/", extend("x-doc" = {"commented": true}))]
     pub issuer: Option<String>,
 
-    /// A human-readable name for the provider, that will be shown to users
+    /// A human-readable name for the provider, which will be displayed on the
+    /// login page
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"Example", extend("x-doc" = {"commented": true}))]
     pub human_name: Option<String>,
 
-    /// A brand identifier used to customise the UI, e.g. `apple`, `google`,
-    /// `github`, etc.
-    ///
-    /// Values supported by the default template are:
-    ///
+    /// A brand identifier for the provider, which will be used to display a
+    /// logo on the login page. Values supported by the default template
+    /// are:
     ///  - `apple`
     ///  - `google`
     ///  - `facebook`
@@ -568,9 +590,11 @@ pub struct Provider {
     ///  - `twitter`
     ///  - `discord`
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"google", extend("x-doc" = {"commented": true}))]
     pub brand_name: Option<String>,
 
-    /// The client ID to use when authenticating with the provider
+    /// The client ID to use to authenticate to the provider
+    #[schemars(example = &"mas-fb3f0c09c4c23de4")]
     pub client_id: String,
 
     /// The client secret to use when authenticating with the provider
@@ -583,10 +607,12 @@ pub struct Provider {
     pub client_secret: Option<ClientSecret>,
 
     /// The method to authenticate the client with the provider
+    #[schemars(example = &TokenAuthMethod::ClientSecretPost)]
     pub token_endpoint_auth_method: TokenAuthMethod,
 
-    /// Additional parameters for the `sign_in_with_apple` method
+    /// Additional parameters for the `sign_in_with_apple` authentication method
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("x-doc" = {"commented": true}))]
     pub sign_in_with_apple: Option<SignInWithApple>,
 
     /// The JWS algorithm to use when authenticating the client with the
@@ -594,6 +620,7 @@ pub struct Provider {
     ///
     /// Used by the `client_secret_jwt` and `private_key_jwt` methods
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &JsonWebSignatureAlg::Rs256, extend("x-doc" = {"commented": true}))]
     pub token_endpoint_auth_signing_alg: Option<JsonWebSignatureAlg>,
 
     /// Expected signature for the JWT payload returned by the token
@@ -604,34 +631,32 @@ pub struct Provider {
         default = "signed_response_alg_default",
         skip_serializing_if = "is_signed_response_alg_default"
     )]
+    #[schemars(example = &JsonWebSignatureAlg::Rs256, extend("x-doc" = {"commented": true}))]
     pub id_token_signed_response_alg: JsonWebSignatureAlg,
 
-    /// The scopes to request from the provider
+    /// The scopes to request from the provider.
     ///
-    /// Defaults to `openid`.
+    /// In most cases, it should always include the `openid` scope
     #[serde(default = "default_scope", skip_serializing_if = "is_default_scope")]
+    #[schemars(example = &"openid email profile")]
     pub scope: String,
 
-    /// How to discover the provider's configuration
-    ///
-    /// Defaults to `oidc`, which uses OIDC discovery with strict metadata
-    /// verification
+    /// How the provider configuration and endpoints should be discovered
     #[serde(default, skip_serializing_if = "DiscoveryMode::is_default")]
+    #[schemars(example = &DiscoveryMode::Oidc, extend("x-doc" = {"commented": true}))]
     pub discovery_mode: DiscoveryMode,
 
-    /// Whether to use proof key for code exchange (PKCE) when requesting and
-    /// exchanging the token.
-    ///
-    /// Defaults to `auto`, which uses PKCE if the provider supports it.
+    /// Whether PKCE should be used during the authorization code flow.
     #[serde(default, skip_serializing_if = "PkceMethod::is_default")]
+    #[schemars(example = &PkceMethod::Auto, extend("x-doc" = {"commented": true}))]
     pub pkce_method: PkceMethod,
 
-    /// Whether to fetch the user profile from the userinfo endpoint,
-    /// or to rely on the data returned in the `id_token` from the
-    /// `token_endpoint`.
+    /// Whether to fetch user claims from the userinfo endpoint.
     ///
-    /// Defaults to `false`.
+    /// This is disabled by default, as most providers will return the necessary
+    /// claims in the `id_token`
     #[serde(default)]
+    #[schemars(example = &true, extend("x-doc" = {"commented": true}))]
     pub fetch_userinfo: bool,
 
     /// Expected signature for the JWT payload returned by the userinfo
@@ -640,102 +665,101 @@ pub struct Provider {
     /// If not specified, the response is expected to be an unsigned JSON
     /// payload.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &JsonWebSignatureAlg::Rs256, extend("x-doc" = {"commented": true}))]
     pub userinfo_signed_response_alg: Option<JsonWebSignatureAlg>,
 
-    /// The URL to use for the provider's authorization endpoint
+    /// The userinfo endpoint.
     ///
-    /// Defaults to the `authorization_endpoint` provided through discovery
+    /// This takes precedence over the discovery mechanism
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub authorization_endpoint: Option<Url>,
-
-    /// The URL to use for the provider's userinfo endpoint
-    ///
-    /// Defaults to the `userinfo_endpoint` provided through discovery
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"https://example.com/oauth2/userinfo", extend("x-doc" = {"commented": true}))]
     pub userinfo_endpoint: Option<Url>,
 
-    /// The URL to use for the provider's token endpoint
+    /// The provider authorization endpoint.
     ///
-    /// Defaults to the `token_endpoint` provided through discovery
+    /// This takes precedence over the discovery mechanism
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"https://example.com/oauth2/authorize", extend("x-doc" = {"commented": true}))]
+    pub authorization_endpoint: Option<Url>,
+
+    /// The provider token endpoint.
+    ///
+    /// This takes precedence over the discovery mechanism
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"https://example.com/oauth2/token", extend("x-doc" = {"commented": true}))]
     pub token_endpoint: Option<Url>,
 
-    /// The URL to use for getting the provider's public keys
+    /// The provider JWKS URI.
     ///
-    /// Defaults to the `jwks_uri` provided through discovery
+    /// This takes precedence over the discovery mechanism
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"https://example.com/oauth2/keys", extend("x-doc" = {"commented": true}))]
     pub jwks_uri: Option<Url>,
 
     /// The response mode we ask the provider to use for the callback
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &ResponseMode::Query, extend("x-doc" = {"commented": true}))]
     pub response_mode: Option<ResponseMode>,
-
-    /// How claims should be imported from the `id_token` provided by the
-    /// provider
-    #[serde(default, skip_serializing_if = "ClaimsImports::is_default")]
-    pub claims_imports: ClaimsImports,
 
     /// Additional parameters to include in the authorization request.
     ///
-    /// Each value is a [`MiniJinja`] template. The template context
-    /// exposes a `params` map containing the raw query parameters from
-    /// the downstream authorization request. The map is empty when the
-    /// upstream login was not initiated by a downstream OAuth/OIDC
-    /// authorization request (e.g. account linking, direct login from
-    /// the login page).
+    /// Values are Jinja2 templates rendered against a `params` map containing
+    /// the raw query parameters of the downstream authorization request (empty
+    /// when the upstream login was not triggered by a downstream authorization
+    /// request, e.g. account linking or direct login). Templates that render to
+    /// an empty string are dropped rather than forwarded.
     ///
-    /// [`MiniJinja`]: https://docs.rs/minijinja
-    ///
-    /// Templates that render to an empty string are dropped — so
-    /// referencing a downstream parameter that wasn't supplied (e.g.
-    /// `{{ params.login_hint }}`) results in no parameter being
-    /// forwarded, rather than an empty one.
-    ///
-    /// Plain strings (without `{{ … }}`) are valid templates that render
-    /// to themselves.
-    ///
-    /// Example:
-    ///
-    /// ```yaml
-    /// additional_authorization_parameters:
-    ///   login_hint: "{{ params.login_hint }}"
-    ///   acr_values: "{{ params.acr_values }}"
-    ///   kc_idp_hint: "saml"
-    /// ```
-    ///
-    /// `params` exposes the entire raw query string of the downstream
-    /// request (including `client_id`, `state`, `code_challenge`, …).
-    /// Forward specific keys deliberately; don't blindly proxy the
-    /// whole map.
-    ///
-    /// Order of keys is not preserved.
+    /// Plain strings without `{{ … }}` render to themselves, so static values
+    /// work as expected.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[schemars(example = &serde_json::json!({
+        "foo": "bar",
+        "login_hint": "{{ params.login_hint }}",
+        "acr_values": "{{ params.acr_values }}",
+    }), extend("x-doc" = {"commented": true}))]
     pub additional_authorization_parameters: BTreeMap<String, String>,
 
     /// Whether the `login_hint` should be forwarded to the provider in the
     /// authorization request.
     ///
-    /// Defaults to `false`.
-    ///
-    /// Deprecated: prefer adding
-    /// `login_hint: "{{ params.login_hint }}"` to
-    /// `additional_authorization_parameters` instead. When this flag is
-    /// set, a `login_hint` template entry is injected automatically if
-    /// one is not already present.
+    /// Deprecated: prefer adding `login_hint: "{{ params.login_hint }}"` to
+    /// `additional_authorization_parameters` instead. When this flag is set, a
+    /// `login_hint` template entry is injected automatically if one is not
+    /// already present.
     #[serde(default)]
+    #[schemars(extend("x-doc" = {"commented": true}))]
     pub forward_login_hint: bool,
 
     /// What to do when receiving an OIDC Backchannel logout request.
-    ///
-    /// Defaults to `do_nothing`.
     #[serde(default, skip_serializing_if = "OnBackchannelLogout::is_default")]
+    #[schemars(example = &OnBackchannelLogout::DoNothing, extend("x-doc" = {"commented": true}))]
     pub on_backchannel_logout: OnBackchannelLogout,
 
-    /// Whether or not to require a registration token on `OAuth2` auth
-    ///
-    /// Defaults to `false`
+    /// Whether a registration token is required to register through this
+    /// provider. Defaults to `false`.
     #[serde(default)]
+    #[schemars(extend("x-doc" = {"commented": true}))]
     pub registration_token_required: bool,
+
+    /// How user attributes should be mapped
+    ///
+    /// Most of those attributes have two main properties:
+    ///   - `action`: what to do with the attribute. Possible values are:
+    ///      - `ignore`: ignore the attribute
+    ///      - `suggest`: suggest the attribute to the user, but let them opt
+    ///        out
+    ///      - `force`: always import the attribute, and don't fail if it's
+    ///        missing
+    ///      - `require`: always import the attribute, and fail if it's missing
+    ///   - `template`: a Jinja2 template used to generate the value. In this
+    ///     template, the `user` variable is available, which contains the
+    ///     user's attributes retrieved from the `id_token` given by the
+    ///     upstream provider and/or through the userinfo endpoint.
+    ///
+    /// Each attribute has a default template which follows the well-known OIDC
+    /// claims.
+    #[serde(default, skip_serializing_if = "ClaimsImports::is_default")]
+    pub claims_imports: ClaimsImports,
 }
 
 impl Provider {

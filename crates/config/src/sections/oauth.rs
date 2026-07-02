@@ -27,7 +27,7 @@ const fn is_default_false(value: &bool) -> bool {
     *value == default_false()
 }
 
-/// Configuration section for OAuth 2.0 protocol options
+/// Configuration section for OAuth 2.0 protocol options.
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 pub struct OAuthConfig {
     /// Whether the Device Authorization Grant (RFC 8628) is enabled. Defaults
@@ -39,6 +39,7 @@ pub struct OAuthConfig {
     /// `urn:ietf:params:oauth:grant-type:device_code` grant type will be
     /// rejected.
     #[serde(default = "default_true", skip_serializing_if = "is_default_true")]
+    #[schemars(example = &true)]
     pub device_code_grant_enabled: bool,
 
     /// Whether the device authorization endpoint advertises a
@@ -50,6 +51,7 @@ pub struct OAuthConfig {
     /// `code` query parameter, forcing users to type their user code
     /// manually.
     #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
+    #[schemars(example = &false)]
     pub device_code_user_code_auto_fill_enabled: bool,
 }
 

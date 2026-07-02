@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -12,23 +13,37 @@ use serde::{Deserialize, Serialize, de::Error as _};
 
 use crate::ConfigurationSection;
 
-/// Configuration related to sending emails
+/// Settings for limiting the rate of user actions to prevent abuse.
+///
+/// Each rate limiter consists of two options:
+/// - `burst`: a base amount of how many actions are allowed in one go.
+/// - `per_second`: how many units of the allowance replenish per second.
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
 pub struct RateLimitingConfig {
-    /// Account Recovery-specific rate limits
+    /// Limits how many account recovery attempts are allowed.
+    /// These limits can protect against e-mail spam.
+    ///
+    /// Note: these limit also apply to recovery e-mail re-sends.
     #[serde(default)]
     pub account_recovery: AccountRecoveryRateLimitingConfig,
 
-    /// Login-specific rate limits
+    /// Limits how many login attempts are allowed.
+    ///
+    /// Note: these limit also applies to password checks when a user attempts
+    /// to change their own password.
     #[serde(default)]
     pub login: LoginRateLimitingConfig,
 
-    /// Controls how many registrations attempts are permitted
-    /// based on source address.
+    /// Limits how many registrations attempts are allowed,
+    /// based on source IP address.
+    /// This limit can protect against e-mail spam and against people
+    /// registering too many accounts.
     #[serde(default = "default_registration")]
     pub registration: RateLimiterConfiguration,
 
-    /// Email authentication-specific rate limits
+    /// Limits how many e-mail authentication attempts are allowed.
+    /// These limits can protect against e-mail spam and against brute-forcing
+    /// the verification code.
     #[serde(default)]
     pub email_authentication: EmailauthenticationRateLimitingConfig,
 }

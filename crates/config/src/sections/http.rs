@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -82,52 +83,55 @@ impl UnixOrTcp {
 #[derive(Debug, Serialize, Deserialize, JsonSchema, Clone)]
 #[serde(untagged)]
 pub enum BindConfig {
-    /// Listen on the specified host and port
+    /// Listen on the given host and port combination
     Listen {
-        /// Host on which to listen.
-        ///
-        /// Defaults to listening on all addresses
+        /// Host on which to listen, defaults to all addresses
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[schemars(example = &"localhost")]
         host: Option<String>,
 
-        /// Port on which to listen.
+        /// Port on which to listen
+        #[schemars(example = &8081u16)]
         port: u16,
     },
 
-    /// Listen on the specified address
+    /// Listen on the given address
     Address {
         /// Host and port on which to listen
         #[schemars(
-            example = &"[::1]:8080",
             example = &"[::]:8080",
+            example = &"[::1]:8080",
             example = &"127.0.0.1:8080",
             example = &"0.0.0.0:8080",
         )]
         address: String,
     },
 
-    /// Listen on a UNIX domain socket
+    /// Listen on the given UNIX socket
     Unix {
         /// Path to the socket
-        #[schemars(with = "String")]
+        #[schemars(with = "String", example = &"/tmp/mas.sock")]
         socket: Utf8PathBuf,
     },
 
-    /// Accept connections on file descriptors passed by the parent process.
+    /// Grab an already open file descriptor given by the parent process.
     ///
-    /// This is useful for grabbing sockets passed by systemd.
+    /// This is useful when using systemd socket activation.
+    ///
+    /// The file descriptor index is offset by 3, to account for the standard
+    /// input, output and error streams, so a value of `0` grabs the file
+    /// descriptor `3`.
     ///
     /// See <https://www.freedesktop.org/software/systemd/man/sd_listen_fds.html>
     FileDescriptor {
-        /// Index of the file descriptor. Note that this is offseted by 3
-        /// because of the standard input/output sockets, so setting
-        /// here a value of `0` will grab the file descriptor `3`
+        /// Index of the file descriptor to grab
         #[serde(default)]
+        #[schemars(example = &1usize)]
         fd: usize,
 
-        /// Whether the socket is a TCP socket or a UNIX domain socket. Defaults
-        /// to TCP.
+        /// Kind of socket that was passed, defaults to tcp
         #[serde(default = "UnixOrTcp::tcp")]
+        #[schemars(example = &UnixOrTcp::Tcp)]
         kind: UnixOrTcp,
     },
 }
@@ -135,45 +139,36 @@ pub enum BindConfig {
 /// Configuration related to TLS on a listener
 #[derive(Debug, Serialize, Deserialize, JsonSchema, Clone)]
 pub struct TlsConfig {
-    /// PEM-encoded X509 certificate chain
-    ///
-    /// Exactly one of `certificate` or `certificate_file` must be set.
+    /// Inline PEM-encoded X509 certificate chain (alternative to
+    /// `certificate_file`)
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"<inline PEM>", extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub certificate: Option<String>,
 
-    /// File containing the PEM-encoded X509 certificate chain
-    ///
-    /// Exactly one of `certificate` or `certificate_file` must be set.
+    /// Path to a file containing the PEM-encoded X509 certificate chain
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(with = "Option<String>")]
+    #[schemars(with = "Option<String>", example = &"/path/to/cert.pem")]
     pub certificate_file: Option<Utf8PathBuf>,
 
-    /// PEM-encoded private key
-    ///
-    /// Exactly one of `key` or `key_file` must be set.
+    /// Inline PEM-encoded private key (alternative to `key_file`)
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"<inline PEM>", extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub key: Option<String>,
 
-    /// File containing a PEM or DER-encoded private key
-    ///
-    /// Exactly one of `key` or `key_file` must be set.
+    /// Path to a file containing a PEM or DER-encoded private key
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(with = "Option<String>")]
+    #[schemars(with = "Option<String>", example = &"/path/to/key.pem")]
     pub key_file: Option<Utf8PathBuf>,
 
-    /// Password used to decode the private key
-    ///
-    /// One of `password` or `password_file` must be set if the key is
-    /// encrypted.
+    /// Inline password used to decrypt the private key, if it is encrypted
+    /// (alternative to `password_file`)
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"<password to decrypt the key>", extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub password: Option<String>,
 
-    /// Password file used to decode the private key
-    ///
-    /// One of `password` or `password_file` must be set if the key is
-    /// encrypted.
+    /// Path to a file containing the password used to decrypt the private key
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(with = "Option<String>")]
+    #[schemars(with = "Option<String>", example = &"/path/to/password.txt", extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub password_file: Option<Utf8PathBuf>,
 }
 
@@ -253,51 +248,55 @@ impl TlsConfig {
 #[derive(Debug, Serialize, Deserialize, JsonSchema, Clone)]
 #[serde(tag = "name", rename_all = "lowercase")]
 pub enum Resource {
-    /// Healthcheck endpoint (/health)
+    /// Serves the health check endpoint on `/health`
     Health,
 
-    /// Prometheus metrics endpoint (/metrics)
+    /// Serves a Prometheus-compatible metrics endpoint on `/metrics`, if the
+    /// Prometheus exporter is enabled in `telemetry.metrics.exporter`
     Prometheus,
 
-    /// OIDC discovery endpoints
+    /// Serves the `.well-known/openid-configuration` document
     Discovery,
 
-    /// Pages destined to be viewed by humans
+    /// Serves the human-facing pages, such as the login page
     Human,
 
-    /// GraphQL endpoint
+    /// Serves the GraphQL API used by the frontend, and optionally the GraphQL
+    /// playground
     GraphQL {
-        /// Enabled the GraphQL playground
+        /// Enable the GraphQL playground
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[schemars(example = &true)]
         playground: bool,
 
         /// Allow access for OAuth 2.0 clients (undocumented)
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[schemars(extend("x-doc" = serde_json::json!({ "skip": true })))]
         undocumented_oauth2_access: bool,
     },
 
-    /// OAuth-related APIs
+    /// Serves the OAuth 2.0/OIDC endpoints
     OAuth,
 
-    /// Matrix compatibility API
+    /// Serves the Matrix C-S API compatibility endpoints
     Compat,
 
-    /// Static files
+    /// Serves the given folder on the `/assets/` path
     Assets {
-        /// Path to the directory to serve.
+        /// Path to the directory to serve
         #[serde(
             default = "http_listener_assets_path_default",
             skip_serializing_if = "is_default_http_listener_assets_path"
         )]
-        #[schemars(with = "String")]
+        #[schemars(with = "String", example = &"./share/assets/")]
         path: Utf8PathBuf,
     },
 
-    /// Admin API, served at `/api/admin/v1`
+    /// Serves the admin API on the `/api/admin/v1/` path. Disabled by default
     AdminApi,
 
-    /// Mount a "/connection-info" handler which helps debugging informations on
-    /// the upstream connection
+    /// Mounts a `/connection-info` handler which shows debugging information
+    /// about the upstream connection
     #[serde(rename = "connection-info")]
     ConnectionInfo,
 }
@@ -305,23 +304,25 @@ pub enum Resource {
 /// Configuration of a listener
 #[derive(Debug, Serialize, Deserialize, JsonSchema, Clone)]
 pub struct ListenerConfig {
-    /// A unique name for this listener which will be shown in traces and in
-    /// metrics labels
+    /// The name of the listener, used in logs and metrics
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"web")]
     pub name: Option<String>,
 
-    /// List of resources to mount
+    /// List of resources to serve
     pub resources: Vec<Resource>,
 
-    /// HTTP prefix to mount the resources on
+    /// Optional URL prefix to mount all the resources of this listener under
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"/auth", extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub prefix: Option<String>,
 
-    /// List of sockets to bind
+    /// List of addresses and ports to listen to
     pub binds: Vec<BindConfig>,
 
-    /// Accept `HAProxy`'s Proxy Protocol V1
+    /// Whether to enable the PROXY protocol on the listener
     #[serde(default)]
+    #[schemars(example = &false)]
     pub proxy_protocol: bool,
 
     /// If set, makes the listener use TLS with the provided certificate and key
@@ -329,24 +330,51 @@ pub struct ListenerConfig {
     pub tls: Option<TlsConfig>,
 }
 
-/// Configuration related to the web server
+/// Controls the web server.
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct HttpConfig {
-    /// List of listeners to run
+    /// Each listener can serve multiple resources, and listen on multiple TCP
+    /// ports or UNIX sockets.
+    ///
+    /// <!-- more -->
+    ///
+    /// The following additional resources are available, although it is
+    /// recommended to serve them on a separate listener, not exposed to the
+    /// public internet:
+    ///
+    /// - `name: prometheus`: serves a Prometheus-compatible metrics endpoint on
+    ///   `/metrics`, if the Prometheus exporter is enabled in
+    ///   `telemetry.metrics.exporter`.
+    /// - `name: health`: serves the health check endpoint on `/health`.
     #[serde(default)]
     pub listeners: Vec<ListenerConfig>,
 
-    /// List of trusted reverse proxies that can set the `X-Forwarded-For`
-    /// header
+    /// List of trusted reverse proxies that are allowed to set the
+    /// `X-Forwarded-For` header.
+    ///
+    /// Defaults to the usual private IP ranges:
+    ///   192.168.0.0/16, 172.16.0.0/12, 10.0.0.0/8, 127.0.0.0/8,
+    ///   fd00::/8 and ::1/128
+    #[expect(
+        clippy::doc_markdown,
+        reason = "the IPv6 ranges are shown verbatim in the rendered config reference"
+    )]
     #[serde(default = "default_trusted_proxies")]
-    #[schemars(with = "Vec<String>", inner(ip))]
+    #[schemars(
+        with = "Vec<String>",
+        inner(ip),
+        example = &["192.168.0.0/16", "172.16.0.0/12", "10.0.0.0/8", "127.0.0.0/8", "fd00::/8", "::1/128"],
+        extend("x-doc" = serde_json::json!({ "commented": true }))
+    )]
     pub trusted_proxies: Vec<IpNetwork>,
 
-    /// Public URL base from where the authentication service is reachable
+    /// Public URL base used when building absolute public URLs
+    #[schemars(example = &"https://auth.example.com/")]
     pub public_base: Url,
 
-    /// OIDC issuer URL. Defaults to `public_base` if not set.
+    /// OIDC issuer advertised by the service. Defaults to `public_base`
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"https://example.com/")]
     pub issuer: Option<Url>,
 }
 

@@ -30,21 +30,19 @@ fn default_endpoint() -> Url {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum HomeserverKind {
-    /// Homeserver is Synapse, version 1.135.0 or newer
+    /// Synapse, version 1.135.0 or newer
     #[default]
     Synapse,
 
-    /// Homeserver is Synapse, version 1.135.0 or newer, in read-only mode
-    ///
-    /// This is meant for testing rolling out Matrix Authentication Service with
-    /// no risk of writing data to the homeserver.
+    /// same as `synapse`, but in read-only mode. This is meant for testing
+    /// rolling out MAS with no risk of writing data to the homeserver.
     SynapseReadOnly,
 
-    /// Homeserver is Synapse, using the legacy API
-    SynapseLegacy,
-
-    /// Homeserver is Synapse, with the modern API available (>= 1.135.0)
+    /// Synapse with the modern admin API available (>= 1.135.0)
     SynapseModern,
+
+    /// Synapse using the legacy admin API
+    SynapseLegacy,
 }
 
 /// Shared secret between MAS and the homeserver.
@@ -60,9 +58,16 @@ pub enum Secret {
 /// Secret fields as serialized in JSON.
 #[derive(JsonSchema, Serialize, Deserialize, Clone, Debug)]
 struct SecretRaw {
-    #[schemars(with = "Option<String>")]
+    /// Shared secret used to authenticate the service to the homeserver.
+    /// This must be of high entropy, because leaking this secret would allow
+    /// anyone to perform admin actions on the homeserver.
+    #[schemars(with = "Option<String>", example = &"/path/to/secret/file")]
     #[serde(skip_serializing_if = "Option::is_none")]
     secret_file: Option<Utf8PathBuf>,
+
+    /// Alternatively, the shared secret can be passed inline.
+    #[schemars(example = &"SomeRandomSecret")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     #[serde(skip_serializing_if = "Option::is_none")]
     secret: Option<String>,
 }
@@ -95,16 +100,19 @@ impl From<Secret> for SecretRaw {
     }
 }
 
-/// Configuration related to the Matrix homeserver
+/// Settings related to the connection to the Matrix homeserver
 #[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct MatrixConfig {
-    /// The kind of homeserver it is.
+    /// The kind of homeserver it is. Defaults to `synapse`.
     #[serde(default)]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub kind: HomeserverKind,
 
-    /// The server name of the homeserver.
+    /// The homeserver name, as per the `server_name` in the Synapse
+    /// configuration file.
     #[serde(default = "default_homeserver")]
+    #[schemars(example = &"example.com")]
     pub homeserver: String,
 
     /// Shared secret to use for calls to the admin API
@@ -113,8 +121,9 @@ pub struct MatrixConfig {
     #[serde(flatten)]
     pub secret: Secret,
 
-    /// The base URL of the homeserver's client API
+    /// URL to which the homeserver is accessible from the service.
     #[serde(default = "default_endpoint")]
+    #[schemars(example = &"http://localhost:8008")]
     pub endpoint: Url,
 }
 

@@ -79,7 +79,7 @@ pub enum PgSslMode {
     Prefer,
 
     /// Only try an SSL connection. If a root CA file is present, verify the
-    /// connection in the same way as if `VerifyCa` was specified.
+    /// connection in the same way as if `verify-ca` was specified.
     Require,
 
     /// Only try an SSL connection, and verify that the server certificate is
@@ -92,30 +92,42 @@ pub enum PgSslMode {
     VerifyFull,
 }
 
-/// Database connection configuration
+/// Configure how to connect to the PostgreSQL database.
+///
+/// MAS must not be connected to a database pooler (such as pgBouncer or pgCat)
+/// when it is configured in transaction pooling mode.
+/// See [the relevant section of the database
+/// page](./database.md#a-warning-about-database-pooling-software) for more
+/// information.
 #[serde_as]
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct DatabaseConfig {
-    /// Connection URI
+    /// Full connection string as per
+    /// <https://www.postgresql.org/docs/13/libpq-connect.html#id-1.7.3.8.3.6>
     ///
     /// This must not be specified if `host`, `port`, `socket`, `username`,
     /// `password`, or `database` are specified.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(url, default = "default_connection_string")]
+    #[schemars(url, default = "default_connection_string", example = &"postgresql://user:password@hostname:5432/database?sslmode=require")]
     pub uri: Option<String>,
 
-    /// Name of host to connect to
+    /// Alternatively, the connection can be configured with separate
+    /// parameters.
+    ///
+    /// Name of host to connect to.
     ///
     /// This must not be specified if `uri` is specified.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(with = "Option::<schema::Hostname>")]
+    #[schemars(with = "Option::<schema::Hostname>", example = &"hostname")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub host: Option<String>,
 
     /// Port number to connect at the server host
     ///
     /// This must not be specified if `uri` is specified.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(range(min = 1, max = 65535))]
+    #[schemars(range(min = 1, max = 65535), example = &5432u16)]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub port: Option<u16>,
 
     /// Directory containing the UNIX socket to connect to
@@ -123,86 +135,101 @@ pub struct DatabaseConfig {
     /// This must not be specified if `uri` is specified.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[schemars(with = "Option<String>")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub socket: Option<Utf8PathBuf>,
 
     /// PostgreSQL user name to connect as
     ///
     /// This must not be specified if `uri` is specified.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"user")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub username: Option<String>,
 
     /// Password to be used if the server demands password authentication
     ///
     /// This must not be specified if `uri` is specified.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"password")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub password: Option<String>,
 
     /// The database name
     ///
     /// This must not be specified if `uri` is specified.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"database")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub database: Option<String>,
 
-    /// How to handle SSL connections
+    /// Whether to use SSL to connect to the database
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &PgSslMode::Require)]
     pub ssl_mode: Option<PgSslMode>,
 
     /// The PEM-encoded root certificate for SSL connections
     ///
     /// This must not be specified if the `ssl_ca_file` option is specified.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub ssl_ca: Option<String>,
 
     /// Path to the root certificate for SSL connections
     ///
     /// This must not be specified if the `ssl_ca` option is specified.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(with = "Option<String>")]
+    #[schemars(with = "Option<String>", example = &"/path/to/ca.pem")]
     pub ssl_ca_file: Option<Utf8PathBuf>,
 
-    /// The PEM-encoded client certificate for SSL connections
+    /// Client certificate to present to the server when SSL is enabled.
+    ///
+    /// The PEM-encoded client certificate for SSL connections.
     ///
     /// This must not be specified if the `ssl_certificate_file` option is
     /// specified.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub ssl_certificate: Option<String>,
 
     /// Path to the client certificate for SSL connections
     ///
     /// This must not be specified if the `ssl_certificate` option is specified.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(with = "Option<String>")]
+    #[schemars(with = "Option<String>", example = &"/path/to/cert.pem")]
     pub ssl_certificate_file: Option<Utf8PathBuf>,
 
     /// The PEM-encoded client key for SSL connections
     ///
     /// This must not be specified if the `ssl_key_file` option is specified.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub ssl_key: Option<String>,
 
     /// Path to the client key for SSL connections
     ///
     /// This must not be specified if the `ssl_key` option is specified.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(with = "Option<String>")]
+    #[schemars(with = "Option<String>", example = &"/path/to/key.pem")]
     pub ssl_key_file: Option<Utf8PathBuf>,
 
     /// Set the maximum number of connections the pool should maintain
     #[serde(default = "default_max_connections")]
+    #[schemars(example = &10u32)]
     pub max_connections: NonZeroU32,
 
     /// Set the minimum number of connections the pool should maintain
     #[serde(default)]
+    #[schemars(example = &0u32)]
     pub min_connections: u32,
 
-    /// Set the amount of time to attempt connecting to the database
-    #[schemars(with = "u64")]
+    /// Set the amount of time to attempt connecting to the database, in seconds
+    #[schemars(with = "u64", example = &30u64)]
     #[serde(default = "default_connect_timeout")]
     #[serde_as(as = "serde_with::DurationSeconds<u64>")]
     pub connect_timeout: Duration,
 
-    /// Set a maximum idle duration for individual connections
-    #[schemars(with = "Option<u64>")]
+    /// Set a maximum idle duration for individual connections, in seconds
+    #[schemars(with = "Option<u64>", example = &600u64)]
     #[serde(
         default = "default_idle_timeout",
         skip_serializing_if = "Option::is_none"
@@ -210,8 +237,8 @@ pub struct DatabaseConfig {
     #[serde_as(as = "Option<serde_with::DurationSeconds<u64>>")]
     pub idle_timeout: Option<Duration>,
 
-    /// Set the maximum lifetime of individual connections
-    #[schemars(with = "u64")]
+    /// Set the maximum lifetime of individual connections, in seconds
+    #[schemars(with = "u64", example = &1800u64)]
     #[serde(
         default = "default_max_lifetime",
         skip_serializing_if = "Option::is_none"

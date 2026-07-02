@@ -21,23 +21,21 @@ use super::{ClientSecret, ClientSecretRaw, ConfigurationSection};
 #[derive(JsonSchema, Serialize, Deserialize, Copy, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum ClientAuthMethodConfig {
-    /// `none`: No authentication
+    /// No authentication
     None,
 
-    /// `client_secret_basic`: `client_id` and `client_secret` used as basic
-    /// authorization credentials
+    /// `client_id` and `client_secret` used as basic authorization credentials
     ClientSecretBasic,
 
-    /// `client_secret_post`: `client_id` and `client_secret` sent in the
-    /// request body
+    /// `client_id` and `client_secret` sent in the request body
     ClientSecretPost,
 
-    /// `client_secret_basic`: a `client_assertion` sent in the request body and
-    /// signed using the `client_secret`
+    /// A `client_assertion` sent in the request body and signed using the
+    /// `client_secret`
     ClientSecretJwt,
 
-    /// `client_secret_basic`: a `client_assertion` sent in the request body and
-    /// signed by an asymmetric key
+    /// A `client_assertion` sent in the request body and signed by an
+    /// asymmetric key
     PrivateKeyJwt,
 }
 
@@ -61,15 +59,19 @@ pub struct ClientConfig {
     #[schemars(
         with = "String",
         regex(pattern = r"^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$"),
-        description = "A ULID as per https://github.com/ulid/spec"
+        description = "A ULID as per https://github.com/ulid/spec",
+        example = &"000000000000000000000FIRST"
     )]
     pub client_id: Ulid,
 
     /// Authentication method used for this client
+    #[schemars(example = &"client_secret_post")]
     client_auth_method: ClientAuthMethodConfig,
 
     /// Name of the `OAuth2` client
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"My Application")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub client_name: Option<String>,
 
     /// The client secret, used by the `client_secret_basic`,
@@ -82,15 +84,29 @@ pub struct ClientConfig {
     /// The JSON Web Key Set (JWKS) used by the `private_key_jwt` authentication
     /// method. Mutually exclusive with `jwks_uri`
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &serde_json::json!({
+        "keys": [{
+            "kid": "03e84aed4ef4431014e8617567864c4efaaaede9",
+            "kty": "RSA",
+            "alg": "RS256",
+            "use": "sig",
+            "e": "AQAB",
+            "n": "<base64url-encoded modulus>"
+        }]
+    }))]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub jwks: Option<PublicJsonWebKeySet>,
 
     /// The URL of the JSON Web Key Set (JWKS) used by the `private_key_jwt`
     /// authentication method. Mutually exclusive with `jwks`
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"https://example.com/.well-known/jwks.json")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub jwks_uri: Option<Url>,
 
     /// List of allowed redirect URIs
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(example = &["https://example.com/callback"])]
     pub redirect_uris: Vec<Url>,
 }
 
@@ -205,7 +221,15 @@ impl ClientConfig {
     }
 }
 
-/// List of OAuth 2.0/OIDC clients config
+/// List of OAuth 2.0/OIDC clients and their keys/secrets. Each `client_id` must
+/// be a [ULID](https://github.com/ulid/spec).
+///
+/// <!-- more -->
+///
+/// **Note:** any additions or modifications in this list are synced with the
+/// database on server startup. Removed entries are only removed with the
+/// [`config sync --prune`](./cli/config.md#config-sync---prune---dry-run)
+/// command.
 #[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
 #[serde(transparent)]
 pub struct ClientsConfig(#[schemars(with = "Vec::<ClientConfig>")] Vec<ClientConfig>);

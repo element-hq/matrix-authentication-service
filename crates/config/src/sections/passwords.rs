@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -32,29 +33,28 @@ fn default_minimum_complexity() -> u8 {
     3
 }
 
-/// User password hashing config
+/// Settings related to the local password database
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct PasswordsConfig {
-    /// Whether password-based authentication is enabled
+    /// Whether to enable the password database.
+    ///
+    /// If disabled, users will only be able to log in using upstream OIDC
+    /// providers
     #[serde(default = "default_enabled")]
     pub enabled: bool,
 
-    /// The hashing schemes to use for hashing and validating passwords
+    /// List of password hashing schemes being used
     ///
-    /// The hashing scheme with the highest version number will be used for
-    /// hashing new passwords.
+    /// /!\ Only change this if you know what you're doing
     #[serde(default = "default_schemes")]
     pub schemes: Vec<HashingScheme>,
 
-    /// Score between 0 and 4 determining the minimum allowed password
-    /// complexity. Scores are based on the ESTIMATED number of guesses
-    /// needed to guess the password.
+    /// Minimum complexity required for passwords, estimated by the zxcvbn
+    /// algorithm
     ///
-    /// - 0: less than 10^2 (100)
-    /// - 1: less than 10^4 (10'000)
-    /// - 2: less than 10^6 (1'000'000)
-    /// - 3: less than 10^8 (100'000'000)
-    /// - 4: any more than that
+    /// Must be between 0 and 4, default is 3
+    ///
+    /// See <https://github.com/dropbox/zxcvbn#usage> for more information
     #[serde(default = "default_minimum_complexity")]
     minimum_complexity: u8,
 }
@@ -178,34 +178,47 @@ const fn is_default_false(value: &bool) -> bool {
 /// Parameters for a password hashing scheme
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct HashingScheme {
-    /// The version of the hashing scheme. They must be unique, and the highest
-    /// version will be used for hashing new passwords.
+    /// The version of the hashing scheme. Must be unique; the highest version
+    /// is used for hashing new passwords, the others are kept to verify
+    /// existing passwords.
+    #[schemars(example = &1u16)]
     pub version: u16,
 
-    /// The hashing algorithm to use
+    /// The hashing algorithm to use.
+    #[schemars(example = &Algorithm::Argon2id)]
     pub algorithm: Algorithm,
 
-    /// Whether to apply Unicode normalization to the password before hashing
+    /// Whether to apply Unicode normalization to the password before hashing.
     ///
     /// Defaults to `false`, and generally recommended to stay false. This is
-    /// although recommended when importing password hashs from Synapse, as it
-    /// applies an NFKC normalization to the password before hashing it.
+    /// recommended when importing password hashes from Synapse, which applies
+    /// an NFKC normalization to the password before hashing it.
     #[serde(default, skip_serializing_if = "is_default_false")]
+    #[schemars(example = &false)]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub unicode_normalization: bool,
 
-    /// Cost for the bcrypt algorithm
+    /// Cost for the bcrypt algorithm. Defaults to `12`.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[schemars(default = "default_bcrypt_cost")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub cost: Option<u32>,
 
-    /// An optional secret to use when hashing passwords. This makes it harder
-    /// to brute-force the passwords in case of a database leak.
+    /// An optional secret ("pepper") to use when hashing passwords. This makes
+    /// it harder to brute-force the passwords in case of a database leak.
+    ///
+    /// This must not be specified if `secret_file` is specified.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"<secret>")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub secret: Option<String>,
 
     /// Same as `secret`, but read from a file.
+    ///
+    /// This must not be specified if `secret` is specified.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(with = "Option<String>")]
+    #[schemars(with = "Option<String>", example = &"/path/to/secret")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub secret_file: Option<Utf8PathBuf>,
 }
 
@@ -218,13 +231,13 @@ fn default_bcrypt_cost() -> Option<u32> {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum Algorithm {
-    /// bcrypt
+    /// The bcrypt password hashing algorithm.
     Bcrypt,
 
-    /// argon2id
+    /// The Argon2id password hashing algorithm. This is the default.
     #[default]
     Argon2id,
 
-    /// PBKDF2
+    /// The PBKDF2 password hashing algorithm.
     Pbkdf2,
 }

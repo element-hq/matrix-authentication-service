@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -27,71 +28,88 @@ const fn is_default_false(value: &bool) -> bool {
     *value == default_false()
 }
 
-/// Configuration section to configure features related to account management
+/// Configuration related to account management
 #[expect(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 pub struct AccountConfig {
-    /// Whether users are allowed to change their email addresses. Defaults to
-    /// `true`.
+    /// Whether users are allowed to change their email addresses.
+    ///
+    /// Defaults to `true`.
     #[serde(default = "default_true", skip_serializing_if = "is_default_true")]
+    #[schemars(example = &true)]
     pub email_change_allowed: bool,
 
-    /// Whether users are allowed to change their display names. Defaults to
-    /// `true`.
+    /// Whether users are allowed to change their display names.
     ///
+    /// Defaults to `true`.
     /// This should be in sync with the policy in the homeserver configuration.
     #[serde(default = "default_true", skip_serializing_if = "is_default_true")]
+    #[schemars(example = &true)]
     pub displayname_change_allowed: bool,
 
-    /// Whether to enable self-service password registration. Defaults to
-    /// `false` if password authentication is enabled.
+    /// Whether to enable self-service password registration.
     ///
+    /// Defaults to `false`.
     /// This has no effect if password login is disabled.
     #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
+    #[schemars(example = &false)]
     pub password_registration_enabled: bool,
 
-    /// Whether self-service password registrations require a valid email.
-    /// Defaults to `true`.
+    /// Whether self-service registrations require a valid email.
     ///
+    /// Defaults to `true`.
     /// This has no effect if password registration is disabled.
     #[serde(default = "default_true", skip_serializing_if = "is_default_true")]
+    #[schemars(example = &true)]
     pub password_registration_email_required: bool,
 
-    /// Whether users are allowed to change their passwords. Defaults to `true`.
+    /// Whether users are allowed to change their passwords.
     ///
+    /// Defaults to `true`.
     /// This has no effect if password login is disabled.
     #[serde(default = "default_true", skip_serializing_if = "is_default_true")]
+    #[schemars(example = &true)]
     pub password_change_allowed: bool,
 
-    /// Whether email-based password recovery is enabled. Defaults to `false`.
+    /// Whether email-based password recovery is enabled.
     ///
+    /// Defaults to `false`.
     /// This has no effect if password login is disabled.
     #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
+    #[schemars(example = &false)]
     pub password_recovery_enabled: bool,
 
     /// Whether registration tokens are required for password registrations.
+    ///
     /// Defaults to `false`.
     ///
     /// When enabled, users must provide a valid registration token during
-    /// password registration. This has no effect if password registration
-    /// is disabled.
+    /// password registration. This has no effect if password registration is
+    /// disabled.
     #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
+    #[schemars(example = &false)]
     pub password_registration_token_required: bool,
 
-    /// Whether users are allowed to delete their own account. Defaults to
-    /// `true`.
+    /// Whether users are allowed to delete their own account.
+    ///
+    /// Defaults to `true`.
     #[serde(default = "default_true", skip_serializing_if = "is_default_true")]
+    #[schemars(example = &true)]
     pub account_deactivation_allowed: bool,
 
-    /// Whether users can log in with their email address. Defaults to `false`.
+    /// Whether users can log in with their email address.
     ///
+    /// Defaults to `false`.
     /// This has no effect if password login is disabled.
     #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
+    #[schemars(example = &false)]
     pub login_with_email_allowed: bool,
 
-    /// Whether registration tokens are required for password registrations
-    /// This is deprecated in favor of `password_registration_token_required`
+    /// Whether registration tokens are required for password registrations.
+    ///
+    /// Deprecated: use `password_registration_token_required` instead.
     #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
+    #[schemars(example = &false)]
     pub registration_token_required: bool,
 }
 

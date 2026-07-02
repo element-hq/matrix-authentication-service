@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -12,7 +13,7 @@ use crate::ConfigurationSection;
 /// Which service should be used for CAPTCHA protection
 #[derive(Clone, Copy, Debug, Deserialize, JsonSchema, Serialize)]
 pub enum CaptchaServiceKind {
-    /// Use Google's reCAPTCHA v2 API
+    /// Use Google's `reCAPTCHA` v2 API
     #[serde(rename = "recaptcha_v2")]
     RecaptchaV2,
 
@@ -20,24 +21,34 @@ pub enum CaptchaServiceKind {
     #[serde(rename = "cloudflare_turnstile")]
     CloudflareTurnstile,
 
-    /// Use ``HCaptcha``
+    /// Use `hCaptcha`
     #[serde(rename = "hcaptcha")]
     HCaptcha,
 }
 
-/// Configuration section to setup CAPTCHA protection on a few operations
+/// Settings related to CAPTCHA protection
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize, Default)]
 pub struct CaptchaConfig {
-    /// Which service should be used for CAPTCHA protection
+    /// Which service should be used for CAPTCHA protection. Set to `null` (or
+    /// `~`) to disable CAPTCHA protection
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &Option::<CaptchaServiceKind>::None)]
     pub service: Option<CaptchaServiceKind>,
 
-    /// The site key to use
+    /// The site key to use.
+    ///
+    /// The expected value depends on the chosen `service`.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub site_key: Option<String>,
 
-    /// The secret key to use
+    /// The secret key to use.
+    ///
+    /// The expected value depends on the chosen `service`.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub secret_key: Option<String>,
 }
 
