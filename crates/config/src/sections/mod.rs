@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -68,7 +69,15 @@ use crate::util::ConfigurationSection;
 /// Application configuration root
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct RootConfig {
-    /// List of OAuth 2.0/OIDC clients config
+    /// List of OAuth 2.0/OIDC clients and their keys/secrets. Each `client_id`
+    /// must be a [ULID](https://github.com/ulid/spec).
+    ///
+    /// <!-- more -->
+    ///
+    /// **Note:** any additions or modifications in this list are synced with
+    /// the database on server startup. Removed entries are only removed with
+    /// the [`config sync
+    /// --prune`](./cli/config.md#config-sync---prune---dry-run) command.
     #[serde(default, skip_serializing_if = "ClientsConfig::is_default")]
     pub clients: ClientsConfig,
 
@@ -338,12 +347,16 @@ pub struct ClientSecretRaw {
     /// Path to the file containing the client secret. The client secret is used
     /// by the `client_secret_basic`, `client_secret_post` and
     /// `client_secret_jwt` authentication methods.
-    #[schemars(with = "Option<String>")]
+    #[schemars(with = "Option<String>", example = &"secret")]
     #[serde(skip_serializing_if = "Option::is_none")]
     client_secret_file: Option<Utf8PathBuf>,
 
     /// Alternative to `client_secret_file`: Reads the client secret directly
     /// from the config.
+    #[schemars(
+        example = &"f4f6bb68a0269264877e9cb23b1856ab",
+        extend("x-doc" = {"commented": true})
+    )]
     #[serde(skip_serializing_if = "Option::is_none")]
     client_secret: Option<String>,
 }

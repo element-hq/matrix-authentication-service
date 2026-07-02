@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -53,35 +54,59 @@ fn default_sendmail_command() -> Option<String> {
     Some("sendmail".to_owned())
 }
 
-/// Configuration related to sending emails
+/// Hand-authored rendering of the transport selection for the documentation.
+///
+/// The schema models the transport as a flat `transport` enum plus sibling
+/// optional fields, but the reference groups them per transport, so the whole
+/// block is authored here and the sibling fields are skipped in the docs.
+const TRANSPORT_DOC_YAML: &str = r"# Default transport: don't send any emails
+transport: blackhole
+
+# Send emails using SMTP
+#transport: smtp
+#mode: plain | tls | starttls
+#hostname: localhost
+#port: 587
+#username: username
+#password: password
+
+# Send emails by calling a local sendmail binary
+#transport: sendmail
+#command: /usr/sbin/sendmail";
+
+/// Settings related to sending emails
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 pub struct EmailConfig {
     /// Email address to use as From when sending emails
     #[serde(default = "default_email")]
-    #[schemars(email)]
+    #[schemars(email, example = &r#""The almighty auth service" <auth@example.com>"#)]
     pub from: String,
 
     /// Email address to use as Reply-To when sending emails
     #[serde(default = "default_email")]
-    #[schemars(email)]
+    #[schemars(email, example = &r#""No reply" <no-reply@example.com>"#)]
     pub reply_to: String,
 
     /// What backend should be used when sending emails
+    #[schemars(extend("x-doc" = serde_json::json!({ "yaml": TRANSPORT_DOC_YAML })))]
     transport: EmailTransportKind,
 
     /// SMTP transport: Connection mode to the relay
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "skip": true })))]
     mode: Option<EmailSmtpMode>,
 
     /// SMTP transport: Hostname to connect to
     #[serde(skip_serializing_if = "Option::is_none")]
     #[schemars(with = "Option<crate::schema::Hostname>")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "skip": true })))]
     hostname: Option<String>,
 
     /// SMTP transport: Port to connect to. Default is 25 for plain, 465 for TLS
     /// and 587 for `StartTLS`
     #[serde(skip_serializing_if = "Option::is_none")]
     #[schemars(range(min = 1, max = 65535))]
+    #[schemars(extend("x-doc" = serde_json::json!({ "skip": true })))]
     port: Option<NonZeroU16>,
 
     /// SMTP transport: Username for use to authenticate when connecting to the
@@ -89,6 +114,7 @@ pub struct EmailConfig {
     ///
     /// Must be set if the `password` or `password_file` field is set
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "skip": true })))]
     username: Option<String>,
 
     /// SMTP transport: Password for use to authenticate when connecting to the
@@ -96,6 +122,7 @@ pub struct EmailConfig {
     ///
     /// Must be set if the `username` but not `password_file` field is set
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "skip": true })))]
     password: Option<String>,
 
     /// SMTP transport: Path to the password for use to authenticate when
@@ -109,6 +136,7 @@ pub struct EmailConfig {
     /// Sendmail transport: Command to use to send emails
     #[serde(skip_serializing_if = "Option::is_none")]
     #[schemars(default = "default_sendmail_command")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "skip": true })))]
     command: Option<String>,
 }
 

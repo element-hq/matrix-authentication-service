@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -49,24 +50,37 @@ pub enum TracingExporterKind {
 /// Configuration related to exporting traces
 #[derive(Clone, Debug, Default, Serialize, Deserialize, JsonSchema)]
 pub struct TracingConfig {
-    /// Exporter to use when exporting traces
+    /// List of propagators to use for extracting and injecting trace contexts
     #[serde(default)]
+    pub propagators: Vec<Propagator>,
+
+    /// Exporter to use when exporting traces
+    ///
+    /// Set to `otlp` to export traces to an OTLP-compatible endpoint (which
+    /// also requires setting `endpoint`), or to `stdout` to print traces to
+    /// the standard output. Defaults to `none`, which disables trace
+    /// exporting.
+    #[serde(default)]
+    #[schemars(extend("x-doc" = {"yaml": r"# The default: don't export traces
+exporter: none
+
+# Export traces to an OTLP-compatible endpoint
+#exporter: otlp
+#endpoint: https://localhost:4318
+
+# Export traces to the standard output. Only useful for debugging
+#exporter: stdout"}))]
     pub exporter: TracingExporterKind,
 
     /// OTLP exporter: OTLP over HTTP compatible endpoint
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(url, default = "otlp_endpoint_default")]
+    #[schemars(url, default = "otlp_endpoint_default", extend("x-doc" = {"skip": true}))]
     pub endpoint: Option<Url>,
 
-    /// List of propagation formats to use for incoming and outgoing requests
-    #[serde(default)]
-    pub propagators: Vec<Propagator>,
-
-    /// Sample rate for traces
-    ///
-    /// Defaults to `1.0` if not set.
+    /// Sample rate for traces, between 0.0 and 1.0. Defaults to `1.0` if not
+    /// set.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(example = 0.5, range(min = 0.0, max = 1.0))]
+    #[schemars(example = 0.5, range(min = 0.0, max = 1.0), extend("x-doc" = {"commented": true}))]
     pub sample_rate: Option<f64>,
 }
 
@@ -103,12 +117,30 @@ pub enum MetricsExporterKind {
 #[derive(Clone, Debug, Default, Serialize, Deserialize, JsonSchema)]
 pub struct MetricsConfig {
     /// Exporter to use when exporting metrics
+    ///
+    /// Set to `otlp` to export metrics to an OTLP-compatible endpoint (which
+    /// also requires setting `endpoint`), to `prometheus` to expose a
+    /// Prometheus endpoint, or to `stdout` to print metrics to the standard
+    /// output. Defaults to `none`, which disables metric exporting.
     #[serde(default)]
+    #[schemars(extend("x-doc" = {"yaml": r"# The default: don't export metrics
+exporter: none
+
+# Export metrics to an OTLP-compatible endpoint
+#exporter: otlp
+#endpoint: https://localhost:4317
+
+# Export metrics by exposing a Prometheus endpoint
+# This requires mounting the `prometheus` resource to an HTTP listener
+#exporter: prometheus
+
+# Export metrics to the standard output. Only useful for debugging
+#exporter: stdout"}))]
     pub exporter: MetricsExporterKind,
 
     /// OTLP exporter: OTLP over HTTP compatible endpoint
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(url, default = "otlp_endpoint_default")]
+    #[schemars(url, default = "otlp_endpoint_default", extend("x-doc" = {"skip": true}))]
     pub endpoint: Option<Url>,
 }
 
@@ -122,30 +154,27 @@ impl MetricsConfig {
 /// Configuration related to the Sentry integration
 #[derive(Clone, Debug, Default, Serialize, Deserialize, JsonSchema)]
 pub struct SentryConfig {
-    /// Sentry DSN
+    /// DSN to use for sending errors and crashes to Sentry
     #[schemars(url, example = &"https://public@host:port/1")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dsn: Option<String>,
 
-    /// Environment to use when sending events to Sentry
-    ///
-    /// Defaults to `production` if not set.
-    #[schemars(example = &"production")]
+    /// Environment to use when sending events to Sentry. Defaults to
+    /// `production`.
+    #[schemars(example = &"production", extend("x-doc" = {"commented": true}))]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub environment: Option<String>,
 
-    /// Sample rate for event submissions
-    ///
-    /// Defaults to `1.0` if not set.
+    /// Sample rate for event submissions, between 0.0 and 1.0. Defaults to
+    /// `1.0`.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(example = 0.5, range(min = 0.0, max = 1.0))]
+    #[schemars(example = 1.0, range(min = 0.0, max = 1.0), extend("x-doc" = {"commented": true}))]
     pub sample_rate: Option<f32>,
 
-    /// Sample rate for tracing transactions
-    ///
-    /// Defaults to `0.0` if not set.
+    /// Sample rate for tracing transactions, between 0.0 and 1.0. Defaults to
+    /// `0.0`.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schemars(example = 0.5, range(min = 0.0, max = 1.0))]
+    #[schemars(example = 0.0, range(min = 0.0, max = 1.0), extend("x-doc" = {"commented": true}))]
     pub traces_sample_rate: Option<f32>,
 }
 
@@ -156,7 +185,7 @@ impl SentryConfig {
     }
 }
 
-/// Configuration related to sending monitoring data
+/// Settings related to metrics and traces
 #[derive(Clone, Debug, Default, Serialize, Deserialize, JsonSchema)]
 pub struct TelemetryConfig {
     /// Configuration related to exporting traces

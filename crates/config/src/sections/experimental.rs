@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -33,59 +34,71 @@ fn is_default_token_ttl(value: &Duration) -> bool {
 #[serde_as]
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 pub struct InactiveSessionExpirationConfig {
-    /// Time after which an inactive session is automatically finished
-    #[schemars(with = "u64", range(min = 600, max = 7_776_000))]
+    /// Time after which an inactive session is automatically finished, in
+    /// seconds
+    #[schemars(with = "u64", range(min = 600, max = 7_776_000), example = &32400)]
     #[serde_as(as = "serde_with::DurationSeconds<i64>")]
     pub ttl: Duration,
 
-    /// Should compatibility sessions expire after inactivity
+    /// Should compatibility sessions expire after inactivity. Defaults to true.
     #[serde(default = "default_true")]
+    #[schemars(example = &true)]
     pub expire_compat_sessions: bool,
 
-    /// Should OAuth 2.0 sessions expire after inactivity
+    /// Should OAuth 2.0 sessions expire after inactivity. Defaults to true.
     #[serde(default = "default_true")]
+    #[schemars(example = &true)]
     pub expire_oauth_sessions: bool,
 
-    /// Should user sessions expire after inactivity
+    /// Should user sessions expire after inactivity. Defaults to true.
     #[serde(default = "default_true")]
+    #[schemars(example = &true)]
     pub expire_user_sessions: bool,
 }
 
-/// Configuration sections for experimental options
+/// Settings that may change or be removed in future versions.
+/// Some of which are in this section because they don't have a stable place
+/// in the configuration yet.
 ///
 /// Do not change these options unless you know what you are doing.
 #[serde_as]
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 pub struct ExperimentalConfig {
-    /// Time-to-live of access tokens in seconds. Defaults to 5 minutes.
-    #[schemars(with = "u64", range(min = 60, max = 86400))]
+    /// Time-to-live of OAuth 2.0 access tokens in seconds. Defaults to 300, 5
+    /// minutes.
+    #[schemars(with = "u64", range(min = 60, max = 86400), example = &300)]
     #[serde(
         default = "default_token_ttl",
         skip_serializing_if = "is_default_token_ttl"
     )]
     #[serde_as(as = "serde_with::DurationSeconds<i64>")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub access_token_ttl: Duration,
 
-    /// Time-to-live of compatibility access tokens in seconds. Defaults to 5
-    /// minutes.
-    #[schemars(with = "u64", range(min = 60, max = 86400))]
+    /// Time-to-live of compatibility access tokens in seconds, when refresh
+    /// tokens are supported. Defaults to 300, 5 minutes.
+    #[schemars(with = "u64", range(min = 60, max = 86400), example = &300)]
     #[serde(
         default = "default_token_ttl",
         skip_serializing_if = "is_default_token_ttl"
     )]
     #[serde_as(as = "serde_with::DurationSeconds<i64>")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub compat_token_ttl: Duration,
 
-    /// Experimetal feature to automatically expire inactive sessions
+    /// Experimental feature to automatically expire inactive sessions.
     ///
-    /// Disabled by default
+    /// Disabled by default.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub inactive_session_expiration: Option<InactiveSessionExpirationConfig>,
 
     /// Experimental feature to show a plan management tab and iframe.
     /// This value is passed through "as is" to the client without any
     /// validation.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &"https://example.com/plan")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub plan_management_iframe_uri: Option<String>,
 
     /// Experimental feature to limit the number of application sessions per
@@ -93,6 +106,7 @@ pub struct ExperimentalConfig {
     ///
     /// Disabled by default.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "commented": true })))]
     pub session_limit: Option<SessionLimitConfig>,
 }
 
@@ -150,20 +164,18 @@ pub struct SessionLimitConfig {
     /// This is not enforced in non-interactive contexts (like
     /// `m.login.password` login with the compatibility API) as there is no
     /// opportunity for us to show some UI for people remove some sessions.
-    /// See [`hard_limit`] for enforcement on that side.
+    /// See `hard_limit` for enforcement on that side.
     ///
     /// This is the limit that is displayed in the UI
-    ///
-    /// [`hard_limit`]: Self::hard_limit
+    #[schemars(example = &10)]
     pub soft_limit: NonZeroU64,
     /// Upon login, when `dangerous_hard_limit_eviction: false`, will refuse the
     /// new login (policy violation error), otherwise, see
-    /// [`dangerous_hard_limit_eviction`].
+    /// `dangerous_hard_limit_eviction`.
     ///
     /// The hard limit is enforced in all contexts
     /// (interactive/non-interactive).
-    ///
-    /// [`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction
+    #[schemars(example = &50)]
     pub hard_limit: NonZeroU64,
     /// When set, only accounts with <= `max_session_threshold` sessions have
     /// the session limits applied.
@@ -175,9 +187,10 @@ pub struct SessionLimitConfig {
     /// and you want to avoid breaking their operation while maintaining some
     /// level of sanity with the number of devices that people can have.
     /// This will prevent anyone else from crossing the limit.
+    #[schemars(example = &100)]
     pub max_session_threshold: Option<NonZeroU64>,
     /// Whether we should automatically choose the least recently used devices
-    /// to remove when the [`Self::hard_limit`] is reached; in order to
+    /// to remove when the `hard_limit` is reached; in order to
     /// allow the new login to continue.
     ///
     /// Disabled by default
@@ -187,7 +200,7 @@ pub struct SessionLimitConfig {
     /// be recovered if you have another verified active device or have a
     /// recovery key setup.
     ///
-    /// When using [`dangerous_hard_limit_eviction`], the [`hard_limit`] must be
+    /// When using `dangerous_hard_limit_eviction`, the `hard_limit` must be
     /// at least 2 to avoid catastrophically losing encrypted history and
     /// digital identity in pathological cases. Keep in mind this is a bare
     /// minimum restriction and you can still run into trouble.
@@ -201,13 +214,10 @@ pub struct SessionLimitConfig {
     ///
     /// Removing devices is a non-trivial task for some homeservers to tackle
     /// and can cause lots of device list changes, `/sync`, federation, and
-    /// replication traffic. Consider using [`max_session_threshold`] to
+    /// replication traffic. Consider using `max_session_threshold` to
     /// limit the size of accounts that are acted upon.
-    ///
-    /// [`hard_limit`]: Self::hard_limit
-    /// [`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction
-    /// [`max_session_threshold`]: Self::max_session_threshold
     #[serde(default = "default_false")]
+    #[schemars(example = &false)]
     pub dangerous_hard_limit_eviction: bool,
 }
 

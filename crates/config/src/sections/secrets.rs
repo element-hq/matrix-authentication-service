@@ -199,14 +199,17 @@ pub enum Encryption {
 struct EncryptionRaw {
     /// File containing the encryption key for secure cookies.
     #[schemars(with = "Option<String>")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "skip": true })))]
     #[serde(skip_serializing_if = "Option::is_none")]
     encryption_file: Option<Utf8PathBuf>,
 
-    /// Encryption key for secure cookies.
+    /// Encryption secret (used for encrypting cookies and database fields)
+    ///
+    /// This must be a 32-byte long hex-encoded key
     #[schemars(
         with = "Option<String>",
         regex(pattern = r"[0-9a-fA-F]{64}"),
-        example = &"0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff"
+        example = &"c7e42fb8baba8f228b2e169fdf4c8216dffd5d33ad18bafd8b928c09ca46c718"
     )]
     #[serde_as(as = "Option<serde_with::hex::Hex>")]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -258,7 +261,82 @@ async fn key_configs_from_path(path: &Utf8PathBuf) -> anyhow::Result<Vec<KeyConf
     Ok(result)
 }
 
-/// Application secrets
+/// Signing and encryption secrets
+///
+/// <!-- more -->
+///
+/// ### `secrets.encryption{_file}`
+///
+/// The encryption secret used for encrypting cookies and database fields. It
+/// takes the form of a 32-bytes-long hex-encoded string. To provide the
+/// encryption secret via file, set `secrets.encryption_file` to the file path;
+/// alternatively use `secrets.encryption` for declaring the secret inline. The
+/// options `secrets.encryption_file` and `secrets.encryption` are mutually
+/// exclusive.
+///
+/// If given via file, the encryption secret is only read at application
+/// startup. The secret is not updated when the content of the file changes.
+///
+/// > ⚠️ **Warning** – Do not change the encryption secret after the initial
+/// > start! Changing the encryption secret afterwards will lead to a loss of
+/// > all encrypted information in the database.
+///
+/// ### Signing Keys
+///
+/// The service can use a number of key types for signing.
+/// The following key types are supported:
+///
+/// - RSA
+/// - ECDSA with the P-256 (`prime256v1`) curve
+/// - ECDSA with the P-384 (`secp384r1`) curve
+/// - ECDSA with the K-256 (`secp256k1`) curve
+///
+/// The following key formats are supported:
+///
+/// - PKCS#1 PEM or DER-encoded RSA private key
+/// - PKCS#8 PEM or DER-encoded RSA or ECDSA private key, encrypted or not
+/// - SEC1 PEM or DER-encoded ECDSA private key
+///
+/// The signing keys are used for:
+/// - signing ID Tokens (as returned in the [Token Endpoint] at
+///   `/oauth2/token`);
+/// - signing the response of the [UserInfo Endpoint] at `/oauth2/userinfo` if
+///   the client requests a signed response;
+/// - (niche) signing a JWT for authenticating to an upstream OAuth provider
+///   when the `private_key_jwt` client auth method is configured.
+///
+/// At a minimum, an RSA key must be configured in order to be compliant with
+/// the [OpenID Connect Core specification][oidc-core-rs256] which specifies the
+/// RS256 algorithm as mandatory to implement by servers for interoperability
+/// reasons.
+///
+/// The keys can be given as a directory path via `secrets.keys_dir`
+/// or, alternatively, as an inline configuration list via `secrets.keys`.
+///
+/// [Token Endpoint]: https://openid.net/specs/openid-connect-core-1_0.html#TokenEndpoint
+/// [UserInfo Endpoint]: https://openid.net/specs/openid-connect-core-1_0.html#UserInfo
+/// [oidc-core-rs256]: https://openid.net/specs/openid-connect-core-1_0.html#ServerMTI
+///
+/// #### `secrets.keys_dir`
+///
+/// Path to the directory containing MAS signing key files.
+/// Only keys that don’t require a password are supported.
+///
+/// #### `secrets.keys`
+///
+/// Each entry in the list corresponds to one signing key used by MAS.
+/// The key can either be specified inline (with the `key` property),
+/// or loaded from a file (with the `key_file` property).
+///
+/// A [JWK Key ID] is automatically derived from each key.
+/// To override this default, set `kid` to a custom value.
+/// The `kid` can be any case-sensitive string value as long as it is unique to
+/// this list; a key’s `kid` value must be stable across restarts.
+///
+/// For PKCS#8 encoded keys, the `password` or `password_file` properties can be
+/// used to decrypt the key.
+///
+/// [JWK Key ID]: <https://datatracker.ietf.org/doc/html/rfc7517#section-4.5>
 #[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct SecretsConfig {
@@ -269,11 +347,21 @@ pub struct SecretsConfig {
     encryption: Encryption,
 
     /// List of private keys to use for signing and encrypting payloads.
+    ///
+    /// At least one RSA key must be configured.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(example = &serde_json::json!([
+        { "key_file": "keys/rsa_key" },
+        {
+            "kid": "iv1aShae",
+            "key": "-----BEGIN EC PRIVATE KEY-----\nMHQCAQEEIE8yeUh111Npqu2e5wXxjC/GA5lbGe0j0KVXqZP12vqioAcGBSuBBAAK\noUQDQgAESKfUtKaLqCfhK+p3z870W59yOYvd+kjGWe+tK16SmWzZJbRCgdHakHE5\nMC6tJRnvedsYoKTrYoDv/XZIBI9zlA==\n-----END EC PRIVATE KEY-----"
+        }
+    ]))]
     keys: Option<Vec<KeyConfig>>,
 
     /// Directory of private keys to use for signing and encrypting payloads.
     #[schemars(with = "Option<String>")]
+    #[schemars(extend("x-doc" = serde_json::json!({ "skip": true })))]
     #[serde(skip_serializing_if = "Option::is_none")]
     keys_dir: Option<Utf8PathBuf>,
 }
