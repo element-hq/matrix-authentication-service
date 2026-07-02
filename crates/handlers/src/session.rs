@@ -75,7 +75,7 @@ pub async fn load_session_or_fallback(
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(clock, rng);
         let ctx = AccountInactiveContext::new(session.user)
             .with_csrf(csrf_token.form_value())
-            .with_language(locale.clone());
+            .with_language(*locale);
         let fallback = templates.render_account_deactivated(&ctx)?;
         let response = (cookie_jar, Html(fallback)).into_response();
         return Ok(SessionOrFallback::Fallback { response });
@@ -86,7 +86,7 @@ pub async fn load_session_or_fallback(
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(clock, rng);
         let ctx = AccountInactiveContext::new(session.user)
             .with_csrf(csrf_token.form_value())
-            .with_language(locale.clone());
+            .with_language(*locale);
         let fallback = templates.render_account_locked(&ctx)?;
         let response = (cookie_jar, Html(fallback)).into_response();
         return Ok(SessionOrFallback::Fallback { response });
@@ -100,7 +100,7 @@ pub async fn load_session_or_fallback(
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(clock, rng);
         let ctx = AccountInactiveContext::new(session.user)
             .with_csrf(csrf_token.form_value())
-            .with_language(locale.clone());
+            .with_language(*locale);
         let fallback = templates.render_account_logged_out(&ctx)?;
         let response = (cookie_jar, Html(fallback)).into_response();
         return Ok(SessionOrFallback::Fallback { response });

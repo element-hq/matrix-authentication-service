@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -154,7 +155,6 @@ pub(crate) async fn get(
     let res: Result<Response, RouteError> = ({
         let templates = templates.clone();
         let callback_destination = callback_destination.clone();
-        let locale = locale.clone();
         async move {
             let maybe_session = session_info.load_active_session(&mut repo).await?;
             let prompt = params.auth.prompt.as_deref().unwrap_or_default();

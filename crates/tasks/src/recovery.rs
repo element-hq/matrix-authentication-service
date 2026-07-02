@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -93,8 +94,8 @@ impl RunnableJob for SendAccountRecoveryEmailsJob {
                 let mailbox = Mailbox::new(Some(user.username.clone()), address);
 
                 info!("Sending recovery email to {}", mailbox);
-                let context = EmailRecoveryContext::new(user, session.clone(), url)
-                    .with_language(lang.clone());
+                let context =
+                    EmailRecoveryContext::new(user, session.clone(), url).with_language(lang);
 
                 // XXX: we only log if the email fails to send, to avoid stopping the loop
                 if let Err(e) = mailer.send_recovery_email(mailbox, &context).await {
