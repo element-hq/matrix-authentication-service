@@ -201,7 +201,7 @@ version = "1.4.0"
 
 # DER encoding
 [workspace.dependencies.der]
-version = "0.7.10"
+version = "0.8.0"
 features = ["std"]
 
 # Interactive CLI dialogs
