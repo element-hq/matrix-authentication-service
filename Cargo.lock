@@ -3437,7 +3437,6 @@ dependencies = [
  "opentelemetry-semantic-conventions",
  "reqwest",
  "rustls",
- "rustls-platform-verifier",
  "tokio",
  "tower",
  "tower-http",
