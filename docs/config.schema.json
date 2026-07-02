@@ -2722,14 +2722,6 @@
             "string",
             "null"
           ]
-        },
-        "logo_uri": {
-          "description": "Logo displayed in some web pages.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "format": "uri"
         }
       }
     },
