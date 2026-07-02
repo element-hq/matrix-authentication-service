@@ -6,10 +6,11 @@
   "properties": {
     "clients": {
       "description": "List of OAuth 2.0/OIDC clients config",
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/ClientConfig"
-      }
+      "allOf": [
+        {
+          "$ref": "#/definitions/ClientsConfig"
+        }
+      ]
     },
     "http": {
       "description": "Configuration of the HTTP server",
@@ -165,7 +166,7 @@
       ]
     },
     "rate_limiting": {
-      "description": "Configuration related to limiting the rate of user actions to prevent\n abuse",
+      "description": "Configuration related to limiting the rate of user actions to prevent\nabuse",
       "allOf": [
         {
           "$ref": "#/definitions/RateLimitingConfig"
@@ -197,7 +198,7 @@
       ]
     },
     "account": {
-      "description": "Configuration section to configure features related to account\n management",
+      "description": "Configuration section to configure features related to account\nmanagement",
       "allOf": [
         {
           "$ref": "#/definitions/AccountConfig"
@@ -226,6 +227,13 @@
     "matrix"
   ],
   "definitions": {
+    "ClientsConfig": {
+      "description": "List of OAuth 2.0/OIDC clients config",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ClientConfig"
+      }
+    },
     "ClientConfig": {
       "description": "An OAuth 2.0 client configuration",
       "type": "object",
@@ -251,24 +259,24 @@
           ]
         },
         "client_secret_file": {
-          "description": "Path to the file containing the client secret. The client secret is used\n by the `client_secret_basic`, `client_secret_post` and\n `client_secret_jwt` authentication methods.",
+          "description": "Path to the file containing the client secret. The client secret is used\nby the `client_secret_basic`, `client_secret_post` and\n`client_secret_jwt` authentication methods.",
           "type": [
             "string",
             "null"
           ]
         },
         "client_secret": {
-          "description": "Alternative to `client_secret_file`: Reads the client secret directly\n from the config.",
+          "description": "Alternative to `client_secret_file`: Reads the client secret directly\nfrom the config.",
           "type": [
             "string",
             "null"
           ]
         },
         "jwks": {
-          "description": "The JSON Web Key Set (JWKS) used by the `private_key_jwt` authentication\n method. Mutually exclusive with `jwks_uri`",
+          "description": "The JSON Web Key Set (JWKS) used by the `private_key_jwt` authentication\nmethod. Mutually exclusive with `jwks_uri`",
           "anyOf": [
             {
-              "$ref": "#/definitions/JsonWebKeySet_for_JsonWebKeyPublicParameters"
+              "$ref": "#/definitions/JsonWebKeySet"
             },
             {
               "type": "null"
@@ -276,7 +284,7 @@
           ]
         },
         "jwks_uri": {
-          "description": "The URL of the JSON Web Key Set (JWKS) used by the `private_key_jwt`\n authentication method. Mutually exclusive with `jwks`",
+          "description": "The URL of the JSON Web Key Set (JWKS) used by the `private_key_jwt`\nauthentication method. Mutually exclusive with `jwks`",
           "type": [
             "string",
             "null"
@@ -306,34 +314,34 @@
           "const": "none"
         },
         {
-          "description": "`client_secret_basic`: `client_id` and `client_secret` used as basic\n authorization credentials",
+          "description": "`client_secret_basic`: `client_id` and `client_secret` used as basic\nauthorization credentials",
           "type": "string",
           "const": "client_secret_basic"
         },
         {
-          "description": "`client_secret_post`: `client_id` and `client_secret` sent in the\n request body",
+          "description": "`client_secret_post`: `client_id` and `client_secret` sent in the\nrequest body",
           "type": "string",
           "const": "client_secret_post"
         },
         {
-          "description": "`client_secret_basic`: a `client_assertion` sent in the request body and\n signed using the `client_secret`",
+          "description": "`client_secret_basic`: a `client_assertion` sent in the request body and\nsigned using the `client_secret`",
           "type": "string",
           "const": "client_secret_jwt"
         },
         {
-          "description": "`client_secret_basic`: a `client_assertion` sent in the request body and\n signed by an asymmetric key",
+          "description": "`client_secret_basic`: a `client_assertion` sent in the request body and\nsigned by an asymmetric key",
           "type": "string",
           "const": "private_key_jwt"
         }
       ]
     },
-    "JsonWebKeySet_for_JsonWebKeyPublicParameters": {
+    "JsonWebKeySet": {
       "type": "object",
       "properties": {
         "keys": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/JsonWebKey_for_JsonWebKeyPublicParameters"
+            "$ref": "#/definitions/JsonWebKey"
           }
         }
       },
@@ -341,7 +349,7 @@
         "keys"
       ]
     },
-    "JsonWebKey_for_JsonWebKeyPublicParameters": {
+    "JsonWebKey": {
       "type": "object",
       "properties": {
         "use": {
@@ -685,7 +693,7 @@
           "default": []
         },
         "trusted_proxies": {
-          "description": "List of trusted reverse proxies that can set the `X-Forwarded-For`\n header",
+          "description": "List of trusted reverse proxies that can set the `X-Forwarded-For`\nheader",
           "type": "array",
           "items": {
             "type": "string",
@@ -723,7 +731,7 @@
       "type": "object",
       "properties": {
         "name": {
-          "description": "A unique name for this listener which will be shown in traces and in\n metrics labels",
+          "description": "A unique name for this listener which will be shown in traces and in\nmetrics labels",
           "type": [
             "string",
             "null"
@@ -905,7 +913,7 @@
           ]
         },
         {
-          "description": "Mount a \"/connection-info\" handler which helps debugging informations on\n the upstream connection",
+          "description": "Mount a \"/connection-info\" handler which helps debugging informations on\nthe upstream connection",
           "type": "object",
           "properties": {
             "name": {
@@ -927,7 +935,7 @@
           "type": "object",
           "properties": {
             "host": {
-              "description": "Host on which to listen.\n\n Defaults to listening on all addresses",
+              "description": "Host on which to listen.\n\nDefaults to listening on all addresses",
               "type": [
                 "string",
                 "null"
@@ -978,18 +986,18 @@
           ]
         },
         {
-          "description": "Accept connections on file descriptors passed by the parent process.\n\n This is useful for grabbing sockets passed by systemd.\n\n See <https://www.freedesktop.org/software/systemd/man/sd_listen_fds.html>",
+          "description": "Accept connections on file descriptors passed by the parent process.\n\nThis is useful for grabbing sockets passed by systemd.\n\nSee <https://www.freedesktop.org/software/systemd/man/sd_listen_fds.html>",
           "type": "object",
           "properties": {
             "fd": {
-              "description": "Index of the file descriptor. Note that this is offseted by 3\n because of the standard input/output sockets, so setting\n here a value of `0` will grab the file descriptor `3`",
+              "description": "Index of the file descriptor. Note that this is offseted by 3\nbecause of the standard input/output sockets, so setting\nhere a value of `0` will grab the file descriptor `3`",
               "type": "integer",
               "format": "uint",
               "minimum": 0,
               "default": 0
             },
             "kind": {
-              "description": "Whether the socket is a TCP socket or a UNIX domain socket. Defaults\n to TCP.",
+              "description": "Whether the socket is a TCP socket or a UNIX domain socket. Defaults\nto TCP.",
               "default": "tcp",
               "allOf": [
                 {
@@ -1021,42 +1029,42 @@
       "type": "object",
       "properties": {
         "certificate": {
-          "description": "PEM-encoded X509 certificate chain\n\n Exactly one of `certificate` or `certificate_file` must be set.",
+          "description": "PEM-encoded X509 certificate chain\n\nExactly one of `certificate` or `certificate_file` must be set.",
           "type": [
             "string",
             "null"
           ]
         },
         "certificate_file": {
-          "description": "File containing the PEM-encoded X509 certificate chain\n\n Exactly one of `certificate` or `certificate_file` must be set.",
+          "description": "File containing the PEM-encoded X509 certificate chain\n\nExactly one of `certificate` or `certificate_file` must be set.",
           "type": [
             "string",
             "null"
           ]
         },
         "key": {
-          "description": "PEM-encoded private key\n\n Exactly one of `key` or `key_file` must be set.",
+          "description": "PEM-encoded private key\n\nExactly one of `key` or `key_file` must be set.",
           "type": [
             "string",
             "null"
           ]
         },
         "key_file": {
-          "description": "File containing a PEM or DER-encoded private key\n\n Exactly one of `key` or `key_file` must be set.",
+          "description": "File containing a PEM or DER-encoded private key\n\nExactly one of `key` or `key_file` must be set.",
           "type": [
             "string",
             "null"
           ]
         },
         "password": {
-          "description": "Password used to decode the private key\n\n One of `password` or `password_file` must be set if the key is\n encrypted.",
+          "description": "Password used to decode the private key\n\nOne of `password` or `password_file` must be set if the key is\nencrypted.",
           "type": [
             "string",
             "null"
           ]
         },
         "password_file": {
-          "description": "Password file used to decode the private key\n\n One of `password` or `password_file` must be set if the key is\n encrypted.",
+          "description": "Password file used to decode the private key\n\nOne of `password` or `password_file` must be set if the key is\nencrypted.",
           "type": [
             "string",
             "null"
@@ -1069,7 +1077,7 @@
       "type": "object",
       "properties": {
         "uri": {
-          "description": "Connection URI\n\n This must not be specified if `host`, `port`, `socket`, `username`,\n `password`, or `database` are specified.",
+          "description": "Connection URI\n\nThis must not be specified if `host`, `port`, `socket`, `username`,\n`password`, or `database` are specified.",
           "type": [
             "string",
             "null"
@@ -1078,7 +1086,7 @@
           "default": "postgresql://"
         },
         "host": {
-          "description": "Name of host to connect to\n\n This must not be specified if `uri` is specified.",
+          "description": "Name of host to connect to\n\nThis must not be specified if `uri` is specified.",
           "anyOf": [
             {
               "$ref": "#/definitions/Hostname"
@@ -1089,7 +1097,7 @@
           ]
         },
         "port": {
-          "description": "Port number to connect at the server host\n\n This must not be specified if `uri` is specified.",
+          "description": "Port number to connect at the server host\n\nThis must not be specified if `uri` is specified.",
           "type": [
             "integer",
             "null"
@@ -1099,28 +1107,28 @@
           "maximum": 65535
         },
         "socket": {
-          "description": "Directory containing the UNIX socket to connect to\n\n This must not be specified if `uri` is specified.",
+          "description": "Directory containing the UNIX socket to connect to\n\nThis must not be specified if `uri` is specified.",
           "type": [
             "string",
             "null"
           ]
         },
         "username": {
-          "description": "PostgreSQL user name to connect as\n\n This must not be specified if `uri` is specified.",
+          "description": "PostgreSQL user name to connect as\n\nThis must not be specified if `uri` is specified.",
           "type": [
             "string",
             "null"
           ]
         },
         "password": {
-          "description": "Password to be used if the server demands password authentication\n\n This must not be specified if `uri` is specified.",
+          "description": "Password to be used if the server demands password authentication\n\nThis must not be specified if `uri` is specified.",
           "type": [
             "string",
             "null"
           ]
         },
         "database": {
-          "description": "The database name\n\n This must not be specified if `uri` is specified.",
+          "description": "The database name\n\nThis must not be specified if `uri` is specified.",
           "type": [
             "string",
             "null"
@@ -1138,42 +1146,42 @@
           ]
         },
         "ssl_ca": {
-          "description": "The PEM-encoded root certificate for SSL connections\n\n This must not be specified if the `ssl_ca_file` option is specified.",
+          "description": "The PEM-encoded root certificate for SSL connections\n\nThis must not be specified if the `ssl_ca_file` option is specified.",
           "type": [
             "string",
             "null"
           ]
         },
         "ssl_ca_file": {
-          "description": "Path to the root certificate for SSL connections\n\n This must not be specified if the `ssl_ca` option is specified.",
+          "description": "Path to the root certificate for SSL connections\n\nThis must not be specified if the `ssl_ca` option is specified.",
           "type": [
             "string",
             "null"
           ]
         },
         "ssl_certificate": {
-          "description": "The PEM-encoded client certificate for SSL connections\n\n This must not be specified if the `ssl_certificate_file` option is\n specified.",
+          "description": "The PEM-encoded client certificate for SSL connections\n\nThis must not be specified if the `ssl_certificate_file` option is\nspecified.",
           "type": [
             "string",
             "null"
           ]
         },
         "ssl_certificate_file": {
-          "description": "Path to the client certificate for SSL connections\n\n This must not be specified if the `ssl_certificate` option is specified.",
+          "description": "Path to the client certificate for SSL connections\n\nThis must not be specified if the `ssl_certificate` option is specified.",
           "type": [
             "string",
             "null"
           ]
         },
         "ssl_key": {
-          "description": "The PEM-encoded client key for SSL connections\n\n This must not be specified if the `ssl_key_file` option is specified.",
+          "description": "The PEM-encoded client key for SSL connections\n\nThis must not be specified if the `ssl_key_file` option is specified.",
           "type": [
             "string",
             "null"
           ]
         },
         "ssl_key_file": {
-          "description": "Path to the client key for SSL connections\n\n This must not be specified if the `ssl_key` option is specified.",
+          "description": "Path to the client key for SSL connections\n\nThis must not be specified if the `ssl_key` option is specified.",
           "type": [
             "string",
             "null"
@@ -1224,7 +1232,7 @@
       "format": "hostname"
     },
     "PgSslMode": {
-      "description": "Options for controlling the level of protection provided for PostgreSQL SSL\n connections.",
+      "description": "Options for controlling the level of protection provided for PostgreSQL SSL\nconnections.",
       "oneOf": [
         {
           "description": "Only try a non-SSL connection.",
@@ -1242,17 +1250,17 @@
           "const": "prefer"
         },
         {
-          "description": "Only try an SSL connection. If a root CA file is present, verify the\n connection in the same way as if `VerifyCa` was specified.",
+          "description": "Only try an SSL connection. If a root CA file is present, verify the\nconnection in the same way as if `VerifyCa` was specified.",
           "type": "string",
           "const": "require"
         },
         {
-          "description": "Only try an SSL connection, and verify that the server certificate is\n issued by a trusted certificate authority (CA).",
+          "description": "Only try an SSL connection, and verify that the server certificate is\nissued by a trusted certificate authority (CA).",
           "type": "string",
           "const": "verify-ca"
         },
         {
-          "description": "Only try an SSL connection; verify that the server certificate is issued\n by a trusted CA and that the requested server host name matches that\n in the certificate.",
+          "description": "Only try an SSL connection; verify that the server certificate is issued\nby a trusted CA and that the requested server host name matches that\nin the certificate.",
           "type": "string",
           "const": "verify-full"
         }
@@ -1319,7 +1327,7 @@
           "default": []
         },
         "sample_rate": {
-          "description": "Sample rate for traces\n\n Defaults to `1.0` if not set.",
+          "description": "Sample rate for traces\n\nDefaults to `1.0` if not set.",
           "type": [
             "number",
             "null"
@@ -1416,7 +1424,7 @@
           "const": "otlp"
         },
         {
-          "description": "Export metrics via Prometheus. An HTTP listener with the `prometheus`\n resource must be setup to expose the Promethes metrics.",
+          "description": "Export metrics via Prometheus. An HTTP listener with the `prometheus`\nresource must be setup to expose the Promethes metrics.",
           "type": "string",
           "const": "prometheus"
         }
@@ -1438,7 +1446,7 @@
           ]
         },
         "environment": {
-          "description": "Environment to use when sending events to Sentry\n\n Defaults to `production` if not set.",
+          "description": "Environment to use when sending events to Sentry\n\nDefaults to `production` if not set.",
           "type": [
             "string",
             "null"
@@ -1448,7 +1456,7 @@
           ]
         },
         "sample_rate": {
-          "description": "Sample rate for event submissions\n\n Defaults to `1.0` if not set.",
+          "description": "Sample rate for event submissions\n\nDefaults to `1.0` if not set.",
           "type": [
             "number",
             "null"
@@ -1461,7 +1469,7 @@
           "maximum": 1.0
         },
         "traces_sample_rate": {
-          "description": "Sample rate for tracing transactions\n\n Defaults to `0.0` if not set.",
+          "description": "Sample rate for tracing transactions\n\nDefaults to `0.0` if not set.",
           "type": [
             "number",
             "null"
@@ -1549,7 +1557,7 @@
           ]
         },
         "port": {
-          "description": "SMTP transport: Port to connect to. Default is 25 for plain, 465 for TLS\n and 587 for `StartTLS`",
+          "description": "SMTP transport: Port to connect to. Default is 25 for plain, 465 for TLS\nand 587 for `StartTLS`",
           "type": [
             "integer",
             "null"
@@ -1559,14 +1567,14 @@
           "maximum": 65535
         },
         "username": {
-          "description": "SMTP transport: Username for use to authenticate when connecting to the\n SMTP server\n\n Must be set if the `password` field is set",
+          "description": "SMTP transport: Username for use to authenticate when connecting to the\nSMTP server\n\nMust be set if the `password` field is set",
           "type": [
             "string",
             "null"
           ]
         },
         "password": {
-          "description": "SMTP transport: Password for use to authenticate when connecting to the\n SMTP server\n\n Must be set if the `username` field is set",
+          "description": "SMTP transport: Password for use to authenticate when connecting to the\nSMTP server\n\nMust be set if the `username` field is set",
           "type": [
             "string",
             "null"
@@ -1671,7 +1679,7 @@
       "type": "object",
       "properties": {
         "kid": {
-          "description": "The key ID `kid` of the key as used by JWKs.\n\n If not given, `kid` will be the key’s RFC 7638 JWK Thumbprint.",
+          "description": "The key ID `kid` of the key as used by JWKs.\n\nIf not given, `kid` will be the key’s RFC 7638 JWK Thumbprint.",
           "type": [
             "string",
             "null"
@@ -1713,7 +1721,7 @@
           "default": true
         },
         "schemes": {
-          "description": "The hashing schemes to use for hashing and validating passwords\n\n The hashing scheme with the highest version number will be used for\n hashing new passwords.",
+          "description": "The hashing schemes to use for hashing and validating passwords\n\nThe hashing scheme with the highest version number will be used for\nhashing new passwords.",
           "type": "array",
           "items": {
             "$ref": "#/definitions/HashingScheme"
@@ -1726,7 +1734,7 @@
           ]
         },
         "minimum_complexity": {
-          "description": "Score between 0 and 4 determining the minimum allowed password\n complexity. Scores are based on the ESTIMATED number of guesses\n needed to guess the password.\n\n - 0: less than 10^2 (100)\n - 1: less than 10^4 (10'000)\n - 2: less than 10^6 (1'000'000)\n - 3: less than 10^8 (100'000'000)\n - 4: any more than that",
+          "description": "Score between 0 and 4 determining the minimum allowed password\ncomplexity. Scores are based on the ESTIMATED number of guesses\nneeded to guess the password.\n\n- 0: less than 10^2 (100)\n- 1: less than 10^4 (10'000)\n- 2: less than 10^6 (1'000'000)\n- 3: less than 10^8 (100'000'000)\n- 4: any more than that",
           "type": "integer",
           "format": "uint8",
           "minimum": 0,
@@ -1740,7 +1748,7 @@
       "type": "object",
       "properties": {
         "version": {
-          "description": "The version of the hashing scheme. They must be unique, and the highest\n version will be used for hashing new passwords.",
+          "description": "The version of the hashing scheme. They must be unique, and the highest\nversion will be used for hashing new passwords.",
           "type": "integer",
           "format": "uint16",
           "minimum": 0,
@@ -1755,7 +1763,7 @@
           ]
         },
         "unicode_normalization": {
-          "description": "Whether to apply Unicode normalization to the password before hashing\n\n Defaults to `false`, and generally recommended to stay false. This is\n although recommended when importing password hashs from Synapse, as it\n applies an NFKC normalization to the password before hashing it.",
+          "description": "Whether to apply Unicode normalization to the password before hashing\n\nDefaults to `false`, and generally recommended to stay false. This is\nalthough recommended when importing password hashs from Synapse, as it\napplies an NFKC normalization to the password before hashing it.",
           "type": "boolean"
         },
         "cost": {
@@ -1769,7 +1777,7 @@
           "default": 12
         },
         "secret": {
-          "description": "An optional secret to use when hashing passwords. This makes it harder\n to brute-force the passwords in case of a database leak.",
+          "description": "An optional secret to use when hashing passwords. This makes it harder\nto brute-force the passwords in case of a database leak.",
           "type": [
             "string",
             "null"
@@ -1855,7 +1863,7 @@
           "const": "synapse"
         },
         {
-          "description": "Homeserver is Synapse, version 1.135.0 or newer, in read-only mode\n\n This is meant for testing rolling out Matrix Authentication Service with\n no risk of writing data to the homeserver.",
+          "description": "Homeserver is Synapse, version 1.135.0 or newer, in read-only mode\n\nThis is meant for testing rolling out Matrix Authentication Service with\nno risk of writing data to the homeserver.",
           "type": "string",
           "const": "synapse_read_only"
         },
@@ -1949,7 +1957,7 @@
           ]
         },
         "registration": {
-          "description": "Controls how many registrations attempts are permitted\n based on source address.",
+          "description": "Controls how many registrations attempts are permitted\nbased on source address.",
           "default": {
             "burst": 3,
             "per_second": 0.0008333333333333334
@@ -1992,7 +2000,7 @@
       "type": "object",
       "properties": {
         "per_ip": {
-          "description": "Controls how many account recovery attempts are permitted\n based on source IP address.\n This can protect against causing e-mail spam to many targets.\n\n Note: this limit also applies to re-sends.",
+          "description": "Controls how many account recovery attempts are permitted\nbased on source IP address.\nThis can protect against causing e-mail spam to many targets.\n\nNote: this limit also applies to re-sends.",
           "default": {
             "burst": 3,
             "per_second": 0.0008333333333333334
@@ -2004,7 +2012,7 @@
           ]
         },
         "per_address": {
-          "description": "Controls how many account recovery attempts are permitted\n based on the e-mail address entered into the recovery form.\n This can protect against causing e-mail spam to one target.\n\n Note: this limit also applies to re-sends.",
+          "description": "Controls how many account recovery attempts are permitted\nbased on the e-mail address entered into the recovery form.\nThis can protect against causing e-mail spam to one target.\n\nNote: this limit also applies to re-sends.",
           "default": {
             "burst": 3,
             "per_second": 0.0002777777777777778
@@ -2021,13 +2029,13 @@
       "type": "object",
       "properties": {
         "burst": {
-          "description": "A one-off burst of actions that the user can perform\n in one go without waiting.",
+          "description": "A one-off burst of actions that the user can perform\nin one go without waiting.",
           "type": "integer",
           "format": "uint32",
           "minimum": 1
         },
         "per_second": {
-          "description": "How quickly the allowance replenishes, in number of actions per second.\n Can be fractional to replenish slower.",
+          "description": "How quickly the allowance replenishes, in number of actions per second.\nCan be fractional to replenish slower.",
           "type": "number",
           "format": "double"
         }
@@ -2041,7 +2049,7 @@
       "type": "object",
       "properties": {
         "per_ip": {
-          "description": "Controls how many login attempts are permitted\n based on source IP address.\n This can protect against brute force login attempts.\n\n Note: this limit also applies to password checks when a user attempts to\n change their own password.",
+          "description": "Controls how many login attempts are permitted\nbased on source IP address.\nThis can protect against brute force login attempts.\n\nNote: this limit also applies to password checks when a user attempts to\nchange their own password.",
           "default": {
             "burst": 3,
             "per_second": 0.05
@@ -2053,7 +2061,7 @@
           ]
         },
         "per_account": {
-          "description": "Controls how many login attempts are permitted\n based on the account that is being attempted to be logged into.\n This can protect against a distributed brute force attack\n but should be set high enough to prevent someone's account being\n casually locked out.\n\n Note: this limit also applies to password checks when a user attempts to\n change their own password.",
+          "description": "Controls how many login attempts are permitted\nbased on the account that is being attempted to be logged into.\nThis can protect against a distributed brute force attack\nbut should be set high enough to prevent someone's account being\ncasually locked out.\n\nNote: this limit also applies to password checks when a user attempts to\nchange their own password.",
           "default": {
             "burst": 1800,
             "per_second": 0.5
@@ -2070,7 +2078,7 @@
       "type": "object",
       "properties": {
         "per_ip": {
-          "description": "Controls how many email authentication attempts are permitted\n based on the source IP address.\n This can protect against causing e-mail spam to many targets.",
+          "description": "Controls how many email authentication attempts are permitted\nbased on the source IP address.\nThis can protect against causing e-mail spam to many targets.",
           "default": {
             "burst": 5,
             "per_second": 0.016666666666666666
@@ -2082,7 +2090,7 @@
           ]
         },
         "per_address": {
-          "description": "Controls how many email authentication attempts are permitted\n based on the e-mail address entered into the authentication form.\n This can protect against causing e-mail spam to one target.\n\n Note: this limit also applies to re-sends.",
+          "description": "Controls how many email authentication attempts are permitted\nbased on the e-mail address entered into the authentication form.\nThis can protect against causing e-mail spam to one target.\n\nNote: this limit also applies to re-sends.",
           "default": {
             "burst": 3,
             "per_second": 0.0002777777777777778
@@ -2094,7 +2102,7 @@
           ]
         },
         "emails_per_session": {
-          "description": "Controls how many authentication emails are permitted to be sent per\n authentication session. This ensures not too many authentication codes\n are created for the same authentication session.",
+          "description": "Controls how many authentication emails are permitted to be sent per\nauthentication session. This ensures not too many authentication codes\nare created for the same authentication session.",
           "default": {
             "burst": 2,
             "per_second": 0.0033333333333333335
@@ -2106,7 +2114,7 @@
           ]
         },
         "attempt_per_session": {
-          "description": "Controls how many code authentication attempts are permitted per\n authentication session. This can protect against brute-forcing the\n code.",
+          "description": "Controls how many code authentication attempts are permitted per\nauthentication session. This can protect against brute-forcing the\ncode.",
           "default": {
             "burst": 10,
             "per_second": 0.016666666666666666
@@ -2140,7 +2148,7 @@
       "type": "object",
       "properties": {
         "enabled": {
-          "description": "Whether this provider is enabled.\n\n Defaults to `true`",
+          "description": "Whether this provider is enabled.\n\nDefaults to `true`",
           "type": "boolean"
         },
         "id": {
@@ -2149,14 +2157,14 @@
           "pattern": "^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$"
         },
         "synapse_idp_id": {
-          "description": "The ID of the provider that was used by Synapse.\n In order to perform a Synapse-to-MAS migration, this must be specified.\n\n ## For providers that used OAuth 2.0 or OpenID Connect in Synapse\n\n ### For `oidc_providers`:\n This should be specified as `oidc-` followed by the ID that was\n configured as `idp_id` in one of the `oidc_providers` in the Synapse\n configuration.\n For example, if Synapse's configuration contained `idp_id: wombat` for\n this provider, then specify `oidc-wombat` here.\n\n ### For `oidc_config` (legacy):\n Specify `oidc` here.",
+          "description": "The ID of the provider that was used by Synapse.\nIn order to perform a Synapse-to-MAS migration, this must be specified.\n\n## For providers that used OAuth 2.0 or OpenID Connect in Synapse\n\n### For `oidc_providers`:\nThis should be specified as `oidc-` followed by the ID that was\nconfigured as `idp_id` in one of the `oidc_providers` in the Synapse\nconfiguration.\nFor example, if Synapse's configuration contained `idp_id: wombat` for\nthis provider, then specify `oidc-wombat` here.\n\n### For `oidc_config` (legacy):\nSpecify `oidc` here.",
           "type": [
             "string",
             "null"
           ]
         },
         "issuer": {
-          "description": "The OIDC issuer URL\n\n This is required if OIDC discovery is enabled (which is the default)",
+          "description": "The OIDC issuer URL\n\nThis is required if OIDC discovery is enabled (which is the default)",
           "type": [
             "string",
             "null"
@@ -2170,7 +2178,7 @@
           ]
         },
         "brand_name": {
-          "description": "A brand identifier used to customise the UI, e.g. `apple`, `google`,\n `github`, etc.\n\n Values supported by the default template are:\n\n  - `apple`\n  - `google`\n  - `facebook`\n  - `github`\n  - `gitlab`\n  - `twitter`\n  - `discord`",
+          "description": "A brand identifier used to customise the UI, e.g. `apple`, `google`,\n`github`, etc.\n\nValues supported by the default template are:\n\n - `apple`\n - `google`\n - `facebook`\n - `github`\n - `gitlab`\n - `twitter`\n - `discord`",
           "type": [
             "string",
             "null"
@@ -2181,14 +2189,14 @@
           "type": "string"
         },
         "client_secret_file": {
-          "description": "Path to the file containing the client secret. The client secret is used\n by the `client_secret_basic`, `client_secret_post` and\n `client_secret_jwt` authentication methods.",
+          "description": "Path to the file containing the client secret. The client secret is used\nby the `client_secret_basic`, `client_secret_post` and\n`client_secret_jwt` authentication methods.",
           "type": [
             "string",
             "null"
           ]
         },
         "client_secret": {
-          "description": "Alternative to `client_secret_file`: Reads the client secret directly\n from the config.",
+          "description": "Alternative to `client_secret_file`: Reads the client secret directly\nfrom the config.",
           "type": [
             "string",
             "null"
@@ -2214,7 +2222,7 @@
           ]
         },
         "token_endpoint_auth_signing_alg": {
-          "description": "The JWS algorithm to use when authenticating the client with the\n provider\n\n Used by the `client_secret_jwt` and `private_key_jwt` methods",
+          "description": "The JWS algorithm to use when authenticating the client with the\nprovider\n\nUsed by the `client_secret_jwt` and `private_key_jwt` methods",
           "anyOf": [
             {
               "$ref": "#/definitions/JsonWebSignatureAlg"
@@ -2225,7 +2233,7 @@
           ]
         },
         "id_token_signed_response_alg": {
-          "description": "Expected signature for the JWT payload returned by the token\n authentication endpoint.\n\n Defaults to `RS256`.",
+          "description": "Expected signature for the JWT payload returned by the token\nauthentication endpoint.\n\nDefaults to `RS256`.",
           "allOf": [
             {
               "$ref": "#/definitions/JsonWebSignatureAlg"
@@ -2233,11 +2241,11 @@
           ]
         },
         "scope": {
-          "description": "The scopes to request from the provider\n\n Defaults to `openid`.",
+          "description": "The scopes to request from the provider\n\nDefaults to `openid`.",
           "type": "string"
         },
         "discovery_mode": {
-          "description": "How to discover the provider's configuration\n\n Defaults to `oidc`, which uses OIDC discovery with strict metadata\n verification",
+          "description": "How to discover the provider's configuration\n\nDefaults to `oidc`, which uses OIDC discovery with strict metadata\nverification",
           "allOf": [
             {
               "$ref": "#/definitions/DiscoveryMode"
@@ -2245,7 +2253,7 @@
           ]
         },
         "pkce_method": {
-          "description": "Whether to use proof key for code exchange (PKCE) when requesting and\n exchanging the token.\n\n Defaults to `auto`, which uses PKCE if the provider supports it.",
+          "description": "Whether to use proof key for code exchange (PKCE) when requesting and\nexchanging the token.\n\nDefaults to `auto`, which uses PKCE if the provider supports it.",
           "allOf": [
             {
               "$ref": "#/definitions/PkceMethod"
@@ -2253,12 +2261,12 @@
           ]
         },
         "fetch_userinfo": {
-          "description": "Whether to fetch the user profile from the userinfo endpoint,\n or to rely on the data returned in the `id_token` from the\n `token_endpoint`.\n\n Defaults to `false`.",
+          "description": "Whether to fetch the user profile from the userinfo endpoint,\nor to rely on the data returned in the `id_token` from the\n`token_endpoint`.\n\nDefaults to `false`.",
           "type": "boolean",
           "default": false
         },
         "userinfo_signed_response_alg": {
-          "description": "Expected signature for the JWT payload returned by the userinfo\n endpoint.\n\n If not specified, the response is expected to be an unsigned JSON\n payload.",
+          "description": "Expected signature for the JWT payload returned by the userinfo\nendpoint.\n\nIf not specified, the response is expected to be an unsigned JSON\npayload.",
           "anyOf": [
             {
               "$ref": "#/definitions/JsonWebSignatureAlg"
@@ -2269,7 +2277,7 @@
           ]
         },
         "authorization_endpoint": {
-          "description": "The URL to use for the provider's authorization endpoint\n\n Defaults to the `authorization_endpoint` provided through discovery",
+          "description": "The URL to use for the provider's authorization endpoint\n\nDefaults to the `authorization_endpoint` provided through discovery",
           "type": [
             "string",
             "null"
@@ -2277,7 +2285,7 @@
           "format": "uri"
         },
         "userinfo_endpoint": {
-          "description": "The URL to use for the provider's userinfo endpoint\n\n Defaults to the `userinfo_endpoint` provided through discovery",
+          "description": "The URL to use for the provider's userinfo endpoint\n\nDefaults to the `userinfo_endpoint` provided through discovery",
           "type": [
             "string",
             "null"
@@ -2285,7 +2293,7 @@
           "format": "uri"
         },
         "token_endpoint": {
-          "description": "The URL to use for the provider's token endpoint\n\n Defaults to the `token_endpoint` provided through discovery",
+          "description": "The URL to use for the provider's token endpoint\n\nDefaults to the `token_endpoint` provided through discovery",
           "type": [
             "string",
             "null"
@@ -2293,7 +2301,7 @@
           "format": "uri"
         },
         "jwks_uri": {
-          "description": "The URL to use for getting the provider's public keys\n\n Defaults to the `jwks_uri` provided through discovery",
+          "description": "The URL to use for getting the provider's public keys\n\nDefaults to the `jwks_uri` provided through discovery",
           "type": [
             "string",
             "null"
@@ -2312,7 +2320,7 @@
           ]
         },
         "claims_imports": {
-          "description": "How claims should be imported from the `id_token` provided by the\n provider",
+          "description": "How claims should be imported from the `id_token` provided by the\nprovider",
           "allOf": [
             {
               "$ref": "#/definitions/ClaimsImports"
@@ -2320,19 +2328,19 @@
           ]
         },
         "additional_authorization_parameters": {
-          "description": "Additional parameters to include in the authorization request.\n\n Each value is a [`MiniJinja`] template. The template context\n exposes a `params` map containing the raw query parameters from\n the downstream authorization request. The map is empty when the\n upstream login was not initiated by a downstream OAuth/OIDC\n authorization request (e.g. account linking, direct login from\n the login page).\n\n [`MiniJinja`]: https://docs.rs/minijinja\n\n Templates that render to an empty string are dropped — so\n referencing a downstream parameter that wasn't supplied (e.g.\n `{{ params.login_hint }}`) results in no parameter being\n forwarded, rather than an empty one.\n\n Plain strings (without `{{ … }}`) are valid templates that render\n to themselves.\n\n Example:\n\n ```yaml\n additional_authorization_parameters:\n   login_hint: \"{{ params.login_hint }}\"\n   acr_values: \"{{ params.acr_values }}\"\n   kc_idp_hint: \"saml\"\n ```\n\n `params` exposes the entire raw query string of the downstream\n request (including `client_id`, `state`, `code_challenge`, …).\n Forward specific keys deliberately; don't blindly proxy the\n whole map.\n\n Order of keys is not preserved.",
+          "description": "Additional parameters to include in the authorization request.\n\nEach value is a [`MiniJinja`] template. The template context\nexposes a `params` map containing the raw query parameters from\nthe downstream authorization request. The map is empty when the\nupstream login was not initiated by a downstream OAuth/OIDC\nauthorization request (e.g. account linking, direct login from\nthe login page).\n\n[`MiniJinja`]: https://docs.rs/minijinja\n\nTemplates that render to an empty string are dropped — so\nreferencing a downstream parameter that wasn't supplied (e.g.\n`{{ params.login_hint }}`) results in no parameter being\nforwarded, rather than an empty one.\n\nPlain strings (without `{{ … }}`) are valid templates that render\nto themselves.\n\nExample:\n\n```yaml\nadditional_authorization_parameters:\n  login_hint: \"{{ params.login_hint }}\"\n  acr_values: \"{{ params.acr_values }}\"\n  kc_idp_hint: \"saml\"\n```\n\n`params` exposes the entire raw query string of the downstream\nrequest (including `client_id`, `state`, `code_challenge`, …).\nForward specific keys deliberately; don't blindly proxy the\nwhole map.\n\nOrder of keys is not preserved.",
           "type": "object",
           "additionalProperties": {
             "type": "string"
           }
         },
         "forward_login_hint": {
-          "description": "Whether the `login_hint` should be forwarded to the provider in the\n authorization request.\n\n Defaults to `false`.\n\n Deprecated: prefer adding\n `login_hint: \"{{ params.login_hint }}\"` to\n `additional_authorization_parameters` instead. When this flag is\n set, a `login_hint` template entry is injected automatically if\n one is not already present.",
+          "description": "Whether the `login_hint` should be forwarded to the provider in the\nauthorization request.\n\nDefaults to `false`.\n\nDeprecated: prefer adding\n`login_hint: \"{{ params.login_hint }}\"` to\n`additional_authorization_parameters` instead. When this flag is\nset, a `login_hint` template entry is injected automatically if\none is not already present.",
           "type": "boolean",
           "default": false
         },
         "on_backchannel_logout": {
-          "description": "What to do when receiving an OIDC Backchannel logout request.\n\n Defaults to `do_nothing`.",
+          "description": "What to do when receiving an OIDC Backchannel logout request.\n\nDefaults to `do_nothing`.",
           "allOf": [
             {
               "$ref": "#/definitions/OnBackchannelLogout"
@@ -2340,7 +2348,7 @@
           ]
         },
         "registration_token_required": {
-          "description": "Whether or not to require a registration token on `OAuth2` auth\n\n Defaults to `false`",
+          "description": "Whether or not to require a registration token on `OAuth2` auth\n\nDefaults to `false`",
           "type": "boolean",
           "default": false
         }
@@ -2360,22 +2368,22 @@
           "const": "none"
         },
         {
-          "description": "`client_secret_basic`: `client_id` and `client_secret` used as basic\n authorization credentials",
+          "description": "`client_secret_basic`: `client_id` and `client_secret` used as basic\nauthorization credentials",
           "type": "string",
           "const": "client_secret_basic"
         },
         {
-          "description": "`client_secret_post`: `client_id` and `client_secret` sent in the\n request body",
+          "description": "`client_secret_post`: `client_id` and `client_secret` sent in the\nrequest body",
           "type": "string",
           "const": "client_secret_post"
         },
         {
-          "description": "`client_secret_jwt`: a `client_assertion` sent in the request body and\n signed using the `client_secret`",
+          "description": "`client_secret_jwt`: a `client_assertion` sent in the request body and\nsigned using the `client_secret`",
           "type": "string",
           "const": "client_secret_jwt"
         },
         {
-          "description": "`private_key_jwt`: a `client_assertion` sent in the request body and\n signed by an asymmetric key",
+          "description": "`private_key_jwt`: a `client_assertion` sent in the request body and\nsigned by an asymmetric key",
           "type": "string",
           "const": "private_key_jwt"
         },
@@ -2438,10 +2446,10 @@
       ]
     },
     "PkceMethod": {
-      "description": "Whether to use proof key for code exchange (PKCE) when requesting and\n exchanging the token.",
+      "description": "Whether to use proof key for code exchange (PKCE) when requesting and\nexchanging the token.",
       "oneOf": [
         {
-          "description": "Use PKCE if the provider supports it\n\n Defaults to no PKCE if provider discovery is disabled",
+          "description": "Use PKCE if the provider supports it\n\nDefaults to no PKCE if provider discovery is disabled",
           "type": "string",
           "const": "auto"
         },
@@ -2461,12 +2469,12 @@
       "description": "The response mode we ask the provider to use for the callback",
       "oneOf": [
         {
-          "description": "`query`: The provider will send the response as a query string in the\n URL search parameters",
+          "description": "`query`: The provider will send the response as a query string in the\nURL search parameters",
           "type": "string",
           "const": "query"
         },
         {
-          "description": "`form_post`: The provider will send the response as a POST request with\n the response parameters in the request body\n\n <https://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html>",
+          "description": "`form_post`: The provider will send the response as a POST request with\nthe response parameters in the request body\n\n<https://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html>",
           "type": "string",
           "const": "form_post"
         }
@@ -2485,7 +2493,7 @@
           ]
         },
         "skip_confirmation": {
-          "description": "Whether to skip the interactive screen prompting the user to confirm the\n attributes that are being imported. This requires `localpart.action` to\n be `require` and other attribute actions to be either `ignore`, `force`\n or `require`",
+          "description": "Whether to skip the interactive screen prompting the user to confirm the\nattributes that are being imported. This requires `localpart.action` to\nbe `require` and other attribute actions to be either `ignore`, `force`\nor `require`",
           "type": "boolean"
         },
         "localpart": {
@@ -2527,7 +2535,7 @@
       "type": "object",
       "properties": {
         "template": {
-          "description": "The Jinja2 template to use for the subject attribute\n\n If not provided, the default template is `{{ user.sub }}`",
+          "description": "The Jinja2 template to use for the subject attribute\n\nIf not provided, the default template is `{{ user.sub }}`",
           "type": [
             "string",
             "null"
@@ -2548,7 +2556,7 @@
           ]
         },
         "template": {
-          "description": "The Jinja2 template to use for the localpart attribute\n\n If not provided, the default template is `{{ user.preferred_username }}`",
+          "description": "The Jinja2 template to use for the localpart attribute\n\nIf not provided, the default template is `{{ user.preferred_username }}`",
           "type": [
             "string",
             "null"
@@ -2598,7 +2606,7 @@
           "const": "fail"
         },
         {
-          "description": "Adds the upstream OAuth 2.0 identity link, regardless of whether there\n is an existing link or not",
+          "description": "Adds the upstream OAuth 2.0 identity link, regardless of whether there\nis an existing link or not",
           "type": "string",
           "const": "add"
         },
@@ -2608,7 +2616,7 @@
           "const": "replace"
         },
         {
-          "description": "Adds the upstream OAuth 2.0 identity link *only* if there is no existing\n link for this provider on the matching user",
+          "description": "Adds the upstream OAuth 2.0 identity link *only* if there is no existing\nlink for this provider on the matching user",
           "type": "string",
           "const": "set"
         }
@@ -2627,7 +2635,7 @@
           ]
         },
         "template": {
-          "description": "The Jinja2 template to use for the displayname attribute\n\n If not provided, the default template is `{{ user.name }}`",
+          "description": "The Jinja2 template to use for the displayname attribute\n\nIf not provided, the default template is `{{ user.name }}`",
           "type": [
             "string",
             "null"
@@ -2648,7 +2656,7 @@
           ]
         },
         "template": {
-          "description": "The Jinja2 template to use for the email address attribute\n\n If not provided, the default template is `{{ user.email }}`",
+          "description": "The Jinja2 template to use for the email address attribute\n\nIf not provided, the default template is `{{ user.email }}`",
           "type": [
             "string",
             "null"
@@ -2661,7 +2669,7 @@
       "type": "object",
       "properties": {
         "template": {
-          "description": "The Jinja2 template to use for the account name. This name is only used\n for display purposes.\n\n If not provided, it will be ignored.",
+          "description": "The Jinja2 template to use for the account name. This name is only used\nfor display purposes.\n\nIf not provided, it will be ignored.",
           "type": [
             "string",
             "null"
@@ -2683,7 +2691,7 @@
           "const": "logout_browser_only"
         },
         {
-          "description": "Log out all sessions started by this OIDC session, including MAS\n 'browser sessions' and client sessions",
+          "description": "Log out all sessions started by this OIDC session, including MAS\n'browser sessions' and client sessions",
           "type": "string",
           "const": "logout_all"
         }
@@ -2701,7 +2709,7 @@
           ]
         },
         "policy_uri": {
-          "description": "Link to a privacy policy, displayed in the footer of web pages and\n emails. It is also advertised to clients through the `op_policy_uri`\n OIDC provider metadata.",
+          "description": "Link to a privacy policy, displayed in the footer of web pages and\nemails. It is also advertised to clients through the `op_policy_uri`\nOIDC provider metadata.",
           "type": [
             "string",
             "null"
@@ -2709,7 +2717,7 @@
           "format": "uri"
         },
         "tos_uri": {
-          "description": "Link to a terms of service document, displayed in the footer of web\n pages and emails. It is also advertised to clients through the\n `op_tos_uri` OIDC provider metadata.",
+          "description": "Link to a terms of service document, displayed in the footer of web\npages and emails. It is also advertised to clients through the\n`op_tos_uri` OIDC provider metadata.",
           "type": [
             "string",
             "null"
@@ -2717,7 +2725,7 @@
           "format": "uri"
         },
         "imprint": {
-          "description": "Legal imprint, displayed in the footer in the footer of web pages and\n emails.",
+          "description": "Legal imprint, displayed in the footer in the footer of web pages and\nemails.",
           "type": [
             "string",
             "null"
@@ -2781,43 +2789,43 @@
       "type": "object",
       "properties": {
         "email_change_allowed": {
-          "description": "Whether users are allowed to change their email addresses. Defaults to\n `true`.",
+          "description": "Whether users are allowed to change their email addresses. Defaults to\n`true`.",
           "type": "boolean"
         },
         "displayname_change_allowed": {
-          "description": "Whether users are allowed to change their display names. Defaults to\n `true`.\n\n This should be in sync with the policy in the homeserver configuration.",
+          "description": "Whether users are allowed to change their display names. Defaults to\n`true`.\n\nThis should be in sync with the policy in the homeserver configuration.",
           "type": "boolean"
         },
         "password_registration_enabled": {
-          "description": "Whether to enable self-service password registration. Defaults to\n `false` if password authentication is enabled.\n\n This has no effect if password login is disabled.",
+          "description": "Whether to enable self-service password registration. Defaults to\n`false` if password authentication is enabled.\n\nThis has no effect if password login is disabled.",
           "type": "boolean"
         },
         "password_registration_email_required": {
-          "description": "Whether self-service password registrations require a valid email.\n Defaults to `true`.\n\n This has no effect if password registration is disabled.",
+          "description": "Whether self-service password registrations require a valid email.\nDefaults to `true`.\n\nThis has no effect if password registration is disabled.",
           "type": "boolean"
         },
         "password_change_allowed": {
-          "description": "Whether users are allowed to change their passwords. Defaults to `true`.\n\n This has no effect if password login is disabled.",
+          "description": "Whether users are allowed to change their passwords. Defaults to `true`.\n\nThis has no effect if password login is disabled.",
           "type": "boolean"
         },
         "password_recovery_enabled": {
-          "description": "Whether email-based password recovery is enabled. Defaults to `false`.\n\n This has no effect if password login is disabled.",
+          "description": "Whether email-based password recovery is enabled. Defaults to `false`.\n\nThis has no effect if password login is disabled.",
           "type": "boolean"
         },
         "password_registration_token_required": {
-          "description": "Whether registration tokens are required for password registrations.\n Defaults to `false`.\n\n When enabled, users must provide a valid registration token during\n password registration. This has no effect if password registration\n is disabled.",
+          "description": "Whether registration tokens are required for password registrations.\nDefaults to `false`.\n\nWhen enabled, users must provide a valid registration token during\npassword registration. This has no effect if password registration\nis disabled.",
           "type": "boolean"
         },
         "account_deactivation_allowed": {
-          "description": "Whether users are allowed to delete their own account. Defaults to\n `true`.",
+          "description": "Whether users are allowed to delete their own account. Defaults to\n`true`.",
           "type": "boolean"
         },
         "login_with_email_allowed": {
-          "description": "Whether users can log in with their email address. Defaults to `false`.\n\n This has no effect if password login is disabled.",
+          "description": "Whether users can log in with their email address. Defaults to `false`.\n\nThis has no effect if password login is disabled.",
           "type": "boolean"
         },
         "registration_token_required": {
-          "description": "Whether registration tokens are required for password registrations\n This is deprecated in favor of `password_registration_token_required`",
+          "description": "Whether registration tokens are required for password registrations\nThis is deprecated in favor of `password_registration_token_required`",
           "type": "boolean"
         }
       }
@@ -2827,17 +2835,17 @@
       "type": "object",
       "properties": {
         "device_code_grant_enabled": {
-          "description": "Whether the Device Authorization Grant (RFC 8628) is enabled. Defaults\n to `true`.\n\n When disabled, the device authorization endpoint will reject requests,\n the discovery metadata will not advertise the device authorization\n endpoint, and dynamic client registrations requesting the\n `urn:ietf:params:oauth:grant-type:device_code` grant type will be\n rejected.",
+          "description": "Whether the Device Authorization Grant (RFC 8628) is enabled. Defaults\nto `true`.\n\nWhen disabled, the device authorization endpoint will reject requests,\nthe discovery metadata will not advertise the device authorization\nendpoint, and dynamic client registrations requesting the\n`urn:ietf:params:oauth:grant-type:device_code` grant type will be\nrejected.",
           "type": "boolean"
         },
         "device_code_user_code_auto_fill_enabled": {
-          "description": "Whether the device authorization endpoint advertises a\n `verification_uri_complete` that auto-fills the user code on the\n `/link` page. Defaults to `false`.\n\n When disabled, the device authorization response will omit\n `verification_uri_complete`, and the `/link` route will ignore any\n `code` query parameter, forcing users to type their user code\n manually.",
+          "description": "Whether the device authorization endpoint advertises a\n`verification_uri_complete` that auto-fills the user code on the\n`/link` page. Defaults to `false`.\n\nWhen disabled, the device authorization response will omit\n`verification_uri_complete`, and the `/link` route will ignore any\n`code` query parameter, forcing users to type their user code\nmanually.",
           "type": "boolean"
         }
       }
     },
     "ExperimentalConfig": {
-      "description": "Configuration sections for experimental options\n\n Do not change these options unless you know what you are doing.",
+      "description": "Configuration sections for experimental options\n\nDo not change these options unless you know what you are doing.",
       "type": "object",
       "properties": {
         "access_token_ttl": {
@@ -2848,14 +2856,14 @@
           "maximum": 86400
         },
         "compat_token_ttl": {
-          "description": "Time-to-live of compatibility access tokens in seconds. Defaults to 5\n minutes.",
+          "description": "Time-to-live of compatibility access tokens in seconds. Defaults to 5\nminutes.",
           "type": "integer",
           "format": "uint64",
           "minimum": 60,
           "maximum": 86400
         },
         "inactive_session_expiration": {
-          "description": "Experimetal feature to automatically expire inactive sessions\n\n Disabled by default",
+          "description": "Experimetal feature to automatically expire inactive sessions\n\nDisabled by default",
           "anyOf": [
             {
               "$ref": "#/definitions/InactiveSessionExpirationConfig"
@@ -2866,14 +2874,14 @@
           ]
         },
         "plan_management_iframe_uri": {
-          "description": "Experimental feature to show a plan management tab and iframe.\n This value is passed through \"as is\" to the client without any\n validation.",
+          "description": "Experimental feature to show a plan management tab and iframe.\nThis value is passed through \"as is\" to the client without any\nvalidation.",
           "type": [
             "string",
             "null"
           ]
         },
         "session_limit": {
-          "description": "Experimental feature to limit the number of application sessions per\n user.\n\n Disabled by default.",
+          "description": "Experimental feature to limit the number of application sessions per\nuser.\n\nDisabled by default.",
           "anyOf": [
             {
               "$ref": "#/definitions/SessionLimitConfig"
@@ -2921,19 +2929,19 @@
       "type": "object",
       "properties": {
         "soft_limit": {
-          "description": "Upon login in interactive contexts (like OAuth 2.0 sessions, or\n `m.login.sso` compatibility login flow), if the soft limit is reached,\n it will display a policy violation screen (web UI) to remove\n sessions before creating the new session.\n\n This is not enforced in non-interactive contexts (like\n `m.login.password` login with the compatibility API) as there is no\n opportunity for us to show some UI for people remove some sessions.\n See [`hard_limit`] for enforcement on that side.\n\n This is the limit that is displayed in the UI\n\n [`hard_limit`]: Self::hard_limit",
+          "description": "Upon login in interactive contexts (like OAuth 2.0 sessions, or\n`m.login.sso` compatibility login flow), if the soft limit is reached,\nit will display a policy violation screen (web UI) to remove\nsessions before creating the new session.\n\nThis is not enforced in non-interactive contexts (like\n`m.login.password` login with the compatibility API) as there is no\nopportunity for us to show some UI for people remove some sessions.\nSee [`hard_limit`] for enforcement on that side.\n\nThis is the limit that is displayed in the UI\n\n[`hard_limit`]: Self::hard_limit",
           "type": "integer",
           "format": "uint64",
           "minimum": 1
         },
         "hard_limit": {
-          "description": "Upon login, when `dangerous_hard_limit_eviction: false`, will refuse the\n new login (policy violation error), otherwise, see\n [`dangerous_hard_limit_eviction`].\n\n The hard limit is enforced in all contexts\n (interactive/non-interactive).\n\n [`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction",
+          "description": "Upon login, when `dangerous_hard_limit_eviction: false`, will refuse the\nnew login (policy violation error), otherwise, see\n[`dangerous_hard_limit_eviction`].\n\nThe hard limit is enforced in all contexts\n(interactive/non-interactive).\n\n[`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction",
           "type": "integer",
           "format": "uint64",
           "minimum": 1
         },
         "max_session_threshold": {
-          "description": "When set, only accounts with <= `max_session_threshold` sessions have\n the session limits applied.\n\n This is most applicable in scenarios where your homeserver has many\n legacy bots/scripts that login over and over (which ideally should\n be using [personal access\n tokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))\n and you want to avoid breaking their operation while maintaining some\n level of sanity with the number of devices that people can have.\n This will prevent anyone else from crossing the limit.",
+          "description": "When set, only accounts with <= `max_session_threshold` sessions have\nthe session limits applied.\n\nThis is most applicable in scenarios where your homeserver has many\nlegacy bots/scripts that login over and over (which ideally should\nbe using [personal access\ntokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))\nand you want to avoid breaking their operation while maintaining some\nlevel of sanity with the number of devices that people can have.\nThis will prevent anyone else from crossing the limit.",
           "type": [
             "integer",
             "null"
@@ -2942,7 +2950,7 @@
           "minimum": 1
         },
         "dangerous_hard_limit_eviction": {
-          "description": "Whether we should automatically choose the least recently used devices\n to remove when the [`Self::hard_limit`] is reached; in order to\n allow the new login to continue.\n\n Disabled by default\n\n WARNING: Removing sessions is a potentially damaging operation. Any\n end-to-end encrypted history on the device will be lost and can only\n be recovered if you have another verified active device or have a\n recovery key setup.\n\n When using [`dangerous_hard_limit_eviction`], the [`hard_limit`] must be\n at least 2 to avoid catastrophically losing encrypted history and\n digital identity in pathological cases. Keep in mind this is a bare\n minimum restriction and you can still run into trouble.\n\n This is most applicable in scenarios where your homeserver has many\n legacy bots/scripts that login over and over (which ideally should\n be using [personal access\n tokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))\n and you want to avoid breaking their operation while maintaining some\n level of sanity with the number of devices that people can have.\n\n Removing devices is a non-trivial task for some homeservers to tackle\n and can cause lots of device list changes, `/sync`, federation, and\n replication traffic. Consider using [`max_session_threshold`] to\n limit the size of accounts that are acted upon.\n\n [`hard_limit`]: Self::hard_limit\n [`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction\n [`max_session_threshold`]: Self::max_session_threshold",
+          "description": "Whether we should automatically choose the least recently used devices\nto remove when the [`Self::hard_limit`] is reached; in order to\nallow the new login to continue.\n\nDisabled by default\n\nWARNING: Removing sessions is a potentially damaging operation. Any\nend-to-end encrypted history on the device will be lost and can only\nbe recovered if you have another verified active device or have a\nrecovery key setup.\n\nWhen using [`dangerous_hard_limit_eviction`], the [`hard_limit`] must be\nat least 2 to avoid catastrophically losing encrypted history and\ndigital identity in pathological cases. Keep in mind this is a bare\nminimum restriction and you can still run into trouble.\n\nThis is most applicable in scenarios where your homeserver has many\nlegacy bots/scripts that login over and over (which ideally should\nbe using [personal access\ntokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))\nand you want to avoid breaking their operation while maintaining some\nlevel of sanity with the number of devices that people can have.\n\nRemoving devices is a non-trivial task for some homeservers to tackle\nand can cause lots of device list changes, `/sync`, federation, and\nreplication traffic. Consider using [`max_session_threshold`] to\nlimit the size of accounts that are acted upon.\n\n[`hard_limit`]: Self::hard_limit\n[`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction\n[`max_session_threshold`]: Self::max_session_threshold",
           "type": "boolean",
           "default": false
         }
