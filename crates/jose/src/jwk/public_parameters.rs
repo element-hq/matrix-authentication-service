@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -255,9 +256,9 @@ mod ec_impls {
                 .get(..C::FieldBytesSize::USIZE)
                 .ok_or(elliptic_curve::Error)?;
 
-            let x = FieldBytes::<C>::from_slice(x);
-            let y = FieldBytes::<C>::from_slice(y);
-            let pubkey = Sec1Point::<C>::from_affine_coordinates(x, y, false);
+            let x = FieldBytes::<C>::try_from(x).map_err(|_| elliptic_curve::Error)?;
+            let y = FieldBytes::<C>::try_from(y).map_err(|_| elliptic_curve::Error)?;
+            let pubkey = Sec1Point::<C>::from_affine_coordinates(&x, &y, false);
             let pubkey: Option<_> = PublicKey::from_sec1_point(&pubkey).into();
             pubkey.ok_or(elliptic_curve::Error)
         }

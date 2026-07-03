@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -406,7 +407,10 @@ mod tests {
         let header = JsonWebSignatureHeader::new(JsonWebSignatureAlg::Es256);
         let payload = serde_json::json!({"hello": "world"});
 
-        let key = ecdsa::SigningKey::<p256::NistP256>::random(&mut rng());
+        let key =
+            <ecdsa::SigningKey<p256::NistP256> as elliptic_curve::Generate>::generate_from_rng(
+                &mut rng(),
+            );
         let signed = Jwt::sign::<_, ecdsa::Signature<_>>(header, payload, &key).unwrap();
         signed
             .verify::<_, ecdsa::Signature<_>>(key.verifying_key())

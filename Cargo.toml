@@ -127,7 +127,7 @@ features = ["alloc", "password-hash", "rand_core"]
 
 # Constant-time base64
 [workspace.dependencies.base64ct]
-version = "1.8.0"
+version = "1.8.3"
 features = ["std"]
 
 # Bcrypt password hashing
@@ -150,7 +150,7 @@ features = ["serde1"]
 
 # ChaCha20Poly1305 AEAD
 [workspace.dependencies.chacha20poly1305]
-version = "0.11.0-rc.3"
+version = "0.11.0"
 features = ["alloc", "getrandom"]
 
 # Memory optimisation for short strings
@@ -220,12 +220,12 @@ version = "0.15.7"
 
 # ECDSA algorithms
 [workspace.dependencies.ecdsa]
-version = "0.17.0-rc.20"
+version = "0.17.0"
 features = ["alloc", "der", "pem", "pkcs8", "std"]
 
 # Elliptic curve cryptography
 [workspace.dependencies.elliptic-curve]
-version = "0.14.0-rc.35"
+version = "0.14.1"
 features = ["std", "pem", "pkcs8", "arithmetic"]
 
 # Configuration loading
@@ -349,7 +349,7 @@ version = "0.15.0"
 
 # K256 elliptic curve
 [workspace.dependencies.k256]
-version = "0.14.0-rc.12"
+version = "0.14.0-rc.15"
 features = ["std", "ecdsa", "pem", "pkcs8"]
 
 # RFC 5646 language tags
@@ -439,12 +439,12 @@ default-features = false
 
 # P256 elliptic curve
 [workspace.dependencies.p256]
-version = "0.14.0-rc.12"
+version = "0.14.0-rc.15"
 features = ["std", "ecdsa", "pem", "pkcs8"]
 
 # P384 elliptic curve
 [workspace.dependencies.p384]
-version = "0.14.0-rc.12"
+version = "0.14.0-rc.15"
 features = ["std", "ecdsa", "pem", "pkcs8"]
 
 # Text padding utilities
@@ -458,7 +458,7 @@ features = ["phc", "sha2", "alloc"]
 
 # PEM encoding/decoding
 [workspace.dependencies.pem-rfc7468]
-version = "0.7.0"
+version = "1.0.0"
 features = ["std"]
 
 # Parser generator

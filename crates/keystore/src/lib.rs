@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -9,7 +10,7 @@
 use std::{ops::Deref, sync::Arc};
 
 use der::{Decode, Encode, EncodePem, pem::PemLabel, zeroize::Zeroizing};
-use elliptic_curve::{pkcs8::EncodePrivateKey, sec1::ToSec1Point};
+use elliptic_curve::{Generate, pkcs8::EncodePrivateKey, sec1::ToSec1Point};
 use mas_iana::jose::{JsonWebKeyType, JsonWebSignatureAlg};
 pub use mas_jose::jwk::{JsonWebKey, JsonWebKeySet};
 use mas_jose::{
@@ -501,19 +502,19 @@ impl PrivateKey {
 
     /// Generate an Elliptic Curve key for the P-256 curve
     pub fn generate_ec_p256<R: CryptoRng>(mut rng: R) -> Self {
-        let key = elliptic_curve::SecretKey::random(&mut rng);
+        let key = elliptic_curve::SecretKey::generate_from_rng(&mut rng);
         Self::EcP256(Box::new(key))
     }
 
     /// Generate an Elliptic Curve key for the P-384 curve
     pub fn generate_ec_p384<R: CryptoRng>(mut rng: R) -> Self {
-        let key = elliptic_curve::SecretKey::random(&mut rng);
+        let key = elliptic_curve::SecretKey::generate_from_rng(&mut rng);
         Self::EcP384(Box::new(key))
     }
 
     /// Generate an Elliptic Curve key for the secp256k1 curve
     pub fn generate_ec_k256<R: CryptoRng>(mut rng: R) -> Self {
-        let key = elliptic_curve::SecretKey::random(&mut rng);
+        let key = elliptic_curve::SecretKey::generate_from_rng(&mut rng);
         Self::EcK256(Box::new(key))
     }
 }
