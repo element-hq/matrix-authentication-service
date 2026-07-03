@@ -612,7 +612,7 @@ features = ["oid"]
 
 # Digital signature traits
 [workspace.dependencies.signature]
-version = "2.2.0"
+version = "3.0.0"
 
 # Low-level socket manipulation
 [workspace.dependencies.socket2]
