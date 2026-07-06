@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -22,7 +23,7 @@ use mas_axum_utils::{
 use mas_data_model::{BoxClock, BoxRng, Clock, MatrixUser};
 use mas_matrix::HomeserverConnection;
 use mas_policy::{Policy, model::CompatLogin};
-use mas_router::{CompatLoginSsoAction, UrlBuilder};
+use mas_router::{CompatLoginSsoAction, PostAuthAction, UrlBuilder};
 use mas_storage::{BoxRepository, RepositoryAccess, compat::CompatSsoLoginRepository};
 use mas_templates::{
     CompatLoginPolicyViolationContext, CompatSsoContext, ErrorContext, TemplateContext, Templates,
@@ -63,7 +64,13 @@ pub async fn get(
     let user_agent = user_agent.map(|ua| ua.to_string());
 
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
-        cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
+        cookie_jar,
+        &clock,
+        &mut rng,
+        &templates,
+        &locale,
+        Some(PostAuthAction::continue_compat_sso_login(id)),
+        &mut repo,
     )
     .await?
     {
@@ -204,7 +211,13 @@ pub async fn post(
     let user_agent = user_agent.map(|ua| ua.to_string());
 
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
-        cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
+        cookie_jar,
+        &clock,
+        &mut rng,
+        &templates,
+        &locale,
+        Some(PostAuthAction::continue_compat_sso_login(id)),
+        &mut repo,
     )
     .await?
     {

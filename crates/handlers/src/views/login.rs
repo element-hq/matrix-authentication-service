@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -77,7 +78,13 @@ pub(crate) async fn get(
     cookie_jar: CookieJar,
 ) -> Result<Response, InternalError> {
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
-        cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
+        cookie_jar,
+        &clock,
+        &mut rng,
+        &templates,
+        &locale,
+        query.post_auth_action.clone(),
+        &mut repo,
     )
     .await?
     {

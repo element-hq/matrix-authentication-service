@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -99,7 +100,13 @@ pub(crate) async fn get(
     Path(grant_id): Path<Ulid>,
 ) -> Result<Response, RouteError> {
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
-        cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
+        cookie_jar,
+        &clock,
+        &mut rng,
+        &templates,
+        &locale,
+        Some(PostAuthAction::continue_grant(grant_id)),
+        &mut repo,
     )
     .await?
     {
@@ -232,7 +239,13 @@ pub(crate) async fn post(
     cookie_jar.verify_form(&clock, form)?;
 
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
-        cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
+        cookie_jar,
+        &clock,
+        &mut rng,
+        &templates,
+        &locale,
+        Some(PostAuthAction::continue_grant(grant_id)),
+        &mut repo,
     )
     .await?
     {
