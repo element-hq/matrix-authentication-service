@@ -28,8 +28,8 @@ use mas_storage::{
     user::{BrowserSessionRepository, UserPasswordRepository, UserRepository},
 };
 use mas_templates::{
-    AccountInactiveContext, FieldError, FormError, FormState, LoginContext, LoginFormField,
-    TemplateContext, Templates, ToFormState,
+    FieldError, FormError, FormState, LoginContext, LoginFormField, TemplateContext, Templates,
+    ToFormState,
 };
 use opentelemetry::{Key, KeyValue, metrics::Counter};
 use rand::Rng;
@@ -40,7 +40,7 @@ use super::shared::{LoginHint, OptionalPostAuthAction, QueryLoginHint};
 use crate::{
     BoundActivityTracker, Limiter, METER, PreferredLanguage, RequesterFingerprint, SiteConfig,
     passwords::{PasswordManager, PasswordVerificationResult},
-    session::{SessionOrFallback, load_session_or_fallback},
+    session::{SessionOrFallback, load_session_or_fallback, render_account_inactive},
 };
 
 static PASSWORD_LOGIN_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
@@ -314,27 +314,36 @@ pub(crate) async fn post(
     };
 
     // Now that we have checked the user password, we now want to show an error if
-    // the user is locked or deactivated
+    // the user is locked or deactivated, while preserving the post-auth action so
+    // the sign-in button on the interstitial resumes the flow the user started.
     if user.deactivated_at.is_some() {
         tracing::warn!(username, "User is deactivated");
         PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
-        let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
-        let ctx = AccountInactiveContext::new(user)
-            .with_csrf(csrf_token.form_value())
-            .with_language(locale);
-        let content = templates.render_account_deactivated(&ctx)?;
-        return Ok((cookie_jar, Html(content)).into_response());
+        let (cookie_jar, response) = render_account_inactive(
+            &templates,
+            &locale,
+            &clock,
+            &mut rng,
+            cookie_jar,
+            user,
+            query.post_auth_action.clone(),
+        )?;
+        return Ok((cookie_jar, response).into_response());
     }
 
     if user.locked_at.is_some() {
         tracing::warn!(username, "User is locked");
         PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
-        let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
-        let ctx = AccountInactiveContext::new(user)
-            .with_csrf(csrf_token.form_value())
-            .with_language(locale);
-        let content = templates.render_account_locked(&ctx)?;
-        return Ok((cookie_jar, Html(content)).into_response());
+        let (cookie_jar, response) = render_account_inactive(
+            &templates,
+            &locale,
+            &clock,
+            &mut rng,
+            cookie_jar,
+            user,
+            query.post_auth_action.clone(),
+        )?;
+        return Ok((cookie_jar, response).into_response());
     }
 
     // At this point, we should have a 'valid' user. In case we missed something, we
