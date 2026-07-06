@@ -488,6 +488,86 @@ mod test {
         },
     };
 
+    /// A fixed authorization-grant ULID used to check that the post-auth action
+    /// round-trips through the account-inactive interstitials.
+    const GRANT_ID: &str = "01ARZ3NDEKTSV4RRFFQ69G5FAV";
+
+    /// Extract the logout form's HTML from a rendered interstitial: the
+    /// substring from the `<form` tag whose `action` ends in `/logout` through
+    /// the following `</form>`. This scopes hidden-input assertions to the
+    /// logout form, so they don't accidentally match markup elsewhere on the
+    /// page. Panics with a clear message if no logout form is found.
+    ///
+    /// The rendered attribute is HTML-escaped (`action="&#x2f;logout"`), so we
+    /// key off the `logout"` that terminates the action value rather than the
+    /// literal `/logout`.
+    fn extract_logout_form(body: &str) -> &str {
+        let action_end = body
+            .find(r#"logout""#)
+            .expect("expected a logout form (action ending in /logout) in the body");
+        let form_start = body[..action_end]
+            .rfind("<form")
+            .expect("expected an enclosing <form tag before the /logout action");
+        let form_end = body[form_start..]
+            .find("</form>")
+            .expect("expected a closing </form> after the logout form")
+            + "</form>".len();
+        &body[form_start..form_start + form_end]
+    }
+
+    /// Assert that the rendered interstitial carries the hidden inputs which
+    /// make the sign-out/sign-in button continue an authorization grant.
+    ///
+    /// Scoped to the logout form so a match anywhere else on the page can't
+    /// mask a missing hidden input.
+    fn assert_interstitial_carries_grant_action(body: &str, grant_id: &str) {
+        let form = extract_logout_form(body);
+        assert!(
+            form.contains(r#"name="kind""#)
+                && form.contains(r#"value="continue_authorization_grant""#),
+            "expected a continue_authorization_grant hidden input, form: {form}"
+        );
+        assert!(
+            form.contains(r#"name="id""#) && form.contains(&format!(r#"value="{grant_id}""#)),
+            "expected the grant id hidden input, form: {form}"
+        );
+    }
+
+    /// Extract the (single) CSRF token from a rendered interstitial's logout
+    /// form.
+    fn extract_csrf(body: &str) -> &str {
+        body.split("name=\"csrf\" value=\"")
+            .nth(1)
+            .unwrap()
+            .split('\"')
+            .next()
+            .unwrap()
+    }
+
+    /// Provision a live browser-session cookie for `user` into `cookies`, and
+    /// return the created session.
+    async fn login_with_session(
+        state: &TestState,
+        cookies: &CookieHelper,
+        user: &mas_data_model::User,
+    ) -> mas_data_model::BrowserSession {
+        use mas_axum_utils::SessionInfoExt as _;
+
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+        let browser_session = repo
+            .browser_session()
+            .add(&mut rng, &state.clock, user, None)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let cookie_jar = state.cookie_jar().set_session(&browser_session);
+        cookies.import(cookie_jar);
+
+        browser_session
+    }
+
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_password_disabled(pool: PgPool) {
         setup();
@@ -874,8 +954,13 @@ mod test {
             .next()
             .unwrap();
 
-        // Submit the login form
-        let request = Request::post("/login").form(serde_json::json!({
+        // Submit the login form, carrying a post-auth action which should be
+        // preserved on the account-locked interstitial so the sign-in button
+        // resumes the flow.
+        let request = Request::post(format!(
+            "/login?kind=continue_authorization_grant&id={GRANT_ID}"
+        ))
+        .form(serde_json::json!({
             "csrf": csrf_token,
             "username": "john",
             "password": "hunter2",
@@ -886,6 +971,7 @@ mod test {
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
         assert!(response.body().contains("Account locked"));
+        assert_interstitial_carries_grant_action(response.body(), GRANT_ID);
 
         // A bad password should not disclose that the account is locked
         let request = Request::post("/login").form(serde_json::json!({
@@ -933,8 +1019,12 @@ mod test {
             .next()
             .unwrap();
 
-        // Submit the login form
-        let request = Request::post("/login").form(serde_json::json!({
+        // Submit the login form, carrying a post-auth action which should be
+        // preserved on the account-deactivated interstitial.
+        let request = Request::post(format!(
+            "/login?kind=continue_authorization_grant&id={GRANT_ID}"
+        ))
+        .form(serde_json::json!({
             "csrf": csrf_token,
             "username": "john",
             "password": "hunter2",
@@ -945,6 +1035,7 @@ mod test {
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
         assert!(response.body().contains("Account deleted"));
+        assert_interstitial_carries_grant_action(response.body(), GRANT_ID);
 
         // A bad password should not disclose that the account is deleted
         let request = Request::post("/login").form(serde_json::json!({
@@ -959,6 +1050,230 @@ mod test {
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
         assert!(!response.body().contains("Account deleted"));
         assert!(response.body().contains("Invalid credentials"));
+    }
+
+    /// A locked user hitting `GET /login` with an in-flight authorization grant
+    /// (via the `load_session_or_fallback` cookie path) should get the
+    /// account-locked interstitial carrying the continuation.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_login_get_locked_account_preserves_action(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let user = user_with_password(&state, "john", "hunter2").await;
+        login_with_session(&state, &cookies, &user).await;
+
+        // Lock the user after the session was established
+        let mut repo = state.repository().await.unwrap();
+        repo.user().lock(&state.clock, user).await.unwrap();
+        repo.save().await.unwrap();
+
+        let request = Request::get(format!(
+            "/login?kind=continue_authorization_grant&id={GRANT_ID}"
+        ))
+        .empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert!(response.body().contains("Account locked"));
+        assert_interstitial_carries_grant_action(response.body(), GRANT_ID);
+    }
+
+    /// A locked user with a live session requesting `/consent/{grant_id}`
+    /// should get the account-locked interstitial carrying the grant, and
+    /// signing out from it should continue back into the grant.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_consent_locked_account_preserves_action(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let user = user_with_password(&state, "john", "hunter2").await;
+        login_with_session(&state, &cookies, &user).await;
+
+        let mut repo = state.repository().await.unwrap();
+        repo.user().lock(&state.clock, user).await.unwrap();
+        repo.save().await.unwrap();
+
+        // The consent handler falls back to the interstitial before even looking
+        // up the grant, so any grant id exercises the path.
+        let request = Request::get(format!("/consent/{GRANT_ID}")).empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        assert!(response.body().contains("Account locked"));
+        assert_interstitial_carries_grant_action(response.body(), GRANT_ID);
+
+        // Signing out from the interstitial should continue into the grant.
+        let csrf_token = extract_csrf(response.body()).to_owned();
+        let request = Request::post("/logout").form(serde_json::json!({
+            "csrf": csrf_token,
+            "kind": "continue_authorization_grant",
+            "id": GRANT_ID,
+        }));
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, &format!("/consent/{GRANT_ID}"));
+    }
+
+    /// A session finished out-of-band (remote logout) should render the
+    /// 'logged out' interstitial carrying the continuation, and signing out
+    /// should continue into it.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_logged_out_session_preserves_action(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let user = user_with_password(&state, "john", "hunter2").await;
+        let session = login_with_session(&state, &cookies, &user).await;
+
+        // Finish the session out-of-band, as an admin or remote logout would.
+        let mut repo = state.repository().await.unwrap();
+        repo.browser_session()
+            .finish(&state.clock, session)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let request = Request::get(format!("/consent/{GRANT_ID}")).empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        // It's the 'logged out' page, not locked/deactivated.
+        assert!(!response.body().contains("Account locked"));
+        assert!(!response.body().contains("Account deleted"));
+        assert_interstitial_carries_grant_action(response.body(), GRANT_ID);
+
+        let csrf_token = extract_csrf(response.body()).to_owned();
+        let request = Request::post("/logout").form(serde_json::json!({
+            "csrf": csrf_token,
+            "kind": "continue_authorization_grant",
+            "id": GRANT_ID,
+        }));
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, &format!("/consent/{GRANT_ID}"));
+    }
+
+    /// Without a continuation the post-logout redirect must be action-driven:
+    /// signing out from the interstitial with only the CSRF field (no
+    /// `kind`/`id`) lands on a bare `/login`, not on any grant continuation.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_logout_without_action_redirects_to_login(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let user = user_with_password(&state, "john", "hunter2").await;
+        login_with_session(&state, &cookies, &user).await;
+
+        let mut repo = state.repository().await.unwrap();
+        repo.user().lock(&state.clock, user).await.unwrap();
+        repo.save().await.unwrap();
+
+        let request = Request::get(format!("/consent/{GRANT_ID}")).empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        assert!(response.body().contains("Account locked"));
+
+        // Sign out with only the CSRF field, i.e. no post-logout action.
+        let csrf_token = extract_csrf(response.body()).to_owned();
+        let request = Request::post("/logout").form(serde_json::json!({
+            "csrf": csrf_token,
+        }));
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/login");
+    }
+
+    /// The device-consent and compat-SSO interstitials should carry their
+    /// respective continuations for a locked user.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_device_and_compat_locked_account_preserve_action(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let user = user_with_password(&state, "john", "hunter2").await;
+        login_with_session(&state, &cookies, &user).await;
+
+        let mut repo = state.repository().await.unwrap();
+        repo.user().lock(&state.clock, user).await.unwrap();
+        repo.save().await.unwrap();
+
+        // Device consent
+        let request = Request::get(format!("/device/{GRANT_ID}")).empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert!(response.body().contains("Account locked"));
+        assert!(
+            response
+                .body()
+                .contains(r#"value="continue_device_code_grant""#),
+            "expected continue_device_code_grant input, body: {}",
+            response.body()
+        );
+        assert!(response.body().contains(&format!(r#"value="{GRANT_ID}""#)));
+
+        // Compat SSO completion
+        let request = Request::get(format!("/complete-compat-sso/{GRANT_ID}")).empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert!(response.body().contains("Account locked"));
+        assert!(
+            response
+                .body()
+                .contains(r#"value="continue_compat_sso_login""#),
+            "expected continue_compat_sso_login input, body: {}",
+            response.body()
+        );
+        assert!(response.body().contains(&format!(r#"value="{GRANT_ID}""#)));
+    }
+
+    /// The homepage passes no action, so a locked user's interstitial there
+    /// must not emit any continuation hidden inputs (guards the
+    /// `skip_serializing_if`).
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_index_locked_account_has_no_action(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let user = user_with_password(&state, "john", "hunter2").await;
+        login_with_session(&state, &cookies, &user).await;
+
+        let mut repo = state.repository().await.unwrap();
+        repo.user().lock(&state.clock, user).await.unwrap();
+        repo.save().await.unwrap();
+
+        let request = Request::get("/").empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert!(response.body().contains("Account locked"));
+        // Scope to the logout form if there is one, otherwise fall back to the
+        // whole body.
+        let scope = if response.body().contains(r#"logout""#) {
+            extract_logout_form(response.body())
+        } else {
+            response.body()
+        };
+        assert!(
+            !scope.contains(r#"name="kind""#),
+            "homepage interstitial should carry no continuation, form/body: {scope}"
+        );
+        assert!(!scope.contains("continue_authorization_grant"));
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
