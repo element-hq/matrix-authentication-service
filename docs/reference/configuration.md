@@ -865,12 +865,16 @@ upstream_oauth2:
 
       # Additional parameters to include in the authorization request.
       #
-      # Values are Jinja2 templates rendered against a `params` map
-      # containing the raw query parameters of the downstream
-      # authorization request (empty when the upstream login was not
-      # triggered by a downstream authorization request, e.g. account
-      # linking or direct login). Templates that render to an empty
-      # string are dropped rather than forwarded.
+      # Values are Jinja2 templates rendered against a context exposing:
+      #  - `params`: a map containing the raw query parameters of the
+      #    downstream authorization request (empty when the upstream login
+      #    was not triggered by a downstream authorization request, e.g.
+      #    account linking or direct login).
+      #  - `logged_out`: a boolean that is `true` when the browser recently
+      #    signed out of MAS and has no active session. Use it to force a
+      #    fresh prompt at the upstream provider after sign-out.
+      # Templates that render to an empty string are dropped rather than
+      # forwarded.
       #
       # Plain strings without `{{ … }}` render to themselves, so static
       # values work as expected.
@@ -878,6 +882,9 @@ upstream_oauth2:
       #  foo: "bar"
       #  login_hint: "{{ params.login_hint }}"
       #  acr_values: "{{ params.acr_values }}"
+      #  # Force re-authentication after sign-out (Keycloak only supports
+      #  # `prompt=login`, not `prompt=select_account`).
+      #  prompt: "{% if logged_out %}login{% endif %}"
 
       # Whether the `login_hint` should be forwarded to the provider in the
       # authorization request.

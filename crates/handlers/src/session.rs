@@ -58,7 +58,7 @@ pub async fn load_session_or_fallback(
 
     let Some(session) = repo.browser_session().lookup(session_id).await? else {
         // We looked up the session, but it was not found. Still update the cookie
-        let session_info = session_info.mark_session_ended();
+        let session_info = session_info.mark_session_ended(clock.now());
         let cookie_jar = cookie_jar.update_session_info(&session_info);
         return Ok(SessionOrFallback::MaybeSession {
             cookie_jar,

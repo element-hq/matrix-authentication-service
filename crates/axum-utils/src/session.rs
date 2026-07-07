@@ -5,6 +5,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use chrono::{DateTime, Utc};
 use mas_data_model::BrowserSession;
 use mas_storage::RepositoryAccess;
 use serde::{Deserialize, Serialize};
@@ -16,6 +17,17 @@ use crate::{cookies::CookieJar, log_context::RecordAsRequester};
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct SessionInfo {
     current: Option<Ulid>,
+
+    /// When the browser was last signed out, if it was.
+    ///
+    /// This is set when the session cookie is cleared (either through an
+    /// explicit logout, or because the session was ended out from under the
+    /// user), and is cleared again whenever a new session is established, since
+    /// [`SessionInfo::from_session`] leaves it unset. It lets us tell that the
+    /// current, anonymous browser used to be signed in — which is used to force
+    /// a fresh prompt at the upstream provider on the next login.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    logged_out_at: Option<DateTime<Utc>>,
 }
 
 impl SessionInfo {
@@ -24,13 +36,15 @@ impl SessionInfo {
     pub fn from_session(session: &BrowserSession) -> Self {
         Self {
             current: Some(session.id),
+            logged_out_at: None,
         }
     }
 
     /// Mark the session as ended
     #[must_use]
-    pub fn mark_session_ended(mut self) -> Self {
+    pub fn mark_session_ended(mut self, now: DateTime<Utc>) -> Self {
         self.current = None;
+        self.logged_out_at = Some(now);
         self
     }
 
@@ -65,6 +79,16 @@ impl SessionInfo {
     #[must_use]
     pub fn current_session_id(&self) -> Option<Ulid> {
         self.current
+    }
+
+    /// Get the time at which the browser was last signed out, if it currently
+    /// has no active session.
+    ///
+    /// Returns [`None`] if the browser has never been signed out or has since
+    /// signed back in.
+    #[must_use]
+    pub fn logged_out_at(&self) -> Option<DateTime<Utc>> {
+        self.logged_out_at
     }
 }
 
