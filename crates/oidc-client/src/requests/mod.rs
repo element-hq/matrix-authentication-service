@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 Kévin Commaille.
 //
@@ -11,5 +12,6 @@ pub mod client_credentials;
 pub mod discovery;
 pub mod jose;
 pub mod refresh_token;
+pub mod rp_initiated_logout;
 pub mod token;
 pub mod userinfo;

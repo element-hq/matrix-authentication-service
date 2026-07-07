@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -17,7 +18,8 @@ pub use self::{
         ImportPreference as UpstreamOAuthProviderImportPreference,
         LocalpartPreference as UpstreamOAuthProviderLocalpartPreference,
         OnBackchannelLogout as UpstreamOAuthProviderOnBackchannelLogout,
-        OnConflict as UpstreamOAuthProviderOnConflict, PkceMode as UpstreamOAuthProviderPkceMode,
+        OnConflict as UpstreamOAuthProviderOnConflict, OnLogout as UpstreamOAuthProviderOnLogout,
+        PkceMode as UpstreamOAuthProviderPkceMode,
         ResponseMode as UpstreamOAuthProviderResponseMode,
         SubjectPreference as UpstreamOAuthProviderSubjectPreference,
         TokenAuthMethod as UpstreamOAuthProviderTokenAuthMethod, UpstreamOAuthProvider,

@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -310,6 +311,15 @@ pub async fn config_sync(
                 }
             };
 
+            let on_logout = match provider.on_logout {
+                mas_config::UpstreamOAuth2OnLogout::DoNothing => {
+                    mas_data_model::UpstreamOAuthProviderOnLogout::DoNothing
+                }
+                mas_config::UpstreamOAuth2OnLogout::RpInitiatedLogout => {
+                    mas_data_model::UpstreamOAuthProviderOnLogout::RpInitiatedLogout
+                }
+            };
+
             repo.upstream_oauth_provider()
                 .upsert(
                     clock,
@@ -362,6 +372,8 @@ pub async fn config_sync(
                         forward_login_hint: provider.forward_login_hint,
                         ui_order,
                         on_backchannel_logout,
+                        on_logout,
+                        end_session_endpoint_override: provider.end_session_endpoint,
                         registration_token_required: provider.registration_token_required,
                     },
                 )

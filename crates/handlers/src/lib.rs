@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -464,6 +464,10 @@ where
         .route(
             mas_router::UpstreamOAuth2BackchannelLogout::route(),
             post(self::upstream_oauth2::backchannel_logout::post),
+        )
+        .route(
+            mas_router::UpstreamOAuth2PostLogout::route(),
+            get(self::upstream_oauth2::logout::get),
         )
         .route(
             mas_router::DeviceCodeLink::route(),

@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -58,8 +59,9 @@ pub use self::{
         EmailImportPreference as UpstreamOAuth2EmailImportPreference,
         ImportAction as UpstreamOAuth2ImportAction,
         OnBackchannelLogout as UpstreamOAuth2OnBackchannelLogout,
-        OnConflict as UpstreamOAuth2OnConflict, PkceMethod as UpstreamOAuth2PkceMethod,
-        Provider as UpstreamOAuth2Provider, ResponseMode as UpstreamOAuth2ResponseMode,
+        OnConflict as UpstreamOAuth2OnConflict, OnLogout as UpstreamOAuth2OnLogout,
+        PkceMethod as UpstreamOAuth2PkceMethod, Provider as UpstreamOAuth2Provider,
+        ResponseMode as UpstreamOAuth2ResponseMode,
         TokenAuthMethod as UpstreamOAuth2TokenAuthMethod, UpstreamOAuth2Config,
     },
 };

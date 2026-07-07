@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -79,6 +80,8 @@ mod tests {
                     forward_login_hint: false,
                     ui_order: 0,
                     on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    on_logout: mas_data_model::UpstreamOAuthProviderOnLogout::DoNothing,
+                    end_session_endpoint_override: None,
                     registration_token_required: false,
                 },
             )
@@ -200,6 +203,16 @@ mod tests {
             .unwrap()
             .expect("session to be found in the database");
         assert!(session.is_consumed());
+
+        // The consumed upstream session should be findable from the browser
+        // session it was consumed by (used for RP-Initiated Logout)
+        let found = repo
+            .upstream_oauth_session()
+            .find_for_user_session(browser_session.id)
+            .await
+            .unwrap()
+            .expect("upstream session to be found for the browser session");
+        assert_eq!(found.id, session.id);
 
         repo.upstream_oauth_link()
             .associate_to_user(&link, &user)
@@ -400,6 +413,8 @@ mod tests {
                         forward_login_hint: false,
                         ui_order: 0,
                         on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                        on_logout: mas_data_model::UpstreamOAuthProviderOnLogout::DoNothing,
+                        end_session_endpoint_override: None,
                         registration_token_required: false,
                     },
                 )
@@ -539,6 +554,8 @@ mod tests {
                     forward_login_hint: false,
                     ui_order: 0,
                     on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    on_logout: mas_data_model::UpstreamOAuthProviderOnLogout::DoNothing,
+                    end_session_endpoint_override: None,
                     registration_token_required: false,
                 },
             )

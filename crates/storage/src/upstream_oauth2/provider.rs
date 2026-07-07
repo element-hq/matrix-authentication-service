@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -10,8 +11,8 @@ use async_trait::async_trait;
 use mas_data_model::{
     Clock, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports,
     UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderOnBackchannelLogout,
-    UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderResponseMode,
-    UpstreamOAuthProviderTokenAuthMethod,
+    UpstreamOAuthProviderOnLogout, UpstreamOAuthProviderPkceMode,
+    UpstreamOAuthProviderResponseMode, UpstreamOAuthProviderTokenAuthMethod,
 };
 use mas_iana::jose::JsonWebSignatureAlg;
 use oauth2_types::scope::Scope;
@@ -105,6 +106,13 @@ pub struct UpstreamOAuthProviderParams {
 
     /// The behavior when receiving a backchannel logout notification
     pub on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout,
+
+    /// What to do towards the upstream provider when the user logs out of MAS
+    pub on_logout: UpstreamOAuthProviderOnLogout,
+
+    /// The URL to use as the `end_session_endpoint` (RP-Initiated Logout). If
+    /// `None`, the URL will be discovered
+    pub end_session_endpoint_override: Option<Url>,
 
     /// Whether or not to require a registration token on `OAuth2` auth
     pub registration_token_required: bool,

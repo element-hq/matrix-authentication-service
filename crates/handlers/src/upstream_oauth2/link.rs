@@ -1350,6 +1350,8 @@ mod tests {
                     ui_order: 0,
                     on_backchannel_logout:
                         mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    on_logout: mas_data_model::UpstreamOAuthProviderOnLogout::DoNothing,
+                    end_session_endpoint_override: None,
                     registration_token_required: false,
                 },
             )
@@ -1548,6 +1550,8 @@ mod tests {
                     ui_order: 0,
                     on_backchannel_logout:
                         mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    on_logout: mas_data_model::UpstreamOAuthProviderOnLogout::DoNothing,
+                    end_session_endpoint_override: None,
                     registration_token_required: false,
                 },
             )
@@ -1709,6 +1713,8 @@ mod tests {
                     forward_login_hint: false,
                     on_backchannel_logout:
                         mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    on_logout: mas_data_model::UpstreamOAuthProviderOnLogout::DoNothing,
+                    end_session_endpoint_override: None,
                     ui_order: 0,
                     registration_token_required: false,
                 },
@@ -1826,6 +1832,8 @@ mod tests {
                     forward_login_hint: false,
                     on_backchannel_logout:
                         mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    on_logout: mas_data_model::UpstreamOAuthProviderOnLogout::DoNothing,
+                    end_session_endpoint_override: None,
                     ui_order: 0,
                     registration_token_required: false,
                 },
@@ -1996,6 +2004,8 @@ mod tests {
                     forward_login_hint: false,
                     on_backchannel_logout:
                         mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    on_logout: mas_data_model::UpstreamOAuthProviderOnLogout::DoNothing,
+                    end_session_endpoint_override: None,
                     ui_order: 0,
                     registration_token_required: false,
                 },
@@ -2145,6 +2155,8 @@ mod tests {
                     forward_login_hint: false,
                     on_backchannel_logout:
                         mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    on_logout: mas_data_model::UpstreamOAuthProviderOnLogout::DoNothing,
+                    end_session_endpoint_override: None,
                     ui_order: 0,
                     registration_token_required: false,
                 },
@@ -2265,6 +2277,8 @@ mod tests {
                     forward_login_hint: false,
                     on_backchannel_logout:
                         mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    on_logout: mas_data_model::UpstreamOAuthProviderOnLogout::DoNothing,
+                    end_session_endpoint_override: None,
                     ui_order: 0,
                     registration_token_required: false,
                 },

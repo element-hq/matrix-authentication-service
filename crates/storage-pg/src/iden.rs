@@ -164,6 +164,8 @@ pub enum UpstreamOAuthProviders {
     AuthorizationEndpointOverride,
     UserinfoEndpointOverride,
     OnBackchannelLogout,
+    OnLogout,
+    EndSessionEndpointOverride,
     RegistrationTokenRequired,
 }
 

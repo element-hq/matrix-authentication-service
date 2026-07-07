@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -190,6 +191,8 @@ mod tests {
             additional_authorization_parameters: vec![],
             forward_login_hint: false,
             on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+            on_logout: mas_data_model::UpstreamOAuthProviderOnLogout::DoNothing,
+            end_session_endpoint_override: None,
             ui_order: 0,
             registration_token_required: false,
         };
@@ -223,6 +226,8 @@ mod tests {
             additional_authorization_parameters: vec![],
             forward_login_hint: false,
             on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+            on_logout: mas_data_model::UpstreamOAuthProviderOnLogout::DoNothing,
+            end_session_endpoint_override: None,
             ui_order: 1,
             registration_token_required: false,
         };
@@ -263,6 +268,8 @@ mod tests {
             additional_authorization_parameters: vec![],
             forward_login_hint: false,
             on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+            on_logout: mas_data_model::UpstreamOAuthProviderOnLogout::DoNothing,
+            end_session_endpoint_override: None,
             ui_order: 2,
             registration_token_required: false,
         };

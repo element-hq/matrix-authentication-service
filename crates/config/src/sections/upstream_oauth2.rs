@@ -508,6 +508,29 @@ impl OnBackchannelLogout {
     }
 }
 
+/// What to do towards the upstream provider when the user logs out of MAS.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum OnLogout {
+    /// Do nothing: only end the local MAS session.
+    #[default]
+    DoNothing,
+
+    /// Redirect the user's browser to the upstream provider's
+    /// `end_session_endpoint` (OIDC RP-Initiated Logout) so the upstream
+    /// session is ended as well. Requires the provider to expose an
+    /// `end_session_endpoint` (through discovery or `end_session_endpoint`
+    /// override).
+    RpInitiatedLogout,
+}
+
+impl OnLogout {
+    #[expect(clippy::trivially_copy_pass_by_ref)]
+    const fn is_default(&self) -> bool {
+        matches!(self, OnLogout::DoNothing)
+    }
+}
+
 /// Configuration for one upstream OAuth 2 provider.
 #[serde_as]
 #[skip_serializing_none]
@@ -666,6 +689,14 @@ pub struct Provider {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub jwks_uri: Option<Url>,
 
+    /// The URL to use for the provider's RP-Initiated Logout
+    /// `end_session_endpoint`
+    ///
+    /// Defaults to the `end_session_endpoint` provided through discovery.
+    /// Only used when `on_logout` is set to `rp_initiated_logout`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub end_session_endpoint: Option<Url>,
+
     /// The response mode we ask the provider to use for the callback
     #[serde(skip_serializing_if = "Option::is_none")]
     pub response_mode: Option<ResponseMode>,
@@ -739,6 +770,16 @@ pub struct Provider {
     /// Defaults to `do_nothing`.
     #[serde(default, skip_serializing_if = "OnBackchannelLogout::is_default")]
     pub on_backchannel_logout: OnBackchannelLogout,
+
+    /// What to do towards the upstream provider when the user logs out of MAS.
+    ///
+    /// When set to `rp_initiated_logout`, MAS redirects the user's browser to
+    /// the upstream provider's `end_session_endpoint` on logout, so the
+    /// upstream session is ended too (OIDC RP-Initiated Logout).
+    ///
+    /// Defaults to `do_nothing`.
+    #[serde(default, skip_serializing_if = "OnLogout::is_default")]
+    pub on_logout: OnLogout,
 
     /// Whether or not to require a registration token on `OAuth2` auth
     ///

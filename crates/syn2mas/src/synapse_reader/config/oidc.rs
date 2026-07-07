@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -348,6 +349,8 @@ impl OidcProvider {
             additional_authorization_parameters,
             forward_login_hint: self.forward_login_hint,
             on_backchannel_logout,
+            on_logout: mas_config::UpstreamOAuth2OnLogout::DoNothing,
+            end_session_endpoint: None,
             registration_token_required: false,
         })
     }

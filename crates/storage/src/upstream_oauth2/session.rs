@@ -181,6 +181,26 @@ pub trait UpstreamOAuthSessionRepository: Send + Sync {
         browser_session: &BrowserSession,
     ) -> Result<UpstreamOAuthAuthorizationSession, Self::Error>;
 
+    /// Find the most recent upstream OAuth 2.0 authorization session that was
+    /// consumed by the given browser (user) session.
+    ///
+    /// This is used to end the upstream session (RP-Initiated Logout) when the
+    /// user logs out of MAS.
+    ///
+    /// Returns `None` if no such session exists.
+    ///
+    /// # Parameters
+    ///
+    /// * `user_session_id`: the ID of the browser session to look up
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn find_for_user_session(
+        &mut self,
+        user_session_id: Ulid,
+    ) -> Result<Option<UpstreamOAuthAuthorizationSession>, Self::Error>;
+
     /// List [`UpstreamOAuthAuthorizationSession`] with the given filter and
     /// pagination
     ///
@@ -270,6 +290,11 @@ repository_impl!(UpstreamOAuthSessionRepository:
         upstream_oauth_authorization_session: UpstreamOAuthAuthorizationSession,
         browser_session: &BrowserSession,
     ) -> Result<UpstreamOAuthAuthorizationSession, Self::Error>;
+
+    async fn find_for_user_session(
+        &mut self,
+        user_session_id: Ulid,
+    ) -> Result<Option<UpstreamOAuthAuthorizationSession>, Self::Error>;
 
     async fn list(
         &mut self,

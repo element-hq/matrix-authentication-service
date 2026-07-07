@@ -403,6 +403,53 @@ impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
     }
 
     #[tracing::instrument(
+        name = "db.upstream_oauth_authorization_session.find_for_user_session",
+        skip_all,
+        fields(
+            db.query.text,
+            user_session.id = %user_session_id,
+        ),
+        err,
+    )]
+    async fn find_for_user_session(
+        &mut self,
+        user_session_id: Ulid,
+    ) -> Result<Option<UpstreamOAuthAuthorizationSession>, Self::Error> {
+        let res = sqlx::query_as!(
+            SessionLookup,
+            r#"
+                SELECT
+                    upstream_oauth_authorization_session_id,
+                    upstream_oauth_provider_id,
+                    upstream_oauth_link_id,
+                    state,
+                    code_challenge_verifier,
+                    nonce,
+                    id_token,
+                    id_token_claims,
+                    extra_callback_parameters,
+                    userinfo,
+                    created_at,
+                    completed_at,
+                    consumed_at,
+                    unlinked_at
+                FROM upstream_oauth_authorization_sessions
+                WHERE user_session_id = $1
+                ORDER BY consumed_at DESC
+                LIMIT 1
+            "#,
+            Uuid::from(user_session_id),
+        )
+        .traced()
+        .fetch_optional(&mut *self.conn)
+        .await?;
+
+        let Some(res) = res else { return Ok(None) };
+
+        Ok(Some(res.try_into()?))
+    }
+
+    #[tracing::instrument(
         name = "db.upstream_oauth_authorization_session.list",
         skip_all,
         fields(

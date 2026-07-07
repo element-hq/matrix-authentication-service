@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -51,6 +52,8 @@ mod test_utils {
             forward_login_hint: false,
             ui_order: 0,
             on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+            on_logout: mas_data_model::UpstreamOAuthProviderOnLogout::DoNothing,
+            end_session_endpoint_override: None,
             registration_token_required: false,
         }
     }

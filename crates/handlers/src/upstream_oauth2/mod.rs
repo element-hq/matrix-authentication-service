@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -21,9 +22,11 @@ pub(crate) mod cache;
 pub(crate) mod callback;
 mod cookie;
 pub(crate) mod link;
+pub(crate) mod logout;
 mod template;
 
 use self::cookie::UpstreamSessions as UpstreamSessionsCookie;
+pub(crate) use self::logout::UpstreamLogoutCookie;
 
 #[derive(Debug, Error)]
 enum ProviderCredentialsError {

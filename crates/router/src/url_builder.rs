@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -224,6 +225,12 @@ impl UrlBuilder {
     #[must_use]
     pub fn upstream_oauth_authorize(&self, id: Ulid) -> Url {
         self.absolute_url_for(&crate::endpoints::UpstreamOAuth2Authorize::new(id))
+    }
+
+    /// Upstream RP-Initiated Logout `post_logout_redirect_uri`
+    #[must_use]
+    pub fn upstream_oauth_post_logout(&self) -> Url {
+        self.absolute_url_for(&crate::endpoints::UpstreamOAuth2PostLogout)
     }
 
     /// Account management URI

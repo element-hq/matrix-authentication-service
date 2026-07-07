@@ -777,6 +777,8 @@ async fn test_user_session(pool: PgPool) {
                 ui_order: 0,
                 on_backchannel_logout:
                     mas_data_model::UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                on_logout: mas_data_model::UpstreamOAuthProviderOnLogout::DoNothing,
+                end_session_endpoint_override: None,
                 registration_token_required: false,
             },
         )

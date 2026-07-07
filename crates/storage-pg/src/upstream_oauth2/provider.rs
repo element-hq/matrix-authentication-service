@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -76,6 +76,8 @@ struct ProviderLookup {
     additional_parameters: Option<Json<Vec<(String, String)>>>,
     forward_login_hint: bool,
     on_backchannel_logout: String,
+    on_logout: String,
+    end_session_endpoint_override: Option<String>,
     registration_token_required: bool,
 }
 
@@ -212,6 +214,24 @@ impl TryFrom<ProviderLookup> for UpstreamOAuthProvider {
                 .source(e)
         })?;
 
+        let on_logout = value.on_logout.parse().map_err(|e| {
+            DatabaseInconsistencyError::on("upstream_oauth_providers")
+                .column("on_logout")
+                .row(id)
+                .source(e)
+        })?;
+
+        let end_session_endpoint_override = value
+            .end_session_endpoint_override
+            .map(|x| x.parse())
+            .transpose()
+            .map_err(|e| {
+                DatabaseInconsistencyError::on("upstream_oauth_providers")
+                    .column("end_session_endpoint_override")
+                    .row(id)
+                    .source(e)
+            })?;
+
         Ok(UpstreamOAuthProvider {
             id,
             issuer: value.issuer,
@@ -238,6 +258,8 @@ impl TryFrom<ProviderLookup> for UpstreamOAuthProvider {
             additional_authorization_parameters,
             forward_login_hint: value.forward_login_hint,
             on_backchannel_logout,
+            on_logout,
+            end_session_endpoint_override,
             registration_token_required: value.registration_token_required,
         })
     }
@@ -299,6 +321,8 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     additional_parameters as "additional_parameters: Json<Vec<(String, String)>>",
                     forward_login_hint,
                     on_backchannel_logout,
+                    on_logout,
+                    end_session_endpoint_override,
                     registration_token_required
                 FROM upstream_oauth_providers
                 WHERE upstream_oauth_provider_id = $1
@@ -363,11 +387,13 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                 response_mode,
                 forward_login_hint,
                 on_backchannel_logout,
+                on_logout,
+                end_session_endpoint_override,
                 registration_token_required,
                 created_at
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
                       $12, $13, $14, $15, $16, $17, $18, $19, $20,
-                      $21, $22, $23, $24)
+                      $21, $22, $23, $24, $25, $26)
         "#,
             Uuid::from(id),
             params.issuer.as_deref(),
@@ -406,6 +432,11 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             params.response_mode.as_ref().map(ToString::to_string),
             params.forward_login_hint,
             params.on_backchannel_logout.as_str(),
+            params.on_logout.as_str(),
+            params
+                .end_session_endpoint_override
+                .as_ref()
+                .map(ToString::to_string),
             params.registration_token_required,
             created_at,
         )
@@ -438,6 +469,8 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             response_mode: params.response_mode,
             additional_authorization_parameters: params.additional_authorization_parameters,
             on_backchannel_logout: params.on_backchannel_logout,
+            on_logout: params.on_logout,
+            end_session_endpoint_override: params.end_session_endpoint_override,
             forward_login_hint: params.forward_login_hint,
             registration_token_required: params.registration_token_required,
         })
@@ -555,11 +588,13 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     forward_login_hint,
                     ui_order,
                     on_backchannel_logout,
+                    on_logout,
+                    end_session_endpoint_override,
                     registration_token_required,
                     created_at
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
                           $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-                          $21, $22, $23, $24, $25, $26)
+                          $21, $22, $23, $24, $25, $26, $27, $28)
                 ON CONFLICT (upstream_oauth_provider_id)
                     DO UPDATE
                     SET
@@ -587,6 +622,8 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                         forward_login_hint = EXCLUDED.forward_login_hint,
                         ui_order = EXCLUDED.ui_order,
                         on_backchannel_logout = EXCLUDED.on_backchannel_logout,
+                        on_logout = EXCLUDED.on_logout,
+                        end_session_endpoint_override = EXCLUDED.end_session_endpoint_override,
                         registration_token_required = EXCLUDED.registration_token_required
                 RETURNING created_at
             "#,
@@ -629,6 +666,11 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             params.forward_login_hint,
             params.ui_order,
             params.on_backchannel_logout.as_str(),
+            params.on_logout.as_str(),
+            params
+                .end_session_endpoint_override
+                .as_ref()
+                .map(ToString::to_string),
             params.registration_token_required,
             created_at,
         )
@@ -662,6 +704,8 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             additional_authorization_parameters: params.additional_authorization_parameters,
             forward_login_hint: params.forward_login_hint,
             on_backchannel_logout: params.on_backchannel_logout,
+            on_logout: params.on_logout,
+            end_session_endpoint_override: params.end_session_endpoint_override,
             registration_token_required: params.registration_token_required,
         })
     }
@@ -890,6 +934,20 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             .expr_as(
                 Expr::col((
                     UpstreamOAuthProviders::Table,
+                    UpstreamOAuthProviders::OnLogout,
+                )),
+                ProviderLookupIden::OnLogout,
+            )
+            .expr_as(
+                Expr::col((
+                    UpstreamOAuthProviders::Table,
+                    UpstreamOAuthProviders::EndSessionEndpointOverride,
+                )),
+                ProviderLookupIden::EndSessionEndpointOverride,
+            )
+            .expr_as(
+                Expr::col((
+                    UpstreamOAuthProviders::Table,
                     UpstreamOAuthProviders::RegistrationTokenRequired,
                 )),
                 ProviderLookupIden::RegistrationTokenRequired,
@@ -989,6 +1047,8 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
                     additional_parameters as "additional_parameters: Json<Vec<(String, String)>>",
                     forward_login_hint,
                     on_backchannel_logout,
+                    on_logout,
+                    end_session_endpoint_override,
                     registration_token_required
 
                 FROM upstream_oauth_providers

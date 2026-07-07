@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -120,6 +121,23 @@ impl<'a> LazyProviderInfos<'a> {
         }
 
         Ok(self.load().await?.userinfo_endpoint())
+    }
+
+    /// Get the RP-Initiated Logout `end_session_endpoint` for the provider.
+    ///
+    /// Uses [`UpstreamOAuthProvider.end_session_endpoint_override`] if set,
+    /// otherwise uses the one from discovery. Returns `None` if neither is
+    /// available (the provider doesn't advertise one, or discovery is
+    /// disabled).
+    pub async fn end_session_endpoint(&mut self) -> Result<Option<Url>, DiscoveryError> {
+        if let Some(end_session_endpoint) = &self.provider.end_session_endpoint_override {
+            return Ok(Some(end_session_endpoint.clone()));
+        }
+
+        Ok(self
+            .maybe_discover()
+            .await?
+            .and_then(|metadata| metadata.end_session_endpoint.clone()))
     }
 
     /// Get the PKCE methods supported by the provider.
@@ -302,7 +320,7 @@ mod tests {
 
     use mas_data_model::{
         Clock, UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderOnBackchannelLogout,
-        UpstreamOAuthProviderTokenAuthMethod, clock::MockClock,
+        UpstreamOAuthProviderOnLogout, UpstreamOAuthProviderTokenAuthMethod, clock::MockClock,
     };
     use mas_iana::jose::JsonWebSignatureAlg;
     use oauth2_types::scope::{OPENID, Scope};
@@ -433,6 +451,8 @@ mod tests {
             additional_authorization_parameters: Vec::new(),
             forward_login_hint: false,
             on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+            on_logout: UpstreamOAuthProviderOnLogout::DoNothing,
+            end_session_endpoint_override: None,
             registration_token_required: false,
         };
 

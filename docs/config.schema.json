@@ -2340,6 +2340,14 @@
           ],
           "format": "uri"
         },
+        "end_session_endpoint": {
+          "description": "The URL to use for the provider's RP-Initiated Logout\n`end_session_endpoint`\n\nDefaults to the `end_session_endpoint` provided through discovery.\nOnly used when `on_logout` is set to `rp_initiated_logout`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
         "response_mode": {
           "description": "The response mode we ask the provider to use for the callback",
           "anyOf": [
@@ -2376,6 +2384,14 @@
           "allOf": [
             {
               "$ref": "#/definitions/OnBackchannelLogout"
+            }
+          ]
+        },
+        "on_logout": {
+          "description": "What to do towards the upstream provider when the user logs out of MAS.\n\nWhen set to `rp_initiated_logout`, MAS redirects the user's browser to\nthe upstream provider's `end_session_endpoint` on logout, so the\nupstream session is ended too (OIDC RP-Initiated Logout).\n\nDefaults to `do_nothing`.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/OnLogout"
             }
           ]
         },
@@ -2726,6 +2742,21 @@
           "description": "Log out all sessions started by this OIDC session, including MAS\n'browser sessions' and client sessions",
           "type": "string",
           "const": "logout_all"
+        }
+      ]
+    },
+    "OnLogout": {
+      "description": "What to do towards the upstream provider when the user logs out of MAS.",
+      "oneOf": [
+        {
+          "description": "Do nothing: only end the local MAS session.",
+          "type": "string",
+          "const": "do_nothing"
+        },
+        {
+          "description": "Redirect the user's browser to the upstream provider's\n`end_session_endpoint` (OIDC RP-Initiated Logout) so the upstream\nsession is ended as well. Requires the provider to expose an\n`end_session_endpoint` (through discovery or `end_session_endpoint`\noverride).",
+          "type": "string",
+          "const": "rp_initiated_logout"
         }
       ]
     },

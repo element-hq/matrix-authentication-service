@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -804,6 +805,21 @@ impl Route for UpstreamOAuth2BackchannelLogout {
 
     fn path(&self) -> std::borrow::Cow<'static, str> {
         format!("/upstream/backchannel-logout/{}", self.id).into()
+    }
+}
+
+/// `GET /upstream/post-logout`
+///
+/// The `post_logout_redirect_uri` the upstream provider redirects the browser
+/// to after an OIDC RP-Initiated Logout. The `state` query parameter is
+/// validated against the short-lived logout cookie.
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
+pub struct UpstreamOAuth2PostLogout;
+
+impl Route for UpstreamOAuth2PostLogout {
+    type Query = ();
+    fn route() -> &'static str {
+        "/upstream/post-logout"
     }
 }
 

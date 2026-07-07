@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -258,6 +259,52 @@ impl std::str::FromStr for OnBackchannelLogout {
 #[error("Invalid upstream OAuth 2.0 'on backchannel logout': {0}")]
 pub struct InvalidUpstreamOAuth2OnBackchannelLogout(String);
 
+/// What to do towards the upstream provider when the user logs out of MAS.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum OnLogout {
+    /// Do nothing: only end the local MAS session.
+    #[default]
+    DoNothing,
+
+    /// Redirect the user's browser to the upstream provider's
+    /// `end_session_endpoint` (OIDC RP-Initiated Logout) so the upstream
+    /// session is ended as well.
+    RpInitiatedLogout,
+}
+
+impl OnLogout {
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::DoNothing => "do_nothing",
+            Self::RpInitiatedLogout => "rp_initiated_logout",
+        }
+    }
+}
+
+impl std::fmt::Display for OnLogout {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl std::str::FromStr for OnLogout {
+    type Err = InvalidUpstreamOAuth2OnLogout;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "do_nothing" => Ok(Self::DoNothing),
+            "rp_initiated_logout" => Ok(Self::RpInitiatedLogout),
+            s => Err(InvalidUpstreamOAuth2OnLogout(s.to_owned())),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Error)]
+#[error("Invalid upstream OAuth 2.0 'on logout': {0}")]
+pub struct InvalidUpstreamOAuth2OnLogout(String);
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UpstreamOAuthProvider {
     pub id: Ulid,
@@ -285,6 +332,11 @@ pub struct UpstreamOAuthProvider {
     pub additional_authorization_parameters: Vec<(String, String)>,
     pub forward_login_hint: bool,
     pub on_backchannel_logout: OnBackchannelLogout,
+    /// What to do towards the upstream provider when the user logs out of MAS.
+    pub on_logout: OnLogout,
+    /// Override for the upstream provider's `end_session_endpoint`. If `None`,
+    /// the endpoint discovered through OIDC discovery is used.
+    pub end_session_endpoint_override: Option<Url>,
     pub registration_token_required: bool,
 }
 
