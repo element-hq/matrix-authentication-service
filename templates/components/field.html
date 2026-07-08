@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 
@@ -12,16 +13,22 @@ Please see LICENSE files in the repository root for full details.
   form-{{- cnt.next() -}}
 {%- endmacro %}
 
-{% macro attributes(field, default_value=None) -%}
+{% macro attributes(field, default_value=None, describedby="") -%}
   {%- set value = field.value | default(default_value) -%}
+  {%- set described_by = [] -%}
+  {%- if field.errors is not empty %}{% set described_by = described_by + [field.id ~ "-error"] %}{% endif -%}
+  {%- if describedby %}{% set described_by = described_by + [describedby] %}{% endif -%}
   name="{{ field.name }}" id="{{ field.id }}"
+  {%- if field.errors is not empty %} aria-invalid="true"{% endif %}
+  {%- if described_by is not empty %} aria-describedby="{{ described_by | join(" ") }}"{% endif %}
   {%- if field.errors is not empty %} data-invalid{% endif %}
   {%- if value %} value="{{ value }}" {% endif %}
 {%- endmacro %}
 
-{% macro error(error, field_name="", hidden=false) %}
+{% macro error(error, field_name="", hidden=false, id="") %}
   <div class="cpd-form-message cpd-form-error-message
-    {%- if hidden %} hidden{% endif %}" data-error-kind="{{ error.kind }}"
+    {%- if hidden %} hidden{% endif %}"
+    {%- if id %} id="{{ id }}"{% endif %} data-error-kind="{{ error.kind }}"
     {%- if error.code is defined %}data-error-code="{{ error.code }}"{% endif %}>
     {% if error.kind == "required" %}
       {{ _("mas.errors.field_required") }}
@@ -95,7 +102,8 @@ Please see LICENSE files in the repository root for full details.
     {% if field.errors is not empty %}
       {% for field_error in field.errors %}
         {% if field_error.kind != "unspecified" %}
-          {{ error(error=field_error, field_name=field.name) }}
+          {% set error_id = (field.id ~ "-error") if loop.first else "" %}
+          {{ error(error=field_error, field_name=field.name, id=error_id) }}
         {% endif %}
       {% endfor %}
     {% endif %}

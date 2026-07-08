@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 
@@ -91,7 +92,7 @@ Please see LICENSE files in the repository root for full details.
 
     {% if force_localpart %}
       {% call(f) field.field(label=_("common.mxid"), name="mxid") %}
-        <input {{ field.attributes(f) }} class="cpd-text-control" type="text" value="@{{ imported_localpart }}:{{ branding.server_name }}" readonly aria-describedby="{{ f.id }}-help" />
+        <input {{ field.attributes(f, describedby=f.id ~ "-help") }} class="cpd-text-control" type="text" value="@{{ imported_localpart }}:{{ branding.server_name }}" readonly />
 
         <div class="cpd-form-message cpd-form-help-message" id="{{ f.id }}-help">
           {{- _("mas.upstream_oauth2.register.enforced_by_policy") -}}
@@ -99,7 +100,8 @@ Please see LICENSE files in the repository root for full details.
       {% endcall %}
     {% else %}
       {% call(f) field.field(label=_("common.username"), name="username", form_state=form_state) %}
-        <input {{ field.attributes(f) }} class="cpd-text-control" type="text" autocomplete="username" autocorrect="off" autocapitalize="none" value="{{ imported_localpart or '' }}" aria-describedby="{{ f.id }}-help" data-choose-username />
+        {% set username_describedby = (f.id ~ "-help") if f.errors is empty else "" %}
+        <input {{ field.attributes(f, describedby=username_describedby) }} class="cpd-text-control" type="text" autocomplete="username" autocorrect="off" autocapitalize="none" value="{{ imported_localpart or '' }}" data-choose-username />
         {{ field.error(error={"kind": "policy", "code": "username-invalid-chars"}, hidden=true) }}
 
         {% if f.errors is empty %}
@@ -113,7 +115,7 @@ Please see LICENSE files in the repository root for full details.
     {% if imported_email %}
       <div class="flex gap-6 items-center">
         {% call(f) field.field(label=_("common.email_address"), name="email", class="flex-1") %}
-          <input {{ field.attributes(f) }} class="cpd-text-control" type="email" value="{{ imported_email }}" readonly aria-describedby="{{ f.id }}-help" />
+          <input {{ field.attributes(f, describedby=f.id ~ "-help") }} class="cpd-text-control" type="email" value="{{ imported_email }}" readonly />
 
           <div class="cpd-form-message cpd-form-help-message" id="{{ f.id }}-help">
             {% if upstream_oauth_provider.human_name %}
