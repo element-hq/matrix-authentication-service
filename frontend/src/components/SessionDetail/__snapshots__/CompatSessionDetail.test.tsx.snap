@@ -29,7 +29,6 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
       >
         element.io: Unknown device
         <button
-          aria-controls="radix-_r_0_"
           aria-expanded="false"
           aria-haspopup="dialog"
           aria-labelledby="_r_3_"
@@ -154,7 +153,7 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
           Scopes
         </h5>
         <ul
-          class="_visual-list_1mgc1_8 mt-1"
+          class="_visual-list_6zpfn_8 mt-1"
         >
           <li
             class="_visual-list-item_1nc1y_8"
@@ -268,10 +267,9 @@ exports[`<CompatSessionDetail> > renders a compatability session details 1`] = `
       </ul>
     </section>
     <button
-      aria-controls="radix-_r_8_"
       aria-expanded="false"
       aria-haspopup="dialog"
-      class="_button_13vu4_8 _has-icon_13vu4_60 _destructive_13vu4_110"
+      class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
       data-kind="secondary"
       data-size="lg"
       data-state="closed"
@@ -326,7 +324,6 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
       >
         abcd1234: Unknown device
         <button
-          aria-controls="radix-_r_c_"
           aria-expanded="false"
           aria-haspopup="dialog"
           aria-labelledby="_r_f_"
@@ -451,7 +448,7 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
           Scopes
         </h5>
         <ul
-          class="_visual-list_1mgc1_8 mt-1"
+          class="_visual-list_6zpfn_8 mt-1"
         >
           <li
             class="_visual-list-item_1nc1y_8"
@@ -551,10 +548,9 @@ exports[`<CompatSessionDetail> > renders a compatability session without an ssoL
       </ul>
     </section>
     <button
-      aria-controls="radix-_r_k_"
       aria-expanded="false"
       aria-haspopup="dialog"
-      class="_button_13vu4_8 _has-icon_13vu4_60 _destructive_13vu4_110"
+      class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
       data-kind="secondary"
       data-size="lg"
       data-state="closed"
@@ -609,7 +605,6 @@ exports[`<CompatSessionDetail> > renders a finished compatability session detail
       >
         element.io: Unknown device
         <button
-          aria-controls="radix-_r_o_"
           aria-expanded="false"
           aria-haspopup="dialog"
           aria-labelledby="_r_r_"
@@ -752,7 +747,7 @@ exports[`<CompatSessionDetail> > renders a finished compatability session detail
           Scopes
         </h5>
         <ul
-          class="_visual-list_1mgc1_8 mt-1"
+          class="_visual-list_6zpfn_8 mt-1"
         >
           <li
             class="_visual-list-item_1nc1y_8"

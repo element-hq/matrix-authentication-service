@@ -3,7 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-import { type ErrorComponentProps, Outlet } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  type ErrorComponentProps,
+  Outlet,
+} from "@tanstack/react-router";
 import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import { Button, Text } from "@vector-im/compound-web";
 import { useTranslation } from "react-i18next";
@@ -15,7 +19,7 @@ const searchSchema = v.object({
   deepLink: v.optional(v.boolean()),
 });
 
-export const Route = createFileRoute({
+export const Route = createFileRoute("/reset-cross-signing")({
   validateSearch: searchSchema,
   component: () => (
     <Layout>

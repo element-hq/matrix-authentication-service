@@ -82,7 +82,7 @@ impl HomeserverConnection for SynapseConnection {
     )]
     async fn query_user(&self, localpart: &str) -> Result<MatrixUser, anyhow::Error> {
         #[derive(Deserialize)]
-        #[allow(dead_code)]
+        #[expect(dead_code)]
         struct Response {
             user_id: String,
             display_name: Option<String>,
@@ -141,6 +141,8 @@ impl HomeserverConnection for SynapseConnection {
             set_emails: Option<Vec<String>>,
             #[serde(skip_serializing_if = "std::ops::Not::not")]
             unset_emails: bool,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            locked: Option<bool>,
         }
 
         let mut body = Request {
@@ -151,6 +153,7 @@ impl HomeserverConnection for SynapseConnection {
             unset_avatar_url: false,
             set_emails: None,
             unset_emails: false,
+            locked: Some(request.locked()),
         };
 
         request.on_displayname(|displayname| match displayname {

@@ -9,11 +9,13 @@
 //! repositories
 
 use async_trait::async_trait;
-use mas_data_model::{Clock, User};
+use mas_data_model::{Clock, UlidExt as _, User};
 use mas_storage::user::{UserFilter, UserRepository};
 use rand::RngCore;
-use sea_query::{Expr, PostgresQueryBuilder, Query, extension::postgres::PgExpr as _};
-use sea_query_binder::SqlxBinder;
+use sea_query::{
+    Expr, ExprTrait, PostgresQueryBuilder, Query, SimpleExpr, extension::postgres::PgExpr as _,
+};
+use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
@@ -21,7 +23,7 @@ use uuid::Uuid;
 use crate::{
     DatabaseError,
     filter::{Filter, StatementExt},
-    iden::Users,
+    iden::{CompatSessions, OAuth2Sessions, Users},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
 };
@@ -132,6 +134,64 @@ impl Filter for UserFilter<'_> {
             .add_option(self.search().map(|search| {
                 Expr::col((Users::Table, Users::Username)).ilike(format!("%{search}%"))
             }))
+            .add_option(self.active_oauth2_session_for_any_of_clients().map(
+                |clients| -> SimpleExpr {
+                    let client_ids: Vec<SimpleExpr> =
+                        clients.iter().map(|c| Expr::val(Uuid::from(*c))).collect();
+                    Expr::exists(
+                        Query::select()
+                            .expr(Expr::cust("1"))
+                            .from(OAuth2Sessions::Table)
+                            .and_where(
+                                Expr::col((OAuth2Sessions::Table, OAuth2Sessions::UserId))
+                                    .equals((Users::Table, Users::UserId)),
+                            )
+                            .and_where(
+                                Expr::col((OAuth2Sessions::Table, OAuth2Sessions::FinishedAt))
+                                    .is_null(),
+                            )
+                            .and_where(
+                                Expr::col((OAuth2Sessions::Table, OAuth2Sessions::OAuth2ClientId))
+                                    .is_in(client_ids),
+                            )
+                            .take(),
+                    )
+                },
+            ))
+            .add_option(self.has_active_oauth2_session().map(|has| -> SimpleExpr {
+                let exists = Expr::exists(
+                    Query::select()
+                        .expr(Expr::cust("1"))
+                        .from(OAuth2Sessions::Table)
+                        .and_where(
+                            Expr::col((OAuth2Sessions::Table, OAuth2Sessions::UserId))
+                                .equals((Users::Table, Users::UserId)),
+                        )
+                        .and_where(
+                            Expr::col((OAuth2Sessions::Table, OAuth2Sessions::FinishedAt))
+                                .is_null(),
+                        )
+                        .take(),
+                );
+                if has { exists } else { exists.not() }
+            }))
+            .add_option(self.has_active_compat_session().map(|has| -> SimpleExpr {
+                let exists = Expr::exists(
+                    Query::select()
+                        .expr(Expr::cust("1"))
+                        .from(CompatSessions::Table)
+                        .and_where(
+                            Expr::col((CompatSessions::Table, CompatSessions::UserId))
+                                .equals((Users::Table, Users::UserId)),
+                        )
+                        .and_where(
+                            Expr::col((CompatSessions::Table, CompatSessions::FinishedAt))
+                                .is_null(),
+                        )
+                        .take(),
+                );
+                if has { exists } else { exists.not() }
+            }))
     }
 }
 
@@ -240,7 +300,7 @@ impl UserRepository for PgUserRepository<'_> {
         username: String,
     ) -> Result<User, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("user.id", tracing::field::display(id));
 
         let res = sqlx::query!(

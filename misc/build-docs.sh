@@ -28,6 +28,9 @@ if [ "${CF_PAGES:-""}" = "1" ]; then
   # Install mdbook
   MDBOOK_URL="https://github.com/rust-lang/mdBook/releases/download/v${MDBOOK_VERSION}/mdbook-v${MDBOOK_VERSION}-$(uname -m)-unknown-linux-gnu.tar.gz"
   curl --proto '=https' --tlsv1.2 -sSfL "${MDBOOK_URL}" | tar -C "$HOME/.cargo/bin" -xzv
+
+  # Enable pnpm via corepack (Node and corepack are pre-installed on Cloudflare Pages)
+  corepack enable
 fi
 
 # Sanity check
@@ -35,7 +38,7 @@ rustdoc --version
 rustc --version
 cargo --version
 mdbook --version
-npx --version
+pnpm --version
 
 # Build the docs
 mdbook build
@@ -52,7 +55,5 @@ rm -rf target/book/rustdoc
 mv target/doc target/book/rustdoc
 
 # Build the frontend storybook
-cd frontend
-npm ci
-npx storybook build -o ../target/book/storybook
-cd ..
+pnpm install --frozen-lockfile
+pnpm --filter mas-frontend exec storybook build -o ../target/book/storybook

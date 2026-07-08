@@ -33,10 +33,25 @@ jobs:
         run: exit 1
 
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v6
+        with:
+          persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        # Only the minimal profile is required here to run `cargo`
+        run: rustup toolchain install stable --profile minimal
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6.0.9
+
+      - name: Install Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Extract the current version
         id: current
@@ -47,7 +62,7 @@ jobs:
         env:
           BUMP: ${{ inputs.rc && 'prerelease' || 'patch' }}
           VERSION: ${{ steps.current.outputs.version }}
-        run: echo "version=$(npx --yes semver@7.5.4 -i "$BUMP" --preid rc "$VERSION")" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(pnpm exec semver -i "$BUMP" --preid rc "$VERSION")" >> "$GITHUB_OUTPUT"
 
   tag:
     uses: ./.github/workflows/tag.yaml
@@ -76,13 +91,14 @@ jobs:
     needs: [tag, compute-version]
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v6
         with:
           sparse-checkout: |
             .github/scripts
+          persist-credentials: false
 
       - name: Update the release branch
-        uses: actions/github-script@v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           BRANCH: "${{ github.ref_name }}"
           SHA: ${{ needs.tag.outputs.sha }}

@@ -37,7 +37,6 @@ describe("Account home page", () => {
           return HttpResponse.json({
             data: {
               setDisplayName: {
-                __typename: "SetDisplayNamePayload",
                 status: "SET",
               },
             },
@@ -105,7 +104,6 @@ describe("Account home page", () => {
           HttpResponse.json({
             data: {
               setDisplayName: {
-                __typename: "SetDisplayNamePayload",
                 status: "INVALID",
               },
             },

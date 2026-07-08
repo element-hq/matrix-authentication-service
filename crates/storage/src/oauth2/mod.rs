@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -16,7 +17,7 @@ mod session;
 pub use self::{
     access_token::OAuth2AccessTokenRepository,
     authorization_grant::OAuth2AuthorizationGrantRepository,
-    client::OAuth2ClientRepository,
+    client::{OAuth2ClientFilter, OAuth2ClientKind, OAuth2ClientRepository},
     device_code_grant::{OAuth2DeviceCodeGrantParams, OAuth2DeviceCodeGrantRepository},
     refresh_token::OAuth2RefreshTokenRepository,
     session::{OAuth2SessionFilter, OAuth2SessionRepository},

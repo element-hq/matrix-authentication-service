@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -9,7 +10,7 @@ use mas_storage::RepositoryAccess;
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
 
-use crate::cookies::CookieJar;
+use crate::{cookies::CookieJar, log_context::RecordAsRequester};
 
 /// An encrypted cookie to save the session ID
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
@@ -52,6 +53,10 @@ impl SessionInfo {
             .await?
             // Ensure that the session is still active
             .filter(BrowserSession::active);
+
+        if let Some(session) = &maybe_session {
+            session.maybe_record_as_requester();
+        }
 
         Ok(maybe_session)
     }

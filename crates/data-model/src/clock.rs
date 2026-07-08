@@ -41,7 +41,7 @@ pub struct SystemClock {
 impl Clock for SystemClock {
     fn now(&self) -> DateTime<Utc> {
         // This is the clock used elsewhere, it's fine to call Utc::now here
-        #[allow(clippy::disallowed_methods)]
+        #[expect(clippy::disallowed_methods)]
         Utc::now()
     }
 }

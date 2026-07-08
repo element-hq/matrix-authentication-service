@@ -12,7 +12,7 @@ import styles from "./ButtonLink.module.css";
 
 type Props = {
   kind?: "primary" | "secondary" | "tertiary";
-  size?: "sm" | "lg";
+  size?: "md" | "lg";
   Icon?: React.ComponentType<React.SVGAttributes<SVGElement>>;
   destructive?: boolean;
   disabled?: boolean;

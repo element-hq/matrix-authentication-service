@@ -23,6 +23,7 @@ describe("<OAuth2SessionDetail>", () => {
     lastActiveAt: "2023-07-29T03:35:17.451292+00:00",
     lastActiveIp: "1.2.3.4",
     userAgent: null,
+    humanName: null,
     client: {
       id: "test-id",
       clientId: "test-client-id",

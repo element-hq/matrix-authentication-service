@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -5,12 +6,18 @@
 // Please see LICENSE files in the repository root for full details.
 
 use axum::{
+    Form,
     extract::State,
-    response::{Html, IntoResponse},
+    response::{Html, IntoResponse, Response},
 };
 use axum_extra::extract::Query;
-use mas_axum_utils::{InternalError, cookies::CookieJar};
-use mas_data_model::BoxClock;
+use mas_axum_utils::{
+    InternalError,
+    cookies::CookieJar,
+    csrf::{CsrfExt, ProtectedForm},
+};
+use mas_data_model::{BoxClock, BoxRng};
+use mas_i18n::DataLocale;
 use mas_router::UrlBuilder;
 use mas_storage::BoxRepository;
 use mas_templates::{
@@ -18,7 +25,7 @@ use mas_templates::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::PreferredLanguage;
+use crate::{PreferredLanguage, SiteConfig};
 
 #[derive(Serialize, Deserialize)]
 pub struct Params {
@@ -28,19 +35,87 @@ pub struct Params {
 
 #[tracing::instrument(name = "handlers.oauth2.device.link.get", skip_all)]
 pub(crate) async fn get(
+    mut rng: BoxRng,
     clock: BoxClock,
-    mut repo: BoxRepository,
+    repo: BoxRepository,
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
+    State(site_config): State<SiteConfig>,
     cookie_jar: CookieJar,
-    Query(query): Query<Params>,
-) -> Result<impl IntoResponse, InternalError> {
-    let mut form_state = FormState::from_form(&query);
+    Query(mut query): Query<Params>,
+) -> Result<Response, InternalError> {
+    if !site_config.device_code_grant_enabled {
+        return Err(InternalError::from_anyhow(anyhow::anyhow!(
+            "The Device Authorization Grant is disabled"
+        )));
+    }
+    // When the auto-fill flow is disabled, ignore the `code` query parameter
+    // entirely — users must type their user code into the form.
+    if !site_config.device_code_user_code_auto_fill_enabled {
+        query.code = None;
+    }
 
-    // If we have a code in query, find it in the database
-    if let Some(code) = &query.code {
-        // Find the code in the database
+    handle_code(
+        &mut rng,
+        &clock,
+        repo,
+        &locale,
+        &templates,
+        &url_builder,
+        cookie_jar,
+        query,
+    )
+    .await
+}
+
+#[tracing::instrument(name = "handlers.oauth2.device.link.post", skip_all)]
+pub(crate) async fn post(
+    mut rng: BoxRng,
+    clock: BoxClock,
+    repo: BoxRepository,
+    PreferredLanguage(locale): PreferredLanguage,
+    State(templates): State<Templates>,
+    State(url_builder): State<UrlBuilder>,
+    State(site_config): State<SiteConfig>,
+    cookie_jar: CookieJar,
+    Form(form): Form<ProtectedForm<Params>>,
+) -> Result<Response, InternalError> {
+    if !site_config.device_code_grant_enabled {
+        return Err(InternalError::from_anyhow(anyhow::anyhow!(
+            "The Device Authorization Grant is disabled"
+        )));
+    }
+
+    let form = cookie_jar.verify_form(&clock, form)?;
+
+    handle_code(
+        &mut rng,
+        &clock,
+        repo,
+        &locale,
+        &templates,
+        &url_builder,
+        cookie_jar,
+        form,
+    )
+    .await
+}
+
+async fn handle_code(
+    rng: &mut BoxRng,
+    clock: &BoxClock,
+    mut repo: BoxRepository,
+    locale: &DataLocale,
+    templates: &Templates,
+    url_builder: &UrlBuilder,
+    cookie_jar: CookieJar,
+    params: Params,
+) -> Result<Response, InternalError> {
+    let mut form_state = FormState::from_form(&params);
+
+    // If we have a code, find it in the database
+    if let Some(code) = &params.code {
         let code = code.to_uppercase();
         let grant = repo
             .oauth2_device_code_grant()
@@ -62,10 +137,13 @@ pub(crate) async fn get(
         form_state = form_state.with_error_on_field(DeviceLinkFormField::Code, FieldError::Invalid);
     }
 
-    // Rendre the form
+    let (csrf_token, cookie_jar) = cookie_jar.csrf_token(clock, rng);
+
+    // Render the form
     let ctx = DeviceLinkContext::new()
         .with_form_state(form_state)
-        .with_language(locale);
+        .with_csrf(csrf_token.form_value())
+        .with_language(*locale);
 
     let content = templates.render_device_link(&ctx)?;
 

@@ -167,7 +167,6 @@ pub enum JwtVerificationError {
 }
 
 impl JwtVerificationError {
-    #[allow(clippy::needless_pass_by_value)]
     fn parse_signature<E>(_inner: E) -> Self {
         Self::ParseSignature
     }
@@ -325,7 +324,7 @@ impl<T> Jwt<'static, T> {
         S: SignatureEncoding,
         T: Serialize,
     {
-        #[allow(clippy::disallowed_methods)]
+        #[expect(clippy::disallowed_methods)]
         Self::sign_with_rng(&mut thread_rng(), header, payload, key)
     }
 

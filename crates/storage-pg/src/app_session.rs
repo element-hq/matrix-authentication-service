@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -21,7 +22,7 @@ use opentelemetry_semantic_conventions::trace::DB_QUERY_TEXT;
 use sea_query::{
     Alias, ColumnRef, CommonTableExpression, Expr, PostgresQueryBuilder, Query, UnionType,
 };
-use sea_query_binder::SqlxBinder;
+use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
 use tracing::Instrument;
 use ulid::Ulid;
@@ -259,6 +260,16 @@ fn split_filter(
         oauth2_filter = oauth2_filter.with_last_active_after(last_active_after);
     }
 
+    if let Some(created_before) = filter.created_before() {
+        compat_filter = compat_filter.with_created_before(created_before);
+        oauth2_filter = oauth2_filter.with_created_before(created_before);
+    }
+
+    if let Some(created_after) = filter.created_after() {
+        compat_filter = compat_filter.with_created_after(created_after);
+        oauth2_filter = oauth2_filter.with_created_after(created_after);
+    }
+
     (compat_filter, oauth2_filter)
 }
 
@@ -405,7 +416,7 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
         let with_clause = Query::with().cte(common_table_expression).clone();
 
         let select = Query::select()
-            .column(ColumnRef::Asterisk)
+            .column(ColumnRef::Asterisk(None))
             .from(Alias::new("sessions"))
             .generate_pagination(AppSessionLookupIden::Cursor, pagination)
             .clone();
@@ -545,7 +556,7 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
 #[cfg(test)]
 mod tests {
     use chrono::Duration;
-    use mas_data_model::{Device, clock::MockClock};
+    use mas_data_model::{Clock, Device, clock::MockClock};
     use mas_storage::{
         Pagination, RepositoryAccess,
         app_session::{AppSession, AppSessionFilter},
@@ -782,5 +793,89 @@ mod tests {
         assert_eq!(repo.app_session().count(filter).await.unwrap(), 0);
         let list = repo.app_session().list(filter, pagination).await.unwrap();
         assert!(list.edges.is_empty());
+    }
+
+    /// Test the created-at filters on [`AppSessionFilter`]: they should apply
+    /// to both the compat and the `OAuth2` branches of the union.
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_list_app_sessions_by_created_at(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap();
+
+        let user = repo
+            .user()
+            .add(&mut rng, &clock, "alice".to_owned())
+            .await
+            .unwrap();
+
+        // Create a compat session
+        let device = Device::generate(&mut rng);
+        let compat_session = repo
+            .compat_session()
+            .add(&mut rng, &clock, &user, device, None, false, None)
+            .await
+            .unwrap();
+        clock.advance(Duration::try_minutes(1).unwrap());
+
+        // Capture a cutoff that sits between the compat session and the
+        // OAuth2 one
+        let cutoff = clock.now();
+        clock.advance(Duration::try_minutes(1).unwrap());
+
+        // Create an OAuth2 session for the same user
+        let client = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &clock,
+                vec!["https://example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::AuthorizationCode],
+                Some("Test client".to_owned()),
+                Some("https://example.com/logo.png".parse().unwrap()),
+                Some("https://example.com/".parse().unwrap()),
+                Some("https://example.com/policy".parse().unwrap()),
+                Some("https://example.com/tos".parse().unwrap()),
+                Some("https://example.com/jwks.json".parse().unwrap()),
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some("https://example.com/login".parse().unwrap()),
+            )
+            .await
+            .unwrap();
+        let scope: Scope = [OPENID].into_iter().collect();
+        let oauth_session = repo
+            .oauth2_session()
+            .add(&mut rng, &clock, &client, Some(&user), None, scope)
+            .await
+            .unwrap();
+
+        let pagination = Pagination::first(10);
+
+        // Sessions created before the cutoff: only the compat one
+        let filter = AppSessionFilter::new().with_created_before(cutoff);
+        let list = repo.app_session().list(filter, pagination).await.unwrap();
+        assert_eq!(list.edges.len(), 1);
+        assert_eq!(
+            list.edges[0].node,
+            AppSession::Compat(Box::new(compat_session.clone()))
+        );
+        assert_eq!(repo.app_session().count(filter).await.unwrap(), 1);
+
+        // Sessions created after the cutoff: only the OAuth2 one
+        let filter = AppSessionFilter::new().with_created_after(cutoff);
+        let list = repo.app_session().list(filter, pagination).await.unwrap();
+        assert_eq!(list.edges.len(), 1);
+        assert_eq!(
+            list.edges[0].node,
+            AppSession::OAuth2(Box::new(oauth_session.clone()))
+        );
+        assert_eq!(repo.app_session().count(filter).await.unwrap(), 1);
     }
 }

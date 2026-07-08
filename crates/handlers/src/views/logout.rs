@@ -9,7 +9,7 @@ use axum::{
     response::IntoResponse,
 };
 use mas_axum_utils::{
-    InternalError, SessionInfoExt,
+    InternalError, RecordAsRequester, SessionInfoExt,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
@@ -37,6 +37,10 @@ pub(crate) async fn post(
         if let Some(session) = maybe_session
             && session.finished_at.is_none()
         {
+            // Attribute this request (and its log line) to the user being
+            // logged out.
+            session.maybe_record_as_requester();
+
             activity_tracker
                 .record_browser_session(&clock, &session)
                 .await;

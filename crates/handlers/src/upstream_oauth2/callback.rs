@@ -170,7 +170,7 @@ impl IntoResponse for RouteError {
     fields(upstream_oauth_provider.id = %provider_id),
     skip_all,
 )]
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 pub(crate) async fn handler(
     mut rng: BoxRng,
     clock: BoxClock,

@@ -100,7 +100,7 @@ impl BrowserSession {
 
     /// Get the list of both compat and OAuth 2.0 sessions started by this
     /// browser session, chronologically sorted
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments)]
     async fn app_sessions(
         &self,
         ctx: &Context<'_>,

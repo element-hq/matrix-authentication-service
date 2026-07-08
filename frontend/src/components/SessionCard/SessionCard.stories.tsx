@@ -35,7 +35,7 @@ const Template: React.FC<{
       </Card.Body>
       {!disabled && (
         <Card.Action>
-          <Button kind="secondary" destructive size="sm" Icon={IconSignOut}>
+          <Button kind="secondary" destructive size="md" Icon={IconSignOut}>
             {t("frontend.end_session_button.text")}
           </Button>
         </Card.Action>

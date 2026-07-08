@@ -12,7 +12,7 @@
       "additionalProperties": true
     },
     "session_counts": {
-      "description": "How many sessions the user has.\n Not populated if it's not a user logging in.",
+      "description": "How many sessions the user has.\nNot populated if it's not a user logging in.",
       "anyOf": [
         {
           "$ref": "#/definitions/SessionCounts"

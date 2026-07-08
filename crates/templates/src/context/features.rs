@@ -12,7 +12,7 @@ use minijinja::{
 };
 
 /// Site features information.
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SiteFeatures {
     /// Whether local password-based registration is enabled.

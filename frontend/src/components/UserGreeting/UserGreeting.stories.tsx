@@ -12,7 +12,7 @@ import UserGreeting, { CONFIG_FRAGMENT, FRAGMENT } from "./UserGreeting";
 const queryClient = new QueryClient();
 
 const Template: React.FC<{
-  displayName?: string;
+  displayName: string | null;
   mxid: string;
   displayNameChangeAllowed: boolean;
 }> = ({ displayName, mxid, displayNameChangeAllowed }) => {

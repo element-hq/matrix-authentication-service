@@ -157,6 +157,9 @@ violation contains {"msg": sprintf(
 violation contains {
 	"code": "too-many-sessions",
 	"msg": "user has too many active sessions",
+	# `+ 1` because when you're at 2 sessions, and the limit is 2, you have to make room
+	# for the new session
+	"need_to_remove": (input.session_counts.total - data.session_limit.soft_limit) + 1,
 } if {
 	# Only apply if session limits are enabled in the config
 	data.session_limit != null
@@ -164,9 +167,32 @@ violation contains {
 	# Only apply if it's a user logging in (who therefore has countable sessions)
 	input.session_counts != null
 
+	# Only apply limits to accounts under the threshold (if configured)
+	passes_session_threshold
+
 	# For OAuth 2 login, a violation occurs when the soft limit has already been
 	# reached or exceeded.
 	# We use the soft limit because the user will be able to interactively remove
 	# sessions to return under the limit.
 	data.session_limit.soft_limit <= input.session_counts.total
+}
+
+# The session limits only apply to accounts within the `max_session_threshold`.
+#
+# True if the `max_session_threshold` isn't configured or <= `max_session_threshold`.
+passes_session_threshold if {
+	# If no `session_limit` configured, automatically passes (undefined)
+	not data.session_limit
+} else if {
+	# If no `session_limit` configured, automatically passes (null)
+	data.session_limit == null
+} else if {
+	# If no `max_session_threshold` configured, automatically passes (undefined)
+	not data.session_limit.max_session_threshold
+} else if {
+	# If no `max_session_threshold` configured, automatically passes (null)
+	data.session_limit.max_session_threshold == null
+} else if {
+	# Otherwise, check whether the total number of sessions is under the threshold
+	input.session_counts.total <= data.session_limit.max_session_threshold
 }

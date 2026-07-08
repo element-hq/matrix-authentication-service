@@ -123,6 +123,8 @@ pub trait OAuth2DeviceCodeGrantRepository: Send + Sync {
     /// * `device_code_grant`: The device code grant to fulfill
     /// * `browser_session`: The browser session which was used to fulfill the
     ///   device code grant
+    /// * `locale`: The locale detected from the browser which fulfilled the
+    ///   grant, used later to render a human-readable device name
     ///
     /// # Errors
     ///
@@ -135,6 +137,7 @@ pub trait OAuth2DeviceCodeGrantRepository: Send + Sync {
         clock: &dyn Clock,
         device_code_grant: DeviceCodeGrant,
         browser_session: &BrowserSession,
+        locale: Option<String>,
     ) -> Result<DeviceCodeGrant, Self::Error>;
 
     /// Mark the device code grant as rejected with the given browser session
@@ -235,6 +238,7 @@ repository_impl!(OAuth2DeviceCodeGrantRepository:
         clock: &dyn Clock,
         device_code_grant: DeviceCodeGrant,
         browser_session: &BrowserSession,
+        locale: Option<String>,
     ) -> Result<DeviceCodeGrant, Self::Error>;
 
     async fn reject(

@@ -133,6 +133,26 @@ impl CallbackDestination {
                 let new_qs = serde_urlencoded::to_string(merged)?;
 
                 redirect_uri.set_query(Some(&new_qs));
+                if redirect_uri.fragment().is_none() {
+                    // Ensure that the Location header (redirect target)
+                    // includes a URL fragment (#) of some sort.
+                    //
+                    // Any fragment present in the Location header URL that the server redirects to
+                    // (e.g., via a 303 response) will overwrite the client’s existing fragment,
+                    // otherwise the fragment will be preserved across the
+                    // redirect (and may contain sensitive information,
+                    // or confuse the downstream client).
+                    //
+                    // If the redirect_uri already contains a fragment, that fragment will do the
+                    // same job, so we leave it alone — we don't want to mangle the client's
+                    // configured redirect URL by replacing it with a blank fragment.
+                    // Otherwise, set a fragment of empty string (effectively appending `#` to the
+                    // URL).
+                    //
+                    // Browser behaviour is documented as part of the 'location URL' algorithm at
+                    // https://fetch.spec.whatwg.org/commit-snapshots/809904366f33a673a9489b81155ee9e3edd29c12#concept-response-location-url
+                    redirect_uri.set_fragment(Some(""));
+                }
 
                 Ok(Redirect::to(redirect_uri.as_str()).into_response())
             }
@@ -162,5 +182,70 @@ impl CallbackDestination {
                 Ok(Html(rendered).into_response())
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use hyper::{Request, StatusCode};
+    use mas_router::SimpleRoute;
+    use oauth2_types::registration::ClientRegistrationResponse;
+    use sqlx::PgPool;
+
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
+
+    /// Test that checks the content of the `Location` header
+    /// in response to an authorization request.
+    ///
+    /// Specifically, we expect to see an empty fragment (`#`)
+    /// at the end of the URL in order to overwrite any fragment
+    /// that the browser might otherwise preserve across the redirect.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_query_mode_location_header(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        // Register an OAuth2 client
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://example.com/",
+                "redirect_uris": ["https://example.com/callback"],
+                "token_endpoint_auth_method": "none",
+                "response_types": ["code"],
+                "grant_types": ["authorization_code"],
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+
+        let registration: ClientRegistrationResponse = response.json();
+        let client_id = registration.client_id;
+
+        // Send an authorization request with response_mode=query and prompt=none.
+        // prompt=none always fails with login_required since there is no session,
+        // which exercises the CallbackDestinationMode::Query path.
+
+        // Build /authorize query parameters
+        let query = url::form_urlencoded::Serializer::new(String::new())
+            .append_pair("response_type", "code")
+            .append_pair("client_id", &client_id)
+            .append_pair("redirect_uri", "https://example.com/callback")
+            .append_pair("scope", "openid")
+            .append_pair("state", "test-state-value")
+            .append_pair("response_mode", "query")
+            .append_pair("prompt", "none")
+            .finish();
+
+        let response = state
+            .request(Request::get(format!("https://example.com/authorize?{query}")).empty())
+            .await;
+
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        // Check the form of the Location redirect
+        response.assert_header_value(
+            hyper::header::LOCATION,
+            "https://example.com/callback?state=test-state-value&error=login_required&error_description=The+Authorization+Server+requires+End-User+authentication.#",
+        );
     }
 }

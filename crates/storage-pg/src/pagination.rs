@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -7,7 +8,7 @@
 //! Utilities to manage paginated queries.
 
 use mas_storage::{Pagination, pagination::PaginationDirection};
-use sea_query::IntoColumnRef;
+use sea_query::{ExprTrait, IntoColumnRef};
 use uuid::Uuid;
 
 /// An extension trait to the `sqlx` [`QueryBuilder`], to help adding pagination

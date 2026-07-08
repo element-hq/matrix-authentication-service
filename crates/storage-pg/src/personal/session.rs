@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -8,7 +9,7 @@ use std::net::IpAddr;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    Clock, User,
+    Clock, UlidExt as _, User,
     personal::{
         PersonalAccessToken,
         session::{PersonalSession, PersonalSessionOwner, SessionState},
@@ -23,10 +24,10 @@ use oauth2_types::scope::Scope;
 use opentelemetry_semantic_conventions::trace::DB_QUERY_TEXT;
 use rand::RngCore;
 use sea_query::{
-    Cond, Condition, Expr, PgFunc, PostgresQueryBuilder, Query, SimpleExpr, enum_def,
+    Cond, Condition, Expr, ExprTrait, PgFunc, PostgresQueryBuilder, Query, SimpleExpr, enum_def,
     extension::postgres::PgExpr as _,
 };
-use sea_query_binder::SqlxBinder as _;
+use sea_query_sqlx::SqlxBinder as _;
 use sqlx::PgConnection;
 use tracing::{Instrument as _, info_span};
 use ulid::Ulid;
@@ -250,7 +251,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
         scope: Scope,
     ) -> Result<PersonalSession, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("session.id", tracing::field::display(id));
 
         let scope_list: Vec<String> = scope.iter().map(|s| s.as_str().to_owned()).collect();
@@ -657,7 +658,7 @@ impl Filter for PersonalSessionFilter<'_> {
                         .into()
                 } else {
                     // If the device ID can't be encoded as a scope token, match no rows
-                    Expr::val(false).into()
+                    Expr::val(false)
                 }
             }))
             .add_option(self.state().map(|state| match state {

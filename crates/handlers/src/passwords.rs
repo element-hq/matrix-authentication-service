@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -303,8 +304,8 @@ impl Hasher {
     fn normalize_password(&self, password: Zeroizing<String>) -> Zeroizing<String> {
         if self.unicode_normalization {
             // This is the normalization method used by Synapse
-            let normalizer = icu_normalizer::ComposingNormalizer::new_nfkc();
-            Zeroizing::new(normalizer.normalize(&password))
+            let normalizer = icu_normalizer::ComposingNormalizerBorrowed::new_nfkc();
+            Zeroizing::new(normalizer.normalize(&password).into_owned())
         } else {
             password
         }

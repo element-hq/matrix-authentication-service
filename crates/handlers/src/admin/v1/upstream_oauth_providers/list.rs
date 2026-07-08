@@ -191,6 +191,7 @@ mod tests {
             forward_login_hint: false,
             on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
             ui_order: 0,
+            registration_token_required: false,
         };
 
         repo.upstream_oauth_provider()
@@ -223,6 +224,7 @@ mod tests {
             forward_login_hint: false,
             on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
             ui_order: 1,
+            registration_token_required: false,
         };
 
         let disabled_provider = repo
@@ -262,6 +264,7 @@ mod tests {
             forward_login_hint: false,
             on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
             ui_order: 2,
+            registration_token_required: false,
         };
 
         repo.upstream_oauth_provider()
@@ -304,7 +307,8 @@ mod tests {
                 "human_name": "Apple ID",
                 "brand_name": "apple",
                 "created_at": "2022-01-16T14:40:00Z",
-                "disabled_at": "2022-01-16T14:40:00Z"
+                "disabled_at": "2022-01-16T14:40:00Z",
+                "registration_token_required": false
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG07HNEZXNQM2KNBNF6"
@@ -323,7 +327,8 @@ mod tests {
                 "human_name": "Microsoft",
                 "brand_name": "microsoft",
                 "created_at": "2022-01-16T14:40:00Z",
-                "disabled_at": null
+                "disabled_at": null,
+                "registration_token_required": false
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG09AVTNSQFMSR34AJC"
@@ -342,7 +347,8 @@ mod tests {
                 "human_name": "Google",
                 "brand_name": "google",
                 "created_at": "2022-01-16T14:40:00Z",
-                "disabled_at": null
+                "disabled_at": null,
+                "registration_token_required": false
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -392,7 +398,8 @@ mod tests {
                 "human_name": "Microsoft",
                 "brand_name": "microsoft",
                 "created_at": "2022-01-16T14:40:00Z",
-                "disabled_at": null
+                "disabled_at": null,
+                "registration_token_required": false
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG09AVTNSQFMSR34AJC"
@@ -411,7 +418,8 @@ mod tests {
                 "human_name": "Google",
                 "brand_name": "google",
                 "created_at": "2022-01-16T14:40:00Z",
-                "disabled_at": null
+                "disabled_at": null,
+                "registration_token_required": false
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -461,7 +469,8 @@ mod tests {
                 "human_name": "Apple ID",
                 "brand_name": "apple",
                 "created_at": "2022-01-16T14:40:00Z",
-                "disabled_at": "2022-01-16T14:40:00Z"
+                "disabled_at": "2022-01-16T14:40:00Z",
+                "registration_token_required": false
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG07HNEZXNQM2KNBNF6"
@@ -512,7 +521,8 @@ mod tests {
                 "human_name": "Apple ID",
                 "brand_name": "apple",
                 "created_at": "2022-01-16T14:40:00Z",
-                "disabled_at": "2022-01-16T14:40:00Z"
+                "disabled_at": "2022-01-16T14:40:00Z",
+                "registration_token_required": false
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG07HNEZXNQM2KNBNF6"
@@ -531,7 +541,8 @@ mod tests {
                 "human_name": "Microsoft",
                 "brand_name": "microsoft",
                 "created_at": "2022-01-16T14:40:00Z",
-                "disabled_at": null
+                "disabled_at": null,
+                "registration_token_required": false
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG09AVTNSQFMSR34AJC"
@@ -578,7 +589,8 @@ mod tests {
                 "human_name": "Google",
                 "brand_name": "google",
                 "created_at": "2022-01-16T14:40:00Z",
-                "disabled_at": null
+                "disabled_at": null,
+                "registration_token_required": false
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -640,7 +652,8 @@ mod tests {
                 "human_name": "Apple ID",
                 "brand_name": "apple",
                 "created_at": "2022-01-16T14:40:00Z",
-                "disabled_at": "2022-01-16T14:40:00Z"
+                "disabled_at": "2022-01-16T14:40:00Z",
+                "registration_token_required": false
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG07HNEZXNQM2KNBNF6"
@@ -659,7 +672,8 @@ mod tests {
                 "human_name": "Microsoft",
                 "brand_name": "microsoft",
                 "created_at": "2022-01-16T14:40:00Z",
-                "disabled_at": null
+                "disabled_at": null,
+                "registration_token_required": false
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG09AVTNSQFMSR34AJC"
@@ -678,7 +692,8 @@ mod tests {
                 "human_name": "Google",
                 "brand_name": "google",
                 "created_at": "2022-01-16T14:40:00Z",
-                "disabled_at": null
+                "disabled_at": null,
+                "registration_token_required": false
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -737,7 +752,8 @@ mod tests {
                 "human_name": "Microsoft",
                 "brand_name": "microsoft",
                 "created_at": "2022-01-16T14:40:00Z",
-                "disabled_at": null
+                "disabled_at": null,
+                "registration_token_required": false
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG09AVTNSQFMSR34AJC"
@@ -756,7 +772,8 @@ mod tests {
                 "human_name": "Google",
                 "brand_name": "google",
                 "created_at": "2022-01-16T14:40:00Z",
-                "disabled_at": null
+                "disabled_at": null,
+                "registration_token_required": false
               },
               "links": {
                 "self": "/api/admin/v1/upstream-oauth-providers/01FSHN9AG0MZAA6S4AF7CTV32E"

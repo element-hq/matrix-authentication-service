@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE compat_refresh_tokens\n                SET consumed_at = $2\n                WHERE compat_session_id = $1\n                  AND consumed_at IS NULL\n                  AND compat_refresh_token_id <> $3\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4e64540bbffe5f4b9c4a6589012cf69eb67adaa4d40fc1910dfcd2640e32ab37"
+}

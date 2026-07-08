@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 Kévin Commaille.
 //
@@ -135,30 +136,34 @@ fn pass_full_authorization_url() {
 fn is_valid_token_endpoint_request(req: &Request) -> bool {
     let body = form_urlencoded::parse(&req.body).collect::<HashMap<_, _>>();
 
-    if body.get("client_id").filter(|s| *s == CLIENT_ID).is_none() {
+    if body
+        .get("client_id")
+        .as_ref()
+        .is_none_or(|s| *s != CLIENT_ID)
+    {
         println!("Missing or wrong client ID");
         return false;
     }
     if body
         .get("grant_type")
-        .filter(|s| *s == "authorization_code")
-        .is_none()
+        .as_ref()
+        .is_none_or(|s| *s != "authorization_code")
     {
         println!("Missing or wrong grant type");
         return false;
     }
     if body
         .get("code")
-        .filter(|s| *s == AUTHORIZATION_CODE)
-        .is_none()
+        .as_ref()
+        .is_none_or(|s| *s != AUTHORIZATION_CODE)
     {
         println!("Missing or wrong authorization code");
         return false;
     }
     if body
         .get("redirect_uri")
-        .filter(|s| *s == REDIRECT_URI)
-        .is_none()
+        .as_ref()
+        .is_none_or(|s| *s != REDIRECT_URI)
     {
         println!("Missing or wrong redirect URI");
         return false;
@@ -166,8 +171,8 @@ fn is_valid_token_endpoint_request(req: &Request) -> bool {
 
     if body
         .get("code_verifier")
-        .filter(|s| *s == CODE_VERIFIER)
-        .is_none()
+        .as_ref()
+        .is_none_or(|s| *s != CODE_VERIFIER)
     {
         println!("Missing or wrong code verifier");
         return false;

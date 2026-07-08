@@ -73,7 +73,7 @@ impl<T> Localized<T> {
     }
 
     /// Returns the number of variants.
-    #[allow(clippy::len_without_is_empty)]
+    #[expect(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         self.localized.len() + 1
     }

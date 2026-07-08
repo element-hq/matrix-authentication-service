@@ -9,7 +9,9 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, Clock, DeviceCodeGrant, DeviceCodeGrantState, Session};
+use mas_data_model::{
+    BrowserSession, Clock, DeviceCodeGrant, DeviceCodeGrantState, Session, UlidExt as _,
+};
 use mas_storage::oauth2::{OAuth2DeviceCodeGrantParams, OAuth2DeviceCodeGrantRepository};
 use oauth2_types::scope::Scope;
 use rand::RngCore;
@@ -48,6 +50,7 @@ struct OAuth2DeviceGrantLookup {
     oauth2_session_id: Option<Uuid>,
     ip_address: Option<IpAddr>,
     user_agent: Option<String>,
+    locale: Option<String>,
 }
 
 impl TryFrom<OAuth2DeviceGrantLookup> for DeviceCodeGrant {
@@ -69,6 +72,7 @@ impl TryFrom<OAuth2DeviceGrantLookup> for DeviceCodeGrant {
             oauth2_session_id,
             ip_address,
             user_agent,
+            locale,
         }: OAuth2DeviceGrantLookup,
     ) -> Result<Self, Self::Error> {
         let id = Ulid::from(oauth2_device_code_grant_id);
@@ -131,6 +135,7 @@ impl TryFrom<OAuth2DeviceGrantLookup> for DeviceCodeGrant {
             expires_at,
             ip_address,
             user_agent,
+            locale,
         })
     }
 }
@@ -157,7 +162,7 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
         params: OAuth2DeviceCodeGrantParams<'_>,
     ) -> Result<DeviceCodeGrant, Self::Error> {
         let now = clock.now();
-        let id = Ulid::from_datetime_with_source(now.into(), rng);
+        let id = Ulid::from_datetime_with_rng(now, rng);
         tracing::Span::current().record("oauth2_device_code.id", tracing::field::display(id));
 
         let created_at = now;
@@ -205,6 +210,7 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
             expires_at,
             ip_address: params.ip_address,
             user_agent: params.user_agent,
+            locale: None,
         })
     }
 
@@ -235,6 +241,7 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
                      , oauth2_session_id
                      , ip_address as "ip_address: IpAddr"
                      , user_agent
+                     , locale
                 FROM
                     oauth2_device_code_grant
 
@@ -281,6 +288,7 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
                      , oauth2_session_id
                      , ip_address as "ip_address: IpAddr"
                      , user_agent
+                     , locale
                 FROM
                     oauth2_device_code_grant
 
@@ -327,6 +335,7 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
                      , oauth2_session_id
                      , ip_address as "ip_address: IpAddr"
                      , user_agent
+                     , locale
                 FROM
                     oauth2_device_code_grant
 
@@ -360,10 +369,11 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
         clock: &dyn Clock,
         device_code_grant: DeviceCodeGrant,
         browser_session: &BrowserSession,
+        locale: Option<String>,
     ) -> Result<DeviceCodeGrant, Self::Error> {
         let fulfilled_at = clock.now();
         let device_code_grant = device_code_grant
-            .fulfill(browser_session, fulfilled_at)
+            .fulfill(browser_session, locale, fulfilled_at)
             .map_err(DatabaseError::to_invalid_operation)?;
 
         let res = sqlx::query!(
@@ -371,10 +381,12 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
                 UPDATE oauth2_device_code_grant
                 SET fulfilled_at = $1
                   , user_session_id = $2
-                WHERE oauth2_device_code_grant_id = $3
+                  , locale = $3
+                WHERE oauth2_device_code_grant_id = $4
             "#,
             fulfilled_at,
             Uuid::from(browser_session.id),
+            device_code_grant.locale.as_deref(),
             Uuid::from(device_code_grant.id),
         )
         .traced()

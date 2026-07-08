@@ -61,7 +61,7 @@ Many [tools in text editors](https://json-schema.org/implementations.html#editor
 ## Syncing the configuration file with the database
 
 Some sections of the configuration file need to be synced every time the configuration file is updated.
-This includes the [`clients`](../reference/configuration.md#clients) and [`upstream_oauth`](../reference/configuration.md#upstream-oauth) sections.
+This includes the [`clients`](../reference/configuration.md#clients) and [`upstream_oauth2`](../reference/configuration.md#upstream_oauth2) sections.
 The configuration is synced by default on startup, and can be manually synced using the [`config sync`](../reference/cli/config.md#config-sync---prune---dry-run) command.
 
 By default, this will only add new clients and upstream OAuth providers and update existing ones, but will not remove entries that were removed from the configuration file.

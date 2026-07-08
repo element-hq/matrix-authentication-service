@@ -11,7 +11,7 @@ Please see LICENSE files in the repository root for full details.
 {% block content %}
   <header class="page-heading">
     <div class="icon">
-      {{ icon.link() }}
+      {{ icon.mobile() }}
     </div>
 
     <div class="header">
@@ -20,23 +20,28 @@ Please see LICENSE files in the repository root for full details.
     </div>
   </header>
 
-  <form method="GET" class="cpd-form-root">
-    {% call(f) field.field(label="Device code", name="code", class="mb-4 self-center", form_state=form_state) %}
-      <div class="cpd-mfa-container">
-        <input {{ field.attributes(f) }}
-          id="mfa-code-input"
-          type="text"
-          minlength="0"
-          maxlength="6"
-          class="cpd-mfa-control uppercase"
-          required>
+  <section class="flex flex-col gap-5">
+    <form method="POST" class="cpd-form-root">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}" />
+      {% call(f) field.field(label=_("mas.device_code_link.verification_code"), name="code", class="mb-4 self-center", form_state=form_state) %}
+        <div class="cpd-mfa-container">
+          <input {{ field.attributes(f) }}
+            id="mfa-code-input"
+            type="text"
+            minlength="0"
+            maxlength="6"
+            class="cpd-mfa-control uppercase"
+            required>
 
-        {% for _ in range(6) %}
-        <div class="cpd-mfa-digit" aria-hidden="true"></div>
-        {% endfor %}
-      </div>
-    {% endcall %}
+          {% for _ in range(6) %}
+          <div class="cpd-mfa-digit" aria-hidden="true"></div>
+          {% endfor %}
+        </div>
+      {% endcall %}
 
-    {{ button.button(text=_("action.continue")) }}
-  </form>
+      {{ button.button(text=_("action.continue")) }}
+    </form>
+
+    {{ button.link_tertiary(text=_("action.cancel"), href="/") }}
+  </section>
 {% endblock content %}

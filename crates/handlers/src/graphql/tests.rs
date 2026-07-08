@@ -470,7 +470,10 @@ async fn test_oauth2_client_credentials(pool: PgPool) {
     let state = {
         let mut state = state;
         state.policy_factory = test_utils::policy_factory(
-            "example.com",
+            mas_policy::BaseData {
+                server_name: "example.com".to_owned(),
+                session_limit: None,
+            },
             serde_json::json!({
                 "admin_clients": [client_id],
             }),
@@ -530,7 +533,7 @@ async fn test_oauth2_client_credentials(pool: PgPool) {
     // so we need to do it manually
     state
         .homeserver_connection
-        .provision_user(&ProvisionRequest::new("alice", user_id))
+        .provision_user(&ProvisionRequest::new("alice", user_id, false))
         .await
         .unwrap();
 
@@ -596,7 +599,10 @@ async fn test_add_user(pool: PgPool) {
     let state = {
         let mut state = state;
         state.policy_factory = test_utils::policy_factory(
-            "example.com",
+            mas_policy::BaseData {
+                server_name: "example.com".to_owned(),
+                session_limit: None,
+            },
             serde_json::json!({
                 "admin_clients": [client_id],
             }),

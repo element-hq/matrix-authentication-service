@@ -551,6 +551,12 @@ impl UserMutations {
 
         let user = repo.user().lock(&state.clock(), user).await?;
 
+        // Schedule a job to provision the user so that the lock flag is propagated
+        // to Synapse
+        repo.queue_job()
+            .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&user))
+            .await?;
+
         if deactivate {
             info!(%user.id, "Scheduling deactivation of user");
             repo.queue_job()
@@ -570,6 +576,8 @@ impl UserMutations {
         input: UnlockUserInput,
     ) -> Result<UnlockUserPayload, async_graphql::Error> {
         let state = ctx.state();
+        let clock = state.clock();
+        let mut rng = state.rng();
         let requester = ctx.requester();
         let matrix = state.homeserver_connection();
 
@@ -591,6 +599,12 @@ impl UserMutations {
         // Now reactivate & unlock the user in our database
         let user = repo.user().reactivate(user).await?;
         let user = repo.user().unlock(user).await?;
+
+        // Schedule a job to provision the user so that the lock flag is propagated
+        // to Synapse
+        repo.queue_job()
+            .schedule_job(&mut rng, &clock, ProvisionUserJob::new(&user))
+            .await?;
 
         repo.save().await?;
 

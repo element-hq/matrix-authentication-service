@@ -256,7 +256,7 @@ impl Options {
 
                 let clock = SystemClock::default();
                 // TODO is this rng ok?
-                #[allow(clippy::disallowed_methods)]
+                #[expect(clippy::disallowed_methods)]
                 let mut rng = thread_rng();
 
                 let progress = Progress::default();
@@ -304,7 +304,7 @@ async fn occasional_progress_logger(progress: Progress) {
             } => {
                 let migrated = counter.migrated();
                 let skipped = counter.skipped();
-                #[allow(clippy::cast_precision_loss)]
+                #[expect(clippy::cast_precision_loss)]
                 let percent = (f64::from(migrated + skipped) / *approx_count as f64) * 100.0;
                 info!(name: "progress", "migrating {entity}: {migrated} ({skipped} skipped) /~{approx_count} (~{percent:.1}%)");
             }

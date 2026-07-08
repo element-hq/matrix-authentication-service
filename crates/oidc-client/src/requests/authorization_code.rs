@@ -393,7 +393,7 @@ pub fn build_authorization_url(
 ///
 /// Returns an error if the request fails, the response is invalid or the
 /// verification of the ID Token fails.
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 #[tracing::instrument(skip_all, fields(token_endpoint))]
 pub async fn access_token_with_authorization_code(
     http_client: &reqwest::Client,

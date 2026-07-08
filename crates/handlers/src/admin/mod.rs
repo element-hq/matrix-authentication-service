@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -57,6 +58,11 @@ fn finish(t: TransformOpenApi) -> TransformOpenApi {
         .tag(Tag {
             name: "policy-data".to_owned(),
             description: Some("Manage the dynamic policy data".to_owned()),
+            ..Tag::default()
+        })
+        .tag(Tag {
+            name: "oauth2-client".to_owned(),
+            description: Some("Manage OAuth 2.0 clients".to_owned()),
             ..Tag::default()
         })
         .tag(Tag {

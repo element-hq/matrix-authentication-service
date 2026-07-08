@@ -5,7 +5,7 @@
 // Please see LICENSE files in the repository root for full details.
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import OAuth2ClientDetail from "../components/Client/OAuth2ClientDetail";
 import Layout from "../components/Layout";
 import { graphql } from "../gql";
@@ -26,7 +26,7 @@ const query = (id: string) =>
       graphqlRequest({ query: QUERY, variables: { id }, signal }),
   });
 
-export const Route = createFileRoute({
+export const Route = createFileRoute("/clients/$id")({
   loader: ({ context, params }) =>
     context.queryClient.ensureQueryData(query(params.id)),
   component: ClientDetail,

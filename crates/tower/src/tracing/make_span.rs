@@ -41,7 +41,7 @@ macro_rules! impl_for_tuple {
             $($T: EnrichSpan<R>),+
         {
             fn make_span(&self, request: &R) -> Span {
-                #[allow(non_snake_case)]
+                #[expect(non_snake_case)]
                 let (ref m, $(ref $T),+) = *self;
 
                 let span = m.make_span(request);

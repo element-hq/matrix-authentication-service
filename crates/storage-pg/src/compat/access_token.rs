@@ -6,7 +6,7 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
-use mas_data_model::{Clock, CompatAccessToken, CompatSession};
+use mas_data_model::{Clock, CompatAccessToken, CompatSession, UlidExt as _};
 use mas_storage::compat::CompatAccessTokenRepository;
 use rand::RngCore;
 use sqlx::PgConnection;
@@ -143,7 +143,7 @@ impl CompatAccessTokenRepository for PgCompatAccessTokenRepository<'_> {
         expires_after: Option<Duration>,
     ) -> Result<CompatAccessToken, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("compat_access_token.id", tracing::field::display(id));
 
         let expires_at = expires_after.map(|expires_after| created_at + expires_after);

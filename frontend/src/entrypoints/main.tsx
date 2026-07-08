@@ -15,6 +15,7 @@ import LoadingScreen from "../components/LoadingScreen";
 import { queryClient } from "../graphql";
 import i18n, { setupI18n } from "../i18n";
 import { router } from "../router";
+import "./vendor.css";
 import "./shared.css";
 
 setupI18n();

@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -12,6 +13,7 @@ use async_graphql::{
     EmptySubscription, InputObject,
     extensions::Tracing,
     http::{GraphQLPlaygroundConfig, MultipartOptions, playground_source},
+    parser::types::{DocumentOperations, OperationType},
 };
 use axum::{
     Extension, Json,
@@ -26,7 +28,8 @@ use futures_util::TryStreamExt;
 use headers::{Authorization, ContentType, HeaderValue, authorization::Bearer};
 use hyper::header::CACHE_CONTROL;
 use mas_axum_utils::{
-    InternalError, SessionInfo, SessionInfoExt, cookies::CookieJar, sentry::SentryEventID,
+    InternalError, RecordAsRequester, SessionInfo, SessionInfoExt, cookies::CookieJar,
+    sentry::SentryEventID,
 };
 use mas_data_model::{
     BoxClock, BoxRng, BrowserSession, Clock, Session, SiteConfig, SystemClock, User,
@@ -35,7 +38,9 @@ use mas_matrix::HomeserverConnection;
 use mas_policy::{InstantiateError, Policy, PolicyFactory};
 use mas_router::UrlBuilder;
 use mas_storage::{BoxRepository, BoxRepositoryFactory, RepositoryError};
-use opentelemetry_semantic_conventions::trace::{GRAPHQL_DOCUMENT, GRAPHQL_OPERATION_NAME};
+use opentelemetry_semantic_conventions::trace::{
+    GRAPHQL_DOCUMENT, GRAPHQL_OPERATION_NAME, GRAPHQL_OPERATION_TYPE,
+};
 use rand::{SeedableRng, thread_rng};
 use rand_chacha::ChaChaRng;
 use state::has_session_ended;
@@ -114,7 +119,7 @@ impl state::State for GraphQLState {
     }
 
     fn rng(&self) -> BoxRng {
-        #[allow(clippy::disallowed_methods)]
+        #[expect(clippy::disallowed_methods)]
         let rng = thread_rng();
 
         let rng = ChaChaRng::from_rng(rng).expect("Failed to seed rng");
@@ -146,21 +151,90 @@ pub fn schema(
     schema_builder().extension(Tracing).data(state).finish()
 }
 
-fn span_for_graphql_request(request: &async_graphql::Request) -> tracing::Span {
+fn span_and_operation_for_graphql_request(
+    request: &mut async_graphql::Request,
+) -> (tracing::Span, GraphQLOperation) {
     let span = info_span!(
         "GraphQL operation",
         "otel.name" = tracing::field::Empty,
         "otel.kind" = "server",
         { GRAPHQL_DOCUMENT } = request.query,
         { GRAPHQL_OPERATION_NAME } = tracing::field::Empty,
+        { GRAPHQL_OPERATION_TYPE } = tracing::field::Empty,
     );
 
-    if let Some(name) = &request.operation_name {
-        span.record("otel.name", name);
-        span.record(GRAPHQL_OPERATION_NAME, name);
+    let mut graphql_operation = GraphQLOperation {
+        operation_type: None,
+        operation_name: None,
+    };
+
+    // We need to clone the operation_name before parsing the query, else we're
+    // going to have a borrow conflict between request.parsed_query() and
+    // request.operation_name
+    let operation_name = request.operation_name.clone();
+    if let Ok(document) = request.parsed_query() {
+        match (&document.operations, operation_name) {
+            // A single anonymous operation, with no name requested: the
+            // document defines no name for it, so we only record the type.
+            (DocumentOperations::Single(operation), None) => {
+                span.record("otel.name", format!("GraphQL {}", operation.node.ty));
+                span.record(
+                    GRAPHQL_OPERATION_TYPE,
+                    tracing::field::display(operation.node.ty),
+                );
+                graphql_operation.operation_type = Some(operation.node.ty);
+            }
+
+            (DocumentOperations::Multiple(operations), Some(name)) => {
+                if let Some((name, operation)) = operations.get_key_value(name.as_str()) {
+                    span.record(
+                        "otel.name",
+                        format!("GraphQL {} {}", operation.node.ty, name),
+                    );
+                    span.record(
+                        GRAPHQL_OPERATION_TYPE,
+                        tracing::field::display(operation.node.ty),
+                    );
+                    span.record(GRAPHQL_OPERATION_NAME, tracing::field::display(name));
+                    graphql_operation.operation_type = Some(operation.node.ty);
+                    graphql_operation.operation_name = Some(name.to_string());
+                }
+            }
+
+            (DocumentOperations::Multiple(operations), None) if operations.len() == 1 => {
+                let mut iter = operations.iter();
+                let (name, operation) = iter.next().unwrap();
+                span.record(
+                    "otel.name",
+                    format!("GraphQL {} {}", operation.node.ty, name),
+                );
+                span.record(
+                    GRAPHQL_OPERATION_TYPE,
+                    tracing::field::display(operation.node.ty),
+                );
+                span.record(GRAPHQL_OPERATION_NAME, name.as_ref());
+                graphql_operation.operation_type = Some(operation.node.ty);
+                graphql_operation.operation_name = Some(name.to_string());
+            }
+
+            // Cases the executor rejects, so we don't record a misleading
+            // operation: a single anonymous operation with a name requested, or
+            // several named operations with no requested name (ambiguous).
+            (DocumentOperations::Single(_), Some(_)) | (DocumentOperations::Multiple(_), None) => {}
+        }
     }
 
-    span
+    (span, graphql_operation)
+}
+
+/// The GraphQL operation being executed, attached to the response extensions so
+/// the HTTP logging middleware can record it on the request log line.
+#[derive(Clone, Debug)]
+pub struct GraphQLOperation {
+    /// The type of the operation: query, mutation or subscription.
+    pub operation_type: Option<OperationType>,
+    /// The name of the operation, as defined in the query document.
+    pub operation_name: Option<String>,
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -283,6 +357,10 @@ async fn get_requester(
             return Err(RouteError::MissingScope);
         }
 
+        if let Some(user) = &user {
+            user.maybe_record_as_requester();
+        }
+
         RequestingEntity::OAuth2Session(Box::new((session, user)))
     } else {
         let maybe_session = session_info.load_active_session(&mut repo).await?;
@@ -339,7 +417,7 @@ pub async fn post(
 
     let content_type = content_type.map(|TypedHeader(h)| h.to_string());
 
-    let request = async_graphql::http::receive_body(
+    let mut request = async_graphql::http::receive_body(
         content_type,
         body.map_err(std::io::Error::other).into_async_read(),
         MultipartOptions::default(),
@@ -347,7 +425,7 @@ pub async fn post(
     .await?
     .data(requester); // XXX: this should probably return another error response?
 
-    let span = span_for_graphql_request(&request);
+    let (span, operation) = span_and_operation_for_graphql_request(&mut request);
     let mut response = schema.execute(request).instrument(span).await;
 
     if has_session_ended(&mut response) {
@@ -363,7 +441,13 @@ pub async fn post(
 
     let headers = response.http_headers.clone();
 
-    Ok((headers, cache_control, cookie_jar, Json(response)))
+    Ok((
+        headers,
+        cache_control,
+        cookie_jar,
+        Extension(operation),
+        Json(response),
+    ))
 }
 
 pub async fn get(
@@ -395,10 +479,10 @@ pub async fn get(
     )
     .await?;
 
-    let request =
+    let mut request =
         async_graphql::http::parse_query_string(&query.unwrap_or_default())?.data(requester);
 
-    let span = span_for_graphql_request(&request);
+    let (span, operation) = span_and_operation_for_graphql_request(&mut request);
     let mut response = schema.execute(request).instrument(span).await;
 
     if has_session_ended(&mut response) {
@@ -414,7 +498,13 @@ pub async fn get(
 
     let headers = response.http_headers.clone();
 
-    Ok((headers, cache_control, cookie_jar, Json(response)))
+    Ok((
+        headers,
+        cache_control,
+        cookie_jar,
+        Extension(operation),
+        Json(response),
+    ))
 }
 
 pub async fn playground() -> impl IntoResponse {

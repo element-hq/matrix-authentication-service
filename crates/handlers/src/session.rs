@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -7,7 +8,7 @@
 //! locked or deactivated
 
 use axum::response::{Html, IntoResponse as _, Response};
-use mas_axum_utils::{SessionInfoExt, cookies::CookieJar, csrf::CsrfExt};
+use mas_axum_utils::{RecordAsRequester, SessionInfoExt, cookies::CookieJar, csrf::CsrfExt};
 use mas_data_model::{BrowserSession, Clock, User};
 use mas_i18n::DataLocale;
 use mas_policy::model::SessionCounts;
@@ -26,7 +27,7 @@ pub enum SessionLoadError {
     Repository(#[from] RepositoryError),
 }
 
-#[allow(clippy::large_enum_variant)]
+#[expect(clippy::large_enum_variant)]
 pub enum SessionOrFallback {
     MaybeSession {
         cookie_jar: CookieJar,
@@ -65,12 +66,16 @@ pub async fn load_session_or_fallback(
         });
     };
 
+    // Record the user as the requester even when we return a fallback page
+    // below — the request is still attributable to that user.
+    session.maybe_record_as_requester();
+
     if session.user.deactivated_at.is_some() {
         // The account is deactivated, show the 'account deactivated' fallback
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(clock, rng);
         let ctx = AccountInactiveContext::new(session.user)
             .with_csrf(csrf_token.form_value())
-            .with_language(locale.clone());
+            .with_language(*locale);
         let fallback = templates.render_account_deactivated(&ctx)?;
         let response = (cookie_jar, Html(fallback)).into_response();
         return Ok(SessionOrFallback::Fallback { response });
@@ -81,7 +86,7 @@ pub async fn load_session_or_fallback(
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(clock, rng);
         let ctx = AccountInactiveContext::new(session.user)
             .with_csrf(csrf_token.form_value())
-            .with_language(locale.clone());
+            .with_language(*locale);
         let fallback = templates.render_account_locked(&ctx)?;
         let response = (cookie_jar, Html(fallback)).into_response();
         return Ok(SessionOrFallback::Fallback { response });
@@ -95,7 +100,7 @@ pub async fn load_session_or_fallback(
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(clock, rng);
         let ctx = AccountInactiveContext::new(session.user)
             .with_csrf(csrf_token.form_value())
-            .with_language(locale.clone());
+            .with_language(*locale);
         let fallback = templates.render_account_logged_out(&ctx)?;
         let response = (cookie_jar, Html(fallback)).into_response();
         return Ok(SessionOrFallback::Fallback { response });

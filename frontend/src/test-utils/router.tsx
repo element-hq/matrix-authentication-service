@@ -9,9 +9,7 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
-  matchContext,
   RouterContextProvider,
-  useRouterState,
 } from "@tanstack/react-router";
 
 const rootRoute = createRootRoute();
@@ -27,22 +25,6 @@ const router = createRouter({
 });
 router.load();
 
-const InnerProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const matchId = useRouterState({
-    select: (s) => {
-      return s.matches[0]?.id;
-    },
-  });
-
-  return (
-    <matchContext.Provider value={matchId}>{children}</matchContext.Provider>
-  );
-};
-
 export const DummyRouter: React.FC<React.PropsWithChildren> = ({
   children,
-}) => (
-  <RouterContextProvider router={router}>
-    <InnerProvider>{children}</InnerProvider>
-  </RouterContextProvider>
-);
+}) => <RouterContextProvider router={router}>{children}</RouterContextProvider>;

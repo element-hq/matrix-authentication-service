@@ -125,7 +125,8 @@
       "heading": "Sähköpostiosoite {{email}} on jo käytössä."
     },
     "end_session_button": {
-      "confirmation_modal_title": "Haluatko varmasti lopettaa tämän istunnon?",
+      "confirmation_modal_body_text": "Varmista, että sinulla on toinen vahvistettu laite tai palautusavaimesi käytettävissä, jotta et menetä salattua keskusteluhistoriaasi.",
+      "confirmation_modal_title": "Haluatko varmasti poistaa tämän laitteen?",
       "text": "Poista laite"
     },
     "error": {
@@ -145,6 +146,7 @@
       "inactive_90_days": "Ei aktiivinen yli 90 päivää"
     },
     "nav": {
+      "device_limit_error": "Laiteraja saavutettu",
       "devices": "Laitteet",
       "plan": "Tilaus",
       "profile": "Profiili",
@@ -257,10 +259,10 @@
       "button": "Nollaa identiteetti",
       "cancelled": {
         "description_1": "Voit sulkea tämän ikkunan ja palata sovellukseen jatkaaksesi.",
-        "description_2": "Jos olet kirjautunut ulos kaikkialta etkä muista palautuskoodiasi, sinun on silti nollattava identiteettisi.",
-        "heading": "Identiteetin nollaus peruutettu."
+        "description_2": "Jos sinulla ei ole muita vahvistettuja laitteita eikä palautuskoodiasi käytettävissä, sinun on nollattava digitaalinen identiteettisi, jotta voit jatkaa sovelluksen käyttöä.",
+        "heading": "Digitaalisen identiteetin nollaus peruutettu."
       },
-      "description": "Jos et ole kirjautunut muihin laitteisiin ja olet kadottanut palautusavaimesi, sinun on nollattava identiteettisi, jotta voit jatkaa sovelluksen käyttöä.",
+      "description": "Jos sinulla ei ole muita vahvistettuja laitteita eikä palautuskoodiasi käytettävissä, sinun on nollattava digitaalinen identiteettisi, jotta voit jatkaa sovelluksen käyttöä.",
       "effect_list": {
         "negative_1": "Menetät nykyisen viestihistoriasi",
         "negative_2": "Sinun on vahvistettava kaikki olemassa olevat laitteesi ja yhteystietosi uudelleen",
@@ -270,18 +272,18 @@
       },
       "failure": {
         "description": "Tämä saattaa olla väliaikainen ongelma, joten yritä myöhemmin uudelleen. Jos ongelma jatkuu, ota yhteyttä palvelimen ylläpitäjään.",
-        "heading": "Kryptografisen identiteetin nollauksen salliminen epäonnistui",
-        "title": "Kryptografisen identiteetin nollauksen salliminen epäonnistui"
+        "heading": "Digitaalisen identiteetin nollauksen salliminen epäonnistui",
+        "title": "Digitaalisen identiteetin nollauksen salliminen epäonnistui"
       },
       "finish_reset": "Viimeistele nollaus",
-      "heading": "Nollaa identiteettisi, jos et voi vahvistaa muulla tavalla",
+      "heading": "Nollaa digitaalinen identiteettisi, jos et voi vahvistaa muulla tavalla",
       "start_reset": "Aloita nollaus",
       "success": {
-        "description": "Identiteetin nollaus on hyväksytty seuraavaksi {{minutes}} minuutiksi. Voit sulkea tämän ikkunan ja palata sovellukseen jatkaaksesi.",
-        "heading": "Identiteetin nollaus onnistui. Palaa takaisin sovellukseen viimeistelläksesi prosessin.",
-        "title": "Kryptografisen identiteetin nollaus tilapäisesti sallittu"
+        "description": "Digitaalisen identiteetin nollaus on hyväksytty seuraavaksi {{minutes}} minuutiksi. Voit sulkea tämän ikkunan ja palata sovellukseen jatkaaksesi.",
+        "heading": "Digitaalisen identiteetin nollaus onnistui. Palaa takaisin sovellukseen viimeistelläksesi prosessin.",
+        "title": "Digitaalisen identiteetin nollaus tilapäisesti sallittu"
       },
-      "warning": "Nollaa identiteettisi vain, jos et voi käyttää toista laitetta, johon olet kirjautunut, ja olet kadottanut palautusavaimesi."
+      "warning": "Nollaa digitaalinen identiteettisi vain, jos sinulla ei ole toista vahvistettua laitetta tai palautusavaintasi käytettävissä."
     },
     "selectable_session": {
       "label": "Valitse istunto"
@@ -357,11 +359,27 @@
     "user_sessions_overview": {
       "active_sessions:one": "{{count}} aktiivinen istunto",
       "active_sessions:other": "{{count}} aktiivista istuntoa",
+      "approaching_session_limit_warning_description:one": "Olet käyttänyt {{num_sessions}}/{{count}} laitepaikkaa. Kun olet saavuttanut rajan, sinun on poistettava olemassa oleva laite lisätäksesi uuden.",
+      "approaching_session_limit_warning_description:other": "Olet käyttänyt {{num_sessions}}/{{count}} laitepaikkaa. Kun olet saavuttanut rajan, sinun on poistettava olemassa oleva laite lisätäksesi uuden.",
+      "approaching_session_limit_warning_header": "Huomio, olet lähellä laiterajaasi",
       "heading": "Missä olet kirjautuneena",
+      "hit_session_limit_warning_description:one": "Olet käyttänyt {{num_sessions}}/{{count}} laitepaikkaa. Kun yrität kirjautua sisään uudelleen, sinun on poistettava olemassa oleva laite.",
+      "hit_session_limit_warning_description:other": "Olet käyttänyt {{num_sessions}}/{{count}} laitepaikkaa. Kun yrität kirjautua sisään uudelleen, sinun on poistettava olemassa oleva laite.",
+      "hit_session_limit_warning_header": "Olet saavuttanut laiterajan",
       "no_active_sessions": {
         "default": "Et ole kirjautunut mihinkään sovellukseen.",
         "inactive_90_days": "Kaikki istuntosi ovat olleet aktiivisia viimeisten 90 päivän aikana."
-      }
+      },
+      "num_sessions_filtered_header": {
+        "header:one": "{{count}} laite täsmää suodattimesi kanssa ({{unfiltered_session_total}})",
+        "header:other": "{{count}} laitetta täsmää suodattimesi kanssa ({{unfiltered_session_total}})",
+        "unfiltered_session_total:one": "Yhteensä {{count}}",
+        "unfiltered_session_total:other": "Yhteensä {{count}}"
+      },
+      "num_sessions_header:one": "{{count}} laite",
+      "num_sessions_header:other": "{{count}} laitetta",
+      "session_limit_info:one": "Olet käyttänyt {{count}}/{{limit}} laitepaikkaa",
+      "session_limit_info:other": "Olet käyttänyt {{count}}/{{limit}} laitepaikkaa"
     },
     "verify_email": {
       "code_expired_alert": {

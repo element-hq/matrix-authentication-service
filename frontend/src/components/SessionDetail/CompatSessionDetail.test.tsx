@@ -22,6 +22,7 @@ describe("<CompatSessionDetail>", () => {
     lastActiveIp: "1.2.3.4",
     lastActiveAt: "2023-07-29T03:35:17.451292+00:00",
     userAgent: null,
+    humanName: null,
     ssoLogin: {
       id: "test-id",
       redirectUri: "https://element.io",

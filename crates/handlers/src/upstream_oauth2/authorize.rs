@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use std::collections::BTreeMap;
+
 use axum::{
     extract::{Path, State},
     response::{IntoResponse, Redirect},
@@ -16,12 +18,14 @@ use mas_oidc_client::requests::authorization_code::AuthorizationRequestData;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
     BoxRepository,
+    oauth2::OAuth2AuthorizationGrantRepository,
     upstream_oauth2::{UpstreamOAuthProviderRepository, UpstreamOAuthSessionRepository},
 };
+use minijinja::context;
 use thiserror::Error;
 use ulid::Ulid;
 
-use super::{UpstreamSessionsCookie, cache::LazyProviderInfos};
+use super::{UpstreamSessionsCookie, cache::LazyProviderInfos, template::environment};
 use crate::{
     impl_from_error_for_route, upstream_oauth2::cache::MetadataCache,
     views::shared::OptionalPostAuthAction,
@@ -92,15 +96,36 @@ pub(crate) async fn get(
         data = data.with_response_mode(response_mode.into());
     }
 
-    // Forward the raw login hint upstream for the provider to handle however it
-    // sees fit
+    // Look up the downstream authorization grant once, if there is one, so
+    // we can both (a) populate the MiniJinja template context for the
+    // `additional_authorization_parameters` rendering and (b) keep the
+    // `forward_login_hint` shortcut working for deployments that haven't
+    // re-run config sync yet.
+    let downstream_grant =
+        if let Some(PostAuthAction::ContinueAuthorizationGrant { id }) = &query.post_auth_action {
+            repo.oauth2_authorization_grant().lookup(*id).await?
+        } else {
+            None
+        };
+
+    let raw_parameters: BTreeMap<String, String> = downstream_grant
+        .as_ref()
+        .map(|grant| grant.raw_parameters.clone())
+        .unwrap_or_default();
+
+    // Back-compat: honour `forward_login_hint` as long as the operator
+    // hasn't explicitly added a `login_hint` template entry to
+    // `additional_authorization_parameters`. The CLI config sync will
+    // also inject a template entry on the next sync, so this branch
+    // mainly catches the moment between an upgrade and the next sync.
     if provider.forward_login_hint
-        && let Some(PostAuthAction::ContinueAuthorizationGrant { id }) = &query.post_auth_action
-        && let Some(login_hint) = repo
-            .oauth2_authorization_grant()
-            .lookup(*id)
-            .await?
-            .and_then(|grant| grant.login_hint)
+        && !provider
+            .additional_authorization_parameters
+            .iter()
+            .any(|(k, _)| k == "login_hint")
+        && let Some(login_hint) = downstream_grant
+            .as_ref()
+            .and_then(|grant| grant.login_hint.clone())
     {
         data = data.with_login_hint(login_hint);
     }
@@ -118,12 +143,16 @@ pub(crate) async fn get(
         &mut rng,
     )?;
 
-    // We do that in a block because params borrows url mutably
+    // Render the templated `additional_authorization_parameters` and
+    // append the non-empty results to the URL query.
     {
-        // Add any additional parameters to the query
-        let mut params = url.query_pairs_mut();
-        for (key, value) in &provider.additional_authorization_parameters {
-            params.append_pair(key, value);
+        let mut pairs = url.query_pairs_mut();
+        for (key, value) in render_additional_authorization_parameters(
+            provider.id,
+            &provider.additional_authorization_parameters,
+            &raw_parameters,
+        ) {
+            pairs.append_pair(key, value.as_str());
         }
     }
 
@@ -146,4 +175,115 @@ pub(crate) async fn get(
     repo.save().await?;
 
     Ok((cookie_jar, Redirect::temporary(url.as_str())))
+}
+
+/// Render each `additional_authorization_parameters` template against
+/// the raw downstream query parameters, dropping templates that render
+/// to empty strings, and logging-and-skipping any that fail to render.
+fn render_additional_authorization_parameters<'a>(
+    provider_id: Ulid,
+    templates: &'a [(String, String)],
+    raw_parameters: &BTreeMap<String, String>,
+) -> impl Iterator<Item = (&'a str, String)> {
+    let env = environment();
+    let ctx = context! { params => raw_parameters };
+
+    templates.iter().filter_map(move |(key, template)| {
+        match env.render_str(template, &ctx).map(|v| v.trim().to_owned()) {
+            Ok(value) if !value.is_empty() => Some((key.as_str(), value)),
+            Ok(_) => {
+                // Empty render — drop the parameter rather than forwarding
+                // `?key=`.
+                None
+            }
+            Err(error) => {
+                tracing::warn!(
+                    error = &error as &dyn std::error::Error,
+                    upstream_oauth_provider.id = %provider_id,
+                    parameter.key = %key,
+                    "Failed to render upstream authorization parameter template",
+                );
+                None
+            }
+        }
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::BTreeMap;
+
+    use ulid::Ulid;
+
+    use super::render_additional_authorization_parameters;
+
+    fn params(entries: &[(&str, &str)]) -> BTreeMap<String, String> {
+        entries
+            .iter()
+            .map(|(k, v)| ((*k).to_owned(), (*v).to_owned()))
+            .collect()
+    }
+
+    #[test]
+    fn renders_static_values_unchanged() {
+        let templates = [("kc_idp_hint".to_owned(), "saml".to_owned())];
+        let rendered =
+            render_additional_authorization_parameters(Ulid::nil(), &templates, &params(&[]))
+                .collect::<Vec<_>>();
+        assert_eq!(rendered, vec![("kc_idp_hint", "saml".to_owned())]);
+    }
+
+    #[test]
+    fn renders_template_from_downstream_params() {
+        let templates = [
+            (
+                "login_hint".to_owned(),
+                "{{ params.login_hint }}".to_owned(),
+            ),
+            (
+                "acr_values".to_owned(),
+                "{{ params.acr_values }}".to_owned(),
+            ),
+        ];
+        let rendered = render_additional_authorization_parameters(
+            Ulid::nil(),
+            &templates,
+            &params(&[("login_hint", "alice"), ("acr_values", "mfa")]),
+        )
+        .collect::<Vec<_>>();
+        assert_eq!(
+            rendered,
+            vec![
+                ("login_hint", "alice".to_owned()),
+                ("acr_values", "mfa".to_owned()),
+            ]
+        );
+    }
+
+    #[test]
+    fn drops_parameters_that_render_to_empty() {
+        let templates = [
+            (
+                "login_hint".to_owned(),
+                "{{ params.login_hint }}".to_owned(),
+            ),
+            ("kc_idp_hint".to_owned(), "saml".to_owned()),
+        ];
+        let rendered =
+            render_additional_authorization_parameters(Ulid::nil(), &templates, &params(&[]))
+                .collect::<Vec<_>>();
+        assert_eq!(rendered, vec![("kc_idp_hint", "saml".to_owned())]);
+    }
+
+    #[test]
+    fn drops_failing_template_but_keeps_others() {
+        let templates = [
+            ("broken".to_owned(), "{{ params. }}".to_owned()),
+            ("kc_idp_hint".to_owned(), "saml".to_owned()),
+        ];
+        let rendered =
+            render_additional_authorization_parameters(Ulid::nil(), &templates, &params(&[]))
+                .collect::<Vec<_>>();
+        assert_eq!(rendered, vec![("kc_idp_hint", "saml".to_owned())]);
+    }
 }

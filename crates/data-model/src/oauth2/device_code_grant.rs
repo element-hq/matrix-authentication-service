@@ -193,6 +193,11 @@ pub struct DeviceCodeGrant {
 
     /// The user agent used to request this device code grant.
     pub user_agent: Option<String>,
+
+    /// The locale detected from the browser which fulfilled this device code
+    /// grant. Used to render a human-readable device name. [`None`] until the
+    /// grant is fulfilled.
+    pub locale: Option<String>,
 }
 
 impl std::ops::Deref for DeviceCodeGrant {
@@ -215,10 +220,12 @@ impl DeviceCodeGrant {
     pub fn fulfill(
         self,
         browser_session: &BrowserSession,
+        locale: Option<String>,
         fulfilled_at: DateTime<Utc>,
     ) -> Result<Self, InvalidTransitionError> {
         Ok(Self {
             state: self.state.fulfill(browser_session, fulfilled_at)?,
+            locale,
             ..self
         })
     }

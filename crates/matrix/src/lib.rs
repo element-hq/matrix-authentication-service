@@ -33,6 +33,7 @@ enum FieldAction<T> {
 pub struct ProvisionRequest {
     localpart: String,
     sub: String,
+    locked: bool,
     displayname: FieldAction<String>,
     avatar_url: FieldAction<String>,
     emails: FieldAction<Vec<String>>,
@@ -45,11 +46,13 @@ impl ProvisionRequest {
     ///
     /// * `localpart` - The localpart of the user to provision.
     /// * `sub` - The `sub` of the user, aka the internal ID.
+    /// * `locked` - Whether the user is locked.
     #[must_use]
-    pub fn new(localpart: impl Into<String>, sub: impl Into<String>) -> Self {
+    pub fn new(localpart: impl Into<String>, sub: impl Into<String>, locked: bool) -> Self {
         Self {
             localpart: localpart.into(),
             sub: sub.into(),
+            locked,
             displayname: FieldAction::DoNothing,
             avatar_url: FieldAction::DoNothing,
             emails: FieldAction::DoNothing,
@@ -66,6 +69,12 @@ impl ProvisionRequest {
     #[must_use]
     pub fn localpart(&self) -> &str {
         &self.localpart
+    }
+
+    /// Get the locked flag of the user to provision
+    #[must_use]
+    pub fn locked(&self) -> bool {
+        self.locked
     }
 
     /// Ask to set the displayname of the user.

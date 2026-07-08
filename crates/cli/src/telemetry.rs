@@ -83,6 +83,12 @@ fn match_propagator(propagator: Propagator) -> Box<dyn TextMapPropagator + Send 
     match propagator {
         P::TraceContext => Box::new(TraceContextPropagator::new()),
         P::Baggage => Box::new(BaggagePropagator::new()),
+        // opentelemetry-jaeger-propagator is deprecated upstream but still
+        // published; we keep supporting the Jaeger format until it's removed.
+        #[expect(
+            deprecated,
+            reason = "the Jaeger propagator is deprecated upstream but we still expose it as an option"
+        )]
         P::Jaeger => Box::new(opentelemetry_jaeger_propagator::Propagator::new()),
     }
 }
@@ -191,7 +197,6 @@ fn stdout_metric_reader() -> PeriodicReader<opentelemetry_stdout::MetricExporter
 type PromServiceFuture =
     std::future::Ready<Result<Response<Full<Bytes>>, std::convert::Infallible>>;
 
-#[allow(clippy::needless_pass_by_value)]
 fn prometheus_service_fn<T>(_req: T) -> PromServiceFuture {
     let response = if let Some(exporter) = PROMETHEUS_EXPORTER.get() {
         // We'll need some space for this, so we preallocate a bit

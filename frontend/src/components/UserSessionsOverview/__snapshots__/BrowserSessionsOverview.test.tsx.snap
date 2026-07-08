@@ -20,9 +20,9 @@ exports[`BrowserSessionsOverview > renders with no browser sessions 1`] = `
       </p>
     </div>
     <a
-      class="_link_1v5rz_8"
+      class="_link_k9ljz_8"
       data-kind="primary"
-      data-size="medium"
+      data-size="md"
       href="/sessions/browsers"
       rel="noreferrer noopener"
     >
@@ -52,9 +52,9 @@ exports[`BrowserSessionsOverview > renders with sessions 1`] = `
       </p>
     </div>
     <a
-      class="_link_1v5rz_8"
+      class="_link_k9ljz_8"
       data-kind="primary"
-      data-size="medium"
+      data-size="md"
       href="/sessions/browsers"
       rel="noreferrer noopener"
     >

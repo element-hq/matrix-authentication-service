@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -11,6 +12,7 @@ use std::{
 
 use futures_util::FutureExt as _;
 use headers::{ContentLength, HeaderMapExt as _, UserAgent};
+use http::Version;
 use hyper_util::client::legacy::connect::{
     HttpInfo,
     dns::{GaiResolver, Name},
@@ -25,11 +27,12 @@ use opentelemetry_semantic_conventions::{
     metric::{HTTP_CLIENT_ACTIVE_REQUESTS, HTTP_CLIENT_REQUEST_DURATION},
     trace::{
         ERROR_TYPE, HTTP_REQUEST_METHOD, HTTP_RESPONSE_STATUS_CODE, NETWORK_LOCAL_ADDRESS,
-        NETWORK_LOCAL_PORT, NETWORK_PEER_ADDRESS, NETWORK_PEER_PORT, NETWORK_TRANSPORT,
-        NETWORK_TYPE, SERVER_ADDRESS, SERVER_PORT, URL_FULL, URL_SCHEME, USER_AGENT_ORIGINAL,
+        NETWORK_LOCAL_PORT, NETWORK_PEER_ADDRESS, NETWORK_PEER_PORT, NETWORK_PROTOCOL_NAME,
+        NETWORK_PROTOCOL_VERSION, NETWORK_TRANSPORT, NETWORK_TYPE, SERVER_ADDRESS, SERVER_PORT,
+        URL_FULL, URL_SCHEME, USER_AGENT_ORIGINAL,
     },
 };
-use rustls_platform_verifier::ConfigVerifierExt;
+use reqwest::Response;
 use tokio::time::Instant;
 use tower::{BoxError, Service as _};
 use tracing::Instrument;
@@ -83,6 +86,18 @@ impl reqwest::dns::Resolve for TracingResolver {
     }
 }
 
+#[inline]
+fn otel_net_protocol_version(response: &Response) -> &'static str {
+    match response.version() {
+        Version::HTTP_09 => "0.9",
+        Version::HTTP_10 => "1.0",
+        Version::HTTP_11 => "1.1",
+        Version::HTTP_2 => "2.0",
+        Version::HTTP_3 => "3.0",
+        _other => "_OTHER",
+    }
+}
+
 /// Create a new [`reqwest::Client`] with sane parameters
 ///
 /// # Panics
@@ -91,18 +106,11 @@ impl reqwest::dns::Resolve for TracingResolver {
 #[must_use]
 pub fn client() -> reqwest::Client {
     // TODO: can/should we limit in-flight requests?
-
-    // The explicit typing here is because `use_preconfigured_tls` accepts
-    // `Any`, but wants a `ClientConfig` under the hood. This helps us detect
-    // breaking changes in the rustls-platform-verifier API.
-    let tls_config: rustls::ClientConfig =
-        rustls::ClientConfig::with_platform_verifier().expect("failed to create TLS config");
-
     reqwest::Client::builder()
         .dns_resolver(Arc::new(TracingResolver::new()))
-        .use_preconfigured_tls(tls_config)
+        .tls_backend_rustls()
         .user_agent(USER_AGENT)
-        .timeout(Duration::from_secs(60))
+        .timeout(Duration::from_mins(1))
         .connect_timeout(Duration::from_secs(30))
         .build()
         .expect("failed to create HTTP client")
@@ -143,6 +151,8 @@ async fn send_traced(
         { NETWORK_LOCAL_PORT } = tracing::field::Empty,
         { NETWORK_PEER_ADDRESS } = tracing::field::Empty,
         { NETWORK_PEER_PORT } = tracing::field::Empty,
+        { NETWORK_PROTOCOL_NAME } = "http",
+        { NETWORK_PROTOCOL_VERSION } = tracing::field::Empty,
         { USER_AGENT_ORIGINAL } = user_agent,
         "rust.error" = tracing::field::Empty,
     );
@@ -182,6 +192,10 @@ async fn send_traced(
             Ok(response) => {
                 span.record("otel.status_code", "OK");
                 span.record(HTTP_RESPONSE_STATUS_CODE, response.status().as_u16());
+                span.record(
+                    NETWORK_PROTOCOL_VERSION,
+                    otel_net_protocol_version(&response),
+                );
 
                 if let Some(ContentLength(content_length)) = response.headers().typed_get() {
                     span.record(HTTP_RESPONSE_BODY_SIZE, content_length);

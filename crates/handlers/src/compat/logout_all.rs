@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -9,7 +10,7 @@ use axum::{Json, response::IntoResponse};
 use axum_extra::typed_header::TypedHeader;
 use headers::{Authorization, authorization::Bearer};
 use hyper::StatusCode;
-use mas_axum_utils::record_error;
+use mas_axum_utils::{RecordAsRequester, record_error};
 use mas_data_model::{BoxClock, BoxRng, Clock, TokenType};
 use mas_storage::{
     BoxRepository, RepositoryAccess,
@@ -176,6 +177,8 @@ pub(crate) async fn post(
     if !user.is_valid() {
         return Err(RouteError::InvalidUser(session.user_id));
     }
+
+    user.maybe_record_as_requester();
 
     if !input.only_compat_is_fine {
         return Err(RouteError::NotSupported);

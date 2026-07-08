@@ -87,23 +87,33 @@
       "access_requested": "Hozzáférés kérve",
       "device_code": "Kód",
       "generic_device": "Eszköz",
-      "ip_address": "IP-cím"
+      "ip_address": "IP-cím",
+      "security_code": "Biztonsági kód"
     },
     "device_code_link": {
-      "description": "Eszköz összekapcsolása",
-      "headline": "Adja meg az eszközén megjelenített kódot"
+      "description": "Adja meg a másik eszközén látható biztonsági kódot",
+      "headline": "Új eszköz hozzákapcsolása a fiókjához",
+      "verification_code": "Ellenőrzőkód"
     },
     "device_consent": {
       "another_device_access": "Egy másik eszköz akarja elérni a fiókját.",
+      "confirm_device": "Igen, megerősítem, hogy ez az én eszközöm, és be szeretnék jelentkezni.",
       "denied": {
         "description": "Elutasította a(z) %(client_name)s hozzáférését. Bezárhatja ezt az ablakot.",
         "heading": "Hozzáférés megtagadva"
       },
+      "description": "<strong>Egy másik eszköz</strong>, hozzá akarja kapcsolni a(z) %(client_name)s (<span>%(client_uri)s</span>) eszközt az Ön <span>%(server_name)s</span>-fiókjához. Győződjön meg róla, hogy felismeri ezt az eszközt.",
+      "grant_access": "Hozzáférés engedélyezése",
       "granted": {
         "description": "Megadta a(z) %(client_name)s hozzáférését. Bezárhatja ezt az ablakot.",
         "heading": "Hozzáférés megadva"
       },
-      "this_will_setup": "Egy másik eszköz szeretné beállítani a(z) %(client_name)s klienst (<span>%(client_uri)s</span>) a(z) <span>%(server_name)s</span> fiókjával. Győződjön meg arról, hogy felismeri az eszközt."
+      "this_will_setup": "Egy másik eszköz szeretné beállítani a(z) %(client_name)s klienst (<span>%(client_uri)s</span>) a(z) <span>%(server_name)s</span> fiókjával. Győződjön meg arról, hogy felismeri az eszközt.",
+      "title": "Hozzáférést ad a fiókjához?",
+      "warning": {
+        "description": "Biztos, hogy ez az Ön eszköze? A rendszergazdák vagy az IT-támogatás sosem kérné arra, hogy fogadja ezt el.",
+        "title": "Arra készül, hogy egy távoli eszköznek hozzáférést adjon a fiókjához"
+      }
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s ezen: %(device_name)s",
@@ -181,7 +191,12 @@
     "policy_violation": {
       "description": "Ez a kérést feladó kliens, a jelenleg bejelentkezett felhasználó, vagy maga a kérés miatt is lehet.",
       "heading": "Az engedélyezési kérés a szolgáltatás által betartatott házirend alapján elutasítva",
-      "logged_as": "Bejelentkezve mint <span class=\"font-semibold\">%(username)s</span>"
+      "logged_as": "Bejelentkezve mint <span class=\"font-semibold\">%(username)s</span>",
+      "too_many_sessions": {
+        "description": "A fiókja már a maximális számú eszközön be van jelentkezve. A folytatáshoz távolítson el <span class=\"font-semibold\">%(num_devices_to_remove)s eszközt</span>, majd jelentkezzen be újra.",
+        "heading": "Eszközkorlát elérve",
+        "manage_devices": "Eszközök kezelése"
+      }
     },
     "recovery": {
       "consumed": {

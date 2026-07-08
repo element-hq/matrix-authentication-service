@@ -8,8 +8,14 @@ doc-valid-idents = ["OpenID", "OAuth", "UserInfo", "..", "PostgreSQL", "SQLite"]
 disallowed-methods = [
     { path = "rand::thread_rng", reason = "do not create rngs on the fly, pass them as parameters" },
     { path = "chrono::Utc::now", reason = "source the current time from the clock instead" },
-    { path = "ulid::Ulid::from_datetime", reason = "use Ulid::from_datetime_with_source instead" },
-    { path = "ulid::Ulid::new", reason = "use Ulid::from_datetime_with_source instead" },
+    # ulid's own constructors/accessors below either use ulid's (separate) `rand`
+    # or its `std`-only SystemTime API. Use `mas_data_model::UlidExt` instead so our
+    # ULID generation stays on the workspace `rand` and `chrono`.
+    { path = "ulid::Ulid::new", reason = "use mas_data_model::UlidExt::from_datetime_with_rng instead" },
+    { path = "ulid::Ulid::with_source", reason = "use mas_data_model::UlidExt::from_datetime_with_rng instead" },
+    { path = "ulid::Ulid::from_datetime", reason = "use mas_data_model::UlidExt::from_datetime_with_rng instead" },
+    { path = "ulid::Ulid::from_datetime_with_source", reason = "use mas_data_model::UlidExt::from_datetime_with_rng instead" },
+    { path = "ulid::Ulid::datetime", reason = "use mas_data_model::UlidExt::datetime_utc instead" },
     { path = "reqwest::Client::new", reason = "use mas_http::reqwest_client instead" },
     { path = "reqwest::RequestBuilder::send", reason = "use send_traced instead" },
 ]

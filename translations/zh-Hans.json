@@ -73,31 +73,46 @@
       "headline": "选择显示名称"
     },
     "consent": {
-      "client_wants_access": "<span>%(client_name)s</span> 位于 <span>%(redirect_uri)s</span>，请求访问您的账户。",
+      "client_wants_access": "位于 <span>%(redirect_uri)s</span> 上的 <span>%(client_name)s</span> 想要访问你的账户。",
+      "continue_to": "继续前往 <span>%(client_name)s</span>？",
       "heading": "允许访问你的账户？",
       "make_sure_you_trust": "请确保你信任 <span>%(client_name)s</span> 。",
+      "scope_list_preface": "一旦继续你将允许 <span>%(client_name)s</span>：",
       "this_will_allow": "这将允许 <span>%(client_name)s</span> ：",
+      "this_will_setup": "这将使用你位于 <span>%(server_name)s</span> 上的账户设置 %(client_name)s（<span>%(client_uri)s</span>）。",
+      "use_another_account": "使用另一账户",
       "you_may_be_sharing": "你可能正在与本网站或 app 分享敏感信息。"
     },
     "device_card": {
       "access_requested": "已请求访问权限",
       "device_code": "代码",
       "generic_device": "设备",
-      "ip_address": "IP 地址"
+      "ip_address": "IP 地址",
+      "security_code": "安全代码"
     },
     "device_code_link": {
-      "description": "链接设备",
-      "headline": "输入设备上显示的代码"
+      "description": "关联设备",
+      "headline": "关联新设备到账户",
+      "verification_code": "验证码"
     },
     "device_consent": {
       "another_device_access": "另一个设备想要访问你的账户。",
+      "confirm_device": "是，已确认这是我的设备并且想登录。",
       "denied": {
-        "description": "你已拒绝%(client_name)s 的访问。你可以关闭此窗口。",
+        "description": "你已拒绝 %(client_name)s 的访问。你可以关闭此窗口。",
         "heading": "访问被拒绝"
       },
+      "description": "<strong>另一设备</strong>想要关联你位于 <span>%(server_name)s</span> 上的账户： %(client_name)s（<span>%(client_uri)s</span>），请确保你认识该设备。",
+      "grant_access": "授予访问权",
       "granted": {
-        "description": "您已授予 %(client_name)s 访问权限。您可以关闭此窗口。",
+        "description": "你已授予 %(client_name)s 访问权限。可以关闭此窗口。",
         "heading": "已授予访问权限"
+      },
+      "this_will_setup": "另一设备尝试使用你在上的账户 <span>%(server_name)s</span> 配置 %(client_name)s（<span>%(client_uri)s</span>）。请确保你认识该设备。",
+      "title": "允许其访问你的账户？",
+      "warning": {
+        "description": "是否确定这是你的设备？管理员或 IT 支持人员绝不会要求你同意。",
+        "title": "你即将向远端设备授予账户的访问权"
       }
     },
     "device_display_name": {
@@ -116,7 +131,7 @@
         "copy_link": "复制以下链接并粘贴到浏览器中以创建新密码：",
         "create_new_password": "创建新密码",
         "fallback": "此按钮对你无效？",
-        "headline": "您已请求重置您在 %(server_name)s 的密码。",
+        "headline": "你已请求重置位于 %(server_name)s 上的账户密码。",
         "subject": "重置账户密码 (%(mxid)s)",
         "you_can_ignore": "如果你没有请求过重置密码可以忽略此邮件。当前密码仍然有效。"
       },
@@ -145,6 +160,9 @@
       "username_too_long": "用户名太长",
       "username_too_short": "用户名太短"
     },
+    "legacy_consent": {
+      "this_will_setup": "这将使用你位于 <span>%(server_name)s</span> 上的账户设置 <span>%(client_name)s</span>。"
+    },
     "login": {
       "call_to_register": "还没有账户？",
       "continue_with_provider": "以 %(provider)s 继续",
@@ -152,7 +170,7 @@
       "forgot_password": "忘记密码？",
       "headline": "登录",
       "link": {
-        "description": "正在链接您的<span class=\"break-keep text-links\">%(provider)s</span>账户",
+        "description": "正在关联你位于 <span class=\"break-keep text-links\">%(provider)s</span> 上的账户",
         "headline": "登录以链接"
       },
       "no_login_methods": "没有可用的登录途径。",
@@ -173,7 +191,12 @@
     "policy_violation": {
       "description": "这可能是由于创建请求的客户端、当前登录的用户或请求本身造成的。",
       "heading": "授权请求被该服务执行的策略拒绝",
-      "logged_as": "登录为 <span class=\"font-semibold\">%(username)s</span>"
+      "logged_as": "登录为 <span class=\"font-semibold\">%(username)s</span>",
+      "too_many_sessions": {
+        "description": "你的账户已登录到设备的数量上限。若要继续，<span class=\"font-semibold\">请从现有设备中移除 %(num_devices_to_remove)s 个</span>，然后重新登录。",
+        "heading": "设备数量已达上限",
+        "manage_devices": "管理设备"
+      }
     },
     "recovery": {
       "consumed": {
@@ -275,7 +298,7 @@
       "6_digit_code": "6位数代码",
       "code": "代码",
       "description": "输入发送至以下邮箱的6位数代码：<em>%(email)s</em>",
-      "headline": "验证邮箱"
+      "headline": "验证邮件地址"
     }
   }
 }

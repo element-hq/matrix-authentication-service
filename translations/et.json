@@ -87,23 +87,33 @@
       "access_requested": "Ligipääsupäring",
       "device_code": "Kood",
       "generic_device": "Seade",
-      "ip_address": "IP-aadress"
+      "ip_address": "IP-aadress",
+      "security_code": "Turvakood"
     },
     "device_code_link": {
-      "description": "Seo seade",
-      "headline": "Sisesta sinu seadmes kuvatud kood"
+      "description": "Sisesta oma teises seadmes kuvatav turvakood",
+      "headline": "Seo uus seade oma kasutajakontoga",
+      "verification_code": "Kinnituskood"
     },
     "device_consent": {
       "another_device_access": "Üks seade soovib ligipääsu sinu kasutajakontole.",
+      "confirm_device": "Kinnitan, et see on minu seade ja ma tahan sellega sisse logida.",
       "denied": {
         "description": "Sa keelasid seadmele %(client_name)s ligipääsu. Sa võid nüüd selle akna sulgeda.",
         "heading": "Ligipääs on keelatud"
       },
+      "description": "<strong>Teine seade</strong> soovib siduda seadme %(client_name)s (<span>%(client_uri)s</span>) sinu <span>%(server_name)s</span> kasutajakontoga. Veendu, et see seade on sulle teada.",
+      "grant_access": "Luba juurdepääs",
       "granted": {
         "description": "Sa lubasid seadmele %(client_name)s ligipääsu. Sa võid nüüd selle akna sulgeda.",
         "heading": "Ligipääs on lubatud"
       },
-      "this_will_setup": "Üks teine seade tahab seadistada %(client_name)s (<span>%(client_uri)s</span>) klienti kasutama sinu <span>%(server_name)s</span> kontot. Palun kontrolli, et see on õige ja sinule vajalik seade."
+      "this_will_setup": "Üks teine seade tahab seadistada %(client_name)s (<span>%(client_uri)s</span>) klienti kasutama sinu <span>%(server_name)s</span> kontot. Palun kontrolli, et see on õige ja sinule vajalik seade.",
+      "title": "Kas lubad juurdepääsu oma kasutajakontole?",
+      "warning": {
+        "description": "Kas olete kindel, et see on sinu seade? Peakasutajad või IT-tugi ei paluks sul seda kunagi heaks kiita.",
+        "title": "Sa oled andmas kaugseadmele juurdepääsu oma kasutajakontole"
+      }
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s seadmes %(device_name)s",
@@ -181,7 +191,12 @@
     "policy_violation": {
       "description": "Põhjustajaks võib olla autentimispäringu teinud klient, hetkel sisselogitud kasutaja või päring ise.",
       "heading": "Selle teenuse reeglite alusel keelduti autentimispäringust",
-      "logged_as": "Sisselogitud kui <span class=\"font-semibold\">%(username)s</span>"
+      "logged_as": "Sisselogitud kui <span class=\"font-semibold\">%(username)s</span>",
+      "too_many_sessions": {
+        "description": "Sinu kasutajakonto on juba sisse loginud kõikides lubatud seadmetes. Jätkamiseks eemalda <span class=\"font-semibold\">oma olemasolevatest seadmetest %(num_devices_to_remove)s</span> ja logi uuesti sisse.",
+        "heading": "Seadmete arvu ülempiir on käes",
+        "manage_devices": "Halda seadmeid"
+      }
     },
     "recovery": {
       "consumed": {

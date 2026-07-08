@@ -7,7 +7,7 @@
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{AccessToken, Clock, RefreshToken, RefreshTokenState, Session};
+use mas_data_model::{AccessToken, Clock, RefreshToken, RefreshTokenState, Session, UlidExt as _};
 use mas_storage::oauth2::OAuth2RefreshTokenRepository;
 use rand::RngCore;
 use sqlx::PgConnection;
@@ -177,7 +177,7 @@ impl OAuth2RefreshTokenRepository for PgOAuth2RefreshTokenRepository<'_> {
         refresh_token: String,
     ) -> Result<RefreshToken, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("refresh_token.id", tracing::field::display(id));
 
         sqlx::query!(

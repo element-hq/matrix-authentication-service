@@ -8,7 +8,7 @@
 
 use async_trait::async_trait;
 use chrono::Duration;
-use mas_data_model::Clock;
+use mas_data_model::{Clock, UlidExt as _};
 use mas_storage::queue::{QueueWorkerRepository, Worker};
 use rand::RngCore;
 use sqlx::PgConnection;
@@ -50,7 +50,7 @@ impl QueueWorkerRepository for PgQueueWorkerRepository<'_> {
         clock: &dyn Clock,
     ) -> Result<Worker, Self::Error> {
         let now = clock.now();
-        let worker_id = Ulid::from_datetime_with_source(now.into(), rng);
+        let worker_id = Ulid::from_datetime_with_rng(now, rng);
         tracing::Span::current().record("worker.id", tracing::field::display(worker_id));
 
         sqlx::query!(

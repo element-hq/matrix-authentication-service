@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -63,7 +64,7 @@ impl Reloadable for Templates {
 
 /// A wrapper around [`sd_notify::notify`] that logs any errors
 fn notify(states: &[sd_notify::NotifyState]) {
-    if let Err(e) = sd_notify::notify(false, states) {
+    if let Err(e) = sd_notify::notify(states) {
         tracing::error!(
             error = &e as &dyn std::error::Error,
             "Failed to notify service manager"
@@ -83,7 +84,7 @@ impl LifecycleManager {
         let sigterm = tokio::signal::unix::signal(SignalKind::terminate())?;
         let sigint = tokio::signal::unix::signal(SignalKind::interrupt())?;
         let sighup = tokio::signal::unix::signal(SignalKind::hangup())?;
-        let timeout = Duration::from_secs(60);
+        let timeout = Duration::from_mins(1);
         let task_tracker = TaskTracker::new();
 
         notify(&[sd_notify::NotifyState::MainPid(std::process::id())]);
@@ -132,16 +133,8 @@ impl LifecycleManager {
         notify(&[sd_notify::NotifyState::Ready]);
 
         // This will be `Some` if we have the watchdog enabled, and `None` if not
-        let mut watchdog_interval = {
-            let mut watchdog_usec = 0;
-            if sd_notify::watchdog_enabled(false, &mut watchdog_usec) {
-                Some(tokio::time::interval(Duration::from_micros(
-                    watchdog_usec / 2,
-                )))
-            } else {
-                None
-            }
-        };
+        let mut watchdog_interval =
+            sd_notify::watchdog_enabled().map(|timeout| tokio::time::interval(timeout / 2));
 
         // Wait for a first shutdown signal and trigger the soft shutdown
         let likely_crashed = loop {

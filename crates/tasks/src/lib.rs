@@ -80,7 +80,7 @@ impl State {
     }
 
     // This is fine for now, we may move that to a trait at some point.
-    #[allow(clippy::unused_self, clippy::disallowed_methods)]
+    #[expect(clippy::unused_self, clippy::disallowed_methods)]
     pub fn rng(&self) -> rand_chacha::ChaChaRng {
         rand_chacha::ChaChaRng::from_rng(rand::thread_rng()).expect("failed to seed rng")
     }

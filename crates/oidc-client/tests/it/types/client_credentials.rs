@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 Kévin Commaille.
 //
@@ -41,8 +42,8 @@ async fn pass_none() {
 
             if query_pairs
                 .get("client_id")
-                .filter(|s| *s == CLIENT_ID)
-                .is_none()
+                .as_ref()
+                .is_none_or(|s| *s != CLIENT_ID)
             {
                 println!("Wrong or missing client ID");
                 return false;
@@ -132,16 +133,16 @@ async fn pass_client_secret_post() {
 
             if query_pairs
                 .get("client_id")
-                .filter(|s| *s == CLIENT_ID)
-                .is_none()
+                .as_ref()
+                .is_none_or(|s| *s != CLIENT_ID)
             {
                 println!("Wrong or missing client ID");
                 return false;
             }
             if query_pairs
                 .get("client_secret")
-                .filter(|s| *s == CLIENT_SECRET)
-                .is_none()
+                .as_ref()
+                .is_none_or(|s| *s != CLIENT_SECRET)
             {
                 println!("Wrong or missing client secret");
                 return false;
@@ -194,8 +195,8 @@ async fn pass_client_secret_jwt() {
             }
             if query_pairs
                 .get("client_assertion_type")
-                .filter(|s| *s == "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
-                .is_none()
+                .as_ref()
+                .is_none_or(|s| *s != "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
             {
                 println!("Wrong or missing client assertion type");
                 return false;
@@ -273,8 +274,8 @@ async fn pass_private_key_jwt() {
             }
             if query_pairs
                 .get("client_assertion_type")
-                .filter(|s| *s == "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
-                .is_none()
+                .as_ref()
+                .is_none_or(|s| *s != "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
             {
                 println!("Wrong or missing client assertion type");
                 return false;

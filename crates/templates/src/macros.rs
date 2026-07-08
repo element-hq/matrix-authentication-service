@@ -25,7 +25,7 @@ macro_rules! register_templates {
         )?
 
         $(
-            // Match any attribute on the function, such as #[doc], #[allow(dead_code)], etc.
+            // Match any attribute on the function, such as #[doc], #[expect(dead_code)], etc.
             $( #[ $attr:meta ] )*
             // The function name
             pub fn $name:ident

@@ -10,7 +10,7 @@ use std::net::IpAddr;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    Authentication, AuthenticationMethod, BrowserSession, Clock, Password,
+    Authentication, AuthenticationMethod, BrowserSession, Clock, Password, UlidExt as _,
     UpstreamOAuthAuthorizationSession, User,
 };
 use mas_storage::{
@@ -19,8 +19,8 @@ use mas_storage::{
     user::{BrowserSessionFilter, BrowserSessionRepository},
 };
 use rand::RngCore;
-use sea_query::{Expr, PostgresQueryBuilder, Query};
-use sea_query_binder::SqlxBinder;
+use sea_query::{Expr, ExprTrait, PostgresQueryBuilder, Query};
+use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
@@ -31,6 +31,7 @@ use crate::{
     iden::{UpstreamOAuthAuthorizationSessions, UserSessions, Users},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
+    ulid_at::{max_ulid_at, min_ulid_at},
 };
 
 /// An implementation of [`BrowserSessionRepository`] for a PostgreSQL
@@ -47,7 +48,7 @@ impl<'c> PgBrowserSessionRepository<'c> {
     }
 }
 
-#[allow(clippy::struct_field_names)]
+#[expect(clippy::struct_field_names)]
 #[derive(sqlx::FromRow)]
 #[sea_query::enum_def]
 struct SessionLookup {
@@ -155,6 +156,17 @@ impl crate::filter::Filter for BrowserSessionFilter<'_> {
             .add_option(self.last_active_before().map(|last_active_before| {
                 Expr::col((UserSessions::Table, UserSessions::LastActiveAt)).lt(last_active_before)
             }))
+            .add_option(self.created_after().map(|created_after| {
+                // ULIDs encode the creation time in their high 48 bits, so we
+                // can use the primary key index to filter on creation time
+                // without touching the `created_at` column.
+                Expr::col((UserSessions::Table, UserSessions::UserSessionId))
+                    .gt(max_ulid_at(created_after))
+            }))
+            .add_option(self.created_before().map(|created_before| {
+                Expr::col((UserSessions::Table, UserSessions::UserSessionId))
+                    .lt(min_ulid_at(created_before))
+            }))
             .add_option(self.linked_to_upstream_sessions().map(|filter| {
                 Expr::col((UserSessions::Table, UserSessions::UserSessionId)).in_subquery(
                     Query::select()
@@ -234,7 +246,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
         user_agent: Option<String>,
     ) -> Result<BrowserSession, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("user_session.id", tracing::field::display(id));
 
         sqlx::query!(
@@ -463,7 +475,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
         user_password: &Password,
     ) -> Result<Authentication, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record(
             "user_session_authentication.id",
             tracing::field::display(id),
@@ -512,7 +524,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
         upstream_oauth_session: &UpstreamOAuthAuthorizationSession,
     ) -> Result<Authentication, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record(
             "user_session_authentication.id",
             tracing::field::display(id),

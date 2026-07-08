@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -32,7 +33,7 @@ use crate::{
     },
 };
 
-#[allow(clippy::struct_excessive_bools)]
+#[expect(clippy::struct_excessive_bools)]
 #[derive(Parser, Debug, Default)]
 pub(super) struct Options {
     /// Do not apply pending database migrations on start
@@ -154,6 +155,7 @@ impl Options {
             &config.passwords,
             &config.account,
             &config.captcha,
+            &config.oauth,
         )?;
 
         // Load and compile the templates
@@ -203,7 +205,7 @@ impl Options {
         // Activity is flushed every minute
         let activity_tracker = ActivityTracker::new(
             PgRepositoryFactory::new(pool.clone()).boxed(),
-            Duration::from_secs(60),
+            Duration::from_mins(1),
             shutdown.task_tracker(),
             shutdown.soft_shutdown_token(),
         );

@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -6,13 +7,13 @@
 
 use std::{convert::Infallible, net::IpAddr, sync::Arc};
 
-use axum::extract::{FromRef, FromRequestParts};
+use axum::extract::{FromRef, FromRequestParts, State};
 use ipnetwork::IpNetwork;
 use mas_context::LogContext;
 use mas_data_model::{AppVersion, BoxClock, BoxRng, SiteConfig, SystemClock};
 use mas_handlers::{
-    ActivityTracker, BoundActivityTracker, CookieManager, ErrorWrapper, GraphQLSchema, Limiter,
-    MetadataCache, RequesterFingerprint, passwords::PasswordManager,
+    ActivityTracker, ClientIp, CookieManager, ErrorWrapper, GraphQLSchema, Limiter, MetadataCache,
+    passwords::PasswordManager,
 };
 use mas_i18n::Translator;
 use mas_keystore::{Encrypter, Keystore};
@@ -100,7 +101,7 @@ impl AppState {
                     if let Err(e) = metadata_cache
                         .warm_up_and_run(
                             &http_client,
-                            std::time::Duration::from_secs(60 * 15),
+                            std::time::Duration::from_mins(15),
                             &mut repo,
                         )
                         .await
@@ -240,7 +241,7 @@ impl FromRequestParts<AppState> for BoxRng {
         _state: &AppState,
     ) -> Result<Self, Self::Rejection> {
         // This rng is used to source the local rng
-        #[allow(clippy::disallowed_methods)]
+        #[expect(clippy::disallowed_methods)]
         let rng = rand::thread_rng();
 
         let rng = rand_chacha::ChaChaRng::from_rng(rng).expect("Failed to seed RNG");
@@ -272,10 +273,11 @@ impl FromRequestParts<AppState> for ActivityTracker {
 }
 
 fn infer_client_ip(
-    parts: &axum::http::request::Parts,
+    extensions: &axum::http::Extensions,
+    headers: &axum::http::HeaderMap,
     trusted_proxies: &[IpNetwork],
 ) -> Option<IpAddr> {
-    let connection_info = parts.extensions.get::<mas_listener::ConnectionInfo>();
+    let connection_info = extensions.get::<mas_listener::ConnectionInfo>();
 
     let peer = if let Some(info) = connection_info {
         // We can always trust the proxy protocol to give us the correct IP address
@@ -291,8 +293,7 @@ fn infer_client_ip(
     };
 
     // Get the list of IPs from the X-Forwarded-For header
-    let peers_from_header = parts
-        .headers
+    let peers_from_header = headers
         .get("x-forwarded-for")
         .and_then(|value| value.to_str().ok())
         .map(|value| value.split(',').filter_map(|v| v.parse().ok()))
@@ -324,41 +325,23 @@ fn infer_client_ip(
     client_ip.or(fallback)
 }
 
-impl FromRequestParts<AppState> for BoundActivityTracker {
-    type Rejection = Infallible;
-
-    async fn from_request_parts(
-        parts: &mut axum::http::request::Parts,
-        state: &AppState,
-    ) -> Result<Self, Self::Rejection> {
-        // TODO: we may infer the IP twice, for the activity tracker and the limiter
-        let ip = infer_client_ip(parts, &state.trusted_proxies);
-        tracing::debug!(ip = ?ip, "Inferred client IP address");
-        Ok(state.activity_tracker.clone().bind(ip))
-    }
-}
-
-impl FromRequestParts<AppState> for RequesterFingerprint {
-    type Rejection = Infallible;
-
-    async fn from_request_parts(
-        parts: &mut axum::http::request::Parts,
-        state: &AppState,
-    ) -> Result<Self, Self::Rejection> {
-        // TODO: we may infer the IP twice, for the activity tracker and the limiter
-        let ip = infer_client_ip(parts, &state.trusted_proxies);
-
-        if let Some(ip) = ip {
-            Ok(RequesterFingerprint::new(ip))
-        } else {
-            // If we can't infer the IP address, we'll just use an empty fingerprint and
-            // warn about it
-            tracing::warn!(
-                "Could not infer client IP address for an operation which rate-limits based on IP addresses"
-            );
-            Ok(RequesterFingerprint::EMPTY)
-        }
-    }
+/// Middleware which infers the client IP address once, ahead of the rest of the
+/// request handling, and stores it in the request extensions as a [`ClientIp`].
+///
+/// This lets the logging middleware and the `BoundActivityTracker` /
+/// `RequesterFingerprint` extractors read the same IP without re-inferring it.
+pub(crate) async fn client_ip_middleware(
+    State(state): State<AppState>,
+    mut request: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    let ip = infer_client_ip(
+        request.extensions(),
+        request.headers(),
+        &state.trusted_proxies,
+    );
+    request.extensions_mut().insert(ClientIp(ip));
+    next.run(request).await
 }
 
 impl FromRequestParts<AppState> for BoxRepository {

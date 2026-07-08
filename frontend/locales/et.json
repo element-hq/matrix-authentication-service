@@ -125,7 +125,8 @@
       "heading": "E-posti aadress {{email}} on juba kasutusel."
     },
     "end_session_button": {
-      "confirmation_modal_title": "Kas sa oled kindel, et soovid selle sessiooni lõpetada?",
+      "confirmation_modal_body_text": "Krüptitud vestlusajaloo kaotamise vältimiseks veendu, et sul on alati juurdepääs mõnele muule verifitseeritud seadmele või taastevõtmele.",
+      "confirmation_modal_title": "Kas sa oled kindel, et soovid selle seadme eemaldada?",
       "text": "Eemalda seade"
     },
     "error": {
@@ -145,6 +146,7 @@
       "inactive_90_days": "Pole kasutusel olnud üle 90 päeva"
     },
     "nav": {
+      "device_limit_error": "Seadmete arvu ülempiir on käes",
       "devices": "Seadmed",
       "plan": "Teenusepakett",
       "profile": "Profiil",
@@ -357,11 +359,27 @@
     "user_sessions_overview": {
       "active_sessions:one": "{{count}} aktiivne sessioon",
       "active_sessions:other": "{{count}} aktiivset sessiooni",
+      "approaching_session_limit_warning_description:one": "Olete kasutanud {{num_sessions}} / {{count}} lubatud seadmest. Kui oled oma piirarvuni jõudnud, pead uue lisamiseks olemasoleva seadme eemaldama.",
+      "approaching_session_limit_warning_description:other": "Olete kasutanud {{num_sessions}} / {{count}} lubatud seadmetest. Kui oled oma piirarvuni jõudnud, pead uue lisamiseks olemasoleva seadme eemaldama.",
+      "approaching_session_limit_warning_header": "Tähelepanu, sinu seadmete arvu ülempiir on lähedal",
       "heading": "Kus sa oled sisse logitud",
+      "hit_session_limit_warning_description:one": "Oled kasutanud {{count}} / {{num_sessions}} lubatud seadmest. Kui soovid uuesti sisse logida, pead eemaldama ühe olemasoleva seadme.",
+      "hit_session_limit_warning_description:other": "Oled kasutanud {{count}} / {{num_sessions}} lubatud seadmetest. Kui soovid uuesti sisse logida, pead eemaldama ühe olemasoleva seadme.",
+      "hit_session_limit_warning_header": "Oled jõudnud seadmete arvu piiranguni",
       "no_active_sessions": {
         "default": "Sa pole mitte üheski rakenduses sisse loginud.",
         "inactive_90_days": "Kõik sinu sessioonid on olnud aktiivsed viimase 90 päeva jooksul."
-      }
+      },
+      "num_sessions_filtered_header": {
+        "header:one": "{{count}} seade vastab sinu filtrile ({{unfiltered_session_total}})",
+        "header:other": "{{count}} seadet vastavad sinu filtrile ({{unfiltered_session_total}})",
+        "unfiltered_session_total:one": "Kokku {{count}} ",
+        "unfiltered_session_total:other": "Kokku {{count}} "
+      },
+      "num_sessions_header:one": "{{count}} seade",
+      "num_sessions_header:other": "{{count}} seadet",
+      "session_limit_info:one": "Oled kasutanud {{count}}/{{limit}} lubatud seadmetest",
+      "session_limit_info:other": "Oled kasutanud {{count}}/{{limit}} lubatud seadmetest"
     },
     "verify_email": {
       "code_expired_alert": {

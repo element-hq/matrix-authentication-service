@@ -38,7 +38,7 @@ const SUBJECT_IDENTIFIER: &str = "SubjectID";
 const ID_TOKEN_SIGNING_ALG: JsonWebSignatureAlg = JsonWebSignatureAlg::Rs256;
 
 fn now() -> DateTime<Utc> {
-    #[allow(clippy::disallowed_methods)]
+    #[expect(clippy::disallowed_methods)]
     Utc::now()
 }
 

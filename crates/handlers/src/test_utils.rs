@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -6,6 +7,7 @@
 
 use std::{
     convert::Infallible,
+    net::IpAddr,
     sync::{Arc, Mutex, RwLock},
     task::{Context, Poll},
 };
@@ -28,6 +30,7 @@ use mas_axum_utils::{
     cookies::{CookieJar, CookieManager},
 };
 use mas_config::RateLimitingConfig;
+use mas_context::LogContext;
 use mas_data_model::{AppVersion, BoxClock, BoxRng, SiteConfig, clock::MockClock};
 use mas_email::{MailTransport, Mailer};
 use mas_i18n::Translator;
@@ -52,13 +55,13 @@ use tower::{Layer, Service, ServiceExt};
 use url::Url;
 
 use crate::{
-    ActivityTracker, BoundActivityTracker, Limiter, RequesterFingerprint, graphql,
+    ActivityTracker, ClientIp, Limiter, graphql,
     passwords::{Hasher, PasswordManager},
     upstream_oauth2::cache::MetadataCache,
 };
 
 /// Setup rustcrypto and tracing for tests.
-#[allow(unused_must_use)]
+#[expect(unused_must_use)]
 pub(crate) fn setup() {
     rustls::crypto::aws_lc_rs::default_provider().install_default();
 
@@ -69,7 +72,7 @@ pub(crate) fn setup() {
 }
 
 pub(crate) async fn policy_factory(
-    server_name: &str,
+    base_data: mas_policy::BaseData,
     data: serde_json::Value,
 ) -> Result<Arc<PolicyFactory>, anyhow::Error> {
     let workspace_root = camino::Utf8Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -86,7 +89,7 @@ pub(crate) async fn policy_factory(
         email: "email/violation".to_owned(),
     };
 
-    let data = mas_policy::Data::new(server_name.to_owned(), None).with_rest(data);
+    let data = mas_policy::Data::new(base_data).with_rest(data);
 
     let policy_factory = PolicyFactory::load(file, data, entrypoints).await?;
     let policy_factory = Arc::new(policy_factory);
@@ -115,7 +118,7 @@ pub(crate) struct TestState {
     pub task_tracker: TaskTracker,
     queue_worker: Arc<tokio::sync::Mutex<QueueWorker>>,
 
-    #[allow(dead_code)] // It is used, as it will cancel the CancellationToken when dropped
+    #[expect(dead_code)] // It is used, as it will cancel the CancellationToken when dropped
     cancellation_drop_guard: Arc<DropGuard>,
 }
 
@@ -137,6 +140,7 @@ pub fn test_site_config() -> SiteConfig {
         imprint: None,
         password_login_enabled: true,
         password_registration_enabled: true,
+        password_registration_token_required: false,
         registration_token_required: false,
         email_change_allowed: true,
         displayname_change_allowed: true,
@@ -150,6 +154,8 @@ pub fn test_site_config() -> SiteConfig {
         login_with_email_allowed: true,
         plan_management_iframe_uri: None,
         session_limit: None,
+        device_code_grant_enabled: true,
+        device_code_user_code_auto_fill_enabled: true,
     }
 }
 
@@ -164,6 +170,11 @@ impl TestState {
         pool: PgPool,
         site_config: SiteConfig,
     ) -> Result<Self, anyhow::Error> {
+        // Make sure the rustls crypto provider and tracing are set up, as
+        // building the HTTP client below requires a process-level provider to
+        // be installed.
+        setup();
+
         let workspace_root = workspace_root();
 
         let task_tracker = TaskTracker::new();
@@ -207,8 +218,14 @@ impl TestState {
             PasswordManager::disabled()
         };
 
-        let policy_factory =
-            policy_factory(&site_config.server_name, serde_json::json!({})).await?;
+        let policy_factory = policy_factory(
+            mas_policy::BaseData {
+                server_name: site_config.server_name.clone(),
+                session_limit: site_config.session_limit.clone(),
+            },
+            serde_json::json!({}),
+        )
+        .await?;
 
         let homeserver_connection =
             Arc::new(MockHomeserverConnection::new(&site_config.server_name));
@@ -235,7 +252,7 @@ impl TestState {
 
         let activity_tracker = ActivityTracker::new(
             PgRepositoryFactory::new(pool.clone()).boxed(),
-            std::time::Duration::from_secs(60),
+            std::time::Duration::from_mins(1),
             &task_tracker,
             shutdown_token.child_token(),
         );
@@ -293,11 +310,17 @@ impl TestState {
         queue.process_all_jobs_in_tests().await.unwrap();
     }
 
-    /// Reset the test utils to a fresh state, with the same configuration.
-    pub async fn reset(self) -> Self {
+    /// Restart the app with the same configuration.
+    ///
+    /// To change the config, mutate `TestState.site_config` before calling this
+    /// function.
+    pub async fn restart(self) -> Self {
         let site_config = self.site_config.clone();
         let pool = self.repository_factory.pool();
         let task_tracker = self.task_tracker.clone();
+
+        // Retain the homeserver connection so we keep the in-memory state
+        let homeserver_connection = self.homeserver_connection.clone();
 
         // This should trigger the cancellation drop guard
         drop(self);
@@ -306,12 +329,18 @@ impl TestState {
         task_tracker.close();
         task_tracker.wait().await;
 
-        Self::from_pool_with_site_config(pool, site_config)
+        let mut state = Self::from_pool_with_site_config(pool, site_config)
             .await
-            .unwrap()
+            .unwrap();
+        // Restore the homeserver connection so we keep the in-memory state
+        state.homeserver_connection = homeserver_connection;
+        state
     }
 
-    pub async fn request<B>(&self, request: Request<B>) -> Response<String>
+    /// Dispatch a request through the router, without setting up a log context.
+    /// Use [`TestState::request`] instead — it mirrors production by running
+    /// inside a [`LogContext`].
+    async fn dispatch<B>(&self, request: Request<B>) -> Response<String>
     where
         B: HttpBody<Data = Bytes> + Send + 'static,
         <B as HttpBody>::Error: std::error::Error + Send + Sync,
@@ -346,6 +375,40 @@ impl TestState {
         Response::from_parts(parts, body)
     }
 
+    pub async fn request<B>(&self, request: Request<B>) -> Response<String>
+    where
+        B: HttpBody<Data = Bytes> + Send + 'static,
+        <B as HttpBody>::Error: std::error::Error + Send + Sync,
+        B::Error: std::error::Error + Send + Sync,
+        B::Data: Send,
+    {
+        // Mirror production: every request is served inside a `LogContext`
+        // (set up by the `LogContextLayer` in the real server).
+        LogContext::new("test-request")
+            .run(|| self.dispatch(request))
+            .await
+    }
+
+    /// Like [`TestState::request`], but additionally returns the requester that
+    /// the handlers recorded on the request's [`LogContext`] (formatted via its
+    /// `Display`), so tests can assert how a request was attributed. `None`
+    /// means no requester was recorded.
+    pub async fn request_capturing_requester<B>(
+        &self,
+        request: Request<B>,
+    ) -> (Response<String>, Option<String>)
+    where
+        B: HttpBody<Data = Bytes> + Send + 'static,
+        <B as HttpBody>::Error: std::error::Error + Send + Sync,
+        B::Error: std::error::Error + Send + Sync,
+        B::Data: Send,
+    {
+        let log_context = LogContext::new("test-request");
+        let response = log_context.run(|| self.dispatch(request)).await;
+        let requester = log_context.requester().map(ToString::to_string);
+        (response, requester)
+    }
+
     /// Get a token with the given scope
     pub async fn token_with_scope(&mut self, scope: &str) -> String {
         // Provision a client
@@ -365,7 +428,10 @@ impl TestState {
         let state = {
             let mut state = self.clone();
             state.policy_factory = policy_factory(
-                "example.com",
+                mas_policy::BaseData {
+                    server_name: "example.com".to_owned(),
+                    session_limit: None,
+                },
                 serde_json::json!({
                     "admin_clients": [client_id],
                 }),
@@ -597,29 +663,6 @@ impl FromRequestParts<TestState> for ActivityTracker {
     }
 }
 
-impl FromRequestParts<TestState> for BoundActivityTracker {
-    type Rejection = Infallible;
-
-    async fn from_request_parts(
-        _parts: &mut axum::http::request::Parts,
-        state: &TestState,
-    ) -> Result<Self, Self::Rejection> {
-        let ip = None;
-        Ok(state.activity_tracker.clone().bind(ip))
-    }
-}
-
-impl FromRequestParts<TestState> for RequesterFingerprint {
-    type Rejection = Infallible;
-
-    async fn from_request_parts(
-        _parts: &mut axum::http::request::Parts,
-        _state: &TestState,
-    ) -> Result<Self, Self::Rejection> {
-        Ok(RequesterFingerprint::EMPTY)
-    }
-}
-
 impl FromRequestParts<TestState> for BoxClock {
     type Rejection = Infallible;
 
@@ -682,6 +725,14 @@ pub(crate) trait RequestBuilderExt {
     /// credentials.
     fn basic_auth(self, username: &str, password: &str) -> Self;
 
+    /// Sets the client IP address that the extractors will see for this
+    /// request.
+    ///
+    /// This mirrors what the IP-detection middleware does in production: it
+    /// stores a [`ClientIp`] in the request extensions, which is then read by
+    /// the `BoundActivityTracker` and `RequesterFingerprint` extractors.
+    fn client_ip(self, ip: IpAddr) -> Self;
+
     /// Builds the request with an empty body.
     fn empty(self) -> hyper::Request<String>;
 }
@@ -716,6 +767,10 @@ impl RequestBuilderExt for hyper::http::request::Builder {
             .unwrap()
             .typed_insert(Authorization::basic(username, password));
         self
+    }
+
+    fn client_ip(self, ip: IpAddr) -> Self {
+        self.extension(ClientIp(Some(ip)))
     }
 
     fn empty(self) -> hyper::Request<String> {

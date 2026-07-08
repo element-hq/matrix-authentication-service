@@ -210,7 +210,7 @@ fn to_precision(number: f64, mut placeholder: Placeholder) -> String {
     // This tells us how many numbers are before the decimal point
     // This lossy cast is fine because we only care about the order of magnitude,
     // and special cases are handled above
-    #[allow(clippy::cast_possible_truncation)]
+    #[expect(clippy::cast_possible_truncation)]
     let log10 = number.abs().log10().floor() as i64;
     let precision_i64 = precision.try_into().unwrap_or(i64::MAX);
     // We can fit the number in the precision, so we just format it as normal
@@ -226,7 +226,7 @@ fn to_precision(number: f64, mut placeholder: Placeholder) -> String {
     }
 }
 
-#[allow(clippy::match_same_arms)]
+#[expect(clippy::match_same_arms)]
 fn format_value(value: &Value, placeholder: &Placeholder) -> Result<String, FormatError> {
     match (value, &placeholder.type_specifier) {
         (Value::Number(number), ts @ TypeSpecifier::BinaryNumber) => {
@@ -295,7 +295,7 @@ fn format_value(value: &Value, placeholder: &Placeholder) -> Result<String, Form
                 Ok(format_placeholder!(number, placeholder))
             } else if let Some(number) = number.as_i64() {
                 // Truncate to a i32 and then u32 to mimic JS's behaviour
-                #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+                #[expect(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
                 let number = number as i32 as u32;
                 Ok(format_placeholder!(number, placeholder))
             } else {
@@ -364,7 +364,7 @@ fn format_value(value: &Value, placeholder: &Placeholder) -> Result<String, Form
                 Ok(format_placeholder!(number, "o", placeholder))
             } else if let Some(number) = number.as_i64() {
                 // Truncate to a i32 and then u32 to mimic JS's behaviour
-                #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+                #[expect(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
                 let number = number as i32 as u32;
                 Ok(format_placeholder!(number, "o", placeholder))
             } else {
@@ -418,7 +418,7 @@ fn format_value(value: &Value, placeholder: &Placeholder) -> Result<String, Form
                 Ok(format_placeholder!(number, "x", placeholder))
             } else if let Some(number) = n.as_i64() {
                 // Truncate to a i32 and then u32 to mimic JS's behaviour
-                #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+                #[expect(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
                 let number = number as i32 as u32;
                 Ok(format_placeholder!(number, "x", placeholder))
             } else {
@@ -440,7 +440,7 @@ fn format_value(value: &Value, placeholder: &Placeholder) -> Result<String, Form
                 Ok(format_placeholder!(number, "X", placeholder))
             } else if let Some(number) = n.as_i64() {
                 // Truncate to a i32 and then u32 to mimic JS's behaviour
-                #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+                #[expect(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
                 let number = number as i32 as u32;
                 Ok(format_placeholder!(number, "X", placeholder))
             } else {

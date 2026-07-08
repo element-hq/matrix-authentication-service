@@ -214,7 +214,6 @@ mod rsa_impls {
     impl TryFrom<&RsaPrivateParameters> for RsaPrivateKey {
         type Error = rsa::errors::Error;
 
-        #[allow(clippy::many_single_char_names)]
         fn try_from(value: &RsaPrivateParameters) -> Result<Self, Self::Error> {
             let n = BigUint::from_bytes_be(value.n.as_bytes());
             let e = BigUint::from_bytes_be(value.e.as_bytes());

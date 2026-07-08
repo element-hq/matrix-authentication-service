@@ -45,7 +45,7 @@ The `--output` option can be used to specify the output file. If not specified, 
 ## `config sync [--prune] [--dry-run]`
 
 Synchronize the configuration with the database.
-This will synchronize the `clients` and `upstream_oauth` sections of the configuration with the database.
+This will synchronize the `clients` and `upstream_oauth2` sections of the configuration with the database.
 By default, it does not delete clients and upstreams that are not in the configuration anymore. Use the `--prune` option to do so.
 The `--dry-run` option will log the changes that would be made, without actually making them.
 

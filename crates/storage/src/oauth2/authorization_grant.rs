@@ -5,6 +5,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use std::collections::BTreeMap;
+
 use async_trait::async_trait;
 use mas_data_model::{AuthorizationCode, AuthorizationGrant, Client, Clock, Session};
 use oauth2_types::{requests::ResponseMode, scope::Scope};
@@ -42,11 +44,14 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
     /// * `login_hint`: The `login_hint` the client sent, if set
     /// * `locale`: The locale the detected when the user asked for the
     ///   authorization grant
+    /// * `raw_parameters`: The raw query parameters of the authorization
+    ///   request, used to template the parameters forwarded to the upstream
+    ///   provider
     ///
     /// # Errors
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments)]
     async fn add(
         &mut self,
         rng: &mut (dyn RngCore + Send),
@@ -61,6 +66,7 @@ pub trait OAuth2AuthorizationGrantRepository: Send + Sync {
         response_type_id_token: bool,
         login_hint: Option<String>,
         locale: Option<String>,
+        raw_parameters: BTreeMap<String, String>,
     ) -> Result<AuthorizationGrant, Self::Error>;
 
     /// Lookup an authorization grant by its ID
@@ -169,6 +175,7 @@ repository_impl!(OAuth2AuthorizationGrantRepository:
         response_type_id_token: bool,
         login_hint: Option<String>,
         locale: Option<String>,
+        raw_parameters: BTreeMap<String, String>,
     ) -> Result<AuthorizationGrant, Self::Error>;
 
     async fn lookup(&mut self, id: Ulid) -> Result<Option<AuthorizationGrant>, Self::Error>;

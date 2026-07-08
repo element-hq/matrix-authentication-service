@@ -11,11 +11,7 @@ updates:
       - "A-Dependencies"
       - "Z-Deps-Backend"
     schedule:
-      interval: "daily"
-    ignore:
-      # We plan to remove apalis soon, let's ignore it for now
-      - dependency-name: "apalis"
-      - dependency-name: "apalis-*"
+      interval: "monthly"
     groups:
       axum:
         patterns:
@@ -44,6 +40,8 @@ updates:
         patterns:
           - "icu"
           - "icu_*"
+    cooldown:
+      default-days: 14
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -51,15 +49,19 @@ updates:
       - "A-Dependencies"
       - "Z-Deps-CI"
     schedule:
-      interval: "daily"
+      interval: "monthly"
+    cooldown:
+      default-days: 14
 
   - package-ecosystem: "npm"
-    directory: "/frontend/"
+    # pnpm workspace lives at the repo root, includes mostly frontend
+    # dependencies but also a few tools
+    directory: "/"
     labels:
       - "A-Dependencies"
       - "Z-Deps-Frontend"
     schedule:
-      interval: "daily"
+      interval: "monthly"
     groups:
       storybook:
         patterns:
@@ -111,3 +113,5 @@ updates:
       browser-logos:
         patterns:
           - "@browser-logos/*"
+    cooldown:
+      default-days: 14

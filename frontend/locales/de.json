@@ -125,7 +125,8 @@
       "heading": "Die E-Mail-Adresse {{email}} wird bereits verwendet."
     },
     "end_session_button": {
-      "confirmation_modal_title": "Möchtest du diese Sitzung wirklich beenden?",
+      "confirmation_modal_body_text": "Stelle sicher, dass du immer Zugriff auf ein anderes verifiziertes Gerät oder deinen Wiederherstellungsschlüssel hast, um zu vermeiden, dass dein verschlüsselter Chatverlauf verloren geht.",
+      "confirmation_modal_title": "Möchten Sie dieses Gerät wirklich entfernen?",
       "text": "Gerät entfernen"
     },
     "error": {
@@ -145,6 +146,7 @@
       "inactive_90_days": "Seit über 90 Tagen inaktiv"
     },
     "nav": {
+      "device_limit_error": "Gerätelimit erreicht",
       "devices": "Geräte",
       "plan": "Abo",
       "profile": "Profil",
@@ -357,11 +359,27 @@
     "user_sessions_overview": {
       "active_sessions:one": "{{count}} aktive Sitzung",
       "active_sessions:other": "{{count}} aktive Sitzungen",
+      "approaching_session_limit_warning_description:one": "Du hast {{num_sessions}} von {{count}} Geräteplätzen belegt. Sobald du das Limit erreicht hast, musst du ein vorhandenes Gerät entfernen, um ein weiteres hinzuzufügen.",
+      "approaching_session_limit_warning_description:other": "Du hast {{num_sessions}} von {{count}} Geräteplätzen belegt. Sobald du das Limit erreicht hast, musst du ein vorhandenes Gerät entfernen, um ein weiteres hinzuzufügen.",
+      "approaching_session_limit_warning_header": "Achtung, du hast fast das Limit für angemeldete Geräte erreicht",
       "heading": "Wo du angemeldet bist",
+      "hit_session_limit_warning_description:one": "Du hast {{num_sessions}} von {{count}} Geräteplätzen belegt. Wenn du dich erneut anmelden möchtest, musst du ein bereits angemeldetes Gerät entfernen.",
+      "hit_session_limit_warning_description:other": "Du hast {{num_sessions}} von {{count}} Geräteplätzen belegt. Wenn du dich erneut anmelden möchtest, musst du ein bereits angemeldetes Gerät entfernen.",
+      "hit_session_limit_warning_header": "Du hast das Limit für angemeldete Geräte erreicht",
       "no_active_sessions": {
         "default": "Du bist bei keiner Anwendung angemeldet.",
         "inactive_90_days": "Alle deine Sitzungen waren in den letzten 90 Tagen aktiv."
-      }
+      },
+      "num_sessions_filtered_header": {
+        "header:one": "{{count}} Geräte entsprechen Ihren Suchkriterien ({{unfiltered_session_total}})",
+        "header:other": "{{count}} Geräte entsprechen Ihren Suchkriterien ({{unfiltered_session_total}})",
+        "unfiltered_session_total:one": "{{count}} insgesamt",
+        "unfiltered_session_total:other": "{{count}} insgesamt"
+      },
+      "num_sessions_header:one": "{{count}} Gerät",
+      "num_sessions_header:other": "{{count}} Geräte",
+      "session_limit_info:one": "Du hast {{count}} von {{limit}} Geräten belegt",
+      "session_limit_info:other": "Du hast {{count}} von {{limit}} Geräten belegt"
     },
     "verify_email": {
       "code_expired_alert": {

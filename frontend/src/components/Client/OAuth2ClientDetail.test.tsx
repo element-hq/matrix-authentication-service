@@ -22,6 +22,7 @@ describe("<OAuth2ClientDetail>", () => {
     clientName: "Test Client",
     clientUri: "https://client.org/logo.png",
     tosUri: "https://client.org/tos",
+    logoUri: null,
     policyUri: "https://client.org/policy",
     redirectUris: ["https://client.org/"],
   };
@@ -38,7 +39,7 @@ describe("<OAuth2ClientDetail>", () => {
     const data = makeFragmentData(
       {
         ...baseClient,
-        tosUri: undefined,
+        tosUri: null,
       },
       OAUTH2_CLIENT_FRAGMENT,
     );
@@ -52,7 +53,7 @@ describe("<OAuth2ClientDetail>", () => {
     const data = makeFragmentData(
       {
         ...baseClient,
-        logoUri: undefined,
+        logoUri: null,
       },
       OAUTH2_CLIENT_FRAGMENT,
     );

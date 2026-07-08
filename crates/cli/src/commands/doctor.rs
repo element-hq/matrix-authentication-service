@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -40,10 +41,12 @@ impl Options {
         let base_url = config.http.public_base.as_str();
         let issuer = config.http.issuer.as_ref().map(url::Url::as_str);
         let issuer = issuer.unwrap_or(base_url);
-        let matrix_domain: Host = Host::parse(&config.matrix.homeserver).context(
-            r"The homeserver host in the config (`matrix.homeserver`) is not a valid domain.
-See {DOCS_BASE}/setup/homeserver.html",
-        )?;
+        let matrix_domain: Host = Host::parse(&config.matrix.homeserver).with_context(|| {
+            format!(
+                r"The homeserver host in the config (`matrix.homeserver`) is not a valid domain.
+See {DOCS_BASE}/setup/homeserver.html"
+            )
+        })?;
         let secret = config.matrix.secret().await?;
         let hs_api = config.matrix.endpoint;
 
@@ -60,10 +63,6 @@ This means some clients will refuse to use it."
         let expected_well_known = serde_json::json!({
             "m.homeserver": {
                 "base_url": "...",
-            },
-            "org.matrix.msc2965.authentication": {
-                "issuer": issuer,
-                "account": format!("{base_url}account/"),
             },
         });
 
@@ -82,63 +81,6 @@ Make sure the homeserver is reachable and the well-known document is available a
 
                 match result {
                     Ok(body) => {
-                        if let Some(auth) = body.get("org.matrix.msc2965.authentication") {
-                            if let Some(wk_issuer) =
-                                auth.get("issuer").and_then(|issuer| issuer.as_str())
-                            {
-                                if issuer == wk_issuer {
-                                    info!(
-                                        r#"✅ Matrix client well-known at "{well_known_uri}" is valid"#
-                                    );
-                                } else {
-                                    warn!(
-                                        r#"⚠️ Matrix client well-known has an "org.matrix.msc2965.authentication" section, but the issuer is not the same as the homeserver.
-Check the well-known document at "{well_known_uri}"
-This can happen because MAS parses the URL its config differently from the homeserver.
-This means some OIDC-native clients might not work.
-Make sure that the MAS config contains:
-
-  http:
-    public_base: {issuer:?}
-
-And in the Synapse config:
-
-  matrix_authentication_service:
-    enabled: true
-    # This must point to where MAS is reachable by Synapse
-    endpoint: {issuer:?}
-    # ...
-
-See {DOCS_BASE}/setup/homeserver.html
-"#
-                                    );
-                                }
-                            } else {
-                                error!(
-                                    r#"❌ Matrix client well-known "org.matrix.msc2965.authentication" does not have a valid "issuer" field.
-Check the well-known document at "{well_known_uri}"
-"#
-                                );
-                            }
-                        } else {
-                            warn!(
-                                r#"Matrix client well-known is missing the "org.matrix.msc2965.authentication" section.
-Check the well-known document at "{well_known_uri}"
-Make sure Synapse has delegated auth enabled:
-
-  matrix_authentication_service:
-    enabled: true
-    endpoint: {issuer:?}
-    # ...
-
-If it is not Synapse handling the well-known document, update it to include the following:
-
-{expected_well_known:#}
-
-See {DOCS_BASE}/setup/homeserver.html
-"#
-                            );
-                        }
                         // Return the discovered homeserver base URL
                         body.get("m.homeserver")
                             .and_then(|hs| hs.get("base_url"))

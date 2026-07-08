@@ -34,7 +34,7 @@ enum Requirements {
     Deprecated,
 }
 
-#[allow(dead_code)]
+#[expect(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct WebEncryptionSignatureAlgorithm {
     #[serde(rename = "Algorithm Name")]
@@ -112,7 +112,7 @@ impl EnumEntry for WebEncryptionSignatureAlgorithm {
     }
 }
 
-#[allow(dead_code)]
+#[expect(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct WebEncryptionCompressionAlgorithm {
     #[serde(rename = "Compression Algorithm Value")]
@@ -146,7 +146,7 @@ impl EnumEntry for WebEncryptionCompressionAlgorithm {
     }
 }
 
-#[allow(dead_code)]
+#[expect(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct WebKeyType {
     #[serde(rename = "\"kty\" Parameter Value")]
@@ -178,7 +178,7 @@ impl EnumEntry for WebKeyType {
     }
 }
 
-#[allow(dead_code)]
+#[expect(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct WebKeyEllipticCurve {
     #[serde(rename = "Curve Name")]
@@ -223,7 +223,7 @@ impl EnumEntry for WebKeyEllipticCurve {
     }
 }
 
-#[allow(dead_code)]
+#[expect(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct WebKeyUse {
     #[serde(rename = "Use Member Value")]
@@ -253,7 +253,7 @@ impl EnumEntry for WebKeyUse {
     }
 }
 
-#[allow(dead_code)]
+#[expect(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct WebKeyOperation {
     #[serde(rename = "Key Operation Value")]

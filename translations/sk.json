@@ -1,0 +1,122 @@
+{
+  "action": {
+    "back": "Naspäť",
+    "cancel": "Zrušiť",
+    "continue": "Pokračovať",
+    "create_account": "Vytvoriť účet",
+    "sign_in": "Prihlásiť sa",
+    "sign_out": "Odhlásiť sa",
+    "submit": "Odoslať"
+  },
+  "app": {
+    "human_name": "Matrix Authentication Service",
+    "name": "matrix-authentication-service",
+    "technical_description": "Dokument zisťovania OpenID Connect: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>"
+  },
+  "common": {
+    "display_name": "Zobrazované meno",
+    "email_address": "Emailová adresa",
+    "loading": "Načítavanie…",
+    "password": "Heslo",
+    "password_confirm": "Potvrdiť heslo",
+    "username": "Meno používateľa"
+  },
+  "error": {
+    "unexpected": "Neočakávaná chyba"
+  },
+  "mas": {
+    "add_email": {
+      "heading": "Pridať email"
+    },
+    "back_to_homepage": "Späť na domovskú stránku",
+    "change_password": {
+      "change": "Zmeniť heslo",
+      "confirm": "Potvrdiť heslo",
+      "current": "Súčasné heslo",
+      "heading": "Zmena hesla",
+      "new": "Nové heslo"
+    },
+    "emails": {
+      "greeting": "Ahoj %(username)s,",
+      "verify": {
+        "body_html": "Váš overovací kód na potvrdenie tejto e-mailovej adresy je: <strong>%(code)s</strong>",
+        "body_text": "Váš kód na potvrdenie tejto e-mailovej adresy je: %(code)s",
+        "subject": "Váš kód e-mailu je: %(code)s"
+      }
+    },
+    "errors": {
+      "denied_policy": "Zamietnuté pravidlami:%(policy)s",
+      "field_required": "Toto pole je povinné",
+      "invalid_credentials": "Neplatné poverenia",
+      "password_mismatch": "Heslá sa nezhodujú.",
+      "username_taken": "Toto používateľské meno je už obsadené"
+    },
+    "login": {
+      "call_to_register": "Ešte nemáte účet?",
+      "continue_with_provider": "Pokračovať s %(provider)s",
+      "description": "Ak chcete pokračovať, prihláste sa:",
+      "headline": "Prihlásiť sa",
+      "link": {
+        "description": "Prepojenie vášho <span class=\"break-keep text-links\"> %(provider)s </span> účtu"
+      },
+      "no_login_methods": "Nie sú k dispozícii žiadne metódy prihlásenia.",
+      "separator": "Alebo"
+    },
+    "navbar": {
+      "my_account": "Môj účet",
+      "register": "Vytvoriť účet",
+      "signed_in_as": "Prihlásený ako <span class=\"font-semibold\">%(username)s</span>."
+    },
+    "not_found": {
+      "description": "Stránka, ktorú hľadáte, neexistuje alebo bola presunutá.",
+      "heading": "Stránka nenájdená"
+    },
+    "not_you": "Nie ste prihlásený ako %(username)s?",
+    "or_separator": "Alebo",
+    "policy_violation": {
+      "description": "Môže to byť spôsobené klientom, ktorý požiadavku vytvoril, aktuálne prihláseným používateľom alebo samotnou požiadavkou.",
+      "heading": "Žiadosť o autorizáciu bola zamietnutá na základe pravidiel uplatňovaných touto službou.",
+      "logged_as": "Prihlásený ako <span class=\"font-semibold\">%(username)s</span>"
+    },
+    "recovery": {
+      "finish": {
+        "new": "Nové heslo"
+      }
+    },
+    "register": {
+      "call_to_login": "Už máte účet?",
+      "create_account": {
+        "description": "Pre pokračovanie vyberte používateľské meno.",
+        "heading": "Vytvoriť účet"
+      },
+      "sign_in_instead": "Radšej sa prihlásiť"
+    },
+    "scope": {
+      "edit_profile": "Upravte si profil a kontaktné údaje",
+      "manage_sessions": "Spravujte svoje zariadenia a prihlásenia.",
+      "mas_admin": "Spravovať ľubovoľného používateľa v matrix-authentication-service",
+      "send_messages": "Odosielať nové správy vo vašom mene",
+      "synapse_admin": "Spravovať domovský server",
+      "view_messages": "Zobraziť existujúce správy a údaje",
+      "view_profile": "Zobraziť informácie o vašom profile a kontaktné údaje"
+    },
+    "upstream_oauth2": {
+      "login_link": {
+        "action": "Pokračovať"
+      },
+      "register": {
+        "choose_username": {
+          "heading": "Vyberte si svoje používateľské meno"
+        },
+        "create_account": "Vytvoriť nový účet"
+      },
+      "suggest_link": {
+        "action": "Odkaz"
+      }
+    },
+    "verify_email": {
+      "description": "Zadajte 6-ciferný kód, ktorý bol odoslaný na: <em>%(email)s</em>",
+      "headline": "Overte svoj e-mail"
+    }
+  }
+}

@@ -155,7 +155,7 @@ fn load_unencrypted_as_encrypted_error() {
     );
 }
 
-#[allow(clippy::similar_names)]
+#[expect(clippy::similar_names)]
 #[test]
 fn generate_sign_and_verify() {
     // Use a seeded RNG to keep the snapshot stable

@@ -19,6 +19,7 @@ mod email;
 mod experimental;
 mod http;
 mod matrix;
+mod oauth;
 mod passwords;
 mod policy;
 mod rate_limiting;
@@ -34,12 +35,13 @@ pub use self::{
     clients::{ClientAuthMethodConfig, ClientConfig, ClientsConfig},
     database::{DatabaseConfig, PgSslMode},
     email::{EmailConfig, EmailSmtpMode, EmailTransportKind},
-    experimental::ExperimentalConfig,
+    experimental::{ExperimentalConfig, SessionLimitConfig as ExperimentalSessionLimitConfig},
     http::{
         BindConfig as HttpBindConfig, HttpConfig, ListenerConfig as HttpListenerConfig,
         Resource as HttpResource, TlsConfig as HttpTlsConfig, UnixOrTcp,
     },
     matrix::{HomeserverKind, MatrixConfig},
+    oauth::OAuthConfig,
     passwords::{
         Algorithm as PasswordAlgorithm, HashingScheme as PasswordHashingScheme, PasswordsConfig,
     },
@@ -126,6 +128,10 @@ pub struct RootConfig {
     #[serde(default, skip_serializing_if = "AccountConfig::is_default")]
     pub account: AccountConfig,
 
+    /// Configuration section for OAuth 2.0 protocol options
+    #[serde(default, skip_serializing_if = "OAuthConfig::is_default")]
+    pub oauth: OAuthConfig,
+
     /// Experimental configuration options
     #[serde(default, skip_serializing_if = "ExperimentalConfig::is_default")]
     pub experimental: ExperimentalConfig,
@@ -151,6 +157,7 @@ impl ConfigurationSection for RootConfig {
         self.branding.validate(figment)?;
         self.captcha.validate(figment)?;
         self.account.validate(figment)?;
+        self.oauth.validate(figment)?;
         self.experimental.validate(figment)?;
 
         Ok(())
@@ -183,6 +190,7 @@ impl RootConfig {
             branding: BrandingConfig::default(),
             captcha: CaptchaConfig::default(),
             account: AccountConfig::default(),
+            oauth: OAuthConfig::default(),
             experimental: ExperimentalConfig::default(),
         })
     }
@@ -206,13 +214,14 @@ impl RootConfig {
             branding: BrandingConfig::default(),
             captcha: CaptchaConfig::default(),
             account: AccountConfig::default(),
+            oauth: OAuthConfig::default(),
             experimental: ExperimentalConfig::default(),
         }
     }
 }
 
 /// Partial configuration actually used by the server
-#[allow(missing_docs)]
+#[expect(missing_docs)]
 #[derive(Debug, Deserialize)]
 pub struct AppConfig {
     #[serde(default)]
@@ -250,6 +259,9 @@ pub struct AppConfig {
     pub account: AccountConfig,
 
     #[serde(default)]
+    pub oauth: OAuthConfig,
+
+    #[serde(default)]
     pub experimental: ExperimentalConfig,
 }
 
@@ -270,6 +282,7 @@ impl ConfigurationSection for AppConfig {
         self.branding.validate(figment)?;
         self.captcha.validate(figment)?;
         self.account.validate(figment)?;
+        self.oauth.validate(figment)?;
         self.experimental.validate(figment)?;
 
         Ok(())
@@ -277,7 +290,7 @@ impl ConfigurationSection for AppConfig {
 }
 
 /// Partial config used by the `mas-cli config sync` command
-#[allow(missing_docs)]
+#[expect(missing_docs)]
 #[derive(Debug, Deserialize)]
 pub struct SyncConfig {
     #[serde(default)]
@@ -345,7 +358,7 @@ impl ClientSecret {
     /// Returns an error when the client secret could not be read from file.
     pub async fn value(&self) -> anyhow::Result<String> {
         Ok(match self {
-            ClientSecret::File(path) => tokio::fs::read_to_string(path).await?,
+            ClientSecret::File(path) => tokio::fs::read_to_string(path).await?.trim().to_owned(),
             ClientSecret::Value(client_secret) => client_secret.clone(),
         })
     }

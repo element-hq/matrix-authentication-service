@@ -9,8 +9,8 @@ use std::net::IpAddr;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{
-    Clock, UpstreamOAuthAuthorizationSession, UserEmailAuthentication, UserRegistration,
-    UserRegistrationPassword, UserRegistrationToken,
+    Clock, UlidExt as _, UpstreamOAuthAuthorizationSession, UserEmailAuthentication,
+    UserRegistration, UserRegistrationPassword, UserRegistrationToken,
 };
 use mas_storage::user::UserRegistrationRepository;
 use rand::RngCore;
@@ -175,7 +175,7 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
         post_auth_action: Option<serde_json::Value>,
     ) -> Result<UserRegistration, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("user_registration.id", tracing::field::display(id));
 
         sqlx::query!(
@@ -993,6 +993,7 @@ mod tests {
                     forward_login_hint: false,
                     ui_order: 0,
                     on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    registration_token_required: false,
                 },
             )
             .await

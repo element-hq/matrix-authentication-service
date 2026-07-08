@@ -146,7 +146,7 @@ impl AcceptError {
 /// Returns an error if the proxy protocol or TLS handshake failed.
 /// Returns the connection, which should be used to spawn a task to serve the
 /// connection.
-#[allow(clippy::type_complexity)]
+#[expect(clippy::type_complexity)]
 #[tracing::instrument(
     name = "accept",
     skip_all,

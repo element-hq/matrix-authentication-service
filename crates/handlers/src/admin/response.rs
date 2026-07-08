@@ -56,6 +56,7 @@ impl PaginationMeta {
 
 /// A top-level response with a page of resources
 #[derive(Serialize, JsonSchema)]
+#[schemars(rename = "PaginatedResponse_for_{T}")]
 pub struct PaginatedResponse<T> {
     /// Response metadata
     #[serde(skip_serializing_if = "PaginationMeta::is_empty")]
@@ -167,6 +168,7 @@ impl<T: Resource> PaginatedResponse<T> {
 
 /// A single resource, with its type, ID, attributes and related links
 #[derive(Serialize, JsonSchema)]
+#[schemars(rename = "SingleResource_for_{T}")]
 struct SingleResource<T> {
     /// The type of the resource
     #[serde(rename = "type")]
@@ -239,6 +241,7 @@ struct SelfLinks {
 
 /// A top-level response with a single resource
 #[derive(Serialize, JsonSchema)]
+#[schemars(rename = "SingleResponse_for_{T}")]
 pub struct SingleResponse<T> {
     data: SingleResource<T>,
     links: SelfLinks,

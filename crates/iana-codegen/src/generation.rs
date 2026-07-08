@@ -169,7 +169,7 @@ pub fn json_schema_impl(
         std::borrow::Cow::Borrowed("{}")
     }}
 
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines)]
     fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {{
         let enums = vec!["#,
         section.key, section.key,

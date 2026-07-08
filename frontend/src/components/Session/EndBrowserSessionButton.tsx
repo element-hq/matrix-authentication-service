@@ -66,7 +66,7 @@ export const useEndBrowserSession = (
 
 type Props = {
   session: FragmentType<typeof FRAGMENT>;
-  size: "sm" | "lg";
+  size: "md" | "lg";
 };
 
 const EndBrowserSessionButton: React.FC<Props> = ({ session, size }) => {

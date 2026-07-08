@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 Kévin Commaille.
 //
@@ -32,24 +33,24 @@ async fn pass_refresh_access_token() {
 
             if query_pairs
                 .get("grant_type")
-                .filter(|s| *s == "refresh_token")
-                .is_none()
+                .as_ref()
+                .is_none_or(|s| *s != "refresh_token")
             {
                 println!("Wrong or missing grant type");
                 return false;
             }
             if query_pairs
                 .get("refresh_token")
-                .filter(|s| *s == REFRESH_TOKEN)
-                .is_none()
+                .as_ref()
+                .is_none_or(|s| *s != REFRESH_TOKEN)
             {
                 println!("Wrong or missing refresh token");
                 return false;
             }
             if query_pairs
                 .get("client_id")
-                .filter(|s| *s == CLIENT_ID)
-                .is_none()
+                .as_ref()
+                .is_none_or(|s| *s != CLIENT_ID)
             {
                 println!("Wrong or missing client ID");
                 return false;

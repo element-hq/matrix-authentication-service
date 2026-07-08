@@ -8,7 +8,7 @@ The authentication service needs to be able to call the Synapse admin API to pro
 
 In the [`matrix`](../reference/configuration.md#matrix) section of the configuration file, add the following properties:
 
- - `kind`: the type of homeserver to connect to, currently only `synapse` is supported
+ - `kind`: the type of homeserver to connect to. Only Synapse is supported; see the [`matrix`](../reference/configuration.md#matrix) configuration reference for the available values
  - `homeserver`: corresponds to the `server_name` in the Synapse configuration file
  - `secret`: a shared secret the service will use to call the homeserver MAS API
  - `endpoint`: the URL to which the homeserver is accessible from the service
@@ -20,7 +20,7 @@ matrix:
   endpoint: "http://localhost:8008"
   secret: "AVeryRandomSecretPleaseUseSomethingSecure"
   # Alternatively, using a file:
-  #secret_path: /path/to/secret.txt
+  #secret_file: /path/to/secret.txt
 ```
 
 ## Configure the homeserver to delegate authentication to the service
@@ -33,7 +33,7 @@ matrix_authentication_service:
   endpoint: http://localhost:8080/
   secret: "AVeryRandomSecretPleaseUseSomethingSecure"
   # Alternatively, using a file:
-  #secret_file: /path/to/secret.txt
+  #secret_path: /path/to/secret.txt
 ```
 
 The `endpoint` property should be set to the URL of the authentication service.

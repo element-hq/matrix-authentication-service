@@ -1,0 +1,1121 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Account sessions page > renders the page 1`] = `
+<DocumentFragment>
+  <div
+    class="_layoutContainer_4402d3"
+  >
+    <div
+      class="flex flex-col gap-6"
+    >
+      <header
+        class="_pageHeading_5ba6c3"
+      >
+        <div
+          class="_icon_5ba6c3 _invalid_5ba6c3"
+        >
+          <svg
+            fill="currentColor"
+            height="1em"
+            viewBox="0 0 24 24"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 17q.424 0 .713-.288A.97.97 0 0 0 13 16a.97.97 0 0 0-.287-.713A.97.97 0 0 0 12 15a.97.97 0 0 0-.713.287A.97.97 0 0 0 11 16q0 .424.287.712.288.288.713.288m0-4q.424 0 .713-.287A.97.97 0 0 0 13 12V8a.97.97 0 0 0-.287-.713A.97.97 0 0 0 12 7a.97.97 0 0 0-.713.287A.97.97 0 0 0 11 8v4q0 .424.287.713.288.287.713.287m0 9a9.7 9.7 0 0 1-3.9-.788 10.1 10.1 0 0 1-3.175-2.137q-1.35-1.35-2.137-3.175A9.7 9.7 0 0 1 2 12q0-2.075.788-3.9a10.1 10.1 0 0 1 2.137-3.175q1.35-1.35 3.175-2.137A9.7 9.7 0 0 1 12 2q2.075 0 3.9.788a10.1 10.1 0 0 1 3.175 2.137q1.35 1.35 2.137 3.175A9.7 9.7 0 0 1 22 12a9.7 9.7 0 0 1-.788 3.9 10.1 10.1 0 0 1-2.137 3.175q-1.35 1.35-3.175 2.137A9.7 9.7 0 0 1 12 22"
+            />
+          </svg>
+        </div>
+        <div
+          class="_header_5ba6c3"
+        >
+          <h1
+            class="_title_5ba6c3"
+          >
+            Something went wrong
+          </h1>
+          <p
+            class="_text_5ba6c3"
+          >
+            An unexpected error occurred. Please try again.
+          </p>
+        </div>
+      </header>
+      <button
+        class="_button_1nw83_8"
+        data-kind="tertiary"
+        data-size="lg"
+        role="button"
+        tabindex="0"
+      >
+        Show details
+      </button>
+    </div>
+    <footer
+      class="_legalFooter_acfd2c"
+    >
+      <nav>
+        <a
+          class="_link_k9ljz_8"
+          data-kind="primary"
+          data-size="md"
+          href="https://matrix.org/policy"
+          rel="noreferrer noopener"
+          title="Link to the service privacy policy"
+        >
+          Privacy Policy
+        </a>
+        <div
+          aria-hidden="true"
+          class="_separator_acfd2c"
+        >
+          •
+        </div>
+        <a
+          class="_link_k9ljz_8"
+          data-kind="primary"
+          data-size="md"
+          href="https://matrix.org/tos"
+          rel="noreferrer noopener"
+          title="Link to the service terms and conditions"
+        >
+          Terms & Conditions
+        </a>
+      </nav>
+      <p
+        class="_imprint_acfd2c"
+      >
+        All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
+      </p>
+    </footer>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`Account sessions page > session limit > displays an error if they've hit the session soft_limit 1`] = `
+<DocumentFragment>
+  <div
+    class="_layoutContainer_4402d3 _wide_4402d3"
+  >
+    <div
+      class="flex flex-col gap-10"
+    >
+      <h1
+        class="_typography_6v6n8_153 _font-heading-md-semibold_6v6n8_112"
+      >
+        Your account
+      </h1>
+      <div
+        class="flex flex-col gap-4"
+      >
+        <div
+          class="_user_0d9d49"
+        >
+          <span
+            aria-label="@alice:example.com"
+            class="_avatar_va14e_8 _avatar_0d9d49 _avatar-imageless_va14e_55"
+            data-color="6"
+            data-type="round"
+            role="img"
+            style="--cpd-avatar-size: var(--cpd-space-14x);"
+          >
+            A
+          </span>
+          <div
+            class="_meta_0d9d49"
+          >
+            <p
+              class="_typography_6v6n8_153 _font-body-lg-semibold_6v6n8_74"
+            >
+              Alice
+            </p>
+            <p
+              class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50 _mxid_0d9d49"
+            >
+              @alice:example.com
+            </p>
+          </div>
+          <button
+            aria-expanded="false"
+            aria-haspopup="dialog"
+            aria-labelledby="_r_j_"
+            class="_icon-button_1215g_8 _editButton_0d9d49"
+            data-kind="primary"
+            data-state="closed"
+            role="button"
+            style="--cpd-icon-button-size: var(--cpd-space-6x);"
+            tabindex="0"
+            type="button"
+          >
+            <div
+              class="_indicator-icon_147l5_17"
+              style="--cpd-icon-button-size: 100%;"
+            >
+              <svg
+                fill="currentColor"
+                height="1em"
+                viewBox="0 0 24 24"
+                width="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  clip-rule="evenodd"
+                  d="M15.706 2.637a2 2 0 0 1 2.829 0l2.828 2.828a2 2 0 0 1 0 2.829L9.605 20.052a1 1 0 0 1-.465.263L3.483 21.73a1 1 0 0 1-1.212-1.213l1.414-5.657a1 1 0 0 1 .263-.465zm1.224 7.262L14.102 7.07l-8.544 8.544-.943 3.771 3.771-.943z"
+                  fill-rule="evenodd"
+                />
+              </svg>
+            </div>
+          </button>
+        </div>
+        <nav
+          class="_navBar_6d152a"
+        >
+          <ul
+            class="_navBarItems_6d152a"
+          >
+            <li
+              class="_navTab_a2fe1e"
+            >
+              <a
+                class="_navItem_a2fe1e"
+                href="/"
+              >
+                Settings
+              </a>
+            </li>
+            <li
+              class="_navTab_a2fe1e"
+            >
+              <a
+                aria-current="page"
+                class="_navItem_a2fe1e"
+                data-status="active"
+                href="/sessions"
+              >
+                Devices
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div
+      class="flex flex-col gap-6"
+    >
+      <h3
+        class="_typography_6v6n8_153 _font-heading-md-semibold_6v6n8_112"
+      >
+        Where you're signed in
+      </h3>
+      <div
+        class="_browserSessionsOverview_5c5d1f"
+      >
+        <div
+          class="flex flex-1 flex-col"
+        >
+          <h5
+            class="_typography_6v6n8_153 _font-body-lg-semibold_6v6n8_74"
+          >
+            Browsers
+          </h5>
+          <p
+            class="_typography_6v6n8_153 _font-body-md-regular_6v6n8_50"
+          >
+            3 active sessions
+          </p>
+        </div>
+        <a
+          class="_link_k9ljz_8"
+          data-kind="primary"
+          data-size="md"
+          href="/sessions/browsers"
+          rel="noreferrer noopener"
+        >
+          View all
+        </a>
+      </div>
+      <h4
+        class="_typography_6v6n8_153 _font-heading-sm-semibold_6v6n8_93 flex gap-1 items-center"
+      >
+        12 devices
+        <svg
+          aria-labelledby="_r_o_"
+          fill="currentColor"
+          height="1em"
+          viewBox="0 0 24 24"
+          width="1em"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M11.288 7.288A.97.97 0 0 1 12 7q.424 0 .713.287Q13 7.576 13 8t-.287.713A.97.97 0 0 1 12 9a.97.97 0 0 1-.713-.287A.97.97 0 0 1 11 8q0-.424.287-.713m.001 4.001A.97.97 0 0 1 12 11q.424 0 .713.287.287.288.287.713v4q0 .424-.287.712A.97.97 0 0 1 12 17a.97.97 0 0 1-.713-.288A.97.97 0 0 1 11 16v-4q0-.424.287-.713"
+          />
+          <path
+            clip-rule="evenodd"
+            d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10m-2 0a8 8 0 1 1-16 0 8 8 0 0 1 16 0"
+            fill-rule="evenodd"
+          />
+        </svg>
+      </h4>
+      <div
+        aria-orientation="horizontal"
+        class="_separator_59a6a1 _section_59a6a1"
+        role="separator"
+      />
+      <div
+        class="_alert_zx76t_10"
+        data-testid="device-limit-error"
+        data-type="critical"
+      >
+        <svg
+          aria-hidden="true"
+          class="_icon_zx76t_48"
+          fill="currentColor"
+          height="24"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 17q.424 0 .713-.288A.97.97 0 0 0 13 16a.97.97 0 0 0-.287-.713A.97.97 0 0 0 12 15a.97.97 0 0 0-.713.287A.97.97 0 0 0 11 16q0 .424.287.712.288.288.713.288m0-4q.424 0 .713-.287A.97.97 0 0 0 13 12V8a.97.97 0 0 0-.287-.713A.97.97 0 0 0 12 7a.97.97 0 0 0-.713.287A.97.97 0 0 0 11 8v4q0 .424.287.713.288.287.713.287m0 9a9.7 9.7 0 0 1-3.9-.788 10.1 10.1 0 0 1-3.175-2.137q-1.35-1.35-2.137-3.175A9.7 9.7 0 0 1 2 12q0-2.075.788-3.9a10.1 10.1 0 0 1 2.137-3.175q1.35-1.35 3.175-2.137A9.7 9.7 0 0 1 12 2q2.075 0 3.9.788a10.1 10.1 0 0 1 3.175 2.137q1.35 1.35 2.137 3.175A9.7 9.7 0 0 1 22 12a9.7 9.7 0 0 1-.788 3.9 10.1 10.1 0 0 1-2.137 3.175q-1.35 1.35-3.175 2.137A9.7 9.7 0 0 1 12 22"
+          />
+        </svg>
+        <div
+          class="_content_zx76t_37"
+        >
+          <div
+            class="_text-content_zx76t_44"
+          >
+            <p
+              class="_typography_6v6n8_153 _font-body-md-semibold_6v6n8_55"
+            >
+              You've hit the device limit
+            </p>
+            <p
+              class="_typography_6v6n8_153 _font-body-sm-regular_6v6n8_31"
+            >
+              You've used 12 of 12 device slots. When you try to sign-in again, you'll need to remove an existing device.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div
+        class="flex gap-2 justify-start items-center"
+      >
+        <a
+          class="_filter_f76dea _disabledFilter_f76dea"
+          href="/sessions?inactive=true"
+        >
+          Inactive for 90+ days
+        </a>
+      </div>
+      <section
+        class="_sessionCardRoot_6c1027"
+      >
+        <a
+          class="_sessionCard_6c1027"
+          href="/sessions/compat_session%3A5"
+        >
+          <header
+            class="_cardHeader_6c1027"
+          >
+            <svg
+              aria-label="Computer"
+              class="_deviceTypeIcon_261d75"
+              fill="currentColor"
+              height="1em"
+              viewBox="0 0 24 24"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 18q-.824 0-1.412-.587A1.93 1.93 0 0 1 2 16V5q0-.824.587-1.412A1.93 1.93 0 0 1 4 3h16q.824 0 1.413.587Q22 4.176 22 5v11q0 .824-.587 1.413A1.93 1.93 0 0 1 20 18zm0-2h16V5H4zm-2 5a.97.97 0 0 1-.712-.288A.97.97 0 0 1 1 20q0-.424.288-.712A.97.97 0 0 1 2 19h20q.424 0 .712.288.288.287.288.712 0 .424-.288.712A.97.97 0 0 1 22 21z"
+              />
+            </svg>
+            <div
+              class="_content_6c1027"
+            >
+              <div
+                class="_name_6c1027"
+              >
+                Chrome for Linux
+              </div>
+              <div
+                class="_client_6c1027"
+              >
+                <img
+                  alt="Jungle Phone"
+                  class="_avatar_d3cd4c"
+                  referrerpolicy="no-referrer"
+                  src="data:image/png;base64,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"
+                  style="--mas-avatar-size: var(--cpd-space-5x);"
+                />
+                Jungle Phone
+              </div>
+            </div>
+          </header>
+          <ul
+            class="_metadata_6c1027"
+          >
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Last Active
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <span
+                  title="Thu, Apr 23, 2026, 9:25 PM"
+                >
+                  Active Thu, Apr 23, 2026, 9:25 PM
+                </span>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Signed in
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <time
+                  datetime="2026-04-23T21:25:43Z"
+                >
+                  Thu, Apr 23, 2026, 9:25 PM
+                </time>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Device ID
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                zzzZZZzzz5
+              </div>
+            </li>
+          </ul>
+        </a>
+        <div
+          class="_action_6c1027"
+        >
+          <button
+            aria-expanded="false"
+            aria-haspopup="dialog"
+            class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
+            data-kind="secondary"
+            data-size="md"
+            data-state="closed"
+            role="button"
+            tabindex="0"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              fill="currentColor"
+              height="20"
+              viewBox="0 0 24 24"
+              width="20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7 21q-.824 0-1.412-.587A1.93 1.93 0 0 1 5 19V6a.97.97 0 0 1-.713-.287A.97.97 0 0 1 4 5q0-.424.287-.713A.97.97 0 0 1 5 4h4q0-.424.287-.712A.97.97 0 0 1 10 3h4q.424 0 .713.288Q15 3.575 15 4h4q.424 0 .712.287Q20 4.576 20 5t-.288.713A.97.97 0 0 1 19 6v13q0 .824-.587 1.413A1.93 1.93 0 0 1 17 21zM7 6v13h10V6zm2 10q0 .424.287.712Q9.576 17 10 17t.713-.288A.97.97 0 0 0 11 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 10 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 9 9zm4 0q0 .424.287.712.288.288.713.288.424 0 .713-.288A.97.97 0 0 0 15 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 14 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 13 9z"
+              />
+            </svg>
+            Remove device
+          </button>
+        </div>
+      </section>
+      <section
+        class="_sessionCardRoot_6c1027"
+      >
+        <a
+          class="_sessionCard_6c1027"
+          href="/sessions/compat_session%3A4"
+        >
+          <header
+            class="_cardHeader_6c1027"
+          >
+            <svg
+              aria-label="Computer"
+              class="_deviceTypeIcon_261d75"
+              fill="currentColor"
+              height="1em"
+              viewBox="0 0 24 24"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 18q-.824 0-1.412-.587A1.93 1.93 0 0 1 2 16V5q0-.824.587-1.412A1.93 1.93 0 0 1 4 3h16q.824 0 1.413.587Q22 4.176 22 5v11q0 .824-.587 1.413A1.93 1.93 0 0 1 20 18zm0-2h16V5H4zm-2 5a.97.97 0 0 1-.712-.288A.97.97 0 0 1 1 20q0-.424.288-.712A.97.97 0 0 1 2 19h20q.424 0 .712.288.288.287.288.712 0 .424-.288.712A.97.97 0 0 1 22 21z"
+              />
+            </svg>
+            <div
+              class="_content_6c1027"
+            >
+              <div
+                class="_name_6c1027"
+              >
+                Chrome for Linux
+              </div>
+              <div
+                class="_client_6c1027"
+              >
+                <img
+                  alt="Jungle Phone"
+                  class="_avatar_d3cd4c"
+                  referrerpolicy="no-referrer"
+                  src="data:image/png;base64,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"
+                  style="--mas-avatar-size: var(--cpd-space-5x);"
+                />
+                Jungle Phone
+              </div>
+            </div>
+          </header>
+          <ul
+            class="_metadata_6c1027"
+          >
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Last Active
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <span
+                  title="Thu, Apr 23, 2026, 9:25 PM"
+                >
+                  Active Thu, Apr 23, 2026, 9:25 PM
+                </span>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Signed in
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <time
+                  datetime="2026-04-23T21:25:43Z"
+                >
+                  Thu, Apr 23, 2026, 9:25 PM
+                </time>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Device ID
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                zzzZZZzzz4
+              </div>
+            </li>
+          </ul>
+        </a>
+        <div
+          class="_action_6c1027"
+        >
+          <button
+            aria-expanded="false"
+            aria-haspopup="dialog"
+            class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
+            data-kind="secondary"
+            data-size="md"
+            data-state="closed"
+            role="button"
+            tabindex="0"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              fill="currentColor"
+              height="20"
+              viewBox="0 0 24 24"
+              width="20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7 21q-.824 0-1.412-.587A1.93 1.93 0 0 1 5 19V6a.97.97 0 0 1-.713-.287A.97.97 0 0 1 4 5q0-.424.287-.713A.97.97 0 0 1 5 4h4q0-.424.287-.712A.97.97 0 0 1 10 3h4q.424 0 .713.288Q15 3.575 15 4h4q.424 0 .712.287Q20 4.576 20 5t-.288.713A.97.97 0 0 1 19 6v13q0 .824-.587 1.413A1.93 1.93 0 0 1 17 21zM7 6v13h10V6zm2 10q0 .424.287.712Q9.576 17 10 17t.713-.288A.97.97 0 0 0 11 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 10 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 9 9zm4 0q0 .424.287.712.288.288.713.288.424 0 .713-.288A.97.97 0 0 0 15 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 14 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 13 9z"
+              />
+            </svg>
+            Remove device
+          </button>
+        </div>
+      </section>
+      <section
+        class="_sessionCardRoot_6c1027"
+      >
+        <a
+          class="_sessionCard_6c1027"
+          href="/sessions/compat_session%3A3"
+        >
+          <header
+            class="_cardHeader_6c1027"
+          >
+            <svg
+              aria-label="Computer"
+              class="_deviceTypeIcon_261d75"
+              fill="currentColor"
+              height="1em"
+              viewBox="0 0 24 24"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 18q-.824 0-1.412-.587A1.93 1.93 0 0 1 2 16V5q0-.824.587-1.412A1.93 1.93 0 0 1 4 3h16q.824 0 1.413.587Q22 4.176 22 5v11q0 .824-.587 1.413A1.93 1.93 0 0 1 20 18zm0-2h16V5H4zm-2 5a.97.97 0 0 1-.712-.288A.97.97 0 0 1 1 20q0-.424.288-.712A.97.97 0 0 1 2 19h20q.424 0 .712.288.288.287.288.712 0 .424-.288.712A.97.97 0 0 1 22 21z"
+              />
+            </svg>
+            <div
+              class="_content_6c1027"
+            >
+              <div
+                class="_name_6c1027"
+              >
+                Chrome for Linux
+              </div>
+              <div
+                class="_client_6c1027"
+              >
+                <img
+                  alt="Jungle Phone"
+                  class="_avatar_d3cd4c"
+                  referrerpolicy="no-referrer"
+                  src="data:image/png;base64,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"
+                  style="--mas-avatar-size: var(--cpd-space-5x);"
+                />
+                Jungle Phone
+              </div>
+            </div>
+          </header>
+          <ul
+            class="_metadata_6c1027"
+          >
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Last Active
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <span
+                  title="Thu, Apr 23, 2026, 9:25 PM"
+                >
+                  Active Thu, Apr 23, 2026, 9:25 PM
+                </span>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Signed in
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <time
+                  datetime="2026-04-23T21:25:43Z"
+                >
+                  Thu, Apr 23, 2026, 9:25 PM
+                </time>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Device ID
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                zzzZZZzzz3
+              </div>
+            </li>
+          </ul>
+        </a>
+        <div
+          class="_action_6c1027"
+        >
+          <button
+            aria-expanded="false"
+            aria-haspopup="dialog"
+            class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
+            data-kind="secondary"
+            data-size="md"
+            data-state="closed"
+            role="button"
+            tabindex="0"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              fill="currentColor"
+              height="20"
+              viewBox="0 0 24 24"
+              width="20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7 21q-.824 0-1.412-.587A1.93 1.93 0 0 1 5 19V6a.97.97 0 0 1-.713-.287A.97.97 0 0 1 4 5q0-.424.287-.713A.97.97 0 0 1 5 4h4q0-.424.287-.712A.97.97 0 0 1 10 3h4q.424 0 .713.288Q15 3.575 15 4h4q.424 0 .712.287Q20 4.576 20 5t-.288.713A.97.97 0 0 1 19 6v13q0 .824-.587 1.413A1.93 1.93 0 0 1 17 21zM7 6v13h10V6zm2 10q0 .424.287.712Q9.576 17 10 17t.713-.288A.97.97 0 0 0 11 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 10 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 9 9zm4 0q0 .424.287.712.288.288.713.288.424 0 .713-.288A.97.97 0 0 0 15 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 14 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 13 9z"
+              />
+            </svg>
+            Remove device
+          </button>
+        </div>
+      </section>
+      <section
+        class="_sessionCardRoot_6c1027"
+      >
+        <a
+          class="_sessionCard_6c1027"
+          href="/sessions/compat_session%3A2"
+        >
+          <header
+            class="_cardHeader_6c1027"
+          >
+            <svg
+              aria-label="Computer"
+              class="_deviceTypeIcon_261d75"
+              fill="currentColor"
+              height="1em"
+              viewBox="0 0 24 24"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 18q-.824 0-1.412-.587A1.93 1.93 0 0 1 2 16V5q0-.824.587-1.412A1.93 1.93 0 0 1 4 3h16q.824 0 1.413.587Q22 4.176 22 5v11q0 .824-.587 1.413A1.93 1.93 0 0 1 20 18zm0-2h16V5H4zm-2 5a.97.97 0 0 1-.712-.288A.97.97 0 0 1 1 20q0-.424.288-.712A.97.97 0 0 1 2 19h20q.424 0 .712.288.288.287.288.712 0 .424-.288.712A.97.97 0 0 1 22 21z"
+              />
+            </svg>
+            <div
+              class="_content_6c1027"
+            >
+              <div
+                class="_name_6c1027"
+              >
+                Chrome for Linux
+              </div>
+              <div
+                class="_client_6c1027"
+              >
+                <img
+                  alt="Jungle Phone"
+                  class="_avatar_d3cd4c"
+                  referrerpolicy="no-referrer"
+                  src="data:image/png;base64,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"
+                  style="--mas-avatar-size: var(--cpd-space-5x);"
+                />
+                Jungle Phone
+              </div>
+            </div>
+          </header>
+          <ul
+            class="_metadata_6c1027"
+          >
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Last Active
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <span
+                  title="Thu, Apr 23, 2026, 9:25 PM"
+                >
+                  Active Thu, Apr 23, 2026, 9:25 PM
+                </span>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Signed in
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <time
+                  datetime="2026-04-23T21:25:43Z"
+                >
+                  Thu, Apr 23, 2026, 9:25 PM
+                </time>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Device ID
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                zzzZZZzzz2
+              </div>
+            </li>
+          </ul>
+        </a>
+        <div
+          class="_action_6c1027"
+        >
+          <button
+            aria-expanded="false"
+            aria-haspopup="dialog"
+            class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
+            data-kind="secondary"
+            data-size="md"
+            data-state="closed"
+            role="button"
+            tabindex="0"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              fill="currentColor"
+              height="20"
+              viewBox="0 0 24 24"
+              width="20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7 21q-.824 0-1.412-.587A1.93 1.93 0 0 1 5 19V6a.97.97 0 0 1-.713-.287A.97.97 0 0 1 4 5q0-.424.287-.713A.97.97 0 0 1 5 4h4q0-.424.287-.712A.97.97 0 0 1 10 3h4q.424 0 .713.288Q15 3.575 15 4h4q.424 0 .712.287Q20 4.576 20 5t-.288.713A.97.97 0 0 1 19 6v13q0 .824-.587 1.413A1.93 1.93 0 0 1 17 21zM7 6v13h10V6zm2 10q0 .424.287.712Q9.576 17 10 17t.713-.288A.97.97 0 0 0 11 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 10 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 9 9zm4 0q0 .424.287.712.288.288.713.288.424 0 .713-.288A.97.97 0 0 0 15 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 14 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 13 9z"
+              />
+            </svg>
+            Remove device
+          </button>
+        </div>
+      </section>
+      <section
+        class="_sessionCardRoot_6c1027"
+      >
+        <a
+          class="_sessionCard_6c1027"
+          href="/sessions/compat_session%3A1"
+        >
+          <header
+            class="_cardHeader_6c1027"
+          >
+            <svg
+              aria-label="Computer"
+              class="_deviceTypeIcon_261d75"
+              fill="currentColor"
+              height="1em"
+              viewBox="0 0 24 24"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 18q-.824 0-1.412-.587A1.93 1.93 0 0 1 2 16V5q0-.824.587-1.412A1.93 1.93 0 0 1 4 3h16q.824 0 1.413.587Q22 4.176 22 5v11q0 .824-.587 1.413A1.93 1.93 0 0 1 20 18zm0-2h16V5H4zm-2 5a.97.97 0 0 1-.712-.288A.97.97 0 0 1 1 20q0-.424.288-.712A.97.97 0 0 1 2 19h20q.424 0 .712.288.288.287.288.712 0 .424-.288.712A.97.97 0 0 1 22 21z"
+              />
+            </svg>
+            <div
+              class="_content_6c1027"
+            >
+              <div
+                class="_name_6c1027"
+              >
+                Chrome for Linux
+              </div>
+              <div
+                class="_client_6c1027"
+              >
+                <img
+                  alt="Jungle Phone"
+                  class="_avatar_d3cd4c"
+                  referrerpolicy="no-referrer"
+                  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAQQklEQVR4Ac3bBZBc57Ut4G//p2cky5KZHTSzHd+Ab5iZc5mZmZkZw8yc1PUNMzM7nMhxmBODYAQDfc56T11yVZe6RuyXt6q6++DuWetfe/9wespND1+6w4VVpahCVUEFqgCqqkCoVAniJkZ9/c6XuimwvLzSiqZqwOAgMDc3aqpaMWBwE6C+cZfLHC4sLi5V0ahgAKhW66ucRZ2LM6ucSh2LtVVgkdpU5Zv4InV1lWuwfcofTVVRA+IwYaTaoRPfvrM0HcahJ6rq3OIBqu6Ly8XJyoHg27hK1RuL1+IaCaKqRkqPOESMquJQsGP7zk7pxbjKfKkfUfXzuAszlHsEzJ6bPt7hFDxw9+u/8E7l6XQvDStCVTr0DgEj6uCIb9vRUOjb0I0yGn4dv4dbAGCMQpsitr8IBgQj3J26exn+Af+Z0fDE0NfQdcWAHKQDHDC2L2wfYQyqHpFu+A+csQfpDiMHi1nBesCt8Ljq229Rf4BXBlXVob/JHbBt67YJ+VLHKE/DDxDUGA0jNw06wIABZxevwIs1v0QWpEYYOwC0AyTfYazcWdmIH0CPQYwOLF4cJBpGGNArPyI2Sl2B8YE2wGj/iC9UKPSlfg7PANNfWA4Q5RDRAGOcVrxP+Wk8V/Y/HUal7BtVxYA/wT8Deox87zFCjw7PwQkq/6XslwgjLfaGhc0LHfrwJ6X+GQNmK3pQDgBBHc76MKDwnxTxX2SfNWEkVsXWzQs3Bvh5ZZp8+V5jVseGIMV/KtdSz8NeRRhVFWaxZdPWEca4M54O/9+Rh5rZG1B4Lq7B+1k9HUbMYvOmrQ3j4hhcCejROWwoq6IOKW3a1N96pW44DwvGXSFmU2A24GdutR5c8OWFp5c6CWOMHCqqaA1ISIBqaNTU8TrkmjDGafr2FPzY6BYLjVkX1PU/fZ5pfOg78x36231uy6OuPXr+f5rq0SlKgdltKIqCKkxtt05lkKVFWVpWjZpfo0ZzlFRWZFiuqqi2lu5IVYXB7HeUktnvQCkqKFWF9FRnafRQvGp0660zqTAy7gA86IHnFvr3/9iV7Sk/fcW/3O+q6yzOd9Xi4NAaYti6WZufN3/eBVl7+R2sueBC3amnqyPXq8J4K0tfTbZ+RDa/UxY+poalMndMKNJTCAQwu10AAgWCUR695oe2vR4r4zePCgGolTeNAHz/9Q8bYbwyql9ftzg8/jFP3jg+YevKaGVUyoE5oLpOtm9jNLL+/g/JUT/8E+YuuU3trYoOKFE73mf4+pPk2y8mY0YbyBgQAoHZz9nz4ww1Mq7fw38r072CkdpN/rqHFcbjuRqtXRp+f/P6kRfe/ZT2h1d+xfLcSCUH1PL95k2OuM1tc/yf/q01F11SAASxfWdsWwpYv7YcubY00Azr7sg5d9RO/k39xt9iyweYO5r0CAL7KYRGqPwueSKWqEKgVt48ulGADj1+TLxA0i/PVfdPz/mCS760zY61nS727YDWDFu3OPrHfzYn/Pnf1YBmQPn418Ze9fEl7//isq9v6m1fCjhyTbnZsZ0rzpj3kEvXuPTmIwx6nQ7Dxl81fO3JzB1Fhlmy2YsIkIwxws/gOdPd4ogCSQL4eWjoqzzv7qf4l69+QUtQ+2z5Yctmx/3G7+fYX//d3eRj47cGf/fqBW/6zJIdSzE/KnMdrQps2Tn4yvW9t21c8pi3bHOfC9b4qwdvcN6pgyFNO+9JzB1v+OI/7uGEQqhib39fKYH8Ap6jagColbfMu+K7D24YcBY2ohNqiIV1nT/436960FXXW1g3pw1h1gF0I8PmTY75yV0t//eVYVCteea7d/iz/12wfTmOPqK0InumaVGoYsguQeLI+fJPj9zg5+68ThJVNeWEY8gYDsANEDgfG9EwNEADPEB0ScYRKdYsD158l5PdsH7OqB+EWbQ2KXhrL7/dhPzAhPw/v3abX3/BFq1x7LqS0A8MISEIEobd5xKTa1szuXdXjAn5mDihjrkD/TaqAxTTr5q8Zo8zplAPolCN0ihJhiSS3DcCJQTzK4OvnjDvyitOsG5pMLQygyF0Iyf+2d8Y0GTS8n/3qgUnbmha0Q/2G/1AK5N7d8XYFavVoEc759FUB1NEzX7OilAU3AeogVKXv/ARhSjrxDXiNCQUIaToBh79rC+4xXVLluZLS4EadZO83/DwH3TyP/83hknO3/3fr9carUgcOKZSYhh4+x8e77xTm0GTT/+kfOv5zB1L+v0pghAU+S45CwtUNVGCwVm7yYsUIUDXx9a1zfPvcqLREAFAhkHNzTv6h38SUJOCtyvnR43EQSNh1OyKNYkJ0E7/Fdo8yZTtoVCrpUUh1Em0c2ioaqGCcE5EpBeEIKIv1u/sveP8o73/rA3WLw2GQmuyuNP8uReYv/Ry2NXV7ar2k4LXDw4Z/WBXrEnMT3yt15Cj76jWX8KwiIYyKwRmhRhUwbmAaqQIcoYgAoGEACDxnLueaHGutKBKlpYccdvbq4JM+vkdS9HKYUMrk5iv/PgSBqlSx9yFYZFq+yiEpj8Dqs640RUjAXAaBISY5i0yKYKfvtk6r7302PzgB2+orRs6qqy54CIFMhnkzI9K4rAhsSvmJDZHaMiG20yRh5qdLheCWZwGMAoBHEuIAgimmfRV1i71XnTF8XXXqxcctTRYmZ83OvVmQW3bmckIb64jDh/CJOaNo8cj15C1t6DmqaAIgNlBkpCCAhwLyEgCcMRqxCGBmB/Ht4+Z/78inJDfeeO3a3l+Tq1fD7YvZfJqVYddgVY1ib1tyUQA3VG0eQJFAQJmUaaEyFqgjMAs0VX3+ypH7uy96tKj676f3pKzv7GtUuX/OWoU2h7MiwpWHRrPHBolAdTOWeIQIATQEjvmm2fd+UT/9PxNhu3bbpzUTF67xvYOpwuKIbus36xfU0C/QMbUPAYzKASC2vNzEaChgGwCJIEgICEgiAFHLg7ee/b6evut1+SIL31VsP6IyazOSk85fCis9HbFnggcWPoaWaY1QMG+hsWhUJsoVI0A8M097S5kFRcQXR/P/v7j3O+Ln3GiR6EmU9pds7pae/gcUMXyOJPYMKAWPgYoqoDMFsFV6sM3p1MggC8Cyixxe3aRYdIjfO7mR9cLv3318NuLQ1nbPPTSNZMp7RCHDUNYt6Y89LI1aCpk83toR5CggFmie9aHkprmmoYAPgeJbpqoELMDo2BIrK95z1n/zfrW1z4VuOTmo8l8fsvO6JpDRtfsijWJecnNRrtb/0PJtk+Vtg5ZfSI0++pUUTYqVKUlkiD1+cQ3CRLTxIUETIsRMReunRvqcV96dYBMFjOOnC/jgapDs/54sCvWJCYBwzeePpX/q5At1LQwQqG+S11DQWrl7ce5/Et3bBiUV4kHhx4dIUBmuweBUFgall35sMflkpPOK5Pp8M7JfH7XlHYIyYGTb8W1C4Mn/PjRfu7ORxiUWrgq/VX3L20OEITY14zwRk5vwP2phqHRhBaINwYkkln7T7sgSBBVZdz3/urdjwVJTVZy/uohGyYEhtC1A7P9kAn5XTEmsSg9Wbj6z9KMqQ72MREyfT4U6k0UNBgBGSDqdZIeIwhmW3x2oNRnsH5unQ9/65P1l+96dP7+Lr9TfeJPH7jeyUe1yZLYpsX9XxLbtCO7bL+75deRgWo+8rG/yW23vbdldBwZo8ygVi2CIxXUawAD1Mo7TgSXfeEODUPJW8I90Uu61ciHGds1zabFrX7/9j+X37v9z1ZCVWz8Vr/XRdEhsdKzPM6uaj+1KNqhwGM/8PThPpv+vM4/em2N+yiR7MXykAByo/3fhbtShewW4OTdAtx2alk8L0CPbrVWB7LHPq3K5sWtfvaSH8g/3PV3ChzUsnjQwK+96dE5/don5M/PWGrLK01XAwD7FCLEmMwui5sW4JrLC2nJ3NDa1eHWYiBtf4gTAlQ1mxe3uN2pF+fv7vrbLj3p/JkHIwuLUw9G1pQNawuFAvCJ73w2v//WR7v2+g/70G22GBlXH2oVsqsIERT5msHZWFKmHXAKgEuvuXyEMX6dPB5jjPY2LyB77CPRtc7C8nZddR569r3yUxc/vC4/+UJV9oohXPXtT3nOJ17m1Z97s+uX4yXnb80DjttUy+NOJ8ySXMUNkAkHMnk0hhs5glp556kALv3cZYV04771o25jOFsMaKu3+upitGoyDLYubzPXzbng+LNccfplufjEc5y+4WTr548UbFve7hsL365PfOdq7//Gx3z62s/rh2W6De519GKef87Xa2Vo2jT5BPYlxIBGviQ5FyuqFTIlwOmmccnVl3To8RC8kvTo9k4cidm6GDcKMSR2rixa6pdQ5tucURshVoax5fGKiDXdvCNGa7VisU9edd43XbJ+sVb60mofD0JmBekTHfkBXDmd+2YFmBbh4g49Xih+NIwxOkDiMz1FVSmNRMSQgaBKUzA51sT14+YXT96af771dbU8bntYf19CTFvflfgB0jDs12+EEgOIX1buRk4TfegOhjgkJEFvRshEn0FQWAqnzY3ze6dtZWhaQa0+25vt/3uM8F3yC0BhFjV+180xi4s+e0GHHleI9wUYSDsUFzBbR6b3O3H9SvMvt9o0/OLpW3d3ewf0NDiSAtwF7yYjjFcR4BZWw4WfPX+EsfhJPFcSCAUC2ZMfIrAXorP7NLG9LxesW8kbLvquisr+DXSmD4Q0/AKeMUN+RoB339LecOGnz9stQn4v/CciQhrkgIkjMVtToxVbx+WF596Qex+/s5bHpav9/kVIEDTyp/gXMlP0zApwK/vChZ86p0Mffk/ynxB60c1a+8CIE0FXbF4pDz5uMc86/4ZaGZdWgX3bfnrYfiP5zBa9VVLg1vYHF3z67A59kp/CcwQyxuhA81xgVoxB8oaLb3DuupXd3d4sWasPdODn8UyGJoLAPhxwhv3FBZ88a4RxkivIlWHSO6DQyEG5oKu4bqX8zuk78tdnLtTySukE9mb7gQQd+Q5+AO9mmLH93gV4z5kOBOd//IwRxoNhQ6Weih8hEmM0tL3l+QwnsRxOHCVvu2yTY0ZDjUOtWvENZMCIEP9DfhGbGWYL3r4FOAsOUIRbd+ghGR6a+A+cDZI+QLe3niICOtywUh5z1rb85Ok7a9L6hVnb9wgZAfki/gAvA+mnyB+QAGc7GJz38VuWaOiH6loN419L8vu4FQhkHApNlGnqoRXbey5fP85rL13QDykgEDIgU62NfJX8F+0JGMu4I8EAByHAOQ4F533s5h16WBky1/FD4hcid0XbwwU9IqBKbBmXl128bbjrcStteSxdKUlntn9/F3mG1IuxDIxn8v3ABXjveQ4V5151eqHDGGAYhrPFA3HfyOU4RQCiMSH/E6cse/S5O0x3ewS+I7mKvAmvxdXAjXYfegS+5wIAnPOR0wqt1LQljYf+yIqzcS45I5xWcexKrH3tpTtcctR4cXlsU1e+Rb6Iq5VrsA3AMG6kxHBIxGcFuNBNgbM/fFJDE8PB5uc1t7++keam/Ofp8fsudlPjrA8eX6JQpIKOXLtcnnTuTj9+2pKVcVWrQEgQxE2M/wPzITWn2Wj3jQAAAABJRU5ErkJggg=="
+                  style="--mas-avatar-size: var(--cpd-space-5x);"
+                />
+                Jungle Phone
+              </div>
+            </div>
+          </header>
+          <ul
+            class="_metadata_6c1027"
+          >
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Last Active
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <span
+                  title="Thu, Apr 23, 2026, 9:25 PM"
+                >
+                  Active Thu, Apr 23, 2026, 9:25 PM
+                </span>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Signed in
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <time
+                  datetime="2026-04-23T21:25:43Z"
+                >
+                  Thu, Apr 23, 2026, 9:25 PM
+                </time>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Device ID
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                zzzZZZzzz1
+              </div>
+            </li>
+          </ul>
+        </a>
+        <div
+          class="_action_6c1027"
+        >
+          <button
+            aria-expanded="false"
+            aria-haspopup="dialog"
+            class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
+            data-kind="secondary"
+            data-size="md"
+            data-state="closed"
+            role="button"
+            tabindex="0"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              fill="currentColor"
+              height="20"
+              viewBox="0 0 24 24"
+              width="20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7 21q-.824 0-1.412-.587A1.93 1.93 0 0 1 5 19V6a.97.97 0 0 1-.713-.287A.97.97 0 0 1 4 5q0-.424.287-.713A.97.97 0 0 1 5 4h4q0-.424.287-.712A.97.97 0 0 1 10 3h4q.424 0 .713.288Q15 3.575 15 4h4q.424 0 .712.287Q20 4.576 20 5t-.288.713A.97.97 0 0 1 19 6v13q0 .824-.587 1.413A1.93 1.93 0 0 1 17 21zM7 6v13h10V6zm2 10q0 .424.287.712Q9.576 17 10 17t.713-.288A.97.97 0 0 0 11 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 10 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 9 9zm4 0q0 .424.287.712.288.288.713.288.424 0 .713-.288A.97.97 0 0 0 15 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 14 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 13 9z"
+              />
+            </svg>
+            Remove device
+          </button>
+        </div>
+      </section>
+      <section
+        class="_sessionCardRoot_6c1027"
+      >
+        <a
+          class="_sessionCard_6c1027"
+          href="/sessions/compat_session%3A0"
+        >
+          <header
+            class="_cardHeader_6c1027"
+          >
+            <svg
+              aria-label="Computer"
+              class="_deviceTypeIcon_261d75"
+              fill="currentColor"
+              height="1em"
+              viewBox="0 0 24 24"
+              width="1em"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M4 18q-.824 0-1.412-.587A1.93 1.93 0 0 1 2 16V5q0-.824.587-1.412A1.93 1.93 0 0 1 4 3h16q.824 0 1.413.587Q22 4.176 22 5v11q0 .824-.587 1.413A1.93 1.93 0 0 1 20 18zm0-2h16V5H4zm-2 5a.97.97 0 0 1-.712-.288A.97.97 0 0 1 1 20q0-.424.288-.712A.97.97 0 0 1 2 19h20q.424 0 .712.288.288.287.288.712 0 .424-.288.712A.97.97 0 0 1 22 21z"
+              />
+            </svg>
+            <div
+              class="_content_6c1027"
+            >
+              <div
+                class="_name_6c1027"
+              >
+                Chrome for Linux
+              </div>
+              <div
+                class="_client_6c1027"
+              >
+                <img
+                  alt="Jungle Phone"
+                  class="_avatar_d3cd4c"
+                  referrerpolicy="no-referrer"
+                  src="data:image/png;base64,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"
+                  style="--mas-avatar-size: var(--cpd-space-5x);"
+                />
+                Jungle Phone
+              </div>
+            </div>
+          </header>
+          <ul
+            class="_metadata_6c1027"
+          >
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Last Active
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <span
+                  title="Thu, Apr 23, 2026, 9:25 PM"
+                >
+                  Active Thu, Apr 23, 2026, 9:25 PM
+                </span>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Signed in
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                <time
+                  datetime="2026-04-23T21:25:43Z"
+                >
+                  Thu, Apr 23, 2026, 9:25 PM
+                </time>
+              </div>
+            </li>
+            <li>
+              <div
+                class="_key_6c1027"
+              >
+                Device ID
+              </div>
+              <div
+                class="_value_6c1027"
+              >
+                zzzZZZzzz0
+              </div>
+            </li>
+          </ul>
+        </a>
+        <div
+          class="_action_6c1027"
+        >
+          <button
+            aria-expanded="false"
+            aria-haspopup="dialog"
+            class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
+            data-kind="secondary"
+            data-size="md"
+            data-state="closed"
+            role="button"
+            tabindex="0"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              fill="currentColor"
+              height="20"
+              viewBox="0 0 24 24"
+              width="20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7 21q-.824 0-1.412-.587A1.93 1.93 0 0 1 5 19V6a.97.97 0 0 1-.713-.287A.97.97 0 0 1 4 5q0-.424.287-.713A.97.97 0 0 1 5 4h4q0-.424.287-.712A.97.97 0 0 1 10 3h4q.424 0 .713.288Q15 3.575 15 4h4q.424 0 .712.287Q20 4.576 20 5t-.288.713A.97.97 0 0 1 19 6v13q0 .824-.587 1.413A1.93 1.93 0 0 1 17 21zM7 6v13h10V6zm2 10q0 .424.287.712Q9.576 17 10 17t.713-.288A.97.97 0 0 0 11 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 10 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 9 9zm4 0q0 .424.287.712.288.288.713.288.424 0 .713-.288A.97.97 0 0 0 15 16V9a.97.97 0 0 0-.287-.713A.97.97 0 0 0 14 8a.97.97 0 0 0-.713.287A.97.97 0 0 0 13 9z"
+              />
+            </svg>
+            Remove device
+          </button>
+        </div>
+      </section>
+      <div
+        class="flex *:flex-1"
+      >
+        <a
+          aria-disabled="true"
+          class="_button_1nw83_8 _buttonLink_014cb0"
+          data-kind="secondary"
+          data-size="md"
+          role="link"
+          tabindex="0"
+        >
+          Previous
+        </a>
+        <div />
+        <a
+          aria-disabled="false"
+          class="_button_1nw83_8 _buttonLink_014cb0"
+          data-kind="secondary"
+          data-size="md"
+          href="/sessions?last=6&before=foo"
+          role="link"
+          tabindex="0"
+        >
+          Next
+        </a>
+      </div>
+    </div>
+    <footer
+      class="_legalFooter_acfd2c"
+    >
+      <nav>
+        <a
+          class="_link_k9ljz_8"
+          data-kind="primary"
+          data-size="md"
+          href="https://matrix.org/policy"
+          rel="noreferrer noopener"
+          title="Link to the service privacy policy"
+        >
+          Privacy Policy
+        </a>
+        <div
+          aria-hidden="true"
+          class="_separator_acfd2c"
+        >
+          •
+        </div>
+        <a
+          class="_link_k9ljz_8"
+          data-kind="primary"
+          data-size="md"
+          href="https://matrix.org/tos"
+          rel="noreferrer noopener"
+          title="Link to the service terms and conditions"
+        >
+          Terms & Conditions
+        </a>
+      </nav>
+      <p
+        class="_imprint_acfd2c"
+      >
+        All Rights Reserved. The Super Chat name, logo and device are registered trade marks of BigCorp Ltd.
+      </p>
+    </footer>
+  </div>
+</DocumentFragment>
+`;

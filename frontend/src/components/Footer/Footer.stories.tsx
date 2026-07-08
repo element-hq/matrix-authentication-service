@@ -11,9 +11,9 @@ import { makeFragmentData } from "../../gql";
 import Footer, { FRAGMENT } from "./Footer";
 
 const Template: React.FC<{
-  tosUri?: string;
-  policyUri?: string;
-  imprint?: string;
+  tosUri: string | null;
+  policyUri: string | null;
+  imprint: string | null;
 }> = ({ tosUri, policyUri, imprint }) => (
   <Footer
     siteConfig={makeFragmentData(

@@ -9,7 +9,7 @@ use std::net::IpAddr;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use mas_data_model::{BrowserSession, Client, Clock, Session, SessionState, User};
+use mas_data_model::{BrowserSession, Client, Clock, Session, SessionState, UlidExt as _, User};
 use mas_storage::{
     Page, Pagination,
     oauth2::{OAuth2SessionFilter, OAuth2SessionRepository},
@@ -18,10 +18,10 @@ use mas_storage::{
 use oauth2_types::scope::{Scope, ScopeToken};
 use rand::RngCore;
 use sea_query::{
-    Condition, Expr, PgFunc, PostgresQueryBuilder, Query, SimpleExpr, enum_def,
+    Condition, Expr, ExprTrait, PgFunc, PostgresQueryBuilder, Query, SimpleExpr, enum_def,
     extension::postgres::PgExpr,
 };
-use sea_query_binder::SqlxBinder;
+use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
@@ -32,6 +32,7 @@ use crate::{
     iden::{OAuth2Clients, OAuth2Sessions, UserSessions},
     pagination::QueryBuilderExt,
     tracing::ExecuteExt,
+    ulid_at::{max_ulid_at, min_ulid_at},
 };
 
 /// An implementation of [`OAuth2SessionRepository`] for a PostgreSQL connection
@@ -117,6 +118,10 @@ impl Filter for OAuth2SessionFilter<'_> {
                 Expr::col((OAuth2Sessions::Table, OAuth2Sessions::OAuth2ClientId))
                     .eq(Uuid::from(client.id))
             }))
+            .add_option(self.clients().map(|clients| {
+                Expr::col((OAuth2Sessions::Table, OAuth2Sessions::OAuth2ClientId))
+                    .is_in(clients.iter().map(|c| Uuid::from(c.id)))
+            }))
             .add_option(self.client_kind().map(|client_kind| {
                 // This builds either a:
                 // `WHERE oauth2_client_id = ANY(...)`
@@ -126,7 +131,7 @@ impl Filter for OAuth2SessionFilter<'_> {
                         OAuth2Clients::Table,
                         OAuth2Clients::OAuth2ClientId,
                     )))
-                    .and_where(Expr::col((OAuth2Clients::Table, OAuth2Clients::IsStatic)).into())
+                    .and_where(Expr::col((OAuth2Clients::Table, OAuth2Clients::IsStatic)))
                     .from(OAuth2Clients::Table)
                     .take();
                 if client_kind.is_static() {
@@ -152,7 +157,7 @@ impl Filter for OAuth2SessionFilter<'_> {
                         .into()
                 } else {
                     // If the device ID can't be encoded as a scope token, match no rows
-                    Expr::val(false).into()
+                    Expr::val(false)
                 }
             }))
             .add_option(self.browser_session().map(|browser_session| {
@@ -196,6 +201,17 @@ impl Filter for OAuth2SessionFilter<'_> {
             .add_option(self.last_active_before().map(|last_active_before| {
                 Expr::col((OAuth2Sessions::Table, OAuth2Sessions::LastActiveAt))
                     .lt(last_active_before)
+            }))
+            .add_option(self.created_after().map(|created_after| {
+                // ULIDs encode the creation time in their high 48 bits, so we
+                // can use the primary key index to filter on creation time
+                // without touching the `created_at` column.
+                Expr::col((OAuth2Sessions::Table, OAuth2Sessions::OAuth2SessionId))
+                    .gt(max_ulid_at(created_after))
+            }))
+            .add_option(self.created_before().map(|created_before| {
+                Expr::col((OAuth2Sessions::Table, OAuth2Sessions::OAuth2SessionId))
+                    .lt(min_ulid_at(created_before))
             }))
     }
 }
@@ -264,7 +280,7 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
         scope: Scope,
     ) -> Result<Session, Self::Error> {
         let created_at = clock.now();
-        let id = Ulid::from_datetime_with_source(created_at.into(), rng);
+        let id = Ulid::from_datetime_with_rng(created_at, rng);
         tracing::Span::current().record("session.id", tracing::field::display(id));
 
         let scope_list: Vec<String> = scope.iter().map(|s| s.as_str().to_owned()).collect();

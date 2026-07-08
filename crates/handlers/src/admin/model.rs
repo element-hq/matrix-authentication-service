@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -14,6 +15,7 @@ use mas_data_model::{
         session::{PersonalSession as DataModelPersonalSession, PersonalSessionOwner},
     },
 };
+use oauth2_types::requests::GrantType;
 use schemars::JsonSchema;
 use serde::Serialize;
 use thiserror::Error;
@@ -181,11 +183,11 @@ pub struct CompatSession {
     pub user_id: Ulid,
 
     /// The Matrix device ID of this session
-    #[schemars(with = "super::schema::Device")]
+    #[schemars(with = "Option<super::schema::Device>")]
     pub device_id: Option<Device>,
 
     /// The ID of the user session that started this session, if any
-    #[schemars(with = "super::schema::Ulid")]
+    #[schemars(with = "Option<super::schema::Ulid>")]
     pub user_session_id: Option<Ulid>,
 
     /// The redirect URI used to login in the client, if it was an SSO login
@@ -703,6 +705,88 @@ impl UserRegistrationToken {
     }
 }
 
+/// An OAuth 2.0 client registered with this service
+#[derive(Serialize, JsonSchema)]
+pub struct OAuth2Client {
+    #[serde(skip)]
+    id: Ulid,
+
+    /// The OAuth 2.0 client identifier
+    client_id: String,
+
+    /// The human-readable name of the client, if registered
+    client_name: Option<String>,
+
+    /// The homepage URL of the client, if registered
+    client_uri: Option<Url>,
+
+    /// The URL of the client's logo, if registered
+    logo_uri: Option<Url>,
+
+    /// The list of redirect URIs registered by the client
+    redirect_uris: Vec<Url>,
+
+    /// The list of grant types the client is allowed to use
+    #[schemars(with = "Vec<String>")]
+    grant_types: Vec<GrantType>,
+
+    /// Whether the client is statically configured (defined in the
+    /// configuration file) rather than dynamically registered.
+    is_static: bool,
+}
+
+impl From<mas_data_model::Client> for OAuth2Client {
+    fn from(client: mas_data_model::Client) -> Self {
+        Self {
+            id: client.id,
+            client_id: client.client_id,
+            client_name: client.client_name,
+            client_uri: client.client_uri,
+            logo_uri: client.logo_uri,
+            redirect_uris: client.redirect_uris,
+            grant_types: client.grant_types,
+            is_static: client.is_static,
+        }
+    }
+}
+
+impl Resource for OAuth2Client {
+    const KIND: &'static str = "oauth2-client";
+    const PATH: &'static str = "/api/admin/v1/oauth2-clients";
+
+    fn id(&self) -> Ulid {
+        self.id
+    }
+}
+
+impl OAuth2Client {
+    /// Samples of OAuth 2.0 clients
+    pub fn samples() -> [Self; 2] {
+        [
+            Self {
+                id: Ulid::from_bytes([0x01; 16]),
+                client_id: "01040G2081040G2081040G2081".to_owned(),
+                client_name: Some("Example dynamic client".to_owned()),
+                client_uri: Some("https://example.com/".parse().unwrap()),
+                logo_uri: Some("https://example.com/logo.png".parse().unwrap()),
+                redirect_uris: vec!["https://example.com/oauth/callback".parse().unwrap()],
+                grant_types: vec![GrantType::AuthorizationCode, GrantType::RefreshToken],
+                is_static: false,
+            },
+            Self {
+                id: Ulid::from_bytes([0x02; 16]),
+                client_id: "static-client".to_owned(),
+                client_name: Some("Configured static client".to_owned()),
+                client_uri: None,
+                logo_uri: None,
+                redirect_uris: vec!["https://static.example.com/callback".parse().unwrap()],
+                grant_types: vec![GrantType::ClientCredentials],
+                is_static: true,
+            },
+        ]
+    }
+}
+
 /// An upstream OAuth 2.0 provider
 #[derive(Serialize, JsonSchema)]
 pub struct UpstreamOAuthProvider {
@@ -723,6 +807,10 @@ pub struct UpstreamOAuthProvider {
 
     /// When the provider was disabled. If null, the provider is enabled.
     disabled_at: Option<DateTime<Utc>>,
+
+    /// Whether a registration token is required for registrations via this
+    /// provider.
+    registration_token_required: bool,
 }
 
 impl From<mas_data_model::UpstreamOAuthProvider> for UpstreamOAuthProvider {
@@ -734,6 +822,7 @@ impl From<mas_data_model::UpstreamOAuthProvider> for UpstreamOAuthProvider {
             brand_name: provider.brand_name,
             created_at: provider.created_at,
             disabled_at: provider.disabled_at,
+            registration_token_required: provider.registration_token_required,
         }
     }
 }
@@ -758,6 +847,7 @@ impl UpstreamOAuthProvider {
                 brand_name: Some("google".to_owned()),
                 created_at: DateTime::default(),
                 disabled_at: None,
+                registration_token_required: false,
             },
             Self {
                 id: Ulid::from_bytes([0x02; 16]),
@@ -766,6 +856,7 @@ impl UpstreamOAuthProvider {
                 brand_name: Some("apple".to_owned()),
                 created_at: DateTime::default(),
                 disabled_at: Some(DateTime::default()),
+                registration_token_required: false,
             },
             Self {
                 id: Ulid::from_bytes([0x03; 16]),
@@ -774,6 +865,7 @@ impl UpstreamOAuthProvider {
                 brand_name: None,
                 created_at: DateTime::default(),
                 disabled_at: None,
+                registration_token_required: true,
             },
         ]
     }

@@ -10,6 +10,7 @@ import path, { resolve } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import zlib from "node:zlib";
+import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import browserslistToEsbuild from "browserslist-to-esbuild";
@@ -216,6 +217,8 @@ export default defineConfig((env) => ({
     }),
 
     react(),
+
+    tailwindcss(),
 
     augmentManifest(),
 

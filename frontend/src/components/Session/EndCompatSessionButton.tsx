@@ -40,7 +40,7 @@ const END_SESSION_MUTATION = graphql(/* GraphQL */ `
 
 type Props = {
   session: FragmentType<typeof FRAGMENT>;
-  size: "sm" | "lg";
+  size: "md" | "lg";
 };
 
 const EndCompatSessionButton: React.FC<Props> = ({ session, size }) => {
@@ -55,6 +55,7 @@ const EndCompatSessionButton: React.FC<Props> = ({ session, size }) => {
       }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["sessionsOverview"] });
+      queryClient.invalidateQueries({ queryKey: ["currentUserGreeting"] });
       queryClient.invalidateQueries({ queryKey: ["appSessionList"] });
       queryClient.invalidateQueries({
         queryKey: ["sessionDetail", data.endCompatSession.compatSession?.id],

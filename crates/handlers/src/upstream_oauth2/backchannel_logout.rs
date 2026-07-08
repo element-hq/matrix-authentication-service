@@ -124,7 +124,7 @@ pub(crate) struct BackchannelLogoutRequest {
 
 #[derive(Deserialize)]
 struct LogoutTokenEvents {
-    #[allow(dead_code)] // We just want to check it deserializes
+    #[expect(dead_code)] // We just want to check it deserializes
     #[serde(rename = "http://schemas.openid.net/event/backchannel-logout")]
     backchannel_logout: HashMap<String, Value>,
 }

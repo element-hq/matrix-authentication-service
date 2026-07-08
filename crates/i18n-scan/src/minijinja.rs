@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -195,6 +196,12 @@ fn find_in_expr<'a>(context: &mut Context, expr: &'a Expr<'a>) -> Result<(), min
         Expr::BinOp(bin_op) => {
             find_in_expr(context, &bin_op.left)?;
             find_in_expr(context, &bin_op.right)?;
+        }
+        Expr::Compare(compare) => {
+            find_in_expr(context, &compare.expr)?;
+            for op in &compare.ops {
+                find_in_expr(context, &op.expr)?;
+            }
         }
         Expr::IfExpr(if_expr) => {
             find_in_expr(context, &if_expr.test_expr)?;

@@ -87,23 +87,33 @@
       "access_requested": "Zugriff beantragt",
       "device_code": "Code",
       "generic_device": "Gerät",
-      "ip_address": "IP-Adresse"
+      "ip_address": "IP-Adresse",
+      "security_code": "Sicherheitscode"
     },
     "device_code_link": {
-      "description": "Ein Gerät verknüpfen",
-      "headline": "Gib den Code ein, der auf deinem Gerät angezeigt wird."
+      "description": "Eingeben Sie den Sicherheitscode ein, der auf Ihrem anderen Gerät angezeigt wird",
+      "headline": "Gib den Code ein, der auf deinem Gerät angezeigt wird.",
+      "verification_code": "Bestätigungscode"
     },
     "device_consent": {
       "another_device_access": "Ein anderes Gerät möchte auf dein Konto zugreifen.",
+      "confirm_device": "Ja, ich bestätige, dass dies mein Gerät ist und ich mich anmelden möchte.",
       "denied": {
         "description": "Du hast den Zugriff auf %(client_name)s abgelehnt. Du kannst dieses Fenster jetzt schließen.",
         "heading": "Zugriff verweigert"
       },
+      "description": "<strong>Ein anderes Gerät</strong> möchte %(client_name)s (<span>%(client_uri)s</span>) mit deinem <span>%(server_name)s</span> Konto verknüpfen. Bitte stelle sicher, dass du dieses Gerät erkennst.",
+      "grant_access": "Zugriff gewähren",
       "granted": {
         "description": "Du hast %(client_name)s Zugriff gegeben. Du kannst dieses Fenster jetzt schließen.",
         "heading": "Zugriff gewährt"
       },
-      "this_will_setup": "Ein anderes Gerät möchte %(client_name)s (<span>%(client_uri)s</span>) mit deinem <span>%(server_name)s</span> Konto einrichten. Stelle sicher, dass du dieses Gerät kennst."
+      "this_will_setup": "Ein anderes Gerät möchte %(client_name)s (<span>%(client_uri)s</span>) mit deinem <span>%(server_name)s</span> Konto einrichten. Stelle sicher, dass du dieses Gerät kennst.",
+      "title": "Zugriff auf dein Konto gewähren?",
+      "warning": {
+        "description": "Bist du sicher, dass dies dein Gerät ist? Administratoren oder der IT-Support würden dich niemals bitten, dies zu akzeptieren.",
+        "title": "Hiermit wirst du einem Remote-Gerät Zugriff auf dein Konto zu gewähren"
+      }
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s auf %(device_name)s",
@@ -181,7 +191,12 @@
     "policy_violation": {
       "description": "Dies kann am Client liegen, der die Anfrage erstellt hat, am aktuell angemeldeten Benutzer oder an der Anfrage selbst.",
       "heading": "Die Autorisierungsanfrage wurde durch eine Richtlinie dieses Dienstes abgelehnt",
-      "logged_as": "Eingeloggt als <span class=\"font-semibold\">%(username)s</span>"
+      "logged_as": "Eingeloggt als <span class=\"font-semibold\">%(username)s</span>",
+      "too_many_sessions": {
+        "description": "Dein Konto ist bereits auf der maximalen Anzahl von Geräten angemeldet. Um fortzufahren, <span class=\"font-semibold\">entferne %(num_devices_to_remove)s deiner eingeloggten Geräten</span> und melde dich erneut an.",
+        "heading": "Gerätelimit erreicht",
+        "manage_devices": "Geräte verwalten"
+      }
     },
     "recovery": {
       "consumed": {

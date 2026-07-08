@@ -9,7 +9,12 @@ import {
   useMutation,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { notFound, useNavigate, useSearch } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  notFound,
+  useNavigate,
+  useSearch,
+} from "@tanstack/react-router";
 import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import IconLockSolid from "@vector-im/compound-design-tokens/assets/web/icons/lock-solid";
 import { Alert, Button, Form } from "@vector-im/compound-web";
@@ -81,7 +86,7 @@ const schema = v.object({
   ticket: v.string(),
 });
 
-export const Route = createFileRoute({
+export const Route = createFileRoute("/password/recovery/")({
   validateSearch: schema,
 
   loaderDeps: ({ search: { ticket } }) => ({ ticket }),

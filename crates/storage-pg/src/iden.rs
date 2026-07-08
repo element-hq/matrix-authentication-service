@@ -95,6 +95,14 @@ pub enum OAuth2Clients {
     #[iden = "oauth2_client_id"]
     OAuth2ClientId,
     IsStatic,
+    ClientName,
+    ClientUri,
+    LogoUri,
+    RedirectUris,
+    GrantTypeAuthorizationCode,
+    GrantTypeRefreshToken,
+    GrantTypeClientCredentials,
+    GrantTypeDeviceCode,
 }
 
 #[derive(sea_query::Iden)]
@@ -156,6 +164,7 @@ pub enum UpstreamOAuthProviders {
     AuthorizationEndpointOverride,
     UserinfoEndpointOverride,
     OnBackchannelLogout,
+    RegistrationTokenRequired,
 }
 
 #[derive(sea_query::Iden)]

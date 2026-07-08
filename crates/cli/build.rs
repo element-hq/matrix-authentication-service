@@ -15,7 +15,7 @@ fn main() -> anyhow::Result<()> {
     if let Ok(ver) = std::env::var("VERGEN_GIT_DESCRIBE")
         && ver.is_empty()
     {
-        #[allow(unsafe_code)]
+        #[expect(unsafe_code)]
         // SAFETY: This is safe because the build script is running a single thread
         unsafe {
             std::env::remove_var("VERGEN_GIT_DESCRIBE");

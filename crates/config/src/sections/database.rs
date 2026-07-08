@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -14,7 +15,7 @@ use serde_with::serde_as;
 use super::ConfigurationSection;
 use crate::schema;
 
-#[allow(clippy::unnecessary_wraps)]
+#[expect(clippy::unnecessary_wraps)]
 fn default_connection_string() -> Option<String> {
     Some("postgresql://".to_owned())
 }
@@ -27,14 +28,14 @@ fn default_connect_timeout() -> Duration {
     Duration::from_secs(30)
 }
 
-#[allow(clippy::unnecessary_wraps)]
+#[expect(clippy::unnecessary_wraps)]
 fn default_idle_timeout() -> Option<Duration> {
-    Some(Duration::from_secs(10 * 60))
+    Some(Duration::from_mins(10))
 }
 
-#[allow(clippy::unnecessary_wraps)]
+#[expect(clippy::unnecessary_wraps)]
 fn default_max_lifetime() -> Option<Duration> {
-    Some(Duration::from_secs(30 * 60))
+    Some(Duration::from_mins(30))
 }
 
 impl Default for DatabaseConfig {
@@ -286,6 +287,10 @@ impl ConfigurationSection for DatabaseConfig {
 }
 #[cfg(test)]
 mod tests {
+    // The closures passed to `Jail::expect_with` return `figment::Error`, which is
+    // large, and we can't change figment's API.
+    #![expect(clippy::result_large_err)]
+
     use figment::{
         Figment, Jail,
         providers::{Format, Yaml},

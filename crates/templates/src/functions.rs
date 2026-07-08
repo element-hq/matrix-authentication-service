@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -276,14 +277,14 @@ impl Object for TranslateFunc {
 
         let (message, _locale) = if let Some(count) = kwargs.get("count")? {
             self.translator
-                .plural_with_fallback(self.lang.clone(), key, count)
+                .plural_with_fallback(self.lang, key, count)
                 .ok_or(Error::new(
                     ErrorKind::InvalidOperation,
                     "Missing translation",
                 ))?
         } else {
             self.translator
-                .message_with_fallback(self.lang.clone(), key)
+                .message_with_fallback(self.lang, key)
                 .ok_or(Error::new(
                     ErrorKind::InvalidOperation,
                     "Missing translation",
@@ -344,7 +345,7 @@ impl Object for TranslateFunc {
                 })?;
 
                 // TODO: grab the clock somewhere
-                #[allow(clippy::disallowed_methods)]
+                #[expect(clippy::disallowed_methods)]
                 let now = chrono::Utc::now();
 
                 let diff = (date - now).num_days();
@@ -362,6 +363,8 @@ impl Object for TranslateFunc {
             }
 
             "short_time" => {
+                use chrono::Timelike as _;
+
                 let (date,): (String,) = from_args(args)?;
                 let date: chrono::DateTime<chrono::Utc> = date.parse().map_err(|e| {
                     Error::new(
@@ -374,9 +377,20 @@ impl Object for TranslateFunc {
                 // TODO: we should use the user's timezone here
                 let time = date.time();
 
+                // The hour, minute and second always fit in a `u8`.
+                let time = mas_i18n::icu_datetime::input::Time::try_new(
+                    time.hour().try_into().unwrap_or(0),
+                    time.minute().try_into().unwrap_or(0),
+                    time.second().try_into().unwrap_or(0),
+                    time.nanosecond(),
+                )
+                .map_err(|e| {
+                    Error::new(ErrorKind::InvalidOperation, "Invalid time").with_source(e)
+                })?;
+
                 Ok(Value::from(
                     self.translator
-                        .short_time(&self.lang, &TimeAdapter(time))
+                        .short_time(&self.lang, &time)
                         .map_err(|_e| {
                             Error::new(ErrorKind::InvalidOperation, "Failed to format time")
                         })?,
@@ -388,34 +402,6 @@ impl Object for TranslateFunc {
                 "Invalid method on include_asset",
             )),
         }
-    }
-}
-
-/// An adapter to make a [`Timelike`] implement [`IsoTimeInput`]
-///
-/// [`Timelike`]: chrono::Timelike
-/// [`IsoTimeInput`]: mas_i18n::icu_datetime::input::IsoTimeInput
-struct TimeAdapter<T>(T);
-
-impl<T: chrono::Timelike> mas_i18n::icu_datetime::input::IsoTimeInput for TimeAdapter<T> {
-    fn hour(&self) -> Option<mas_i18n::icu_calendar::types::IsoHour> {
-        let hour: usize = chrono::Timelike::hour(&self.0).try_into().ok()?;
-        hour.try_into().ok()
-    }
-
-    fn minute(&self) -> Option<mas_i18n::icu_calendar::types::IsoMinute> {
-        let minute: usize = chrono::Timelike::minute(&self.0).try_into().ok()?;
-        minute.try_into().ok()
-    }
-
-    fn second(&self) -> Option<mas_i18n::icu_calendar::types::IsoSecond> {
-        let second: usize = chrono::Timelike::second(&self.0).try_into().ok()?;
-        second.try_into().ok()
-    }
-
-    fn nanosecond(&self) -> Option<mas_i18n::icu_calendar::types::NanoSecond> {
-        let nanosecond: usize = chrono::Timelike::nanosecond(&self.0).try_into().ok()?;
-        nanosecond.try_into().ok()
     }
 }
 
@@ -526,7 +512,7 @@ impl Object for IncludeAsset {
                 // When a JSON is included at the top level (a translation), we preload it
                 let src = main.src(assets_base);
                 if tracker.mark_preloaded(&src) {
-                    writeln!(output, r#"<link rel="preload" href="{src}" as="fetch" />"#,).unwrap();
+                    writeln!(output, r#"<link rel="preload" href="{src}" as="fetch" />"#).unwrap();
                 }
             }
 
