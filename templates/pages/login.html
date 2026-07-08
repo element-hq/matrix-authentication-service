@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 
@@ -54,7 +55,7 @@ Please see LICENSE files in the repository root for full details.
         {% endif %}
       
         {% call(f) field.field(label=_("common.password"), name="password", form_state=form) %}
-          <input {{ field.attributes(f) }} class="cpd-text-control" type="password" autocomplete="password" required />
+          <input {{ field.attributes(f) }} class="cpd-text-control" type="password" autocomplete="current-password" required />
         {% endcall %}
 
         {% if features.account_recovery %}
