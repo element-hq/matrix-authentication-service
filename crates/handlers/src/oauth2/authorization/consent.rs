@@ -29,7 +29,10 @@ use mas_policy::Policy;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
     BoxRepository,
-    oauth2::{OAuth2AuthorizationGrantRepository, OAuth2ClientRepository},
+    oauth2::{
+        OAuth2AuthorizationGrantRepository, OAuth2ClientRepository, OAuth2SessionFilter,
+        OAuth2SessionRepository,
+    },
 };
 use mas_templates::{ConsentContext, PolicyViolationContext, TemplateContext, Templates};
 use oauth2_types::requests::AuthorizationResponse;
@@ -245,8 +248,19 @@ pub(crate) async fn get(
         return Ok((cookie_jar, Html(content)).into_response());
     }
 
-    // check if client configured to skip consent. if so, fulfill grant directly
-    if client.skip_consent {
+    let has_prior_consent = repo
+        .oauth2_session()
+        .count(
+            OAuth2SessionFilter::new()
+                .for_user(&session.user)
+                .for_client(&client)
+                .with_scope(&grant.scope)
+                .active_only(),
+        )
+        .await?
+        > 0;
+
+    if client.skip_consent || has_prior_consent {
         let response = fulfill_grant_and_redirect(
             &mut rng,
             &clock,
