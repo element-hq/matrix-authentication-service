@@ -65,9 +65,9 @@ Please see LICENSE files in the repository root for full details.
       {% endif %}
 
       <div class="infos">
-        <h3 class="provider">
+        <h2 class="provider">
           {{- _("mas.upstream_oauth2.register.provider_name", human_name=upstream_oauth_provider.human_name) -}}
-        </h3>
+        </h2>
         {% if upstream_oauth_link.human_account_name is not none %}
           <p class="account">
             {{- upstream_oauth_link.human_account_name -}}
