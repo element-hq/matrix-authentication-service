@@ -620,7 +620,7 @@ version = "0.6.2"
 
 # Subject Public Key Info
 [workspace.dependencies.spki]
-version = "0.7.3"
+version = "0.8.0"
 features = ["std"]
 
 # SQL database support
