@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 
@@ -18,7 +19,7 @@ Please see LICENSE files in the repository root for full details.
   <header class="page-heading">
     <div class="flex justify-center">
       {% if client.logo_uri %}
-      <img class="consent-client-icon image" referrerpolicy="no-referrer" src="{{ client.logo_uri }}" />
+      <img class="consent-client-icon image" referrerpolicy="no-referrer" src="{{ client.logo_uri }}" alt="{{ client_display_name }}" />
       {% else %}
       <div class="consent-client-icon generic">
         {{ icon.web_browser() }}
@@ -58,7 +59,7 @@ Please see LICENSE files in the repository root for full details.
   {%- endset %}
 
   <section class="flex items-center p-4 gap-4 border border-[var(--cpd-color-gray-400)] rounded-xl">
-    <div class="avatar-placeholder" data-color="{{ matrix_user.mxid | id_color_hash }}">{{ initial }}</div>
+    <div class="avatar-placeholder" data-color="{{ matrix_user.mxid | id_color_hash }}" aria-hidden="true">{{ initial }}</div>
     <div class="flex flex-col">
       <div class="text-primary cpd-text-body-lg-semibold">{{ matrix_user.display_name or current_session.user.username }}</div>
       <div class="text-secondary cpd-text-body-md-regular">{{ matrix_user.mxid }}</div>
