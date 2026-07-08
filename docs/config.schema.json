@@ -981,11 +981,14 @@
               "type": "string"
             },
             "mode": {
-              "description": "Socket file mode. A string representing UNIX permission bits, in octal integer format.",
+              "description": "Socket file mode. A string representing UNIX permission bits, in\noctal integer format.",
+              "type": [
+                "string",
+                "null"
+              ],
               "examples": [
                 "660"
-              ],
-              "type": "string"
+              ]
             }
           },
           "required": [

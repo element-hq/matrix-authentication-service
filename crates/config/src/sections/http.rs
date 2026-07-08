@@ -23,10 +23,6 @@ fn default_public_base() -> Url {
     "http://[::]:8080".parse().unwrap()
 }
 
-fn unix_mode_example() -> Option<String> {
-    Some("660".to_string())
-}
-
 #[cfg(not(any(feature = "docker", feature = "dist")))]
 fn http_listener_assets_path_default() -> Utf8PathBuf {
     "./frontend/dist/".into()
@@ -116,9 +112,9 @@ pub enum BindConfig {
         #[schemars(with = "String")]
         socket: Utf8PathBuf,
 
-        /// Socket file mode. A string representing UNIX permission bits, in octal
-        /// integer format.
-        #[schemars(example = "unix_mode_example()")]
+        /// Socket file mode. A string representing UNIX permission bits, in
+        /// octal integer format.
+        #[schemars(example = "660")]
         mode: Option<String>,
     },
 
