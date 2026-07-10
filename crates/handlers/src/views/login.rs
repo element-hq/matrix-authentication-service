@@ -170,7 +170,7 @@ pub(crate) async fn post(
 
     if !form_state.is_valid() {
         tracing::warn!("Invalid login form: {form_state:?}");
-        PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
+        PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "form-invalid")]);
         return render(
             locale,
             cookie_jar,
@@ -197,7 +197,7 @@ pub(crate) async fn post(
     else {
         tracing::warn!(username, "User not found");
         let form_state = form_state.with_error_on_form(FormError::InvalidCredentials);
-        PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
+        PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "user-not-found")]);
         return render(
             locale,
             cookie_jar,
@@ -218,7 +218,7 @@ pub(crate) async fn post(
     if let Err(e) = limiter.check_password(requester, &user) {
         tracing::warn!(error = &e as &dyn std::error::Error, "ratelimit exceeded");
         let form_state = form_state.with_error_on_form(FormError::RateLimitExceeded);
-        PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
+        PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "ratelimited")]);
         return render(
             locale,
             cookie_jar,
@@ -241,7 +241,7 @@ pub(crate) async fn post(
         // a generic 'invalid credentials' error instead
         tracing::warn!(username, "No password for user");
         let form_state = form_state.with_error_on_form(FormError::InvalidCredentials);
-        PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
+        PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "no-password-for-user")]);
         return render(
             locale,
             cookie_jar,
@@ -310,7 +310,7 @@ pub(crate) async fn post(
     // the user is locked or deactivated
     if user.deactivated_at.is_some() {
         tracing::warn!(username, "User is deactivated");
-        PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
+        PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "deactivated")]);
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
         let ctx = AccountInactiveContext::new(user)
             .with_csrf(csrf_token.form_value())
@@ -321,7 +321,7 @@ pub(crate) async fn post(
 
     if user.locked_at.is_some() {
         tracing::warn!(username, "User is locked");
-        PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "error")]);
+        PASSWORD_LOGIN_COUNTER.add(1, &[KeyValue::new(RESULT, "locked")]);
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
         let ctx = AccountInactiveContext::new(user)
             .with_csrf(csrf_token.form_value())
