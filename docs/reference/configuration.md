@@ -12,6 +12,20 @@ http:
   # OIDC issuer advertised by the service. Defaults to `public_base`
   issuer: https://example.com/
 
+  # List of trusted reverse proxies that are allowed to set the
+  # `X-Forwarded-For` header.
+  #
+  # Defaults to the usual private IP ranges:
+  #   192.168.0.0/16, 172.16.0.0/12, 10.0.0.0/8, 127.0.0.0/8,
+  #   fd00::/8 and ::1/128
+  #trusted_proxies:
+  #  - 192.168.0.0/16
+  #  - 172.16.0.0/12
+  #  - 10.0.0.0/8
+  #  - 127.0.0.0/8
+  #  - fd00::/8
+  #  - ::1/128
+
   # List of HTTP listeners, see below
   listeners:
     # ...
@@ -46,6 +60,9 @@ http:
           path: ./share/assets/
         # Serve the admin API on the /api/admin/v1/ path. Disabled by default
         #- name: adminapi
+
+      # Optional URL prefix to mount all the resources of this listener under
+      #prefix: /auth
 
       # List of addresses and ports to listen to
       binds:
@@ -130,6 +147,16 @@ Settings related to the connection to the Matrix homeserver
 
 ```yaml
 matrix:
+  # The kind of homeserver it is. Defaults to `synapse`.
+  # Possible values are:
+  #  - `synapse`: Synapse, version 1.135.0 or newer
+  #  - `synapse_read_only`: same as `synapse`, but in read-only mode. This is
+  #     meant for testing rolling out MAS with no risk of writing data to the
+  #     homeserver.
+  #  - `synapse_modern`: Synapse with the modern admin API available (>= 1.135.0)
+  #  - `synapse_legacy`: Synapse using the legacy admin API
+  #kind: synapse
+
   # The homeserver name, as per the `server_name` in the Synapse configuration file
   homeserver: example.com
 
@@ -293,10 +320,30 @@ passwords:
 
   # List of password hashing schemes being used
   # /!\ Only change this if you know what you're doing
-  # TODO: document this section better
   schemes:
-    - version: 1
+    - # The version of the hashing scheme. Must be unique; the highest version
+      # is used for hashing new passwords, the others are kept to verify
+      # existing passwords.
+      version: 1
+
+      # The hashing algorithm to use.
+      # Supported algorithms are `argon2id`, `bcrypt` and `pbkdf2`.
       algorithm: argon2id
+
+      # Whether to apply Unicode normalization to the password before hashing.
+      # Defaults to `false`, and generally recommended to stay false. This is
+      # recommended when importing password hashes from Synapse, which applies
+      # an NFKC normalization to the password before hashing it.
+      #unicode_normalization: false
+
+      # Cost for the bcrypt algorithm. Defaults to `12`.
+      #cost: 12
+
+      # An optional secret ("pepper") to use when hashing passwords. This makes
+      # it harder to brute-force the passwords in case of a database leak.
+      #secret: <secret>
+      # OR, read from a file:
+      #secret_file: /path/to/secret
 ```
 
 ## `account`
@@ -357,6 +404,11 @@ account:
   #
   # When enabled, users must provide a valid registration token during password
   # registration. This has no effect if password registration is disabled.
+  password_registration_token_required: false
+
+  # Whether registration tokens are required for password registrations.
+  #
+  # Deprecated: use `password_registration_token_required` instead.
   registration_token_required: false
 ```
 
@@ -407,6 +459,8 @@ policy:
   password_entrypoint: password/violation
   # Entrypoint to use when adding an email address
   email_entrypoint: email/violation
+  # Entrypoint to use when evaluating compatibility logins
+  compat_login_entrypoint: compat_login/violation
 
   # This data is being passed to the policy
   data:
@@ -556,6 +610,36 @@ rate_limiting:
   registration:
     burst: 3
     per_second: 0.0008
+
+  # Limits how many e-mail authentication attempts are allowed.
+  # These limits can protect against e-mail spam and against brute-forcing
+  # the verification code.
+  email_authentication:
+    # Controls how many e-mail authentication attempts are permitted
+    # based on source IP address.
+    per_ip:
+      burst: 5
+      per_second: 0.016666
+
+    # Controls how many e-mail authentication attempts are permitted
+    # based on the e-mail address being used.
+    # Note: this limit also applies to re-sends.
+    per_address:
+      burst: 3
+      per_second: 0.000277
+
+    # Controls how many e-mails can be sent within a single authentication
+    # session.
+    emails_per_session:
+      burst: 2
+      per_second: 0.003333
+
+    # Controls how many code verification attempts are permitted within a
+    # single authentication session.
+    # This protects against brute-forcing the code.
+    attempt_per_session:
+      burst: 10
+      per_second: 0.016666
 ```
 
 ## `telemetry`
@@ -581,6 +665,12 @@ telemetry:
     #exporter: otlp
     #endpoint: https://localhost:4318
 
+    # Export traces to the standard output. Only useful for debugging
+    #exporter: stdout
+
+    # Sample rate for traces, between 0.0 and 1.0. Defaults to 1.0.
+    #sample_rate: 0.5
+
   metrics:
     # The default: don't export metrics
     exporter: none
@@ -593,9 +683,21 @@ telemetry:
     # This requires mounting the `prometheus` resource to an HTTP listener
     #exporter: prometheus
 
+    # Export metrics to the standard output. Only useful for debugging
+    #exporter: stdout
+
   sentry:
     # DSN to use for sending errors and crashes to Sentry
     dsn: https://public@host:port/1
+
+    # Environment to use when sending events to Sentry. Defaults to `production`.
+    #environment: production
+
+    # Sample rate for event submissions, between 0.0 and 1.0. Defaults to 1.0.
+    #sample_rate: 1.0
+
+    # Sample rate for tracing transactions, between 0.0 and 1.0. Defaults to 0.0.
+    #traces_sample_rate: 0.0
 ```
 
 ## `email`
@@ -641,6 +743,15 @@ upstream_oauth2:
     - # A unique identifier for the provider
       # Must be a valid ULID
       id: 01HFVBY12TMNTYTBV8W921M5FA
+
+      # Whether this provider is enabled. Defaults to `true`.
+      #enabled: true
+
+      # The ID of the provider that was used by Synapse.
+      # Only required when performing a Synapse-to-MAS migration.
+      # For Synapse's `oidc_providers`, this is `oidc-<idp_id>`; for the legacy
+      # `oidc_config`, this is `oidc`.
+      #synapse_idp_id: "oidc-github"
 
       # The issuer URL, which will be used to discover the provider's configuration.
       # If discovery is enabled, this *must* exactly match the `issuer` field
@@ -695,6 +806,10 @@ upstream_oauth2:
       # the `private_key_jwt` or the `client_secret_jwt` authentication methods
       #token_endpoint_auth_signing_alg: RS256
 
+      # Expected signature algorithm for the `id_token` returned by the token
+      # endpoint. Defaults to `RS256`.
+      #id_token_signed_response_alg: RS256
+
       # The scopes to request from the provider
       # In most cases, it should always include `openid` scope
       scope: "openid email profile"
@@ -722,7 +837,7 @@ upstream_oauth2:
 
       # If set, ask for a signed response on the userinfo endpoint, and validate
       # the response uses the given algorithm
-      #userinfo_endpoint_auth_signing_alg: RS256
+      #userinfo_signed_response_alg: RS256
 
       # The userinfo endpoint
       # This takes precedence over the discovery mechanism
@@ -780,6 +895,10 @@ upstream_oauth2:
       #  - `logout_browser_only`: Only log out the MAS 'browser session' started by this OIDC session
       #  - `logout_all`: Log out all sessions started by this OIDC session, including MAS 'browser sessions' and client sessions
       #on_backchannel_logout: do_nothing
+
+      # Whether a registration token is required to register through this
+      # provider. Defaults to `false`.
+      #registration_token_required: false
 
       # How user attributes should be mapped
       #
@@ -869,9 +988,6 @@ branding:
 
   # Legal imprint, displayed in the footer in the footer of web pages and emails.
   #imprint:
-
-  # Logo displayed in some web pages.
-  #logo_uri:
 ```
 
 ## `oauth`
@@ -892,13 +1008,13 @@ oauth:
 
   # Whether the device authorization endpoint advertises a
   # `verification_uri_complete` that auto-fills the user code on the
-  # `/link` page. Defaults to `true`.
+  # `/link` page. Defaults to `false`.
   #
   # When disabled, the device authorization response will omit
   # `verification_uri_complete`, and the `/link` route will ignore any
   # `code` query parameter, forcing users to type their user code
   # manually.
-  device_code_user_code_auto_fill_enabled: true
+  device_code_user_code_auto_fill_enabled: false
 ```
 
 ## `experimental`
@@ -928,4 +1044,37 @@ experimental:
 
      # Should user sessions expire after inactivity. Defaults to true.
      #expire_user_sessions: true
+
+  # Experimental feature to show a plan management tab and iframe.
+  # This value is passed through "as is" to the client without any validation.
+  #plan_management_iframe_uri: https://example.com/plan
+
+  # Experimental feature to limit the number of application sessions per user.
+  # Disabled by default.
+  #session_limit:
+     # Soft limit on the number of sessions. In interactive login contexts
+     # (OAuth 2.0 sessions or the `m.login.sso` compatibility flow), reaching
+     # this limit shows a policy violation screen prompting the user to remove
+     # sessions before creating a new one. This is the limit displayed in the UI.
+     #soft_limit: 10
+
+     # Hard limit on the number of sessions, enforced in all contexts
+     # (interactive and non-interactive). When reached, new logins are refused
+     # unless `dangerous_hard_limit_eviction` is set.
+     #hard_limit: 50
+
+     # If set, only accounts with at most this many sessions have the session
+     # limits applied. Useful to avoid breaking legacy bots/scripts that log in
+     # repeatedly, while keeping a sane limit for everyone else.
+     #max_session_threshold: 100
+
+     # Whether to automatically evict the least recently used sessions when the
+     # hard limit is reached, instead of refusing the new login. Defaults to
+     # `false`.
+     #
+     # WARNING: removing sessions is potentially damaging. Any end-to-end
+     # encrypted history on the evicted device will be lost unless it can be
+     # recovered from another verified device or a recovery key. When enabled,
+     # `hard_limit` must be at least 2.
+     #dangerous_hard_limit_eviction: false
 ```

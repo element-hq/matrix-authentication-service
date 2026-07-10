@@ -7,8 +7,7 @@
     "sign_in": "Logga in",
     "sign_out": "Logga ut",
     "skip": "Hoppa över",
-    "start_over": "Börja om",
-    "submit": "Skicka in"
+    "start_over": "Börja om"
   },
   "app": {
     "human_name": "Matrix Authentication Service",
@@ -38,10 +37,6 @@
     "unexpected": "Oväntat fel"
   },
   "mas": {
-    "add_email": {
-      "description": "Ange en e-postadress för att återställa ditt konto om du förlorar åtkomsten till det.",
-      "heading": "Lägg till en e-postadress"
-    },
     "back_to_homepage": "Gå tillbaka till startsidan",
     "captcha": {
       "noscript": "Detta formulär är skyddat av en CAPTCHA och kräver att JavaScript aktiveras för att kunna skickas. Aktivera JavaScript i din webbläsare och ladda om den här sidan."
@@ -50,7 +45,6 @@
       "change": "Ändra lösenord",
       "confirm": "Bekräfta lösenordet",
       "current": "Nuvarande lösenord",
-      "description": "Detta kommer att ändra lösenordet på ditt konto.",
       "heading": "Ändra mitt lösenord",
       "new": "Nytt lösenord"
     },
@@ -58,16 +52,8 @@
       "description": "Detta är namnet andra människor kommer att se. Du kan ändra detta när som helst.",
       "headline": "Välj ditt visningsnamn"
     },
-    "consent": {
-      "client_wants_access": "<span>%(client_name)s</span> på <span>%(redirect_uri)s</span> vill få tillgång till ditt konto.",
-      "heading": "Tillåt åtkomst till ditt konto?",
-      "make_sure_you_trust": "Se till att du litar på <span>%(client_name)s</span>.",
-      "this_will_allow": "Detta kommer att tillåta <span>%(client_name)s</span> till:",
-      "you_may_be_sharing": "Du kanske delar känslig information med den här webbplatsen eller appen."
-    },
     "device_card": {
       "access_requested": "Åtkomst begärd",
-      "device_code": "Kod",
       "generic_device": "Enhet",
       "ip_address": "IP-adress"
     },
@@ -76,7 +62,6 @@
       "headline": "Ange koden som visas på din enhet"
     },
     "device_consent": {
-      "another_device_access": "En annan enhet vill komma åt ditt konto.",
       "denied": {
         "description": "Du nekade åtkomst till %(client_name)s . Du kan stänga det här fönstret.",
         "heading": "Åtkomst nekad"
@@ -134,8 +119,7 @@
         "description": "Länka ditt <span class=\"break-keep text-links\">%(provider)s</span> konto",
         "headline": "Logga in för att länka"
       },
-      "no_login_methods": "Inga inloggningsmetoder tillgängliga.",
-      "separator": "eller"
+      "no_login_methods": "Inga inloggningsmetoder tillgängliga."
     },
     "navbar": {
       "my_account": "Mitt konto",
@@ -192,7 +176,6 @@
         "description": "Välj ett användarnamn för att fortsätta.",
         "heading": "Skapa ett konto"
       },
-      "sign_in_instead": "Logga in istället",
       "terms_of_service": "Jag samtycker till <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Villkor och bestämmelser</a>"
     },
     "scope": {
@@ -207,10 +190,6 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "Detta upstream-konto är redan kopplat till ett annat konto."
-      },
-      "login_link": {
-        "action": "Fortsätt",
-        "heading": "Länka till ditt befintliga konto"
       },
       "register": {
         "choose_username": {
@@ -244,7 +223,6 @@
     },
     "verify_email": {
       "6_digit_code": "6-siffrig kod",
-      "code": "Kod",
       "description": "Ange den 6-siffriga koden som skickas till: <em>%(email)s</em>",
       "headline": "Verifiera din e-postadress"
     }

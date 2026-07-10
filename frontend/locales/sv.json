@@ -25,9 +25,7 @@
     }
   },
   "common": {
-    "add": "Lägg till",
     "e2ee": "End-to-end-kryptering",
-    "error": "Fel",
     "loading": "Laddar …",
     "next": "Nästa",
     "password": "Lösenord",
@@ -69,34 +67,16 @@
       "title": "Ditt konto"
     },
     "add_email_form": {
-      "email_denied_alert": {
-        "text": "Det angivna e-postmeddelandet är inte tillåtet enligt serverpolicyn.",
-        "title": "E-post nekas av policy"
-      },
       "email_denied_error": "Den angivna e-posten tillåts inte av serverpolicyn",
-      "email_exists_alert": {
-        "text": "Det angivna e-postmeddelandet har redan lagts till i det här kontot",
-        "title": "E-postadressen finns redan"
-      },
-      "email_exists_error": "Det angivna e-postmeddelandet har redan lagts till i det här kontot",
       "email_field_help": "Lägg till en alternativ e-postadress som du kan använda för att komma åt det här kontot.",
       "email_field_label": "Lägg till e-post",
       "email_in_use_error": "Det angivna e-postmeddelandet används redan",
-      "email_invalid_alert": {
-        "text": "Den angivna e-postadressen är ogiltig",
-        "title": "Ogiltig e-postadress"
-      },
       "email_invalid_error": "Den angivna e-postadressen är ogiltig",
       "incorrect_password_error": "Incorrect password, please try again",
       "password_confirmation": "Confirm your account password to add this email address"
     },
-    "app_sessions_list": {
-      "error": "Det gick inte att läsa in appsessioner",
-      "heading": "Appar"
-    },
     "browser_session_details": {
-      "current_badge": "Nuvarande",
-      "session_details_title": "Session"
+      "current_badge": "Nuvarande"
     },
     "browser_sessions_overview": {
       "body:one": "{{count}}aktiv session",
@@ -110,16 +90,13 @@
     },
     "compat_session_detail": {
       "client_details_title": "Kundinformation",
-      "name": "Namn",
-      "session_details_title": "Session"
+      "name": "Namn"
     },
     "device_type_icon_label": {
-      "desktop": "Skrivbord",
       "mobile": "Mobil",
       "pc": "Dator",
       "tablet": "Läsplatta",
-      "unknown": "Okänd enhetstyp",
-      "web": "Webb"
+      "unknown": "Okänd enhetstyp"
     },
     "email_in_use": {
       "heading": "E-postadressen {{email}} är redan i bruk."
@@ -135,7 +112,6 @@
       "subtitle": "Ett oväntat fel inträffade. Vänligen försök igen.",
       "title": "Något gick fel"
     },
-    "error_boundary_title": "Något gick fel",
     "errors": {
       "field_required": "Detta fält är obligatoriskt",
       "rate_limit_exceeded": "Du har gjort för många förfrågningar under en kort period. Vänta några minuter och försök igen."
@@ -149,23 +125,18 @@
       "device_limit_error": "Device limit reached",
       "devices": "Enheter",
       "plan": "Plan",
-      "profile": "Profil",
-      "sessions": "Sessioner",
       "settings": "Inställningar"
     },
     "not_found_alert_title": "Hittades inte.",
-    "not_logged_in_alert": "Du är inte inloggad.",
     "oauth2_client_detail": {
       "details_title": "Kundinformation",
-      "id": "Kund-ID",
       "name": "Namn",
       "policy": "Policy",
       "terms": "Terms Of Service"
     },
     "oauth2_session_detail": {
       "client_details_name": "Namn",
-      "client_title": "Kundinformation",
-      "session_details_title": "Session"
+      "client_title": "Kundinformation"
     },
     "pagination_controls": {
       "total": "Totalt: {{totalCount}}"
@@ -256,7 +227,6 @@
       }
     },
     "reset_cross_signing": {
-      "button": "Återställ identitet",
       "cancelled": {
         "description_1": "Du kan stänga det här fönstret och gå tillbaka till appen för att fortsätta.",
         "description_2": "Om du är utloggad överallt och inte kommer ihåg din återställningskod måste du fortfarande återställa din identitet.",
@@ -264,42 +234,31 @@
       },
       "description": "Om du inte är inloggad på någon annan enhet och du har tappat bort din återställningsnyckel måste du återställa din identitet för att fortsätta använda appen.",
       "effect_list": {
-        "negative_1": "Du kommer att förlora din befintliga meddelandehistorik",
-        "negative_2": "Du kommer att behöva verifiera alla dina befintliga enheter och kontakter igen",
         "neutral_1": "Du kommer att förlora all meddelandehistorik som bara är lagrad på servern",
         "neutral_2": "Du kommer att behöva verifiera alla dina befintliga enheter och kontakter igen",
         "positive_1": "Dina kontouppgifter, kontakter, preferenser och chattlista kommer att behållas"
       },
       "failure": {
         "description": "Detta kan vara ett tillfälligt problem, så försök igen senare. Om problemet kvarstår kontaktar du serveradministratören.",
-        "heading": "Det gick inte att tillåta återställning av kryptoidentitet",
-        "title": "Misslyckades med att tillåta kryptoidentitet"
+        "heading": "Det gick inte att tillåta återställning av kryptoidentitet"
       },
       "finish_reset": "Slutför återställningen",
       "heading": "Återställ din identitet om du inte kan bekräfta på annat sätt",
       "start_reset": "Starta återställning",
       "success": {
         "description": "Identitetsåterställningen har godkänts för nästa{{minutes}} minuter. Du kan stänga det här fönstret och gå tillbaka till appen för att fortsätta.",
-        "heading": "Identiteten har återställts. Gå tillbaka till appen för att avsluta processen.",
-        "title": "Återställning av kryptoidentitet är tillfälligt tillåten"
+        "heading": "Identiteten har återställts. Gå tillbaka till appen för att avsluta processen."
       },
       "warning": "Återställ bara din identitet om du inte har tillgång till en annan inloggad enhet och du har tappat bort din återställningsnyckel."
-    },
-    "selectable_session": {
-      "label": "Välj session"
     },
     "session": {
       "client_id_label": "Kund-ID",
       "current": "Nuvarande",
-      "current_badge": "Nuvarande",
       "device_id_label": "Enhets-ID",
-      "finished_date": "Slutförd <datetime/>",
       "finished_label": "Slutförda",
       "generic_browser_session": "Browser session",
-      "id_label": "ID",
       "ip_label": "IP-adress",
       "last_active_label": "Senast aktiv",
-      "last_auth_label": "Senaste autentisering",
       "name_for_platform": "{{name}} för {{platform}}",
       "scopes_label": "Scope",
       "set_device_name": {
@@ -307,14 +266,11 @@
         "label": "Device name",
         "title": "Edit device name"
       },
-      "signed_in_date": "Inloggad <datetime/>",
       "signed_in_label": "Inloggad",
       "title": "Enhetsdetaljer",
       "unknown_browser": "Okänd webbläsare",
       "unknown_device": "Okänd enhet",
-      "uri_label": "Uri",
-      "user_id_label": "Användar-ID",
-      "username_label": "Användarnamn"
+      "uri_label": "Uri"
     },
     "session_detail": {
       "alert": {
@@ -323,15 +279,7 @@
         "title": "Kan inte hitta sessionen: {{deviceId}}"
       }
     },
-    "unknown_route": "Okänd rutt {{route}}",
-    "unverified_email_alert": {
-      "button": "Granska och verifiera",
-      "text:one": "Du har {{count}} obekräftad e-postadress.",
-      "text:other": "Du har {{count}} obekräftade e-postadresser.",
-      "title": "Overifierad e-postadress"
-    },
     "user_email": {
-      "cant_delete_primary": "Välj en annan primär e-postadress för att radera denna.",
       "delete_button_confirmation_modal": {
         "action": "Ta bort e-post",
         "body": "Radera det här e-postmeddelandet?",
@@ -339,26 +287,9 @@
         "password_confirmation": "Confirm your account password to delete this email address"
       },
       "delete_button_title": "Ta bort e-postadress",
-      "email": "E-post",
-      "make_primary_button": "Gör primär",
-      "not_verified": "Ej verifierad",
-      "primary_email": "Primär e-post",
-      "retry_button": "Skicka kod igen",
-      "unverified": "Overifierad"
-    },
-    "user_email_list": {
-      "heading": "E-postmeddelanden",
-      "no_primary_email_alert": "Ingen primär e-postadress"
-    },
-    "user_greeting": {
-      "error": "Det gick inte att läsa in användaren"
-    },
-    "user_name": {
-      "display_name_field_label": "Visningsnamn"
+      "email": "E-post"
     },
     "user_sessions_overview": {
-      "active_sessions:one": "{{count}}aktiv session",
-      "active_sessions:other": "{{count}}aktiva sessioner",
       "approaching_session_limit_warning_description:one": "You've used {{num_sessions}} of {{count}} device slot. Once you reach your limit, you'll need to remove an existing device to add another.",
       "approaching_session_limit_warning_description:other": "You've used {{num_sessions}} of {{count}} device slots. Once you reach your limit, you'll need to remove an existing device to add another.",
       "approaching_session_limit_warning_header": "Heads up, you're close to your device limit",
@@ -399,10 +330,7 @@
         "description": "Kontrollera koden som skickats till din e-post och uppdatera fälten nedan för att fortsätta.",
         "title": "Du har angett fel kod"
       },
-      "resend_code": "Skicka kod igen",
-      "resend_email": "Skicka e-post på nytt",
-      "sent": "Skickat!",
-      "unknown_email": "Okänd e-postadress"
+      "resend_code": "Skicka kod igen"
     }
   },
   "mas": {

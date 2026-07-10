@@ -7,8 +7,7 @@
     "sign_in": "Войти",
     "sign_out": "Выйти",
     "skip": "Пропустить",
-    "start_over": "Начать сначала",
-    "submit": "Отправить"
+    "start_over": "Начать сначала"
   },
   "app": {
     "human_name": "Matrix Authentication Service",
@@ -52,10 +51,6 @@
         "heading": "Сессия завершена"
       }
     },
-    "add_email": {
-      "description": "Введите адрес электронной почты для восстановления вашей учётной записи в случае утраты доступа к ней.",
-      "heading": "Добавление адреса электронной почты"
-    },
     "back_to_homepage": "Вернуться на главную страницу",
     "captcha": {
       "noscript": "Эта форма защищена CAPTCHA и требует включения JavaScript для ее отправки. Пожалуйста, включите JavaScript в вашем браузере и перезагрузите эту страницу."
@@ -64,7 +59,6 @@
       "change": "Изменить пароль",
       "confirm": "Подтверждение пароля",
       "current": "Текущий пароль",
-      "description": "Это изменит пароль вашей учётной записи.",
       "heading": "Изменить пароль",
       "new": "Новый пароль"
     },
@@ -73,19 +67,13 @@
       "headline": "Выберите отображаемое имя"
     },
     "consent": {
-      "client_wants_access": "<span>%(client_name)s</span> на <span>%(redirect_uri)s</span> хочет получить доступ к вашей учётной записи.",
       "continue_to": "Продолжить в <span>%(client_name)s</span>?",
-      "heading": "Разрешить доступ к вашей учетной записи?",
-      "make_sure_you_trust": "Убедитесь, что вы доверяете <span>%(client_name)s</span>.",
       "scope_list_preface": "Продолжая, вы разрешаете <span>%(client_name)s</span>:",
-      "this_will_allow": "Это позволит <span>%(client_name)s</span>:",
       "this_will_setup": "Это свяжет %(client_name)s (<span>%(client_uri)s</span>) с вашей учётной записью на <span>%(server_name)s</span>.",
-      "use_another_account": "Использовать другую учётную запись",
-      "you_may_be_sharing": "Возможно, вы делитесь конфиденциальной информацией с этим сайтом или приложением."
+      "use_another_account": "Использовать другую учётную запись"
     },
     "device_card": {
       "access_requested": "Запрашивает доступ",
-      "device_code": "Код",
       "generic_device": "Устройство",
       "ip_address": "IP-адрес"
     },
@@ -94,7 +82,6 @@
       "headline": "Введите код, показанный на вашем устройстве."
     },
     "device_consent": {
-      "another_device_access": "Другое устройство хочет получить доступ к вашей учетной записи.",
       "denied": {
         "description": "Вы запретили доступ для %(client_name)s. Вы можете закрыть это окно.",
         "heading": "Доступ запрещен"
@@ -102,8 +89,7 @@
       "granted": {
         "description": "Вы предоставили доступ для %(client_name)s. Вы можете закрыть это окно.",
         "heading": "Доступ предоставлен"
-      },
-      "this_will_setup": "Другое устройство пытается связать %(client_name)s (<span>%(client_uri)s</span>) с вашей учётной записью на <span>%(server_name)s</span>. Убедитесь что вы знаете это устройство."
+      }
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s на %(device_name)s",
@@ -164,7 +150,6 @@
         "headline": "Войдите, чтобы перейти по ссылке"
       },
       "no_login_methods": "Нет доступных методов входа.",
-      "separator": "Или",
       "username_or_email": "Имя пользователя или электронная почта"
     },
     "navbar": {
@@ -223,7 +208,6 @@
         "description": "Выберите имя пользователя, чтобы продолжить.",
         "heading": "Создать учётную запись"
       },
-      "sign_in_instead": "Вместо этого войдите",
       "terms_of_service": "Я соглашаюсь с <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Правилами и положениями</a>"
     },
     "registration_token": {
@@ -243,11 +227,6 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "Этот SSO аккаунт уже связан с другим аккаунтом Matrix."
-      },
-      "login_link": {
-        "action": "Продолжить",
-        "description": "Для этого имени пользователя (%(username)s) существует учетная запись, она будет связана с этой учетной записью.",
-        "heading": "Связать с существующим аккаунтом"
       },
       "register": {
         "choose_username": {
@@ -281,7 +260,6 @@
     },
     "verify_email": {
       "6_digit_code": "шестизначный код",
-      "code": "Код",
       "description": "Введите 6-значный код, отправленный на: <em>%(email)s</em>",
       "headline": "Подтвердите электронную почту"
     }

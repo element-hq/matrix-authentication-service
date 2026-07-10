@@ -27,6 +27,13 @@ trustPolicyExclude:
   # to one with only provenance.
   - "tinyexec@1.2.2"
 
+# Force a single copy of @radix-ui/react-dialog across the tree: vaul resolves
+# its own (older) copy otherwise, and mixing two copies breaks React context
+# between the app's Dialog.Trigger and vaul's Drawer.Root ("DialogTrigger must
+# be used within Dialog" on mobile). Keep in sync with frontend/package.json.
+overrides:
+  "@radix-ui/react-dialog": ^1.1.18
+
 # Fail the install if any dependency has a build script that isn't explicitly
 # allowed. Add entries to `allowBuilds` (package name pattern -> bool) to
 # permit specific packages to run their install/build scripts.

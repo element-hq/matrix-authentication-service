@@ -55,7 +55,8 @@ deny = [
 multiple-versions = "deny"
 
 skip = [
-    { name = "itertools", version = "0.13.0" },      # zxcvbn depends on this old version
+    { name = "itertools", version = "0.14.0" },      # zxcvbn, prost-derive and wasmtime-internal-cranelift depend on this old version
+    { name = "v_htmlescape", version = "0.15.8" },   # minijinja depends on this old version
     # a few crates depend on old versions of hashbrown
     { name = "hashbrown", version = "0.14.5" },
     { name = "hashbrown", version = "0.15.5" },
@@ -67,15 +68,24 @@ skip = [
     { name = "heck", version = "0.4.1" },
     # pad depends on an old version
     { name = "unicode-width", version = "0.1.14" },
-    # cron depends on this old version
-    # https://github.com/zslayton/cron/pull/137
-    { name = "winnow", version = "0.6.26" },
+    # cron depends on these old versions, chrono-tz is on phf 0.12
+    { name = "phf", version = "0.11.3" },
+    { name = "phf_shared", version = "0.11.3" },
+    # ruma-macros moved to toml 1.x, these still depend on the old versions
+    { name = "serde_html_form", version = "0.2.8" },  # axum-extra
+    { name = "toml_datetime", version = "0.6.11" },   # proc-macro-crate -> toml_edit
+    { name = "winnow", version = "0.7.13" },          # cron, toml_edit
     # hyper-util -> system-configuration depends on this old version
     { name = "core-foundation", version = "0.9.4" },
     # wasmtime pulls in older versions of these
     { name = "foldhash", version = "0.1.5" },
     { name = "gimli", version = "0.32.3" },
     { name = "object", version = "0.37.3" },
+    # async-graphql, zxcvbn's derive_builder and sea-query still use an old
+    # darling; aide-macros 0.16 moved on to 0.23
+    { name = "darling", version = "0.20.11" },
+    { name = "darling_core", version = "0.20.11" },
+    { name = "darling_macro", version = "0.20.11" },
 
     # We are still mainly using rand 0.8
     { name = "rand", version = "0.8.5" },

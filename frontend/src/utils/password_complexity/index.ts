@@ -1,10 +1,11 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-import { zxcvbnAsync, zxcvbnOptions } from "@zxcvbn-ts/core";
+import { ZxcvbnFactory } from "@zxcvbn-ts/core";
 import * as zxcvbnCommonPackage from "@zxcvbn-ts/language-common";
 import type { TFunction } from "i18next";
 
@@ -54,7 +55,7 @@ const options = {
   l33tTable,
 };
 
-zxcvbnOptions.setOptions(options);
+const zxcvbn = new ZxcvbnFactory(options);
 
 export interface PasswordComplexity {
   /** Score between 0 and 4 */
@@ -72,7 +73,7 @@ export async function estimatePasswordComplexity(
   password: string,
   t: TFunction,
 ): Promise<PasswordComplexity> {
-  const scorerResult = await zxcvbnAsync(password);
+  const scorerResult = await zxcvbn.checkAsync(password);
 
   const improvementsText = [];
   if (scorerResult.feedback.warning !== null) {

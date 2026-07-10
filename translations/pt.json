@@ -7,8 +7,7 @@
     "sign_in": "Iniciar sessão",
     "sign_out": "Terminar sessão",
     "skip": "Saltar",
-    "start_over": "Recomeçar",
-    "submit": "Enviar"
+    "start_over": "Recomeçar"
   },
   "app": {
     "human_name": "Matrix Authentication Service",
@@ -52,10 +51,6 @@
         "heading": "Sessão terminada"
       }
     },
-    "add_email": {
-      "description": "Introduza um endereço de e-mail para recuperar a sua conta no caso de perder o acesso à mesma.",
-      "heading": "Adicionar um endereço de e-mail"
-    },
     "back_to_homepage": "Voltar à página inicial",
     "captcha": {
       "noscript": "Este formulário é protegido por um CAPTCHA e requer que o JavaScript esteja habilitado para enviá-lo. Por favor, habilite o JavaScript no seu navegador e recarregue esta página."
@@ -64,7 +59,6 @@
       "change": "Alterar palavra-passe",
       "confirm": "Confirmar palavra-passe",
       "current": "Palavra-passe atual",
-      "description": "Isto irá alterar a palavra-passe da sua conta.",
       "heading": "Alterar a minha palavra-passe",
       "new": "Nova palavra-passe"
     },
@@ -72,16 +66,8 @@
       "description": "Este é o nome que as outras pessoas irão ver. Pode alterá-lo a qualquer momento.",
       "headline": "Escolha o seu pseudónimo"
     },
-    "consent": {
-      "client_wants_access": "<span>%(client_name)s</span> em <span>%(redirect_uri)s</span> quer aceder à sua conta.",
-      "heading": "Permitir acesso à sua conta?",
-      "make_sure_you_trust": "Certifique-se de que confia em <span>%(client_name)s</span>.",
-      "this_will_allow": "Isso permitirá que <span>%(client_name)s</span>:",
-      "you_may_be_sharing": "Você pode estar compartilhando informações confidenciais com este site ou aplicativo."
-    },
     "device_card": {
       "access_requested": "Acesso solicitado",
-      "device_code": "Código",
       "generic_device": "Dispositivo",
       "ip_address": "Endereço de IP"
     },
@@ -90,7 +76,6 @@
       "headline": "Digite o código exibido no seu dispositivo"
     },
     "device_consent": {
-      "another_device_access": "Outro dispositivo deseja acessar sua conta.",
       "denied": {
         "description": "Você negou acesso a%(client_name)s . Você pode fechar esta janela.",
         "heading": "Acesso negado"
@@ -156,7 +141,6 @@
         "headline": "Faça login para vincular"
       },
       "no_login_methods": "Não há métodos de login disponíveis.",
-      "separator": "Ou",
       "username_or_email": "Nome de utilizador ou e-mail"
     },
     "navbar": {
@@ -214,7 +198,6 @@
         "description": "Escolha um nome de utilizador para continuar.",
         "heading": "Criar uma conta"
       },
-      "sign_in_instead": "Em vez disso, inicie sessão",
       "terms_of_service": "Concordo com o <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Termos e Condições</a>"
     },
     "registration_token": {
@@ -234,10 +217,6 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "Esta conta upstream já está vinculada a outra conta."
-      },
-      "login_link": {
-        "action": "Continuar",
-        "heading": "Vincular à sua conta existente"
       },
       "register": {
         "choose_username": {
@@ -271,7 +250,6 @@
     },
     "verify_email": {
       "6_digit_code": "Código de 6 dígitos",
-      "code": "Código",
       "description": "Insira o código de 6 dígitos enviado para: <em>%(email)s</em>",
       "headline": "Verifique o seu e-mail"
     }

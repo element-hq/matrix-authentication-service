@@ -7,8 +7,7 @@
     "sign_in": "Zaloguj się",
     "sign_out": "Wyloguj",
     "skip": "Pomiń",
-    "start_over": "Zacznij od nowa",
-    "submit": "Wyślij"
+    "start_over": "Zacznij od nowa"
   },
   "app": {
     "human_name": "Matrix Authentication Service",
@@ -52,10 +51,6 @@
         "heading": "Sesja zakończona"
       }
     },
-    "add_email": {
-      "description": "Podaj adres e-mail, aby odzyskać dostęp do konta, jeśli utracisz do niego dostęp.",
-      "heading": "Dodaj adres e-mail"
-    },
     "back_to_homepage": "Wróć do strony głównej",
     "captcha": {
       "noscript": "Ten formularz jest zabezpieczony kodem CAPTCHA i do jego wysłania wymagana jest włączona obsługa JavaScript. Włącz obsługę JavaScript w przeglądarce i odśwież tę stronę."
@@ -64,7 +59,6 @@
       "change": "Zmień hasło",
       "confirm": "Potwierdź hasło",
       "current": "Aktualne hasło",
-      "description": "Spowoduje to zmianę hasła do Twojego konta.",
       "heading": "Zmień moje hasło",
       "new": "Nowe hasło"
     },
@@ -73,19 +67,13 @@
       "headline": "Wybierz swoją nazwę wyświetlaną"
     },
     "consent": {
-      "client_wants_access": "<span>%(client_name)s</span> z <span>%(redirect_uri)s</span> chce uzyskać dostęp do Twojego konta.",
       "continue_to": "Przejść do <span>%(client_name)s</span>?",
-      "heading": "Zezwolić na dostęp do konta?",
-      "make_sure_you_trust": "Upewnij się, że ufasz <span>%(client_name)s</span> .",
       "scope_list_preface": "Kontynuując, wyrażasz zgodę dla <span>%(client_name)s</span> na:",
-      "this_will_allow": "To pozwoli <span>%(client_name)s</span> na:",
       "this_will_setup": "Spowoduje to skonfigurowanie usługi %(client_name)s (<span>%(client_uri)s</span>) z kontem <span>%(server_name)s</span>.",
-      "use_another_account": "Użyj innego konta",
-      "you_may_be_sharing": "Możesz udostępniać temu serwisowi lub aplikacji poufne informacje."
+      "use_another_account": "Użyj innego konta"
     },
     "device_card": {
       "access_requested": "Zażądano dostępu",
-      "device_code": "Kod",
       "generic_device": "Urządzenie",
       "ip_address": "Adres IP",
       "security_code": "Kod bezpieczeństwa"
@@ -96,19 +84,17 @@
       "verification_code": "Kod weryfikacyjny"
     },
     "device_consent": {
-      "another_device_access": "Inne urządzenie chce uzyskać dostęp do Twojego konta.",
       "confirm_device": "Tak, to jest moje urządzenie i chcę się na nim zalogować.",
       "denied": {
         "description": "Odmówiłeś dostępu aplikacji %(client_name)s. Możesz zamknąć to okno.",
         "heading": "Odmowa dostępu"
       },
-      "description": "<strong>Inne urządzenie</strong> chce połączyć %(client_name)s (<span>%(client_uri)s</span>) z Twoim kontem <span>%(server_name)s</span>. Upewnij się, że rozpoznajesz to urządzenie.",
+      "description": "<strong>Zewnętrzne urządzenie</strong> chce powiązać %(client_name)s z Twoim <span>%(server_name)s</span> kontem. Upewnij się, że rozpoznajesz to urządzenie.",
       "grant_access": "Udziel dostępu",
       "granted": {
         "description": "Udzieliłeś dostępu aplikacji %(client_name)s. Możesz zamknąć to okno.",
         "heading": "Udzielono dostępu"
       },
-      "this_will_setup": "Inne urządzenie chce skonfigurować %(client_name)s (<span>%(client_uri)s</span>) z twoim kontem <span>%(server_name)s</span>. Upewnij się, że rozpoznajesz to urządzenie.",
       "title": "Udzielić dostępu do swojego konta?",
       "warning": {
         "description": "Czy na pewno to Twoje urządzenie? Administratorzy ani dział wsparcia IT nigdy nie poprosiliby Cię o wyrażenie zgody na to.",
@@ -174,7 +160,6 @@
         "headline": "Zaloguj się, aby połączyć"
       },
       "no_login_methods": "Brak dostępnych metod logowania.",
-      "separator": "Lub",
       "username_or_email": "Nazwa użytkownika lub adres e-mail"
     },
     "navbar": {
@@ -238,7 +223,6 @@
         "description": "Wybierz nazwę użytkownika, aby kontynuować.",
         "heading": "Utwórz konto"
       },
-      "sign_in_instead": "Zamiast tego zaloguj się",
       "terms_of_service": "Wyrażam zgodę na <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">warunki korzystania z serwisu</a>"
     },
     "registration_token": {
@@ -258,11 +242,6 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "To konto nadrzędne jest już powiązane z innym kontem."
-      },
-      "login_link": {
-        "action": "Kontynuuj",
-        "description": "Istnieje konto o tej nazwie użytkownika (%(username)s), zostanie ono powiązane z tym kontem nadrzędnym.",
-        "heading": "Połącz z istniejącym kontem"
       },
       "register": {
         "choose_username": {
@@ -296,7 +275,6 @@
     },
     "verify_email": {
       "6_digit_code": "6-cyfrowy kod",
-      "code": "Kod",
       "description": "Wprowadź 6-cyfrowy kod wysłany na adres:<em>%(email)s</em>",
       "headline": "Zweryfikuj swój adres e-mail"
     }

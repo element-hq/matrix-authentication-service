@@ -136,7 +136,6 @@ exports[`Account sessions page > session limit > displays an error if they've hi
             </p>
           </div>
           <button
-            aria-controls="radix-_r_g_"
             aria-expanded="false"
             aria-haspopup="dialog"
             aria-labelledby="_r_j_"
@@ -407,7 +406,6 @@ exports[`Account sessions page > session limit > displays an error if they've hi
           class="_action_6c1027"
         >
           <button
-            aria-controls="radix-_r_t_"
             aria-expanded="false"
             aria-haspopup="dialog"
             class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
@@ -532,7 +530,6 @@ exports[`Account sessions page > session limit > displays an error if they've hi
           class="_action_6c1027"
         >
           <button
-            aria-controls="radix-_r_10_"
             aria-expanded="false"
             aria-haspopup="dialog"
             class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
@@ -657,7 +654,6 @@ exports[`Account sessions page > session limit > displays an error if they've hi
           class="_action_6c1027"
         >
           <button
-            aria-controls="radix-_r_13_"
             aria-expanded="false"
             aria-haspopup="dialog"
             class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
@@ -782,7 +778,6 @@ exports[`Account sessions page > session limit > displays an error if they've hi
           class="_action_6c1027"
         >
           <button
-            aria-controls="radix-_r_16_"
             aria-expanded="false"
             aria-haspopup="dialog"
             class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
@@ -907,7 +902,6 @@ exports[`Account sessions page > session limit > displays an error if they've hi
           class="_action_6c1027"
         >
           <button
-            aria-controls="radix-_r_19_"
             aria-expanded="false"
             aria-haspopup="dialog"
             class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
@@ -1032,7 +1026,6 @@ exports[`Account sessions page > session limit > displays an error if they've hi
           class="_action_6c1027"
         >
           <button
-            aria-controls="radix-_r_1c_"
             aria-expanded="false"
             aria-haspopup="dialog"
             class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"

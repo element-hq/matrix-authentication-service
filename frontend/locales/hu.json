@@ -25,9 +25,7 @@
     }
   },
   "common": {
-    "add": "Hozzáadás",
     "e2ee": "Végpontok közti titkosítás",
-    "error": "Hiba",
     "loading": "Betöltés…",
     "next": "Következő",
     "password": "Jelszó",
@@ -69,34 +67,16 @@
       "title": "Saját fiók"
     },
     "add_email_form": {
-      "email_denied_alert": {
-        "text": "A megadott e-mail-címet nem engedélyezi a kiszolgáló házirendje.",
-        "title": "E-mail-cím házirend alapján elutasítva"
-      },
       "email_denied_error": "A megadott e-mail-címet nem engedélyezi a kiszolgáló házirendje",
-      "email_exists_alert": {
-        "text": "A megadott e-mail-cím már hozzá lett adva ehhez a fiókhoz",
-        "title": "Az e-mail-cím már létezik"
-      },
-      "email_exists_error": "A megadott e-mail-cím már hozzá lett adva ehhez a fiókhoz",
       "email_field_help": "Alternatív e-mail-cím hozzáadása, mellyel hozzáférhet ehhez a fiókhoz.",
       "email_field_label": "E-mail-cím hozzáadása",
       "email_in_use_error": "A megadott e-mail-cím már használatban van",
-      "email_invalid_alert": {
-        "text": "A megadott e-mail-cím érvénytelen",
-        "title": "Érvénytelen e-mail-cím"
-      },
       "email_invalid_error": "A megadott e-mail-cím érvénytelen",
       "incorrect_password_error": "Helytelen jelszó, próbálja újra",
       "password_confirmation": "Erősítse meg a fiókja jelszavát az e-mail-cím hozzáadásához"
     },
-    "app_sessions_list": {
-      "error": "Az alkalmazás munkameneteinek betöltése sikertelen",
-      "heading": "Alkalmazások"
-    },
     "browser_session_details": {
-      "current_badge": "Jelenlegi",
-      "session_details_title": "Munkamenet"
+      "current_badge": "Jelenlegi"
     },
     "browser_sessions_overview": {
       "body:one": "{{count}} aktív munkamenet",
@@ -110,16 +90,13 @@
     },
     "compat_session_detail": {
       "client_details_title": "Kliensinformációk",
-      "name": "Név",
-      "session_details_title": "Munkamenet"
+      "name": "Név"
     },
     "device_type_icon_label": {
-      "desktop": "Asztali számítógép",
       "mobile": "Mobil",
       "pc": "Számítógép",
       "tablet": "Táblagép",
-      "unknown": "Ismeretlen eszköztípus",
-      "web": "Web"
+      "unknown": "Ismeretlen eszköztípus"
     },
     "email_in_use": {
       "heading": "A(z) {{email}} e-mail-cím már használatban van."
@@ -135,7 +112,6 @@
       "subtitle": "Váratlan hiba történt. Próbálja újra.",
       "title": "Valamilyen hiba történt"
     },
-    "error_boundary_title": "Valamilyen hiba történt",
     "errors": {
       "field_required": "Ez a mező kötelező",
       "rate_limit_exceeded": "Túl sok kérést adott fel egy rövid időszak alatt. Várjon néhány percet, és próbálja újra."
@@ -149,23 +125,18 @@
       "device_limit_error": "Eszközkorlát elérve",
       "devices": "Eszközök",
       "plan": "Terv",
-      "profile": "Profil",
-      "sessions": "Munkamenetek",
       "settings": "Beállítások"
     },
     "not_found_alert_title": "Nem található.",
-    "not_logged_in_alert": "Nincs bejelentkezve.",
     "oauth2_client_detail": {
       "details_title": "Kliensinformációk",
-      "id": "Kliensazonosító",
       "name": "Név",
       "policy": "Házirend",
       "terms": "Szolgáltatás feltételei"
     },
     "oauth2_session_detail": {
       "client_details_name": "Név",
-      "client_title": "Kliensinformációk",
-      "session_details_title": "Munkamenet"
+      "client_title": "Kliensinformációk"
     },
     "pagination_controls": {
       "total": "Összesen: {{totalCount}}"
@@ -256,7 +227,6 @@
       }
     },
     "reset_cross_signing": {
-      "button": "Személyazonosság alaphelyzetbe állítása",
       "cancelled": {
         "description_1": "A folytatáshoz bezárhatja ezt az ablakot, és visszatérhet az alkalmazáshoz.",
         "description_2": "Ha mindenhonnan kijelentkezett, és nem emlékszik a helyreállítási kódjára, akkor alaphelyzetbe kell állítania a személyazonosságát.",
@@ -264,42 +234,31 @@
       },
       "description": "Ha nincs bejelentkezve egyetlen más eszközön sem, és elvesztette a helyreállítási kulcsát, akkor az alkalmazás használatának folytatásához alaphelyzetbe kell állítania a személyazonosságát.",
       "effect_list": {
-        "negative_1": "El fogja veszíteni a meglévő üzenetelőzményeit",
-        "negative_2": "Újból ellenőriznie kell az összes meglévő eszközét és kapcsolatát",
         "neutral_1": "El fogja veszíteni a csak a kiszolgálón tárolt üzenetelőzményeit",
         "neutral_2": "Újból ellenőriznie kell az összes meglévő eszközét és kapcsolatát",
         "positive_1": "A fiókja részletei, a névjegyei, a beállításai és a csevegéslistája meg lesz tartva"
       },
       "failure": {
         "description": "Ez ideiglenes probléma is lehet, így próbálja újra később. Ha a probléma továbbra is fennáll, lépjen kapcsolatba a kiszolgáló rendszergazdájával.",
-        "heading": "A kriptográfiai személyazonossága alaphelyzetbe állításának engedélyezése sikertelen",
-        "title": "A kriptográfiai személyazonosságának engedélyezése sikertelen"
+        "heading": "A kriptográfiai személyazonossága alaphelyzetbe állításának engedélyezése sikertelen"
       },
       "finish_reset": "Alaphelyzetbe állítás befejezése",
       "heading": "Állítsa alaphelyzetbe a személyazonosságát, ha semmilyen más módon nem tudja megerősíteni",
       "start_reset": "Alaphelyzetbe állítás elkezdése",
       "success": {
         "description": "A személyazonosság alaphelyzetbe állítása engedélyezve a következő {{minutes}} percre. A folytatáshoz bezárhatja azt az ablakot, és visszatérhet az alkalmazáshoz.",
-        "heading": "Személyazonosság sikeresen alaphelyzetbe állítva. A folyamat befejezéséhez térjen vissza az alkalmazáshoz.",
-        "title": "A kriptográfiai személyazonossága alaphelyzetbe állítása ideiglenesen engedélyezve"
+        "heading": "Személyazonosság sikeresen alaphelyzetbe állítva. A folyamat befejezéséhez térjen vissza az alkalmazáshoz."
       },
       "warning": "Csak akkor állítsa alaphelyzetbe a személyazonosságát, ha nem fér hozzá más bejelentkezett eszközhöz, és elveszítette a helyreállítási kulcsát."
-    },
-    "selectable_session": {
-      "label": "Munkamenet kiválasztása"
     },
     "session": {
       "client_id_label": "Kliensazonosító",
       "current": "Jelenlegi",
-      "current_badge": "Jelenlegi",
       "device_id_label": "Eszközazonosító",
-      "finished_date": "Befejezve: <datetime/>",
       "finished_label": "Befejezve",
       "generic_browser_session": "Böngésző-munkamenet",
-      "id_label": "Azonosító",
       "ip_label": "IP-cím",
       "last_active_label": "Legutóbb aktív",
-      "last_auth_label": "Legutóbbi hitelesítés",
       "name_for_platform": "{{name}} erre: {{platform}}",
       "scopes_label": "Hatókörök",
       "set_device_name": {
@@ -307,14 +266,11 @@
         "label": "Eszköz neve",
         "title": "Eszköz nevének szerkesztése"
       },
-      "signed_in_date": "Bejelentkezve: <datetime/>",
       "signed_in_label": "Bejelentkezve",
       "title": "Eszköz részletei",
       "unknown_browser": "Ismeretlen böngésző",
       "unknown_device": "Ismeretlen eszköz",
-      "uri_label": "URI",
-      "user_id_label": "Felhasználóazonosító",
-      "username_label": "Felhasználónév"
+      "uri_label": "URI"
     },
     "session_detail": {
       "alert": {
@@ -323,15 +279,7 @@
         "title": "A munkamenet nem található: {{deviceId}}"
       }
     },
-    "unknown_route": "Ismeretlen útvonal: {{route}}",
-    "unverified_email_alert": {
-      "button": "Áttekintés és ellenőrzés",
-      "text:one": "{{count}} nem ellenőrzött e-mail-címe van.",
-      "text:other": "{{count}} nem ellenőrzött e-mail-címe van.",
-      "title": "Nem megerősített e-mail-cím"
-    },
     "user_email": {
-      "cant_delete_primary": "Válasszon egy másik elsődleges e-mail-címet, hogy törölhesse ezt.",
       "delete_button_confirmation_modal": {
         "action": "E-mail-cím törlése",
         "body": "Törli ezt az e-mail-címet?",
@@ -339,26 +287,9 @@
         "password_confirmation": "Erősítse meg a fiókja jelszavát az e-mail-cím törléséhez"
       },
       "delete_button_title": "E-mail-cím eltávolítása",
-      "email": "E-mail",
-      "make_primary_button": "Elsődlegessé tétel",
-      "not_verified": "Nincs ellenőrizve",
-      "primary_email": "Elsődleges e-mail-cím",
-      "retry_button": "Kód újraküldése",
-      "unverified": "Ellenőrizetlen"
-    },
-    "user_email_list": {
-      "heading": "Levelek",
-      "no_primary_email_alert": "Nincs elsődleges e-mail-cím"
-    },
-    "user_greeting": {
-      "error": "A felhasználó betöltése sikertelen"
-    },
-    "user_name": {
-      "display_name_field_label": "Megjelenítési név"
+      "email": "E-mail"
     },
     "user_sessions_overview": {
-      "active_sessions:one": "{{count}} aktív munkamenet",
-      "active_sessions:other": "{{count}} aktív munkamenet",
       "approaching_session_limit_warning_description:one": "{{count}} eszközhelyből eddig ennyit használt fel: {{num_sessions}}. Ha eléri a korlátot, egy új eszköz hozzáadásához el kell távolítania egy meglévőt.",
       "approaching_session_limit_warning_description:other": "{{count}} eszközhelyből eddig ennyit használt fel: {{num_sessions}}. Ha eléri a korlátot, egy új eszköz hozzáadásához el kell távolítania egy meglévőt.",
       "approaching_session_limit_warning_header": "Figyelem, hamarosan eléri az eszközei számának korlátját",
@@ -399,10 +330,7 @@
         "description": "A folytatáshoz ellenőrizze az e-mail-címére küldött kódot, és frissítse a lenti mezőket.",
         "title": "Hibás kódot adott meg"
       },
-      "resend_code": "Kód újraküldése",
-      "resend_email": "Levél újraküldése",
-      "sent": "Elküldve!",
-      "unknown_email": "Ismeretlen e-mail-cím"
+      "resend_code": "Kód újraküldése"
     }
   },
   "mas": {

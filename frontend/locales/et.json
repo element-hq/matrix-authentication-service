@@ -25,9 +25,7 @@
     }
   },
   "common": {
-    "add": "Lisa",
     "e2ee": "Läbiv krüptimine",
-    "error": "Viga",
     "loading": "Laadime…",
     "next": "Edasi",
     "password": "Salasõna",
@@ -69,34 +67,16 @@
       "title": "Sinu kasutajakonto"
     },
     "add_email_form": {
-      "email_denied_alert": {
-        "text": "Serveri reeglite alusel pole selle e-posti aadressi kasutamine lubatud.",
-        "title": "Serveri reeglid ei luba seda e-posti aadressi kasutada"
-      },
       "email_denied_error": "Sisestatud e-posti aadressi kasutamine on serveri reeglitega keelatud",
-      "email_exists_alert": {
-        "text": "See e-posti aadress on juba antud kasutajakontoga seotud",
-        "title": "E-posti aadress on juba kasutusel"
-      },
-      "email_exists_error": "See e-posti aadress on juba antud kasutajakontoga seotud",
       "email_field_help": "Ligipääsuks sellele kasutajakontole lisa täiendav e-posti aadress.",
       "email_field_label": "Lisa e-posti aadress",
       "email_in_use_error": "Sisestatud e-posti aadress on juba kasutusel",
-      "email_invalid_alert": {
-        "text": "Lisatud e-posti aadress on vigane",
-        "title": "Vigane e-posti aadress"
-      },
       "email_invalid_error": "Lisatud e-posti aadress on vigane",
       "incorrect_password_error": "Vale salasõna, palun proovi uuesti",
       "password_confirmation": "Selle e-posti aadressi lisamiseks kinnita tegevus oma kasutajakonto salasõnaga"
     },
-    "app_sessions_list": {
-      "error": "Rakenduse sessioonide laadimine ei õnnestunud",
-      "heading": "Rakendused"
-    },
     "browser_session_details": {
-      "current_badge": "Praegune",
-      "session_details_title": "Sessioon"
+      "current_badge": "Praegune"
     },
     "browser_sessions_overview": {
       "body:one": "{{count}} aktiivne sessioon",
@@ -110,16 +90,13 @@
     },
     "compat_session_detail": {
       "client_details_title": "Kliendi teave",
-      "name": "Nimi",
-      "session_details_title": "Sessioon"
+      "name": "Nimi"
     },
     "device_type_icon_label": {
-      "desktop": "Töölauarakendus",
       "mobile": "Rakendus nutitelefonis",
       "pc": "Rakendus arvutis",
       "tablet": "Rakendus tahvelarvutis",
-      "unknown": "Tundmatu seadme tüüp",
-      "web": "Veebirakendus"
+      "unknown": "Tundmatu seadme tüüp"
     },
     "email_in_use": {
       "heading": "E-posti aadress {{email}} on juba kasutusel."
@@ -135,7 +112,6 @@
       "subtitle": "Tekkis ootamatu viga. Palun proovi uuesti.",
       "title": "Midagi läks viltu"
     },
-    "error_boundary_title": "Midagi läks viltu",
     "errors": {
       "field_required": "Selle välja täitmine on kohustuslik",
       "rate_limit_exceeded": "Sa oled lühikese aja jooksul teinud liiga palju päringuid. Palun oota paar minutit ja proovi uuesti."
@@ -149,23 +125,18 @@
       "device_limit_error": "Seadmete arvu ülempiir on käes",
       "devices": "Seadmed",
       "plan": "Teenusepakett",
-      "profile": "Profiil",
-      "sessions": "Sessioonid",
       "settings": "Seadistused"
     },
     "not_found_alert_title": "Ei leidu.",
-    "not_logged_in_alert": "Sa pole sisse loginud.",
     "oauth2_client_detail": {
       "details_title": "Kliendi teave",
-      "id": "Kliendi tunnus",
       "name": "Nimi",
       "policy": "Reeglid",
       "terms": "Kasutustingimused"
     },
     "oauth2_session_detail": {
       "client_details_name": "Nimi",
-      "client_title": "Kliendi teave",
-      "session_details_title": "Sessioon"
+      "client_title": "Kliendi teave"
     },
     "pagination_controls": {
       "total": "Kokku: {{totalCount}}"
@@ -256,7 +227,6 @@
       }
     },
     "reset_cross_signing": {
-      "button": "Lähtesta krüptoidentiteet",
       "cancelled": {
         "description_1": "Jätkamiseks võid sulgeda selle akna ja minna tagasi rakenduse juurde.",
         "description_2": "Kui sa oled kõikidest oma seadmetest välja loginud ja ei mäleta oma kasutajakonto taastekoodi, on jätkuvalt võimalus oma krüptoidentiteet lähtestada.",
@@ -264,42 +234,31 @@
       },
       "description": "Kui sa pole mitte üheski seadmes Matrixi võrku sisse loginud ja oled unustanud või kaotanud kõik oma kasutajakontole ligipääsu taastamise võimalused, siis sa pead rakenduse edasiseks kasutamiseks oma krüptoidentiteedi lähtestama.",
       "effect_list": {
-        "negative_1": "Sa kaotad oma olemasolevate sõnumite ajaloo.",
-        "negative_2": "Sa pead kõik oma kasutatavad seadmed ja kontaktid uuesti verifitseerima",
         "neutral_1": "Sa kaotad ligipääsu kõikidele sõnumitele, mis on salvestatud vaid serveris.",
         "neutral_2": "Sa pead kõik oma kasutatavad seadmed ja kontaktid uuesti verifitseerima",
         "positive_1": "Sinu kasutajakonto andmed, kontaktid, eelistused ja vestluste loendid jäävad muutmata"
       },
       "failure": {
         "description": "See ilmselt on ajutine probleem, palun proovi mõne aja pärast uuesti. Kui viga ei kao, siis abi saad serveri haldajalt.",
-        "heading": "Krüptoidentiteedi lähtestamise lubamine ei õnnestunud",
-        "title": "Viga krüptoidentiteedi oleku muutmisel"
+        "heading": "Krüptoidentiteedi lähtestamise lubamine ei õnnestunud"
       },
       "finish_reset": "Lõpeta lähtestamine",
       "heading": "Kui sa ei saa leida ühtegi muud viisis, siis lähtesta oma krüptoidentiteet",
       "start_reset": "Alusta lähtestamist",
       "success": {
         "description": "Sinu krüptoidentiteedi lähtestamine on lubatud järgneva {{minutes}} minuti jooksul. Jätkamiseks võid selle akna sulgeda ja minna tagasi rakenduse juurde.",
-        "heading": "Krüptoidentiteedi lähtestamine õnnestus. Selle protsessi lõpetamiseks mine tagasi rakenduse juurde.",
-        "title": "Krüptoidentiteedi lähtestamine on ajutuselt lubatud"
+        "heading": "Krüptoidentiteedi lähtestamine õnnestus. Selle protsessi lõpetamiseks mine tagasi rakenduse juurde."
       },
       "warning": "Lähtesta oma krüptoidentiteet vaid siis, kui sul pole ligipääsu mitte ühelegi oma sisselogitud seadmele ja sa oled kaotanud oma kasutajakonto taastevõtme."
-    },
-    "selectable_session": {
-      "label": "Vali sessioon"
     },
     "session": {
       "client_id_label": "Kliendi tunnus",
       "current": "Praegune",
-      "current_badge": "Praegune",
       "device_id_label": "Seadme tunnus",
-      "finished_date": "Lõpetatud <datetime/>",
       "finished_label": "Lõpetatud",
       "generic_browser_session": "Brauseri sessioon",
-      "id_label": "ID",
       "ip_label": "IP-aadress",
       "last_active_label": "Viimati kasutusel",
-      "last_auth_label": "Viimati autenditud",
       "name_for_platform": "{{name}} / {{platform}}",
       "scopes_label": "Õigused",
       "set_device_name": {
@@ -307,14 +266,11 @@
         "label": "Seadme nimi",
         "title": "Muuda seadme nime"
       },
-      "signed_in_date": "Sisse logitud <datetime/>",
       "signed_in_label": "Sisse logitud",
       "title": "Seadme andmed",
       "unknown_browser": "Tundmatu brauser",
       "unknown_device": "Tundmatu seade",
-      "uri_label": "Aadress",
-      "user_id_label": "Kasutajatunnus",
-      "username_label": "Kasutajanimi"
+      "uri_label": "Aadress"
     },
     "session_detail": {
       "alert": {
@@ -323,15 +279,7 @@
         "title": "Sessiooni ei õnnestu leida: {{deviceId}}"
       }
     },
-    "unknown_route": "Tundmatu marsruut {{route}}",
-    "unverified_email_alert": {
-      "button": "Vaata üle ja kinnita",
-      "text:one": "Sul on {{count}} kinnitamata e-posti aadress.",
-      "text:other": "Sul on {{count}} kinnitamata e-posti aadressi.",
-      "title": "Kinnitamata e-posti aadress"
-    },
     "user_email": {
-      "cant_delete_primary": "Selle e-posti aadressi kustutamiseks vali uus põhiline e-posti aadress.",
       "delete_button_confirmation_modal": {
         "action": "Kustuta e-posti aadress",
         "body": "Kas kustutame selle e-posti aadressi?",
@@ -339,26 +287,9 @@
         "password_confirmation": "Selle e-posti aadressi kustutamiseks kinnita tegevus oma salasõnaga"
       },
       "delete_button_title": "Eemalda e-posti aadress",
-      "email": "E-posti aadress",
-      "make_primary_button": "Määra põhiliseks e-posti aadressiks",
-      "not_verified": "E-posti aadress on kinnitamata",
-      "primary_email": "Põhiline e-posti aadress",
-      "retry_button": "Saada kood uuesti",
-      "unverified": "Kinnitamata"
-    },
-    "user_email_list": {
-      "heading": "E-posti aadressid",
-      "no_primary_email_alert": "Põhilist e-posti aadressi pole"
-    },
-    "user_greeting": {
-      "error": "Kasutaja andmete laadimine ei õnnestunud"
-    },
-    "user_name": {
-      "display_name_field_label": "Kuvatav nimi"
+      "email": "E-posti aadress"
     },
     "user_sessions_overview": {
-      "active_sessions:one": "{{count}} aktiivne sessioon",
-      "active_sessions:other": "{{count}} aktiivset sessiooni",
       "approaching_session_limit_warning_description:one": "Olete kasutanud {{num_sessions}} / {{count}} lubatud seadmest. Kui oled oma piirarvuni jõudnud, pead uue lisamiseks olemasoleva seadme eemaldama.",
       "approaching_session_limit_warning_description:other": "Olete kasutanud {{num_sessions}} / {{count}} lubatud seadmetest. Kui oled oma piirarvuni jõudnud, pead uue lisamiseks olemasoleva seadme eemaldama.",
       "approaching_session_limit_warning_header": "Tähelepanu, sinu seadmete arvu ülempiir on lähedal",
@@ -399,10 +330,7 @@
         "description": "Jätkamiseks kirjuta siis kood, mille saatsime sinu e-posti aadressile.",
         "title": "Sa sisestasid vale koodi"
       },
-      "resend_code": "Saada kood uuesti",
-      "resend_email": "Saada e-kiri uuesti",
-      "sent": "Saadetud!",
-      "unknown_email": "Tundmatu e-posti aadress"
+      "resend_code": "Saada kood uuesti"
     }
   },
   "mas": {

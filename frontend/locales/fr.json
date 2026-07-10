@@ -25,9 +25,7 @@
     }
   },
   "common": {
-    "add": "Ajouter",
     "e2ee": "Chiffrement de bout en bout",
-    "error": "Erreur",
     "loading": "Chargement…",
     "next": "Suivant",
     "password": "Mot de passe",
@@ -69,34 +67,16 @@
       "title": "Votre compte"
     },
     "add_email_form": {
-      "email_denied_alert": {
-        "text": "L’adresse e-mail saisie n’est pas autorisée par la politique du serveur.",
-        "title": "Adresse e-mail refusé par la politique du serveur"
-      },
       "email_denied_error": "L’adresse e-mail saisie n’est pas conforme à la politique du serveur",
-      "email_exists_alert": {
-        "text": "L’adresse e-mail saisie est déjà ajoutée à ce compte",
-        "title": "Cette adresse e-mail existe déjà"
-      },
-      "email_exists_error": "L’adresse e-mail saisie est déjà ajoutée à ce compte",
       "email_field_help": "Ajouter une autre adresse e-mail à utiliser pour ce compte.",
       "email_field_label": "Ajouter une adresse e-mail",
       "email_in_use_error": "L’adresse e-mail saisie est déjà utilisée",
-      "email_invalid_alert": {
-        "text": "L’adresse e-mail saisie est invalide",
-        "title": "Adresse e-mail invalide"
-      },
       "email_invalid_error": "L’adresse e-mail saisie est invalide",
       "incorrect_password_error": "Mot de passe incorrect, veuillez réessayer",
       "password_confirmation": "Confirmez le mot de passe de votre compte pour ajouter cette adresse e-mail"
     },
-    "app_sessions_list": {
-      "error": "Impossible de charger les sessions d'application",
-      "heading": "Applications"
-    },
     "browser_session_details": {
-      "current_badge": "Actuel",
-      "session_details_title": "Session"
+      "current_badge": "Actuel"
     },
     "browser_sessions_overview": {
       "body:one": "{{count}} session active",
@@ -110,16 +90,13 @@
     },
     "compat_session_detail": {
       "client_details_title": "Application",
-      "name": "Nom",
-      "session_details_title": "Session"
+      "name": "Nom"
     },
     "device_type_icon_label": {
-      "desktop": "Ordinateur",
       "mobile": "Mobile",
       "pc": "Ordinateur",
       "tablet": "Tablette",
-      "unknown": "Type d’appareil inconnu",
-      "web": "Web"
+      "unknown": "Type d’appareil inconnu"
     },
     "email_in_use": {
       "heading": "L’adresse e-mail {{email}} est déjà utilisée."
@@ -135,7 +112,6 @@
       "subtitle": "Une erreur inattendue s'est produite. Veuillez réessayer",
       "title": "Un problème est survenu"
     },
-    "error_boundary_title": "Un problème est survenu",
     "errors": {
       "field_required": "Ce champ est requis",
       "rate_limit_exceeded": "Vous avez effectué trop de requêtes sur une courte période. Veuillez patienter quelques minutes et réessayer."
@@ -149,23 +125,18 @@
       "device_limit_error": "Limite d'appareils atteinte",
       "devices": "Appareil",
       "plan": "Forfait",
-      "profile": "Profil",
-      "sessions": "Sessions",
       "settings": "Paramètres"
     },
     "not_found_alert_title": "Introuvable.",
-    "not_logged_in_alert": "Vous n’êtes pas connecté.",
     "oauth2_client_detail": {
       "details_title": "Application",
-      "id": "Client ID",
       "name": "Nom",
       "policy": "Politique de confidentialité",
       "terms": "Conditions d’utilisation"
     },
     "oauth2_session_detail": {
       "client_details_name": "Nom",
-      "client_title": "Application",
-      "session_details_title": "Session"
+      "client_title": "Application"
     },
     "pagination_controls": {
       "total": "Total : {{totalCount}}"
@@ -256,7 +227,6 @@
       }
     },
     "reset_cross_signing": {
-      "button": "Réinitialiser l'identité",
       "cancelled": {
         "description_1": "Vous pouvez fermer cette fenêtre et revenir à l'application pour continuer.",
         "description_2": "Si vous êtes déconnecté partout et que vous ne vous souvenez pas de votre code de récupération, vous devrez tout de même réinitialiser votre identité.",
@@ -264,42 +234,31 @@
       },
       "description": "Si vous n'êtes connecté à aucun autre appareil et que vous avez perdu votre clé de récupération, vous devrez réinitialiser votre identité pour continuer à utiliser l'application.",
       "effect_list": {
-        "negative_1": "Vous perdrez votre historique de messages existant",
-        "negative_2": "Vous devrez vérifier à nouveau tous vos appareils et contacts existants",
         "neutral_1": "Vous perdrez l’historique de vos messages",
         "neutral_2": "Vous devrez vérifier à nouveau tous vos appareils et contacts existants",
         "positive_1": "Les détails de votre compte, vos contacts, vos préférences et votre liste de discussion seront conservés"
       },
       "failure": {
         "description": "Il s'agit peut-être d'un problème temporaire, veuillez donc réessayer ultérieurement. Si le problème persiste, contactez l'administrateur de votre serveur.",
-        "heading": "Impossible d'autoriser la réinitialisation de l'identité cryptographique",
-        "title": "Impossible d'autoriser le remplacement de l'identité cryptographique"
+        "heading": "Impossible d'autoriser la réinitialisation de l'identité cryptographique"
       },
       "finish_reset": "Terminer la réinitialisation",
       "heading": "Réinitialisez votre identité au cas où vous ne pourriez pas la vérifier autrement",
       "start_reset": "Démarrer la réinitialisation",
       "success": {
         "description": "La réinitialisation de l'identité a été approuvée pour les prochaines {{minutes}} minutes. Vous pouvez fermer cette fenêtre et revenir à l'application pour continuer.",
-        "heading": "Réinitialisation de l'identité réussie. Retournez dans l'application pour terminer le processus.",
-        "title": "Réinitialisation de l'identité cryptographique temporairement autorisée"
+        "heading": "Réinitialisation de l'identité réussie. Retournez dans l'application pour terminer le processus."
       },
       "warning": "Ne réinitialisez votre identité que si vous n'avez accès à aucun autre appareil connecté et que vous avez perdu votre clé de récupération."
-    },
-    "selectable_session": {
-      "label": "Sélectionner une session"
     },
     "session": {
       "client_id_label": "Client ID",
       "current": "Actuel",
-      "current_badge": "Actuel",
       "device_id_label": "ID de l’appareil",
-      "finished_date": "Terminé <datetime/>",
       "finished_label": "Terminée",
       "generic_browser_session": "Session de navigateur",
-      "id_label": "ID",
       "ip_label": "Adresse IP",
       "last_active_label": "Dernière activité",
-      "last_auth_label": "Dernière authentification",
       "name_for_platform": "{{name}} pour {{platform}}",
       "scopes_label": "Scopes",
       "set_device_name": {
@@ -307,14 +266,11 @@
         "label": "Nom de l'appareil",
         "title": "Modifier le nom de l'appareil"
       },
-      "signed_in_date": "Connecté <datetime/>",
       "signed_in_label": "Connecté",
       "title": "Détails de la session",
       "unknown_browser": "Navigateur inconnu",
       "unknown_device": "Appareil inconnu",
-      "uri_label": "Uri",
-      "user_id_label": "Identifiant",
-      "username_label": "Nom d'utilisateur"
+      "uri_label": "Uri"
     },
     "session_detail": {
       "alert": {
@@ -323,15 +279,7 @@
         "title": "Impossible de trouver la session : {{deviceId}}"
       }
     },
-    "unknown_route": "Route inconnue {{route}}",
-    "unverified_email_alert": {
-      "button": "Examiner et confirmer",
-      "text:one": "Vous avez {{count}} adresse e-mail non vérifiée.",
-      "text:other": "Vous avez {{count}} adresses e-mail non vérifiées.",
-      "title": "Adresse e-mail non vérifiée"
-    },
     "user_email": {
-      "cant_delete_primary": "Changez d'adresse e-mail principale pour supprimer celle-ci.",
       "delete_button_confirmation_modal": {
         "action": "Supprimer l'adresse e-mail",
         "body": "Supprimer cette adresse e-mail ?",
@@ -339,26 +287,9 @@
         "password_confirmation": "Confirmez le mot de passe de votre compte pour supprimer cette adresse e-mail"
       },
       "delete_button_title": "Supprimer l’adresse e-mail",
-      "email": "Adresse e-mail",
-      "make_primary_button": "Utiliser comme adresse principale",
-      "not_verified": "Non vérifié",
-      "primary_email": "Adresse e-mail principale",
-      "retry_button": "Renvoyer le code",
-      "unverified": "Non vérifiée"
-    },
-    "user_email_list": {
-      "heading": "Adresses e-mail",
-      "no_primary_email_alert": "Aucune adresse e-mail principale"
-    },
-    "user_greeting": {
-      "error": "Impossible de charger l'utilisateur"
-    },
-    "user_name": {
-      "display_name_field_label": "Pseudonyme"
+      "email": "Adresse e-mail"
     },
     "user_sessions_overview": {
-      "active_sessions:one": "{{count}} session active",
-      "active_sessions:other": "{{count}} sessions actives",
       "approaching_session_limit_warning_description:one": "Vous avez utilisé {{num_sessions}} sur {{count}} emplacement disponible pour vos appareils. Une fois cette limite atteinte, vous devrez supprimer un appareil existant pour pouvoir en ajouter un autre.",
       "approaching_session_limit_warning_description:other": "Vous avez utilisé {{num_sessions}} sur {{count}} emplacements disponibles pour vos appareils. Une fois cette limite atteinte, vous devrez supprimer un appareil existant pour pouvoir en ajouter un autre.",
       "approaching_session_limit_warning_header": "Attention, vous approchez de la limite du nombre d'appareils autorisés",
@@ -399,10 +330,7 @@
         "description": "Vérifiez le code envoyé à votre adresse e-mail et entrez le dans le champ ci-dessous pour continuer.",
         "title": "Vous avez saisi un code erroné"
       },
-      "resend_code": "Renvoyer le code",
-      "resend_email": "Renvoyer l’e-mail",
-      "sent": "Envoyé !",
-      "unknown_email": "Adresse e-mail inconnue"
+      "resend_code": "Renvoyer le code"
     }
   },
   "mas": {

@@ -91,14 +91,7 @@
             "description": "Retrieve the items before the given ID",
             "schema": {
               "description": "Retrieve the items before the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -108,14 +101,7 @@
             "description": "Retrieve the items after the given ID",
             "schema": {
               "description": "Retrieve the items after the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -125,10 +111,7 @@
             "description": "Retrieve the first N items",
             "schema": {
               "description": "Retrieve the first N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -140,10 +123,7 @@
             "description": "Retrieve the last N items",
             "schema": {
               "description": "Retrieve the last N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -155,14 +135,7 @@
             "description": "Include the total number of items. Defaults to `true`.",
             "schema": {
               "description": "Include the total number of items. Defaults to `true`.",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/IncludeCount"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/IncludeCount"
             },
             "style": "form"
           },
@@ -172,14 +145,7 @@
             "description": "Retrieve the items for the given user",
             "schema": {
               "description": "Retrieve the items for the given user",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -189,31 +155,17 @@
             "description": "Retrieve the items started from the given browser session",
             "schema": {
               "description": "Retrieve the items started from the given browser session",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
           {
             "in": "query",
             "name": "filter[status]",
-            "description": "Retrieve the items with the given status\n\n Defaults to retrieve all sessions, including finished ones.\n\n * `active`: Only retrieve active sessions\n\n * `finished`: Only retrieve finished sessions",
+            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
             "schema": {
-              "description": "Retrieve the items with the given status\n\n Defaults to retrieve all sessions, including finished ones.\n\n * `active`: Only retrieve active sessions\n\n * `finished`: Only retrieve finished sessions",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/CompatSessionStatus"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
+              "$ref": "#/components/schemas/CompatSessionStatus"
             },
             "style": "form"
           },
@@ -223,10 +175,7 @@
             "description": "Retrieve sessions created strictly before the given time",
             "schema": {
               "description": "Retrieve sessions created strictly before the given time",
-              "type": [
-                "string",
-                "null"
-              ],
+              "type": "string",
               "format": "date-time"
             },
             "style": "form"
@@ -237,10 +186,7 @@
             "description": "Retrieve sessions created strictly after the given time",
             "schema": {
               "description": "Retrieve sessions created strictly after the given time",
-              "type": [
-                "string",
-                "null"
-              ],
+              "type": "string",
               "format": "date-time"
             },
             "style": "form"
@@ -251,10 +197,7 @@
             "description": "Retrieve sessions last active strictly before the given time",
             "schema": {
               "description": "Retrieve sessions last active strictly before the given time",
-              "type": [
-                "string",
-                "null"
-              ],
+              "type": "string",
               "format": "date-time"
             },
             "style": "form"
@@ -265,10 +208,7 @@
             "description": "Retrieve sessions last active strictly after the given time",
             "schema": {
               "description": "Retrieve sessions last active strictly after the given time",
-              "type": [
-                "string",
-                "null"
-              ],
+              "type": "string",
               "format": "date-time"
             },
             "style": "form"
@@ -571,14 +511,7 @@
             "description": "Retrieve the items before the given ID",
             "schema": {
               "description": "Retrieve the items before the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -588,14 +521,7 @@
             "description": "Retrieve the items after the given ID",
             "schema": {
               "description": "Retrieve the items after the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -605,10 +531,7 @@
             "description": "Retrieve the first N items",
             "schema": {
               "description": "Retrieve the first N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -620,10 +543,7 @@
             "description": "Retrieve the last N items",
             "schema": {
               "description": "Retrieve the last N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -635,31 +555,17 @@
             "description": "Include the total number of items. Defaults to `true`.",
             "schema": {
               "description": "Include the total number of items. Defaults to `true`.",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/IncludeCount"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/IncludeCount"
             },
             "style": "form"
           },
           {
             "in": "query",
             "name": "filter[client-kind]",
-            "description": "Retrieve only clients of the given kind\n\n * `dynamic`: clients registered via the dynamic-client-registration\n   endpoint\n\n * `static`: clients declared in the configuration file",
+            "description": "Retrieve only clients of the given kind\n\n* `dynamic`: clients registered via the dynamic-client-registration\n  endpoint\n\n* `static`: clients declared in the configuration file",
             "schema": {
-              "description": "Retrieve only clients of the given kind\n\n * `dynamic`: clients registered via the dynamic-client-registration\n   endpoint\n\n * `static`: clients declared in the configuration file",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/OAuth2ClientKind"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "description": "Retrieve only clients of the given kind\n\n* `dynamic`: clients registered via the dynamic-client-registration\n  endpoint\n\n* `static`: clients declared in the configuration file",
+              "$ref": "#/components/schemas/OAuth2ClientKind"
             },
             "style": "form"
           },
@@ -669,10 +575,7 @@
             "description": "Substring (case-insensitive) match on the client's `client_name`",
             "schema": {
               "description": "Substring (case-insensitive) match on the client's `client_name`",
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             },
             "style": "form"
           },
@@ -682,36 +585,27 @@
             "description": "Substring (case-insensitive) match on the client's `client_uri`",
             "schema": {
               "description": "Substring (case-insensitive) match on the client's `client_uri`",
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             },
             "style": "form"
           },
           {
             "in": "query",
             "name": "filter[grant-type]",
-            "description": "Retrieve only clients which support the given grant type\n\n e.g. `authorization_code`, `client_credentials`,\n `urn:ietf:params:oauth:grant-type:device_code`",
+            "description": "Retrieve only clients which support the given grant type\n\ne.g. `authorization_code`, `client_credentials`,\n`urn:ietf:params:oauth:grant-type:device_code`",
             "schema": {
-              "description": "Retrieve only clients which support the given grant type\n\n e.g. `authorization_code`, `client_credentials`,\n `urn:ietf:params:oauth:grant-type:device_code`",
-              "type": [
-                "string",
-                "null"
-              ]
+              "description": "Retrieve only clients which support the given grant type\n\ne.g. `authorization_code`, `client_credentials`,\n`urn:ietf:params:oauth:grant-type:device_code`",
+              "type": "string"
             },
             "style": "form"
           },
           {
             "in": "query",
             "name": "filter[has-active-sessions]",
-            "description": "Retrieve only clients which have (`true`) or don't have (`false`) at\n least one active OAuth 2.0 session",
+            "description": "Retrieve only clients which have (`true`) or don't have (`false`) at\nleast one active OAuth 2.0 session",
             "schema": {
-              "description": "Retrieve only clients which have (`true`) or don't have (`false`) at\n least one active OAuth 2.0 session",
-              "type": [
-                "boolean",
-                "null"
-              ]
+              "description": "Retrieve only clients which have (`true`) or don't have (`false`) at\nleast one active OAuth 2.0 session",
+              "type": "boolean"
             },
             "style": "form"
           }
@@ -895,14 +789,7 @@
             "description": "Retrieve the items before the given ID",
             "schema": {
               "description": "Retrieve the items before the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -912,14 +799,7 @@
             "description": "Retrieve the items after the given ID",
             "schema": {
               "description": "Retrieve the items after the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -929,10 +809,7 @@
             "description": "Retrieve the first N items",
             "schema": {
               "description": "Retrieve the first N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -944,10 +821,7 @@
             "description": "Retrieve the last N items",
             "schema": {
               "description": "Retrieve the last N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -959,14 +833,7 @@
             "description": "Include the total number of items. Defaults to `true`.",
             "schema": {
               "description": "Include the total number of items. Defaults to `true`.",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/IncludeCount"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/IncludeCount"
             },
             "style": "form"
           },
@@ -976,23 +843,16 @@
             "description": "Retrieve the items for the given user",
             "schema": {
               "description": "Retrieve the items for the given user",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
           {
             "in": "query",
             "name": "filter[client]",
-            "description": "Retrieve the items for the given client(s)\n\n This parameter may be repeated to filter on multiple clients at\n once (sessions matching any of the given clients are returned).",
+            "description": "Retrieve the items for the given client(s)\n\nThis parameter may be repeated to filter on multiple clients at\nonce (sessions matching any of the given clients are returned).",
             "schema": {
-              "description": "Retrieve the items for the given client(s)\n\n This parameter may be repeated to filter on multiple clients at\n once (sessions matching any of the given clients are returned).",
+              "description": "Retrieve the items for the given client(s)\n\nThis parameter may be repeated to filter on multiple clients at\nonce (sessions matching any of the given clients are returned).",
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/ULID"
@@ -1007,14 +867,7 @@
             "description": "Retrieve the items only for a specific client kind",
             "schema": {
               "description": "Retrieve the items only for a specific client kind",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/OAuth2ClientKind2"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/OAuth2ClientKind2"
             },
             "style": "form"
           },
@@ -1024,14 +877,7 @@
             "description": "Retrieve the items started from the given browser session",
             "schema": {
               "description": "Retrieve the items started from the given browser session",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -1052,17 +898,10 @@
           {
             "in": "query",
             "name": "filter[status]",
-            "description": "Retrieve the items with the given status\n\n Defaults to retrieve all sessions, including finished ones.\n\n * `active`: Only retrieve active sessions\n\n * `finished`: Only retrieve finished sessions",
+            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
             "schema": {
-              "description": "Retrieve the items with the given status\n\n Defaults to retrieve all sessions, including finished ones.\n\n * `active`: Only retrieve active sessions\n\n * `finished`: Only retrieve finished sessions",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/OAuth2SessionStatus"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
+              "$ref": "#/components/schemas/OAuth2SessionStatus"
             },
             "style": "form"
           },
@@ -1072,10 +911,7 @@
             "description": "Retrieve sessions created strictly before the given time",
             "schema": {
               "description": "Retrieve sessions created strictly before the given time",
-              "type": [
-                "string",
-                "null"
-              ],
+              "type": "string",
               "format": "date-time"
             },
             "style": "form"
@@ -1086,10 +922,7 @@
             "description": "Retrieve sessions created strictly after the given time",
             "schema": {
               "description": "Retrieve sessions created strictly after the given time",
-              "type": [
-                "string",
-                "null"
-              ],
+              "type": "string",
               "format": "date-time"
             },
             "style": "form"
@@ -1100,10 +933,7 @@
             "description": "Retrieve sessions last active strictly before the given time",
             "schema": {
               "description": "Retrieve sessions last active strictly before the given time",
-              "type": [
-                "string",
-                "null"
-              ],
+              "type": "string",
               "format": "date-time"
             },
             "style": "form"
@@ -1114,10 +944,7 @@
             "description": "Retrieve sessions last active strictly after the given time",
             "schema": {
               "description": "Retrieve sessions last active strictly after the given time",
-              "type": [
-                "string",
-                "null"
-              ],
+              "type": "string",
               "format": "date-time"
             },
             "style": "form"
@@ -1437,14 +1264,7 @@
             "description": "Retrieve the items before the given ID",
             "schema": {
               "description": "Retrieve the items before the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -1454,14 +1274,7 @@
             "description": "Retrieve the items after the given ID",
             "schema": {
               "description": "Retrieve the items after the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -1471,10 +1284,7 @@
             "description": "Retrieve the first N items",
             "schema": {
               "description": "Retrieve the first N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -1486,10 +1296,7 @@
             "description": "Retrieve the last N items",
             "schema": {
               "description": "Retrieve the last N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -1501,14 +1308,7 @@
             "description": "Include the total number of items. Defaults to `true`.",
             "schema": {
               "description": "Include the total number of items. Defaults to `true`.",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/IncludeCount"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/IncludeCount"
             },
             "style": "form"
           },
@@ -1518,14 +1318,7 @@
             "description": "Filter by owner user ID",
             "schema": {
               "description": "Filter by owner user ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -1535,14 +1328,7 @@
             "description": "Filter by owner `OAuth2` client ID",
             "schema": {
               "description": "Filter by owner `OAuth2` client ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -1552,14 +1338,7 @@
             "description": "Filter by actor user ID",
             "schema": {
               "description": "Filter by actor user ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -1583,14 +1362,7 @@
             "description": "Filter by session status",
             "schema": {
               "description": "Filter by session status",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PersonalSessionStatus"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/PersonalSessionStatus"
             },
             "style": "form"
           },
@@ -1600,10 +1372,7 @@
             "description": "Filter by access token expiry date",
             "schema": {
               "description": "Filter by access token expiry date",
-              "type": [
-                "string",
-                "null"
-              ],
+              "type": "string",
               "format": "date-time"
             },
             "style": "form"
@@ -1614,10 +1383,7 @@
             "description": "Filter by access token expiry date",
             "schema": {
               "description": "Filter by access token expiry date",
-              "type": [
-                "string",
-                "null"
-              ],
+              "type": "string",
               "format": "date-time"
             },
             "style": "form"
@@ -1628,10 +1394,7 @@
             "description": "Filter by whether the access token has an expiry time",
             "schema": {
               "description": "Filter by whether the access token has an expiry time",
-              "type": [
-                "boolean",
-                "null"
-              ]
+              "type": "boolean"
             },
             "style": "form"
           }
@@ -2256,14 +2019,7 @@
             "description": "Retrieve the items before the given ID",
             "schema": {
               "description": "Retrieve the items before the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -2273,14 +2029,7 @@
             "description": "Retrieve the items after the given ID",
             "schema": {
               "description": "Retrieve the items after the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -2290,10 +2039,7 @@
             "description": "Retrieve the first N items",
             "schema": {
               "description": "Retrieve the first N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -2305,10 +2051,7 @@
             "description": "Retrieve the last N items",
             "schema": {
               "description": "Retrieve the last N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -2320,14 +2063,7 @@
             "description": "Include the total number of items. Defaults to `true`.",
             "schema": {
               "description": "Include the total number of items. Defaults to `true`.",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/IncludeCount"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/IncludeCount"
             },
             "style": "form"
           },
@@ -2337,10 +2073,7 @@
             "description": "Retrieve users with (or without) the `admin` flag set",
             "schema": {
               "description": "Retrieve users with (or without) the `admin` flag set",
-              "type": [
-                "boolean",
-                "null"
-              ]
+              "type": "boolean"
             },
             "style": "form"
           },
@@ -2350,49 +2083,36 @@
             "description": "Retrieve users with (or without) the `legacy_guest` flag set",
             "schema": {
               "description": "Retrieve users with (or without) the `legacy_guest` flag set",
-              "type": [
-                "boolean",
-                "null"
-              ]
+              "type": "boolean"
             },
             "style": "form"
           },
           {
             "in": "query",
             "name": "filter[search]",
-            "description": "Retrieve users where the username matches contains the given string\n\n Note that this doesn't change the ordering of the result, which are\n still ordered by ID.",
+            "description": "Retrieve users where the username matches contains the given string\n\nNote that this doesn't change the ordering of the result, which are\nstill ordered by ID.",
             "schema": {
-              "description": "Retrieve users where the username matches contains the given string\n\n Note that this doesn't change the ordering of the result, which are\n still ordered by ID.",
-              "type": [
-                "string",
-                "null"
-              ]
+              "description": "Retrieve users where the username matches contains the given string\n\nNote that this doesn't change the ordering of the result, which are\nstill ordered by ID.",
+              "type": "string"
             },
             "style": "form"
           },
           {
             "in": "query",
             "name": "filter[status]",
-            "description": "Retrieve the items with the given status\n\n Defaults to retrieve all users, including locked ones.\n\n * `active`: Only retrieve active users\n\n * `locked`: Only retrieve locked users (includes deactivated users)\n\n * `deactivated`: Only retrieve deactivated users",
+            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all users, including locked ones.\n\n* `active`: Only retrieve active users\n\n* `locked`: Only retrieve locked users (includes deactivated users)\n\n* `deactivated`: Only retrieve deactivated users",
             "schema": {
-              "description": "Retrieve the items with the given status\n\n Defaults to retrieve all users, including locked ones.\n\n * `active`: Only retrieve active users\n\n * `locked`: Only retrieve locked users (includes deactivated users)\n\n * `deactivated`: Only retrieve deactivated users",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/UserStatus"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "description": "Retrieve the items with the given status\n\nDefaults to retrieve all users, including locked ones.\n\n* `active`: Only retrieve active users\n\n* `locked`: Only retrieve locked users (includes deactivated users)\n\n* `deactivated`: Only retrieve deactivated users",
+              "$ref": "#/components/schemas/UserStatus"
             },
             "style": "form"
           },
           {
             "in": "query",
             "name": "filter[active-oauth2-client]",
-            "description": "Retrieve users which have at least one active OAuth 2.0 session\n belonging to any of the given client IDs.\n\n This filter may be repeated; the semantics are OR across the supplied\n clients (a user matches if they have an active session for *any* of\n them).",
+            "description": "Retrieve users which have at least one active OAuth 2.0 session\nbelonging to any of the given client IDs.\n\nThis filter may be repeated; the semantics are OR across the supplied\nclients (a user matches if they have an active session for *any* of\nthem).",
             "schema": {
-              "description": "Retrieve users which have at least one active OAuth 2.0 session\n belonging to any of the given client IDs.\n\n This filter may be repeated; the semantics are OR across the supplied\n clients (a user matches if they have an active session for *any* of\n them).",
+              "description": "Retrieve users which have at least one active OAuth 2.0 session\nbelonging to any of the given client IDs.\n\nThis filter may be repeated; the semantics are OR across the supplied\nclients (a user matches if they have an active session for *any* of\nthem).",
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/ULID"
@@ -2404,26 +2124,20 @@
           {
             "in": "query",
             "name": "filter[has-active-oauth2-session]",
-            "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) OAuth 2.0 session, regardless of the client.",
+            "description": "Retrieve users which have (or don't have) at least one active\n(non-finished) OAuth 2.0 session, regardless of the client.",
             "schema": {
-              "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) OAuth 2.0 session, regardless of the client.",
-              "type": [
-                "boolean",
-                "null"
-              ]
+              "description": "Retrieve users which have (or don't have) at least one active\n(non-finished) OAuth 2.0 session, regardless of the client.",
+              "type": "boolean"
             },
             "style": "form"
           },
           {
             "in": "query",
             "name": "filter[has-active-compat-session]",
-            "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) compatibility session.",
+            "description": "Retrieve users which have (or don't have) at least one active\n(non-finished) compatibility session.",
             "schema": {
-              "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) compatibility session.",
-              "type": [
-                "boolean",
-                "null"
-              ]
+              "description": "Retrieve users which have (or don't have) at least one active\n(non-finished) compatibility session.",
+              "type": "boolean"
             },
             "style": "form"
           }
@@ -3232,14 +2946,7 @@
             "description": "Retrieve the items before the given ID",
             "schema": {
               "description": "Retrieve the items before the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -3249,14 +2956,7 @@
             "description": "Retrieve the items after the given ID",
             "schema": {
               "description": "Retrieve the items after the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -3266,10 +2966,7 @@
             "description": "Retrieve the first N items",
             "schema": {
               "description": "Retrieve the first N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -3281,10 +2978,7 @@
             "description": "Retrieve the last N items",
             "schema": {
               "description": "Retrieve the last N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -3296,14 +2990,7 @@
             "description": "Include the total number of items. Defaults to `true`.",
             "schema": {
               "description": "Include the total number of items. Defaults to `true`.",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/IncludeCount"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/IncludeCount"
             },
             "style": "form"
           },
@@ -3313,14 +3000,7 @@
             "description": "Retrieve the items for the given user",
             "schema": {
               "description": "Retrieve the items for the given user",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -3330,10 +3010,7 @@
             "description": "Retrieve the user email with the given email address",
             "schema": {
               "description": "Retrieve the user email with the given email address",
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             },
             "style": "form"
           }
@@ -3623,14 +3300,7 @@
             "description": "Retrieve the items before the given ID",
             "schema": {
               "description": "Retrieve the items before the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -3640,14 +3310,7 @@
             "description": "Retrieve the items after the given ID",
             "schema": {
               "description": "Retrieve the items after the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -3657,10 +3320,7 @@
             "description": "Retrieve the first N items",
             "schema": {
               "description": "Retrieve the first N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -3672,10 +3332,7 @@
             "description": "Retrieve the last N items",
             "schema": {
               "description": "Retrieve the last N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -3687,14 +3344,7 @@
             "description": "Include the total number of items. Defaults to `true`.",
             "schema": {
               "description": "Include the total number of items. Defaults to `true`.",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/IncludeCount"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/IncludeCount"
             },
             "style": "form"
           },
@@ -3704,31 +3354,17 @@
             "description": "Retrieve the items for the given user",
             "schema": {
               "description": "Retrieve the items for the given user",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
           {
             "in": "query",
             "name": "filter[status]",
-            "description": "Retrieve the items with the given status\n\n Defaults to retrieve all sessions, including finished ones.\n\n * `active`: Only retrieve active sessions\n\n * `finished`: Only retrieve finished sessions",
+            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
             "schema": {
-              "description": "Retrieve the items with the given status\n\n Defaults to retrieve all sessions, including finished ones.\n\n * `active`: Only retrieve active sessions\n\n * `finished`: Only retrieve finished sessions",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/UserSessionStatus"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
+              "$ref": "#/components/schemas/UserSessionStatus"
             },
             "style": "form"
           },
@@ -3738,10 +3374,7 @@
             "description": "Retrieve sessions created strictly before the given time",
             "schema": {
               "description": "Retrieve sessions created strictly before the given time",
-              "type": [
-                "string",
-                "null"
-              ],
+              "type": "string",
               "format": "date-time"
             },
             "style": "form"
@@ -3752,10 +3385,7 @@
             "description": "Retrieve sessions created strictly after the given time",
             "schema": {
               "description": "Retrieve sessions created strictly after the given time",
-              "type": [
-                "string",
-                "null"
-              ],
+              "type": "string",
               "format": "date-time"
             },
             "style": "form"
@@ -3766,10 +3396,7 @@
             "description": "Retrieve sessions last active strictly before the given time",
             "schema": {
               "description": "Retrieve sessions last active strictly before the given time",
-              "type": [
-                "string",
-                "null"
-              ],
+              "type": "string",
               "format": "date-time"
             },
             "style": "form"
@@ -3780,10 +3407,7 @@
             "description": "Retrieve sessions last active strictly after the given time",
             "schema": {
               "description": "Retrieve sessions last active strictly after the given time",
-              "type": [
-                "string",
-                "null"
-              ],
+              "type": "string",
               "format": "date-time"
             },
             "style": "form"
@@ -4065,14 +3689,7 @@
             "description": "Retrieve the items before the given ID",
             "schema": {
               "description": "Retrieve the items before the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -4082,14 +3699,7 @@
             "description": "Retrieve the items after the given ID",
             "schema": {
               "description": "Retrieve the items after the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -4099,10 +3709,7 @@
             "description": "Retrieve the first N items",
             "schema": {
               "description": "Retrieve the first N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -4114,10 +3721,7 @@
             "description": "Retrieve the last N items",
             "schema": {
               "description": "Retrieve the last N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -4129,14 +3733,7 @@
             "description": "Include the total number of items. Defaults to `true`.",
             "schema": {
               "description": "Include the total number of items. Defaults to `true`.",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/IncludeCount"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/IncludeCount"
             },
             "style": "form"
           },
@@ -4146,10 +3743,7 @@
             "description": "Retrieve tokens that have (or have not) been used at least once",
             "schema": {
               "description": "Retrieve tokens that have (or have not) been used at least once",
-              "type": [
-                "boolean",
-                "null"
-              ]
+              "type": "boolean"
             },
             "style": "form"
           },
@@ -4159,10 +3753,7 @@
             "description": "Retrieve tokens that are (or are not) revoked",
             "schema": {
               "description": "Retrieve tokens that are (or are not) revoked",
-              "type": [
-                "boolean",
-                "null"
-              ]
+              "type": "boolean"
             },
             "style": "form"
           },
@@ -4172,23 +3763,17 @@
             "description": "Retrieve tokens that are (or are not) expired",
             "schema": {
               "description": "Retrieve tokens that are (or are not) expired",
-              "type": [
-                "boolean",
-                "null"
-              ]
+              "type": "boolean"
             },
             "style": "form"
           },
           {
             "in": "query",
             "name": "filter[valid]",
-            "description": "Retrieve tokens that are (or are not) valid\n\n Valid means that the token has not expired, is not revoked, and has not\n reached its usage limit.",
+            "description": "Retrieve tokens that are (or are not) valid\n\nValid means that the token has not expired, is not revoked, and has not\nreached its usage limit.",
             "schema": {
-              "description": "Retrieve tokens that are (or are not) valid\n\n Valid means that the token has not expired, is not revoked, and has not\n reached its usage limit.",
-              "type": [
-                "boolean",
-                "null"
-              ]
+              "description": "Retrieve tokens that are (or are not) valid\n\nValid means that the token has not expired, is not revoked, and has not\nreached its usage limit.",
+              "type": "boolean"
             },
             "style": "form"
           }
@@ -4663,14 +4248,7 @@
             "description": "Retrieve the items before the given ID",
             "schema": {
               "description": "Retrieve the items before the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -4680,14 +4258,7 @@
             "description": "Retrieve the items after the given ID",
             "schema": {
               "description": "Retrieve the items after the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -4697,10 +4268,7 @@
             "description": "Retrieve the first N items",
             "schema": {
               "description": "Retrieve the first N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -4712,10 +4280,7 @@
             "description": "Retrieve the last N items",
             "schema": {
               "description": "Retrieve the last N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -4727,14 +4292,7 @@
             "description": "Include the total number of items. Defaults to `true`.",
             "schema": {
               "description": "Include the total number of items. Defaults to `true`.",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/IncludeCount"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/IncludeCount"
             },
             "style": "form"
           },
@@ -4744,14 +4302,7 @@
             "description": "Retrieve the items for the given user",
             "schema": {
               "description": "Retrieve the items for the given user",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -4761,14 +4312,7 @@
             "description": "Retrieve the items for the given provider",
             "schema": {
               "description": "Retrieve the items for the given provider",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -4778,10 +4322,7 @@
             "description": "Retrieve the items with the given subject",
             "schema": {
               "description": "Retrieve the items with the given subject",
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             },
             "style": "form"
           }
@@ -5122,14 +4663,7 @@
             "description": "Retrieve the items before the given ID",
             "schema": {
               "description": "Retrieve the items before the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -5139,14 +4673,7 @@
             "description": "Retrieve the items after the given ID",
             "schema": {
               "description": "Retrieve the items after the given ID",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/ULID"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/ULID"
             },
             "style": "form"
           },
@@ -5156,10 +4683,7 @@
             "description": "Retrieve the first N items",
             "schema": {
               "description": "Retrieve the first N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -5171,10 +4695,7 @@
             "description": "Retrieve the last N items",
             "schema": {
               "description": "Retrieve the last N items",
-              "type": [
-                "integer",
-                "null"
-              ],
+              "type": "integer",
               "format": "uint",
               "minimum": 1
             },
@@ -5186,14 +4707,7 @@
             "description": "Include the total number of items. Defaults to `true`.",
             "schema": {
               "description": "Include the total number of items. Defaults to `true`.",
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/IncludeCount"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "$ref": "#/components/schemas/IncludeCount"
             },
             "style": "form"
           },
@@ -5203,10 +4717,7 @@
             "description": "Retrieve providers that are (or are not) enabled",
             "schema": {
               "description": "Retrieve providers that are (or are not) enabled",
-              "type": [
-                "boolean",
-                "null"
-              ]
+              "type": "boolean"
             },
             "style": "form"
           }
@@ -5414,7 +4925,7 @@
             "type": "boolean"
           },
           "registration_token_required": {
-            "description": "Whether registration tokens are required for password registrations.\n Deprecated in favor of `password_registration_token_required`",
+            "description": "Whether registration tokens are required for password registrations.\nDeprecated in favor of `password_registration_token_required`",
             "type": "boolean",
             "deprecated": true
           },
@@ -5443,7 +4954,7 @@
             "type": "boolean"
           },
           "minimum_password_complexity": {
-            "description": "Minimum password complexity, between 0 and 4.\n This is a score from zxcvbn.",
+            "description": "Minimum password complexity, between 0 and 4.\nThis is a score from zxcvbn.",
             "type": "integer",
             "format": "uint8",
             "minimum": 0,
@@ -5592,7 +5103,7 @@
             ]
           },
           "filter[status]": {
-            "description": "Retrieve the items with the given status\n\n Defaults to retrieve all sessions, including finished ones.\n\n * `active`: Only retrieve active sessions\n\n * `finished`: Only retrieve finished sessions",
+            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
             "anyOf": [
               {
                 "$ref": "#/components/schemas/CompatSessionStatus"
@@ -5910,14 +5421,14 @@
             ]
           },
           "next": {
-            "description": "The link to the next page of results\n\n Only present if there is a next page",
+            "description": "The link to the next page of results\n\nOnly present if there is a next page",
             "type": [
               "string",
               "null"
             ]
           },
           "prev": {
-            "description": "The link to the previous page of results\n\n Only present if there is a previous page",
+            "description": "The link to the previous page of results\n\nOnly present if there is a previous page",
             "type": [
               "string",
               "null"
@@ -5993,7 +5504,7 @@
         "type": "object",
         "properties": {
           "filter[client-kind]": {
-            "description": "Retrieve only clients of the given kind\n\n * `dynamic`: clients registered via the dynamic-client-registration\n   endpoint\n\n * `static`: clients declared in the configuration file",
+            "description": "Retrieve only clients of the given kind\n\n* `dynamic`: clients registered via the dynamic-client-registration\n  endpoint\n\n* `static`: clients declared in the configuration file",
             "anyOf": [
               {
                 "$ref": "#/components/schemas/OAuth2ClientKind"
@@ -6018,14 +5529,14 @@
             ]
           },
           "filter[grant-type]": {
-            "description": "Retrieve only clients which support the given grant type\n\n e.g. `authorization_code`, `client_credentials`,\n `urn:ietf:params:oauth:grant-type:device_code`",
+            "description": "Retrieve only clients which support the given grant type\n\ne.g. `authorization_code`, `client_credentials`,\n`urn:ietf:params:oauth:grant-type:device_code`",
             "type": [
               "string",
               "null"
             ]
           },
           "filter[has-active-sessions]": {
-            "description": "Retrieve only clients which have (`true`) or don't have (`false`) at\n least one active OAuth 2.0 session",
+            "description": "Retrieve only clients which have (`true`) or don't have (`false`) at\nleast one active OAuth 2.0 session",
             "type": [
               "boolean",
               "null"
@@ -6176,7 +5687,7 @@
             }
           },
           "is_static": {
-            "description": "Whether the client is statically configured (defined in the\n configuration file) rather than dynamically registered.",
+            "description": "Whether the client is statically configured (defined in the\nconfiguration file) rather than dynamically registered.",
             "type": "boolean"
           }
         },
@@ -6218,7 +5729,7 @@
             ]
           },
           "filter[client]": {
-            "description": "Retrieve the items for the given client(s)\n\n This parameter may be repeated to filter on multiple clients at\n once (sessions matching any of the given clients are returned).",
+            "description": "Retrieve the items for the given client(s)\n\nThis parameter may be repeated to filter on multiple clients at\nonce (sessions matching any of the given clients are returned).",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ULID"
@@ -6256,7 +5767,7 @@
             "default": []
           },
           "filter[status]": {
-            "description": "Retrieve the items with the given status\n\n Defaults to retrieve all sessions, including finished ones.\n\n * `active`: Only retrieve active sessions\n\n * `finished`: Only retrieve finished sessions",
+            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
             "anyOf": [
               {
                 "$ref": "#/components/schemas/OAuth2SessionStatus"
@@ -6755,7 +6266,7 @@
             "format": "ip"
           },
           "expires_at": {
-            "description": "When the current token for this session expires.\n The session will need to be regenerated, producing a new access token,\n after this time.\n None if the current token won't expire or if the session is revoked.",
+            "description": "When the current token for this session expires.\nThe session will need to be regenerated, producing a new access token,\nafter this time.\nNone if the current token won't expire or if the session is revoked.",
             "type": [
               "string",
               "null"
@@ -6798,7 +6309,7 @@
             "type": "string"
           },
           "expires_in": {
-            "description": "Token expiry time in seconds.\n If not set, the token won't expire.",
+            "description": "Token expiry time in seconds.\nIf not set, the token won't expire.",
             "type": [
               "integer",
               "null"
@@ -6834,7 +6345,7 @@
         "type": "object",
         "properties": {
           "expires_in": {
-            "description": "Token expiry time in seconds.\n If not set, the token won't expire.",
+            "description": "Token expiry time in seconds.\nIf not set, the token won't expire.",
             "type": [
               "integer",
               "null"
@@ -6963,14 +6474,14 @@
             ]
           },
           "filter[search]": {
-            "description": "Retrieve users where the username matches contains the given string\n\n Note that this doesn't change the ordering of the result, which are\n still ordered by ID.",
+            "description": "Retrieve users where the username matches contains the given string\n\nNote that this doesn't change the ordering of the result, which are\nstill ordered by ID.",
             "type": [
               "string",
               "null"
             ]
           },
           "filter[status]": {
-            "description": "Retrieve the items with the given status\n\n Defaults to retrieve all users, including locked ones.\n\n * `active`: Only retrieve active users\n\n * `locked`: Only retrieve locked users (includes deactivated users)\n\n * `deactivated`: Only retrieve deactivated users",
+            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all users, including locked ones.\n\n* `active`: Only retrieve active users\n\n* `locked`: Only retrieve locked users (includes deactivated users)\n\n* `deactivated`: Only retrieve deactivated users",
             "anyOf": [
               {
                 "$ref": "#/components/schemas/UserStatus"
@@ -6981,7 +6492,7 @@
             ]
           },
           "filter[active-oauth2-client]": {
-            "description": "Retrieve users which have at least one active OAuth 2.0 session\n belonging to any of the given client IDs.\n\n This filter may be repeated; the semantics are OR across the supplied\n clients (a user matches if they have an active session for *any* of\n them).",
+            "description": "Retrieve users which have at least one active OAuth 2.0 session\nbelonging to any of the given client IDs.\n\nThis filter may be repeated; the semantics are OR across the supplied\nclients (a user matches if they have an active session for *any* of\nthem).",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ULID"
@@ -6989,14 +6500,14 @@
             "default": []
           },
           "filter[has-active-oauth2-session]": {
-            "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) OAuth 2.0 session, regardless of the client.",
+            "description": "Retrieve users which have (or don't have) at least one active\n(non-finished) OAuth 2.0 session, regardless of the client.",
             "type": [
               "boolean",
               "null"
             ]
           },
           "filter[has-active-compat-session]": {
-            "description": "Retrieve users which have (or don't have) at least one active\n (non-finished) compatibility session.",
+            "description": "Retrieve users which have (or don't have) at least one active\n(non-finished) compatibility session.",
             "type": [
               "boolean",
               "null"
@@ -7155,7 +6666,7 @@
             "type": "string"
           },
           "skip_homeserver_check": {
-            "description": "Skip checking with the homeserver whether the username is available.\n\n Use this with caution! The main reason to use this, is when a user used\n by an application service needs to exist in MAS to craft special\n tokens (like with admin access) for them",
+            "description": "Skip checking with the homeserver whether the username is available.\n\nUse this with caution! The main reason to use this, is when a user used\nby an application service needs to exist in MAS to craft special\ntokens (like with admin access) for them",
             "type": "boolean",
             "default": false
           },
@@ -7245,7 +6756,7 @@
         "type": "object",
         "properties": {
           "skip_erase": {
-            "description": "Whether to skip requesting the homeserver to GDPR-erase the user upon\n deactivation.",
+            "description": "Whether to skip requesting the homeserver to GDPR-erase the user upon\ndeactivation.",
             "type": "boolean",
             "default": false
           }
@@ -7445,7 +6956,7 @@
             ]
           },
           "filter[status]": {
-            "description": "Retrieve the items with the given status\n\n Defaults to retrieve all sessions, including finished ones.\n\n * `active`: Only retrieve active sessions\n\n * `finished`: Only retrieve finished sessions",
+            "description": "Retrieve the items with the given status\n\nDefaults to retrieve all sessions, including finished ones.\n\n* `active`: Only retrieve active sessions\n\n* `finished`: Only retrieve finished sessions",
             "anyOf": [
               {
                 "$ref": "#/components/schemas/UserSessionStatus"
@@ -7680,7 +7191,7 @@
             ]
           },
           "filter[valid]": {
-            "description": "Retrieve tokens that are (or are not) valid\n\n Valid means that the token has not expired, is not revoked, and has not\n reached its usage limit.",
+            "description": "Retrieve tokens that are (or are not) valid\n\nValid means that the token has not expired, is not revoked, and has not\nreached its usage limit.",
             "type": [
               "boolean",
               "null"
@@ -7853,7 +7364,7 @@
             ]
           },
           "usage_limit": {
-            "description": "Maximum number of times this token can be used. If not provided, the\n token can be used an unlimited number of times.",
+            "description": "Maximum number of times this token can be used. If not provided, the\ntoken can be used an unlimited number of times.",
             "type": [
               "integer",
               "null"
@@ -8273,7 +7784,7 @@
             "format": "date-time"
           },
           "registration_token_required": {
-            "description": "Whether a registration token is required for registrations via this\n provider.",
+            "description": "Whether a registration token is required for registrations via this\nprovider.",
             "type": "boolean"
           }
         },

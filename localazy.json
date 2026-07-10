@@ -3,6 +3,7 @@
   "readKey": "a7633943728394577700-c0f9f1df124fbdbe76b2c7dfcbfe574476d56509e0da6180e2a321dbbe056c40",
   "upload": {
     "type": "json",
+    "deprecate": "project",
     "files": [
       {
         "file": "file.json",

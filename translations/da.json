@@ -7,8 +7,7 @@
     "sign_in": "Log ind",
     "sign_out": "Log ud",
     "skip": "Spring over",
-    "start_over": "Begynd forfra",
-    "submit": "Indsend"
+    "start_over": "Begynd forfra"
   },
   "app": {
     "human_name": "Matrix Authentication Service",
@@ -52,10 +51,6 @@
         "heading": "Sessionen er afsluttet"
       }
     },
-    "add_email": {
-      "description": "Indtast en e-mailadresse for at gendanne din konto, hvis du mister adgangen til den.",
-      "heading": "Tilføj en e-mail-adresse"
-    },
     "back_to_homepage": "Gå tilbage til hjemmesiden",
     "captcha": {
       "noscript": "Denne formular er beskyttet af en CAPTCHA som kræver, at JavaScript er aktiveret for at kunne indsende den. Aktivér JavaScript i din browser, og indlæs denne side igen."
@@ -64,7 +59,6 @@
       "change": "Skift adgangskode",
       "confirm": "Bekræft adgangskode",
       "current": "Nuværende adgangskode",
-      "description": "Dette vil ændre adgangskoden på din konto.",
       "heading": "Skift min adgangskode",
       "new": "Ny adgangskode"
     },
@@ -72,16 +66,8 @@
       "description": "Dette er det navn, andre mennesker vil se. Du kan ændre dette når som helst.",
       "headline": "Vælg dit visningsnavn"
     },
-    "consent": {
-      "client_wants_access": "<span>%(client_name)s</span> på <span> %(redirect_uri)s</span> ønsker at få adgang til din konto.",
-      "heading": "Tillad adgang til din konto?",
-      "make_sure_you_trust": "Sørg for, at du stoler på <span> %(client_name)s</span>.",
-      "this_will_allow": "Dette gør det muligt for <span>%(client_name)s</span> at:",
-      "you_may_be_sharing": "Du deler muligvis følsomme oplysninger med dette websted eller denne app."
-    },
     "device_card": {
       "access_requested": "Anmodet om adgang",
-      "device_code": "Kode",
       "generic_device": "Enhed",
       "ip_address": "IP-adresse"
     },
@@ -90,7 +76,6 @@
       "headline": "Indtast den kode, der bliver vist på din enhed"
     },
     "device_consent": {
-      "another_device_access": "En anden enhed ønsker at få adgang til din konto.",
       "denied": {
         "description": "Du nægtede adgang til %(client_name)s. Du kan lukke dette vindue.",
         "heading": "Adgang nægtet"
@@ -156,7 +141,6 @@
         "headline": "Log ind for at forbinde"
       },
       "no_login_methods": "Ingen tilgængelige login metoder.",
-      "separator": "Eller",
       "username_or_email": "Brugernavn eller e-mail"
     },
     "navbar": {
@@ -215,7 +199,6 @@
         "description": "Vælg et brugernavn for at fortsætte.",
         "heading": "Opret en konto"
       },
-      "sign_in_instead": "Log ind i stedet",
       "terms_of_service": "Jeg accepterer <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Vilkår og betingelser</a>"
     },
     "registration_token": {
@@ -235,11 +218,6 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "Denne upstream-konto er allerede knyttet til en anden konto."
-      },
-      "login_link": {
-        "action": "Fortsæt",
-        "description": "Der findes allerede en konto med dette brugernavn (%(username)s), den vil blive forbundet til denne upstream-konto.",
-        "heading": "Forbind til din eksisterende konto"
       },
       "register": {
         "choose_username": {
@@ -273,7 +251,6 @@
     },
     "verify_email": {
       "6_digit_code": "6-cifret kode",
-      "code": "Kode",
       "description": "Indtast den 6-cifrede kode, der blev sendt til: <em>%(email)s</em>",
       "headline": "Bekræft din e-mail"
     }

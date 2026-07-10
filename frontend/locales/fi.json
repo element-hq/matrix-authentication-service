@@ -25,9 +25,7 @@
     }
   },
   "common": {
-    "add": "Lisää",
     "e2ee": "Päästä päähän -salaus",
-    "error": "Virhe",
     "loading": "Ladataan…",
     "next": "Seuraava",
     "password": "Salasana",
@@ -69,34 +67,16 @@
       "title": "Tilisi"
     },
     "add_email_form": {
-      "email_denied_alert": {
-        "text": "Palvelimen käytäntö ei salli syötettyä sähköpostia.",
-        "title": "Käytännön kieltämä sähköposti"
-      },
       "email_denied_error": "Palvelimen käytäntö ei salli syötettyä sähköpostia",
-      "email_exists_alert": {
-        "text": "Syötetty sähköpostiosoite on jo lisätty tähän tiliin",
-        "title": "Sähköposti on jo olemassa"
-      },
-      "email_exists_error": "Syötetty sähköpostiosoite on jo lisätty tähän tiliin",
       "email_field_help": "Lisää vaihtoehtoinen sähköpostiosoite, jolla voit käyttää tätä tiliä.",
       "email_field_label": "Lisää sähköpostiosoite",
       "email_in_use_error": "Annettu sähköpostiosoite on jo käytössä",
-      "email_invalid_alert": {
-        "text": "Syötetty sähköpostiosoite on virheellinen",
-        "title": "Virheellinen sähköpostiosoite"
-      },
       "email_invalid_error": "Syötetty sähköpostiosoite on virheellinen",
       "incorrect_password_error": "Väärä salasana, yritä uudelleen",
       "password_confirmation": "Vahvista tilisi salasana lisätäksesi tämän sähköpostiosoitteen"
     },
-    "app_sessions_list": {
-      "error": "Sovellusten istuntojen lataaminen epäonnistui",
-      "heading": "Sovellukset"
-    },
     "browser_session_details": {
-      "current_badge": "Nykyinen",
-      "session_details_title": "Istunto"
+      "current_badge": "Nykyinen"
     },
     "browser_sessions_overview": {
       "body:one": "{{count}} aktiivinen istunto",
@@ -110,16 +90,13 @@
     },
     "compat_session_detail": {
       "client_details_title": "Sovelluksen tiedot",
-      "name": "Nimi",
-      "session_details_title": "Istunto"
+      "name": "Nimi"
     },
     "device_type_icon_label": {
-      "desktop": "Pöytätietokone",
       "mobile": "Puhelin",
       "pc": "Tietokone",
       "tablet": "Tabletti",
-      "unknown": "Tuntematon laitetyyppi",
-      "web": "Verkko"
+      "unknown": "Tuntematon laitetyyppi"
     },
     "email_in_use": {
       "heading": "Sähköpostiosoite {{email}} on jo käytössä."
@@ -135,7 +112,6 @@
       "subtitle": "Tapahtui odottamaton virhe. Yritä uudelleen.",
       "title": "Jokin meni pieleen"
     },
-    "error_boundary_title": "Jokin meni pieleen",
     "errors": {
       "field_required": "Tämä kenttä on pakollinen",
       "rate_limit_exceeded": "Olet tehnyt liian monta pyyntöä lyhyessä ajassa. Odota muutama minuutti ja yritä uudelleen."
@@ -149,23 +125,18 @@
       "device_limit_error": "Laiteraja saavutettu",
       "devices": "Laitteet",
       "plan": "Tilaus",
-      "profile": "Profiili",
-      "sessions": "Istunnot",
       "settings": "Asetukset"
     },
     "not_found_alert_title": "Ei löytynyt.",
-    "not_logged_in_alert": "Et ole kirjautunut sisään.",
     "oauth2_client_detail": {
       "details_title": "Sovelluksen tiedot",
-      "id": "Sovelluksen tunnus",
       "name": "Nimi",
       "policy": "Käytäntö",
       "terms": "Käyttöehdot"
     },
     "oauth2_session_detail": {
       "client_details_name": "Nimi",
-      "client_title": "Sovelluksen tiedot",
-      "session_details_title": "Istunto"
+      "client_title": "Sovelluksen tiedot"
     },
     "pagination_controls": {
       "total": "Yhteensä: {{totalCount}}"
@@ -256,7 +227,6 @@
       }
     },
     "reset_cross_signing": {
-      "button": "Nollaa identiteetti",
       "cancelled": {
         "description_1": "Voit sulkea tämän ikkunan ja palata sovellukseen jatkaaksesi.",
         "description_2": "Jos sinulla ei ole muita vahvistettuja laitteita eikä palautuskoodiasi käytettävissä, sinun on nollattava digitaalinen identiteettisi, jotta voit jatkaa sovelluksen käyttöä.",
@@ -264,42 +234,31 @@
       },
       "description": "Jos sinulla ei ole muita vahvistettuja laitteita eikä palautuskoodiasi käytettävissä, sinun on nollattava digitaalinen identiteettisi, jotta voit jatkaa sovelluksen käyttöä.",
       "effect_list": {
-        "negative_1": "Menetät nykyisen viestihistoriasi",
-        "negative_2": "Sinun on vahvistettava kaikki olemassa olevat laitteesi ja yhteystietosi uudelleen",
         "neutral_1": "Menetät kaiken viestihistorian, joka on tallella vain palvelimella",
         "neutral_2": "Sinun on vahvistettava kaikki olemassa olevat laitteesi ja yhteystietosi uudelleen",
         "positive_1": "Tilitietosi, yhteystiedot, asetukset ja keskustelulista säilytetään"
       },
       "failure": {
         "description": "Tämä saattaa olla väliaikainen ongelma, joten yritä myöhemmin uudelleen. Jos ongelma jatkuu, ota yhteyttä palvelimen ylläpitäjään.",
-        "heading": "Digitaalisen identiteetin nollauksen salliminen epäonnistui",
-        "title": "Digitaalisen identiteetin nollauksen salliminen epäonnistui"
+        "heading": "Digitaalisen identiteetin nollauksen salliminen epäonnistui"
       },
       "finish_reset": "Viimeistele nollaus",
       "heading": "Nollaa digitaalinen identiteettisi, jos et voi vahvistaa muulla tavalla",
       "start_reset": "Aloita nollaus",
       "success": {
         "description": "Digitaalisen identiteetin nollaus on hyväksytty seuraavaksi {{minutes}} minuutiksi. Voit sulkea tämän ikkunan ja palata sovellukseen jatkaaksesi.",
-        "heading": "Digitaalisen identiteetin nollaus onnistui. Palaa takaisin sovellukseen viimeistelläksesi prosessin.",
-        "title": "Digitaalisen identiteetin nollaus tilapäisesti sallittu"
+        "heading": "Digitaalisen identiteetin nollaus onnistui. Palaa takaisin sovellukseen viimeistelläksesi prosessin."
       },
       "warning": "Nollaa digitaalinen identiteettisi vain, jos sinulla ei ole toista vahvistettua laitetta tai palautusavaintasi käytettävissä."
-    },
-    "selectable_session": {
-      "label": "Valitse istunto"
     },
     "session": {
       "client_id_label": "Sovelluksen tunnus",
       "current": "Nykyinen",
-      "current_badge": "Nykyinen",
       "device_id_label": "Laitteen tunnus",
-      "finished_date": "Päättyi <datetime/>",
       "finished_label": "Päättyi",
       "generic_browser_session": "Selainistunto",
-      "id_label": "ID",
       "ip_label": "IP-osoite",
       "last_active_label": "Viimeksi aktiivinen",
-      "last_auth_label": "Viimeisin todennus",
       "name_for_platform": "{{name}} {{platform}}:lle",
       "scopes_label": "Vaikutusalue",
       "set_device_name": {
@@ -307,14 +266,11 @@
         "label": "Laitteen nimi",
         "title": "Muokkaa laitteen nimeä"
       },
-      "signed_in_date": "Kirjautunut sisään <datetime/>",
       "signed_in_label": "Kirjautunut sisään",
       "title": "Laitteen tiedot",
       "unknown_browser": "Tuntematon selain",
       "unknown_device": "Tuntematon laite",
-      "uri_label": "Osoite",
-      "user_id_label": "Käyttäjätunnus",
-      "username_label": "Käyttäjänimi"
+      "uri_label": "Osoite"
     },
     "session_detail": {
       "alert": {
@@ -323,15 +279,7 @@
         "title": "Istuntoa ei löydy: {{deviceId}}"
       }
     },
-    "unknown_route": "Tuntematon reitti {{route}}",
-    "unverified_email_alert": {
-      "button": "Tarkista ja vahvista",
-      "text:one": "Sinulla on {{count}} vahvistamaton sähköpostiosoite.",
-      "text:other": "Sinulla on {{count}} vahvistamatonta sähköpostiosoitetta.",
-      "title": "Vahvistamaton sähköpostiosoite"
-    },
     "user_email": {
-      "cant_delete_primary": "Valitse toinen ensisijainen sähköpostiosoite poistaaksesi tämän.",
       "delete_button_confirmation_modal": {
         "action": "Poista sähköposti",
         "body": "Poistetaanko tämä sähköposti?",
@@ -339,26 +287,9 @@
         "password_confirmation": "Vahvista tilisi salasana poistaaksesi tämän sähköpostiosoitteen"
       },
       "delete_button_title": "Poista sähköpostiosoite",
-      "email": "Sähköposti",
-      "make_primary_button": "Tee ensisijaiseksi",
-      "not_verified": "Ei vahvistettu",
-      "primary_email": "Ensisijainen sähköposti",
-      "retry_button": "Lähetä koodi uudelleen",
-      "unverified": "Vahvistamaton"
-    },
-    "user_email_list": {
-      "heading": "Sähköpostit",
-      "no_primary_email_alert": "Ei ensisijaista sähköpostiosoitetta"
-    },
-    "user_greeting": {
-      "error": "Käyttäjän lataaminen epäonnistui"
-    },
-    "user_name": {
-      "display_name_field_label": "Näyttönimi"
+      "email": "Sähköposti"
     },
     "user_sessions_overview": {
-      "active_sessions:one": "{{count}} aktiivinen istunto",
-      "active_sessions:other": "{{count}} aktiivista istuntoa",
       "approaching_session_limit_warning_description:one": "Olet käyttänyt {{num_sessions}}/{{count}} laitepaikkaa. Kun olet saavuttanut rajan, sinun on poistettava olemassa oleva laite lisätäksesi uuden.",
       "approaching_session_limit_warning_description:other": "Olet käyttänyt {{num_sessions}}/{{count}} laitepaikkaa. Kun olet saavuttanut rajan, sinun on poistettava olemassa oleva laite lisätäksesi uuden.",
       "approaching_session_limit_warning_header": "Huomio, olet lähellä laiterajaasi",
@@ -399,10 +330,7 @@
         "description": "Tarkista sähköpostiisi lähetetty koodi ja päivitä alla olevat kentät jatkaaksesi.",
         "title": "Syötit väärän koodin"
       },
-      "resend_code": "Lähetä koodi uudelleen",
-      "resend_email": "Lähetä sähköposti uudelleen",
-      "sent": "Lähetetty!",
-      "unknown_email": "Tuntematon sähköpostiosoite"
+      "resend_code": "Lähetä koodi uudelleen"
     }
   },
   "mas": {

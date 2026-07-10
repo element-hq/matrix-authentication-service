@@ -21,7 +21,6 @@ anyhow.workspace = true
 camino.workspace = true
 reqwest.workspace = true
 rustls.workspace = true
-rustls-platform-verifier.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tokio.workspace = true

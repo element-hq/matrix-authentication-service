@@ -7,8 +7,7 @@
     "sign_in": "Anmelden",
     "sign_out": "Abmelden",
     "skip": "Überspringen",
-    "start_over": "Von vorne anfangen",
-    "submit": "Absenden"
+    "start_over": "Von vorne anfangen"
   },
   "app": {
     "human_name": "Matrix Authentication Service",
@@ -52,10 +51,6 @@
         "heading": "Sitzung beendet"
       }
     },
-    "add_email": {
-      "description": "Solltest du den Zugriff auf dein Konto verloren haben, gib bitte deine Email-Adresse ein, um das Konto wiederherzustellen.",
-      "heading": "E-Mail-Adresse hinzufügen"
-    },
     "back_to_homepage": "Zurück",
     "captcha": {
       "noscript": "Dieses Formular ist durch ein CAPTCHA geschützt und erfordert die Aktivierung von JavaScript, um es abschicken zu können. Bitte aktiviere JavaScript im Browser und lade diese Seite neu."
@@ -64,7 +59,6 @@
       "change": "Passwort ändern",
       "confirm": "Passwort wiederholen",
       "current": "Aktuelles Passwort",
-      "description": "Damit änderst du das Passwort für dein Konto.",
       "heading": "Mein Passwort ändern",
       "new": "Neues Passwort"
     },
@@ -73,19 +67,13 @@
       "headline": "Wähle deinen Anzeigenamen"
     },
     "consent": {
-      "client_wants_access": "<span>%(client_name)s</span> auf <span>%(redirect_uri)s</span> möchte auf dein Konto zugreifen.",
       "continue_to": "Weiter zu <span>%(client_name)s</span>?",
-      "heading": "Zugriff auf dein Konto zulassen?",
-      "make_sure_you_trust": "Stelle sicher, dass du <span>%(client_name)s</span> vertraust.",
       "scope_list_preface": "Wenn du fortfährst, gestattest du <span>%(client_name)s</span> folgendes:",
-      "this_will_allow": "Dies wird <span>%(client_name)s</span> ermöglichen:",
       "this_will_setup": "Dadurch wird %(client_name)s (<span>%(client_uri)s</span>) mit deinem %(server_name)s<span></span> Konto eingerichtet.",
-      "use_another_account": "Anderes Konto verwenden",
-      "you_may_be_sharing": "Du gibst vielleicht sensible Infos an diese Website oder App weiter."
+      "use_another_account": "Anderes Konto verwenden"
     },
     "device_card": {
       "access_requested": "Zugriff beantragt",
-      "device_code": "Code",
       "generic_device": "Gerät",
       "ip_address": "IP-Adresse",
       "security_code": "Sicherheitscode"
@@ -96,19 +84,17 @@
       "verification_code": "Bestätigungscode"
     },
     "device_consent": {
-      "another_device_access": "Ein anderes Gerät möchte auf dein Konto zugreifen.",
       "confirm_device": "Ja, ich bestätige, dass dies mein Gerät ist und ich mich anmelden möchte.",
       "denied": {
         "description": "Du hast den Zugriff auf %(client_name)s abgelehnt. Du kannst dieses Fenster jetzt schließen.",
         "heading": "Zugriff verweigert"
       },
-      "description": "<strong>Ein anderes Gerät</strong> möchte %(client_name)s (<span>%(client_uri)s</span>) mit deinem <span>%(server_name)s</span> Konto verknüpfen. Bitte stelle sicher, dass du dieses Gerät erkennst.",
+      "description": "<strong>Ein anderes Gerät</strong> möchte %(client_name)s mit deinem <span>%(server_name)s</span> Konto verknüpfen. Bitte stelle sicher, dass du dieses Gerät erkennst.",
       "grant_access": "Zugriff gewähren",
       "granted": {
         "description": "Du hast %(client_name)s Zugriff gegeben. Du kannst dieses Fenster jetzt schließen.",
         "heading": "Zugriff gewährt"
       },
-      "this_will_setup": "Ein anderes Gerät möchte %(client_name)s (<span>%(client_uri)s</span>) mit deinem <span>%(server_name)s</span> Konto einrichten. Stelle sicher, dass du dieses Gerät kennst.",
       "title": "Zugriff auf dein Konto gewähren?",
       "warning": {
         "description": "Bist du sicher, dass dies dein Gerät ist? Administratoren oder der IT-Support würden dich niemals bitten, dies zu akzeptieren.",
@@ -174,7 +160,6 @@
         "headline": "Melde dich zum Verbinden an"
       },
       "no_login_methods": "Keine Anmeldemethoden verfügbar.",
-      "separator": "Oder",
       "username_or_email": "Benutzername oder E-Mail-Adresse"
     },
     "navbar": {
@@ -238,7 +223,6 @@
         "description": "Wähle einen Nutzernamen, um fortzufahren.",
         "heading": "Konto erstellen"
       },
-      "sign_in_instead": "Stattdessen anmelden",
       "terms_of_service": "Ich stimme den <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Allgemeinen Geschäftsbedingungen</a> zu."
     },
     "registration_token": {
@@ -258,11 +242,6 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "Dieses Konto ist bereits mit einem anderen Konto verknüpft."
-      },
-      "login_link": {
-        "action": "Weiter",
-        "description": "Für diesen Nutzernamen (%(username)s) gibt es schon ein Konto. Es wird mit diesem Upstream-Konto verknüpft.",
-        "heading": "Verknüpfe mit deinem bestehenden Konto"
       },
       "register": {
         "choose_username": {
@@ -296,7 +275,6 @@
     },
     "verify_email": {
       "6_digit_code": "6-stelliger Code",
-      "code": "Code",
       "description": "Gib den 6-stelligen Code ein, der an <em>%(email)s</em> gesendet wurde",
       "headline": "Bestätige deine E-Mail"
     }

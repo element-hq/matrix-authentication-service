@@ -25,9 +25,7 @@
     }
   },
   "common": {
-    "add": "Legg til",
     "e2ee": "Ende-til-ende-kryptering",
-    "error": "Feil",
     "loading": "Laster inn...",
     "next": "Neste",
     "password": "Passord",
@@ -69,34 +67,16 @@
       "title": "Din konto"
     },
     "add_email_form": {
-      "email_denied_alert": {
-        "text": "Den angitte e-postadressen er ikke tillatt av serverpolicyen.",
-        "title": "E-post avvist av policy"
-      },
       "email_denied_error": "Den angitte e-postadressen er ikke tillatt av serverpolicyen",
-      "email_exists_alert": {
-        "text": "Den angitte e-postadressen er allerede lagt til denne kontoen",
-        "title": "E-posten finnes allerede"
-      },
-      "email_exists_error": "Den angitte e-postadressen er allerede lagt til denne kontoen",
       "email_field_help": "Legg til en alternativ e-postadresse du kan bruke for å få tilgang til denne kontoen.",
       "email_field_label": "Legg til e-post",
       "email_in_use_error": "Den angitte e-postadressen er allerede i bruk",
-      "email_invalid_alert": {
-        "text": "Den angitte e-postadressen er ugyldig",
-        "title": "Ugyldig e-post"
-      },
       "email_invalid_error": "Den angitte e-postadressen er ugyldig",
       "incorrect_password_error": "Feil passord, prøv igjen",
       "password_confirmation": "Bekreft passordet ditt for å legge til denne e-postadressen"
     },
-    "app_sessions_list": {
-      "error": "Kunne ikke laste inn appsesjoner",
-      "heading": "Applikasjoner"
-    },
     "browser_session_details": {
-      "current_badge": "Nåværende",
-      "session_details_title": "Sesjon"
+      "current_badge": "Nåværende"
     },
     "browser_sessions_overview": {
       "body:one": "{{count}} aktiv sesjon",
@@ -110,16 +90,13 @@
     },
     "compat_session_detail": {
       "client_details_title": "Klient informasjon",
-      "name": "Navn",
-      "session_details_title": "Sesjon"
+      "name": "Navn"
     },
     "device_type_icon_label": {
-      "desktop": "Skrivebord",
       "mobile": "Mobil",
       "pc": "Datamaskin",
       "tablet": "Nettbrett",
-      "unknown": "Ukjent enhetstype",
-      "web": "Web"
+      "unknown": "Ukjent enhetstype"
     },
     "email_in_use": {
       "heading": "E-postadressen {{email}} er allerede i bruk."
@@ -135,7 +112,6 @@
       "subtitle": "Det oppstod en uventet feil. Vennligst prøv igjen.",
       "title": "Noe gikk galt"
     },
-    "error_boundary_title": "Noe gikk galt",
     "errors": {
       "field_required": "Dette feltet er obligatorisk",
       "rate_limit_exceeded": "Du har kommet med for mange forespørsler på kort tid. Vent noen minutter og prøv igjen."
@@ -149,23 +125,18 @@
       "device_limit_error": "Device limit reached",
       "devices": "Enheter",
       "plan": "Plan",
-      "profile": "Profil",
-      "sessions": "Sesjoner",
       "settings": "Innstillinger"
     },
     "not_found_alert_title": "Ikke funnet.",
-    "not_logged_in_alert": "Du er ikke innlogget.",
     "oauth2_client_detail": {
       "details_title": "Klient informasjon",
-      "id": "Klient-ID",
       "name": "Navn",
       "policy": "Retningslinjer",
       "terms": "Vilkår for bruk"
     },
     "oauth2_session_detail": {
       "client_details_name": "Navn",
-      "client_title": "Klient informasjon",
-      "session_details_title": "Sesjon"
+      "client_title": "Klient informasjon"
     },
     "pagination_controls": {
       "total": "Totalt: {{totalCount}}"
@@ -256,7 +227,6 @@
       }
     },
     "reset_cross_signing": {
-      "button": "Tilbakestill identitet",
       "cancelled": {
         "description_1": "Du kan lukke dette vinduet og gå tilbake til appen for å fortsette.",
         "description_2": "Hvis du er logget av overalt og ikke husker gjenopprettingskoden, må du fortsatt tilbakestille identiteten din.",
@@ -264,42 +234,31 @@
       },
       "description": "Hvis du ikke er logget på andre enheter, og du har mistet gjenopprettingsnøkkelen, må du tilbakestille identiteten din for å fortsette å bruke appen.",
       "effect_list": {
-        "negative_1": "Du vil miste din eksisterende meldingshistorikk",
-        "negative_2": "Du må bekrefte alle eksisterende enheter og kontakter på nytt",
         "neutral_1": "Du vil miste all meldingshistorikk som bare er lagret på serveren",
         "neutral_2": "Du må bekrefte alle eksisterende enheter og kontakter på nytt",
         "positive_1": "Dine kontodetaljer, kontakter, preferanser og chatteliste vil bli beholdt"
       },
       "failure": {
         "description": "Dette kan være et midlertidig problem, så prøv igjen senere. Hvis problemet vedvarer, vennligst kontakt serveradministratoren din.",
-        "heading": "Kunne ikke tillate tilbakestilling av kryptoidentitet",
-        "title": "Kunne ikke tillate kryptoidentitet"
+        "heading": "Kunne ikke tillate tilbakestilling av kryptoidentitet"
       },
       "finish_reset": "Fullfør tilbakestillingen",
       "heading": "Tilbakestill identiteten din i tilfelle du ikke kan bekrefte på en annen måte",
       "start_reset": "Start tilbakestilling",
       "success": {
         "description": "Tilbakestillingen av identiteten er godkjent for de neste {{minutes}} minuttene. Du kan lukke dette vinduet og gå tilbake til appen for å fortsette.",
-        "heading": "Identitet tilbakestilt. Gå tilbake til appen for å fullføre prosessen.",
-        "title": "Tilbakestilling av kryptoidentitet midlertidig tillatt"
+        "heading": "Identitet tilbakestilt. Gå tilbake til appen for å fullføre prosessen."
       },
       "warning": "Tilbakestill identiteten din bare hvis du ikke har tilgang til en annen pålogget enhet og du har mistet gjenopprettingsnøkkelen."
-    },
-    "selectable_session": {
-      "label": "Velg sesjon"
     },
     "session": {
       "client_id_label": "Klient-ID",
       "current": "Nåværende",
-      "current_badge": "Nåværende",
       "device_id_label": "Enhets-ID",
-      "finished_date": "Fullført <datetime/>",
       "finished_label": "Fullført",
       "generic_browser_session": "Nettlesersesjon",
-      "id_label": "ID",
       "ip_label": "IP-adresse",
       "last_active_label": "Sist aktiv",
-      "last_auth_label": "Siste autentisering",
       "name_for_platform": "{{name}} for {{platform}}",
       "scopes_label": "Omfang",
       "set_device_name": {
@@ -307,14 +266,11 @@
         "label": "Navn på enhet",
         "title": "Rediger navnet på enheten"
       },
-      "signed_in_date": "Logget på <datetime/>",
       "signed_in_label": "Logget på",
       "title": "Detaljer om enheten",
       "unknown_browser": "Ukjent nettleser",
       "unknown_device": "Ukjent enhet",
-      "uri_label": "Uri",
-      "user_id_label": "Bruker ID",
-      "username_label": "Brukernavn"
+      "uri_label": "Uri"
     },
     "session_detail": {
       "alert": {
@@ -323,15 +279,7 @@
         "title": "Finner ikke sesjonen: {{deviceId}}"
       }
     },
-    "unknown_route": "Ukjent rute {{route}}",
-    "unverified_email_alert": {
-      "button": "Gjennomgå og verifiser",
-      "text:one": "Du har {{count}} ubekreftet e-postadresse.",
-      "text:other": "Du har {{count}} ubekreftede e-postadresser.",
-      "title": "Ubekreftet e-post"
-    },
     "user_email": {
-      "cant_delete_primary": "Velg en annen primær e-postadresse for å slette denne.",
       "delete_button_confirmation_modal": {
         "action": "Slett e-post",
         "body": "Vil du slette denne e-posten?",
@@ -339,26 +287,9 @@
         "password_confirmation": "Bekreft kontopassordet ditt for å slette denne e-postadressen"
       },
       "delete_button_title": "Fjern e-postadresse",
-      "email": "E-post",
-      "make_primary_button": "Gjøre til primær",
-      "not_verified": "Ikke verifisert",
-      "primary_email": "Primær e-postadresse",
-      "retry_button": "Send kode på nytt",
-      "unverified": "Ikke verifisert"
-    },
-    "user_email_list": {
-      "heading": "E-poster",
-      "no_primary_email_alert": "Ingen primær e-postadresse"
-    },
-    "user_greeting": {
-      "error": "Kunne ikke laste inn bruker"
-    },
-    "user_name": {
-      "display_name_field_label": "Visningsnavn"
+      "email": "E-post"
     },
     "user_sessions_overview": {
-      "active_sessions:one": "{{count}} aktiv sesjon",
-      "active_sessions:other": "{{count}} aktive sesjoner",
       "approaching_session_limit_warning_description:one": "You've used {{num_sessions}} of {{count}} device slot. Once you reach your limit, you'll need to remove an existing device to add another.",
       "approaching_session_limit_warning_description:other": "You've used {{num_sessions}} of {{count}} device slots. Once you reach your limit, you'll need to remove an existing device to add another.",
       "approaching_session_limit_warning_header": "Heads up, you're close to your device limit",
@@ -399,10 +330,7 @@
         "description": "Sjekk koden som er sendt til e-posten din, og oppdater feltene nedenfor for å fortsette.",
         "title": "Du skrev inn feil kode"
       },
-      "resend_code": "Send kode på nytt",
-      "resend_email": "Send e-post på nytt",
-      "sent": "Sendt!",
-      "unknown_email": "Ukjent e-postadresse"
+      "resend_code": "Send kode på nytt"
     }
   },
   "mas": {

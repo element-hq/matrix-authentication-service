@@ -7,8 +7,7 @@
     "sign_in": "Přihlásit se",
     "sign_out": "Odhlásit",
     "skip": "Přeskočit",
-    "start_over": "Začít znovu",
-    "submit": "Odeslat"
+    "start_over": "Začít znovu"
   },
   "app": {
     "human_name": "Matrix Authentication Service",
@@ -52,10 +51,6 @@
         "heading": "Relace ukončena"
       }
     },
-    "add_email": {
-      "description": "Zadejte e-mailovou adresu pro obnovení účtu v případě, že k němu ztratíte přístup.",
-      "heading": "Přidání e-mailové adresy"
-    },
     "back_to_homepage": "Vraťte se na domovskou stránku",
     "captcha": {
       "noscript": "Tento formulář je chráněn CAPTCHA a pro jeho odeslání je nutné mít povolen JavaScript. Povolte prosím JavaScript ve svém prohlížeči a znovu načtěte tuto stránku."
@@ -64,7 +59,6 @@
       "change": "Změna hesla",
       "confirm": "Potvrďte heslo",
       "current": "Současné heslo",
-      "description": "Tím se změní heslo k vašemu účtu.",
       "heading": "Změnit heslo",
       "new": "Nové heslo"
     },
@@ -73,19 +67,13 @@
       "headline": "Zvolte si své zobrazované jméno"
     },
     "consent": {
-      "client_wants_access": "<span>%(client_name)s</span> na adrese <span>%(redirect_uri)s</span> chce získat přístup k vašemu účtu.",
       "continue_to": "Pokračovat na <span>%(client_name)s</span>?",
-      "heading": "Povolit přístup ke svému účtu?",
-      "make_sure_you_trust": "Ujistěte se, že důvěřujete aplikaci <span>%(client_name)s</span>.",
       "scope_list_preface": "Pokračováním dáváte souhlas aplikaci <span>%(client_name)s</span> k:",
-      "this_will_allow": "To <span> %(client_name)s </span> umožní:",
       "this_will_setup": "Tím se nastaví %(client_name)s (<span>%(client_uri)s</span>) s vaším účtem <span>%(server_name)s</span>.",
-      "use_another_account": "Použít jiný účet",
-      "you_may_be_sharing": "Je možné, že s tímto webem nebo aplikací sdílíte citlivé informace."
+      "use_another_account": "Použít jiný účet"
     },
     "device_card": {
       "access_requested": "Přístup byl vyžádán",
-      "device_code": "Kód",
       "generic_device": "Zařízení",
       "ip_address": "IP adresa",
       "security_code": "Bezpečnostní kód"
@@ -96,19 +84,17 @@
       "verification_code": "Ověřovací kód"
     },
     "device_consent": {
-      "another_device_access": "Jiné zařízení chce získat přístup k vašemu účtu.",
       "confirm_device": "Ano, potvrzuji, že se jedná o mé zařízení a chci se na něm přihlásit.",
       "denied": {
         "description": "Odepřeli jste přístup k %(client_name)s. Toto okno můžete zavřít.",
         "heading": "Přístup odepřen"
       },
-      "description": "<strong>Další zařízení</strong> chce propojit %(client_name)s (<span>%(client_uri)s</span>) s vaším účtem <span>%(server_name)s</span>. Ujistěte se, že toto zařízení poznáváte.",
+      "description": "<strong>Další zařízení</strong> chce propojit %(client_name)s s vaším účtem <span>%(server_name)s</span>. Ujistěte se, že toto zařízení poznáváte.",
       "grant_access": "Udělit přístup",
       "granted": {
         "description": "Udělili jste přístup k %(client_name)s. Toto okno můžete zavřít.",
         "heading": "Přístup udělen"
       },
-      "this_will_setup": "Jiné zařízení chce nastavit %(client_name)s (<span>%(client_uri)s</span>) s vaším <span>%(server_name)s</span> účtem. Ujistěte se, že dané zařízení poznáváte.",
       "title": "Udělit přístup k vašemu účtu?",
       "warning": {
         "description": "Jste si jisti, že se jedná o vaše zařízení? Správci ani technická podpora by vás nikdy nepožádali o souhlas.",
@@ -174,7 +160,6 @@
         "headline": "Přihlaste se k odkazu"
       },
       "no_login_methods": "Nejsou k dispozici žádné metody přihlášení.",
-      "separator": "Nebo",
       "username_or_email": "Uživatelské jméno nebo e-mail"
     },
     "navbar": {
@@ -238,7 +223,6 @@
         "description": "Pokračujte výběrem uživatelského jména.",
         "heading": "Vytvořte si účet"
       },
-      "sign_in_instead": "Místo toho se přihlaste",
       "terms_of_service": "Souhlasím s podmínkami <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\"></a>"
     },
     "registration_token": {
@@ -258,11 +242,6 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "Tento nadřazený účet je již propojen s jiným účtem."
-      },
-      "login_link": {
-        "action": "Pokračovat",
-        "description": "Pro toto uživatelské jméno existuje účet (%(username)s), který bude propojen s tímto upstream účtem.",
-        "heading": "Propojení s vaším stávajícím účtem"
       },
       "register": {
         "choose_username": {
@@ -296,7 +275,6 @@
     },
     "verify_email": {
       "6_digit_code": "6místný kód",
-      "code": "Kód",
       "description": "Zadejte šestimístný kód zaslaný na: <em>%(email)s</em>",
       "headline": "Ověřte svůj e-mail"
     }

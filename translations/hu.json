@@ -7,8 +7,7 @@
     "sign_in": "Bejelentkezés",
     "sign_out": "Kijelentkezés",
     "skip": "Kihagyás",
-    "start_over": "Újrakezdés",
-    "submit": "Elküldés"
+    "start_over": "Újrakezdés"
   },
   "app": {
     "human_name": "Matrix Authentication Service",
@@ -52,10 +51,6 @@
         "heading": "Munkamenet befejezve"
       }
     },
-    "add_email": {
-      "description": "Adjon meg egy e-mail-címet a fiókja helyreállításához, arra az esetre, ha elveszítené a hozzáférését.",
-      "heading": "E-mail-cím hozzáadása"
-    },
     "back_to_homepage": "Vissza a kezdőlaphoz",
     "captcha": {
       "noscript": "Ezt az űrlapot CAPTCHA védi, és az elküldéséhez engedélyezni kell a JavaScriptet. Engedélyezze a böngészőben a JavaScriptet, és töltse újra az oldalt."
@@ -64,7 +59,6 @@
       "change": "Jelszó módosítása",
       "confirm": "Jelszó megerősítése",
       "current": "Jelenlegi jelszó",
-      "description": "Ez módosítja a fiókja jelszavát.",
       "heading": "Saját jelszó módosítása",
       "new": "Új jelszó"
     },
@@ -73,19 +67,13 @@
       "headline": "Válasszon megjelenítési név"
     },
     "consent": {
-      "client_wants_access": "A(z) <span>%(client_name)s</span> (itt: <span>%(redirect_uri)s</span>) hozzá akar férni a fiókjához.",
       "continue_to": "Továbblép ide: <span>%(client_name)s</span>?",
-      "heading": "Engedélyezi a hozzáférést a fiókjához?",
-      "make_sure_you_trust": "Győződjön meg arról, hogy megbízik a(z) <span>%(client_name)s</span> kliensben.",
       "scope_list_preface": "A folytatással engedélyezi ezeket a(z) <span>%(client_name)s</span> számára:",
-      "this_will_allow": "Ez lehetővé teszi, hogy a(z) <span>%(client_name)s</span> a következőket tegye:",
       "this_will_setup": "Ez beállítja a(z) %(client_name)s klienst (<span>%(client_uri)s</span>) a(z) <span>%(server_name)s</span> fiókjával.",
-      "use_another_account": "Másik fiók használata",
-      "you_may_be_sharing": "Bizalmas információkat oszthat meg ezzel az oldallal vagy alkalmazással."
+      "use_another_account": "Másik fiók használata"
     },
     "device_card": {
       "access_requested": "Hozzáférés kérve",
-      "device_code": "Kód",
       "generic_device": "Eszköz",
       "ip_address": "IP-cím",
       "security_code": "Biztonsági kód"
@@ -96,19 +84,17 @@
       "verification_code": "Ellenőrzőkód"
     },
     "device_consent": {
-      "another_device_access": "Egy másik eszköz akarja elérni a fiókját.",
       "confirm_device": "Igen, megerősítem, hogy ez az én eszközöm, és be szeretnék jelentkezni.",
       "denied": {
         "description": "Elutasította a(z) %(client_name)s hozzáférését. Bezárhatja ezt az ablakot.",
         "heading": "Hozzáférés megtagadva"
       },
-      "description": "<strong>Egy másik eszköz</strong>, hozzá akarja kapcsolni a(z) %(client_name)s (<span>%(client_uri)s</span>) eszközt az Ön <span>%(server_name)s</span>-fiókjához. Győződjön meg róla, hogy felismeri ezt az eszközt.",
+      "description": "<strong>Egy másik eszköz</strong>, hozzá akarja kapcsolni a(z) %(client_name)s eszközt az Ön <span>%(server_name)s</span>-fiókjához. Győződjön meg róla, hogy felismeri ezt az eszközt.",
       "grant_access": "Hozzáférés engedélyezése",
       "granted": {
         "description": "Megadta a(z) %(client_name)s hozzáférését. Bezárhatja ezt az ablakot.",
         "heading": "Hozzáférés megadva"
       },
-      "this_will_setup": "Egy másik eszköz szeretné beállítani a(z) %(client_name)s klienst (<span>%(client_uri)s</span>) a(z) <span>%(server_name)s</span> fiókjával. Győződjön meg arról, hogy felismeri az eszközt.",
       "title": "Hozzáférést ad a fiókjához?",
       "warning": {
         "description": "Biztos, hogy ez az Ön eszköze? A rendszergazdák vagy az IT-támogatás sosem kérné arra, hogy fogadja ezt el.",
@@ -174,7 +160,6 @@
         "headline": "Bejelentkezés az összekötéshez"
       },
       "no_login_methods": "Nem érhetőek el bejelentkezési módok.",
-      "separator": "Vagy",
       "username_or_email": "Felhasználónév vagy e-mail-cím"
     },
     "navbar": {
@@ -238,7 +223,6 @@
         "description": "A folytatáshoz válasszon felhasználónevet.",
         "heading": "Fiók létrehozása"
       },
-      "sign_in_instead": "Bejelentkezés",
       "terms_of_service": "Elfogadom a <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Szolgáltatási feltételeket</a>"
     },
     "registration_token": {
@@ -258,11 +242,6 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "Ez a forrásfiók már egy másik fiókkal van összekötve."
-      },
-      "login_link": {
-        "action": "Folytatás",
-        "description": "A felhasználónévhez (%(username)s) már létezik fiók, amely ehhez a felülről érkező fiókhoz lesz kötve.",
-        "heading": "Meglévő fiók összekötése"
       },
       "register": {
         "choose_username": {
@@ -296,7 +275,6 @@
     },
     "verify_email": {
       "6_digit_code": "6 számjegyű kód",
-      "code": "Kód",
       "description": "Adja meg az ide küldött 6 számjegyű kódot: <em>%(email)s</em>",
       "headline": "E-mail-cím ellenőrzése"
     }

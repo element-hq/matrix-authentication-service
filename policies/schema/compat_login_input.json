@@ -21,7 +21,7 @@
       "type": "boolean"
     },
     "login": {
-      "description": "What type of login is being performed.\n This also determines whether the login is interactive.",
+      "description": "What type of login is being performed.\nThis also determines whether the login is interactive.",
       "allOf": [
         {
           "$ref": "#/definitions/CompatLogin"
@@ -78,12 +78,12 @@
           "description": "Used as the interactive part of SSO login.",
           "type": "object",
           "properties": {
+            "redirect_uri": {
+              "type": "string"
+            },
             "type": {
               "type": "string",
               "const": "m.login.sso"
-            },
-            "redirect_uri": {
-              "type": "string"
             }
           },
           "required": [

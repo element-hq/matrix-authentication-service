@@ -29,7 +29,6 @@ exports[`<OAuth2SessionDetail> > renders a finished session details 1`] = `
       >
         Element: Unknown device
         <button
-          aria-controls="radix-_r_c_"
           aria-expanded="false"
           aria-haspopup="dialog"
           aria-labelledby="_r_f_"
@@ -340,7 +339,6 @@ exports[`<OAuth2SessionDetail> > renders session details 1`] = `
       >
         Element: Unknown device
         <button
-          aria-controls="radix-_r_0_"
           aria-expanded="false"
           aria-haspopup="dialog"
           aria-labelledby="_r_3_"
@@ -601,7 +599,6 @@ exports[`<OAuth2SessionDetail> > renders session details 1`] = `
       </ul>
     </section>
     <button
-      aria-controls="radix-_r_8_"
       aria-expanded="false"
       aria-haspopup="dialog"
       class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"

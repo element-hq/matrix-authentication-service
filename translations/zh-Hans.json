@@ -7,8 +7,7 @@
     "sign_in": "登录",
     "sign_out": "注销",
     "skip": "跳过",
-    "start_over": "重新开始",
-    "submit": "提交"
+    "start_over": "重新开始"
   },
   "app": {
     "human_name": "Matrix Authentication Service",
@@ -52,10 +51,6 @@
         "heading": "会话已终止"
       }
     },
-    "add_email": {
-      "description": "输入电子邮件地址，以便在失去访问权限时恢复账户。",
-      "heading": "添加电子邮件地址"
-    },
     "back_to_homepage": "返回主页",
     "captcha": {
       "noscript": "此表格受验证码保护，需要启用 JavaScript 才能提交。请在浏览器中启用 JavaScript 并重新加载此页面。"
@@ -64,7 +59,6 @@
       "change": "更改密码",
       "confirm": "确认密码",
       "current": "当前密码",
-      "description": "这将更改账户的密码。",
       "heading": "更改我的密码",
       "new": "新密码"
     },
@@ -73,19 +67,13 @@
       "headline": "选择显示名称"
     },
     "consent": {
-      "client_wants_access": "位于 <span>%(redirect_uri)s</span> 上的 <span>%(client_name)s</span> 想要访问你的账户。",
       "continue_to": "继续前往 <span>%(client_name)s</span>？",
-      "heading": "允许访问你的账户？",
-      "make_sure_you_trust": "请确保你信任 <span>%(client_name)s</span> 。",
       "scope_list_preface": "一旦继续你将允许 <span>%(client_name)s</span>：",
-      "this_will_allow": "这将允许 <span>%(client_name)s</span> ：",
       "this_will_setup": "这将使用你位于 <span>%(server_name)s</span> 上的账户设置 %(client_name)s（<span>%(client_uri)s</span>）。",
-      "use_another_account": "使用另一账户",
-      "you_may_be_sharing": "你可能正在与本网站或 app 分享敏感信息。"
+      "use_another_account": "使用另一账户"
     },
     "device_card": {
       "access_requested": "已请求访问权限",
-      "device_code": "代码",
       "generic_device": "设备",
       "ip_address": "IP 地址",
       "security_code": "安全代码"
@@ -96,19 +84,17 @@
       "verification_code": "验证码"
     },
     "device_consent": {
-      "another_device_access": "另一个设备想要访问你的账户。",
       "confirm_device": "是，已确认这是我的设备并且想登录。",
       "denied": {
         "description": "你已拒绝 %(client_name)s 的访问。你可以关闭此窗口。",
         "heading": "访问被拒绝"
       },
-      "description": "<strong>另一设备</strong>想要关联你位于 <span>%(server_name)s</span> 上的账户： %(client_name)s（<span>%(client_uri)s</span>），请确保你认识该设备。",
+      "description": "<strong>另一设备</strong>想要关联你位于 <span>%(server_name)s</span> 上的账户： %(client_name)s，请确保你认识该设备。",
       "grant_access": "授予访问权",
       "granted": {
         "description": "你已授予 %(client_name)s 访问权限。可以关闭此窗口。",
         "heading": "已授予访问权限"
       },
-      "this_will_setup": "另一设备尝试使用你在上的账户 <span>%(server_name)s</span> 配置 %(client_name)s（<span>%(client_uri)s</span>）。请确保你认识该设备。",
       "title": "允许其访问你的账户？",
       "warning": {
         "description": "是否确定这是你的设备？管理员或 IT 支持人员绝不会要求你同意。",
@@ -174,7 +160,6 @@
         "headline": "登录以链接"
       },
       "no_login_methods": "没有可用的登录途径。",
-      "separator": "或",
       "username_or_email": "用户名或邮件地址"
     },
     "navbar": {
@@ -238,7 +223,6 @@
         "description": "选择一个用户名以继续。",
         "heading": "创建账户"
       },
-      "sign_in_instead": "去登录",
       "terms_of_service": "我同意<a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">条款与条件 </a>"
     },
     "registration_token": {
@@ -258,11 +242,6 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "此上游账户已与另一个账户关联。"
-      },
-      "login_link": {
-        "action": "继续",
-        "description": "此用户名（%(username)s）已存在于一个账户，它将与该上游账户关联。",
-        "heading": "链接到现有账户"
       },
       "register": {
         "choose_username": {
@@ -296,7 +275,6 @@
     },
     "verify_email": {
       "6_digit_code": "6位数代码",
-      "code": "代码",
       "description": "输入发送至以下邮箱的6位数代码：<em>%(email)s</em>",
       "headline": "验证邮件地址"
     }

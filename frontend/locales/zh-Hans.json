@@ -25,9 +25,7 @@
     }
   },
   "common": {
-    "add": "添加",
     "e2ee": "端到端加密",
-    "error": "错误",
     "loading": "加载中...",
     "next": "下一页",
     "password": "密码",
@@ -69,34 +67,16 @@
       "title": "你的账户"
     },
     "add_email_form": {
-      "email_denied_alert": {
-        "text": "服务器策略不允许输入的电子邮件地址。",
-        "title": "电子邮件地址被策略拒绝"
-      },
       "email_denied_error": "服务器策略不允许输入的邮箱地址。",
-      "email_exists_alert": {
-        "text": "输入的电子邮件地址已添加到此账户",
-        "title": "电子邮件地址已经存在"
-      },
-      "email_exists_error": "输入的电子邮件地址已添加到此账户",
       "email_field_help": "添加可用于访问此账户的备用电子邮件地址。",
       "email_field_label": "添加电子邮件地址",
       "email_in_use_error": "输入的邮件地址已被使用",
-      "email_invalid_alert": {
-        "text": "输入的电子邮件地址无效",
-        "title": "无效的电子邮件地址"
-      },
       "email_invalid_error": "输入的电子邮件地址无效",
       "incorrect_password_error": "密码不正确，请重试",
       "password_confirmation": "确认账户密码以添加此邮件地址"
     },
-    "app_sessions_list": {
-      "error": "加载应用程序会话失败",
-      "heading": "应用"
-    },
     "browser_session_details": {
-      "current_badge": "当前",
-      "session_details_title": "会话"
+      "current_badge": "当前"
     },
     "browser_sessions_overview": {
       "body:other": "{{count}} 个活跃会话",
@@ -109,16 +89,13 @@
     },
     "compat_session_detail": {
       "client_details_title": "客户端",
-      "name": "名称",
-      "session_details_title": "会话"
+      "name": "名称"
     },
     "device_type_icon_label": {
-      "desktop": "桌面",
       "mobile": "手机",
       "pc": "计算机",
       "tablet": "平板电脑",
-      "unknown": "未知设备类型",
-      "web": "网页"
+      "unknown": "未知设备类型"
     },
     "email_in_use": {
       "heading": "此邮件地址 {{email}} 已被使用。"
@@ -134,7 +111,6 @@
       "subtitle": "出现意外错误。请重试。",
       "title": "出了点问题"
     },
-    "error_boundary_title": "出了点问题",
     "errors": {
       "field_required": "此字段为必填项",
       "rate_limit_exceeded": "你在短时间内发出了过多请求。请于几分钟后重试。"
@@ -148,23 +124,18 @@
       "device_limit_error": "已达到设备数量上限",
       "devices": "设备",
       "plan": "配额",
-      "profile": "个人资料",
-      "sessions": "会话",
       "settings": "设置"
     },
     "not_found_alert_title": "未找到。",
-    "not_logged_in_alert": "尚未登录。",
     "oauth2_client_detail": {
       "details_title": "客户端",
-      "id": "客户端ID",
       "name": "名称",
       "policy": "策略",
       "terms": "服务条款"
     },
     "oauth2_session_detail": {
       "client_details_name": "名称",
-      "client_title": "客户端",
-      "session_details_title": "会话"
+      "client_title": "客户端"
     },
     "pagination_controls": {
       "total": "总计：{{totalCount}}"
@@ -255,7 +226,6 @@
       }
     },
     "reset_cross_signing": {
-      "button": "重置身份",
       "cancelled": {
         "description_1": "你可以关闭此窗口并返回到 App 以继续。",
         "description_2": "如果你既没有其它已验证的设备，也没有恢复密钥，则需要重置数字身份才能继续使用 app。",
@@ -263,42 +233,31 @@
       },
       "description": "如果你既没有其它已验证的设备，也没有恢复密钥，则需要重置数字身份才能继续使用 app。",
       "effect_list": {
-        "negative_1": "你将丢失现有消息历史",
-        "negative_2": "你将需要再次验证所有现有设备与联系人",
         "neutral_1": "你将丢失仅存储在服务器上的消息历史",
         "neutral_2": "你将需要再次验证所有现有设备与联系人",
         "positive_1": "你的账户的详细信息、联系人、偏好与聊天列表都将被保留"
       },
       "failure": {
         "description": "这可能是暂时的问题，请稍后再试。如果问题仍然存在，请联系服务器管理员。",
-        "heading": "数字身份重置授权失败。",
-        "title": "无法允许加密身份"
+        "heading": "数字身份重置授权失败。"
       },
       "finish_reset": "完成重置",
       "heading": "如果你无法通过其它方式确认请重置数字身份",
       "start_reset": "开始重置",
       "success": {
         "description": "已批准重置数字身份，有效时间为 {{minutes}} 分钟。你可以关闭此窗口并返回 app 继续操作。",
-        "heading": "已成功重置数字身份。返回到 App 以完成此流程。",
-        "title": "临时允许重置加密身份"
+        "heading": "已成功重置数字身份。返回到 App 以完成此流程。"
       },
       "warning": "仅当你无法访问其它已登录的设备并且丢失了恢复密钥时才重置数字身份。"
-    },
-    "selectable_session": {
-      "label": "选择会话"
     },
     "session": {
       "client_id_label": "客户端ID",
       "current": "当前",
-      "current_badge": "当前",
       "device_id_label": "设备 ID",
-      "finished_date": "已完成 <datetime/>",
       "finished_label": "已完成",
       "generic_browser_session": "浏览器会话",
-      "id_label": "ID",
       "ip_label": "IP 地址",
       "last_active_label": "最后活动",
-      "last_auth_label": "最后认证",
       "name_for_platform": "{{name}}对于 {{platform}}",
       "scopes_label": "范围",
       "set_device_name": {
@@ -306,14 +265,11 @@
         "label": "设备名称",
         "title": "编辑设备名称"
       },
-      "signed_in_date": "<datetime/>已登录",
       "signed_in_label": "已登录",
       "title": "设备详情",
       "unknown_browser": "未知浏览器",
       "unknown_device": "未知设备",
-      "uri_label": "Uri",
-      "user_id_label": "用户 ID",
-      "username_label": "用户名"
+      "uri_label": "Uri"
     },
     "session_detail": {
       "alert": {
@@ -322,14 +278,7 @@
         "title": "无法找到会话：{{deviceId}}"
       }
     },
-    "unknown_route": "未知路线 {{route}}",
-    "unverified_email_alert": {
-      "button": "审查并验证",
-      "text:other": "你有 {{count}} 个未经验证的邮件地址。",
-      "title": "未经验证的电子邮件地址"
-    },
     "user_email": {
-      "cant_delete_primary": "选择其他主电子邮件地址，删除该电子邮件地址。",
       "delete_button_confirmation_modal": {
         "action": "删除电子邮件地址",
         "body": "确定要删除此邮件地址？",
@@ -337,25 +286,9 @@
         "password_confirmation": "确认账户密码以删除此邮件地址"
       },
       "delete_button_title": "删除电子邮件地址",
-      "email": "电子邮件地址",
-      "make_primary_button": "设为主要",
-      "not_verified": "未验证",
-      "primary_email": "主电子邮件地址",
-      "retry_button": "重新发送代码",
-      "unverified": "未验证"
-    },
-    "user_email_list": {
-      "heading": "电子邮件地址",
-      "no_primary_email_alert": "没有主电子邮件地址"
-    },
-    "user_greeting": {
-      "error": "加载用户失败"
-    },
-    "user_name": {
-      "display_name_field_label": "显示名称"
+      "email": "电子邮件地址"
     },
     "user_sessions_overview": {
-      "active_sessions:other": "{{count}} 个活跃会话",
       "approaching_session_limit_warning_description:other": "你已使用 {{count}} 个设备槽位中的 {{num_sessions}} 个。达到上限后需要移除 1 个现有设备才能添加另一个。",
       "approaching_session_limit_warning_header": "注意，您即将达到设备数量上限",
       "heading": "你已登录的位置",
@@ -390,10 +323,7 @@
         "description": "检查发送到你的邮件地址中的代码，并更新以下字段以继续。",
         "title": "你输入的代码错误"
       },
-      "resend_code": "重新发送代码",
-      "resend_email": "重新发送电子邮件",
-      "sent": "已发送！",
-      "unknown_email": "未知的电子邮件地址"
+      "resend_code": "重新发送代码"
     }
   },
   "mas": {

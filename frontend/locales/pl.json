@@ -25,9 +25,7 @@
     }
   },
   "common": {
-    "add": "Dodaj",
     "e2ee": "Szyfrowanie typu end-to-end",
-    "error": "Błąd",
     "loading": "Wczytywanie…",
     "next": "Dalej",
     "password": "Hasło",
@@ -69,34 +67,16 @@
       "title": "Twoje konto"
     },
     "add_email_form": {
-      "email_denied_alert": {
-        "text": "Wprowadzony adres e-mail nie jest dozwolony przez politykę serwera.",
-        "title": "E-mail odrzucony przez zasady serwera"
-      },
       "email_denied_error": "Wprowadzony adres e-mail nie jest dozwolony przez politykę serwera",
-      "email_exists_alert": {
-        "text": "Podany adres e-mail został już dodany do tego konta",
-        "title": "Adres e-mail już istnieje"
-      },
-      "email_exists_error": "Podany adres e-mail został już dodany do tego konta",
       "email_field_help": "Dodaj alternatywny adres e-mail, którego możesz używać do uzyskania dostępu do tego konta.",
       "email_field_label": "Dodaj adres e-mail",
       "email_in_use_error": "Podany adres e-mail jest już używany",
-      "email_invalid_alert": {
-        "text": "Podany adres e-mail jest nieprawidłowy",
-        "title": "Nieprawidłowy adres e-mail"
-      },
       "email_invalid_error": "Podany adres e-mail jest nieprawidłowy",
       "incorrect_password_error": "Niepoprawne hasło. Spróbuj ponownie.",
       "password_confirmation": "Potwierdź hasło do swojego konta, aby dodać ten adres e-mail"
     },
-    "app_sessions_list": {
-      "error": "Nie udało się załadować sesji aplikacji",
-      "heading": "Aplikacje"
-    },
     "browser_session_details": {
-      "current_badge": "Aktualny",
-      "session_details_title": "Sesja"
+      "current_badge": "Aktualny"
     },
     "browser_sessions_overview": {
       "body:one": "{{count}} aktywna sesja",
@@ -111,16 +91,13 @@
     },
     "compat_session_detail": {
       "client_details_title": "Informacje o kliencie",
-      "name": "Nazwa",
-      "session_details_title": "Sesja"
+      "name": "Nazwa"
     },
     "device_type_icon_label": {
-      "desktop": "Pulpit",
       "mobile": "Telefon",
       "pc": "Komputer",
       "tablet": "Tablet",
-      "unknown": "Nieznany typ urządzenia",
-      "web": "Przeglądarka"
+      "unknown": "Nieznany typ urządzenia"
     },
     "email_in_use": {
       "heading": "Adres e-mail {{email}} jest już używany."
@@ -136,7 +113,6 @@
       "subtitle": "Wystąpił nieoczekiwany błąd. Spróbuj ponownie.",
       "title": "Coś poszło nie tak"
     },
-    "error_boundary_title": "Coś poszło nie tak",
     "errors": {
       "field_required": "To pole jest wymagane",
       "rate_limit_exceeded": "W krótkim czasie wysłałeś zbyt wiele żądań. Poczekaj kilka minut i spróbuj ponownie."
@@ -150,23 +126,18 @@
       "device_limit_error": "Osiągnięto limit urządzeń",
       "devices": "Urządzenia",
       "plan": "Plan",
-      "profile": "Profil",
-      "sessions": "Sesje",
       "settings": "Ustawienia"
     },
     "not_found_alert_title": "Nie znaleziono.",
-    "not_logged_in_alert": "Nie jesteś zalogowany.",
     "oauth2_client_detail": {
       "details_title": "Informacje o kliencie",
-      "id": "Identyfikator klienta",
       "name": "Nazwa",
       "policy": "Polityka",
       "terms": "Warunki korzystania z usługi"
     },
     "oauth2_session_detail": {
       "client_details_name": "Nazwa",
-      "client_title": "Informacje o kliencie",
-      "session_details_title": "Sesja"
+      "client_title": "Informacje o kliencie"
     },
     "pagination_controls": {
       "total": "Razem: {{totalCount}}"
@@ -257,7 +228,6 @@
       }
     },
     "reset_cross_signing": {
-      "button": "Zresetuj tożsamość",
       "cancelled": {
         "description_1": "Możesz zamknąć to okno i wrócić do aplikacji, aby kontynuować.",
         "description_2": "Jeśli wylogowałeś się z dowolnego miejsca i nie pamiętasz kodu odzyskiwania, nadal musisz zresetować swoją tożsamość.",
@@ -265,42 +235,31 @@
       },
       "description": "Jeśli nie zalogowałeś się na żadnym innym urządzeniu i utraciłeś klucz odzyskiwania, musisz zresetować swoją tożsamość, aby móc nadal korzystać z aplikacji.",
       "effect_list": {
-        "negative_1": "Utracisz istniejącą historię wiadomości",
-        "negative_2": "Będziesz musiał ponownie zweryfikować wszystkie swoje istniejące urządzenia i kontakty",
         "neutral_1": "Utracisz całą historię wiadomości przechowywaną wyłącznie na serwerze",
         "neutral_2": "Będziesz musiał ponownie zweryfikować wszystkie swoje istniejące urządzenia i kontakty",
         "positive_1": "Twoje dane konta, kontakty, preferencje i lista czatów zostaną zachowane"
       },
       "failure": {
         "description": "To może być problem tymczasowy, więc spróbuj ponownie później. Jeśli problem będzie się powtarzał, skontaktuj się z administratorem serwera.",
-        "heading": "Nie udało się zezwolić na zresetowanie tożsamości kryptograficznej",
-        "title": "Nie udało się zezwolić na tożsamość kryptograficzną"
+        "heading": "Nie udało się zezwolić na zresetowanie tożsamości kryptograficznej"
       },
       "finish_reset": "Zakończ resetowanie",
       "heading": "Zresetuj swoją tożsamość, jeśli nie możesz potwierdzić jej w inny sposób",
       "start_reset": "Rozpocznij resetowanie",
       "success": {
         "description": "Resetowanie tożsamości zostało zatwierdzone na najbliższe {{minutes}} minut. Możesz zamknąć to okno i wrócić do aplikacji, aby kontynuować.",
-        "heading": "Tożsamość została zresetowana pomyślnie. Wróć do aplikacji, aby dokończyć proces.",
-        "title": "Resetowanie tożsamości kryptograficznej tymczasowo dozwolone"
+        "heading": "Tożsamość została zresetowana pomyślnie. Wróć do aplikacji, aby dokończyć proces."
       },
       "warning": "Zresetuj swoją tożsamość tylko wtedy, gdy nie masz dostępu do innego urządzenia, na którym jesteś zalogowany i utraciłeś klucz odzyskiwania."
-    },
-    "selectable_session": {
-      "label": "Wybierz sesję"
     },
     "session": {
       "client_id_label": "Identyfikator klienta",
       "current": "Aktualny",
-      "current_badge": "Aktualny",
       "device_id_label": "Identyfikator urządzenia",
-      "finished_date": "Zakończone <datetime/>",
       "finished_label": "Zakończone",
       "generic_browser_session": "Sesja przeglądarki",
-      "id_label": "ID",
       "ip_label": "Adres IP",
       "last_active_label": "Ostatnio aktywny",
-      "last_auth_label": "Ostatnie uwierzytelnienie",
       "name_for_platform": "{{name}} dla {{platform}}",
       "scopes_label": "Zakresy",
       "set_device_name": {
@@ -308,14 +267,11 @@
         "label": "Nazwa urządzenia",
         "title": "Edytuj nazwę urządzenia"
       },
-      "signed_in_date": "Zalogowano <datetime/>",
       "signed_in_label": "Zalogowano",
       "title": "Szczegóły urządzenia",
       "unknown_browser": "Nieznana przeglądarka",
       "unknown_device": "Nieznane urządzenie",
-      "uri_label": "Uri",
-      "user_id_label": "Identyfikator użytkownika",
-      "username_label": "Nazwa użytkownika"
+      "uri_label": "Uri"
     },
     "session_detail": {
       "alert": {
@@ -324,16 +280,7 @@
         "title": "Nie można znaleźć sesji: {{deviceId}}"
       }
     },
-    "unknown_route": "Nieznana trasa {{route}}",
-    "unverified_email_alert": {
-      "button": "Przejrzyj i zweryfikuj",
-      "text:one": "Masz {{count}} niezweryfikowany adres e-mail.",
-      "text:few": "Masz {{count}} niezweryfikowane adresy e-mail.",
-      "text:many": "Masz {{count}} niezweryfikowanych adresów e-mail.",
-      "title": "Niezweryfikowany adres e-mail"
-    },
     "user_email": {
-      "cant_delete_primary": "Aby usunąć ten adres, wybierz inny główny adres e-mail.",
       "delete_button_confirmation_modal": {
         "action": "Usuń adres e-mail",
         "body": "Usunąć ten adres e-mail?",
@@ -341,27 +288,9 @@
         "password_confirmation": "Potwierdź hasło do swojego konta, aby usunąć ten adres e-mail"
       },
       "delete_button_title": "Usuń adres e-mail",
-      "email": "E-mail",
-      "make_primary_button": "Ustaw jako główne",
-      "not_verified": "Nie zweryfikowano",
-      "primary_email": "Główny adres e-mail",
-      "retry_button": "Wyślij ponownie kod",
-      "unverified": "Niezweryfikowany"
-    },
-    "user_email_list": {
-      "heading": "E-maile",
-      "no_primary_email_alert": "Brak głównego adresu e-mail"
-    },
-    "user_greeting": {
-      "error": "Nie udało się załadować użytkownika"
-    },
-    "user_name": {
-      "display_name_field_label": "Nazwa wyświetlana"
+      "email": "E-mail"
     },
     "user_sessions_overview": {
-      "active_sessions:one": "{{count}} aktywna sesja",
-      "active_sessions:few": "{{count}} aktywne sesje",
-      "active_sessions:many": "{{count}} aktywnych sesji",
       "approaching_session_limit_warning_description:one": "Wykorzystano {{num_sessions}} z {{count}} miejsc na urządzenia. Po osiągnięciu limitu konieczne będzie usunięcie istniejącego urządzenia, aby dodać kolejne.",
       "approaching_session_limit_warning_description:few": "Wykorzystano {{num_sessions}} z {{count}} miejsc na urządzenia. Po osiągnięciu limitu konieczne będzie usunięcie istniejącego urządzenia, aby dodać kolejne.",
       "approaching_session_limit_warning_description:many": "Wykorzystano {{num_sessions}} z {{count}} miejsc na urządzenia. Po osiągnięciu limitu konieczne będzie usunięcie istniejącego urządzenia, aby dodać kolejne.",
@@ -408,10 +337,7 @@
         "description": "Sprawdź kod wysłany na Twój adres e-mail i zaktualizuj poniższe pola, aby kontynuować.",
         "title": "Wpisałeś zły kod"
       },
-      "resend_code": "Wyślij ponownie kod",
-      "resend_email": "Wyślij ponownie wiadomość e-mail",
-      "sent": "Wysłano!",
-      "unknown_email": "Nieznany adres e-mail"
+      "resend_code": "Wyślij ponownie kod"
     }
   },
   "mas": {

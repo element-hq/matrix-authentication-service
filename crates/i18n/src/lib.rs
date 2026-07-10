@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -8,9 +9,8 @@ pub mod sprintf;
 pub mod translations;
 mod translator;
 
-pub use icu_calendar;
 pub use icu_datetime;
-pub use icu_locid::locale;
+pub use icu_locale_core::{ParseError, locale};
 pub use icu_provider::{DataError, DataLocale};
 
 pub use self::{

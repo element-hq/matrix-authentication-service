@@ -186,6 +186,10 @@ done
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M14 5H5v9h1a1 1 0 1 1 0 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1a1 1 0 1 1-2 0z"/><path d="M8 10a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2zm2 0v9h9v-9z"/></svg>
 {% endmacro %}
 
+{% macro crop() %}
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M6 4a1 1 0 0 0-1 1v2H3a1 1 0 1 0 0 2h2v8a3 3 0 0 0 3 3h8v2a1 1 0 0 0 2 0v-2h2a1 1 0 1 0 0-2h-2v-8a3 3 0 0 0-3-3H7V5a1 1 0 0 0-1-1m9 5a1 1 0 0 1 1 1v8H8a1 1 0 0 1-1-1V9z" clip-rule="evenodd"/><path d="M15.707.293a1 1 0 0 0-1.414 0l-2 2a1 1 0 0 0 0 1.414l2 2a1 1 0 1 0 1.414-1.414l-.275-.276A6 6 0 0 1 21 10a1 1 0 1 0 2 0 8 8 0 0 0-7.596-7.99l.303-.303a1 1 0 0 0 0-1.414"/></svg>
+{% endmacro %}
+
 {% macro dark_mode() %}
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M17.983 17.31C13.332 15.66 10 11.22 10 6q0-.907.132-1.78a8 8 0 1 0 7.852 13.091m1.82-1.552c.668.15 1.094.863.737 1.447A10 10 0 0 1 12 22C6.477 22 2 17.523 2 12S6.477 2 12 2c.402 0 .653.416.524.797A10 10 0 0 0 12 6c0 4.768 3.337 8.757 7.803 9.758" clip-rule="evenodd"/></svg>
 {% endmacro %}
@@ -262,6 +266,10 @@ done
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20a1 1 0 1 1-2 0v-4H4a1 1 0 1 1 0-2h6zm10-6a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-6zM9 3a1 1 0 0 1 1 1v6H4a1 1 0 0 1 0-2h4V4a1 1 0 0 1 1-1m6 0a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-6V4a1 1 0 0 1 1-1"/></svg>
 {% endmacro %}
 
+{% macro expand_all() %}
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="m12 19.2 3.9-3.9a.95.95 0 0 1 .7-.275q.425 0 .7.275a.95.95 0 0 1 .275.7.95.95 0 0 1-.275.7l-3.875 3.875q-.575.575-1.425.575t-1.425-.575L6.7 16.7a.95.95 0 0 1-.275-.7q0-.425.275-.7a.95.95 0 0 1 .7-.275q.425 0 .7.275zm0-14.25-3.9 3.9a.95.95 0 0 1-.7.275.95.95 0 0 1-.7-.275.95.95 0 0 1-.275-.7q0-.425.275-.7l3.875-3.875Q11.15 3 12 3t1.425.575L17.3 7.45a.95.95 0 0 1 .275.7.95.95 0 0 1-.275.7.95.95 0 0 1-.7.275.95.95 0 0 1-.7-.275z"/></svg>
+{% endmacro %}
+
 {% macro expand() %}
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M21 3.997a1 1 0 0 0-.29-.702l-.005-.004A1 1 0 0 0 20 3h-8a1 1 0 1 0 0 2h5.586L5 17.586V12a1 1 0 1 0-2 0v8.003a1 1 0 0 0 .29.702l.005.004c.18.18.43.291.705.291h8a1 1 0 1 0 0-2H6.414L19 6.414V12a1 1 0 1 0 2 0z"/></svg>
 {% endmacro %}
@@ -300,6 +308,14 @@ done
 
 {% macro filter() %}
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M5 7a1 1 0 0 0 0 2h14a1 1 0 1 0 0-2zm3 4a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2zm2 5a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2h-2a1 1 0 0 1-1-1"/></svg>
+{% endmacro %}
+
+{% macro flip_horizontal() %}
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a1 1 0 0 1 1 1v18a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1M2 8a1 1 0 0 1 1.6-.8l5.334 4a1 1 0 0 1 0 1.6l-5.334 4A1 1 0 0 1 2 16zm18.4-.8A1 1 0 0 1 22 8v8a1 1 0 0 1-1.6.8l-5.334-4a1 1 0 0 1 0-1.6z"/></svg>
+{% endmacro %}
+
+{% macro flip_vertical() %}
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M11.2 15.066a1 1 0 0 1 1.6 0l4 5.334A1 1 0 0 1 16 22H8a1 1 0 0 1-.8-1.6zM21 11a1 1 0 1 1 0 2H3a1 1 0 1 1 0-2zm-5-9a1 1 0 0 1 .8 1.6l-4 5.334a1 1 0 0 1-1.6 0L7.2 3.6A1 1 0 0 1 8 2z"/></svg>
 {% endmacro %}
 
 {% macro folder() %}
@@ -662,6 +678,14 @@ done
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><g clip-path="url(#a)"><path d="M14.83 4.83 12.7 2.7c-.62-.62-1.7-.18-1.7.71v.66C7.06 4.56 4 7.92 4 12c0 3.64 2.43 6.71 5.77 7.68.62.18 1.23-.32 1.23-.96v-.03a.97.97 0 0 0-.68-.94A5.98 5.98 0 0 1 6 12c0-2.97 2.16-5.43 5-5.91v1.53c0 .89 1.07 1.33 1.7.71l2.13-2.08a.99.99 0 0 0 0-1.42m4.84 4.93q-.24-.825-.66-1.59c-.31-.57-1.1-.66-1.56-.2l-.01.01c-.31.31-.38.78-.17 1.16.2.37.36.76.48 1.16.12.42.51.7.94.7h.02c.65 0 1.15-.62.96-1.24M13 18.68v.02c0 .65.62 1.14 1.24.96q.825-.24 1.59-.66c.57-.31.66-1.1.2-1.56l-.02-.02a.97.97 0 0 0-1.16-.17c-.37.21-.76.37-1.16.49-.41.12-.69.51-.69.94m4.44-2.65c.46.46 1.25.37 1.56-.2.28-.51.5-1.04.67-1.59.18-.62-.31-1.24-.96-1.24h-.02c-.44 0-.82.28-.94.7q-.18.6-.48 1.17c-.21.38-.13.86.17 1.16"/></g><defs><clipPath id="a"><path d="M0 0h24v24H0z"/></clipPath></defs></svg>
 {% endmacro %}
 
+{% macro save_solid() %}
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2H6a2 2 0 0 0-2 2v16.336c0 1.583 1.75 2.538 3.082 1.683l3.836-2.467a2 2 0 0 1 2.164 0l3.836 2.467c1.331.855 3.082-.1 3.082-1.683V4a2 2 0 0 0-2-2"/></svg>
+{% endmacro %}
+
+{% macro save() %}
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M9.837 17.869a4 4 0 0 1 4.326 0L18 20.336V4H6v16.336zM20 20.336c0 1.582-1.751 2.538-3.082 1.682l-3.836-2.466a2 2 0 0 0-2.164 0l-3.836 2.466-.126.076C5.643 22.814 4 21.869 4 20.336V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/></svg>
+{% endmacro %}
+
 {% macro search() %}
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M15.05 16.463a7.5 7.5 0 1 1 1.414-1.414l3.243 3.244a1 1 0 0 1-1.414 1.414zM16 10.5a5.5 5.5 0 1 0-11 0 5.5 5.5 0 0 0 11 0"/></svg>
 {% endmacro %}
@@ -808,6 +832,10 @@ done
 
 {% macro unpin() %}
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M5.457 2.083a1 1 0 0 0-1.414 1.414L8.04 7.494v2.25a.5.5 0 0 1-.15.356l-3.7 3.644a.5.5 0 0 0-.15.356v1.4a.5.5 0 0 0 .5.5h6.5v6a1 1 0 0 0 2 0v-6h3.506l4.497 4.497a1 1 0 0 0 1.414-1.414zM14.546 14 10.04 9.494v.25a2.5 2.5 0 0 1-.746 1.781L6.78 14z" clip-rule="evenodd"/><path d="M14.04 4v3.85l2.015 2.015a.5.5 0 0 1-.015-.12V5.257a.5.5 0 0 1 .15-.357l2.081-2.043a.5.5 0 0 0-.35-.857h-9.73l2 2z"/></svg>
+{% endmacro %}
+
+{% macro unsave() %}
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M3.503 2.083a1 1 0 0 1 1.414 0l17 17a1 1 0 1 1-1.414 1.414L20 19.994v.342c0 1.582-1.75 2.538-3.082 1.683l-3.836-2.467a2 2 0 0 0-2.164 0l-3.836 2.467-.126.075C5.643 22.814 4 21.869 4 20.336V3.994l-.497-.497a1 1 0 0 1 0-1.414M6 20.336l3.837-2.467a4 4 0 0 1 4.326 0L18 20.336v-2.342l-12-12z" clip-rule="evenodd"/><path d="M18 2a2 2 0 0 1 2 2v10.35l-2-2V4H9.65l-2-2z"/></svg>
 {% endmacro %}
 
 {% macro user_add_solid() %}

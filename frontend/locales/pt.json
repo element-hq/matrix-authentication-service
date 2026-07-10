@@ -25,9 +25,7 @@
     }
   },
   "common": {
-    "add": "Adicionar",
     "e2ee": "Encriptação de ponta a ponta",
-    "error": "Erro",
     "loading": "A carregar...",
     "next": "Seguinte",
     "password": "Palavra-passe",
@@ -69,34 +67,16 @@
       "title": "A sua conta"
     },
     "add_email_form": {
-      "email_denied_alert": {
-        "text": "O e-mail inserido não é permitido pela política do servidor.",
-        "title": "E-mail negado pela política"
-      },
       "email_denied_error": "O e-mail inserido não é permitido pela política do servidor",
-      "email_exists_alert": {
-        "text": "O e-mail introduzido já foi adicionado a esta conta",
-        "title": "O e-mail já existe"
-      },
-      "email_exists_error": "O e-mail introduzido já foi adicionado a esta conta",
       "email_field_help": "Adicione um e-mail alternativo que possa utilizar para aceder a esta conta.",
       "email_field_label": "Adicionar e-mail",
       "email_in_use_error": "O e-mail introduzido já está a ser utilizado",
-      "email_invalid_alert": {
-        "text": "O e-mail introduzido é inválido",
-        "title": "E-mail inválido"
-      },
       "email_invalid_error": "O e-mail introduzido é inválido",
       "incorrect_password_error": "Palavra-passe incorreta, tente novamente",
       "password_confirmation": "Confirme a palavra-passe da sua conta para adicionar este endereço de e-mail"
     },
-    "app_sessions_list": {
-      "error": "Falha ao carregar sessões da aplicação",
-      "heading": "Aplicações"
-    },
     "browser_session_details": {
-      "current_badge": "Atual",
-      "session_details_title": "Sessão"
+      "current_badge": "Atual"
     },
     "browser_sessions_overview": {
       "body:one": "{{count}} sessão ativa",
@@ -110,16 +90,13 @@
     },
     "compat_session_detail": {
       "client_details_title": "Informação do cliente",
-      "name": "Nome",
-      "session_details_title": "Sessão"
+      "name": "Nome"
     },
     "device_type_icon_label": {
-      "desktop": "Ambiente de trabalho",
       "mobile": "Telemóvel",
       "pc": "Computador",
       "tablet": "Tablet",
-      "unknown": "Tipo de dispositivo desconhecido",
-      "web": "Web"
+      "unknown": "Tipo de dispositivo desconhecido"
     },
     "email_in_use": {
       "heading": "O endereço de e-mail {{email}} já está a ser utilizado."
@@ -135,7 +112,6 @@
       "subtitle": "Ocorreu um erro inesperado. Por favor, tente novamente.",
       "title": "Algo correu mal"
     },
-    "error_boundary_title": "Algo correu mal",
     "errors": {
       "field_required": "Este campo é obrigatório",
       "rate_limit_exceeded": "Efetuou demasiadas solicitações num curto espaço de tempo. Aguarde alguns minutos e tente novamente."
@@ -149,23 +125,18 @@
       "device_limit_error": "Device limit reached",
       "devices": "Dispositivos",
       "plan": "Plano",
-      "profile": "Perfil",
-      "sessions": "Sessões",
       "settings": "Configurações"
     },
     "not_found_alert_title": "Não encontrado.",
-    "not_logged_in_alert": "Não tem sessão iniciada.",
     "oauth2_client_detail": {
       "details_title": "Informação do cliente",
-      "id": "ID do Cliente",
       "name": "Nome",
       "policy": "Política",
       "terms": "Termos de serviço"
     },
     "oauth2_session_detail": {
       "client_details_name": "Nome",
-      "client_title": "Informação do cliente",
-      "session_details_title": "Sessão"
+      "client_title": "Informação do cliente"
     },
     "pagination_controls": {
       "total": "Total: {{totalCount}}"
@@ -256,7 +227,6 @@
       }
     },
     "reset_cross_signing": {
-      "button": "Redefinir identidade",
       "cancelled": {
         "description_1": "Pode fechar esta janela e voltar à aplicação para continuar.",
         "description_2": "Caso tenha terminado sessão em todos os dispositivos e não se recorde do seu código de recuperação, continuará a ser necessário repor a sua identidade.",
@@ -264,42 +234,31 @@
       },
       "description": "Se não tiver sessão iniciada noutros dispositivos e tiver perdido a sua chave de recuperação, terá de repor a sua identidade para continuar a utilizar a aplicação.",
       "effect_list": {
-        "negative_1": "Perderá o histórico de mensagens existente",
-        "negative_2": "Terá de verificar novamente todos os seus dispositivos e contactos existentes.",
         "neutral_1": "Perderá qualquer histórico de mensagens que esteja armazenado apenas no servidor",
         "neutral_2": "Terá de verificar novamente todos os seus dispositivos e contactos existentes.",
         "positive_1": "Os detalhes da sua conta, contactos, preferências e lista de conversação serão mantidos"
       },
       "failure": {
         "description": "Este pode ser um problema temporário, por isso, tente novamente mais tarde. Se o problema persistir, entre em contato com o administrador do servidor.",
-        "heading": "Falha ao permitir a reposição da identidade criptográfica",
-        "title": "Falha ao permitir identidade de criptografia"
+        "heading": "Falha ao permitir a reposição da identidade criptográfica"
       },
       "finish_reset": "Concluir reposição",
       "heading": "Redefina sua identidade caso não possa confirmar de outra forma",
       "start_reset": "Iniciar reposição",
       "success": {
         "description": "A redefinição de identidade foi aprovada para os próximos {{minutes}} minutos. Pode fechar esta janela e voltar à aplicação para continuar.",
-        "heading": "Redefinição de identidade com êxito. Volte ao aplicativo para concluir o processo.",
-        "title": "Redefinição de identidade criptográfica permitida temporariamente"
+        "heading": "Redefinição de identidade com êxito. Volte ao aplicativo para concluir o processo."
       },
       "warning": "Só reponha a sua identidade se não tiver acesso a outro dispositivo com sessão iniciada e tiver perdido a sua chave de recuperação."
-    },
-    "selectable_session": {
-      "label": "Selecionar sessão"
     },
     "session": {
       "client_id_label": "ID do Cliente",
       "current": "Atual",
-      "current_badge": "Atual",
       "device_id_label": "ID de dispositivo",
-      "finished_date": "Concluído <datetime/>",
       "finished_label": "Concluído",
       "generic_browser_session": "Sessão do navegador",
-      "id_label": "Identificação",
       "ip_label": "Endereço IP",
       "last_active_label": "Ativo pela última vez",
-      "last_auth_label": "Última autenticação",
       "name_for_platform": "{{name}}para{{platform}}",
       "scopes_label": "Âmbitos de aplicação",
       "set_device_name": {
@@ -307,14 +266,11 @@
         "label": "Nome do dispositivo",
         "title": "Editar nome do dispositivo"
       },
-      "signed_in_date": "Sessão iniciada <datetime/>",
       "signed_in_label": "Sessão iniciada",
       "title": "Detalhes do dispositivo",
       "unknown_browser": "Navegador desconhecido",
       "unknown_device": "Dispositivo desconhecido",
-      "uri_label": "Uri",
-      "user_id_label": "ID de utilizador",
-      "username_label": "Nome do utilizador"
+      "uri_label": "Uri"
     },
     "session_detail": {
       "alert": {
@@ -323,15 +279,7 @@
         "title": "Não é possível encontrar sessão: {{deviceId}}"
       }
     },
-    "unknown_route": "Rota desconhecida {{route}}",
-    "unverified_email_alert": {
-      "button": "Rever e verificar",
-      "text:one": "Você tem {{count}} endereço de e-mail não verificado.",
-      "text:other": "Você tem {{count}} endereços de e-mail não verificados.",
-      "title": "E-mail não verificado"
-    },
     "user_email": {
-      "cant_delete_primary": "Escolha um e-mail principal diferente para excluir este.",
       "delete_button_confirmation_modal": {
         "action": "Excluir e-mail",
         "body": "Excluir este e-mail?",
@@ -339,26 +287,9 @@
         "password_confirmation": "Confirme a palavra-passe da sua conta para eliminar este endereço de correio eletrónico"
       },
       "delete_button_title": "Remover endereço de e-mail",
-      "email": "Email",
-      "make_primary_button": "Tornar primário",
-      "not_verified": "Não verificado",
-      "primary_email": "E-mail primário",
-      "retry_button": "Reenviar código",
-      "unverified": "Não verificado"
-    },
-    "user_email_list": {
-      "heading": "E-mails",
-      "no_primary_email_alert": "Sem endereço de e-mail principal"
-    },
-    "user_greeting": {
-      "error": "Falha ao carregar o usuário"
-    },
-    "user_name": {
-      "display_name_field_label": "Nome de exibição"
+      "email": "Email"
     },
     "user_sessions_overview": {
-      "active_sessions:one": "{{count}} sessão ativa",
-      "active_sessions:other": "{{count}} sessões ativas",
       "approaching_session_limit_warning_description:one": "You've used {{num_sessions}} of {{count}} device slot. Once you reach your limit, you'll need to remove an existing device to add another.",
       "approaching_session_limit_warning_description:other": "You've used {{num_sessions}} of {{count}} device slots. Once you reach your limit, you'll need to remove an existing device to add another.",
       "approaching_session_limit_warning_header": "Heads up, you're close to your device limit",
@@ -399,10 +330,7 @@
         "description": "Verifique o código enviado para o seu e-mail e atualize os campos abaixo para continuar.",
         "title": "Introduziu o código errado"
       },
-      "resend_code": "Reenviar código",
-      "resend_email": "Reenviar e-mail",
-      "sent": "Enviado!",
-      "unknown_email": "E-mail desconhecido"
+      "resend_code": "Reenviar código"
     }
   },
   "mas": {

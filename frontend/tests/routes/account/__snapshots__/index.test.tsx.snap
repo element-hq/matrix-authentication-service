@@ -28,18 +28,18 @@ exports[`Account home page > display name edit box > displays an error if the di
     A
   </span>
   <form
-    class="_root_19upo_16"
+    class="_root_1o4d9_17"
     id="radix-_r_86_"
   >
     <div
       class="_dialogForm_0d9d49"
     >
       <div
-        class="_field_19upo_26"
+        class="_field_1o4d9_27"
         data-invalid="true"
       >
         <label
-          class="_label_19upo_59"
+          class="_label_1o4d9_60"
           data-invalid="true"
           for="radix-_r_9p_"
         >
@@ -82,17 +82,17 @@ exports[`Account home page > display name edit box > displays an error if the di
           </button>
         </div>
         <span
-          class="_message_19upo_85 _help-message_19upo_91"
+          class="_message_1o4d9_86 _help-message_1o4d9_92"
           id="radix-_r_a0_"
         >
           This is what others will see wherever you’re signed in.
         </span>
       </div>
       <div
-        class="_field_19upo_26"
+        class="_field_1o4d9_27"
       >
         <label
-          class="_label_19upo_59"
+          class="_label_1o4d9_60"
           for="radix-_r_a1_"
         >
           Username
@@ -177,17 +177,17 @@ exports[`Account home page > display name edit box > lets edit the display name 
     A
   </span>
   <form
-    class="_root_19upo_16"
+    class="_root_1o4d9_17"
     id="radix-_r_1n_"
   >
     <div
       class="_dialogForm_0d9d49"
     >
       <div
-        class="_field_19upo_26"
+        class="_field_1o4d9_27"
       >
         <label
-          class="_label_19upo_59"
+          class="_label_1o4d9_60"
           for="radix-_r_3a_"
         >
           Display name
@@ -227,17 +227,17 @@ exports[`Account home page > display name edit box > lets edit the display name 
           </button>
         </div>
         <span
-          class="_message_19upo_85 _help-message_19upo_91"
+          class="_message_1o4d9_86 _help-message_1o4d9_92"
           id="radix-_r_3h_"
         >
           This is what others will see wherever you’re signed in.
         </span>
       </div>
       <div
-        class="_field_19upo_26"
+        class="_field_1o4d9_27"
       >
         <label
-          class="_label_19upo_59"
+          class="_label_1o4d9_60"
           for="radix-_r_3i_"
         >
           Username
@@ -338,7 +338,6 @@ exports[`Account home page > renders the page 1`] = `
             </p>
           </div>
           <button
-            aria-controls="radix-_r_0_"
             aria-expanded="false"
             aria-haspopup="dialog"
             aria-labelledby="_r_3_"
@@ -460,13 +459,13 @@ exports[`Account home page > renders the page 1`] = `
           style="transition-duration: 0s; animation-name: none;"
         >
           <form
-            class="_root_19upo_16"
+            class="_root_1o4d9_17"
           >
             <div
-              class="_field_19upo_26"
+              class="_field_1o4d9_27"
             >
               <label
-                class="_label_19upo_59"
+                class="_label_1o4d9_60"
                 for="radix-_r_j_"
               >
                 Email
@@ -487,13 +486,13 @@ exports[`Account home page > renders the page 1`] = `
             </div>
           </form>
           <form
-            class="_root_19upo_16"
+            class="_root_1o4d9_17"
           >
             <div
-              class="_field_19upo_26"
+              class="_field_1o4d9_27"
             >
               <label
-                class="_label_19upo_59"
+                class="_label_1o4d9_60"
                 for="radix-_r_n_"
               >
                 Add email
@@ -512,7 +511,7 @@ exports[`Account home page > renders the page 1`] = `
                 />
               </div>
               <span
-                class="_message_19upo_85 _help-message_19upo_91"
+                class="_message_1o4d9_86 _help-message_1o4d9_92"
                 id="radix-_r_o_"
               >
                 Add an alternative email you can use to access this account.
@@ -581,13 +580,13 @@ exports[`Account home page > renders the page 1`] = `
           style="transition-duration: 0s; animation-name: none;"
         >
           <form
-            class="_root_19upo_16"
+            class="_root_1o4d9_17"
           >
             <div
-              class="_field_19upo_26"
+              class="_field_1o4d9_27"
             >
               <label
-                class="_label_19upo_59"
+                class="_label_1o4d9_60"
                 for="radix-_r_11_"
               >
                 Password
@@ -603,7 +602,7 @@ exports[`Account home page > renders the page 1`] = `
                 value="this looks like a password"
               />
               <span
-                class="_message_19upo_85 _help-message_19upo_91"
+                class="_message_1o4d9_86 _help-message_1o4d9_92"
                 id="radix-_r_12_"
               >
                 <a
@@ -640,7 +639,6 @@ exports[`Account home page > renders the page 1`] = `
               End-to-end encryption
             </h4>
             <button
-              aria-controls="radix-_r_15_"
               aria-expanded="false"
               aria-labelledby="_r_16_"
               class="_icon-button_1215g_8 _triggerIcon_a44bb3"
@@ -677,7 +675,6 @@ exports[`Account home page > renders the page 1`] = `
         role="separator"
       />
       <button
-        aria-controls="radix-_r_1b_"
         aria-expanded="false"
         aria-haspopup="dialog"
         class="_button_1nw83_8 _has-icon_1nw83_60 _destructive_1nw83_110"
@@ -708,7 +705,6 @@ exports[`Account home page > renders the page 1`] = `
         role="separator"
       />
       <button
-        aria-controls="radix-_r_1e_"
         aria-expanded="false"
         aria-haspopup="dialog"
         class="_button_1nw83_8 self-center _has-icon_1nw83_60 _destructive_1nw83_110"

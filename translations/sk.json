@@ -5,8 +5,7 @@
     "continue": "Pokračovať",
     "create_account": "Vytvoriť účet",
     "sign_in": "Prihlásiť sa",
-    "sign_out": "Odhlásiť sa",
-    "submit": "Odoslať"
+    "sign_out": "Odhlásiť sa"
   },
   "app": {
     "human_name": "Matrix Authentication Service",
@@ -25,9 +24,6 @@
     "unexpected": "Neočakávaná chyba"
   },
   "mas": {
-    "add_email": {
-      "heading": "Pridať email"
-    },
     "back_to_homepage": "Späť na domovskú stránku",
     "change_password": {
       "change": "Zmeniť heslo",
@@ -59,8 +55,7 @@
       "link": {
         "description": "Prepojenie vášho <span class=\"break-keep text-links\"> %(provider)s </span> účtu"
       },
-      "no_login_methods": "Nie sú k dispozícii žiadne metódy prihlásenia.",
-      "separator": "Alebo"
+      "no_login_methods": "Nie sú k dispozícii žiadne metódy prihlásenia."
     },
     "navbar": {
       "my_account": "Môj účet",
@@ -88,8 +83,7 @@
       "create_account": {
         "description": "Pre pokračovanie vyberte používateľské meno.",
         "heading": "Vytvoriť účet"
-      },
-      "sign_in_instead": "Radšej sa prihlásiť"
+      }
     },
     "scope": {
       "edit_profile": "Upravte si profil a kontaktné údaje",
@@ -101,9 +95,6 @@
       "view_profile": "Zobraziť informácie o vašom profile a kontaktné údaje"
     },
     "upstream_oauth2": {
-      "login_link": {
-        "action": "Pokračovať"
-      },
       "register": {
         "choose_username": {
           "heading": "Vyberte si svoje používateľské meno"

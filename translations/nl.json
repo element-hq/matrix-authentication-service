@@ -6,8 +6,7 @@
     "create_account": "Registreren",
     "sign_in": "Inloggen",
     "sign_out": "Uitloggen",
-    "start_over": "Opnieuw beginnen",
-    "submit": "Bevestigen"
+    "start_over": "Opnieuw beginnen"
   },
   "app": {
     "human_name": "Matrix Authentication Service",
@@ -49,17 +48,13 @@
     },
     "login": {
       "continue_with_provider": "Doorgaan met %(provider)s",
-      "headline": "Inloggen",
-      "separator": "Of"
+      "headline": "Inloggen"
     },
     "navbar": {
       "my_account": "Mijn account"
     },
     "or_separator": "Of",
     "upstream_oauth2": {
-      "login_link": {
-        "action": "Doorgaan"
-      },
       "register": {
         "choose_username": {
           "heading": "Kies uw gebruikersnaam"

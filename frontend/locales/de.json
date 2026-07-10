@@ -25,9 +25,7 @@
     }
   },
   "common": {
-    "add": "Hinzufügen",
     "e2ee": "Ende-zu-Ende-Verschlüsselung",
-    "error": "Fehler",
     "loading": "Lade …",
     "next": "Weiter",
     "password": "Passwort",
@@ -69,34 +67,16 @@
       "title": "Dein Konto"
     },
     "add_email_form": {
-      "email_denied_alert": {
-        "text": "Die eingegebene E-Mail-Adresse wird von der Serverrichtlinie nicht zugelassen.",
-        "title": "E-Mail-Adresse durch Richtlinie abgelehnt"
-      },
       "email_denied_error": "Die eingegebene E-Mail wird von der Serverrichtlinie nicht zugelassen.",
-      "email_exists_alert": {
-        "text": "Die eingegebene E-Mail-Adresse ist diesem Konto bereits zugeordnet",
-        "title": "Diese E-Mailadresse existiert bereits"
-      },
-      "email_exists_error": "Die eingegebene E-Mail-Adresse ist diesem Konto bereits zugeordnet",
       "email_field_help": "Gib eine alternative E-Mail-Adresse an, mit der du auf dieses Konto zugreifen kannst.",
       "email_field_label": "E-Mail-Adresse hinzufügen",
       "email_in_use_error": "Die eingegebene E-Mail wird bereits verwendet",
-      "email_invalid_alert": {
-        "text": "Die eingegebene E-Mail-Adresse ist ungültig",
-        "title": "Ungültige Email-Adresse"
-      },
       "email_invalid_error": "Die eingegebene E-Mail-Adresse ist ungültig",
       "incorrect_password_error": "Falsches Passwort, versuch's nochmal",
       "password_confirmation": "Bestätige dein Passwort, um diese E-Mail-Adresse hinzuzufügen."
     },
-    "app_sessions_list": {
-      "error": "App-Sitzungen konnten nicht geladen werden",
-      "heading": "Anwendungen"
-    },
     "browser_session_details": {
-      "current_badge": "Aktuell",
-      "session_details_title": "Sitzung"
+      "current_badge": "Aktuell"
     },
     "browser_sessions_overview": {
       "body:one": "{{count}} aktive Sitzung",
@@ -110,16 +90,13 @@
     },
     "compat_session_detail": {
       "client_details_title": "Geräte Information",
-      "name": "Name",
-      "session_details_title": "Sitzung"
+      "name": "Name"
     },
     "device_type_icon_label": {
-      "desktop": "Desktop",
       "mobile": "Mobil",
       "pc": "Computer",
       "tablet": "Tablet",
-      "unknown": "Unbekannter Gerätetyp",
-      "web": "Web"
+      "unknown": "Unbekannter Gerätetyp"
     },
     "email_in_use": {
       "heading": "Die E-Mail-Adresse {{email}} wird bereits verwendet."
@@ -135,7 +112,6 @@
       "subtitle": "Ein unerwarteter Fehler ist aufgetreten, bitte versuch's nochmal.",
       "title": "Etwas ist schief gelaufen"
     },
-    "error_boundary_title": "Etwas ist schief gelaufen",
     "errors": {
       "field_required": "Dieses Feld ist ein Pflichtfeld",
       "rate_limit_exceeded": "Du hast in kurzer Zeit zu viele Anfragen gestellt. Warte bitte ein paar Minuten und versuch's nochmal."
@@ -149,23 +125,18 @@
       "device_limit_error": "Gerätelimit erreicht",
       "devices": "Geräte",
       "plan": "Abo",
-      "profile": "Profil",
-      "sessions": "Sitzungen",
       "settings": "Einstellungen"
     },
     "not_found_alert_title": "Nicht gefunden.",
-    "not_logged_in_alert": "Du bist nicht angemeldet.",
     "oauth2_client_detail": {
       "details_title": "Geräte Information",
-      "id": "Client-ID",
       "name": "Name",
       "policy": "Richtlinie",
       "terms": "Nutzungsbedingungen"
     },
     "oauth2_session_detail": {
       "client_details_name": "Name",
-      "client_title": "Geräte Information",
-      "session_details_title": "Sitzung"
+      "client_title": "Geräte Information"
     },
     "pagination_controls": {
       "total": "Gesamt: {{totalCount}}"
@@ -256,7 +227,6 @@
       }
     },
     "reset_cross_signing": {
-      "button": "Identität zurücksetzen",
       "cancelled": {
         "description_1": "Du kannst dieses Fenster schließen und zur App zurückgehen, um weiterzumachen.",
         "description_2": "Wenn du dich überall abgemeldet hast und deinen Wiederherstellungs-Schlüssel nicht mehr weißt, musst du deine Identität zurücksetzen.",
@@ -264,42 +234,31 @@
       },
       "description": "Wenn du auf keinem anderen Gerät angemeldet bist und deinen Wiederherstellungs-Schlüssel verloren hast, musst du deine Identität zurücksetzen, um die App weiter nutzen zu können.",
       "effect_list": {
-        "negative_1": "Du verlierst deine bestehenden Chats.",
-        "negative_2": "Du musst alle deine Geräte und Kontakte nochmal verifizieren.",
         "neutral_1": "Du verlierst alle Nachrichten, die nur auf dem Server gespeichert sind.",
         "neutral_2": "Du musst alle deine Geräte und Kontakte nochmal verifizieren.",
         "positive_1": "Deine Kontodaten, Kontakte, Einstellungen und Chat-Liste bleiben erhalten."
       },
       "failure": {
         "description": "Das könnte ein vorübergehendes Problem sein, also versuch's später nochmal. Wenn das Problem weiterhin besteht, wende dich bitte an deinen Server-Admin.",
-        "heading": "Zurücksetzen der Krypto-Identität konnte nicht zugelassen werden",
-        "title": "Krypto-Identität konnte nicht zugelassen werden"
+        "heading": "Zurücksetzen der Krypto-Identität konnte nicht zugelassen werden"
       },
       "finish_reset": "Reset beenden",
       "heading": "Erstelle eine neue Identität, solltest du sie nicht auf andere Weise bestätigen können.",
       "start_reset": "Reset starten",
       "success": {
         "description": "Das Zurücksetzen der Identität wurde für die nächsten {{minutes}} Minuten genehmigt. Du kannst dieses Fenster schließen und zur App zurückkehren, um fortzufahren.",
-        "heading": "Identität erfolgreich zurückgesetzt. Geh zurück zur App, um den Vorgang abzuschließen.",
-        "title": "Das Zurücksetzen der Krypto-Identität ist vorübergehend erlaubt"
+        "heading": "Identität erfolgreich zurückgesetzt. Geh zurück zur App, um den Vorgang abzuschließen."
       },
       "warning": "Setze deine Identität nur zurück, wenn du keinen Zugriff auf ein anderes angemeldetes Gerät hast und deinen Wiederherstellungsschlüssel verloren hast."
-    },
-    "selectable_session": {
-      "label": "Sitzung auswählen"
     },
     "session": {
       "client_id_label": "Client-ID",
       "current": "Aktuell",
-      "current_badge": "Aktuell",
       "device_id_label": "Geräte-ID",
-      "finished_date": "Beendet <datetime/>",
       "finished_label": "Fertig",
       "generic_browser_session": "Browser-Sitzung",
-      "id_label": "ID",
       "ip_label": "IP-Adresse",
       "last_active_label": "Zuletzt aktiv",
-      "last_auth_label": "Letzte Anmeldung",
       "name_for_platform": "{{name}} für {{platform}}",
       "scopes_label": "Berechtigungsumfang",
       "set_device_name": {
@@ -307,14 +266,11 @@
         "label": "Gerätename",
         "title": "Gerätename bearbeiten"
       },
-      "signed_in_date": "Angemeldet <datetime/>",
       "signed_in_label": "Angemeldet",
       "title": "Geräte Details",
       "unknown_browser": "Unbekannter Browser",
       "unknown_device": "Unbekanntes Gerät",
-      "uri_label": "URI",
-      "user_id_label": "Benutzer-ID",
-      "username_label": "Benutzername"
+      "uri_label": "URI"
     },
     "session_detail": {
       "alert": {
@@ -323,15 +279,7 @@
         "title": "Sitzung kann nicht gefunden werden: {{deviceId}}"
       }
     },
-    "unknown_route": "Unbekannte Route {{route}}",
-    "unverified_email_alert": {
-      "button": "Überprüfen und verifizieren",
-      "text:one": "Du hast {{count}} unverifizierte E-Mail-Adresse.",
-      "text:other": "Du hast {{count}} unverifizierte E-Mail-Adressen.",
-      "title": "Nicht verifizierte E-Mail-Adresse"
-    },
     "user_email": {
-      "cant_delete_primary": "Wähle eine andere primäre E-Mail-Adresse aus, um diese zu löschen.",
       "delete_button_confirmation_modal": {
         "action": "E-Mail löschen",
         "body": "Diese E-Mail löschen?",
@@ -339,26 +287,9 @@
         "password_confirmation": "Bestätige dein Passwort, um diese E-Mail-Adresse zu löschen."
       },
       "delete_button_title": "E-Mail-Adresse entfernen",
-      "email": "E-Mail",
-      "make_primary_button": "Als primäre Adresse festlegen",
-      "not_verified": "Nicht verifiziert",
-      "primary_email": "Primäre E-Mail-Adresse",
-      "retry_button": "Code erneut senden",
-      "unverified": "Nicht verifiziert"
-    },
-    "user_email_list": {
-      "heading": "E-Mails",
-      "no_primary_email_alert": "Keine primäre E-Mail-Adresse"
-    },
-    "user_greeting": {
-      "error": "Fehler beim Laden des Benutzers"
-    },
-    "user_name": {
-      "display_name_field_label": "Anzeigename"
+      "email": "E-Mail"
     },
     "user_sessions_overview": {
-      "active_sessions:one": "{{count}} aktive Sitzung",
-      "active_sessions:other": "{{count}} aktive Sitzungen",
       "approaching_session_limit_warning_description:one": "Du hast {{num_sessions}} von {{count}} Geräteplätzen belegt. Sobald du das Limit erreicht hast, musst du ein vorhandenes Gerät entfernen, um ein weiteres hinzuzufügen.",
       "approaching_session_limit_warning_description:other": "Du hast {{num_sessions}} von {{count}} Geräteplätzen belegt. Sobald du das Limit erreicht hast, musst du ein vorhandenes Gerät entfernen, um ein weiteres hinzuzufügen.",
       "approaching_session_limit_warning_header": "Achtung, du hast fast das Limit für angemeldete Geräte erreicht",
@@ -399,10 +330,7 @@
         "description": "Überprüfe den Code, der an deine E-Mail-Adresse gesendet wurde, und aktualisiere die folgenden Felder, um fortzufahren.",
         "title": "Du hast den falschen Code eingegeben."
       },
-      "resend_code": "Code erneut senden",
-      "resend_email": "E-Mail erneut senden",
-      "sent": "Gesendet!",
-      "unknown_email": "Unbekannte E-Mail-Adresse"
+      "resend_code": "Code erneut senden"
     }
   },
   "mas": {

@@ -12,8 +12,6 @@ Please see LICENSE files in the repository root for full details.
 
 {% block content %}
   {% set client_display_name = client.client_name or client.client_id %}
-  {# The URI we can display to distinguish this client #}
-  {% set client_display_uri = ((client.client_uri or "") | simplify_url) or "<no client_uri provided>" %}
   {% set user_agent = grant.user_agent | parse_user_agent() %}
 
   {% if grant.state == "pending" %}
@@ -42,7 +40,7 @@ Please see LICENSE files in the repository root for full details.
         </h1>
 
         <p class="text [&>span]:whitespace-nowrap [&>span]:text-[var(--cpd-color-text-link-external)]">
-          {{ _("mas.device_consent.description", client_name=client_display_name, client_uri=client_display_uri, server_name=branding.server_name) }}
+          {{ _("mas.device_consent.description", client_name=client_display_name, server_name=branding.server_name) }}
         </p>
       </div>
 

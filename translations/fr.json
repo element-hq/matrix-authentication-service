@@ -7,8 +7,7 @@
     "sign_in": "Se connecter",
     "sign_out": "Se déconnecter",
     "skip": "Passer",
-    "start_over": "Recommencer",
-    "submit": "Soumettre"
+    "start_over": "Recommencer"
   },
   "app": {
     "human_name": "Matrix Authentication Service",
@@ -52,10 +51,6 @@
         "heading": "Session terminée"
       }
     },
-    "add_email": {
-      "description": "Entrez une adresse e-mail qui sera utilisée pour récupérer votre compte au cas où vous perdriez l'accès à celui-ci.",
-      "heading": "Ajouter une adresse e-mail"
-    },
     "back_to_homepage": "Retourner sur la page d'accueil",
     "captcha": {
       "noscript": "Ce formulaire est protégé par un CAPTCHA et nécessite l'activation de JavaScript pour le soumettre. Veuillez activer JavaScript dans votre navigateur et recharger cette page."
@@ -64,7 +59,6 @@
       "change": "Changer de mot de passe",
       "confirm": "Confirmer le mot de passe",
       "current": "Mot de passe actuel",
-      "description": "Cela modifiera le mot de passe de votre compte.",
       "heading": "Modifier mon mot de passe",
       "new": "Nouveau mot de passe"
     },
@@ -73,19 +67,13 @@
       "headline": "Choisissez votre pseudonyme"
     },
     "consent": {
-      "client_wants_access": "<span>%(client_name)s</span> à l'adresse <span>%(redirect_uri)s</span> souhaite accéder à votre compte.",
       "continue_to": "Continuer vers <span>%(client_name)s</span>?",
-      "heading": "Autoriser l'accès à votre compte ?",
-      "make_sure_you_trust": "Assurez-vous de faire confiance <span>%(client_name)s</span>.",
       "scope_list_preface": "En continuant, vous autorisez <span>%(client_name)s</span> à :",
-      "this_will_allow": "Cela va permettre à <span>%(client_name)s</span> de :",
       "this_will_setup": "Continuer connectera %(client_name)s (<span>%(client_uri)s</span>) avec votre compte %(server_name)s<span></span>.",
-      "use_another_account": "Utiliser un autre compte",
-      "you_may_be_sharing": "Vous partagez peut-être des informations sensibles avec ce site ou cette application."
+      "use_another_account": "Utiliser un autre compte"
     },
     "device_card": {
       "access_requested": "Accès demandé",
-      "device_code": "Code",
       "generic_device": "Appareil",
       "ip_address": "Adresse IP",
       "security_code": "Code de sécurité"
@@ -96,19 +84,17 @@
       "verification_code": "Code de vérification"
     },
     "device_consent": {
-      "another_device_access": "Un autre appareil souhaite accéder à votre compte.",
       "confirm_device": "Oui, je confirme que cet appareil m'appartient et je souhaite me connecter.",
       "denied": {
         "description": "Vous avez refusé l'accès à %(client_name)s. Vous pouvez fermer cette fenêtre.",
         "heading": "Accès refusé"
       },
-      "description": "<strong>Un autre appareil</strong> souhaite associer %(client_name)s (<span>%(client_uri)s</span>) avec votre compte <span>%(server_name)s</span>. Assurez-vous de reconnaître cet appareil.",
+      "description": "<strong>Un autre appareil</strong> souhaite associer %(client_name)s avec votre compte <span>%(server_name)s</span>. Assurez-vous de reconnaître cet appareil.",
       "grant_access": "Accorder l'accès",
       "granted": {
         "description": "Vous avez accordé l'accès à %(client_name)s. Vous pouvez fermer cette fenêtre.",
         "heading": "Accès accordé"
       },
-      "this_will_setup": "Un autre appareil souhaite connecter %(client_name)s (<span>%(client_uri)s</span>) avec votre compte <span>%(server_name)s</span>. Assurez-vous de reconnaître cet appareil.",
       "title": "Autoriser l'accès à votre compte ?",
       "warning": {
         "description": "Êtes-vous sûr qu'il s'agit bien de votre appareil ? Les administrateurs du service ou le support informatique ne vous demanderaient jamais de confirmer cela.",
@@ -174,7 +160,6 @@
         "headline": "Se connecter pour associer"
       },
       "no_login_methods": "Aucune méthode de connexion n'est disponible.",
-      "separator": "Ou",
       "username_or_email": "Nom d'utilisateur ou adresse email"
     },
     "navbar": {
@@ -238,7 +223,6 @@
         "description": "Choisissez un nom d'utilisateur pour continuer.",
         "heading": "Créer un compte"
       },
-      "sign_in_instead": "Se connecter",
       "terms_of_service": "J'accepte les <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Conditions d'utilisation</a>"
     },
     "registration_token": {
@@ -258,11 +242,6 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "Ce compte est déjà associé à un autre compte."
-      },
-      "login_link": {
-        "action": "Continuer",
-        "description": "Un compte existe pour ce nom d'utilisateur (%(username)s), il sera associé à ce compte en amont.",
-        "heading": "Associer votre compte existant"
       },
       "register": {
         "choose_username": {
@@ -296,7 +275,6 @@
     },
     "verify_email": {
       "6_digit_code": "Code à 6 chiffres",
-      "code": "Code",
       "description": "Veuillez saisir le code à 6 chiffres envoyé à : <em>%(email)s</em>",
       "headline": "Vérifiez votre adresse e-mail"
     }

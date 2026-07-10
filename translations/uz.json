@@ -5,8 +5,7 @@
     "continue": "Davom etish",
     "create_account": "Ro'yxatdan o'tish",
     "sign_in": "Kirish",
-    "sign_out": "Chiqish",
-    "submit": "Yuborish"
+    "sign_out": "Chiqish"
   },
   "app": {
     "human_name": "Matrix Authentication Service",
@@ -36,10 +35,6 @@
     "unexpected": "Kutilmagan xato"
   },
   "mas": {
-    "add_email": {
-      "description": "Agar hisobingizga kira olmasangiz, uni tiklash uchun email manzilini kiriting.",
-      "heading": "Email manzilini qo‘shish"
-    },
     "back_to_homepage": "Bosh sahifaga qaytish",
     "captcha": {
       "noscript": "Bu shakl CAPTCHA bilan himoyalangan va uni yuborish uchun JavaScript yoqilishi kerak. Brauzeringizda JavaScript’ni yoqing va bu sahifani qayta yuklang."
@@ -48,20 +43,11 @@
       "change": "Parolni o‘zgartirish",
       "confirm": "Parolni tasdiqlash",
       "current": "Joriy parol",
-      "description": "Bunda hisobingizdagi parol o‘zgaradi.",
       "heading": "Parolni o‘zgartirish",
       "new": "Yangi parol"
     },
-    "consent": {
-      "client_wants_access": "<span>%(client_name)s</span> da <span>%(redirect_uri)s</span> hisobingizga kirmoqchi.",
-      "heading": "Hisobingizga kirishga ruxsat berilsinmi?",
-      "make_sure_you_trust": "<span>%(client_name)s</span>ga ishonch hosil qiling.",
-      "this_will_allow": "Bu <span>%(client_name)s</span>ga quyidagilarga ruxsat beradi:",
-      "you_may_be_sharing": "Bu sayt yoki ilovaga maxfiy axborotlarni ulashayotgan bo‘lishingiz mumkin."
-    },
     "device_card": {
       "access_requested": "Ruxsat so‘raldi",
-      "device_code": "Kod",
       "generic_device": "Qurilma",
       "ip_address": "IP manzili"
     },
@@ -70,7 +56,6 @@
       "headline": "Qurilmangizda chiqqan kodni kiriting"
     },
     "device_consent": {
-      "another_device_access": "Boshqa qurilma hisobingizga kirishni xohlamoqda.",
       "denied": {
         "description": "Siz %(client_name)s uchun ruxsatni rad etdingiz. Bu oynani yopishingiz mumkin.",
         "heading": "Ruxsat berilmadi"
@@ -108,8 +93,7 @@
         "description": "<span class=\"break-keep text-links\">%(provider)s</span> hisobingiz ulanmoqda",
         "headline": "Havola uchun tizimga kiring"
       },
-      "no_login_methods": "Kirish usullari mavjud emas.",
-      "separator": "Yoki"
+      "no_login_methods": "Kirish usullari mavjud emas."
     },
     "navbar": {
       "my_account": "Mening hisobim",
@@ -145,7 +129,6 @@
         "description": "Davom etish uchun foydalanuvchi nomini tanlang.",
         "heading": "Hisob yaratish"
       },
-      "sign_in_instead": "Buning o‘rniga tizimga kiring",
       "terms_of_service": "Men roziman <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Foydalanish shartlari</a>"
     },
     "scope": {
@@ -160,10 +143,6 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "Bu yuqori oqim hisobi allaqachon boshqa hisobga ulangan."
-      },
-      "login_link": {
-        "action": "Davom etish",
-        "heading": "Mavjud hisobingizga havola"
       },
       "register": {
         "choose_username": {
@@ -192,7 +171,6 @@
     },
     "verify_email": {
       "6_digit_code": "6 xonali kod",
-      "code": "Kod",
       "description": "Yuborilgan 6 xonali kodni kiriting: <em>%(email)s</em>",
       "headline": "Elektron pochtangizni tasdiqlang"
     }

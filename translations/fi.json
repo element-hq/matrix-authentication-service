@@ -7,8 +7,7 @@
     "sign_in": "Kirjaudu sisään",
     "sign_out": "Kirjaudu ulos",
     "skip": "Ohita",
-    "start_over": "Aloita alusta",
-    "submit": "Lähetä"
+    "start_over": "Aloita alusta"
   },
   "app": {
     "human_name": "Matrix Authentication Service",
@@ -52,10 +51,6 @@
         "heading": "Istunto lopetettu"
       }
     },
-    "add_email": {
-      "description": "Kirjoita sähköpostiosoite, jotta voit palauttaa tilisi, jos menetät pääsysi siihen.",
-      "heading": "Lisää sähköpostiosoite"
-    },
     "back_to_homepage": "Palaa etusivulle",
     "captcha": {
       "noscript": "Tämä lomake on suojattu CAPTCHA:lla, ja sen lähettäminen edellyttää JavaScriptin käyttöönottoa. Ota JavaScript käyttöön selaimessasi ja lataa tämä sivu uudelleen."
@@ -64,7 +59,6 @@
       "change": "Vaihda salasana",
       "confirm": "Vahvista salasana",
       "current": "Nykyinen salasana",
-      "description": "Tämä vaihtaa tilisi salasanan.",
       "heading": "Vaihda salasanani",
       "new": "Uusi salasana"
     },
@@ -73,19 +67,13 @@
       "headline": "Valitse näyttönimesi"
     },
     "consent": {
-      "client_wants_access": "<span>%(client_name)s</span> osoitteessa <span>%(redirect_uri)s</span> haluaa päästä tilillesi.",
       "continue_to": "Jatketaanko <span>%(client_name)s</span> -sovellukseen?",
-      "heading": "Sallitaanko pääsy tilillesi?",
-      "make_sure_you_trust": "Varmista, että luotat <span>%(client_name)s</span> -sovellukseen.",
       "scope_list_preface": "Jatkamalla annat <span>%(client_name)s</span> -sovellukselle luvan:",
-      "this_will_allow": "Tämä antaa <span>%(client_name)s</span> -sovellukselle luvan:",
       "this_will_setup": "Tämä yhdistää %(client_name)s (<span>%(client_uri)s</span>) sovelluksen <span>%(server_name)s</span> tiliisi.",
-      "use_another_account": "Käytä toista tiliä",
-      "you_may_be_sharing": "Saatat jakaa arkaluonteisia tietoja tämän sivuston tai sovelluksen kanssa."
+      "use_another_account": "Käytä toista tiliä"
     },
     "device_card": {
       "access_requested": "Pääsyä pyydetty",
-      "device_code": "Koodi",
       "generic_device": "Laite",
       "ip_address": "IP-osoite",
       "security_code": "Turvakoodi"
@@ -96,19 +84,17 @@
       "verification_code": "Vahvistuskoodi"
     },
     "device_consent": {
-      "another_device_access": "Toinen laite haluaa päästä tilillesi.",
       "confirm_device": "Kyllä, vahvistan, että tämä on minun laitteeni ja haluan kirjautua sillä sisään.",
       "denied": {
         "description": "Kielsit pääsyn %(client_name)s -sovellukselta. Voit sulkea tämän ikkunan.",
         "heading": "Pääsy kielletty"
       },
-      "description": "<strong>Toinen laite</strong> haluaa yhdistää %(client_name)s (<span>%(client_uri)s</span>) sovelluksen <span>%(server_name)s</span> tiliisi. Varmista, että tunnistat kyseisen laitteen.",
+      "description": "<strong>Toinen laite</strong> haluaa yhdistää %(client_name)s sovelluksen <span>%(server_name)s</span> tiliisi. Varmista, että tunnistat kyseisen laitteen.",
       "grant_access": "Salli pääsyoikeus",
       "granted": {
         "description": "Annoit pääsyn %(client_name)s -sovellukselle. Voit sulkea tämän ikkunan.",
         "heading": "Pääsy myönnetty"
       },
-      "this_will_setup": "Toinen laite haluaa yhdistää %(client_name)s (<span>%(client_uri)s</span>) sovelluksen <span>%(server_name)s</span> tiliisi. Varmista, että tunnistat kyseisen laitteen.",
       "title": "Annetaanko pääsy tilillesi?",
       "warning": {
         "description": "Oletko varma, että tämä on sinun laitteesi? Ylläpitäjät tai IT-tuki eivät koskaan pyytäisi sinua hyväksymään tätä.",
@@ -174,7 +160,6 @@
         "headline": "Kirjaudu sisään yhdistääksesi tilit"
       },
       "no_login_methods": "Kirjautumistapoja ei ole käytettävissä.",
-      "separator": "Tai",
       "username_or_email": "Käyttäjänimi tai Sähköpostiosoite"
     },
     "navbar": {
@@ -238,7 +223,6 @@
         "description": "Valitse käyttäjänimi jatkaaksesi.",
         "heading": "Luo tili"
       },
-      "sign_in_instead": "Kirjaudu sisään sen sijaan",
       "terms_of_service": "Hyväksyn <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Käyttöehdot</a>"
     },
     "registration_token": {
@@ -258,11 +242,6 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "Tämä tili on jo yhdistetty toiseen tiliin."
-      },
-      "login_link": {
-        "action": "Jatka",
-        "description": "Tälle käyttäjänimelle (%(username)s) on jo olemassa tili, joka yhdistetään tähän tiliin.",
-        "heading": "Yhdistä olemassa olevaan tiliisi"
       },
       "register": {
         "choose_username": {
@@ -296,7 +275,6 @@
     },
     "verify_email": {
       "6_digit_code": "6-numeroinen koodi",
-      "code": "Koodi",
       "description": "Syötä 6-numeroinen koodi, joka lähetettiin osoitteeseen: <em>%(email)s</em>",
       "headline": "Vahvista sähköpostiosoitteesi"
     }

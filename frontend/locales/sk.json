@@ -25,9 +25,7 @@
     }
   },
   "common": {
-    "add": "Pridať",
     "e2ee": "End-to-end encryption",
-    "error": "Chyba",
     "loading": "Načítavanie…",
     "next": "Ďalej",
     "password": "Heslo",
@@ -69,34 +67,16 @@
       "title": "Your account"
     },
     "add_email_form": {
-      "email_denied_alert": {
-        "text": "The entered email is not allowed by the server policy.",
-        "title": "Email denied by policy"
-      },
       "email_denied_error": "The entered email is not allowed by the server policy",
-      "email_exists_alert": {
-        "text": "The entered email is already added to this account",
-        "title": "Email already exists"
-      },
-      "email_exists_error": "The entered email is already added to this account",
       "email_field_help": "Add an alternative email you can use to access this account.",
       "email_field_label": "Add email",
       "email_in_use_error": "The entered email is already in use",
-      "email_invalid_alert": {
-        "text": "The entered email is invalid",
-        "title": "Invalid email"
-      },
       "email_invalid_error": "The entered email is invalid",
       "incorrect_password_error": "Incorrect password, please try again",
       "password_confirmation": "Confirm your account password to add this email address"
     },
-    "app_sessions_list": {
-      "error": "Failed to load app sessions",
-      "heading": "Apps"
-    },
     "browser_session_details": {
-      "current_badge": "Current",
-      "session_details_title": "Session"
+      "current_badge": "Current"
     },
     "browser_sessions_overview": {
       "body:one": "{{count}} active session",
@@ -110,16 +90,13 @@
     },
     "compat_session_detail": {
       "client_details_title": "Client info",
-      "name": "Názov",
-      "session_details_title": "Session"
+      "name": "Názov"
     },
     "device_type_icon_label": {
-      "desktop": "Desktop",
       "mobile": "Mobile",
       "pc": "Computer",
       "tablet": "Tablet",
-      "unknown": "Unknown device type",
-      "web": "Web"
+      "unknown": "Unknown device type"
     },
     "email_in_use": {
       "heading": "The email address {{email}} is already in use."
@@ -135,7 +112,6 @@
       "subtitle": "An unexpected error occurred. Please try again.",
       "title": "Something went wrong"
     },
-    "error_boundary_title": "Something went wrong",
     "errors": {
       "field_required": "Toto pole je povinné",
       "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again."
@@ -149,23 +125,18 @@
       "device_limit_error": "Device limit reached",
       "devices": "Devices",
       "plan": "Plan",
-      "profile": "Profil",
-      "sessions": "Relácie",
       "settings": "Settings"
     },
     "not_found_alert_title": "Not found.",
-    "not_logged_in_alert": "You're not logged in.",
     "oauth2_client_detail": {
       "details_title": "Client info",
-      "id": "Client ID",
       "name": "Názov",
       "policy": "Policy",
       "terms": "Terms of service"
     },
     "oauth2_session_detail": {
       "client_details_name": "Názov",
-      "client_title": "Client info",
-      "session_details_title": "Session"
+      "client_title": "Client info"
     },
     "pagination_controls": {
       "total": "Total: {{totalCount}}"
@@ -256,7 +227,6 @@
       }
     },
     "reset_cross_signing": {
-      "button": "Reset identity",
       "cancelled": {
         "description_1": "You can close this window and go back to the app to continue.",
         "description_2": "If don’t have access to any other verified devices and you don’t have your recovery key, then you’ll need to reset your digital identity to continue using the app.",
@@ -264,42 +234,31 @@
       },
       "description": "If don’t have access to any other verified devices and you don’t have your recovery key, then you’ll need to reset your digital identity to continue using the app.",
       "effect_list": {
-        "negative_1": "You will lose your existing message history",
-        "negative_2": "You will need to verify all your existing devices and contacts again",
         "neutral_1": "You will lose any message history that's stored only on the server",
         "neutral_2": "You will need to verify all your existing devices and contacts again",
         "positive_1": "Your account details, contacts, preferences, and chat list will be kept"
       },
       "failure": {
         "description": "This might be a temporary problem, so please try again later. If the problem persists, please contact your server administrator.",
-        "heading": "Failed to allow digital identity reset",
-        "title": "Failed to allow crypto identity"
+        "heading": "Failed to allow digital identity reset"
       },
       "finish_reset": "Finish reset",
       "heading": "Reset your digital identity in case you can't confirm another way",
       "start_reset": "Start reset",
       "success": {
         "description": "The digital identity reset has been approved for the next {{minutes}} minutes. You can close this window and go back to the app to continue.",
-        "heading": "Digital identity reset successfully. Go back to the app to finish the process.",
-        "title": "Crypto identity reset temporarily allowed"
+        "heading": "Digital identity reset successfully. Go back to the app to finish the process."
       },
       "warning": "Only reset your digital identity if you don't have access to another verified device and you don't have your recovery key."
-    },
-    "selectable_session": {
-      "label": "Select session"
     },
     "session": {
       "client_id_label": "Client ID",
       "current": "Current",
-      "current_badge": "Current",
       "device_id_label": "Device ID",
-      "finished_date": "Finished <datetime/>",
       "finished_label": "Finished",
       "generic_browser_session": "Browser session",
-      "id_label": "ID",
       "ip_label": "IP Address",
       "last_active_label": "Last Active",
-      "last_auth_label": "Last Authentication",
       "name_for_platform": "{{name}} for {{platform}}",
       "scopes_label": "Scopes",
       "set_device_name": {
@@ -307,14 +266,11 @@
         "label": "Device name",
         "title": "Edit device name"
       },
-      "signed_in_date": "Signed in <datetime/>",
       "signed_in_label": "Signed in",
       "title": "Device details",
       "unknown_browser": "Unknown browser",
       "unknown_device": "Unknown device",
-      "uri_label": "Uri",
-      "user_id_label": "User ID",
-      "username_label": "User name"
+      "uri_label": "Uri"
     },
     "session_detail": {
       "alert": {
@@ -323,15 +279,7 @@
         "title": "Cannot find session: {{deviceId}}"
       }
     },
-    "unknown_route": "Unknown route {{route}}",
-    "unverified_email_alert": {
-      "button": "Review and verify",
-      "text:one": "You have {{count}} unverified email address.",
-      "text:other": "You have {{count}} unverified email addresses.",
-      "title": "Unverified email"
-    },
     "user_email": {
-      "cant_delete_primary": "Choose a different primary email to delete this one.",
       "delete_button_confirmation_modal": {
         "action": "Delete email",
         "body": "Delete this email?",
@@ -339,26 +287,9 @@
         "password_confirmation": "Confirm your account password to delete this email address"
       },
       "delete_button_title": "Remove email address",
-      "email": "Email",
-      "make_primary_button": "Make primary",
-      "not_verified": "Not verified",
-      "primary_email": "Primary email",
-      "retry_button": "Resend code",
-      "unverified": "Neoverené"
-    },
-    "user_email_list": {
-      "heading": "Emails",
-      "no_primary_email_alert": "No primary email address"
-    },
-    "user_greeting": {
-      "error": "Failed to load user"
-    },
-    "user_name": {
-      "display_name_field_label": "Zobrazované meno"
+      "email": "Email"
     },
     "user_sessions_overview": {
-      "active_sessions:one": "{{count}} active session",
-      "active_sessions:other": "{{count}} active sessions",
       "approaching_session_limit_warning_description:one": "You've used {{num_sessions}} of {{count}} device slot. Once you reach your limit, you'll need to remove an existing device to add another.",
       "approaching_session_limit_warning_description:other": "You've used {{num_sessions}} of {{count}} device slots. Once you reach your limit, you'll need to remove an existing device to add another.",
       "approaching_session_limit_warning_header": "Heads up, you're close to your device limit",
@@ -399,10 +330,7 @@
         "description": "Check the code sent to your email and update the fields below to continue.",
         "title": "You entered the wrong code"
       },
-      "resend_code": "Resend code",
-      "resend_email": "Resend email",
-      "sent": "Sent!",
-      "unknown_email": "Unknown email"
+      "resend_code": "Resend code"
     }
   },
   "mas": {

@@ -7,8 +7,7 @@
     "sign_in": "Logg inn",
     "sign_out": "Logg ut",
     "skip": "Hopp over",
-    "start_over": "Begynn på nytt",
-    "submit": "Send"
+    "start_over": "Begynn på nytt"
   },
   "app": {
     "human_name": "Matrix Authentication Service",
@@ -52,10 +51,6 @@
         "heading": "Sesjonen er avsluttet"
       }
     },
-    "add_email": {
-      "description": "Skriv inn en e-postadresse for å gjenopprette kontoen din i tilfelle du mister tilgangen til den.",
-      "heading": "Legg til en e-postadresse"
-    },
     "back_to_homepage": "Gå tilbake til hjemmesiden",
     "captcha": {
       "noscript": "Dette skjemaet er beskyttet av en CAPTCHA og krever at JavaScript er aktivert for å kunne sendes inn. Aktiver JavaScript i nettleseren din og last inn denne siden på nytt."
@@ -64,7 +59,6 @@
       "change": "Endre passord",
       "confirm": "Bekreft passord",
       "current": "Nåværende passord",
-      "description": "Dette vil endre passordet på kontoen din.",
       "heading": "Endre passordet mitt",
       "new": "Nytt passord"
     },
@@ -73,19 +67,13 @@
       "headline": "Velg visningsnavnet ditt"
     },
     "consent": {
-      "client_wants_access": "<span>%(client_name)s</span> på <span>%(redirect_uri)s</span> ønsker å få tilgang til kontoen din.",
       "continue_to": "Fortsett til <span>%(client_name)s</span>?",
-      "heading": "Vil du gi tilgang til kontoen din?",
-      "make_sure_you_trust": "Vær sikker på at du stoler på <span>%(client_name)s</span>.",
       "scope_list_preface": "Ved å fortsette gir du <span>%(client_name)s</span> tillatelse til å:",
-      "this_will_allow": "Dette vil tillate <span> %(client_name)s </span> å:",
       "this_will_setup": "Dette vil konfigurere %(client_name)s (<span>%(client_uri)s</span>) med din %(server_name)s<span></span> -konto.",
-      "use_another_account": "Bruk en annen konto",
-      "you_may_be_sharing": "Det kan hende du deler sensitiv informasjon med denne siden eller appen."
+      "use_another_account": "Bruk en annen konto"
     },
     "device_card": {
       "access_requested": "Tilgang forespurt",
-      "device_code": "Kode",
       "generic_device": "Enhet",
       "ip_address": "IP adresse"
     },
@@ -94,7 +82,6 @@
       "headline": "Skriv inn koden som vises på enheten din"
     },
     "device_consent": {
-      "another_device_access": "En annen enhet vil ha tilgang til kontoen din.",
       "denied": {
         "description": "Du nektet tilgang til %(client_name)s. Du kan lukke dette vinduet.",
         "heading": "Tilgang nektet"
@@ -102,8 +89,7 @@
       "granted": {
         "description": "Du har gitt tilgang til %(client_name)s. Du kan lukke dette vinduet.",
         "heading": "Tilgang gitt"
-      },
-      "this_will_setup": "En annen enhet ønsker å konfigurere %(client_name)s (<span>%(client_uri)s</span>) med din %(server_name)s<span></span> -konto. Forsikre deg om at du kjenner igjen denne enheteten."
+      }
     },
     "device_display_name": {
       "client_on_device": "%(client_name)s på %(device_name)s",
@@ -164,7 +150,6 @@
         "headline": "Logg inn for å koble"
       },
       "no_login_methods": "Ingen påloggingsmetoder tilgjengelig.",
-      "separator": "Eller",
       "username_or_email": "Brukernavn eller e-postadresse"
     },
     "navbar": {
@@ -223,7 +208,6 @@
         "description": "Velg et brukernavn for å fortsette.",
         "heading": "Opprett en konto"
       },
-      "sign_in_instead": "Logg på i stedet",
       "terms_of_service": "Jeg godtar <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">vilkårene og betingelsene</a>"
     },
     "registration_token": {
@@ -243,11 +227,6 @@
     "upstream_oauth2": {
       "link_mismatch": {
         "heading": "Denne oppstrømskontoen er allerede knyttet til en annen konto."
-      },
-      "login_link": {
-        "action": "Fortsett",
-        "description": "Det finnes en konto for dette brukernavnet (%(username)s). Den vil bli lenket til denne oppstrømskontoen.",
-        "heading": "Koble til din eksisterende konto"
       },
       "register": {
         "choose_username": {
@@ -281,7 +260,6 @@
     },
     "verify_email": {
       "6_digit_code": "6-sifret kode",
-      "code": "Kode",
       "description": "Skriv inn den 6-sifrede koden sendt til: <em>%(email)s</em>",
       "headline": "Bekreft e-postadressen din"
     }
