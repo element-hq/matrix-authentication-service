@@ -979,6 +979,16 @@
             "socket": {
               "description": "Path to the socket",
               "type": "string"
+            },
+            "mode": {
+              "description": "Permissions to use for the socket. Defaults to the process's umask.",
+              "type": [
+                "string",
+                "null"
+              ],
+              "examples": [
+                "600"
+              ]
             }
           },
           "required": [

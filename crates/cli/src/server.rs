@@ -7,7 +7,7 @@
 
 use std::{
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, TcpListener, ToSocketAddrs},
-    os::unix::net::UnixListener,
+    os::unix::{fs::PermissionsExt as _, net::UnixListener},
     time::Duration,
 };
 
@@ -16,6 +16,7 @@ use axum::{
     Extension, Router,
     extract::{FromRef, MatchedPath},
 };
+use camino::Utf8PathBuf;
 use headers::{CacheControl, HeaderMapExt as _, UserAgent};
 use hyper::{Method, Request, Response, StatusCode, Version, header::USER_AGENT};
 use listenfd::ListenFd;
@@ -419,6 +420,27 @@ pub fn build_tls_server_config(config: &HttpTlsConfig) -> Result<ServerConfig, a
     Ok(config)
 }
 
+/// Utility for removing a file on drop.
+struct RemoveOnDrop<'a>(Option<&'a Utf8PathBuf>);
+
+impl Drop for RemoveOnDrop<'_> {
+    fn drop(&mut self) {
+        if let Some(path) = self.0 {
+            std::fs::remove_file(path).ok();
+        }
+    }
+}
+
+impl<'a> RemoveOnDrop<'a> {
+    fn new(path: &'a Utf8PathBuf) -> Self {
+        Self(Some(path))
+    }
+
+    fn disarm(mut self) {
+        self.0 = None;
+    }
+}
+
 pub fn build_listeners(
     fd_manager: &mut ListenFd,
     configs: &[HttpBindConfig],
@@ -454,9 +476,37 @@ pub fn build_listeners(
                 listener.try_into()?
             }
 
-            HttpBindConfig::Unix { socket } => {
-                let listener = UnixListener::bind(socket).context("could not bind socket")?;
-                listener.try_into()?
+            HttpBindConfig::Unix { socket, mode } => {
+                let permissions = mode
+                    .as_deref()
+                    .map(|mode| u32::from_str_radix(mode, 8))
+                    .transpose()?
+                    .map(std::fs::Permissions::from_mode);
+
+                // We first bind to a temporary socket, then rename it to the desired path.
+                // This lets us replace an existing socket (binding on an existing socket
+                // doesn't work) and change the permissions of the socket before it being
+                // available.
+                let pid = std::process::id();
+                let tmp_socket = Utf8PathBuf::from(format!("{socket}.{pid}.tmp"));
+
+                // Delete the temporary socket on drop, to avoid leaving it around if we fail.
+                let guard = RemoveOnDrop::new(&tmp_socket);
+
+                let listener = UnixListener::bind(&tmp_socket).context("could not bind socket")?;
+                let listener = listener.try_into()?;
+
+                if let Some(permissions) = permissions {
+                    std::fs::set_permissions(&tmp_socket, permissions)
+                        .context("could not set socket permissions")?;
+                }
+
+                std::fs::rename(&tmp_socket, socket).context("could not rename socket")?;
+
+                // We've successfully set the socket up, we can disarm the guard now.
+                guard.disarm();
+
+                listener
             }
 
             HttpBindConfig::FileDescriptor {
