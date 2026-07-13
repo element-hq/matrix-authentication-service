@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 
@@ -21,7 +22,7 @@ Please see LICENSE files in the repository root for full details.
         <div class="header">
           <h1 class="title">{{ _("mas.login.link.headline") }}</h1>
           {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
-          <p class="text">{{ _("mas.login.link.description", provider=name) }}</p>
+          <p class="text">{{ _("mas.login.link.description", provider=name, html=true) }}</p>
         </div>
       {% else %}
         <div class="header">

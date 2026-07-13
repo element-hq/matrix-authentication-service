@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 
@@ -40,7 +41,7 @@ Please see LICENSE files in the repository root for full details.
         </h1>
 
         <p class="text [&>span]:whitespace-nowrap [&>span]:text-[var(--cpd-color-text-link-external)]">
-          {{ _("mas.device_consent.description", client_name=client_display_name, server_name=branding.server_name) }}
+          {{ _("mas.device_consent.description", client_name=client_display_name, server_name=branding.server_name, html=true) }}
         </p>
       </div>
 
@@ -135,7 +136,7 @@ Please see LICENSE files in the repository root for full details.
       {% if scopes is not empty %}
         <section class="flex flex-col gap-3">
           <p class="text-center cpd-text-body-md-regular">
-            {{ _('mas.consent.scope_list_preface', client_name=client_display_name) }}
+            {{ _('mas.consent.scope_list_preface', client_name=client_display_name, html=true) }}
           </p>
           <div class="consent-scope-list">
             {{ scope.list(scopes=scopes) }}

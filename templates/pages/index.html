@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 
@@ -14,14 +15,14 @@ Please see LICENSE files in the repository root for full details.
       <div class="header">
         <h1 class="title">{{ _("app.human_name") }}</h1>
         <p class="text">
-          {{ _("app.technical_description", discovery_url=discovery_url) }}
+          {{ _("app.technical_description", discovery_url=discovery_url, html=true) }}
         </p>
       </div>
     </header>
 
     {% if current_session is not none %}
       <p class="cpd-text-body-md-regular">
-        {{ _("mas.navbar.signed_in_as", username=current_session.user.username) }}
+        {{ _("mas.navbar.signed_in_as", username=current_session.user.username, html=true) }}
       </p>
 
       {{ button.link(text=_("mas.navbar.my_account"), href="/account/") }}

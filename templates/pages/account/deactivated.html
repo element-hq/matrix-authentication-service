@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2025 New Vector Ltd.
 
 SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -17,7 +18,7 @@ Please see LICENSE files in the repository root for full details.
       <div class="header">
         <h1 class="title">{{ _("mas.account.deactivated.heading") }}</h1>
         {% set mxid = "@" + user.username + ":" + branding.server_name %}
-        <p class="text">{{ _("mas.account.deactivated.description", mxid=mxid) }}</p>
+        <p class="text">{{ _("mas.account.deactivated.description", mxid=mxid, html=true) }}</p>
       </div>
 
       {{ logout.button(text=_("action.sign_in"), csrf_token=csrf_token) }}
