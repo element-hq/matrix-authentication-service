@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -291,8 +291,13 @@ impl Object for TranslateFunc {
                 ))?
         };
 
+        // Whether the translation is trusted to contain HTML markup
+        let html = kwargs.get::<Option<bool>>("html")?.unwrap_or(false);
+
         let res: Result<ArgumentList, Error> = kwargs
             .args()
+            // `html` is a control flag, not a message argument
+            .filter(|name| *name != "html")
             .map(|name| {
                 let value: Value = kwargs.get(name)?;
                 let value = serde_json::to_value(value).map_err(|e| {
@@ -309,6 +314,14 @@ impl Object for TranslateFunc {
             Error::new(ErrorKind::InvalidOperation, "Could not format message").with_source(e)
         })?;
 
+        if !html {
+            // Return a plain value, letting auto-escape escape the whole
+            // message at output time
+            return Ok(Value::from(formatted.to_string()));
+        }
+
+        // The literal text is trusted markup; only the placeholders are
+        // escaped, and the result is marked safe
         let mut buf = String::with_capacity(formatted.len());
         let mut output = make_string_output(&mut buf);
         for part in formatted.parts() {
@@ -640,5 +653,89 @@ impl Object for Counter {
                 "Invalid method on counter",
             )),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use mas_i18n::{Translator, translations::TranslationTree};
+
+    use super::*;
+
+    /// Build a `MiniJinja` environment with the translation function registered
+    /// against a small in-memory set of English messages.
+    fn environment() -> minijinja::Environment<'static> {
+        let en: TranslationTree = serde_json::from_value(serde_json::json!({
+            "plain": "Hello %(name)s!",
+            "markup": "Hello <strong>%(name)s</strong>!",
+            "uses_html": "value=%(html)s",
+        }))
+        .unwrap();
+
+        let mut translations = HashMap::new();
+        translations.insert("en".parse().unwrap(), en);
+        let translator = Arc::new(Translator::new(translations));
+
+        let mut env = minijinja::Environment::new();
+        let url_builder = UrlBuilder::new("https://example.com/".parse().unwrap(), None, None);
+        register(&mut env, url_builder, None, translator);
+        env
+    }
+
+    /// Render `source` under the given template name; `MiniJinja`'s
+    /// auto-escaping mode keys off its extension
+    fn render_as(name: &'static str, source: &str) -> Result<String, Error> {
+        let mut env = environment();
+        env.add_template_owned(name, source.to_owned())?;
+        env.get_template(name)?.render(minijinja::context! {})
+    }
+
+    fn render(source: &str) -> Result<String, Error> {
+        render_as("test.html", source)
+    }
+
+    #[test]
+    fn test_escaped_by_default() {
+        // Fully escaped by auto-escape, and *not* double-escaped (which would
+        // yield `&amp;lt;`)
+        let rendered =
+            render(r#"{% set _ = translator("en") %}{{ _("plain", name="<b>\"x\"</b>") }}"#)
+                .unwrap();
+        assert_eq!(rendered, "Hello &lt;b&gt;&quot;x&quot;&lt;&#x2f;b&gt;!");
+    }
+
+    #[test]
+    fn test_html_true_preserves_markup() {
+        // The literal markup is preserved, the placeholder value is escaped
+        let rendered =
+            render(r#"{% set _ = translator("en") %}{{ _("markup", name="<b>&", html=true) }}"#)
+                .unwrap();
+        assert_eq!(rendered, "Hello <strong>&lt;b&gt;&amp;</strong>!");
+    }
+
+    #[test]
+    fn test_not_escaped_in_text_templates() {
+        // With auto-escape off (`.txt` templates, email bodies/subjects), the
+        // default path emits the message untouched
+        let rendered = render_as(
+            "test.txt",
+            r#"{% set _ = translator("en") %}{{ _("plain", name="<b>&") }}"#,
+        )
+        .unwrap();
+        assert_eq!(rendered, "Hello <b>&!");
+    }
+
+    #[test]
+    fn test_html_kwarg_is_not_a_message_argument() {
+        // A message referencing `%(html)s` fails to format, as the kwarg is
+        // consumed by the function and not forwarded as an argument
+        let res = render(r#"{% set _ = translator("en") %}{{ _("uses_html", html=true) }}"#);
+        assert!(res.is_err());
+
+        // ... but it doesn't disturb the other arguments
+        let rendered =
+            render(r#"{% set _ = translator("en") %}{{ _("plain", name="World", html=true) }}"#)
+                .unwrap();
+        assert_eq!(rendered, "Hello World!");
     }
 }

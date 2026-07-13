@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -584,7 +585,9 @@ mod tests {
         let response = state.request(request).await;
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
-        assert!(response.body().contains("Password fields don't match"));
+        // The apostrophe in the translated message is escaped by MiniJinja's
+        // HTML auto-escaping
+        assert!(response.body().contains("Password fields don&#x27;t match"));
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
