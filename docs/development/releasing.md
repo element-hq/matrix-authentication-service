@@ -2,6 +2,31 @@
 
 MAS follows the same release cadence as Synapse, meaning usually one full release cycle every two weeks, with one week of release candidates.
 
+## Full release process
+
+ - Start a new release cycle:
+   1. Run the [`translations-download` workflow] on the main branch.
+   1. Wait for the [translation download PR] to be automatically merged.
+   1. Run the [`release-branch` workflow] on the main branch.
+   1. Wait for [CI to churn] and the [draft release to appear]. This takes about 30 minutes.
+   1. Double-check the changelog on the draft release.
+   1. Check the "Set as pre-release" checkbox, and publish the release.
+   1. Delete the N-2 release branch on [Localazy](https://localazy.com/console/branching), meaning that once the 0.16 release cycle begins, the 0.14 release branch will be deleted.
+ - Create new release candidates if needed:
+   1. Run the `translations-download` workflow on the release branch.
+   1. Wait for the [translation download PR] to be automatically merged.
+   1. Run the [`release-bump` workflow] on the release branch, with the `rc` input **checked**.
+   1. Wait for [CI to churn] and the [draft release to appear]. This takes about 30 minutes.
+   1. Double-check the changelog on the draft release.
+   1. Check the "Set as pre-release" checkbox and publish the release.
+ - Create a new stable release:
+   1. Run the [`translations-download` workflow] on the release branch
+   1. Wait for the [translation download PR] to be automatically merged
+   1. Run the [`release-bump` workflow] on the release branch, with the `rc` input **unchecked**.
+   1. Wait for [CI to churn] and the [draft release to appear]. This takes about 30 minutes.
+   1. Double-check the changelog on the draft release.
+   1. Check the "Set as latest release" checkbox and publish the release.
+
 ## GitHub Action workflows
 
 There are four main GitHub Action workflows involved in releasing MAS:
@@ -87,31 +112,6 @@ They are calculated based on the previous release. For release candidates, this 
 
 Releases are manually undrafted when the release is ready to be published.
 At this point, the releaser should check the changelog and ensure the "Set as pre-release" and "Set as latest release" checkboxes are checked as appropriate.
-
-## Full release process
-
- - Start a new release cycle:
-   1. Run the [`translations-download` workflow] on the main branch.
-   1. Wait for the [translation download PR] to be automatically merged.
-   1. Run the [`release-branch` workflow] on the main branch.
-   1. Wait for [CI to churn] and the [draft release to appear]. This takes about 30 minutes.
-   1. Double-check the changelog on the draft release.
-   1. Check the "Set as pre-release" checkbox, and publish the release.
-   1. Delete the N-2 release branch on [Localazy](https://localazy.com/console/branching), meaning that once the 0.16 release cycle begins, the 0.14 release branch will be deleted.
- - Create new release candidates if needed:
-   1. Run the `translations-download` workflow on the release branch.
-   1. Wait for the [translation download PR] to be automatically merged.
-   1. Run the [`release-bump` workflow] on the release branch, with the `rc` input **checked**.
-   1. Wait for [CI to churn] and the [draft release to appear]. This takes about 30 minutes.
-   1. Double-check the changelog on the draft release.
-   1. Check the "Set as pre-release" checkbox and publish the release.
- - Create a new stable release:
-   1. Run the [`translations-download` workflow] on the release branch
-   1. Wait for the [translation download PR] to be automatically merged
-   1. Run the [`release-bump` workflow] on the release branch, with the `rc` input **unchecked**.
-   1. Wait for [CI to churn] and the [draft release to appear]. This takes about 30 minutes.
-   1. Double-check the changelog on the draft release.
-   1. Check the "Set as latest release" checkbox and publish the release.
 
 [Localazy]: https://localazy.com/p/matrix-authentication-service
 [`translations-download` workflow]: https://github.com/element-hq/matrix-authentication-service/actions/workflows/translations-download.yaml
