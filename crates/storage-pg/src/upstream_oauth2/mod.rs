@@ -131,7 +131,13 @@ mod tests {
         // Create a link
         let link = repo
             .upstream_oauth_link()
-            .add(&mut rng, &clock, &provider, "a-subject".to_owned(), None)
+            .add(
+                &mut rng,
+                &clock,
+                &provider,
+                "a-subject".to_owned(),
+                Some("alice@example.com".to_owned()),
+            )
             .await
             .unwrap();
 
@@ -219,6 +225,40 @@ mod tests {
         assert_eq!(links.edges[0].node.user_id, Some(user.id));
 
         assert_eq!(repo.upstream_oauth_link().count(filter).await.unwrap(), 1);
+
+        // Filtering on a case-insensitive partial human_account_name should match
+        let matching_filter = UpstreamOAuthLinkFilter::new().matching_human_account_name("LICE");
+        let links = repo
+            .upstream_oauth_link()
+            .list(matching_filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert_eq!(links.edges.len(), 1);
+        assert_eq!(links.edges[0].node.id, link.id);
+        assert_eq!(
+            repo.upstream_oauth_link()
+                .count(matching_filter)
+                .await
+                .unwrap(),
+            1
+        );
+
+        // A non-matching human_account_name should return nothing
+        let non_matching_filter =
+            UpstreamOAuthLinkFilter::new().matching_human_account_name("nope");
+        let links = repo
+            .upstream_oauth_link()
+            .list(non_matching_filter, Pagination::first(10))
+            .await
+            .unwrap();
+        assert_eq!(links.edges.len(), 0);
+        assert_eq!(
+            repo.upstream_oauth_link()
+                .count(non_matching_filter)
+                .await
+                .unwrap(),
+            0
+        );
 
         // There should be exactly one enabled provider
         assert_eq!(
