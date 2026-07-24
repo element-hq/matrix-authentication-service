@@ -416,6 +416,7 @@ pub async fn config_sync(
 
             let client_secret = client.client_secret().await?;
             let client_name = client.client_name.as_ref();
+            let client_uri = client.client_uri.as_ref();
             let client_auth_method = client.client_auth_method();
             let jwks = client.jwks.as_ref();
             let jwks_uri = client.jwks_uri.as_ref();
@@ -429,6 +430,7 @@ pub async fn config_sync(
                 .upsert_static(
                     client.client_id,
                     client_name.cloned(),
+                    client_uri.cloned(),
                     client_auth_method,
                     encrypted_client_secret,
                     jwks.cloned(),
