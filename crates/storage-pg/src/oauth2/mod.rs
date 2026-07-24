@@ -1282,6 +1282,7 @@ mod tests {
             .upsert_static(
                 static_id,
                 Some("Static client".to_owned()),
+                None,
                 OAuthClientAuthenticationMethod::None,
                 None,
                 None,
