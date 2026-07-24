@@ -629,6 +629,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
         &mut self,
         client_id: Ulid,
         client_name: Option<String>,
+        client_uri: Option<Url>,
         client_auth_method: OAuthClientAuthenticationMethod,
         encrypted_client_secret: Option<String>,
         jwks: Option<PublicJsonWebKeySet>,
@@ -657,11 +658,12 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                     , token_endpoint_auth_method
                     , jwks
                     , client_name
+                    , client_uri
                     , jwks_uri
                     , is_static
                     )
                 VALUES
-                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, TRUE)
+                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, TRUE)
                 ON CONFLICT (oauth2_client_id)
                 DO
                     UPDATE SET encrypted_client_secret = EXCLUDED.encrypted_client_secret
@@ -673,6 +675,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                              , token_endpoint_auth_method = EXCLUDED.token_endpoint_auth_method
                              , jwks = EXCLUDED.jwks
                              , client_name = EXCLUDED.client_name
+                             , client_uri = EXCLUDED.client_uri
                              , jwks_uri = EXCLUDED.jwks_uri
                              , is_static = TRUE
             "#,
@@ -686,6 +689,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
             client_auth_method,
             jwks_json,
             client_name,
+            client_uri.as_ref().map(Url::as_str),
             jwks_uri.as_ref().map(Url::as_str),
         )
         .traced()
