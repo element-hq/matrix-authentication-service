@@ -59,7 +59,7 @@ pub async fn password_manager_from_config(
     PasswordManager::new(config.minimum_complexity(), schemes)
 }
 
-pub fn mailer_from_config(
+pub async fn mailer_from_config(
     config: &EmailConfig,
     templates: &Templates,
 ) -> Result<Mailer, anyhow::Error> {
@@ -83,10 +83,15 @@ pub fn mailer_from_config(
                 .mode()
                 .context("invalid email configuration: missing mode")?;
 
-            let credentials = match (config.username(), config.password()) {
+            let password = config
+                .password()
+                .await
+                .context("invalid email configuration: unable to read password file")?;
+
+            let credentials = match (config.username(), password) {
                 (Some(username), Some(password)) => Some(mas_email::SmtpCredentials::new(
                     username.to_owned(),
-                    password.to_owned(),
+                    password.clone(),
                 )),
                 (None, None) => None,
                 _ => {
@@ -287,7 +292,7 @@ pub async fn templates_from_config(
     .with_context(|| format!("Failed to load the templates at {}", config.path))
 }
 
-fn database_connect_options_from_config(
+async fn database_connect_options_from_config(
     config: &DatabaseConfig,
     opts: &DatabaseConnectOptions,
 ) -> Result<PgConnectOptions, anyhow::Error> {
@@ -315,6 +320,15 @@ fn database_connect_options_from_config(
 
         if let Some(password) = config.password.as_deref() {
             opts = opts.password(password);
+        }
+
+        if let Some(password_file) = config.password_file.as_deref() {
+            opts = opts.password(
+                tokio::fs::read_to_string(password_file)
+                    .await
+                    .context("could not read database password file")?
+                    .trim(),
+            );
         }
 
         if let Some(database) = config.database.as_deref() {
@@ -386,7 +400,8 @@ fn database_connect_options_from_config(
 /// Create a database connection pool from the configuration
 #[tracing::instrument(name = "db.connect", skip_all)]
 pub async fn database_pool_from_config(config: &DatabaseConfig) -> Result<PgPool, anyhow::Error> {
-    let options = database_connect_options_from_config(config, &DatabaseConnectOptions::default())?;
+    let options =
+        database_connect_options_from_config(config, &DatabaseConnectOptions::default()).await?;
     PgPoolOptions::new()
         .max_connections(config.max_connections.into())
         .min_connections(config.min_connections)
@@ -424,7 +439,8 @@ impl Default for DatabaseConnectOptions {
 pub async fn database_connection_from_config(
     config: &DatabaseConfig,
 ) -> Result<PgConnection, anyhow::Error> {
-    database_connect_options_from_config(config, &DatabaseConnectOptions::default())?
+    database_connect_options_from_config(config, &DatabaseConnectOptions::default())
+        .await?
         .connect()
         .await
         .context("could not connect to the database")
@@ -437,7 +453,8 @@ pub async fn database_connection_from_config_with_options(
     config: &DatabaseConfig,
     options: &DatabaseConnectOptions,
 ) -> Result<PgConnection, anyhow::Error> {
-    database_connect_options_from_config(config, options)?
+    database_connect_options_from_config(config, options)
+        .await?
         .connect()
         .await
         .context("could not connect to the database")
