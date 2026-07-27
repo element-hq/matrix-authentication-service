@@ -351,8 +351,6 @@ jobs:
             --partition count:${{ matrix.partition }}/3
 
   ess:
-    if: "${{ !failure() && !cancelled() }}"
-    needs: [rustfmt, opa-lint, compile-test-artifacts]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
