@@ -7,7 +7,7 @@
 
 import { screen } from "@testing-library/react";
 import { HttpResponse } from "msw";
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { FRAGMENT as BROWSER_SESSIONS_FRAGMENT } from "../../../src/components/UserSessionsOverview/BrowserSessionsOverview";
 import { makeFragmentData } from "../../../src/gql";
 import {
@@ -17,6 +17,15 @@ import {
 import { renderPage, server } from "../render";
 
 describe("Account sessions page", () => {
+  // The mocked sessions were last active on 2026-04-23; freeze time shortly
+  // after so they don't cross the 90-day inactivity threshold as time passes
+  beforeAll(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-05-01T00:00:00Z"));
+  });
+
+  afterAll(() => vi.useRealTimers());
+
   it("renders the page", async () => {
     const { asFragment } = await renderPage("/sessions");
     expect(asFragment()).toMatchSnapshot();
