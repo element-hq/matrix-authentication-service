@@ -744,8 +744,10 @@ version = "1.8.2"
 version = "3.1.0"
 
 [profile.release]
-codegen-units = 1 # Reduce the number of codegen units to increase optimizations
-lto = true        # Enable fat LTO
+# This is not the most performant build we could possibly do, but other
+# optimisations like `codegen-units = 1` and fat LTO are quite expensive on
+# compilation time, with relatively modest advantages over just thin LTO
+lto = "thin"
 
 # A few profile opt-level tweaks to make the test suite run faster
 [profile.dev.package]
