@@ -488,7 +488,7 @@ pub fn build_listeners(
                 // doesn't work) and change the permissions of the socket before it being
                 // available.
                 let pid = std::process::id();
-                let tmp_socket = Utf8PathBuf::from(format!("{socket}.{pid}.tmp"));
+                let tmp_socket = socket.with_added_extension(format!("{pid}.tmp"));
 
                 // Delete the temporary socket on drop, to avoid leaving it around if we fail.
                 let guard = RemoveOnDrop::new(&tmp_socket);
