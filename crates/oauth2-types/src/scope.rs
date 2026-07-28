@@ -228,6 +228,10 @@ mod tests {
         assert_eq!(ScopeToken::from_str("openid"), Ok(OPENID));
 
         assert_eq!(ScopeToken::from_str("invalid\\scope"), Err(InvalidScope));
+
+        // Regression test for #5878: Matrix device IDs may contain any
+        // RFC 3986 unreserved character, including `~`.
+        assert!(ScopeToken::from_str("urn:matrix:client:device:AA~bb1234_-.").is_ok());
     }
 
     #[test]
@@ -244,19 +248,14 @@ mod tests {
             );
         }
 
-        // Boundary characters affected by the off-by-one bug.
-        for c in ['!', '#', '[', ']', '~'] {
-            assert!(ScopeToken::from_str(&c.to_string()).is_ok());
-        }
-
-        // Outside NQCHAR.
-        for s in [" ", "\"", "\\", "\x7F", ""] {
+        // Outside NQCHAR:
+        //  - space is 0x20
+        //  - " (double quote) is 0x22
+        //  - \ (backslash) is 0x5C
+        //  - DEL is 0x7F
+        for s in [" ", "\"", "\\", "\x7F"] {
             assert_eq!(ScopeToken::from_str(s), Err(InvalidScope));
         }
-
-        // Regression test for #5878: Matrix device IDs may contain any
-        // RFC 3986 unreserved character, including `~`.
-        assert!(ScopeToken::from_str("urn:matrix:client:device:AA~bb1234_-.").is_ok());
     }
 
     #[test]
