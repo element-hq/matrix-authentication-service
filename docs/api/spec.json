@@ -4325,6 +4325,16 @@
               "type": "string"
             },
             "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[human-account-name]",
+            "description": "Retrieve the items with a human account name matching the given\nsubstring (case-insensitive)",
+            "schema": {
+              "description": "Retrieve the items with a human account name matching the given\nsubstring (case-insensitive)",
+              "type": "string"
+            },
+            "style": "form"
           }
         ],
         "responses": {
@@ -7448,6 +7458,13 @@
           },
           "filter[subject]": {
             "description": "Retrieve the items with the given subject",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "filter[human-account-name]": {
+            "description": "Retrieve the items with a human account name matching the given\nsubstring (case-insensitive)",
             "type": [
               "string",
               "null"
