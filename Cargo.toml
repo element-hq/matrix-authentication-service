@@ -746,7 +746,9 @@ version = "3.1.0"
 [profile.release]
 # This is not the most performant build we could possibly do, but other
 # optimisations like `codegen-units = 1` and fat LTO are quite expensive on
-# compilation time, with relatively modest advantages over just thin LTO
+# compilation time, with relatively modest perf advantages over just thin LTO
+# (we saw 3-5% perf difference) and we'd rather optimize for compilation time
+# at the moment.
 lto = "thin"
 
 # A few profile opt-level tweaks to make the test suite run faster
