@@ -111,6 +111,11 @@ pub enum BindConfig {
         /// Path to the socket
         #[schemars(with = "String")]
         socket: Utf8PathBuf,
+
+        /// Permissions to use for the socket. Defaults to the process's umask.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[schemars(example = &"600")]
+        mode: Option<String>,
     },
 
     /// Accept connections on file descriptors passed by the parent process.
