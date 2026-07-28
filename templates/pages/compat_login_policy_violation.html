@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2025 New Vector Ltd.
 
 SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -19,7 +20,7 @@ Please see LICENSE files in the repository root for full details.
     {% if is_too_many_sessions %}
       <div class="header" data-testid="device-limit-reached">
         <h1 class="title">{{ _("mas.policy_violation.too_many_sessions.heading") }}</h1>
-        <p class="text">{{ _("mas.policy_violation.too_many_sessions.description", num_devices_to_remove=num_sessions_need_to_remove) }}</p>
+        <p class="text">{{ _("mas.policy_violation.too_many_sessions.description", num_devices_to_remove=num_sessions_need_to_remove, html=true) }}</p>
       </div>
     {% else %}
       <div class="header" data-testid="generic-policy-violation">
@@ -32,7 +33,7 @@ Please see LICENSE files in the repository root for full details.
   <main class="flex flex-col gap-10">
     <div class="flex gap-1 justify-center items-center">
       <p class="cpd-text-secondary cpd-text-body-md-regular">
-        {{ _("mas.policy_violation.logged_as", username=current_session.user.username) }}
+        {{ _("mas.policy_violation.logged_as", username=current_session.user.username, html=true) }}
       </p>
 
       {{ logout.button(text=_("action.sign_out"), csrf_token=csrf_token, post_logout_action=action, as_link=True) }}

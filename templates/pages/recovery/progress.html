@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2024 The Matrix.org Foundation C.I.C.
 
@@ -16,7 +17,7 @@ Please see LICENSE files in the repository root for full details.
 
     <div class="header">
       <h1 class="title">{{ _("mas.recovery.progress.heading") }}</h1>
-      <p class="text [&>span]:font-medium">{{ _("mas.recovery.progress.description", email=session.email) }}</p>
+      <p class="text [&>span]:font-medium">{{ _("mas.recovery.progress.description", email=session.email, html=true) }}</p>
     </div>
   </header>
 

@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 
@@ -16,4 +17,4 @@ Please see LICENSE files in the repository root for full details.
 
 {{ _("mas.emails.greeting", username=(username|default("user"))) }}<br />
 <br />
-{{ _("mas.emails.verify.body_html", code=authentication_code.code) }}<br />
+{{ _("mas.emails.verify.body_html", code=authentication_code.code, html=true) }}<br />
