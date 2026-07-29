@@ -115,7 +115,8 @@ upstream_oauth2:
         prompt: "{% if logged_out %}login{% endif %}"
 ```
 
-`logged_out` is `true` only for a browser that has signed out and has not signed back in — a fresh browser, or one with an active session (such as during account linking), renders the template to an empty string, so no `prompt` parameter is forwarded in that case.
+`logged_out` is `true` only for a browser that has signed out and has not signed back in.
+A fresh browser, or one with an active session (such as during account linking), renders the template to an empty string, so no `prompt` parameter is forwarded in that case.
 
 > ⚠️ Providers differ in which `prompt` values they support. Keycloak, for instance, only honours `prompt=login`, not `prompt=select_account`. Check your provider's documentation.
 
