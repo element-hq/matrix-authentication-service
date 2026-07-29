@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -21,7 +22,7 @@ use mas_axum_utils::{
 use mas_data_model::{BoxClock, BoxRng, MatrixUser};
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
-use mas_router::UrlBuilder;
+use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::BoxRepository;
 use mas_templates::{DeviceConsentContext, PolicyViolationContext, TemplateContext, Templates};
 use serde::Deserialize;
@@ -71,7 +72,13 @@ pub(crate) async fn get(
         )));
     }
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
-        cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
+        cookie_jar,
+        &clock,
+        &mut rng,
+        &templates,
+        &locale,
+        Some(PostAuthAction::continue_device_code_grant(grant_id)),
+        &mut repo,
     )
     .await?
     {
@@ -217,7 +224,13 @@ pub(crate) async fn post(
     }
     let form = cookie_jar.verify_form(&clock, form)?;
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
-        cookie_jar, &clock, &mut rng, &templates, &locale, &mut repo,
+        cookie_jar,
+        &clock,
+        &mut rng,
+        &templates,
+        &locale,
+        Some(PostAuthAction::continue_device_code_grant(grant_id)),
+        &mut repo,
     )
     .await?
     {
