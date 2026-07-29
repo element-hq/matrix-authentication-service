@@ -81,7 +81,7 @@ pub(crate) async fn get(
     let (session_info, cookie_jar) = cookie_jar.session_info();
     let logged_out = session_info
         .logged_out_at()
-        .is_some_and(|t| t.signed_duration_since(clock.now()) < Duration::minutes(5));
+        .is_some_and(|t| clock.now().signed_duration_since(t) < Duration::minutes(5));
 
     let provider = repo
         .upstream_oauth_provider()
@@ -231,6 +231,7 @@ fn render_additional_authorization_parameters<'a>(
 mod tests {
     use std::collections::BTreeMap;
 
+    use chrono::Duration;
     use hyper::{Request, StatusCode, header::LOCATION};
     use mas_data_model::{
         Clock, UlidExt, UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
@@ -527,6 +528,18 @@ mod tests {
         assert!(
             location(&response).contains("prompt=login"),
             "expected prompt=login after logout: {}",
+            location(&response)
+        );
+
+        // Wait a few minutes, past the 5min threshold: we shouldn't see `prompt=login`.
+        state.clock.advance(Duration::minutes(6));
+
+        let request = cookies.with_cookies(Request::get(authorize.as_str()).empty());
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::TEMPORARY_REDIRECT);
+        assert!(
+            !location(&response).contains("prompt="),
+            "unexpected prompt parameter long after logout: {}",
             location(&response)
         );
     }
