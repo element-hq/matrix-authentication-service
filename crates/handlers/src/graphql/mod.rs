@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -429,7 +429,7 @@ pub async fn post(
     let mut response = schema.execute(request).instrument(span).await;
 
     if has_session_ended(&mut response) {
-        let session_info = session_info.mark_session_ended();
+        let session_info = session_info.mark_session_ended(clock.now());
         cookie_jar = cookie_jar.update_session_info(&session_info);
     }
 
@@ -486,7 +486,7 @@ pub async fn get(
     let mut response = schema.execute(request).instrument(span).await;
 
     if has_session_ended(&mut response) {
-        let session_info = session_info.mark_session_ended();
+        let session_info = session_info.mark_session_ended(clock.now());
         cookie_jar = cookie_jar.update_session_info(&session_info);
     }
 

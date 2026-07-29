@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -11,8 +12,9 @@ use axum::{
     response::{IntoResponse, Redirect},
 };
 use axum_extra::extract::Query;
+use chrono::Duration;
 use hyper::StatusCode;
-use mas_axum_utils::{GenericError, InternalError, cookies::CookieJar};
+use mas_axum_utils::{GenericError, InternalError, SessionInfoExt, cookies::CookieJar};
 use mas_data_model::{BoxClock, BoxRng, UpstreamOAuthProvider};
 use mas_oidc_client::requests::authorization_code::AuthorizationRequestData;
 use mas_router::{PostAuthAction, UrlBuilder};
@@ -71,6 +73,16 @@ pub(crate) async fn get(
     Path(provider_id): Path<Ulid>,
     Query(query): Query<OptionalPostAuthAction>,
 ) -> Result<impl IntoResponse, RouteError> {
+    // Load the session info from the cookie jar. We use this to know whether
+    // the browser recently signed out, which we expose to the
+    // `additional_authorization_parameters` templates as `logged_out` so that
+    // operators can force a fresh prompt at the upstream provider. We consider
+    // that we were logged out recently if we logged out within the last 5 minutes.
+    let (session_info, cookie_jar) = cookie_jar.session_info();
+    let logged_out = session_info
+        .logged_out_at()
+        .is_some_and(|t| clock.now().signed_duration_since(t) < Duration::minutes(5));
+
     let provider = repo
         .upstream_oauth_provider()
         .lookup(provider_id)
@@ -151,6 +163,7 @@ pub(crate) async fn get(
             provider.id,
             &provider.additional_authorization_parameters,
             &raw_parameters,
+            logged_out,
         ) {
             pairs.append_pair(key, value.as_str());
         }
@@ -180,13 +193,18 @@ pub(crate) async fn get(
 /// Render each `additional_authorization_parameters` template against
 /// the raw downstream query parameters, dropping templates that render
 /// to empty strings, and logging-and-skipping any that fail to render.
+///
+/// `logged_out` indicates whether the browser recently signed out (and has no
+/// active session), and is exposed to the templates as the `logged_out`
+/// variable.
 fn render_additional_authorization_parameters<'a>(
     provider_id: Ulid,
     templates: &'a [(String, String)],
     raw_parameters: &BTreeMap<String, String>,
+    logged_out: bool,
 ) -> impl Iterator<Item = (&'a str, String)> {
     let env = environment();
-    let ctx = context! { params => raw_parameters };
+    let ctx = context! { params => raw_parameters, logged_out => logged_out };
 
     templates.iter().filter_map(move |(key, template)| {
         match env.render_str(template, &ctx).map(|v| v.trim().to_owned()) {
@@ -213,9 +231,23 @@ fn render_additional_authorization_parameters<'a>(
 mod tests {
     use std::collections::BTreeMap;
 
+    use chrono::Duration;
+    use hyper::{Request, StatusCode, header::LOCATION};
+    use mas_data_model::{
+        Clock, UlidExt, UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
+        UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderPkceMode,
+        UpstreamOAuthProviderTokenAuthMethod,
+    };
+    use mas_iana::jose::JsonWebSignatureAlg;
+    use mas_router::{Route, SimpleRoute};
+    use mas_storage::{RepositoryAccess, upstream_oauth2::UpstreamOAuthProviderParams};
+    use oauth2_types::scope::{OPENID, Scope};
+    use sqlx::PgPool;
     use ulid::Ulid;
+    use zeroize::Zeroizing;
 
     use super::render_additional_authorization_parameters;
+    use crate::test_utils::{CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup};
 
     fn params(entries: &[(&str, &str)]) -> BTreeMap<String, String> {
         entries
@@ -227,9 +259,13 @@ mod tests {
     #[test]
     fn renders_static_values_unchanged() {
         let templates = [("kc_idp_hint".to_owned(), "saml".to_owned())];
-        let rendered =
-            render_additional_authorization_parameters(Ulid::nil(), &templates, &params(&[]))
-                .collect::<Vec<_>>();
+        let rendered = render_additional_authorization_parameters(
+            Ulid::nil(),
+            &templates,
+            &params(&[]),
+            false,
+        )
+        .collect::<Vec<_>>();
         assert_eq!(rendered, vec![("kc_idp_hint", "saml".to_owned())]);
     }
 
@@ -249,6 +285,7 @@ mod tests {
             Ulid::nil(),
             &templates,
             &params(&[("login_hint", "alice"), ("acr_values", "mfa")]),
+            false,
         )
         .collect::<Vec<_>>();
         assert_eq!(
@@ -269,9 +306,13 @@ mod tests {
             ),
             ("kc_idp_hint".to_owned(), "saml".to_owned()),
         ];
-        let rendered =
-            render_additional_authorization_parameters(Ulid::nil(), &templates, &params(&[]))
-                .collect::<Vec<_>>();
+        let rendered = render_additional_authorization_parameters(
+            Ulid::nil(),
+            &templates,
+            &params(&[]),
+            false,
+        )
+        .collect::<Vec<_>>();
         assert_eq!(rendered, vec![("kc_idp_hint", "saml".to_owned())]);
     }
 
@@ -281,9 +322,303 @@ mod tests {
             ("broken".to_owned(), "{{ params. }}".to_owned()),
             ("kc_idp_hint".to_owned(), "saml".to_owned()),
         ];
-        let rendered =
-            render_additional_authorization_parameters(Ulid::nil(), &templates, &params(&[]))
-                .collect::<Vec<_>>();
+        let rendered = render_additional_authorization_parameters(
+            Ulid::nil(),
+            &templates,
+            &params(&[]),
+            false,
+        )
+        .collect::<Vec<_>>();
         assert_eq!(rendered, vec![("kc_idp_hint", "saml".to_owned())]);
+    }
+
+    #[test]
+    fn renders_prompt_login_when_logged_out() {
+        let templates = [(
+            "prompt".to_owned(),
+            "{% if logged_out %}login{% endif %}".to_owned(),
+        )];
+        let rendered =
+            render_additional_authorization_parameters(Ulid::nil(), &templates, &params(&[]), true)
+                .collect::<Vec<_>>();
+        assert_eq!(rendered, vec![("prompt", "login".to_owned())]);
+    }
+
+    #[test]
+    fn drops_prompt_when_not_logged_out() {
+        let templates = [(
+            "prompt".to_owned(),
+            "{% if logged_out %}login{% endif %}".to_owned(),
+        )];
+        let rendered = render_additional_authorization_parameters(
+            Ulid::nil(),
+            &templates,
+            &params(&[]),
+            false,
+        )
+        .collect::<Vec<_>>();
+        assert!(rendered.is_empty());
+    }
+
+    /// Create an upstream provider that forwards `prompt=login` only when the
+    /// browser is logged out, using discovery disabled + an authorization
+    /// endpoint override so the handler makes no network calls.
+    async fn provider_with_logout_prompt(state: &TestState) -> Ulid {
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+        // Use `upsert` (not `add`) because only `upsert` persists
+        // `additional_authorization_parameters` — which is what config sync
+        // uses in production.
+        let id = Ulid::from_datetime_with_rng(state.clock.now(), &mut rng);
+        let provider = repo
+            .upstream_oauth_provider()
+            .upsert(
+                &state.clock,
+                id,
+                UpstreamOAuthProviderParams {
+                    issuer: Some("https://upstream.example.com/".to_owned()),
+                    human_name: Some("Upstream Ltd.".to_owned()),
+                    brand_name: None,
+                    scope: Scope::from_iter([OPENID]),
+                    token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
+                    token_endpoint_signing_alg: None,
+                    id_token_signed_response_alg: JsonWebSignatureAlg::Rs256,
+                    client_id: "client".to_owned(),
+                    encrypted_client_secret: None,
+                    claims_imports: UpstreamOAuthProviderClaimsImports::default(),
+                    authorization_endpoint_override: Some(
+                        "https://upstream.example.com/authorize".parse().unwrap(),
+                    ),
+                    token_endpoint_override: None,
+                    userinfo_endpoint_override: None,
+                    fetch_userinfo: false,
+                    userinfo_signed_response_alg: None,
+                    jwks_uri_override: None,
+                    discovery_mode: UpstreamOAuthProviderDiscoveryMode::Disabled,
+                    pkce_mode: UpstreamOAuthProviderPkceMode::Disabled,
+                    response_mode: None,
+                    additional_authorization_parameters: vec![(
+                        "prompt".to_owned(),
+                        "{% if logged_out %}login{% endif %}".to_owned(),
+                    )],
+                    forward_login_hint: false,
+                    ui_order: 0,
+                    on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    registration_token_required: false,
+                },
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+        provider.id
+    }
+
+    async fn user_with_password(state: &TestState, username: &str, password: &str) {
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+        let user = repo
+            .user()
+            .add(&mut rng, &state.clock, username.to_owned())
+            .await
+            .unwrap();
+        let (version, hash) = state
+            .password_manager
+            .hash(&mut rng, Zeroizing::new(password.to_owned()))
+            .await
+            .unwrap();
+        repo.user_password()
+            .add(&mut rng, &state.clock, &user, version, hash, None)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+    }
+
+    fn location(response: &hyper::Response<String>) -> String {
+        response
+            .headers()
+            .get(LOCATION)
+            .expect("missing Location header")
+            .to_str()
+            .unwrap()
+            .to_owned()
+    }
+
+    /// End-to-end: after signing out, the upstream authorize redirect should
+    /// carry `prompt=login`, while a browser that never signed out should not.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_prompt_login_after_logout(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let provider_id = provider_with_logout_prompt(&state).await;
+        user_with_password(&state, "john", "hunter2").await;
+
+        let authorize = mas_router::UpstreamOAuth2Authorize::new(provider_id)
+            .path_and_query()
+            .into_owned();
+
+        // A brand-new browser (never logged out) should not get a `prompt`
+        // parameter, because the `logged_out` template renders empty.
+        let fresh = CookieHelper::new();
+        let request = fresh.with_cookies(Request::get(authorize.as_str()).empty());
+        let response = state.request(request).await;
+        fresh.save_cookies(&response);
+        response.assert_status(StatusCode::TEMPORARY_REDIRECT);
+        assert!(
+            !location(&response).contains("prompt="),
+            "unexpected prompt parameter: {}",
+            location(&response)
+        );
+
+        // Now log a user in, then sign out, reusing a single cookie jar.
+        let cookies = CookieHelper::new();
+
+        // Render the login page to obtain a CSRF token + cookie.
+        let request = cookies.with_cookies(Request::get("/login").empty());
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        let csrf_token = response
+            .body()
+            .split("name=\"csrf\" value=\"")
+            .nth(1)
+            .unwrap()
+            .split('\"')
+            .next()
+            .unwrap()
+            .to_owned();
+
+        // Submit the login form.
+        let request = cookies.with_cookies(Request::post("/login").form(serde_json::json!({
+            "csrf": csrf_token,
+            "username": "john",
+            "password": "hunter2",
+        })));
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        // While logged in, going through the authorize handler must NOT set
+        // `prompt=login` — the browser has an active session.
+        let request = cookies.with_cookies(Request::get(authorize.as_str()).empty());
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::TEMPORARY_REDIRECT);
+        assert!(
+            !location(&response).contains("prompt="),
+            "unexpected prompt parameter while logged in: {}",
+            location(&response)
+        );
+
+        // Sign out (the CSRF cookie is still valid within the fixed test clock).
+        let request = cookies.with_cookies(Request::post(mas_router::Logout::PATH).form(
+            serde_json::json!({
+                "csrf": csrf_token,
+            }),
+        ));
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        // Now the authorize redirect should carry `prompt=login`.
+        let request = cookies.with_cookies(Request::get(authorize.as_str()).empty());
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::TEMPORARY_REDIRECT);
+        assert!(
+            location(&response).contains("prompt=login"),
+            "expected prompt=login after logout: {}",
+            location(&response)
+        );
+
+        // Wait a few minutes, past the 5min threshold: we shouldn't see `prompt=login`.
+        state.clock.advance(Duration::minutes(6));
+
+        let request = cookies.with_cookies(Request::get(authorize.as_str()).empty());
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::TEMPORARY_REDIRECT);
+        assert!(
+            !location(&response).contains("prompt="),
+            "unexpected prompt parameter long after logout: {}",
+            location(&response)
+        );
+    }
+
+    /// Same as above, but the sign-out happens through the GraphQL
+    /// `endBrowserSession` mutation on the current session.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_prompt_login_after_graphql_logout(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let provider_id = provider_with_logout_prompt(&state).await;
+        user_with_password(&state, "john", "hunter2").await;
+
+        let authorize = mas_router::UpstreamOAuth2Authorize::new(provider_id)
+            .path_and_query()
+            .into_owned();
+        let cookies = CookieHelper::new();
+
+        // Log in via the password flow to establish a browser session cookie.
+        let request = cookies.with_cookies(Request::get("/login").empty());
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        let csrf_token = response
+            .body()
+            .split("name=\"csrf\" value=\"")
+            .nth(1)
+            .unwrap()
+            .split('\"')
+            .next()
+            .unwrap()
+            .to_owned();
+        let request = cookies.with_cookies(Request::post("/login").form(serde_json::json!({
+            "csrf": csrf_token,
+            "username": "john",
+            "password": "hunter2",
+        })));
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        // Find the current browser session's GraphQL ID.
+        let request = cookies.with_cookies(Request::post("/graphql").json(serde_json::json!({
+            "query": "query { viewerSession { ... on BrowserSession { id } } }",
+        })));
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        let session_id = body["data"]["viewerSession"]["id"]
+            .as_str()
+            .expect("missing viewer session id")
+            .to_owned();
+
+        // End the current browser session, which makes the GraphQL HTTP layer
+        // clear (and mark logged-out) the session cookie.
+        let request = cookies.with_cookies(Request::post("/graphql").json(serde_json::json!({
+            "query": "mutation($id: ID!) { endBrowserSession(input: { browserSessionId: $id }) { status } }",
+            "variables": { "id": session_id },
+        })));
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_eq!(
+            body["data"]["endBrowserSession"]["status"].as_str(),
+            Some("ENDED"),
+            "{body:?}"
+        );
+
+        // The authorize redirect should now carry `prompt=login`.
+        let request = cookies.with_cookies(Request::get(authorize.as_str()).empty());
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::TEMPORARY_REDIRECT);
+        assert!(
+            location(&response).contains("prompt=login"),
+            "expected prompt=login after GraphQL logout: {}",
+            location(&response)
+        );
     }
 }
