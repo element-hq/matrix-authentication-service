@@ -41,7 +41,7 @@
     },
     "name": "matrix-authentication-service",
     "@name": {
-      "context": "app.html:17:14-27, base.html:24:31-44",
+      "context": "app.html:18:14-27, base.html:24:31-44",
       "description": "Name of the application"
     },
     "technical_description": "OpenID Connect discovery document: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>",
