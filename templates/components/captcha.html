@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2024 The Matrix.org Foundation C.I.C.
 
@@ -14,28 +15,7 @@ Please see LICENSE files in the repository root for full details.
       </div>
     </noscript>
 
-    {%- if captcha_config.service == "recaptcha_v2" -%}
-      <div class="g-recaptcha {{ class }}" data-sitekey="{{ captcha_config.site_key }}"></div>
-    {%- elif captcha_config.service == "cloudflare_turnstile" -%}
-      <div class="cf-turnstile {{ class }}" data-sitekey="{{ captcha_config.site_key }}"></div>
-    {%- elif captcha_config.service == "hcaptcha" -%}
-      <div class="h-captcha {{ class }}" data-sitekey="{{ captcha_config.site_key }}"></div>
-    {%- else -%}
-      {{ throw(message="Invalid captcha service setup") }}
-    {%- endif %}
+    {{ include_asset('src/entrypoints/captcha.tsx') }}
+    <div class="{{ class }}" data-captcha-service="{{ captcha_config.service }}" data-captcha-site-key="{{ captcha_config.site_key }}"></div>
   {%- endif -%}
 {% endmacro %}
-
-{% macro head() -%}
-  {%- if captcha_config|default(False) -%}
-    {%- if captcha_config.service == "recaptcha_v2" -%}
-      <script src="https://www.recaptcha.net/recaptcha/api.js" async defer></script>
-    {%- elif captcha_config.service == "cloudflare_turnstile" -%}
-      <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    {%- elif captcha_config.service == "hcaptcha" -%}
-      <script src="https://js.hcaptcha.com/1/api.js?recaptchacompat=off" async defer></script>
-    {%- else -%}
-      {{ throw(message="Invalid captcha service setup") }}
-    {%- endif %}
-  {%- endif -%}
-{%- endmacro %}
