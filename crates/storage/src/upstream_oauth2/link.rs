@@ -6,6 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 use mas_data_model::{Clock, UpstreamOAuthLink, UpstreamOAuthProvider, User};
 use rand_core::RngCore;
 use ulid::Ulid;
@@ -241,6 +242,16 @@ pub trait UpstreamOAuthLinkRepository: Send + Sync {
         until: Ulid,
         limit: usize,
     ) -> Result<(usize, Option<Ulid>), Self::Error>;
+
+    /// Delete upstream OAuth links belonging to users deactivated before
+    /// `deactivated_before`, up to `limit` rows.
+    ///
+    /// Returns the number of links deleted.
+    async fn cleanup_deactivated(
+        &mut self,
+        deactivated_before: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<usize, Self::Error>;
 }
 
 repository_impl!(UpstreamOAuthLinkRepository:
@@ -283,4 +294,10 @@ repository_impl!(UpstreamOAuthLinkRepository:
         until: Ulid,
         limit: usize,
     ) -> Result<(usize, Option<Ulid>), Self::Error>;
+
+    async fn cleanup_deactivated(
+        &mut self,
+        deactivated_before: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<usize, Self::Error>;
 );
