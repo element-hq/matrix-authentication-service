@@ -530,6 +530,6 @@ impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
         .execute(&mut *self.conn)
         .await?;
 
-        Ok(res.rows_affected() as usize)
+        Ok(usize::try_from(res.rows_affected()).unwrap_or(usize::MAX))
     }
 }
