@@ -234,6 +234,6 @@ impl RunnableJob for CleanupDeactivatedUsersJob {
     }
 
     fn timeout(&self) -> Option<Duration> {
-        Some(Duration::from_secs(10 * 60))
+        Some(Duration::from_mins(10))
     }
 }
