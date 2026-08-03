@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -678,11 +678,17 @@ pub struct Provider {
     /// Additional parameters to include in the authorization request.
     ///
     /// Each value is a [`MiniJinja`] template. The template context
-    /// exposes a `params` map containing the raw query parameters from
-    /// the downstream authorization request. The map is empty when the
-    /// upstream login was not initiated by a downstream OAuth/OIDC
-    /// authorization request (e.g. account linking, direct login from
-    /// the login page).
+    /// exposes:
+    ///
+    /// - `params`: a map containing the raw query parameters from the
+    ///   downstream authorization request. The map is empty when the upstream
+    ///   login was not initiated by a downstream OAuth/OIDC authorization
+    ///   request (e.g. account linking, direct login from the login page).
+    /// - `logged_out`: a boolean that is `true` when the browser recently
+    ///   signed out of MAS and has no active session. This lets you force a
+    ///   fresh prompt at the upstream provider after sign-out — otherwise a
+    ///   provider that still has a live session would silently sign the user
+    ///   back in.
     ///
     /// [`MiniJinja`]: https://docs.rs/minijinja
     ///
@@ -701,6 +707,9 @@ pub struct Provider {
     ///   login_hint: "{{ params.login_hint }}"
     ///   acr_values: "{{ params.acr_values }}"
     ///   kc_idp_hint: "saml"
+    ///   # Force re-authentication at the upstream provider after sign-out.
+    ///   # Keycloak only supports `prompt=login`, not `prompt=select_account`.
+    ///   prompt: "{% if logged_out %}login{% endif %}"
     /// ```
     ///
     /// `params` exposes the entire raw query string of the downstream

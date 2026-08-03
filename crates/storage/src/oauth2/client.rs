@@ -260,6 +260,8 @@ pub trait OAuth2ClientRepository: Send + Sync {
     /// # Parameters
     ///
     /// * `client_id`: The client ID
+    /// * `client_name`: Name of the `OAuth2` client
+    /// * `client_uri`: User-facing information about the client
     /// * `client_auth_method`: The authentication method this client uses
     /// * `encrypted_client_secret`: The encrypted client secret, if any
     /// * `jwks`: The client JWKS, if any
@@ -274,6 +276,7 @@ pub trait OAuth2ClientRepository: Send + Sync {
         &mut self,
         client_id: Ulid,
         client_name: Option<String>,
+        client_uri: Option<Url>,
         client_auth_method: OAuthClientAuthenticationMethod,
         encrypted_client_secret: Option<String>,
         jwks: Option<PublicJsonWebKeySet>,
@@ -382,6 +385,7 @@ repository_impl!(OAuth2ClientRepository:
         &mut self,
         client_id: Ulid,
         client_name: Option<String>,
+        client_uri: Option<Url>,
         client_auth_method: OAuthClientAuthenticationMethod,
         encrypted_client_secret: Option<String>,
         jwks: Option<PublicJsonWebKeySet>,

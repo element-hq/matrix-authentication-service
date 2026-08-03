@@ -15,7 +15,9 @@ use mas_storage::{
 };
 use opentelemetry_semantic_conventions::trace::DB_QUERY_TEXT;
 use rand::RngCore;
-use sea_query::{Expr, ExprTrait, PostgresQueryBuilder, Query, enum_def};
+use sea_query::{
+    Expr, ExprTrait, PostgresQueryBuilder, Query, enum_def, extension::postgres::PgExpr as _,
+};
 use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
 use tracing::Instrument;
@@ -113,6 +115,13 @@ impl Filter for UpstreamOAuthLinkFilter<'_> {
             }))
             .add_option(self.subject().map(|subject| {
                 Expr::col((UpstreamOAuthLinks::Table, UpstreamOAuthLinks::Subject)).eq(subject)
+            }))
+            .add_option(self.human_account_name().map(|human_account_name| {
+                Expr::col((
+                    UpstreamOAuthLinks::Table,
+                    UpstreamOAuthLinks::HumanAccountName,
+                ))
+                .ilike(format!("%{human_account_name}%"))
             }))
     }
 }

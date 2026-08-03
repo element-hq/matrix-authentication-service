@@ -21,6 +21,7 @@ pub struct UpstreamOAuthLinkFilter<'a> {
     provider: Option<&'a UpstreamOAuthProvider>,
     provider_enabled: Option<bool>,
     subject: Option<&'a str>,
+    human_account_name: Option<&'a str>,
 }
 
 impl<'a> UpstreamOAuthLinkFilter<'a> {
@@ -91,6 +92,22 @@ impl<'a> UpstreamOAuthLinkFilter<'a> {
     #[must_use]
     pub const fn subject(&self) -> Option<&str> {
         self.subject
+    }
+
+    /// Only return links whose `human_account_name` matches the given substring
+    /// (case-insensitive)
+    #[must_use]
+    pub fn matching_human_account_name(mut self, human_account_name: &'a str) -> Self {
+        self.human_account_name = Some(human_account_name);
+        self
+    }
+
+    /// Get the human account name filter
+    ///
+    /// Returns [`None`] if no filter was set
+    #[must_use]
+    pub fn human_account_name(&self) -> Option<&'a str> {
+        self.human_account_name
     }
 }
 

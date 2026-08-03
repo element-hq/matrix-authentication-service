@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -38,8 +39,8 @@ use mas_storage::{
     user::{BrowserSessionRepository, UserEmailRepository, UserRepository},
 };
 use mas_templates::{
-    AccountInactiveContext, ErrorContext, FieldError, FormError, TemplateContext, Templates,
-    ToFormState, UpstreamExistingLinkContext, UpstreamRegister, UpstreamSuggestLink,
+    ErrorContext, FieldError, FormError, TemplateContext, Templates, ToFormState,
+    UpstreamExistingLinkContext, UpstreamRegister, UpstreamSuggestLink,
 };
 use minijinja::Environment;
 use opentelemetry::{Key, KeyValue, metrics::Counter};
@@ -53,6 +54,7 @@ use super::{
 };
 use crate::{
     BoundActivityTracker, METER, PreferredLanguage, SiteConfig, impl_from_error_for_route,
+    session::render_account_inactive,
     views::{register::UserRegistrationSessionsCookie, shared::OptionalPostAuthAction},
 };
 
@@ -132,6 +134,7 @@ impl_from_error_for_route!(super::cookie::UpstreamSessionNotFound);
 impl_from_error_for_route!(mas_storage::RepositoryError);
 impl_from_error_for_route!(mas_policy::EvaluationError);
 impl_from_error_for_route!(mas_jose::jwt::JwtDecodeError);
+impl_from_error_for_route!(crate::session::SessionLoadError);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
@@ -332,23 +335,21 @@ pub(crate) async fn get(
                 .await?
                 .ok_or(RouteError::UserNotFound(user_id))?;
 
-            // Check that the user is not locked or deactivated
-            if user.deactivated_at.is_some() {
-                // The account is deactivated, show the 'account deactivated' fallback
-                let ctx = AccountInactiveContext::new(user)
-                    .with_csrf(csrf_token.form_value())
-                    .with_language(locale);
-                let fallback = templates.render_account_deactivated(&ctx)?;
-                return Ok((cookie_jar, Html(fallback).into_response()));
-            }
-
-            if user.locked_at.is_some() {
-                // The account is locked, show the 'account locked' fallback
-                let ctx = AccountInactiveContext::new(user)
-                    .with_csrf(csrf_token.form_value())
-                    .with_language(locale);
-                let fallback = templates.render_account_locked(&ctx)?;
-                return Ok((cookie_jar, Html(fallback).into_response()));
+            // Check that the user is not locked or deactivated. Preserve the
+            // stashed post-auth action (the ultimate grant/device/compat
+            // destination) so the interstitial's sign-in button resumes it,
+            // rather than re-entering the upstream link flow.
+            if user.deactivated_at.is_some() || user.locked_at.is_some() {
+                let (cookie_jar, response) = render_account_inactive(
+                    &templates,
+                    &locale,
+                    &clock,
+                    &mut rng,
+                    cookie_jar,
+                    user,
+                    post_auth_action.cloned(),
+                )?;
+                return Ok((cookie_jar, response));
             }
 
             let session = repo
@@ -628,23 +629,19 @@ pub(crate) async fn get(
 
                     // Now that we've resolved the conflict, log in that existing user
 
-                    // Check that the user is not locked or deactivated
-                    if existing_user.deactivated_at.is_some() {
-                        // The account is deactivated, show the 'account deactivated' fallback
-                        let ctx = AccountInactiveContext::new(existing_user)
-                            .with_csrf(csrf_token.form_value())
-                            .with_language(locale);
-                        let fallback = templates.render_account_deactivated(&ctx)?;
-                        return Ok((cookie_jar, Html(fallback).into_response()));
-                    }
-
-                    if existing_user.locked_at.is_some() {
-                        // The account is locked, show the 'account locked' fallback
-                        let ctx = AccountInactiveContext::new(existing_user)
-                            .with_csrf(csrf_token.form_value())
-                            .with_language(locale);
-                        let fallback = templates.render_account_locked(&ctx)?;
-                        return Ok((cookie_jar, Html(fallback).into_response()));
+                    // Check that the user is not locked or deactivated, preserving
+                    // the stashed post-auth action so the interstitial resumes it.
+                    if existing_user.deactivated_at.is_some() || existing_user.locked_at.is_some() {
+                        let (cookie_jar, response) = render_account_inactive(
+                            &templates,
+                            &locale,
+                            &clock,
+                            &mut rng,
+                            cookie_jar,
+                            existing_user,
+                            post_auth_action.cloned(),
+                        )?;
+                        return Ok((cookie_jar, response));
                     }
 
                     let session = repo

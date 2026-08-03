@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT oauth2_authorization_grant_id\n                     , created_at\n                     , cancelled_at\n                     , fulfilled_at\n                     , exchanged_at\n                     , scope\n                     , state\n                     , redirect_uri\n                     , response_mode\n                     , nonce\n                     , oauth2_client_id\n                     , authorization_code\n                     , response_type_code\n                     , response_type_id_token\n                     , code_challenge\n                     , code_challenge_method\n                     , login_hint\n                     , locale\n                     , raw_parameters AS \"raw_parameters: Json<BTreeMap<String, String>>\"\n                     , oauth2_session_id\n                FROM\n                    oauth2_authorization_grants\n\n                WHERE oauth2_authorization_grant_id = $1\n            ",
+  "query": "\n                SELECT oauth2_authorization_grant_id\n                     , created_at\n                     , cancelled_at\n                     , fulfilled_at\n                     , exchanged_at\n                     , scope\n                     , state\n                     , redirect_uri\n                     , response_mode\n                     , nonce\n                     , oauth2_client_id\n                     , authorization_code\n                     , response_type_code\n                     , response_type_id_token\n                     , code_challenge\n                     , code_challenge_method\n                     , login_hint\n                     , locale\n                     , raw_parameters AS \"raw_parameters: Json<BTreeMap<String, String>>\"\n                     , user_session_id\n                     , oauth2_session_id\n                FROM\n                    oauth2_authorization_grants\n\n                WHERE oauth2_authorization_grant_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -100,6 +100,11 @@
       },
       {
         "ordinal": 19,
+        "name": "user_session_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 20,
         "name": "oauth2_session_id",
         "type_info": "Uuid"
       }
@@ -129,8 +134,9 @@
       true,
       true,
       true,
+      true,
       true
     ]
   },
-  "hash": "2bdf2e1ed7e207d0165b59153b274ea2941055fdbb6b5a6989b229a2fd68925c"
+  "hash": "008ef8a2092fd2424ab6215bcad376b72f26b723dc029624396bb2030e53907c"
 }

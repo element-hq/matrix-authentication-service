@@ -258,6 +258,14 @@
             "null"
           ]
         },
+        "client_uri": {
+          "description": "Client URL for user-facing information about the client",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
         "client_secret_file": {
           "description": "Path to the file containing the client secret. The client secret is used\nby the `client_secret_basic`, `client_secret_post` and\n`client_secret_jwt` authentication methods.",
           "type": [
@@ -979,6 +987,16 @@
             "socket": {
               "description": "Path to the socket",
               "type": "string"
+            },
+            "mode": {
+              "description": "Permissions to use for the socket. Defaults to the process's umask.",
+              "type": [
+                "string",
+                "null"
+              ],
+              "examples": [
+                "600"
+              ]
             }
           },
           "required": [
@@ -1122,6 +1140,13 @@
         },
         "password": {
           "description": "Password to be used if the server demands password authentication\n\nThis must not be specified if `uri` is specified.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "password_file": {
+          "description": "Path to the password to be used if the server demands password\nauthentication\n\nThis must not be specified if the `password` or `uri` option is\nspecified.",
           "type": [
             "string",
             "null"
@@ -1567,14 +1592,21 @@
           "maximum": 65535
         },
         "username": {
-          "description": "SMTP transport: Username for use to authenticate when connecting to the\nSMTP server\n\nMust be set if the `password` field is set",
+          "description": "SMTP transport: Username for use to authenticate when connecting to the\nSMTP server\n\nMust be set if the `password` or `password_file` field is set",
           "type": [
             "string",
             "null"
           ]
         },
         "password": {
-          "description": "SMTP transport: Password for use to authenticate when connecting to the\nSMTP server\n\nMust be set if the `username` field is set",
+          "description": "SMTP transport: Password for use to authenticate when connecting to the\nSMTP server\n\nMust be set if the `username` but not `password_file` field is set",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "password_file": {
+          "description": "SMTP transport: Path to the password for use to authenticate when\nconnecting to the SMTP server\n\nMust be set if the `username` but not `password` field is set",
           "type": [
             "string",
             "null"
@@ -2328,7 +2360,7 @@
           ]
         },
         "additional_authorization_parameters": {
-          "description": "Additional parameters to include in the authorization request.\n\nEach value is a [`MiniJinja`] template. The template context\nexposes a `params` map containing the raw query parameters from\nthe downstream authorization request. The map is empty when the\nupstream login was not initiated by a downstream OAuth/OIDC\nauthorization request (e.g. account linking, direct login from\nthe login page).\n\n[`MiniJinja`]: https://docs.rs/minijinja\n\nTemplates that render to an empty string are dropped — so\nreferencing a downstream parameter that wasn't supplied (e.g.\n`{{ params.login_hint }}`) results in no parameter being\nforwarded, rather than an empty one.\n\nPlain strings (without `{{ … }}`) are valid templates that render\nto themselves.\n\nExample:\n\n```yaml\nadditional_authorization_parameters:\n  login_hint: \"{{ params.login_hint }}\"\n  acr_values: \"{{ params.acr_values }}\"\n  kc_idp_hint: \"saml\"\n```\n\n`params` exposes the entire raw query string of the downstream\nrequest (including `client_id`, `state`, `code_challenge`, …).\nForward specific keys deliberately; don't blindly proxy the\nwhole map.\n\nOrder of keys is not preserved.",
+          "description": "Additional parameters to include in the authorization request.\n\nEach value is a [`MiniJinja`] template. The template context\nexposes:\n\n- `params`: a map containing the raw query parameters from the\n  downstream authorization request. The map is empty when the upstream\n  login was not initiated by a downstream OAuth/OIDC authorization\n  request (e.g. account linking, direct login from the login page).\n- `logged_out`: a boolean that is `true` when the browser recently\n  signed out of MAS and has no active session. This lets you force a\n  fresh prompt at the upstream provider after sign-out — otherwise a\n  provider that still has a live session would silently sign the user\n  back in.\n\n[`MiniJinja`]: https://docs.rs/minijinja\n\nTemplates that render to an empty string are dropped — so\nreferencing a downstream parameter that wasn't supplied (e.g.\n`{{ params.login_hint }}`) results in no parameter being\nforwarded, rather than an empty one.\n\nPlain strings (without `{{ … }}`) are valid templates that render\nto themselves.\n\nExample:\n\n```yaml\nadditional_authorization_parameters:\n  login_hint: \"{{ params.login_hint }}\"\n  acr_values: \"{{ params.acr_values }}\"\n  kc_idp_hint: \"saml\"\n  # Force re-authentication at the upstream provider after sign-out.\n  # Keycloak only supports `prompt=login`, not `prompt=select_account`.\n  prompt: \"{% if logged_out %}login{% endif %}\"\n```\n\n`params` exposes the entire raw query string of the downstream\nrequest (including `client_id`, `state`, `code_challenge`, …).\nForward specific keys deliberately; don't blindly proxy the\nwhole map.\n\nOrder of keys is not preserved.",
           "type": "object",
           "additionalProperties": {
             "type": "string"

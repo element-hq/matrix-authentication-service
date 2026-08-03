@@ -64,7 +64,7 @@ impl Options {
         )
         .await?;
 
-        let mailer = mailer_from_config(&config.email, &templates)?;
+        let mailer = mailer_from_config(&config.email, &templates).await?;
         test_mailer_in_background(&mailer, Duration::from_secs(30));
 
         let http_client = mas_http::reqwest_client();

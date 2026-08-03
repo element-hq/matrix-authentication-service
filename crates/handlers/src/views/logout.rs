@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -13,7 +14,7 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::BoxClock;
+use mas_data_model::{BoxClock, Clock};
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{BoxRepository, user::BrowserSessionRepository};
 
@@ -53,7 +54,7 @@ pub(crate) async fn post(
 
     // We always want to clear out the session cookie, even if the session was
     // invalid
-    let cookie_jar = cookie_jar.update_session_info(&session_info.mark_session_ended());
+    let cookie_jar = cookie_jar.update_session_info(&session_info.mark_session_ended(clock.now()));
 
     let destination = if let Some(action) = form {
         action.go_next(&url_builder)

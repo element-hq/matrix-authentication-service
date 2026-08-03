@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -1872,18 +1873,33 @@ impl TemplateContext for DeviceConsentContext {
     }
 }
 
-/// Context used by the `account/deactivated.html` and `account/locked.html`
-/// templates
+/// Context used by the `account/deactivated.html`, `account/locked.html` and
+/// `account/logged_out.html` templates
 #[derive(Serialize)]
 pub struct AccountInactiveContext {
     user: User,
+
+    /// The action to continue after signing out and back in from the
+    /// interstitial. Absent when there is no continuation to preserve.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    post_logout_action: Option<PostAuthAction>,
 }
 
 impl AccountInactiveContext {
     /// Constructs a new context with an existing linked user
     #[must_use]
     pub fn new(user: User) -> Self {
-        Self { user }
+        Self {
+            user,
+            post_logout_action: None,
+        }
+    }
+
+    /// Set the action to continue once the user has signed out and back in
+    #[must_use]
+    pub fn with_post_auth_action(mut self, action: Option<PostAuthAction>) -> Self {
+        self.post_logout_action = action;
+        self
     }
 }
 
@@ -1896,10 +1912,19 @@ impl TemplateContext for AccountInactiveContext {
     where
         Self: Sized,
     {
+        let action = PostAuthAction::continue_grant(Ulid::from_datetime_with_rng(now, rng));
         sample_list(
             User::samples(now, rng)
                 .into_iter()
-                .map(|user| AccountInactiveContext { user })
+                .flat_map(|user| {
+                    // Cover both the "no continuation" and "with continuation" render
+                    // paths so the template gallery exercises the hidden inputs.
+                    [
+                        AccountInactiveContext::new(user.clone()),
+                        AccountInactiveContext::new(user)
+                            .with_post_auth_action(Some(action.clone())),
+                    ]
+                })
                 .collect(),
         )
     }

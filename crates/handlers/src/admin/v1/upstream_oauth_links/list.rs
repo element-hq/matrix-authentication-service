@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -42,6 +43,11 @@ pub struct FilterParams {
     /// Retrieve the items with the given subject
     #[serde(rename = "filter[subject]")]
     subject: Option<String>,
+
+    /// Retrieve the items with a human account name matching the given
+    /// substring (case-insensitive)
+    #[serde(rename = "filter[human-account-name]")]
+    human_account_name: Option<String>,
 }
 
 impl std::fmt::Display for FilterParams {
@@ -60,6 +66,11 @@ impl std::fmt::Display for FilterParams {
 
         if let Some(subject) = &self.subject {
             write!(f, "{sep}filter[subject]={subject}")?;
+            sep = '&';
+        }
+
+        if let Some(human_account_name) = &self.human_account_name {
+            write!(f, "{sep}filter[human-account-name]={human_account_name}")?;
             sep = '&';
         }
 
@@ -183,6 +194,12 @@ pub async fn handler(
 
     let filter = if let Some(subject) = &params.subject {
         filter.for_subject(subject)
+    } else {
+        filter
+    };
+
+    let filter = if let Some(name) = &params.human_account_name {
+        filter.matching_human_account_name(name)
     } else {
         filter
     };
@@ -557,6 +574,68 @@ mod tests {
             "self": "/api/admin/v1/upstream-oauth-links?filter[subject]=subject1&page[first]=10",
             "first": "/api/admin/v1/upstream-oauth-links?filter[subject]=subject1&page[first]=10",
             "last": "/api/admin/v1/upstream-oauth-links?filter[subject]=subject1&page[last]=10"
+          }
+        }
+        "#);
+
+        // Filter by human account name (case-insensitive substring)
+        let request =
+            Request::get("/api/admin/v1/upstream-oauth-links?filter[human-account-name]=ALICE%40")
+                .bearer(&token)
+                .empty();
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_json_snapshot!(body, @r#"
+        {
+          "meta": {
+            "count": 2
+          },
+          "data": [
+            {
+              "type": "upstream-oauth-link",
+              "id": "01FSHN9AG0AQZQP8DX40GD59PW",
+              "attributes": {
+                "created_at": "2022-01-16T14:40:00Z",
+                "provider_id": "01FSHN9AG09NMZYX8MFYH578R9",
+                "subject": "subject1",
+                "user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                "human_account_name": "alice@acme"
+              },
+              "links": {
+                "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG0AQZQP8DX40GD59PW"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0AQZQP8DX40GD59PW"
+                }
+              }
+            },
+            {
+              "type": "upstream-oauth-link",
+              "id": "01FSHN9AG0QHEHKX2JNQ2A2D07",
+              "attributes": {
+                "created_at": "2022-01-16T14:40:00Z",
+                "provider_id": "01FSHN9AG0KEPHYQQXW9XPTX6Z",
+                "subject": "subject2",
+                "user_id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                "human_account_name": "alice@example"
+              },
+              "links": {
+                "self": "/api/admin/v1/upstream-oauth-links/01FSHN9AG0QHEHKX2JNQ2A2D07"
+              },
+              "meta": {
+                "page": {
+                  "cursor": "01FSHN9AG0QHEHKX2JNQ2A2D07"
+                }
+              }
+            }
+          ],
+          "links": {
+            "self": "/api/admin/v1/upstream-oauth-links?filter[human-account-name]=ALICE@&page[first]=10",
+            "first": "/api/admin/v1/upstream-oauth-links?filter[human-account-name]=ALICE@&page[first]=10",
+            "last": "/api/admin/v1/upstream-oauth-links?filter[human-account-name]=ALICE@&page[last]=10"
           }
         }
         "#);

@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -82,8 +82,10 @@ pub const OFFLINE_ACCESS: ScopeToken = ScopeToken::from_static("offline_access")
 // https://datatracker.ietf.org/doc/html/rfc6749#appendix-A
 //
 //    NQCHAR     = %x21 / %x23-5B / %x5D-7E
+//
+// Both ranges are inclusive on both ends.
 fn nqchar(c: char) -> bool {
-    '\x21' == c || ('\x23'..'\x5B').contains(&c) || ('\x5D'..'\x7E').contains(&c)
+    '\x21' == c || ('\x23'..='\x5B').contains(&c) || ('\x5D'..='\x7E').contains(&c)
 }
 
 impl FromStr for ScopeToken {
@@ -226,6 +228,34 @@ mod tests {
         assert_eq!(ScopeToken::from_str("openid"), Ok(OPENID));
 
         assert_eq!(ScopeToken::from_str("invalid\\scope"), Err(InvalidScope));
+
+        // Regression test for #5878: Matrix device IDs may contain any
+        // RFC 3986 unreserved character, including `~`.
+        assert!(ScopeToken::from_str("urn:matrix:client:device:AA~bb1234_-.").is_ok());
+    }
+
+    #[test]
+    fn parse_scope_token_characters() {
+        // NQCHAR = %x21 / %x23-5B / %x5D-7E, boundaries inclusive.
+        for c in '\x21'..='\x7E' {
+            if c == '\x22' || c == '\x5C' {
+                continue;
+            }
+            assert!(
+                ScopeToken::from_str(&c.to_string()).is_ok(),
+                "expected {c:?} (0x{:02X}) to be a valid NQCHAR",
+                c as u32
+            );
+        }
+
+        // Outside NQCHAR:
+        //  - space is 0x20
+        //  - " (double quote) is 0x22
+        //  - \ (backslash) is 0x5C
+        //  - DEL is 0x7F
+        for s in [" ", "\"", "\\", "\x7F"] {
+            assert_eq!(ScopeToken::from_str(s), Err(InvalidScope));
+        }
     }
 
     #[test]
