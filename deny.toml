@@ -87,11 +87,31 @@ skip = [
     { name = "darling_core", version = "0.20.11" },
     { name = "darling_macro", version = "0.20.11" },
 
-    # We are still mainly using rand 0.8
+    # We are still mainly using rand 0.8, but 0.9 and 0.10 are out
     { name = "rand", version = "0.8.5" },
+    { name = "rand", version = "0.9.4" },
     { name = "rand_chacha", version = "0.3.1" },
+    { name = "rand_chacha", version = "0.9.0" },
     { name = "rand_core", version = "0.6.4" },
+    { name = "rand_core", version = "0.9.3" },
     { name = "getrandom", version = "0.2.16" },
+    { name = "getrandom", version = "0.3.3" },
+
+    # opa-wasm updated to the latest RustCrypto crates (digest 0.11) and to
+    # base64 0.23, but we (and everything else) haven't
+    { name = "base64", version = "0.22.1" },
+    { name = "block-buffer", version = "0.10.4" },
+    { name = "const-oid", version = "0.9.6" },
+    { name = "cpufeatures", version = "0.2.17" },
+    { name = "crypto-common", version = "0.1.6" },
+    { name = "digest", version = "0.10.7" },
+    { name = "hmac", version = "0.12.1" },
+    { name = "md-5", version = "0.10.6" },
+    { name = "sha1", version = "0.10.6" },
+    { name = "sha2", version = "0.10.9" },
+    # rand 0.10, pulled by opa-wasm, uses chacha20 directly; chacha20poly1305
+    # is still on the old one
+    { name = "chacha20", version = "0.9.1" },
 ]
 
 skip-tree = []
