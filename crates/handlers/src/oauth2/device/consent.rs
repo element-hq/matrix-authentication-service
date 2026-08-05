@@ -13,6 +13,7 @@ use axum::{
     extract::{Path, State},
     response::{Html, IntoResponse, Response},
 };
+use axum_extra::extract::Query;
 use axum_extra::TypedHeader;
 use mas_axum_utils::{
     InternalError,
@@ -33,6 +34,7 @@ use crate::{
     BoundActivityTracker, PreferredLanguage, SiteConfig,
     session::{SessionOrFallback, count_user_sessions_for_limiting, load_session_or_fallback},
 };
+use crate::views::shared::QueryIdp;
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "lowercase")]
@@ -65,6 +67,7 @@ pub(crate) async fn get(
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     cookie_jar: CookieJar,
     Path(grant_id): Path<Ulid>,
+    Query(query_idp): Query<QueryIdp>,
 ) -> Result<Response, InternalError> {
     if !site_config.device_code_grant_enabled {
         return Err(InternalError::from_anyhow(anyhow::anyhow!(
@@ -95,8 +98,13 @@ pub(crate) async fn get(
     let user_agent = user_agent.map(|ua| ua.to_string());
 
     let Some(session) = maybe_session else {
-        let login = mas_router::Login::and_continue_device_code_grant(grant_id);
-        return Ok((cookie_jar, url_builder.redirect(&login)).into_response());
+        let mut url = mas_router::Login::and_continue_device_code_grant(grant_id);
+
+        if let Some(upstream_idp) = query_idp.upstream_idp {
+            url = url.with_upstream_idp(upstream_idp)
+        };
+
+        return Ok((cookie_jar, url_builder.redirect(&url)).into_response());
     };
 
     activity_tracker
@@ -215,6 +223,7 @@ pub(crate) async fn post(
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     cookie_jar: CookieJar,
     Path(grant_id): Path<Ulid>,
+    Query(query_idp): Query<QueryIdp>,
     Form(form): Form<ProtectedForm<ConsentForm>>,
 ) -> Result<Response, InternalError> {
     if !site_config.device_code_grant_enabled {
@@ -246,8 +255,13 @@ pub(crate) async fn post(
     let user_agent = user_agent.map(|TypedHeader(ua)| ua.to_string());
 
     let Some(session) = maybe_session else {
-        let login = mas_router::Login::and_continue_device_code_grant(grant_id);
-        return Ok((cookie_jar, url_builder.redirect(&login)).into_response());
+        let mut url = mas_router::Login::and_continue_device_code_grant(grant_id);
+
+        if let Some(upstream_idp) = query_idp.upstream_idp {
+            url = url.with_upstream_idp(upstream_idp)
+        };
+
+        return Ok((cookie_jar, url_builder.redirect(&url)).into_response());
     };
 
     activity_tracker

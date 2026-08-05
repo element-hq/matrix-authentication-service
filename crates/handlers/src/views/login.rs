@@ -36,7 +36,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroizing;
 
-use super::shared::{LoginHint, OptionalPostAuthAction, QueryLoginHint};
+use super::shared::{LoginHint, OptionalPostAuthAction, QueryIdp, QueryLoginHint};
 use crate::{
     BoundActivityTracker, Limiter, METER, PreferredLanguage, RequesterFingerprint, SiteConfig,
     passwords::{PasswordManager, PasswordVerificationResult},
@@ -75,6 +75,7 @@ pub(crate) async fn get(
     activity_tracker: BoundActivityTracker,
     Query(query): Query<OptionalPostAuthAction>,
     Query(query_login_hint): Query<QueryLoginHint>,
+    Query(query_idp): Query<QueryIdp>,
     cookie_jar: CookieJar,
 ) -> Result<Response, InternalError> {
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
@@ -119,6 +120,21 @@ pub(crate) async fn get(
         }
 
         return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
+    }
+
+    if let Some(idp) = query_idp.upstream_idp {
+        let provider = providers.into_iter().find(|provider| {
+            provider.id.to_string().eq(&idp)
+        });
+        if let Some(provider) = provider {
+            let mut destination = UpstreamOAuth2Authorize::new(provider.id);
+
+            if let Some(action) = query.post_auth_action {
+                destination = destination.and_then(action);
+            }
+
+            return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
+        }
     }
 
     render(
