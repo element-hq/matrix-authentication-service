@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -6,21 +7,18 @@
 
 import { SwaggerUIBundle } from "swagger-ui-dist";
 import "swagger-ui-dist/swagger-ui.css";
-
-type ApiConfig = {
-  openapiUrl: string;
-  callbackUrl: string;
-};
+import * as v from "valibot";
 
 interface IWindow {
-  API_CONFIG?: ApiConfig;
   ui?: SwaggerUIBundle;
 }
 
-const config = typeof window !== "undefined" && (window as IWindow).API_CONFIG;
-if (!config) {
-  throw new Error("API_CONFIG is not defined");
-}
+const el = document.getElementById("swagger-ui");
+if (!el) throw new Error("swagger-ui element not found");
+const config = v.parse(
+  v.object({ openapiUrl: v.string(), callbackUrl: v.string() }),
+  el.dataset,
+);
 
 (window as IWindow).ui = SwaggerUIBundle({
   url: config.openapiUrl,
