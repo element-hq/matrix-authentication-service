@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -33,6 +34,15 @@ can_request_admin(user) if {
 interactive_grant_type("authorization_code") := true
 
 interactive_grant_type("urn:ietf:params:oauth:grant-type:device_code") := true
+
+# Token exchange is a non-interactive grant type where a client exchanges a MAS
+# access token for an upstream provider's access token. It is only allowed for
+# clients explicitly listed in `data.token_exchange_clients`; every other client
+# is denied (see the violation rule below).
+token_exchange_client_allowed if {
+	some client in data.token_exchange_clients
+	input.client.id == client
+}
 
 # Special case to make empty scope work
 allowed_scope("") := true
@@ -124,6 +134,12 @@ violation contains {"msg": msg} if {
 	some scope in split(input.scope, " ")
 	not allowed_scope(scope)
 	msg := sprintf("scope '%s' not allowed", [scope])
+}
+
+# Deny token exchange unless the client is explicitly allow-listed
+violation contains {"msg": "client is not allowed to use token exchange"} if {
+	input.grant_type == "urn:ietf:params:oauth:grant-type:token-exchange"
+	not token_exchange_client_allowed
 }
 
 violation contains {"msg": "only one device scope is allowed at a time"} if {

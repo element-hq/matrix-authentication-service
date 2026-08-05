@@ -89,6 +89,7 @@ pub(crate) async fn get(
             GrantType::AuthorizationCode,
             GrantType::RefreshToken,
             GrantType::ClientCredentials,
+            GrantType::TokenExchange,
         ];
         if site_config.device_code_grant_enabled {
             types.push(GrantType::DeviceCode);
