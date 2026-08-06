@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use aide::axum::{
     ApiRouter,
-    routing::{get_with, post_with},
+    routing::{get_with, post_with, put_with},
 };
 use axum::extract::{FromRef, FromRequestParts};
 use mas_data_model::{AppVersion, BoxRng, SiteConfig};
@@ -146,6 +146,13 @@ where
         .api_route(
             "/users/{id}",
             get_with(self::users::get, self::users::get_doc),
+        )
+        .api_route(
+            "/users/{id}/displayname",
+            put_with(
+                self::users::set_displayname,
+                self::users::set_displayname_doc,
+            ),
         )
         .api_route(
             "/users/{id}/set-password",
