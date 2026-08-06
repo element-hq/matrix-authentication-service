@@ -3,12 +3,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use crate::admin::params::UlidPathParam;
-use crate::admin::{model::User, response::SingleResponse};
-use crate::{
-    admin::{call_context::CallContext, response::ErrorResponse},
-    impl_from_error_for_route,
-};
+use std::sync::Arc;
+
 use aide::{OperationIo, transform::TransformOperation};
 use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
@@ -16,8 +12,17 @@ use mas_axum_utils::record_error;
 use mas_matrix::{HomeserverConnection, ProvisionRequest};
 use schemars::JsonSchema;
 use serde::Deserialize;
-use std::sync::Arc;
 use ulid::Ulid;
+
+use crate::{
+    admin::{
+        call_context::CallContext,
+        model::User,
+        params::UlidPathParam,
+        response::{ErrorResponse, SingleResponse},
+    },
+    impl_from_error_for_route,
+};
 
 #[derive(Debug, thiserror::Error, OperationIo)]
 #[aide(output_with = "Json<ErrorResponse>")]
