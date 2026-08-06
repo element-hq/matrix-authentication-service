@@ -51,10 +51,8 @@ http:
         - name: oauth
         # Serves the Matrix C-S API compatibility endpoints
         - name: compat
-        # Serve the GraphQL API used by the frontend,
-        # and optionally the GraphQL playground
+        # Serve the GraphQL API used by the frontend
         - name: graphql
-          playground: true
         # Serve the given folder on the /assets/ path
         - name: assets
           path: ./share/assets/

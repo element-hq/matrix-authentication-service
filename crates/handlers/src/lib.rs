@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -125,7 +125,7 @@ where
     Router::new().route(mas_router::Healthcheck::route(), get(self::health::get))
 }
 
-pub fn graphql_router<S>(playground: bool, undocumented_oauth2_access: bool) -> Router<S>
+pub fn graphql_router<S>(undocumented_oauth2_access: bool) -> Router<S>
 where
     S: Clone + Send + Sync + 'static,
     graphql::Schema: FromRef<S>,
@@ -137,7 +137,7 @@ where
     Limiter: FromRef<S>,
     RequesterFingerprint: FromRequestParts<S>,
 {
-    let mut router = Router::new()
+    Router::new()
         .route(
             mas_router::GraphQL::route(),
             get(self::graphql::get).post(self::graphql::post),
@@ -158,16 +158,7 @@ where
                     CONTENT_LANGUAGE,
                     CONTENT_TYPE,
                 ]),
-        );
-
-    if playground {
-        router = router.route(
-            mas_router::GraphQLPlayground::route(),
-            get(self::graphql::playground),
-        );
-    }
-
-    router
+        )
 }
 
 pub fn discovery_router<S>() -> Router<S>

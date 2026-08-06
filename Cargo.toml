@@ -85,7 +85,7 @@ version = "1.8.1"
 [workspace.dependencies.async-graphql]
 version = "7.0.17"
 default-features = false
-features = ["chrono", "url", "tracing", "playground"]
+features = ["chrono", "url", "tracing"]
 
 [workspace.dependencies.async-stream]
 version = "0.3.6"
