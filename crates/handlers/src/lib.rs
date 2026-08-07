@@ -33,8 +33,8 @@ use headers::HeaderName;
 use hyper::{
     StatusCode, Version,
     header::{
-        ACCEPT, ACCEPT_LANGUAGE, AUTHORIZATION, CONTENT_LANGUAGE, CONTENT_LENGTH, CONTENT_TYPE,
-        X_FRAME_OPTIONS,
+        ACCEPT, ACCEPT_LANGUAGE, AUTHORIZATION, CONTENT_LANGUAGE, CONTENT_LENGTH,
+        CONTENT_SECURITY_POLICY, CONTENT_TYPE, X_FRAME_OPTIONS,
     },
 };
 use mas_axum_utils::{InternalError, cookies::CookieJar};
@@ -70,6 +70,7 @@ mod captcha;
 #[cfg(test)]
 mod cleanup_tests;
 mod client_ip;
+mod csp;
 mod preferred_language;
 mod rate_limit;
 mod session;
@@ -108,6 +109,7 @@ pub use self::{
     activity_tracker::{ActivityTracker, Bound as BoundActivityTracker},
     admin::router as admin_api_router,
     client_ip::ClientIp,
+    csp::Csp,
     graphql::{
         GraphQLOperation, Schema as GraphQLSchema, schema as graphql_schema,
         schema_builder as graphql_schema_builder,
@@ -258,7 +260,7 @@ where
         )
 }
 
-pub fn compat_router<S>(templates: Templates) -> Router<S>
+pub fn compat_router<S>(templates: Templates, csp: &Csp) -> Router<S>
 where
     S: Clone + Send + Sync + 'static,
     UrlBuilder: FromRef<S>,
@@ -292,6 +294,10 @@ where
             async move |response: axum::response::Response| {
                 Ok::<_, Infallible>(recover_error(&templates, response))
             },
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            CONTENT_SECURITY_POLICY,
+            csp.human(),
         ));
 
     // A sub-router for API-facing routes with CORS
@@ -330,10 +336,11 @@ where
     Router::new().merge(human_router).merge(api_router)
 }
 
-pub fn human_router<S>(templates: Templates) -> Router<S>
+pub fn human_router<S>(templates: Templates, csp: &Csp) -> Router<S>
 where
     S: Clone + Send + Sync + 'static,
     UrlBuilder: FromRef<S>,
+    Csp: FromRef<S>,
     PreferredLanguage: FromRequestParts<S>,
     BoxRepository: FromRequestParts<S>,
     CookieJar: FromRequestParts<S>,
@@ -352,7 +359,25 @@ where
     BoxRng: FromRequestParts<S>,
     Policy: FromRequestParts<S>,
 {
+    // The routes rendering the SPA shell get their own, stricter policy. The
+    // router-wide one below is `if_not_present`, so it yields to this one.
+    let app_router = Router::new()
+        .route(mas_router::Account::route(), get(self::views::app::get))
+        .route(
+            mas_router::AccountWildcard::route(),
+            get(self::views::app::get),
+        )
+        .route(
+            mas_router::AccountRecoveryFinish::route(),
+            get(self::views::app::get_anonymous),
+        )
+        .layer(SetResponseHeaderLayer::if_not_present(
+            CONTENT_SECURITY_POLICY,
+            csp.app(),
+        ));
+
     Router::new()
+        .merge(app_router)
         // XXX: hard-coded redirect from /account to /account/
         .route(
             "/account",
@@ -369,15 +394,6 @@ where
                     axum::response::Redirect::to(&destination)
                 },
             ),
-        )
-        .route(mas_router::Account::route(), get(self::views::app::get))
-        .route(
-            mas_router::AccountWildcard::route(),
-            get(self::views::app::get),
-        )
-        .route(
-            mas_router::AccountRecoveryFinish::route(),
-            get(self::views::app::get_anonymous),
         )
         .route(
             mas_router::ChangePasswordDiscovery::route(),
@@ -472,6 +488,10 @@ where
         .layer(SetResponseHeaderLayer::if_not_present(
             X_FRAME_OPTIONS,
             http::HeaderValue::from_static("DENY"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            CONTENT_SECURITY_POLICY,
+            csp.human(),
         ))
 }
 

@@ -18,11 +18,16 @@ use axum::{
 };
 use camino::Utf8PathBuf;
 use headers::{CacheControl, HeaderMapExt as _, UserAgent};
-use hyper::{Method, Request, Response, StatusCode, Version, header::USER_AGENT};
+use hyper::{
+    Method, Request, Response, StatusCode, Version,
+    header::{
+        CONTENT_SECURITY_POLICY, HeaderValue, USER_AGENT, X_CONTENT_TYPE_OPTIONS, X_FRAME_OPTIONS,
+    },
+};
 use listenfd::ListenFd;
 use mas_config::{HttpBindConfig, HttpResource, HttpTlsConfig, UnixOrTcp};
 use mas_context::LogContext;
-use mas_handlers::{ClientIp, GraphQLOperation};
+use mas_handlers::{ClientIp, Csp, GraphQLOperation};
 use mas_listener::{ConnectionInfo, unix_or_tcp::UnixOrTcpListener};
 use mas_router::Route;
 use mas_templates::Templates;
@@ -40,7 +45,10 @@ use opentelemetry_semantic_conventions::trace::{
 use rustls::ServerConfig;
 use sentry_tower::{NewSentryLayer, SentryHttpLayer};
 use tower::Layer;
-use tower_http::services::{ServeDir, fs::ServeFileSystemResponseBody};
+use tower_http::{
+    services::{ServeDir, fs::ServeFileSystemResponseBody},
+    set_header::SetResponseHeaderLayer,
+};
 use tracing::Span;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
@@ -273,6 +281,7 @@ pub fn build_router(
     name: Option<&str>,
 ) -> Router<()> {
     let templates = Templates::from_ref(&state);
+    let csp = Csp::from_ref(&state);
     let mut router = Router::new();
 
     for resource in resources {
@@ -286,9 +295,9 @@ pub fn build_router(
             mas_config::HttpResource::Discovery => {
                 router.merge(mas_handlers::discovery_router::<AppState>())
             }
-            mas_config::HttpResource::Human => {
-                router.merge(mas_handlers::human_router::<AppState>(templates.clone()))
-            }
+            mas_config::HttpResource::Human => router.merge(
+                mas_handlers::human_router::<AppState>(templates.clone(), &csp),
+            ),
             mas_config::HttpResource::GraphQL {
                 undocumented_oauth2_access,
             } => router.merge(mas_handlers::graphql_router::<AppState>(
@@ -326,11 +335,11 @@ pub fn build_router(
                 )
             }
             mas_config::HttpResource::OAuth => router.merge(mas_handlers::api_router::<AppState>()),
-            mas_config::HttpResource::Compat => {
-                router.merge(mas_handlers::compat_router::<AppState>(templates.clone()))
-            }
+            mas_config::HttpResource::Compat => router.merge(
+                mas_handlers::compat_router::<AppState>(templates.clone(), &csp),
+            ),
             mas_config::HttpResource::AdminApi => {
-                let (_, api_router) = mas_handlers::admin_api_router::<AppState>();
+                let (_, api_router) = mas_handlers::admin_api_router::<AppState>(&csp);
                 router.merge(api_router)
             }
             // TODO: do a better handler here
@@ -357,6 +366,20 @@ pub fn build_router(
     router = router.fallback(mas_handlers::fallback);
 
     router
+        // Catch-all security headers: inner routers set stricter policies on
+        // their own routes, and those win as this layer is `if_not_present`
+        .layer(SetResponseHeaderLayer::if_not_present(
+            CONTENT_SECURITY_POLICY,
+            csp.api(),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            X_CONTENT_TYPE_OPTIONS,
+            HeaderValue::from_static("nosniff"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            X_FRAME_OPTIONS,
+            HeaderValue::from_static("DENY"),
+        ))
         .layer(axum::middleware::from_fn(log_response_middleware))
         .layer(
             InFlightCounterLayer::new("http.server.active_requests").on_request((

@@ -18,7 +18,7 @@ use axum::{
     http::HeaderName,
     response::Html,
 };
-use hyper::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
+use hyper::header::{ACCEPT, AUTHORIZATION, CONTENT_SECURITY_POLICY, CONTENT_TYPE};
 use indexmap::IndexMap;
 use mas_axum_utils::InternalError;
 use mas_data_model::{AppVersion, BoxRng, SiteConfig};
@@ -31,7 +31,10 @@ use mas_router::{
 };
 use mas_templates::{ApiDocContext, Templates};
 use schemars::transform::AddNullable;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::{
+    cors::{Any, CorsLayer},
+    set_header::SetResponseHeaderLayer,
+};
 
 mod call_context;
 mod model;
@@ -41,7 +44,7 @@ mod schema;
 mod v1;
 
 use self::call_context::CallContext;
-use crate::passwords::PasswordManager;
+use crate::{csp::Csp, passwords::PasswordManager};
 
 fn finish(t: TransformOpenApi) -> TransformOpenApi {
     t.title("Matrix Authentication Service admin API")
@@ -160,7 +163,7 @@ fn oauth_security_scheme(url_builder: Option<&UrlBuilder>) -> SecurityScheme {
     }
 }
 
-pub fn router<S>() -> (OpenApi, Router<S>)
+pub fn router<S>(csp: &Csp) -> (OpenApi, Router<S>)
 where
     S: Clone + Send + Sync + 'static,
     Arc<dyn HomeserverConnection>: FromRef<S>,
@@ -216,11 +219,18 @@ where
                 }
             }),
         )
-        // Serve the Swagger API reference
-        .route(ApiDoc::route(), axum::routing::get(swagger))
-        .route(
-            ApiDocCallback::route(),
-            axum::routing::get(swagger_callback),
+        // Serve the Swagger API reference, quarantined behind its own policy
+        .merge(
+            Router::new()
+                .route(ApiDoc::route(), axum::routing::get(swagger))
+                .route(
+                    ApiDocCallback::route(),
+                    axum::routing::get(swagger_callback),
+                )
+                .layer(SetResponseHeaderLayer::if_not_present(
+                    CONTENT_SECURITY_POLICY,
+                    csp.swagger(),
+                )),
         )
         .layer(
             CorsLayer::new()
@@ -254,4 +264,31 @@ async fn swagger_callback(
     let ctx = ApiDocContext::from_url_builder(&url_builder);
     let res = templates.render_swagger_callback(&ctx)?;
     Ok(Html(res))
+}
+
+#[cfg(test)]
+mod tests {
+    use hyper::{Request, StatusCode, header::CONTENT_SECURITY_POLICY};
+    use mas_router::SimpleRoute;
+    use sqlx::PgPool;
+
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
+
+    /// The Swagger UI pages are quarantined behind their own policy
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_content_security_policy(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let response = state
+            .request(Request::get(mas_router::ApiDoc::PATH).empty())
+            .await;
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(
+            CONTENT_SECURITY_POLICY,
+            "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; \
+             img-src 'self' data: blob:; connect-src 'self'; form-action 'self'; \
+             frame-ancestors 'none'; base-uri 'none'; object-src 'none'",
+        );
+    }
 }

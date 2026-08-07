@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -63,7 +64,7 @@ impl_from_ref!(mas_data_model::SiteConfig);
 impl_from_ref!(mas_data_model::AppVersion);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let (mut api, _) = mas_handlers::admin_api_router::<DummyState>();
+    let (mut api, _) = mas_handlers::admin_api_router::<DummyState>(&mas_handlers::Csp::default());
 
     // Set the server list to a configurable base URL
     api.servers = vec![Server {
