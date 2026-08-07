@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -235,6 +235,8 @@ impl Options {
             limiter.clone(),
         );
 
+        let csp = mas_handlers::Csp::new(&site_config, &url_builder);
+
         let state = {
             let mut s = AppState {
                 repository_factory: PgRepositoryFactory::new(pool),
@@ -253,6 +255,7 @@ impl Options {
                 activity_tracker,
                 trusted_proxies,
                 limiter,
+                csp,
             };
             s.init_metrics();
             s.init_metadata_cache();

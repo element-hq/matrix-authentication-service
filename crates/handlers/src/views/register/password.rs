@@ -435,7 +435,7 @@ async fn render(
 mod tests {
     use hyper::{
         Request, StatusCode,
-        header::{CONTENT_TYPE, LOCATION},
+        header::{CONTENT_SECURITY_POLICY, CONTENT_TYPE, LOCATION},
     };
     use mas_router::Route;
     use sqlx::PgPool;
@@ -480,6 +480,24 @@ mod tests {
     }
 
     /// Test the registration happy path
+    /// This is the only page which loads a captcha, so it is the only one
+    /// which trusts the provider's origins
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_content_security_policy(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let request =
+            Request::get(&*mas_router::PasswordRegister::default().path_and_query()).empty();
+        let response = state.request(request).await;
+
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(
+            CONTENT_SECURITY_POLICY,
+            state.csp.register().to_str().unwrap(),
+        );
+    }
+
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register(pool: PgPool) {
         setup();

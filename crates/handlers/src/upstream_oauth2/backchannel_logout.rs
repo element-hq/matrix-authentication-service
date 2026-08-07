@@ -317,3 +317,35 @@ pub(crate) async fn post(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use hyper::{Request, StatusCode, header::CONTENT_SECURITY_POLICY};
+    use mas_router::Route;
+    use sqlx::PgPool;
+    use ulid::Ulid;
+
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
+
+    /// This is called by the upstream provider, not by a browser, so it gets
+    /// the locked-down policy rather than the server-rendered page one
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_content_security_policy(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let path = mas_router::UpstreamOAuth2BackchannelLogout::new(Ulid::nil())
+            .path_and_query()
+            .into_owned();
+        let response = state
+            .request(Request::post(&path).form(serde_json::json!({})))
+            .await;
+
+        // The request is rejected, but the header does not depend on that
+        response.assert_status(StatusCode::BAD_REQUEST);
+        response.assert_header_value(
+            CONTENT_SECURITY_POLICY,
+            state.csp.locked_down().to_str().unwrap(),
+        );
+    }
+}

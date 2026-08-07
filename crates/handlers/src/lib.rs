@@ -33,8 +33,8 @@ use headers::HeaderName;
 use hyper::{
     StatusCode, Version,
     header::{
-        ACCEPT, ACCEPT_LANGUAGE, AUTHORIZATION, CONTENT_LANGUAGE, CONTENT_LENGTH, CONTENT_TYPE,
-        X_FRAME_OPTIONS,
+        ACCEPT, ACCEPT_LANGUAGE, AUTHORIZATION, CONTENT_LANGUAGE, CONTENT_LENGTH,
+        CONTENT_SECURITY_POLICY, CONTENT_TYPE, X_FRAME_OPTIONS,
     },
 };
 use mas_axum_utils::{InternalError, cookies::CookieJar};
@@ -200,6 +200,7 @@ pub fn api_router<S>() -> Router<S>
 where
     S: Clone + Send + Sync + 'static,
     Keystore: FromRef<S>,
+    MetadataCache: FromRef<S>,
     UrlBuilder: FromRef<S>,
     BoxRepository: FromRequestParts<S>,
     ActivityTracker: FromRequestParts<S>,
@@ -218,6 +219,11 @@ where
         .route(
             mas_router::OAuth2Keys::route(),
             get(self::oauth2::keys::get),
+        )
+        // Called by the upstream provider, not by a browser
+        .route(
+            mas_router::UpstreamOAuth2BackchannelLogout::route(),
+            post(self::upstream_oauth2::backchannel_logout::post),
         )
         .route(
             mas_router::OidcUserinfo::route(),
@@ -260,7 +266,7 @@ where
         )
 }
 
-pub fn compat_router<S>(templates: Templates) -> Router<S>
+pub fn compat_router<S>(templates: Templates, csp: &Csp) -> Router<S>
 where
     S: Clone + Send + Sync + 'static,
     UrlBuilder: FromRef<S>,
@@ -294,6 +300,10 @@ where
             async move |response: axum::response::Response| {
                 Ok::<_, Infallible>(recover_error(&templates, response))
             },
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            CONTENT_SECURITY_POLICY,
+            csp.human(),
         ));
 
     // A sub-router for API-facing routes with CORS
@@ -332,10 +342,11 @@ where
     Router::new().merge(human_router).merge(api_router)
 }
 
-pub fn human_router<S>(templates: Templates) -> Router<S>
+pub fn human_router<S>(templates: Templates, csp: &Csp) -> Router<S>
 where
     S: Clone + Send + Sync + 'static,
     UrlBuilder: FromRef<S>,
+    Csp: FromRef<S>,
     PreferredLanguage: FromRequestParts<S>,
     BoxRepository: FromRequestParts<S>,
     CookieJar: FromRequestParts<S>,
@@ -354,7 +365,38 @@ where
     BoxRng: FromRequestParts<S>,
     Policy: FromRequestParts<S>,
 {
+    // The password registration page is the only one which loads a captcha, so
+    // it is the only one which trusts the provider's origins
+    let register_router = Router::new()
+        .route(
+            mas_router::PasswordRegister::route(),
+            get(self::views::register::password::get).post(self::views::register::password::post),
+        )
+        .layer(SetResponseHeaderLayer::if_not_present(
+            CONTENT_SECURITY_POLICY,
+            csp.register(),
+        ));
+
+    // The routes rendering the SPA shell get their own, stricter policy. The
+    // router-wide one below is `if_not_present`, so it yields to this one.
+    let app_router = Router::new()
+        .route(mas_router::Account::route(), get(self::views::app::get))
+        .route(
+            mas_router::AccountWildcard::route(),
+            get(self::views::app::get),
+        )
+        .route(
+            mas_router::AccountRecoveryFinish::route(),
+            get(self::views::app::get_anonymous),
+        )
+        .layer(SetResponseHeaderLayer::if_not_present(
+            CONTENT_SECURITY_POLICY,
+            csp.app(),
+        ));
+
     Router::new()
+        .merge(register_router)
+        .merge(app_router)
         // XXX: hard-coded redirect from /account to /account/
         .route(
             "/account",
@@ -372,15 +414,6 @@ where
                 },
             ),
         )
-        .route(mas_router::Account::route(), get(self::views::app::get))
-        .route(
-            mas_router::AccountWildcard::route(),
-            get(self::views::app::get),
-        )
-        .route(
-            mas_router::AccountRecoveryFinish::route(),
-            get(self::views::app::get_anonymous),
-        )
         .route(
             mas_router::ChangePasswordDiscovery::route(),
             get(async |State(url_builder): State<UrlBuilder>| {
@@ -396,10 +429,6 @@ where
         .route(
             mas_router::Register::route(),
             get(self::views::register::get),
-        )
-        .route(
-            mas_router::PasswordRegister::route(),
-            get(self::views::register::password::get).post(self::views::register::password::post),
         )
         .route(
             mas_router::RegisterVerifyEmail::route(),
@@ -455,10 +484,6 @@ where
             get(self::upstream_oauth2::link::get).post(self::upstream_oauth2::link::post),
         )
         .route(
-            mas_router::UpstreamOAuth2BackchannelLogout::route(),
-            post(self::upstream_oauth2::backchannel_logout::post),
-        )
-        .route(
             mas_router::DeviceCodeLink::route(),
             get(self::oauth2::device::link::get).post(self::oauth2::device::link::post),
         )
@@ -474,6 +499,10 @@ where
         .layer(SetResponseHeaderLayer::if_not_present(
             X_FRAME_OPTIONS,
             http::HeaderValue::from_static("DENY"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            CONTENT_SECURITY_POLICY,
+            csp.human(),
         ))
 }
 
@@ -502,6 +531,7 @@ fn recover_error(
 /// Returns an error if the template rendering fails.
 pub async fn fallback(
     State(templates): State<Templates>,
+    State(csp): State<Csp>,
     OriginalUri(uri): OriginalUri,
     method: Method,
     version: Version,
@@ -512,5 +542,35 @@ pub async fn fallback(
 
     let res = templates.render_not_found(&ctx)?;
 
-    Ok((StatusCode::NOT_FOUND, Html(res)))
+    // This one is registered outside every router, so it only sees the
+    // locked-down catch-all, which would block its own stylesheet
+    Ok((
+        StatusCode::NOT_FOUND,
+        [(CONTENT_SECURITY_POLICY, csp.human())],
+        Html(res),
+    ))
+}
+
+#[cfg(test)]
+mod tests {
+    use hyper::{Request, StatusCode, header::CONTENT_SECURITY_POLICY};
+    use sqlx::PgPool;
+
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
+
+    /// The 404 page is registered outside every router, so it sets its own
+    /// policy rather than inheriting the locked-down catch-all, which would
+    /// block its stylesheet
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_fallback_content_security_policy(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let response = state
+            .request(Request::get("/this-route-does-not-exist").empty())
+            .await;
+
+        response.assert_status(StatusCode::NOT_FOUND);
+        response.assert_header_value(CONTENT_SECURITY_POLICY, state.csp.human().to_str().unwrap());
+    }
 }
