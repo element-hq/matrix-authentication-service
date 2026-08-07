@@ -10,7 +10,7 @@
     },
     "continue": "Continue",
     "@continue": {
-      "context": "form_post.html:25:28-48, pages/consent.html:71:28-48, pages/device_link.html:42:28-48, pages/login.html:68:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:77:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:52:28-48"
+      "context": "form_post.html:26:28-48, pages/consent.html:71:28-48, pages/device_link.html:42:28-48, pages/login.html:68:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:80:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:52:28-48"
     },
     "create_account": "Create Account",
     "@create_account": {
@@ -79,11 +79,11 @@
     },
     "email_address": "Email address",
     "@email_address": {
-      "context": "pages/recovery/start.html:34:33-58, pages/register/password.html:40:35-60, pages/upstream_oauth2/do_register.html:115:37-62"
+      "context": "pages/recovery/start.html:34:33-58, pages/register/password.html:43:35-60, pages/upstream_oauth2/do_register.html:115:37-62"
     },
     "loading": "Loading…",
     "@loading": {
-      "context": "form_post.html:14:27-46"
+      "context": "form_post.html:15:27-46"
     },
     "mxid": "Matrix ID",
     "@mxid": {
@@ -91,15 +91,15 @@
     },
     "password": "Password",
     "@password": {
-      "context": "pages/login.html:56:37-57, pages/reauth.html:28:35-55, pages/register/password.html:45:33-53"
+      "context": "pages/login.html:56:37-57, pages/reauth.html:28:35-55, pages/register/password.html:48:33-53"
     },
     "password_confirm": "Confirm password",
     "@password_confirm": {
-      "context": "pages/register/password.html:49:33-61"
+      "context": "pages/register/password.html:52:33-61"
     },
     "username": "Username",
     "@username": {
-      "context": "pages/login.html:51:39-59, pages/register/index.html:30:35-55, pages/register/password.html:34:33-53, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:107:39-59"
+      "context": "pages/login.html:51:39-59, pages/register/index.html:30:35-55, pages/register/password.html:37:33-53, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:107:39-59"
     }
   },
   "error": {
@@ -149,7 +149,7 @@
     "captcha": {
       "noscript": "This form is protected by a CAPTCHA and requires JavaScript to be enabled to submit it. Please enable JavaScript in your browser and reload this page.",
       "@noscript": {
-        "context": "components/captcha.html:13:11-36"
+        "context": "components/captcha.html:14:11-36"
       }
     },
     "change_password": {
@@ -660,7 +660,7 @@
     "register": {
       "call_to_login": "Already have an account?",
       "@call_to_login": {
-        "context": "pages/register/index.html:63:35-66, pages/register/password.html:80:33-64",
+        "context": "pages/register/index.html:63:35-66, pages/register/password.html:83:33-64",
         "description": "Displayed on the registration page to suggest to log in instead"
       },
       "continue_with_email": "Continue with email address",
@@ -678,12 +678,12 @@
         },
         "heading": "Create an account",
         "@heading": {
-          "context": "pages/register/index.html:21:29-69, pages/register/password.html:18:27-67"
+          "context": "pages/register/index.html:21:29-69, pages/register/password.html:21:27-67"
         }
       },
       "terms_of_service": "I agree to the <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Terms and Conditions</a>",
       "@terms_of_service": {
-        "context": "pages/register/password.html:54:35-95, pages/upstream_oauth2/do_register.html:180:35-95"
+        "context": "pages/register/password.html:57:35-95, pages/upstream_oauth2/do_register.html:180:35-95"
       }
     },
     "registration_token": {
