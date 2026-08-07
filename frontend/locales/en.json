@@ -26,12 +26,14 @@
   },
   "common": {
     "e2ee": "End-to-end encryption",
+    "email_address": "Email address",
     "loading": "Loading…",
     "next": "Next",
     "password": "Password",
     "previous": "Previous",
     "saved": "Saved",
-    "saving": "Saving…"
+    "saving": "Saving…",
+    "username": "Username"
   },
   "frontend": {
     "account": {
@@ -113,8 +115,25 @@
       "title": "Something went wrong"
     },
     "errors": {
+      "captcha": "CAPTCHA verification failed, please try again",
+      "email_banned": "Email is banned by the server policy",
+      "email_domain_banned": "Email domain is banned by the server policy",
+      "email_domain_not_allowed": "Email domain is not allowed by the server policy",
+      "email_not_allowed": "Email is not allowed by the server policy",
+      "field_invalid": "This field is invalid",
       "field_required": "This field is required",
-      "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again."
+      "invalid_email": "Please enter a valid email address",
+      "password_mismatch": "Password fields don't match",
+      "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again.",
+      "unspecified": "Something went wrong. Please try again.",
+      "username_all_numeric": "Username cannot consist solely of numbers",
+      "username_banned": "Username is banned by the server policy",
+      "username_invalid": "Username can only contain lowercase letters, numbers, and the characters . _ - + / =",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, dashes and underscores only.",
+      "username_not_allowed": "Username is not allowed by the server policy",
+      "username_taken": "This username is already taken",
+      "username_too_long": "Username is too long",
+      "username_too_short": "Username is too short"
     },
     "last_active": {
       "active_date": "Active {{relativeDate}}",
@@ -226,6 +245,17 @@
         "word_by_itself": "Single words are easy to guess."
       }
     },
+    "register": {
+      "call_to_login": "Already have an account? Sign in",
+      "captcha_incomplete": "Please complete the CAPTCHA challenge before continuing",
+      "password_confirm_label": "Confirm password",
+      "password_invalid": "The password you chose is invalid; it may not meet the configured security policy.",
+      "password_label": "Password",
+      "username_available": "{{mxid}} is available!",
+      "username_checking": "Checking availability…",
+      "username_reserved": "{{mxid}} is not available",
+      "username_taken": "{{mxid}} is already taken"
+    },
     "reset_cross_signing": {
       "cancelled": {
         "description_1": "You can close this window and go back to the app to continue.",
@@ -334,6 +364,9 @@
     }
   },
   "mas": {
+    "register": {
+      "terms_of_service": "I agree to the <a>Terms and Conditions</a>"
+    },
     "scope": {
       "edit_profile": "Edit your profile and contact details",
       "manage_sessions": "Manage your devices and sessions",

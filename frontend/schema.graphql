@@ -1185,6 +1185,15 @@ type Query {
   """
   user(id: ID!): User
   """
+  Check whether a username is available for registration.
+
+  This query is accessible to anonymous users, as it is used during
+  the registration flow. It intentionally acts as an availability
+  oracle for registration, unlike `userByUsername` below which hides
+  user existence, so it is rate-limited per requester.
+  """
+  usernameAvailable(username: String!): UsernameAvailability!
+  """
   Fetch a user by its username.
   """
   userByUsername(username: String!): User
@@ -2468,6 +2477,57 @@ enum UserState {
   The user is locked.
   """
   LOCKED
+}
+
+"""
+The result of a username availability check.
+"""
+type UsernameAvailability {
+  """
+  The username that was checked.
+  """
+  username: String!
+  """
+  Whether the username is available for registration.
+  """
+  available: Boolean!
+  """
+  If the username is not available, the reason why.
+  """
+  reason: UsernameUnavailableReason
+  """
+  If the username is invalid, the list of policy violation codes (e.g.
+  `username-too-long`, `username-all-numeric`, `username-banned`,
+  `username-not-allowed`, `username-invalid-chars`), so that clients can
+  localize the error message.
+  """
+  violationCodes: [String!]
+}
+
+"""
+Why a username is not available for registration.
+"""
+enum UsernameUnavailableReason {
+  """
+  The username is already taken by an existing user in MAS.
+  """
+  TAKEN
+  """
+  The username is reserved by the homeserver.
+
+  Note that the homeserver may also reject the username at registration
+  time for other reasons (e.g. Synapse's `M_USER_IN_USE`) that this
+  query cannot predict, since it only checks availability, not all the
+  homeserver's own registration rules.
+  """
+  RESERVED
+  """
+  The username does not pass the registration policy (e.g. it is too
+  long, all-numeric, contains invalid characters, or is banned).
+
+  See `violationCodes` for the specific reasons.
+  """
+  INVALID
 }
 
 """

@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -96,7 +97,7 @@ pub(crate) async fn get(
             .into_response());
     }
 
-    let mut ctx = PasswordRegisterContext::default();
+    let mut ctx = PasswordRegisterContext::new(&url_builder);
 
     // If we got a username from the query string, use it to prefill the form
     if let Some(username) = query.username {
@@ -319,7 +320,7 @@ pub(crate) async fn post(
     if !state.is_valid() {
         let content = render(
             locale,
-            PasswordRegisterContext::default().with_form_state(state),
+            PasswordRegisterContext::new(&url_builder).with_form_state(state),
             query,
             csrf_token,
             &mut repo,

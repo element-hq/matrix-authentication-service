@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -22,7 +23,12 @@ use oauth2_types::{
 use sqlx::PgPool;
 use zeroize::Zeroizing;
 
-use crate::test_utils::{self, CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup};
+use crate::{
+    SiteConfig,
+    test_utils::{
+        self, CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup, test_site_config,
+    },
+};
 
 async fn create_test_client(state: &TestState) -> Client {
     let mut repo = state.repository().await.unwrap();
@@ -1083,4 +1089,212 @@ async fn test_deactivate_user_rejected_wrong_password(pool: PgPool) {
         "{:?}",
         response.data
     );
+}
+
+const USERNAME_AVAILABLE_QUERY: &str = r"
+    query($username: String!) {
+        usernameAvailable(username: $username) {
+            username
+            available
+            reason
+            violationCodes
+        }
+    }
+";
+
+/// Test that the `usernameAvailable` query reports an available username.
+#[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+async fn test_username_available(pool: PgPool) {
+    setup();
+    let state = TestState::from_pool(pool).await.unwrap();
+
+    let request = Request::post("/graphql").json(serde_json::json!({
+        "query": USERNAME_AVAILABLE_QUERY,
+        "variables": { "username": "carol" },
+    }));
+
+    let response = state.request(request).await;
+    response.assert_status(StatusCode::OK);
+    let response: GraphQLResponse = response.json();
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+    assert_eq!(
+        response.data["usernameAvailable"],
+        serde_json::json!({
+            "username": "carol",
+            "available": true,
+            "reason": null,
+            "violationCodes": null,
+        })
+    );
+}
+
+/// Test that the `usernameAvailable` query reports a username already taken
+/// by an existing MAS user.
+#[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+async fn test_username_available_taken(pool: PgPool) {
+    setup();
+    let state = TestState::from_pool(pool).await.unwrap();
+    create_test_user(&state, "alice").await;
+
+    let request = Request::post("/graphql").json(serde_json::json!({
+        "query": USERNAME_AVAILABLE_QUERY,
+        "variables": { "username": "alice" },
+    }));
+
+    let response = state.request(request).await;
+    response.assert_status(StatusCode::OK);
+    let response: GraphQLResponse = response.json();
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+    assert_eq!(
+        response.data["usernameAvailable"],
+        serde_json::json!({
+            "username": "alice",
+            "available": false,
+            "reason": "TAKEN",
+            "violationCodes": null,
+        })
+    );
+}
+
+/// Test that the `usernameAvailable` query reports a username reserved on
+/// the homeserver.
+#[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+async fn test_username_available_reserved(pool: PgPool) {
+    setup();
+    let state = TestState::from_pool(pool).await.unwrap();
+    state.homeserver_connection.reserve_localpart("bob").await;
+
+    let request = Request::post("/graphql").json(serde_json::json!({
+        "query": USERNAME_AVAILABLE_QUERY,
+        "variables": { "username": "bob" },
+    }));
+
+    let response = state.request(request).await;
+    response.assert_status(StatusCode::OK);
+    let response: GraphQLResponse = response.json();
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+    assert_eq!(
+        response.data["usernameAvailable"],
+        serde_json::json!({
+            "username": "bob",
+            "available": false,
+            "reason": "RESERVED",
+            "violationCodes": null,
+        })
+    );
+}
+
+/// Test that the `usernameAvailable` query runs the registration policy and
+/// reports the violation codes for an all-numeric username.
+#[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+async fn test_username_available_invalid_all_numeric(pool: PgPool) {
+    setup();
+    let state = TestState::from_pool(pool).await.unwrap();
+
+    let request = Request::post("/graphql").json(serde_json::json!({
+        "query": USERNAME_AVAILABLE_QUERY,
+        "variables": { "username": "1234567" },
+    }));
+
+    let response = state.request(request).await;
+    response.assert_status(StatusCode::OK);
+    let response: GraphQLResponse = response.json();
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+    assert_eq!(
+        response.data["usernameAvailable"]["reason"].as_str(),
+        Some("INVALID")
+    );
+    let codes = response.data["usernameAvailable"]["violationCodes"]
+        .as_array()
+        .expect("violationCodes to be an array");
+    assert!(
+        codes
+            .iter()
+            .any(|c| c.as_str() == Some("username-all-numeric")),
+        "{:?}",
+        codes
+    );
+}
+
+/// Test that the `usernameAvailable` query rejects an overly long username
+/// without hitting the database or the homeserver.
+#[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+async fn test_username_available_too_long(pool: PgPool) {
+    setup();
+    let state = TestState::from_pool(pool).await.unwrap();
+
+    let username = "a".repeat(300);
+    let request = Request::post("/graphql").json(serde_json::json!({
+        "query": USERNAME_AVAILABLE_QUERY,
+        "variables": { "username": username },
+    }));
+
+    let response = state.request(request).await;
+    response.assert_status(StatusCode::OK);
+    let response: GraphQLResponse = response.json();
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+    assert_eq!(
+        response.data["usernameAvailable"]["reason"].as_str(),
+        Some("INVALID")
+    );
+    assert_eq!(
+        response.data["usernameAvailable"]["violationCodes"],
+        serde_json::json!(["username-too-long"])
+    );
+}
+
+/// Test that the `usernameAvailable` query errors out when password
+/// registration is disabled on the server.
+#[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+async fn test_username_available_registration_disabled(pool: PgPool) {
+    setup();
+    let state = TestState::from_pool_with_site_config(
+        pool,
+        SiteConfig {
+            password_registration_enabled: false,
+            ..test_site_config()
+        },
+    )
+    .await
+    .unwrap();
+
+    let request = Request::post("/graphql").json(serde_json::json!({
+        "query": USERNAME_AVAILABLE_QUERY,
+        "variables": { "username": "dave" },
+    }));
+
+    let response = state.request(request).await;
+    response.assert_status(StatusCode::OK);
+    let response: GraphQLResponse = response.json();
+    assert!(!response.errors.is_empty());
+    assert!(response.data["usernameAvailable"].is_null());
+}
+
+/// Test that the `usernameAvailable` query is rate-limited per requester.
+#[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+async fn test_username_available_rate_limited(pool: PgPool) {
+    setup();
+    let state = TestState::from_pool(pool).await.unwrap();
+
+    // The default configuration allows a burst of 3 requests.
+    for _ in 0..3 {
+        let request = Request::post("/graphql").json(serde_json::json!({
+            "query": USERNAME_AVAILABLE_QUERY,
+            "variables": { "username": "eve" },
+        }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let response: GraphQLResponse = response.json();
+        assert!(response.errors.is_empty(), "{:?}", response.errors);
+    }
+
+    // The next one should be rate limited.
+    let request = Request::post("/graphql").json(serde_json::json!({
+        "query": USERNAME_AVAILABLE_QUERY,
+        "variables": { "username": "eve" },
+    }));
+    let response = state.request(request).await;
+    response.assert_status(StatusCode::OK);
+    let response: GraphQLResponse = response.json();
+    assert!(!response.errors.is_empty());
 }

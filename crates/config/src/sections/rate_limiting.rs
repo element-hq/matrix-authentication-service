@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -31,6 +32,14 @@ pub struct RateLimitingConfig {
     /// Email authentication-specific rate limits
     #[serde(default)]
     pub email_authentication: EmailauthenticationRateLimitingConfig,
+
+    /// Controls how many `usernameAvailable` GraphQL queries are permitted
+    /// based on source address.
+    ///
+    /// This query is an availability oracle usable during registration, so
+    /// this limit protects against username enumeration.
+    #[serde(default = "default_username_availability")]
+    pub username_availability: RateLimiterConfiguration,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
@@ -167,6 +176,10 @@ impl ConfigurationSection for RateLimitingConfig {
             return Err(error_on_field(error, "registration").into());
         }
 
+        if let Some(error) = error_on_limiter(&self.username_availability) {
+            return Err(error_on_field(error, "username_availability").into());
+        }
+
         if let Some(error) = error_on_limiter(&self.login.per_ip) {
             return Err(error_on_nested_field(error, "login", "per_ip").into());
         }
@@ -257,6 +270,13 @@ fn default_email_authentication_attempt_per_session() -> RateLimiterConfiguratio
     }
 }
 
+fn default_username_availability() -> RateLimiterConfiguration {
+    RateLimiterConfiguration {
+        burst: NonZeroU32::new(3).unwrap(),
+        per_second: 1.0,
+    }
+}
+
 impl Default for RateLimitingConfig {
     fn default() -> Self {
         RateLimitingConfig {
@@ -264,6 +284,7 @@ impl Default for RateLimitingConfig {
             registration: default_registration(),
             account_recovery: AccountRecoveryRateLimitingConfig::default(),
             email_authentication: EmailauthenticationRateLimitingConfig::default(),
+            username_availability: default_username_availability(),
         }
     }
 }
