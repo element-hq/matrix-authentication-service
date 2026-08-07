@@ -636,6 +636,15 @@ impl InsertableJob for CleanupInactiveOAuth2SessionIpsJob {
     const QUEUE_NAME: &'static str = "cleanup-inactive-oauth2-session-ips";
 }
 
+/// Cleanup upstream OAuth links and password hashes for users
+/// deactivated >30d ago
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct CleanupDeactivatedUsersJob;
+
+impl InsertableJob for CleanupDeactivatedUsersJob {
+    const QUEUE_NAME: &'static str = "cleanup-deactivated-users";
+}
+
 /// Cleanup IP addresses from inactive compat sessions
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct CleanupInactiveCompatSessionIpsJob;
