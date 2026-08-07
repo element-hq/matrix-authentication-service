@@ -34,7 +34,7 @@ use ulid::Ulid;
 
 use super::callback::CallbackDestination;
 use crate::{
-    BoundActivityTracker, PreferredLanguage, impl_from_error_for_route,
+    BoundActivityTracker, Csp, PreferredLanguage, impl_from_error_for_route,
     oauth2::generate_id_token,
     session::{SessionOrFallback, count_user_sessions_for_limiting, load_session_or_fallback},
 };
@@ -226,6 +226,7 @@ pub(crate) async fn post(
     clock: BoxClock,
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
+    State(csp): State<Csp>,
     State(key_store): State<Keystore>,
     mut policy: Policy,
     mut repo: BoxRepository,
@@ -354,7 +355,7 @@ pub(crate) async fn post(
 
     Ok((
         cookie_jar,
-        callback_destination.go(&templates, &locale, params)?,
+        callback_destination.go(&templates, &csp, &locale, params)?,
     )
         .into_response())
 }
