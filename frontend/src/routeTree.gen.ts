@@ -9,31 +9,46 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ResetCrossSigningRouteImport } from './routes/reset-cross-signing'
 import { Route as AccountRouteImport } from './routes/_account'
-import { Route as ResetCrossSigningIndexRouteImport } from './routes/reset-cross-signing.index'
+import { Route as ResetCrossSigningRouteImport } from './routes/reset-cross-signing'
 import { Route as AccountIndexRouteImport } from './routes/_account.index'
-import { Route as SessionsIdRouteImport } from './routes/sessions.$id'
-import { Route as ResetCrossSigningSuccessRouteImport } from './routes/reset-cross-signing.success'
-import { Route as ResetCrossSigningCancelledRouteImport } from './routes/reset-cross-signing.cancelled'
-import { Route as DevicesSplatRouteImport } from './routes/devices.$'
 import { Route as ClientsIdRouteImport } from './routes/clients.$id'
-import { Route as PasswordRecoveryIndexRouteImport } from './routes/password.recovery.index'
-import { Route as PasswordChangeIndexRouteImport } from './routes/password.change.index'
-import { Route as AccountSessionsIndexRouteImport } from './routes/_account.sessions.index'
+import { Route as DevicesSplatRouteImport } from './routes/devices.$'
+import { Route as ResetCrossSigningIndexRouteImport } from './routes/reset-cross-signing.index'
+import { Route as ResetCrossSigningCancelledRouteImport } from './routes/reset-cross-signing.cancelled'
+import { Route as ResetCrossSigningSuccessRouteImport } from './routes/reset-cross-signing.success'
+import { Route as SessionsIdRouteImport } from './routes/sessions.$id'
 import { Route as AccountPlanIndexRouteImport } from './routes/_account.plan.index'
-import { Route as PasswordChangeSuccessRouteImport } from './routes/password.change.success'
-import { Route as EmailsIdVerifyRouteImport } from './routes/emails.$id.verify'
-import { Route as EmailsIdInUseRouteImport } from './routes/emails.$id.in-use'
+import { Route as AccountSessionsIndexRouteImport } from './routes/_account.sessions.index'
 import { Route as AccountSessionsBrowsersRouteImport } from './routes/_account.sessions.browsers'
+import { Route as EmailsIdInUseRouteImport } from './routes/emails.$id.in-use'
+import { Route as EmailsIdVerifyRouteImport } from './routes/emails.$id.verify'
+import { Route as PasswordChangeIndexRouteImport } from './routes/password.change.index'
+import { Route as PasswordChangeSuccessRouteImport } from './routes/password.change.success'
+import { Route as PasswordRecoveryIndexRouteImport } from './routes/password.recovery.index'
 
+const AccountRoute = AccountRouteImport.update({
+  id: '/_account',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetCrossSigningRoute = ResetCrossSigningRouteImport.update({
   id: '/reset-cross-signing',
   path: '/reset-cross-signing',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AccountRoute = AccountRouteImport.update({
-  id: '/_account',
+const AccountIndexRoute = AccountIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AccountRoute,
+} as any)
+const ClientsIdRoute = ClientsIdRouteImport.update({
+  id: '/clients/$id',
+  path: '/clients/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevicesSplatRoute = DevicesSplatRouteImport.update({
+  id: '/devices/$',
+  path: '/devices/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetCrossSigningIndexRoute = ResetCrossSigningIndexRouteImport.update({
@@ -41,61 +56,41 @@ const ResetCrossSigningIndexRoute = ResetCrossSigningIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ResetCrossSigningRoute,
 } as any)
-const AccountIndexRoute = AccountIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AccountRoute,
-} as any)
-const SessionsIdRoute = SessionsIdRouteImport.update({
-  id: '/sessions/$id',
-  path: '/sessions/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetCrossSigningSuccessRoute =
-  ResetCrossSigningSuccessRouteImport.update({
-    id: '/success',
-    path: '/success',
-    getParentRoute: () => ResetCrossSigningRoute,
-  } as any)
 const ResetCrossSigningCancelledRoute =
   ResetCrossSigningCancelledRouteImport.update({
     id: '/cancelled',
     path: '/cancelled',
     getParentRoute: () => ResetCrossSigningRoute,
   } as any)
-const DevicesSplatRoute = DevicesSplatRouteImport.update({
-  id: '/devices/$',
-  path: '/devices/$',
+const ResetCrossSigningSuccessRoute =
+  ResetCrossSigningSuccessRouteImport.update({
+    id: '/success',
+    path: '/success',
+    getParentRoute: () => ResetCrossSigningRoute,
+  } as any)
+const SessionsIdRoute = SessionsIdRouteImport.update({
+  id: '/sessions/$id',
+  path: '/sessions/$id',
   getParentRoute: () => rootRouteImport,
-} as any)
-const ClientsIdRoute = ClientsIdRouteImport.update({
-  id: '/clients/$id',
-  path: '/clients/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PasswordRecoveryIndexRoute = PasswordRecoveryIndexRouteImport.update({
-  id: '/password/recovery/',
-  path: '/password/recovery/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PasswordChangeIndexRoute = PasswordChangeIndexRouteImport.update({
-  id: '/password/change/',
-  path: '/password/change/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AccountSessionsIndexRoute = AccountSessionsIndexRouteImport.update({
-  id: '/sessions/',
-  path: '/sessions/',
-  getParentRoute: () => AccountRoute,
 } as any)
 const AccountPlanIndexRoute = AccountPlanIndexRouteImport.update({
   id: '/plan/',
   path: '/plan/',
   getParentRoute: () => AccountRoute,
 } as any)
-const PasswordChangeSuccessRoute = PasswordChangeSuccessRouteImport.update({
-  id: '/password/change/success',
-  path: '/password/change/success',
+const AccountSessionsIndexRoute = AccountSessionsIndexRouteImport.update({
+  id: '/sessions/',
+  path: '/sessions/',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountSessionsBrowsersRoute = AccountSessionsBrowsersRouteImport.update({
+  id: '/sessions/browsers',
+  path: '/sessions/browsers',
+  getParentRoute: () => AccountRoute,
+} as any)
+const EmailsIdInUseRoute = EmailsIdInUseRouteImport.update({
+  id: '/emails/$id/in-use',
+  path: '/emails/$id/in-use',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmailsIdVerifyRoute = EmailsIdVerifyRouteImport.update({
@@ -103,15 +98,20 @@ const EmailsIdVerifyRoute = EmailsIdVerifyRouteImport.update({
   path: '/emails/$id/verify',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmailsIdInUseRoute = EmailsIdInUseRouteImport.update({
-  id: '/emails/$id/in-use',
-  path: '/emails/$id/in-use',
+const PasswordChangeIndexRoute = PasswordChangeIndexRouteImport.update({
+  id: '/password/change/',
+  path: '/password/change/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AccountSessionsBrowsersRoute = AccountSessionsBrowsersRouteImport.update({
-  id: '/sessions/browsers',
-  path: '/sessions/browsers',
-  getParentRoute: () => AccountRoute,
+const PasswordChangeSuccessRoute = PasswordChangeSuccessRouteImport.update({
+  id: '/password/change/success',
+  path: '/password/change/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PasswordRecoveryIndexRoute = PasswordRecoveryIndexRouteImport.update({
+  id: '/password/recovery/',
+  path: '/password/recovery/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -241,6 +241,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/_account': {
+      id: '/_account'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-cross-signing': {
       id: '/reset-cross-signing'
       path: '/reset-cross-signing'
@@ -248,11 +255,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetCrossSigningRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_account': {
-      id: '/_account'
-      path: ''
+    '/_account/': {
+      id: '/_account/'
+      path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof AccountRouteImport
+      preLoaderRoute: typeof AccountIndexRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/clients/$id': {
+      id: '/clients/$id'
+      path: '/clients/$id'
+      fullPath: '/clients/$id'
+      preLoaderRoute: typeof ClientsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/devices/$': {
+      id: '/devices/$'
+      path: '/devices/$'
+      fullPath: '/devices/$'
+      preLoaderRoute: typeof DevicesSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-cross-signing/': {
@@ -262,19 +283,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetCrossSigningIndexRouteImport
       parentRoute: typeof ResetCrossSigningRoute
     }
-    '/_account/': {
-      id: '/_account/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AccountIndexRouteImport
-      parentRoute: typeof AccountRoute
-    }
-    '/sessions/$id': {
-      id: '/sessions/$id'
-      path: '/sessions/$id'
-      fullPath: '/sessions/$id'
-      preLoaderRoute: typeof SessionsIdRouteImport
-      parentRoute: typeof rootRouteImport
+    '/reset-cross-signing/cancelled': {
+      id: '/reset-cross-signing/cancelled'
+      path: '/cancelled'
+      fullPath: '/reset-cross-signing/cancelled'
+      preLoaderRoute: typeof ResetCrossSigningCancelledRouteImport
+      parentRoute: typeof ResetCrossSigningRoute
     }
     '/reset-cross-signing/success': {
       id: '/reset-cross-signing/success'
@@ -283,47 +297,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetCrossSigningSuccessRouteImport
       parentRoute: typeof ResetCrossSigningRoute
     }
-    '/reset-cross-signing/cancelled': {
-      id: '/reset-cross-signing/cancelled'
-      path: '/cancelled'
-      fullPath: '/reset-cross-signing/cancelled'
-      preLoaderRoute: typeof ResetCrossSigningCancelledRouteImport
-      parentRoute: typeof ResetCrossSigningRoute
-    }
-    '/devices/$': {
-      id: '/devices/$'
-      path: '/devices/$'
-      fullPath: '/devices/$'
-      preLoaderRoute: typeof DevicesSplatRouteImport
+    '/sessions/$id': {
+      id: '/sessions/$id'
+      path: '/sessions/$id'
+      fullPath: '/sessions/$id'
+      preLoaderRoute: typeof SessionsIdRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/clients/$id': {
-      id: '/clients/$id'
-      path: '/clients/$id'
-      fullPath: '/clients/$id'
-      preLoaderRoute: typeof ClientsIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/password/recovery/': {
-      id: '/password/recovery/'
-      path: '/password/recovery'
-      fullPath: '/password/recovery/'
-      preLoaderRoute: typeof PasswordRecoveryIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/password/change/': {
-      id: '/password/change/'
-      path: '/password/change'
-      fullPath: '/password/change/'
-      preLoaderRoute: typeof PasswordChangeIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_account/sessions/': {
-      id: '/_account/sessions/'
-      path: '/sessions'
-      fullPath: '/sessions/'
-      preLoaderRoute: typeof AccountSessionsIndexRouteImport
-      parentRoute: typeof AccountRoute
     }
     '/_account/plan/': {
       id: '/_account/plan/'
@@ -332,11 +311,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountPlanIndexRouteImport
       parentRoute: typeof AccountRoute
     }
-    '/password/change/success': {
-      id: '/password/change/success'
-      path: '/password/change/success'
-      fullPath: '/password/change/success'
-      preLoaderRoute: typeof PasswordChangeSuccessRouteImport
+    '/_account/sessions/': {
+      id: '/_account/sessions/'
+      path: '/sessions'
+      fullPath: '/sessions/'
+      preLoaderRoute: typeof AccountSessionsIndexRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/_account/sessions/browsers': {
+      id: '/_account/sessions/browsers'
+      path: '/sessions/browsers'
+      fullPath: '/sessions/browsers'
+      preLoaderRoute: typeof AccountSessionsBrowsersRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/emails/$id/in-use': {
+      id: '/emails/$id/in-use'
+      path: '/emails/$id/in-use'
+      fullPath: '/emails/$id/in-use'
+      preLoaderRoute: typeof EmailsIdInUseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/emails/$id/verify': {
@@ -346,19 +339,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmailsIdVerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/emails/$id/in-use': {
-      id: '/emails/$id/in-use'
-      path: '/emails/$id/in-use'
-      fullPath: '/emails/$id/in-use'
-      preLoaderRoute: typeof EmailsIdInUseRouteImport
+    '/password/change/': {
+      id: '/password/change/'
+      path: '/password/change'
+      fullPath: '/password/change/'
+      preLoaderRoute: typeof PasswordChangeIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_account/sessions/browsers': {
-      id: '/_account/sessions/browsers'
-      path: '/sessions/browsers'
-      fullPath: '/sessions/browsers'
-      preLoaderRoute: typeof AccountSessionsBrowsersRouteImport
-      parentRoute: typeof AccountRoute
+    '/password/change/success': {
+      id: '/password/change/success'
+      path: '/password/change/success'
+      fullPath: '/password/change/success'
+      preLoaderRoute: typeof PasswordChangeSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/password/recovery/': {
+      id: '/password/recovery/'
+      path: '/password/recovery'
+      fullPath: '/password/recovery/'
+      preLoaderRoute: typeof PasswordRecoveryIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
