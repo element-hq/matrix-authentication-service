@@ -70,6 +70,7 @@ mod captcha;
 #[cfg(test)]
 mod cleanup_tests;
 mod client_ip;
+mod csp;
 mod preferred_language;
 mod rate_limit;
 mod session;
@@ -108,6 +109,7 @@ pub use self::{
     activity_tracker::{ActivityTracker, Bound as BoundActivityTracker},
     admin::router as admin_api_router,
     client_ip::ClientIp,
+    csp::Csp,
     graphql::{
         GraphQLOperation, Schema as GraphQLSchema, schema as graphql_schema,
         schema_builder as graphql_schema_builder,
