@@ -106,6 +106,16 @@ server {
 }
 ```
 
+## Synapse MAS endpoint 
+Include **/_synapse/mas** under the location paths forwarded to Synapse.
+
+```nginx
+server {
+  # ---- SNIP ----
+location ~ ^(/_matrix|/_synapse/client|/_synapse/mas) {
+  # ---- SNIP ----
+```
+
 ## Preserve the client IP
 
 For rate-limiting and logging purposes, MAS needs to know the client IP address, which can be lost when using a reverse proxy.
