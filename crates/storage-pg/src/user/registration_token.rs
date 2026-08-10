@@ -49,6 +49,7 @@ struct UserRegistrationTokenLookup {
     token: String,
     username: Option<String>,
     email: Option<String>,
+    passwordless: bool,
     usage_limit: Option<i32>,
     times_used: i32,
     created_at: DateTime<Utc>,
@@ -215,6 +216,7 @@ impl TryFrom<UserRegistrationTokenLookup> for UserRegistrationToken {
             token: res.token,
             username: res.username,
             email: res.email,
+            passwordless: res.passwordless,
             usage_limit,
             times_used,
             created_at: res.created_at,
@@ -264,6 +266,13 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             .expr_as(
                 Expr::col((UserRegistrationTokens::Table, UserRegistrationTokens::Email)),
                 UserRegistrationTokenLookupIden::Email,
+            )
+            .expr_as(
+                Expr::col((
+                    UserRegistrationTokens::Table,
+                    UserRegistrationTokens::Passwordless,
+                )),
+                UserRegistrationTokenLookupIden::Passwordless,
             )
             .expr_as(
                 Expr::col((
@@ -379,6 +388,7 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
                        token,
                        username,
                        email,
+                       passwordless,
                        usage_limit,
                        times_used,
                        created_at,
@@ -421,6 +431,7 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
                        token,
                        username,
                        email,
+                       passwordless,
                        usage_limit,
                        times_used,
                        created_at,
@@ -461,6 +472,7 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
         expires_at: Option<DateTime<Utc>>,
         username: Option<String>,
         email: Option<String>,
+        passwordless: bool,
     ) -> Result<UserRegistrationToken, Self::Error> {
         let created_at = clock.now();
         let id = Ulid::from_datetime_with_rng(created_at, rng);
@@ -473,8 +485,8 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
         sqlx::query!(
             r#"
                 INSERT INTO user_registration_tokens
-                    (user_registration_token_id, token, usage_limit, created_at, expires_at, username, email)
-                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                    (user_registration_token_id, token, usage_limit, created_at, expires_at, username, email, passwordless)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             "#,
             Uuid::from(id),
             &token,
@@ -483,6 +495,7 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             expires_at,
             username.as_deref(),
             email.as_deref(),
+            passwordless,
         )
         .traced()
         .execute(&mut *self.conn)
@@ -493,6 +506,7 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             token,
             username,
             email,
+            passwordless,
             usage_limit,
             times_used: 0,
             created_at,
@@ -781,6 +795,7 @@ mod tests {
                 None,
                 None,
                 None,
+                false,
             )
             .await
             .unwrap();
@@ -834,6 +849,7 @@ mod tests {
                 None,
                 None,
                 None,
+                false,
             )
             .await
             .unwrap();
@@ -881,6 +897,7 @@ mod tests {
                 None,
                 None,
                 None,
+                false,
             )
             .await
             .unwrap();
@@ -938,6 +955,7 @@ mod tests {
                 None,
                 None,
                 None,
+                false,
             )
             .await
             .unwrap();
@@ -953,6 +971,7 @@ mod tests {
                 None,
                 None,
                 None,
+                false,
             )
             .await
             .unwrap();
@@ -974,6 +993,7 @@ mod tests {
                 Some(past_time),
                 None,
                 None,
+                false,
             )
             .await
             .unwrap();
@@ -989,6 +1009,7 @@ mod tests {
                 None,
                 None,
                 None,
+                false,
             )
             .await
             .unwrap();
