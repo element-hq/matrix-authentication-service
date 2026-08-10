@@ -396,10 +396,6 @@ where
             get(self::views::register::get).post(self::views::register::post),
         )
         .route(
-            mas_router::PasswordRegister::route(),
-            get(self::views::register::password::get).post(self::views::register::password::post),
-        )
-        .route(
             mas_router::RegisterVerifyEmail::route(),
             get(self::views::register::steps::verify_email::get)
                 .post(self::views::register::steps::verify_email::post),

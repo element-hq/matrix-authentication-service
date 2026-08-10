@@ -95,7 +95,7 @@
     },
     "username": "Username",
     "@username": {
-      "context": "pages/login.html:51:39-59, pages/register/index.html:30:35-55, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:107:39-59"
+      "context": "pages/login.html:51:39-59, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:107:39-59"
     }
   },
   "error": {
@@ -442,12 +442,12 @@
     },
     "loading": "Loading…",
     "@loading": {
-      "context": "pages/register/password.html:40:26-42",
+      "context": "pages/register/index.html:38:26-42",
       "description": "Announced to screen readers while a page loads"
     },
     "loading_failed": "Something went wrong while loading the page. Try reloading it.",
     "@loading_failed": {
-      "context": "app.html:28:9-32, pages/register/password.html:51:7-30"
+      "context": "app.html:28:9-32, pages/register/index.html:49:7-30"
     },
     "login": {
       "call_to_register": "Don't have an account yet?",
@@ -456,7 +456,7 @@
       },
       "continue_with_provider": "Continue with %(provider)s",
       "@continue_with_provider": {
-        "context": "pages/login.html:81:15-67, pages/register/index.html:57:15-67",
+        "context": "pages/login.html:81:15-67",
         "description": "Button to log in with an upstream provider"
       },
       "description": "Please sign in to continue:",
@@ -659,30 +659,17 @@
     "register": {
       "call_to_login": "Already have an account?",
       "@call_to_login": {
-        "context": "pages/register/index.html:63:35-66, pages/register/password.html:61:35-66",
         "description": "Displayed on the registration page to suggest to log in instead"
       },
-      "continue_with_email": "Continue with email address",
-      "@continue_with_email": {
-        "context": "pages/register/index.html:45:32-69"
-      },
-      "continue_with_password": "Continue with password",
-      "@continue_with_password": {
-        "context": "pages/register/index.html:47:32-72"
-      },
       "create_account": {
-        "description": "Choose a username to continue.",
-        "@description": {
-          "context": "pages/register/index.html:24:29-73"
-        },
         "heading": "Create an account",
         "@heading": {
-          "context": "pages/register/index.html:21:29-69, pages/register/password.html:25:27-67"
+          "context": "pages/register/index.html:25:27-67"
         }
       },
       "javascript_required": "JavaScript is required to create an account. Please enable JavaScript in your browser and reload this page.",
       "@javascript_required": {
-        "context": "pages/register/password.html:59:36-73"
+        "context": "pages/register/index.html:56:34-71"
       },
       "terms_of_service": "I agree to the <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Terms and Conditions</a>",
       "@terms_of_service": {

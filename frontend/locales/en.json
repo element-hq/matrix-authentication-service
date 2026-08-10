@@ -250,9 +250,13 @@
       }
     },
     "register": {
-      "call_to_login": "Already have an account? Sign in",
+      "call_to_login": "Already have an account?",
       "captcha_incomplete": "Please complete the CAPTCHA challenge before continuing",
       "captcha_loading": "The CAPTCHA is still loading, please wait a moment",
+      "continue_with_email": "Continue with email address",
+      "continue_with_password": "Continue with password",
+      "continue_with_provider": "Continue with {{provider}}",
+      "or_separator": "Or",
       "password_confirm_label": "Confirm password",
       "password_label": "Password",
       "terms_of_service": "I agree to the <a>Terms and Conditions</a>",

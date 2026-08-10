@@ -9,60 +9,50 @@ Please see LICENSE files in the repository root for full details.
 
 {% extends "base.html" %}
 
-{% from "components/idp_brand.html" import logo %}
+{% block head %}
+  {{ include_asset('src/entrypoints/register.tsx') | indent(4) | safe }}
+  {# Pre-load the locale data for the current language #}
+  {{ include_asset('locales/' ~ lang ~ '.json') | indent(4) | safe }}
+{% endblock head %}
 
 {% block content %}
-  <form method="POST" class="flex flex-col gap-10" action="{{ '/register' | prefix_url }}">
-    <header class="page-heading">
-      <div class="icon">
-        {{ icon.user_profile_solid() }}
-      </div>
-
-      <div class="header">
-        <h1 class="title">{{ _("mas.register.create_account.heading") }}</h1>
-
-        {% if features.password_registration %}
-          <p class="text">{{ _("mas.register.create_account.description") }}</p>
-        {% endif %}
-      </div>
-    </header>
-
-    {% if features.password_registration %}
-      {% call(f) field.field(label=_("common.username"), name="username", form_state=form) %}
-        <input {{ field.attributes(f) }} class="cpd-text-control" type="text" autocomplete="username" autocorrect="off" autocapitalize="off" data-choose-username />
-        <div class="cpd-form-message cpd-form-help-message" id="{{ f.id }}-help">
-          @username:{{ branding.server_name }}
-        </div>
-      {% endcall %}
-    {% endif %}
-
-    <div class="cpd-form-root">
-      <input type="hidden" name="csrf" value="{{ csrf_token }}" />
-
-      {% for key, value in next["params"] | default({}) | items %}
-        <input type="hidden" name="{{ key }}" value="{{ value }}" />
-      {% endfor %}
-
-      {% if features.password_registration %}
-        {% if features.password_registration_email_required %}
-          {{ button.button(text=_("mas.register.continue_with_email")) }}
-        {% else %}
-          {{ button.button(text=_("mas.register.continue_with_password")) }}
-        {% endif %}
-      {% endif %}
-
-      {% if providers %}
-        {% for provider in providers %}
-          {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
-          <button type="submit" name="provider" value="{{ provider.id }}" class="cpd-button {%- if provider.brand_name %} has-icon {%- endif %}" data-kind="secondary" data-size="lg">
-            {{ logo(provider.brand_name) }}
-            {{ _("mas.login.continue_with_provider", provider=name) }}
-          </button>
-        {% endfor %}
-      {% endif %}
-
-      {% set params = next["params"] | default({}) | to_params(prefix="?") %}
-      {{ button.link_tertiary(text=_("mas.register.call_to_login"), href="/login" ~ params) }}
+  <header class="page-heading">
+    <div class="icon">
+      {{ icon.user_profile_solid() }}
     </div>
-  </form>
+
+    <div class="header">
+      <h1 class="title">{{ _("mas.register.create_account.heading") }}</h1>
+    </div>
+  </header>
+
+  <div id="register-form"
+       data-csrf-token="{{ csrf_token }}"
+       {%- if captcha_config %} data-captcha-config='{{ captcha_config | tojson }}'{% endif %}
+       data-branding='{{ branding | tojson }}'
+       data-features='{{ features | tojson }}'
+       data-form='{{ form | tojson }}'
+       data-providers='{{ providers | tojson }}'
+       data-login-link="{{ login_link }}"
+       data-graphql-endpoint="{{ graphql_endpoint }}">
+    <p class="sr-only">{{ _("mas.loading") }}</p>
+
+    {# Rough outline of the form, to keep the page from jumping once it mounts #}
+    <div class="register-skeleton" aria-hidden="true">
+      <div class="field"><span class="label"></span><span class="control"></span></div>
+      <div class="field"><span class="label"></span><span class="control"></span></div>
+      <span class="submit"></span>
+    </div>
+  </div>
+
+  <div id="register-form-error" class="critical-notice" hidden>
+    {{ _("mas.loading_failed") }}
+  </div>
+
+  <noscript>
+    {# The skeleton would otherwise sit above this message forever #}
+    <style>#register-form { display: none; }</style>
+
+    <p class="critical-notice">{{ _("mas.register.javascript_required") }}</p>
+  </noscript>
 {% endblock content %}

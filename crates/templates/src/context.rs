@@ -31,7 +31,7 @@ use mas_data_model::{
 use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
 use mas_policy::{Violation, ViolationVariant};
-use mas_router::{Account, GraphQL, PostAuthAction, UrlBuilder};
+use mas_router::{Account, GraphQL, Login, PostAuthAction, UrlBuilder};
 use oauth2_types::scope::{OPENID, Scope};
 use rand::{
     Rng, SeedableRng,
@@ -645,11 +645,44 @@ impl FormField for RegisterFormField {
     }
 }
 
-/// Context used by the `register.html` template
-#[derive(Serialize, Default)]
+/// An upstream OAuth 2.0 provider, as rendered by the registration page island
+#[derive(Serialize)]
+struct RegisterPageProvider {
+    name: String,
+    brand: Option<String>,
+    /// Submitted back as the `provider` field of the registration form
+    id: String,
+}
+
+impl RegisterPageProvider {
+    fn new(provider: UpstreamOAuthProvider) -> Self {
+        let name = provider
+            .human_name
+            .or_else(|| {
+                provider
+                    .issuer
+                    .as_deref()
+                    .map(|issuer| crate::functions::simplify_url(issuer, true))
+            })
+            .filter(|name| !name.is_empty())
+            .unwrap_or_else(|| provider.id.to_string());
+
+        Self {
+            name,
+            brand: provider.brand_name,
+            id: provider.id.to_string(),
+        }
+    }
+}
+
+/// Context used by the `register/index.html` template
+#[derive(Serialize)]
 pub struct RegisterContext {
-    providers: Vec<UpstreamOAuthProvider>,
+    providers: Vec<RegisterPageProvider>,
+    login_link: String,
+    form: FormState<RegisterFormField>,
     next: Option<PostAuthContext>,
+    graphql_endpoint: String,
 }
 
 impl TemplateContext for RegisterContext {
@@ -661,69 +694,34 @@ impl TemplateContext for RegisterContext {
     where
         Self: Sized,
     {
-        sample_list(vec![RegisterContext {
-            providers: Vec::new(),
-            next: None,
-        }])
+        let url_builder = UrlBuilder::new("https://example.com/".parse().unwrap(), None, None);
+        // TODO: samples with errors and with upstream providers
+        sample_list(vec![RegisterContext::new(&url_builder, Vec::new(), None)])
     }
 }
 
 impl RegisterContext {
-    /// Create a new context with the given upstream providers
+    /// Create a new context with the given upstream providers, resolving the
+    /// URLs used by the client-side island from the given [`UrlBuilder`]
     #[must_use]
-    pub fn new(providers: Vec<UpstreamOAuthProvider>) -> Self {
+    pub fn new(
+        url_builder: &UrlBuilder,
+        providers: Vec<UpstreamOAuthProvider>,
+        post_auth_action: Option<&PostAuthAction>,
+    ) -> Self {
         Self {
-            providers,
-            next: None,
-        }
-    }
-
-    /// Add a post authentication action to the context
-    #[must_use]
-    pub fn with_post_action(self, next: PostAuthContext) -> Self {
-        Self {
-            next: Some(next),
-            ..self
-        }
-    }
-}
-
-/// Context used by the `password_register.html` template
-#[derive(Serialize)]
-pub struct PasswordRegisterContext {
-    form: FormState<RegisterFormField>,
-    next: Option<PostAuthContext>,
-    graphql_endpoint: String,
-}
-
-impl TemplateContext for PasswordRegisterContext {
-    fn sample<R: Rng>(
-        _now: chrono::DateTime<Utc>,
-        _rng: &mut R,
-        _locales: &[DataLocale],
-    ) -> BTreeMap<SampleIdentifier, Self>
-    where
-        Self: Sized,
-    {
-        let url_builder = UrlBuilder::new("https://example.com/".parse().unwrap(), None, None);
-        // TODO: samples with errors
-        sample_list(vec![PasswordRegisterContext::new(&url_builder)])
-    }
-}
-
-impl PasswordRegisterContext {
-    /// Create a new context, resolving the GraphQL endpoint used by the
-    /// client-side form from the given [`UrlBuilder`]
-    #[must_use]
-    pub fn new(url_builder: &UrlBuilder) -> Self {
-        Self {
+            providers: providers
+                .into_iter()
+                .map(RegisterPageProvider::new)
+                .collect(),
+            login_link: url_builder.relative_url_for(&Login::from(post_auth_action.cloned())),
             form: FormState::default(),
             next: None,
             graphql_endpoint: url_builder.relative_url_for(&GraphQL),
         }
     }
 
-    /// Add an error on the registration form
+    /// Set the state of the registration form
     #[must_use]
     pub fn with_form_state(self, form: FormState<RegisterFormField>) -> Self {
         Self { form, ..self }
