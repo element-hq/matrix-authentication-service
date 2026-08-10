@@ -7389,6 +7389,20 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "username": {
+            "description": "A username to impose on the registering user. If set, the user cannot\nchoose their own username.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email": {
+            "description": "An email address to impose on the registering user. If set, the user\ncannot choose their own email.",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       },

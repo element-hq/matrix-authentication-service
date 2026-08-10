@@ -166,6 +166,8 @@ mod tests {
                 "test_update_expiry".to_owned(),
                 None,
                 None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -271,6 +273,8 @@ mod tests {
                 "test_update_limit".to_owned(),
                 Some(5),
                 None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -375,6 +379,8 @@ mod tests {
                 "test_update_multiple".to_owned(),
                 None,
                 None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -441,6 +447,8 @@ mod tests {
                 "test_update_none".to_owned(),
                 Some(5),
                 Some(state.clock.now() + Duration::days(30)),
+                None,
+                None,
             )
             .await
             .unwrap();
