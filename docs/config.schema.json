@@ -2021,6 +2021,18 @@
               "$ref": "#/definitions/EmailauthenticationRateLimitingConfig"
             }
           ]
+        },
+        "username_availability": {
+          "description": "Controls how many `usernameAvailable` GraphQL queries are permitted\nbased on source address.\n\nThis query is an availability oracle usable during registration, so\nthis limit protects against username enumeration.",
+          "default": {
+            "burst": 5,
+            "per_second": 1.0
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/RateLimiterConfiguration"
+            }
+          ]
         }
       }
     },
