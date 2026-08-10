@@ -273,10 +273,47 @@ pub(crate) async fn post(
 
     let state = form.to_form_state();
 
-    // The email form is only shown if the server requires it
-    let email = site_config
-        .password_registration_email_required
-        .then_some(form.email);
+    // Resolve the registration token first: it may impose the username and the
+    // email address, and decide whether a password is needed at all
+    let registration_token = if form.token.is_empty() {
+        None
+    } else {
+        repo.user_registration_token()
+            .find_by_token(&form.token)
+            .await?
+            .filter(|token| token.is_valid(clock.now()))
+    };
+    let token_invalid = !form.token.is_empty() && registration_token.is_none();
+
+    let (forced_username, forced_email, passwordless) = match &registration_token {
+        Some(token) => (
+            token.username.as_deref(),
+            token.email.as_deref(),
+            token.passwordless,
+        ),
+        None => (None, None, false),
+    };
+
+    // An empty field means the user accepted whatever the token imposes
+    let username = match forced_username {
+        Some(forced) if form.username.is_empty() => forced.to_owned(),
+        _ => form.username.clone(),
+    };
+
+    // The email form is only shown if the server requires it, but a passwordless
+    // registration always needs one, as verifying it is what establishes the
+    // user's identity. A token imposing an email address also forces it.
+    let email = if site_config.password_registration_email_required
+        || passwordless
+        || forced_email.is_some()
+    {
+        Some(match forced_email {
+            Some(forced) if form.email.is_empty() => forced.to_owned(),
+            _ => form.email.clone(),
+        })
+    } else {
+        None
+    };
 
     // Validate the form
     let state = {
@@ -286,20 +323,33 @@ pub(crate) async fn post(
             state.add_error_on_form(FormError::Captcha);
         }
 
+        if token_invalid {
+            state.add_error_on_field(RegisterFormField::Token, FieldError::Invalid);
+        }
+
+        // The token may only be used to register the identity it was issued for
+        if forced_username.is_some_and(|forced| forced != username) {
+            state.add_error_on_field(RegisterFormField::Username, FieldError::Invalid);
+        }
+
+        if forced_email.is_some_and(|forced| Some(forced) != email.as_deref()) {
+            state.add_error_on_field(RegisterFormField::Email, FieldError::Invalid);
+        }
+
         let mut homeserver_denied_username = false;
-        if form.username.is_empty() {
+        if username.is_empty() {
             state.add_error_on_field(RegisterFormField::Username, FieldError::Required);
-        } else if repo.user().exists(&form.username).await? {
+        } else if repo.user().exists(&username).await? {
             // The user already exists in the database
             state.add_error_on_field(RegisterFormField::Username, FieldError::Exists);
         } else if !homeserver
-            .is_localpart_available(&form.username)
+            .is_localpart_available(&username)
             .await
             .map_err(InternalError::from_anyhow)?
         {
             // The user already exists on the homeserver
             tracing::warn!(
-                username = &form.username,
+                username = &username,
                 "Homeserver denied username provided by user"
             );
 
@@ -319,31 +369,36 @@ pub(crate) async fn post(
             }
         }
 
-        if form.password.is_empty() {
-            state.add_error_on_field(RegisterFormField::Password, FieldError::Required);
-        }
+        // A passwordless token waives the password entirely. If we couldn't resolve
+        // the token we don't know whether one is needed, so don't pile up password
+        // errors on top of the token error either
+        if !passwordless && !token_invalid {
+            if form.password.is_empty() {
+                state.add_error_on_field(RegisterFormField::Password, FieldError::Required);
+            }
 
-        if form.password_confirm.is_empty() {
-            state.add_error_on_field(RegisterFormField::PasswordConfirm, FieldError::Required);
-        }
+            if form.password_confirm.is_empty() {
+                state.add_error_on_field(RegisterFormField::PasswordConfirm, FieldError::Required);
+            }
 
-        if form.password != form.password_confirm {
-            state.add_error_on_field(RegisterFormField::Password, FieldError::Unspecified);
-            state.add_error_on_field(
-                RegisterFormField::PasswordConfirm,
-                FieldError::PasswordMismatch,
-            );
-        }
+            if form.password != form.password_confirm {
+                state.add_error_on_field(RegisterFormField::Password, FieldError::Unspecified);
+                state.add_error_on_field(
+                    RegisterFormField::PasswordConfirm,
+                    FieldError::PasswordMismatch,
+                );
+            }
 
-        if !password_manager.is_password_complex_enough(&form.password)? {
-            // TODO localise this error
-            state.add_error_on_field(
-                RegisterFormField::Password,
-                FieldError::Policy {
-                    code: None,
-                    message: "Password is too weak".to_owned(),
-                },
-            );
+            if !password_manager.is_password_complex_enough(&form.password)? {
+                // TODO localise this error
+                state.add_error_on_field(
+                    RegisterFormField::Password,
+                    FieldError::Policy {
+                        code: None,
+                        message: "Password is too weak".to_owned(),
+                    },
+                );
+            }
         }
 
         // If the site has terms of service, the user must accept them
@@ -354,7 +409,7 @@ pub(crate) async fn post(
         let res = policy
             .evaluate_register(mas_policy::RegisterInput {
                 registration_method: mas_policy::RegistrationMethod::Password,
-                username: &form.username,
+                username: &username,
                 email: email.as_deref(),
                 requester: mas_policy::Requester {
                     ip_address: activity_tracker.ip(),
@@ -423,8 +478,12 @@ pub(crate) async fn post(
 
     if !state.is_valid() {
         let providers = repo.upstream_oauth_provider().all_enabled().await?;
-        let ctx = RegisterContext::new(&url_builder, providers, query.post_auth_action.as_ref())
-            .with_form_state(state);
+        let mut ctx =
+            RegisterContext::new(&url_builder, providers, query.post_auth_action.as_ref())
+                .with_form_state(state);
+        if !form.token.is_empty() {
+            ctx = ctx.with_token(form.token.clone());
+        }
 
         let content = render(
             locale,
@@ -449,7 +508,7 @@ pub(crate) async fn post(
         .add(
             &mut rng,
             &clock,
-            form.username,
+            username,
             ip_address,
             user_agent,
             post_auth_action,
@@ -465,21 +524,12 @@ pub(crate) async fn post(
     };
 
     // Attach the registration token if provided
-    let registration = if form.token.is_empty() {
-        registration
+    let registration = if let Some(registration_token) = &registration_token {
+        repo.user_registration()
+            .set_registration_token(registration, registration_token)
+            .await?
     } else {
-        let registration_token = repo
-            .user_registration_token()
-            .find_by_token(&form.token)
-            .await?;
-
-        if let Some(registration_token) = registration_token {
-            repo.user_registration()
-                .set_registration_token(registration, &registration_token)
-                .await?
-        } else {
-            registration
-        }
+        registration
     };
 
     let registration = if let Some(email) = email {
@@ -505,18 +555,23 @@ pub(crate) async fn post(
         registration
     };
 
-    // Hash the password
-    let password = Zeroizing::new(form.password);
-    let (version, hashed_password) = password_manager
-        .hash(&mut rng, password)
-        .await
-        .map_err(InternalError::from_anyhow)?;
+    // Passwordless registrations don't get a password at all: verifying the email
+    // address is what establishes the user's identity
+    let registration = if passwordless {
+        registration
+    } else {
+        // Hash the password
+        let password = Zeroizing::new(form.password);
+        let (version, hashed_password) = password_manager
+            .hash(&mut rng, password)
+            .await
+            .map_err(InternalError::from_anyhow)?;
 
-    // Add the password to the registration
-    let registration = repo
-        .user_registration()
-        .set_password(registration, hashed_password, version)
-        .await?;
+        // Add the password to the registration
+        repo.user_registration()
+            .set_password(registration, hashed_password, version)
+            .await?
+    };
 
     repo.save().await?;
 
@@ -561,7 +616,7 @@ async fn render(
 #[cfg(test)]
 mod tests {
     use hyper::{
-        Request, StatusCode,
+        Request, Response, StatusCode,
         header::{CONTENT_TYPE, LOCATION},
     };
     use mas_axum_utils::csrf::CsrfExt as _;
@@ -603,6 +658,21 @@ mod tests {
         let (csrf_token, cookie_jar) = state.cookie_jar().csrf_token(&state.clock, state.rng());
         cookies.import(cookie_jar);
         csrf_token.form_value().to_owned()
+    }
+
+    /// Extract the registration ID out of the redirect the handler replies with
+    fn registration_id(response: &Response<String>) -> Ulid {
+        response
+            .headers()
+            .get(LOCATION)
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .rsplit('/')
+            .nth(1)
+            .unwrap()
+            .parse()
+            .unwrap()
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -1449,5 +1519,191 @@ mod tests {
         let mut repo = state.repository().await.unwrap();
         let user_exists = repo.user().exists("grace").await.unwrap();
         assert!(!user_exists);
+    }
+
+    /// A passwordless token lets the user register without a password, and
+    /// imposes the username and email address it was issued for
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_passwordless_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let mut rng = state.rng();
+        let cookies = CookieHelper::new();
+
+        let mut repo = state.repository().await.unwrap();
+        repo.user_registration_token()
+            .add(
+                &mut rng,
+                &state.clock,
+                "invite_alice".to_owned(),
+                None,
+                None,
+                Some("alice".to_owned()),
+                Some("alice@example.com".to_owned()),
+                true,
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let request = Request::get(&*mas_router::Register::default().path_and_query()).empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        let csrf_token = csrf_token(response.body());
+
+        // No password, no username and no email: they all come from the token
+        let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "username": "",
+                "token": "invite_alice",
+                "accept_terms": "on",
+            }),
+        );
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        let id = registration_id(&response);
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
+        assert_eq!(registration.username, "alice");
+        // No password was set on the registration
+        assert!(registration.password.is_none());
+        // The token is attached to the registration
+        assert!(registration.user_registration_token_id.is_some());
+
+        // The email address from the token is being verified
+        let email_authentication = repo
+            .user_email()
+            .lookup_authentication(registration.email_authentication_id.unwrap())
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(email_authentication.email, "alice@example.com");
+    }
+
+    /// Registering with a token which is no longer valid is refused
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_revoked_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let mut rng = state.rng();
+        let cookies = CookieHelper::new();
+
+        let mut repo = state.repository().await.unwrap();
+        let token = repo
+            .user_registration_token()
+            .add(
+                &mut rng,
+                &state.clock,
+                "revoked_invite".to_owned(),
+                None,
+                None,
+                None,
+                None,
+                true,
+            )
+            .await
+            .unwrap();
+        repo.user_registration_token()
+            .revoke(&state.clock, token)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let request = Request::get(&*mas_router::Register::default().path_and_query()).empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        let csrf_token = csrf_token(response.body());
+
+        let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "username": "bob",
+                "email": "bob@example.com",
+                "token": "revoked_invite",
+                "accept_terms": "on",
+            }),
+        );
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        assert!(
+            response
+                .body()
+                .contains("\"token\":{\"errors\":[{\"kind\":\"invalid\"}]"),
+            "response body: {}",
+            response.body()
+        );
+
+        // No registration was created
+        let mut repo = state.repository().await.unwrap();
+        assert!(!repo.user().exists("bob").await.unwrap());
+    }
+
+    /// A token which imposes a username can't be used to register another one
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_token_username_mismatch(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let mut rng = state.rng();
+        let cookies = CookieHelper::new();
+
+        let mut repo = state.repository().await.unwrap();
+        repo.user_registration_token()
+            .add(
+                &mut rng,
+                &state.clock,
+                "invite_alice".to_owned(),
+                None,
+                None,
+                Some("alice".to_owned()),
+                None,
+                false,
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let request = Request::get(&*mas_router::Register::default().path_and_query()).empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        let csrf_token = csrf_token(response.body());
+
+        let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "username": "mallory",
+                "email": "mallory@example.com",
+                "password": "correcthorsebatterystaple",
+                "password_confirm": "correcthorsebatterystaple",
+                "token": "invite_alice",
+                "accept_terms": "on",
+            }),
+        );
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        assert!(
+            response
+                .body()
+                .contains("\"username\":{\"errors\":[{\"kind\":\"invalid\"}]"),
+            "response body: {}",
+            response.body()
+        );
+
+        // No registration was created
+        let mut repo = state.repository().await.unwrap();
+        assert!(!repo.user().exists("mallory").await.unwrap());
     }
 }

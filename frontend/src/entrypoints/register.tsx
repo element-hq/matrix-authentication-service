@@ -185,8 +185,9 @@ const TokenField: React.FC<{
   defaultValue: string;
   /** The token came from the invite link: show it, but don't let it be edited */
   locked: boolean;
+  serverErrors: ServerError[];
   onTokenInfo: (info: TokenInfo | undefined) => void;
-}> = ({ defaultValue, locked, onTokenInfo }) => {
+}> = ({ defaultValue, locked, serverErrors, onTokenInfo }) => {
   const { t } = useTranslation();
   const [token, setToken] = useState(defaultValue);
 
@@ -209,6 +210,9 @@ const TokenField: React.FC<{
   const info = settled ? (data.registrationToken ?? undefined) : undefined;
   const notFound = settled && data.registrationToken === null;
   const checking = token.length > 0 && (isFetching || isDebouncePending);
+  // The live check re-derives the same verdict the POST came back with, so only
+  // fall back to the server errors until it has an answer of its own
+  const showServerErrors = !checking && !notFound && info === undefined;
 
   // The username and email fields lock onto whatever the token was issued for
   useEffect(() => {
@@ -216,11 +220,13 @@ const TokenField: React.FC<{
   }, [info, onTokenInfo]);
 
   return (
-    <Form.Field name="token">
+    <Form.Field name="token" serverInvalid={serverErrors.length > 0}>
       <Form.Label>{t("frontend.register.token_label")}</Form.Label>
       <Form.TextControl
         required
-        readOnly={locked}
+        // A code the server rejected has to stay editable, even when it came
+        // from a link, or there is no way out of the form
+        readOnly={locked && serverErrors.length === 0}
         autoComplete="off"
         autoCorrect="off"
         autoCapitalize="none"
@@ -235,6 +241,14 @@ const TokenField: React.FC<{
       <Form.ErrorMessage match="valueMissing">
         {t("frontend.errors.field_required")}
       </Form.ErrorMessage>
+
+      {showServerErrors &&
+        serverErrors.map((error, index) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: the server error list is static
+          <Form.ErrorMessage key={`${error.kind}-${index}`}>
+            {fieldErrorMessage(t, error)}
+          </Form.ErrorMessage>
+        ))}
     </Form.Field>
   );
 };
@@ -747,6 +761,7 @@ const PasswordRegisterForm: React.FC<{ data: Data }> = ({ data }) => {
           <TokenField
             defaultValue={data.token ?? ""}
             locked={data.token !== undefined}
+            serverErrors={fields.token?.errors ?? []}
             onTokenInfo={setTokenInfo}
           />
         )}
