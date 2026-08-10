@@ -27,7 +27,7 @@ use crate::{
 #[aide(output_with = "Json<ErrorResponse>")]
 pub enum RouteError {
     #[error("A registration token with the same token already exists")]
-    Conflict(mas_data_model::UserRegistrationToken),
+    Conflict(Box<mas_data_model::UserRegistrationToken>),
 
     #[error(transparent)]
     Internal(Box<dyn std::error::Error + Send + Sync + 'static>),
@@ -60,6 +60,14 @@ pub struct Request {
 
     /// When the token expires. If not provided, the token never expires.
     expires_at: Option<DateTime<Utc>>,
+
+    /// A username to impose on the registering user. If set, the user cannot
+    /// choose their own username.
+    username: Option<String>,
+
+    /// An email address to impose on the registering user. If set, the user
+    /// cannot choose their own email.
+    email: Option<String>,
 }
 
 pub fn doc(operation: TransformOperation) -> TransformOperation {
@@ -91,7 +99,7 @@ pub async fn handler(
     // See if we have an existing token with the same token
     let existing_token = repo.user_registration_token().find_by_token(&token).await?;
     if let Some(existing_token) = existing_token {
-        return Err(RouteError::Conflict(existing_token));
+        return Err(RouteError::Conflict(Box::new(existing_token)));
     }
 
     let registration_token = repo
@@ -102,6 +110,8 @@ pub async fn handler(
             token,
             params.usage_limit,
             params.expires_at,
+            params.username,
+            params.email,
         )
         .await?;
 

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT user_registration_token_id,\n                       token,\n                       usage_limit,\n                       times_used,\n                       created_at,\n                       last_used_at,\n                       expires_at,\n                       revoked_at\n                FROM user_registration_tokens\n                WHERE user_registration_token_id = $1\n            ",
+  "query": "\n                SELECT user_registration_token_id,\n                       token,\n                       username,\n                       email,\n                       usage_limit,\n                       times_used,\n                       created_at,\n                       last_used_at,\n                       expires_at,\n                       revoked_at\n                FROM user_registration_tokens\n                WHERE token = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -15,43 +15,55 @@
       },
       {
         "ordinal": 2,
+        "name": "username",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "email",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
         "name": "usage_limit",
         "type_info": "Int4"
       },
       {
-        "ordinal": 3,
+        "ordinal": 5,
         "name": "times_used",
         "type_info": "Int4"
       },
       {
-        "ordinal": 4,
+        "ordinal": 6,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 5,
+        "ordinal": 7,
         "name": "last_used_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 6,
+        "ordinal": 8,
         "name": "expires_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 7,
+        "ordinal": 9,
         "name": "revoked_at",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Text"
       ]
     },
     "nullable": [
       false,
       false,
+      true,
+      true,
       true,
       false,
       false,
@@ -60,5 +72,5 @@
       true
     ]
   },
-  "hash": "d0355d4e98bec6120f17d8cf81ac8c30ed19e9cebd0c8e7c7918b1c3ca0e3cba"
+  "hash": "1ba7c2d8929e3c7d9af7afe92015d3a07eb4609827d97b3477b020059c8a2d4f"
 }
