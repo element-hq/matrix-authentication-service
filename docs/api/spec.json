@@ -3799,6 +3799,7 @@
                         "valid": true,
                         "username": null,
                         "email": null,
+                        "passwordless": false,
                         "usage_limit": 10,
                         "times_used": 5,
                         "created_at": "1970-01-01T00:00:00Z",
@@ -3824,6 +3825,7 @@
                         "valid": false,
                         "username": null,
                         "email": null,
+                        "passwordless": false,
                         "usage_limit": null,
                         "times_used": 0,
                         "created_at": "1970-01-01T00:00:00Z",
@@ -3887,6 +3889,7 @@
                       "valid": true,
                       "username": null,
                       "email": null,
+                      "passwordless": false,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -3945,6 +3948,7 @@
                       "valid": true,
                       "username": null,
                       "email": null,
+                      "passwordless": false,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -4029,6 +4033,7 @@
                       "valid": true,
                       "username": null,
                       "email": null,
+                      "passwordless": false,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -4105,6 +4110,7 @@
                       "valid": false,
                       "username": null,
                       "email": null,
+                      "passwordless": false,
                       "usage_limit": null,
                       "times_used": 0,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -4198,6 +4204,7 @@
                       "valid": true,
                       "username": null,
                       "email": null,
+                      "passwordless": false,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -7345,6 +7352,10 @@
               "null"
             ]
           },
+          "passwordless": {
+            "description": "Whether registering with this token skips the password step. The user's\nidentity is then established by verifying their email address.",
+            "type": "boolean"
+          },
           "usage_limit": {
             "description": "Maximum number of times this token can be used",
             "type": [
@@ -7398,6 +7409,7 @@
         "required": [
           "token",
           "valid",
+          "passwordless",
           "times_used",
           "created_at",
           "invite_url"
@@ -7444,6 +7456,11 @@
               "string",
               "null"
             ]
+          },
+          "passwordless": {
+            "description": "Whether registering with this token skips the password step. The user's\nidentity is then established by verifying their email address.",
+            "type": "boolean",
+            "default": false
           }
         }
       },

@@ -70,6 +70,11 @@ pub struct Request {
     /// An email address to impose on the registering user. If set, the user
     /// cannot choose their own email.
     email: Option<String>,
+
+    /// Whether registering with this token skips the password step. The user's
+    /// identity is then established by verifying their email address.
+    #[serde(default)]
+    passwordless: bool,
 }
 
 pub fn doc(operation: TransformOperation) -> TransformOperation {
@@ -115,6 +120,7 @@ pub async fn handler(
             params.expires_at,
             params.username,
             params.email,
+            params.passwordless,
         )
         .await?;
 
@@ -164,6 +170,7 @@ mod tests {
               "valid": true,
               "username": null,
               "email": null,
+              "passwordless": false,
               "usage_limit": 5,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -209,6 +216,7 @@ mod tests {
               "valid": true,
               "username": null,
               "email": null,
+              "passwordless": false,
               "usage_limit": 1,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -223,6 +231,54 @@ mod tests {
           },
           "links": {
             "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0QMGC989M0XSFVF2X"
+          }
+        }
+        "#);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_create_passwordless(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+
+        let request = Request::post("/api/admin/v1/user-registration-tokens")
+            .bearer(&token)
+            .json(serde_json::json!({
+                "token": "invite_alice",
+                "username": "alice",
+                "email": "alice@example.com",
+                "passwordless": true,
+            }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+        let body: serde_json::Value = response.json();
+
+        assert_json_snapshot!(body, @r#"
+        {
+          "data": {
+            "type": "user-registration_token",
+            "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+            "attributes": {
+              "token": "invite_alice",
+              "valid": true,
+              "username": "alice",
+              "email": "alice@example.com",
+              "passwordless": true,
+              "usage_limit": null,
+              "times_used": 0,
+              "created_at": "2022-01-16T14:40:00Z",
+              "last_used_at": null,
+              "expires_at": null,
+              "revoked_at": null,
+              "invite_url": "https://example.com/invite/invite_alice"
+            },
+            "links": {
+              "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
+            }
+          },
+          "links": {
+            "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
           }
         }
         "#);
@@ -255,6 +311,7 @@ mod tests {
               "valid": true,
               "username": null,
               "email": null,
+              "passwordless": false,
               "usage_limit": 5,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
