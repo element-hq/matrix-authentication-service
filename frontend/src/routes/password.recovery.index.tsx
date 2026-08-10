@@ -58,7 +58,7 @@ const FRAGMENT = graphql(/* GraphQL */ `
 
 const SITE_CONFIG_FRAGMENT = graphql(/* GraphQL */ `
   fragment RecoverPassword_siteConfig on SiteConfig {
-    ...PasswordCreationDoubleInput_siteConfig
+    minimumPasswordComplexity
   }
 `);
 
@@ -292,7 +292,7 @@ const EmailRecovery: React.FC<{
           />
 
           <PasswordCreationDoubleInput
-            siteConfig={siteConfig}
+            minimumPasswordComplexity={siteConfig.minimumPasswordComplexity}
             forceShowNewPasswordInvalid={
               mutation.data?.status === "INVALID_NEW_PASSWORD" || false
             }

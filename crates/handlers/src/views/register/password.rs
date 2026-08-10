@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -96,7 +97,7 @@ pub(crate) async fn get(
             .into_response());
     }
 
-    let mut ctx = PasswordRegisterContext::default();
+    let mut ctx = PasswordRegisterContext::new(&url_builder);
 
     // If we got a username from the query string, use it to prefill the form
     if let Some(username) = query.username {
@@ -319,7 +320,7 @@ pub(crate) async fn post(
     if !state.is_valid() {
         let content = render(
             locale,
-            PasswordRegisterContext::default().with_form_state(state),
+            PasswordRegisterContext::new(&url_builder).with_form_state(state),
             query,
             csrf_token,
             &mut repo,
@@ -447,6 +448,16 @@ mod tests {
         },
     };
 
+    /// Extract the CSRF token the form island was booted with
+    fn csrf_token(body: &str) -> &str {
+        body.split("data-csrf-token=\"")
+            .nth(1)
+            .unwrap()
+            .split('"')
+            .next()
+            .unwrap()
+    }
+
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_password_disabled(pool: PgPool) {
         setup();
@@ -494,15 +505,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Submit the registration form
         let request = Request::post(&*mas_router::PasswordRegister::default().path_and_query())
@@ -560,15 +563,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Submit the registration form
         let request = Request::post(&*mas_router::PasswordRegister::default().path_and_query())
@@ -584,7 +579,12 @@ mod tests {
         let response = state.request(request).await;
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
-        assert!(response.body().contains("Password fields don't match"));
+        // The form state is handed to the client-side form as JSON
+        assert!(
+            response.body().contains("password_mismatch"),
+            "response body: {}",
+            response.body()
+        );
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -601,15 +601,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Submit the registration form
         let request = Request::post(&*mas_router::PasswordRegister::default().path_and_query())
@@ -626,7 +618,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         assert!(
-            response.body().contains("Username is too long"),
+            response.body().contains("\"code\":\"username-too-long\""),
             "response body: {}",
             response.body()
         );
@@ -656,15 +648,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Submit the registration form
         let request = Request::post(&*mas_router::PasswordRegister::default().path_and_query())
@@ -680,7 +664,13 @@ mod tests {
         let response = state.request(request).await;
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
-        assert!(response.body().contains("This username is already taken"));
+        assert!(
+            response
+                .body()
+                .contains("\"username\":{\"errors\":[{\"kind\":\"exists\"}]"),
+            "response body: {}",
+            response.body()
+        );
     }
 
     /// When the username is already reserved on the homeserver, it should give
@@ -699,15 +689,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Reserve "john" on the homeserver
         state.homeserver_connection.reserve_localpart("john").await;
@@ -726,7 +708,13 @@ mod tests {
         let response = state.request(request).await;
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
-        assert!(response.body().contains("This username is already taken"));
+        assert!(
+            response
+                .body()
+                .contains("\"username\":{\"errors\":[{\"kind\":\"exists\"}]"),
+            "response body: {}",
+            response.body()
+        );
     }
 
     /// Test registration without email when email is not required
@@ -752,15 +740,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Submit the registration form without email
         let request = Request::post(&*mas_router::PasswordRegister::default().path_and_query())
@@ -821,15 +801,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Submit the registration form with valid email
         let request = Request::post(&*mas_router::PasswordRegister::default().path_and_query())
@@ -891,15 +863,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Submit the registration form without email
         let request = Request::post(&*mas_router::PasswordRegister::default().path_and_query())
@@ -916,9 +880,14 @@ mod tests {
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
 
-        // Check that the response contains an error about the email field
-        let body = response.body();
-        assert!(body.contains("email") || body.contains("Email"));
+        // Check that the response contains an error on the email field
+        assert!(
+            response
+                .body()
+                .contains("\"email\":{\"errors\":[{\"kind\":\"required\"}]"),
+            "response body: {}",
+            response.body()
+        );
 
         // Ensure no registration was created
         let mut repo = state.repository().await.unwrap();
@@ -949,15 +918,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Submit the registration form with empty email
         let request = Request::post(&*mas_router::PasswordRegister::default().path_and_query())
@@ -975,9 +936,14 @@ mod tests {
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
 
-        // Check that the response contains an error about the email field
-        let body = response.body();
-        assert!(body.contains("email") || body.contains("Email"));
+        // Check that the response contains an error on the email field
+        assert!(
+            response
+                .body()
+                .contains("\"email\":{\"errors\":[{\"kind\":\"required\"}]"),
+            "response body: {}",
+            response.body()
+        );
 
         // Ensure no registration was created
         let mut repo = state.repository().await.unwrap();
@@ -1008,15 +974,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Submit the registration form with invalid email
         let request = Request::post(&*mas_router::PasswordRegister::default().path_and_query())
@@ -1034,9 +992,14 @@ mod tests {
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
 
-        // Check that the response contains an error about the email field
-        let body = response.body();
-        assert!(body.contains("email") || body.contains("Email"));
+        // Check that the response contains an error on the email field
+        assert!(
+            response
+                .body()
+                .contains("\"email\":{\"errors\":[{\"kind\":\"invalid\"}]"),
+            "response body: {}",
+            response.body()
+        );
 
         // Ensure no registration was created
         let mut repo = state.repository().await.unwrap();
