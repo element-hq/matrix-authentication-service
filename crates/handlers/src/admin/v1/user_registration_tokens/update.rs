@@ -171,6 +171,7 @@ mod tests {
                 None,
                 None,
                 None,
+                false,
             )
             .await
             .unwrap();
@@ -203,6 +204,7 @@ mod tests {
               "valid": true,
               "username": null,
               "email": null,
+              "passwordless": false,
               "usage_limit": null,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -246,6 +248,7 @@ mod tests {
               "valid": true,
               "username": null,
               "email": null,
+              "passwordless": false,
               "usage_limit": null,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -284,6 +287,7 @@ mod tests {
                 None,
                 None,
                 None,
+                false,
             )
             .await
             .unwrap();
@@ -315,6 +319,7 @@ mod tests {
               "valid": true,
               "username": null,
               "email": null,
+              "passwordless": false,
               "usage_limit": 10,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -358,6 +363,7 @@ mod tests {
               "valid": true,
               "username": null,
               "email": null,
+              "passwordless": false,
               "usage_limit": null,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -396,6 +402,7 @@ mod tests {
                 None,
                 None,
                 None,
+                false,
             )
             .await
             .unwrap();
@@ -429,6 +436,7 @@ mod tests {
               "valid": true,
               "username": null,
               "email": null,
+              "passwordless": false,
               "usage_limit": 20,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -467,6 +475,7 @@ mod tests {
                 Some(state.clock.now() + Duration::days(30)),
                 None,
                 None,
+                false,
             )
             .await
             .unwrap();
@@ -496,6 +505,7 @@ mod tests {
               "valid": true,
               "username": null,
               "email": null,
+              "passwordless": false,
               "usage_limit": 5,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",

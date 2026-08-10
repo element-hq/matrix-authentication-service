@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -231,6 +232,7 @@ pub struct UserRegistrationToken {
     pub token: String,
     pub username: Option<String>,
     pub email: Option<String>,
+    pub passwordless: bool,
     pub usage_limit: Option<u32>,
     pub times_used: u32,
     pub created_at: DateTime<Utc>,
