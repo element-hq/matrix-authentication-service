@@ -109,6 +109,7 @@ mod tests {
                 None,
                 None,
                 None,
+                false,
             )
             .await
             .unwrap();
@@ -134,6 +135,7 @@ mod tests {
               "valid": true,
               "username": null,
               "email": null,
+              "passwordless": false,
               "usage_limit": 5,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
