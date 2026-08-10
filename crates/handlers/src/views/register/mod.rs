@@ -21,7 +21,10 @@ use mas_data_model::{BoxClock, BoxRng, SiteConfig, UpstreamOAuthProvider};
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::{Register, UpstreamOAuth2Authorize, UrlBuilder};
-use mas_storage::{BoxRepository, upstream_oauth2::UpstreamOAuthProviderRepository};
+use mas_storage::{
+    BoxRepository, upstream_oauth2::UpstreamOAuthProviderRepository,
+    user::UserRegistrationTokenRepository,
+};
 use mas_templates::{RegisterContext, RegisterFormField, TemplateContext, Templates, ToFormState};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -129,6 +132,11 @@ pub(crate) struct RegisterForm {
     #[serde(default)]
     accept_terms: String,
 
+    /// The invite code, carried by a hidden field when the page was opened
+    /// from an invite link
+    #[serde(default)]
+    token: String,
+
     /// Which upstream provider the user chose, if any: each provider has its
     /// own submit button
     #[serde(default, skip_serializing)]
@@ -219,7 +227,22 @@ pub(crate) async fn post(
         return Ok((cookie_jar, Redirect::to(url.as_str())).into_response());
     }
 
-    if !site_config.password_registration_enabled {
+    // Resolve the invite code now: it decides whether a password is needed at
+    // all, and a passwordless one is a way to register on its own
+    let registration_token = if form.token.is_empty() {
+        None
+    } else {
+        repo.user_registration_token()
+            .find_by_token(&form.token)
+            .await?
+            .filter(|token| token.is_valid(clock.now()))
+    };
+    let token_invalid = !form.token.is_empty() && registration_token.is_none();
+    let passwordless_invite = registration_token
+        .as_ref()
+        .is_some_and(|token| token.passwordless);
+
+    if !site_config.password_registration_enabled && !passwordless_invite {
         return Ok(StatusCode::METHOD_NOT_ALLOWED.into_response());
     }
 
@@ -242,6 +265,8 @@ pub(crate) async fn post(
         query,
         cookie_jar,
         form,
+        registration_token,
+        token_invalid,
     )
     .await
 }
@@ -356,7 +381,7 @@ mod tests {
 
     /// Mint a CSRF token out of band, for the configurations where the page
     /// doesn't render a form to read one from
-    fn mint_csrf_token(state: &TestState, cookies: &CookieHelper) -> String {
+    pub(super) fn mint_csrf_token(state: &TestState, cookies: &CookieHelper) -> String {
         let (csrf_token, cookie_jar) = state.cookie_jar().csrf_token(&state.clock, state.rng());
         cookies.import(cookie_jar);
         csrf_token.form_value().clone()
