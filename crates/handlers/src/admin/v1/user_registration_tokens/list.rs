@@ -206,6 +206,8 @@ mod tests {
                 "token_unused".to_owned(),
                 Some(10),
                 None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -218,6 +220,8 @@ mod tests {
                 &state.clock,
                 "token_used".to_owned(),
                 Some(10),
+                None,
+                None,
                 None,
             )
             .await
@@ -236,6 +240,8 @@ mod tests {
                 "token_revoked".to_owned(),
                 Some(10),
                 None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -252,6 +258,8 @@ mod tests {
                 &state.clock,
                 "token_used_revoked".to_owned(),
                 Some(10),
+                None,
+                None,
                 None,
             )
             .await
@@ -275,6 +283,8 @@ mod tests {
                 "token_expired".to_owned(),
                 Some(5),
                 Some(expires_at),
+                None,
+                None,
             )
             .await
             .unwrap();
