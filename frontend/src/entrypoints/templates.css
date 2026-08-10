@@ -1,4 +1,5 @@
-/* Copyright 2024, 2025 New Vector Ltd.
+/* Copyright 2025, 2026 Element Creations Ltd.
+ * Copyright 2024, 2025 New Vector Ltd.
  * Copyright 2022-2024 The Matrix.org Foundation C.I.C.
  *
  * SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -72,15 +73,64 @@
   color: var(--cpd-color-text-secondary);
 }
 
-.captcha-noscript {
-  color: var(--cpd-color-text-critical-primary);
-  font: var(--cpd-font-body-md-semibold);
-  letter-spacing: var(--cpd-font-letter-spacing-body-md);
-  background-color: var(--cpd-color-bg-critical-subtle);
-  border: 1px solid var(--cpd-color-border-critical-subtle);
-  border-radius: var(--cpd-space-2x);
-  text-align: justify;
-  padding: var(--cpd-space-4x);
+@keyframes skeleton-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* Rough stand-in for the React registration form: a couple of field rows and a
+ * submit button, so the page has something of about the right height to show
+ * while the island boots. */
+.register-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cpd-space-5x);
+
+  & .field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cpd-space-1x);
+  }
+
+  & .label,
+  & .control,
+  & .submit {
+    display: block;
+    background-color: var(--cpd-color-bg-subtle-secondary);
+    border-radius: var(--cpd-space-2x);
+    animation: skeleton-pulse 1.6s ease-in-out infinite;
+  }
+
+  & .label {
+    inline-size: 30%;
+    block-size: calc(
+      var(--cpd-font-size-body-md) *
+      var(--cpd-font-line-height-regular)
+    );
+  }
+
+  & .control {
+    /* Matches .cpd-text-control: line height, plus its padding and border */
+    block-size: calc(
+      var(--cpd-font-size-body-md) *
+      var(--cpd-font-line-height-regular) +
+      2 *
+      var(--cpd-space-3x) +
+      2px
+    );
+  }
+
+  & .submit {
+    block-size: var(--cpd-space-12x);
+    border-radius: var(--cpd-radius-pill-effect);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .register-skeleton :is(.label, .control, .submit) {
+    animation: none;
+  }
 }
 
 .consent-client-icon {

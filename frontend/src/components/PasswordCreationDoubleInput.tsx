@@ -1,83 +1,26 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-import { Form, Progress } from "@vector-im/compound-web";
-import { useDeferredValue, useEffect, useRef, useState } from "react";
+import { Form } from "@vector-im/compound-web";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { type FragmentType, graphql, useFragment } from "../gql";
-import type { PasswordComplexity } from "../utils/password_complexity";
-
-const CONFIG_FRAGMENT = graphql(/* GraphQL */ `
-  fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {
-    id
-    minimumPasswordComplexity
-  }
-`);
-
-// This will load the password complexity module lazily,
-// so that it doesn't block the initial render and can be code-split
-const loadPromise = import("../utils/password_complexity").then(
-  ({ estimatePasswordComplexity }) => estimatePasswordComplexity,
-);
-
-const usePasswordComplexity = (password: string): PasswordComplexity => {
-  const { t } = useTranslation();
-  const [result, setResult] = useState<PasswordComplexity>({
-    score: 0,
-    scoreText: t("frontend.password_strength.placeholder"),
-    improvementsText: [],
-  });
-  const deferredPassword = useDeferredValue(password);
-
-  useEffect(() => {
-    if (deferredPassword === "") {
-      setResult({
-        score: 0,
-        scoreText: t("frontend.password_strength.placeholder"),
-        improvementsText: [],
-      });
-    } else {
-      loadPromise
-        .then((estimatePasswordComplexity) =>
-          estimatePasswordComplexity(deferredPassword, t),
-        )
-        .then((response) => setResult(response));
-    }
-  }, [deferredPassword, t]);
-
-  return result;
-};
+import PasswordComplexityFeedback from "./PasswordComplexityFeedback";
 
 export default function PasswordCreationDoubleInput({
-  siteConfig,
-  forceShowNewPasswordInvalid,
+  minimumPasswordComplexity,
+  forceShowNewPasswordInvalid = false,
 }: {
-  siteConfig: FragmentType<typeof CONFIG_FRAGMENT>;
-  forceShowNewPasswordInvalid: boolean;
+  minimumPasswordComplexity: number;
+  forceShowNewPasswordInvalid?: boolean;
 }): React.ReactElement {
   const { t } = useTranslation();
-  const { minimumPasswordComplexity } = useFragment(
-    CONFIG_FRAGMENT,
-    siteConfig,
-  );
-
-  const newPasswordRef = useRef<HTMLInputElement>(null);
   const newPasswordAgainRef = useRef<HTMLInputElement>(null);
   const [newPassword, setNewPassword] = useState("");
-
-  const passwordComplexity = usePasswordComplexity(newPassword);
-  let passwordStrengthTint: "red" | "orange" | "lime" | "green" | undefined;
-  if (newPassword === "") {
-    passwordStrengthTint = undefined;
-  } else {
-    passwordStrengthTint = (["red", "red", "orange", "lime", "green"] as const)[
-      passwordComplexity.score
-    ];
-  }
 
   return (
     <>
@@ -89,7 +32,6 @@ export default function PasswordCreationDoubleInput({
         <Form.PasswordControl
           required
           autoComplete="new-password"
-          ref={newPasswordRef}
           onBlur={() =>
             newPasswordAgainRef.current?.value &&
             newPasswordAgainRef.current?.reportValidity()
@@ -97,23 +39,10 @@ export default function PasswordCreationDoubleInput({
           onChange={(e) => setNewPassword(e.target.value)}
         />
 
-        <Progress
-          size="sm"
-          getValueLabel={() => passwordComplexity.scoreText}
-          tint={passwordStrengthTint}
-          max={4}
-          value={passwordComplexity.score}
+        <PasswordComplexityFeedback
+          password={newPassword}
+          minimumPasswordComplexity={minimumPasswordComplexity}
         />
-
-        {passwordComplexity.improvementsText.map((suggestion) => (
-          <Form.HelpMessage key={suggestion}>{suggestion}</Form.HelpMessage>
-        ))}
-
-        {passwordComplexity.score < minimumPasswordComplexity && (
-          <Form.ErrorMessage match={() => true}>
-            {t("frontend.password_strength.too_weak")}
-          </Form.ErrorMessage>
-        )}
 
         <Form.ErrorMessage match="valueMissing">
           {t("frontend.errors.field_required")}
