@@ -15,6 +15,7 @@ use mas_data_model::{
         session::{PersonalSession as DataModelPersonalSession, PersonalSessionOwner},
     },
 };
+use mas_router::UrlBuilder;
 use oauth2_types::requests::GrantType;
 use schemars::JsonSchema;
 use serde::Serialize;
@@ -631,6 +632,14 @@ pub struct UserRegistrationToken {
     /// Whether the token is valid
     valid: bool,
 
+    /// A username imposed on the registering user. If null, the user can
+    /// choose their own username.
+    username: Option<String>,
+
+    /// An email address imposed on the registering user. If null, the user
+    /// can choose their own email.
+    email: Option<String>,
+
     /// Maximum number of times this token can be used
     usage_limit: Option<u32>,
 
@@ -648,20 +657,32 @@ pub struct UserRegistrationToken {
 
     /// When the token was revoked. If null, the token is not revoked.
     revoked_at: Option<DateTime<Utc>>,
+
+    /// URL to share with the user to register with this token
+    invite_url: Url,
 }
 
 impl UserRegistrationToken {
-    pub fn new(token: mas_data_model::UserRegistrationToken, now: DateTime<Utc>) -> Self {
+    pub fn new(
+        token: mas_data_model::UserRegistrationToken,
+        now: DateTime<Utc>,
+        url_builder: &UrlBuilder,
+    ) -> Self {
+        let invite_url =
+            url_builder.absolute_url_for(&mas_router::Invite::new(token.token.clone()));
         Self {
             id: token.id,
             valid: token.is_valid(now),
             token: token.token,
+            username: token.username,
+            email: token.email,
             usage_limit: token.usage_limit,
             times_used: token.times_used,
             created_at: token.created_at,
             last_used_at: token.last_used_at,
             expires_at: token.expires_at,
             revoked_at: token.revoked_at,
+            invite_url,
         }
     }
 }
@@ -683,23 +704,29 @@ impl UserRegistrationToken {
                 id: Ulid::from_bytes([0x01; 16]),
                 token: "abc123def456".to_owned(),
                 valid: true,
+                username: None,
+                email: None,
                 usage_limit: Some(10),
                 times_used: 5,
                 created_at: DateTime::default(),
                 last_used_at: Some(DateTime::default()),
                 expires_at: Some(DateTime::default() + chrono::Duration::days(30)),
                 revoked_at: None,
+                invite_url: Url::parse("https://example.com/invite/abc123def456").unwrap(),
             },
             Self {
                 id: Ulid::from_bytes([0x02; 16]),
                 token: "xyz789abc012".to_owned(),
                 valid: false,
+                username: None,
+                email: None,
                 usage_limit: None,
                 times_used: 0,
                 created_at: DateTime::default(),
                 last_used_at: None,
                 expires_at: None,
                 revoked_at: Some(DateTime::default()),
+                invite_url: Url::parse("https://example.com/invite/xyz789abc012").unwrap(),
             },
         ]
     }
