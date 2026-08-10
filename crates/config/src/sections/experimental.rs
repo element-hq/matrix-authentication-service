@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -84,7 +85,12 @@ pub struct ExperimentalConfig {
 
     /// Experimental feature to show a plan management tab and iframe.
     /// This value is passed through "as is" to the client without any
-    /// validation.
+    /// validation. It may be relative to the public base URL.
+    ///
+    /// Its origin is allowed to be framed by the `Content-Security-Policy` of
+    /// the account pages, so a value with no origin at all, such as a `data:`
+    /// URI, makes the browser block the iframe. That is logged as a warning on
+    /// startup.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub plan_management_iframe_uri: Option<String>,
 

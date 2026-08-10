@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -99,10 +100,28 @@ pub async fn get(
 
 #[cfg(test)]
 mod tests {
-    use hyper::{Request, StatusCode};
+    use hyper::{Request, StatusCode, header::CONTENT_SECURITY_POLICY};
     use sqlx::PgPool;
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState};
+
+    /// The compat SSO redirect is human-facing — it renders error pages through
+    /// `recover_error` — so it carries the human page policy
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_content_security_policy(pool: PgPool) {
+        let state: TestState = TestState::from_pool(pool).await.unwrap();
+
+        let request =
+            Request::get("/_matrix/client/v3/login/sso/redirect?redirectUrl=http://example.com/")
+                .empty();
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(
+            CONTENT_SECURITY_POLICY,
+            "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' https:; connect-src 'self'; worker-src 'none'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'",
+        );
+    }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_unstable_action_fallback(pool: PgPool) {

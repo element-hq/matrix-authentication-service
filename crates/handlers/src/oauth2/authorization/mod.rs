@@ -32,7 +32,7 @@ use serde::Deserialize;
 use thiserror::Error;
 
 use self::callback::CallbackDestination;
-use crate::{BoundActivityTracker, PreferredLanguage, impl_from_error_for_route};
+use crate::{BoundActivityTracker, Csp, PreferredLanguage, impl_from_error_for_route};
 
 mod callback;
 pub(crate) mod consent;
@@ -118,6 +118,7 @@ pub(crate) async fn get(
     clock: BoxClock,
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
+    State(csp): State<Csp>,
     State(url_builder): State<UrlBuilder>,
     activity_tracker: BoundActivityTracker,
     mut repo: BoxRepository,
@@ -154,6 +155,7 @@ pub(crate) async fn get(
     // One day, we will have try blocks
     let res: Result<Response, RouteError> = ({
         let templates = templates.clone();
+        let csp = csp.clone();
         let callback_destination = callback_destination.clone();
         async move {
             let maybe_session = session_info.load_active_session(&mut repo).await?;
@@ -164,6 +166,7 @@ pub(crate) async fn get(
             if params.auth.request.is_some() {
                 return Ok(callback_destination.go(
                     &templates,
+                    &csp,
                     &locale,
                     ClientError::from(ClientErrorCode::RequestNotSupported),
                 )?);
@@ -172,6 +175,7 @@ pub(crate) async fn get(
             if params.auth.request_uri.is_some() {
                 return Ok(callback_destination.go(
                     &templates,
+                    &csp,
                     &locale,
                     ClientError::from(ClientErrorCode::RequestUriNotSupported),
                 )?);
@@ -182,6 +186,7 @@ pub(crate) async fn get(
             if response_type.has_token() {
                 return Ok(callback_destination.go(
                     &templates,
+                    &csp,
                     &locale,
                     ClientError::from(ClientErrorCode::UnsupportedResponseType),
                 )?);
@@ -192,6 +197,7 @@ pub(crate) async fn get(
             if response_type.has_id_token() && !client.grant_types.contains(&GrantType::Implicit) {
                 return Ok(callback_destination.go(
                     &templates,
+                    &csp,
                     &locale,
                     ClientError::from(ClientErrorCode::UnauthorizedClient),
                 )?);
@@ -200,6 +206,7 @@ pub(crate) async fn get(
             if params.auth.registration.is_some() {
                 return Ok(callback_destination.go(
                     &templates,
+                    &csp,
                     &locale,
                     ClientError::from(ClientErrorCode::RegistrationNotSupported),
                 )?);
@@ -209,6 +216,7 @@ pub(crate) async fn get(
             if prompt.contains(&Prompt::None) {
                 return Ok(callback_destination.go(
                     &templates,
+                    &csp,
                     &locale,
                     ClientError::from(ClientErrorCode::LoginRequired),
                 )?);
@@ -219,6 +227,7 @@ pub(crate) async fn get(
                 if !client.grant_types.contains(&GrantType::AuthorizationCode) {
                     return Ok(callback_destination.go(
                         &templates,
+                        &csp,
                         &locale,
                         ClientError::from(ClientErrorCode::UnauthorizedClient),
                     )?);
@@ -243,6 +252,7 @@ pub(crate) async fn get(
                 if params.pkce.is_some() {
                     return Ok(callback_destination.go(
                         &templates,
+                        &csp,
                         &locale,
                         ClientError::from(ClientErrorCode::InvalidRequest),
                     )?);
@@ -320,6 +330,7 @@ pub(crate) async fn get(
             tracing::error!(message = &err as &dyn std::error::Error);
             callback_destination.go(
                 &templates,
+                &csp,
                 &locale,
                 ClientError::from(ClientErrorCode::ServerError),
             )?

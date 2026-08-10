@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -9,6 +10,7 @@
 use std::collections::HashMap;
 
 use axum::response::{Html, IntoResponse, Redirect, Response};
+use hyper::header::CONTENT_SECURITY_POLICY;
 use mas_data_model::AuthorizationGrant;
 use mas_i18n::DataLocale;
 use mas_templates::{FormPostContext, Templates};
@@ -16,6 +18,8 @@ use oauth2_types::requests::ResponseMode;
 use serde::Serialize;
 use thiserror::Error;
 use url::Url;
+
+use crate::Csp;
 
 #[derive(Debug, Clone)]
 enum CallbackDestinationMode {
@@ -104,6 +108,7 @@ impl CallbackDestination {
     pub fn go<T: Serialize + Send + Sync>(
         self,
         templates: &Templates,
+        csp: &Csp,
         locale: &DataLocale,
         params: T,
     ) -> Result<Response, CallbackDestinationError> {
@@ -177,9 +182,12 @@ impl CallbackDestination {
                     state,
                     params,
                 };
+                // That page auto-submits a form to the client's redirect URI, so
+                // it needs a `form-action` naming it
+                let csp = csp.form_post(&redirect_uri);
                 let ctx = FormPostContext::new_for_url(redirect_uri, merged).with_language(locale);
                 let rendered = templates.render_form_post(&ctx)?;
-                Ok(Html(rendered).into_response())
+                Ok(([(CONTENT_SECURITY_POLICY, csp)], Html(rendered)).into_response())
             }
         }
     }
@@ -187,7 +195,7 @@ impl CallbackDestination {
 
 #[cfg(test)]
 mod tests {
-    use hyper::{Request, StatusCode};
+    use hyper::{Request, StatusCode, header::CONTENT_SECURITY_POLICY};
     use mas_router::SimpleRoute;
     use oauth2_types::registration::ClientRegistrationResponse;
     use sqlx::PgPool;
@@ -246,6 +254,54 @@ mod tests {
         response.assert_header_value(
             hyper::header::LOCATION,
             "https://example.com/callback?state=test-state-value&error=login_required&error_description=The+Authorization+Server+requires+End-User+authentication.#",
+        );
+    }
+
+    /// The `form_post` response allows submitting the form to the client's
+    /// redirect URI, and only there
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_form_post_mode_content_security_policy(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        // Register an OAuth2 client
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://client.example.com/",
+                "redirect_uris": ["https://client.example.com/callback"],
+                "token_endpoint_auth_method": "none",
+                "response_types": ["code"],
+                "grant_types": ["authorization_code"],
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+
+        let registration: ClientRegistrationResponse = response.json();
+        let client_id = registration.client_id;
+
+        // prompt=none always fails with login_required since there is no session,
+        // which exercises the CallbackDestinationMode::FormPost path
+        let query = url::form_urlencoded::Serializer::new(String::new())
+            .append_pair("response_type", "code")
+            .append_pair("client_id", &client_id)
+            .append_pair("redirect_uri", "https://client.example.com/callback")
+            .append_pair("scope", "openid")
+            .append_pair("response_mode", "form_post")
+            .append_pair("prompt", "none")
+            .finish();
+
+        let response = state
+            .request(Request::get(format!("https://example.com/authorize?{query}")).empty())
+            .await;
+
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(
+            CONTENT_SECURITY_POLICY,
+            "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; \
+             img-src 'self' https:; connect-src 'self'; worker-src 'none'; \
+             form-action https://client.example.com; frame-ancestors 'none'; base-uri 'none'; \
+             object-src 'none'",
         );
     }
 }

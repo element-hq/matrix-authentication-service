@@ -12,13 +12,14 @@ use axum::{
     response::{Html, IntoResponse, Response},
 };
 use axum_extra::TypedHeader;
-use hyper::StatusCode;
+use http::HeaderValue;
+use hyper::{StatusCode, header::CONTENT_SECURITY_POLICY};
 use mas_axum_utils::{
     GenericError, InternalError,
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::{AuthorizationGrantStage, BoxClock, BoxRng, MatrixUser};
+use mas_data_model::{AuthorizationGrant, AuthorizationGrantStage, BoxClock, BoxRng, MatrixUser};
 use mas_keystore::Keystore;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
@@ -28,16 +29,27 @@ use mas_storage::{
     oauth2::{OAuth2AuthorizationGrantRepository, OAuth2ClientRepository},
 };
 use mas_templates::{ConsentContext, PolicyViolationContext, TemplateContext, Templates};
-use oauth2_types::requests::AuthorizationResponse;
+use oauth2_types::requests::{AuthorizationResponse, ResponseMode};
 use thiserror::Error;
 use ulid::Ulid;
 
 use super::callback::CallbackDestination;
 use crate::{
-    BoundActivityTracker, PreferredLanguage, impl_from_error_for_route,
+    BoundActivityTracker, Csp, PreferredLanguage, impl_from_error_for_route,
     oauth2::generate_id_token,
     session::{SessionOrFallback, count_user_sessions_for_limiting, load_session_or_fallback},
 };
+
+/// The policy for the consent and policy violation pages.
+///
+/// Both render a "Cancel" button which, in the `form_post` response mode,
+/// posts a form straight to the client's redirect URI instead of back to us.
+fn page_csp(csp: &Csp, grant: &AuthorizationGrant) -> HeaderValue {
+    match grant.response_mode {
+        ResponseMode::FormPost => csp.human_posting_to(&grant.redirect_uri),
+        _ => csp.human(),
+    }
+}
 
 #[derive(Debug, Error)]
 pub enum RouteError {
@@ -90,6 +102,7 @@ pub(crate) async fn get(
     clock: BoxClock,
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
+    State(csp): State<Csp>,
     State(url_builder): State<UrlBuilder>,
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
     mut policy: Policy,
@@ -166,6 +179,7 @@ pub(crate) async fn get(
         })
         .await?;
     if !res.valid() {
+        let policy = page_csp(&csp, &grant);
         let ctx = PolicyViolationContext::for_authorization_grant(grant, client, res.violations)
             .with_session(session)
             .with_csrf(csrf_token.form_value())
@@ -173,7 +187,12 @@ pub(crate) async fn get(
 
         let content = templates.render_policy_violation(&ctx)?;
 
-        return Ok((cookie_jar, Html(content)).into_response());
+        return Ok((
+            cookie_jar,
+            [(CONTENT_SECURITY_POLICY, policy)],
+            Html(content),
+        )
+            .into_response());
     }
 
     // Fetch informations about the user. This is purely cosmetic, so we let it
@@ -206,6 +225,7 @@ pub(crate) async fn get(
         display_name,
     };
 
+    let policy = page_csp(&csp, &grant);
     let ctx = ConsentContext::new(grant, client, matrix_user)
         .with_session(session)
         .with_csrf(csrf_token.form_value())
@@ -213,7 +233,12 @@ pub(crate) async fn get(
 
     let content = templates.render_consent(&ctx)?;
 
-    Ok((cookie_jar, Html(content)).into_response())
+    Ok((
+        cookie_jar,
+        [(CONTENT_SECURITY_POLICY, policy)],
+        Html(content),
+    )
+        .into_response())
 }
 
 #[tracing::instrument(
@@ -226,6 +251,7 @@ pub(crate) async fn post(
     clock: BoxClock,
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
+    State(csp): State<Csp>,
     State(key_store): State<Keystore>,
     mut policy: Policy,
     mut repo: BoxRepository,
@@ -305,6 +331,7 @@ pub(crate) async fn post(
         .await?;
 
     if !res.valid() {
+        let policy = page_csp(&csp, &grant);
         let ctx = PolicyViolationContext::for_authorization_grant(grant, client, res.violations)
             .with_session(browser_session)
             .with_csrf(csrf_token.form_value())
@@ -312,7 +339,12 @@ pub(crate) async fn post(
 
         let content = templates.render_policy_violation(&ctx)?;
 
-        return Ok((cookie_jar, Html(content)).into_response());
+        return Ok((
+            cookie_jar,
+            [(CONTENT_SECURITY_POLICY, policy)],
+            Html(content),
+        )
+            .into_response());
     }
 
     // All good, let's fulfill the grant with the browser session.
@@ -354,7 +386,123 @@ pub(crate) async fn post(
 
     Ok((
         cookie_jar,
-        callback_destination.go(&templates, &locale, params)?,
+        callback_destination.go(&templates, &csp, &locale, params)?,
     )
         .into_response())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::BTreeMap;
+
+    use hyper::{Request, StatusCode, header::CONTENT_SECURITY_POLICY};
+    use mas_axum_utils::SessionInfoExt;
+    use mas_data_model::AuthorizationCode;
+    use mas_router::{Route, SimpleRoute};
+    use oauth2_types::{
+        registration::ClientRegistrationResponse,
+        requests::ResponseMode,
+        scope::{OPENID, Scope},
+    };
+    use sqlx::PgPool;
+
+    use crate::test_utils::{CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup};
+
+    /// Render the consent page for a grant with the given response mode, and
+    /// return its `Content-Security-Policy`.
+    async fn consent_page_csp(state: &TestState, response_mode: ResponseMode) -> String {
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://client.example.com/",
+                "redirect_uris": ["https://client.example.com/callback"],
+                "token_endpoint_auth_method": "none",
+                "response_types": ["code"],
+                "grant_types": ["authorization_code"],
+            }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+        let registration: ClientRegistrationResponse = response.json();
+
+        let mut repo = state.repository().await.unwrap();
+        let user = repo
+            .user()
+            .add(&mut state.rng(), &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+        let browser_session = repo
+            .browser_session()
+            .add(&mut state.rng(), &state.clock, &user, None)
+            .await
+            .unwrap();
+        let client = repo
+            .oauth2_client()
+            .find_by_client_id(&registration.client_id)
+            .await
+            .unwrap()
+            .unwrap();
+        let grant = repo
+            .oauth2_authorization_grant()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                &client,
+                "https://client.example.com/callback".parse().unwrap(),
+                Scope::from_iter([OPENID]),
+                Some(AuthorizationCode {
+                    code: "thisisaverysecurecode".to_owned(),
+                    pkce: None,
+                }),
+                Some("test-state-value".to_owned()),
+                None,
+                response_mode,
+                false,
+                None,
+                None,
+                BTreeMap::new(),
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let cookies = CookieHelper::new();
+        cookies.import(state.cookie_jar().set_session(&browser_session));
+
+        let request = cookies
+            .with_cookies(Request::get(mas_router::Consent(grant.id).path().as_ref()).empty());
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+
+        response
+            .headers()
+            .get(CONTENT_SECURITY_POLICY)
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_owned()
+    }
+
+    /// The consent page's "Cancel" button posts a form straight to the client
+    /// in `form_post` response mode, so the policy has to name it
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_consent_content_security_policy(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let csp = consent_page_csp(&state, ResponseMode::FormPost).await;
+        assert!(
+            csp.contains("form-action 'self' https://client.example.com;"),
+            "expected the client origin in the policy, got {csp:?}"
+        );
+    }
+
+    /// In the other response modes that button is a plain link, so the page
+    /// keeps the unmodified policy
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_consent_content_security_policy_query_mode(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let csp = consent_page_csp(&state, ResponseMode::Query).await;
+        assert_eq!(csp, state.csp.human());
+    }
 }

@@ -23,7 +23,10 @@ use futures_util::future::BoxFuture;
 use headers::{Authorization, ContentType, HeaderMapExt, HeaderName, HeaderValue};
 use hyper::{
     Request, Response, StatusCode,
-    header::{CONTENT_TYPE, COOKIE, SET_COOKIE},
+    header::{
+        CONTENT_SECURITY_POLICY, CONTENT_TYPE, COOKIE, SET_COOKIE, X_CONTENT_TYPE_OPTIONS,
+        X_FRAME_OPTIONS,
+    },
 };
 use mas_axum_utils::{
     ErrorWrapper,
@@ -52,10 +55,11 @@ use tokio_util::{
     task::TaskTracker,
 };
 use tower::{Layer, Service, ServiceExt};
+use tower_http::set_header::SetResponseHeaderLayer;
 use url::Url;
 
 use crate::{
-    ActivityTracker, ClientIp, Limiter, graphql,
+    ActivityTracker, ClientIp, Csp, Limiter, graphql,
     passwords::{Hasher, PasswordManager},
     upstream_oauth2::cache::MetadataCache,
 };
@@ -112,6 +116,7 @@ pub(crate) struct TestState {
     pub site_config: SiteConfig,
     pub activity_tracker: ActivityTracker,
     pub limiter: Limiter,
+    pub csp: Csp,
     pub clock: Arc<MockClock>,
     pub rng: Arc<Mutex<ChaChaRng>>,
     pub http_client: reqwest::Client,
@@ -278,6 +283,8 @@ impl TestState {
 
         let queue_worker = Arc::new(tokio::sync::Mutex::new(queue_worker));
 
+        let csp = Csp::new(&site_config, &url_builder);
+
         Ok(Self {
             repository_factory: PgRepositoryFactory::new(pool),
             templates,
@@ -293,6 +300,7 @@ impl TestState {
             site_config,
             activity_tracker,
             limiter,
+            csp,
             clock,
             rng,
             http_client,
@@ -350,12 +358,26 @@ impl TestState {
         let app = crate::healthcheck_router()
             .merge(crate::discovery_router())
             .merge(crate::api_router())
-            .merge(crate::compat_router(self.templates.clone()))
-            .merge(crate::human_router(self.templates.clone()))
+            .merge(crate::compat_router(self.templates.clone(), &self.csp))
+            .merge(crate::human_router(self.templates.clone(), &self.csp))
             // We enable undocumented_oauth2_access for the tests, as it is easier to query the API
             // with it
             .merge(crate::graphql_router(true))
-            .merge(crate::admin_api_router().1)
+            .merge(crate::admin_api_router(&self.csp).1)
+            .fallback(crate::fallback)
+            // Same catch-all security headers as `mas_cli::server::build_router`
+            .layer(SetResponseHeaderLayer::if_not_present(
+                CONTENT_SECURITY_POLICY,
+                self.csp.locked_down(),
+            ))
+            .layer(SetResponseHeaderLayer::if_not_present(
+                X_CONTENT_TYPE_OPTIONS,
+                HeaderValue::from_static("nosniff"),
+            ))
+            .layer(SetResponseHeaderLayer::if_not_present(
+                X_FRAME_OPTIONS,
+                HeaderValue::from_static("DENY"),
+            ))
             .with_state(self.clone())
             .into_service();
 
@@ -631,6 +653,12 @@ impl FromRef<TestState> for Arc<PolicyFactory> {
 impl FromRef<TestState> for Arc<dyn HomeserverConnection> {
     fn from_ref(input: &TestState) -> Self {
         input.homeserver_connection.clone()
+    }
+}
+
+impl FromRef<TestState> for Csp {
+    fn from_ref(input: &TestState) -> Self {
+        input.csp.clone()
     }
 }
 

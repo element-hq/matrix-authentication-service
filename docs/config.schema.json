@@ -2902,7 +2902,7 @@
           ]
         },
         "plan_management_iframe_uri": {
-          "description": "Experimental feature to show a plan management tab and iframe.\nThis value is passed through \"as is\" to the client without any\nvalidation.",
+          "description": "Experimental feature to show a plan management tab and iframe.\nThis value is passed through \"as is\" to the client without any\nvalidation. It may be relative to the public base URL.\n\nIts origin is allowed to be framed by the `Content-Security-Policy` of\nthe account pages, so a value with no origin at all, such as a `data:`\nURI, makes the browser block the iframe. That is logged as a warning on\nstartup.",
           "type": [
             "string",
             "null"

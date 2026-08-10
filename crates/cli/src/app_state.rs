@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -12,8 +12,8 @@ use ipnetwork::IpNetwork;
 use mas_context::LogContext;
 use mas_data_model::{AppVersion, BoxClock, BoxRng, SiteConfig, SystemClock};
 use mas_handlers::{
-    ActivityTracker, ClientIp, CookieManager, ErrorWrapper, GraphQLSchema, Limiter, MetadataCache,
-    passwords::PasswordManager,
+    ActivityTracker, ClientIp, CookieManager, Csp, ErrorWrapper, GraphQLSchema, Limiter,
+    MetadataCache, passwords::PasswordManager,
 };
 use mas_i18n::Translator;
 use mas_keystore::{Encrypter, Keystore};
@@ -48,6 +48,7 @@ pub struct AppState {
     pub activity_tracker: ActivityTracker,
     pub trusted_proxies: Vec<IpNetwork>,
     pub limiter: Limiter,
+    pub csp: Csp,
 }
 
 impl AppState {
@@ -194,6 +195,12 @@ impl FromRef<AppState> for MetadataCache {
 impl FromRef<AppState> for SiteConfig {
     fn from_ref(input: &AppState) -> Self {
         input.site_config.clone()
+    }
+}
+
+impl FromRef<AppState> for Csp {
+    fn from_ref(input: &AppState) -> Self {
+        input.csp.clone()
     }
 }
 

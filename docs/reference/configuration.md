@@ -1054,6 +1054,9 @@ experimental:
 
   # Experimental feature to show a plan management tab and iframe.
   # This value is passed through "as is" to the client without any validation.
+  # It may be relative to the public base URL. Its origin is allowed to be
+  # framed by the Content-Security-Policy of the account pages, so a value with
+  # no origin at all, such as a data: URI, makes the browser block the iframe.
   #plan_management_iframe_uri: https://example.com/plan
 
   # Experimental feature to limit the number of application sessions per user.

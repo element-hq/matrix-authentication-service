@@ -100,3 +100,33 @@ pub async fn get_anonymous(
 
     Ok(Html(content).into_response())
 }
+
+#[cfg(test)]
+mod tests {
+    use hyper::{Request, StatusCode, header::CONTENT_SECURITY_POLICY};
+    use sqlx::PgPool;
+
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
+
+    const SPA_POLICY: &str = "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' https: data:; connect-src 'self'; worker-src 'none'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'";
+
+    /// The routes rendering the SPA shell carry the SPA shell policy
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_content_security_policy(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        // Without a session this redirects to the login page, but the header is
+        // set on the route, not by the handler
+        let response = state.request(Request::get("/account/").empty()).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(CONTENT_SECURITY_POLICY, SPA_POLICY);
+
+        // This one renders the shell without a session
+        let response = state
+            .request(Request::get("/account/password/recovery?ticket=whatever").empty())
+            .await;
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(CONTENT_SECURITY_POLICY, SPA_POLICY);
+    }
+}
