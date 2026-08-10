@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -290,10 +290,8 @@ pub fn build_router(
                 router.merge(mas_handlers::human_router::<AppState>(templates.clone()))
             }
             mas_config::HttpResource::GraphQL {
-                playground,
                 undocumented_oauth2_access,
             } => router.merge(mas_handlers::graphql_router::<AppState>(
-                *playground,
                 *undocumented_oauth2_access,
             )),
             mas_config::HttpResource::Assets { path } => {
