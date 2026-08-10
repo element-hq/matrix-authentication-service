@@ -450,6 +450,10 @@
         "context": "pages/sso.html:28:11-109"
       }
     },
+    "loading_failed": "Something went wrong while loading the page. Try reloading it.",
+    "@loading_failed": {
+      "context": "app.html:28:9-32"
+    },
     "login": {
       "call_to_register": "Don't have an account yet?",
       "@call_to_register": {
