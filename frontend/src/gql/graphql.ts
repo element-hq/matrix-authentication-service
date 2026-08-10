@@ -361,7 +361,7 @@ export type RegistrationTokenQueryVariables = Exact<{
 }>;
 
 
-export type RegistrationTokenQuery = { registrationToken: { valid: boolean, username: string | null, email: string | null } | null };
+export type RegistrationTokenQuery = { registrationToken: { valid: boolean, username: string | null, email: string | null, passwordless: boolean } | null };
 
 export type UserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1084,6 +1084,7 @@ export const RegistrationTokenDocument = new TypedDocumentString(`
     valid
     username
     email
+    passwordless
   }
 }
     `) as unknown as TypedDocumentString<RegistrationTokenQuery, RegistrationTokenQueryVariables>;
