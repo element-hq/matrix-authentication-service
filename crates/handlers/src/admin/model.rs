@@ -640,6 +640,10 @@ pub struct UserRegistrationToken {
     /// can choose their own email.
     email: Option<String>,
 
+    /// Whether registering with this token skips the password step. The user's
+    /// identity is then established by verifying their email address.
+    passwordless: bool,
+
     /// Maximum number of times this token can be used
     usage_limit: Option<u32>,
 
@@ -676,6 +680,7 @@ impl UserRegistrationToken {
             token: token.token,
             username: token.username,
             email: token.email,
+            passwordless: token.passwordless,
             usage_limit: token.usage_limit,
             times_used: token.times_used,
             created_at: token.created_at,
@@ -706,6 +711,7 @@ impl UserRegistrationToken {
                 valid: true,
                 username: None,
                 email: None,
+                passwordless: false,
                 usage_limit: Some(10),
                 times_used: 5,
                 created_at: DateTime::default(),
@@ -720,6 +726,7 @@ impl UserRegistrationToken {
                 valid: false,
                 username: None,
                 email: None,
+                passwordless: false,
                 usage_limit: None,
                 times_used: 0,
                 created_at: DateTime::default(),
