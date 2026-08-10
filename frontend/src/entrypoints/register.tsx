@@ -471,6 +471,12 @@ const PasswordRegisterForm: React.FC<{ data: Data }> = ({ data }) => {
     >
       <input type="hidden" name="csrf" value={data.csrfToken} />
 
+      {/* The invite code the page was opened with, so that it survives a
+          failed submission */}
+      {fields.token?.value && (
+        <input type="hidden" name="token" value={fields.token.value} />
+      )}
+
       {formErrors.map((error, index) => (
         <div
           // biome-ignore lint/suspicious/noArrayIndexKey: the server error list is static
