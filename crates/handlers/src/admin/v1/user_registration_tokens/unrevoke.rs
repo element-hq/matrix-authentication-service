@@ -125,6 +125,8 @@ mod tests {
                 "test_token_456".to_owned(),
                 Some(5),
                 None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -189,6 +191,8 @@ mod tests {
                 &mut state.rng(),
                 &state.clock,
                 "test_token_789".to_owned(),
+                None,
+                None,
                 None,
                 None,
             )

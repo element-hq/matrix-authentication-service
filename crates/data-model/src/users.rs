@@ -230,6 +230,8 @@ pub struct UserRegistrationPassword {
 pub struct UserRegistrationToken {
     pub id: Ulid,
     pub token: String,
+    pub username: Option<String>,
+    pub email: Option<String>,
     pub usage_limit: Option<u32>,
     pub times_used: u32,
     pub created_at: DateTime<Utc>,

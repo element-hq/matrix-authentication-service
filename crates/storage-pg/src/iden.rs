@@ -210,6 +210,8 @@ pub enum UserRegistrationTokens {
     Table,
     UserRegistrationTokenId,
     Token,
+    Username,
+    Email,
     UsageLimit,
     TimesUsed,
     CreatedAt,
