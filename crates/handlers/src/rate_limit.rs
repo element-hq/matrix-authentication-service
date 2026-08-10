@@ -40,6 +40,12 @@ pub enum RegistrationLimitedError {
 }
 
 #[derive(Debug, Clone, thiserror::Error)]
+pub enum UsernameAvailabilityLimitedError {
+    #[error("Too many username availability checks for requester {0}")]
+    Requester(RequesterFingerprint),
+}
+
+#[derive(Debug, Clone, thiserror::Error)]
 pub enum EmailAuthenticationLimitedError {
     #[error("Too many email authentication requests for requester {0}")]
     Requester(RequesterFingerprint),
@@ -122,6 +128,7 @@ struct LimiterInner {
     email_authentication_per_email: KeyedRateLimiter<String>,
     email_authentication_emails_per_session: KeyedRateLimiter<Ulid>,
     email_authentication_attempt_per_session: KeyedRateLimiter<Ulid>,
+    username_availability_per_requester: KeyedRateLimiter<RequesterFingerprint>,
 }
 
 impl LimiterInner {
@@ -147,6 +154,9 @@ impl LimiterInner {
             ),
             email_authentication_attempt_per_session: RateLimiter::keyed(
                 config.email_authentication.attempt_per_session.to_quota()?,
+            ),
+            username_availability_per_requester: RateLimiter::keyed(
+                config.username_availability.to_quota()?,
             ),
         })
     }
@@ -192,6 +202,9 @@ impl Limiter {
                     .retain_recent();
                 this.inner
                     .email_authentication_attempt_per_session
+                    .retain_recent();
+                this.inner
+                    .username_availability_per_requester
                     .retain_recent();
 
                 interval.tick().await;
@@ -262,6 +275,23 @@ impl Limiter {
             .registration_per_requester
             .check_key(&requester)
             .map_err(|_| RegistrationLimitedError::Requester(requester))?;
+
+        Ok(())
+    }
+
+    /// Check if a username availability check can be performed
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation is rate limited.
+    pub fn check_username_availability(
+        &self,
+        requester: RequesterFingerprint,
+    ) -> Result<(), UsernameAvailabilityLimitedError> {
+        self.inner
+            .username_availability_per_requester
+            .check_key(&requester)
+            .map_err(|_| UsernameAvailabilityLimitedError::Requester(requester))?;
 
         Ok(())
     }
