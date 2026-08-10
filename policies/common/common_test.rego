@@ -46,4 +46,18 @@ test_requester_banned if {
 		{"ip_address": "192.168.1.1", "user_agent": "Mozilla/5.0"},
 		{"banned_ips": ["192.168.1.1"]},
 	)
+
+	# A missing user agent is serialized as null, not omitted
+	common.requester_banned(
+		{"ip_address": "192.168.1.1", "user_agent": null},
+		{"banned_ips": ["192.168.1.1"]},
+	)
+}
+
+test_format_requester if {
+	common.format_requester({"ip_address": "192.168.1.1", "user_agent": "Mozilla/5.0"}) == "192.168.1.1 / Mozilla/5.0"
+	common.format_requester({"ip_address": "192.168.1.1", "user_agent": null}) == "192.168.1.1"
+	common.format_requester({"ip_address": null, "user_agent": "Mozilla/5.0"}) == "Mozilla/5.0"
+	common.format_requester({"ip_address": null, "user_agent": null}) == "unknown"
+	common.format_requester({}) == "unknown"
 }

@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -68,22 +69,27 @@ requester_banned(requester, policy) if ip_in_list(requester.ip_address, policy.b
 
 requester_banned(requester, policy) if matches_string_constraints(requester.user_agent, policy.banned_user_agents)
 
+# The fields are `null` (not absent) when unknown: a bare `requester.user_agent`
+# check lets `null` through to `sprintf`, which aborts the WASM evaluation. The
+# helper rule is undefined for both null and absent values, which `not` handles.
+requester_has(requester, key) if is_string(requester[key])
+
 format_requester(requester) := "unknown" if {
-	not requester.ip_address
-	not requester.user_agent
+	not requester_has(requester, "ip_address")
+	not requester_has(requester, "user_agent")
 }
 
 format_requester(requester) := sprintf("%s / %s", [requester.ip_address, requester.user_agent]) if {
-	requester.ip_address
-	requester.user_agent
+	requester_has(requester, "ip_address")
+	requester_has(requester, "user_agent")
 }
 
-format_requester(requester) := sprintf("%s", [requester.ip_address]) if {
-	requester.ip_address
-	not requester.user_agent
+format_requester(requester) := requester.ip_address if {
+	requester_has(requester, "ip_address")
+	not requester_has(requester, "user_agent")
 }
 
-format_requester(requester) := sprintf("%s", [requester.user_agent]) if {
-	not requester.ip_address
-	requester.user_agent
+format_requester(requester) := requester.user_agent if {
+	not requester_has(requester, "ip_address")
+	requester_has(requester, "user_agent")
 }
