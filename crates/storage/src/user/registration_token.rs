@@ -152,6 +152,8 @@ pub trait UserRegistrationTokenRepository: Send + Sync {
     /// * `expires_at`: Optional expiration time for the token
     /// * `username`: Optional username to impose on the registering user
     /// * `email`: Optional email to impose on the registering user
+    /// * `passwordless`: Whether registrations using this token skip the
+    ///   password step
     ///
     /// # Errors
     ///
@@ -166,6 +168,7 @@ pub trait UserRegistrationTokenRepository: Send + Sync {
         expires_at: Option<DateTime<Utc>>,
         username: Option<String>,
         email: Option<String>,
+        passwordless: bool,
     ) -> Result<UserRegistrationToken, Self::Error>;
 
     /// Increment the usage count of a [`UserRegistrationToken`]
@@ -325,6 +328,7 @@ repository_impl!(UserRegistrationTokenRepository:
         expires_at: Option<DateTime<Utc>>,
         username: Option<String>,
         email: Option<String>,
+        passwordless: bool,
     ) -> Result<UserRegistrationToken, Self::Error>;
     async fn use_token(
         &mut self,

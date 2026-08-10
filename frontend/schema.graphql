@@ -1298,6 +1298,10 @@ type RegistrationTokenInfo {
   An email imposed by this token, if any.
   """
   email: String
+  """
+  Whether registering with this token skips the password step.
+  """
+  passwordless: Boolean!
 }
 
 """

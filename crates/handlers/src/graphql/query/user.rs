@@ -38,6 +38,8 @@ struct RegistrationTokenInfo {
     username: Option<String>,
     /// An email imposed by this token, if any.
     email: Option<String>,
+    /// Whether registering with this token skips the password step.
+    passwordless: bool,
 }
 
 /// The result of a username availability check.
@@ -206,6 +208,7 @@ impl UserQuery {
             valid: registration_token.is_valid(state.clock().now()),
             username: registration_token.username,
             email: registration_token.email,
+            passwordless: registration_token.passwordless,
         }))
     }
 
