@@ -4,7 +4,7 @@
 // Please see LICENSE files in the repository root for full details.
 
 import { QueryClient, useQuery } from "@tanstack/react-query";
-import { Form, InlineSpinner } from "@vector-im/compound-web";
+import { Form, InlineSpinner, Text } from "@vector-im/compound-web";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import * as v from "valibot";
@@ -125,6 +125,7 @@ const REGISTRATION_TOKEN_QUERY = graphql(`
       valid
       username
       email
+      passwordless
     }
   }
 `);
@@ -134,6 +135,7 @@ type TokenInfo = {
   valid: boolean;
   username?: string | null;
   email?: string | null;
+  passwordless: boolean;
 };
 
 /** The settled result of the token lookup, rendered in a live region. */
@@ -609,8 +611,16 @@ const PasswordRegisterForm: React.FC<{ data: Data }> = ({ data }) => {
   const forcedUsername = tokenInfo?.valid ? tokenInfo.username : undefined;
   const forcedEmail = tokenInfo?.valid ? tokenInfo.email : undefined;
 
+  // A passwordless token skips password creation entirely; the email address is
+  // used to send a verification code instead
+  const passwordless = tokenInfo?.valid === true && tokenInfo.passwordless;
+
+  // Show the email field when the server requires one, when the token pins one,
+  // or when it is needed to send the passwordless verification code
   const showEmail =
-    data.features.password_registration_email_required || !!forcedEmail;
+    data.features.password_registration_email_required ||
+    !!forcedEmail ||
+    passwordless;
 
   // With no provider to pick from there is nothing to choose, so the whole form
   // is shown at once
@@ -797,11 +807,19 @@ const PasswordRegisterForm: React.FC<{ data: Data }> = ({ data }) => {
           </Form.Field>
         )}
 
-        <PasswordFields
-          minimumPasswordComplexity={data.features.minimum_password_complexity}
-          serverErrors={fields.password?.errors ?? []}
-          confirmServerErrors={fields.password_confirm?.errors ?? []}
-        />
+        {passwordless ? (
+          <Text size="sm" className="text-secondary">
+            {t("frontend.register.passwordless_notice")}
+          </Text>
+        ) : (
+          <PasswordFields
+            minimumPasswordComplexity={
+              data.features.minimum_password_complexity
+            }
+            serverErrors={fields.password?.errors ?? []}
+            confirmServerErrors={fields.password_confirm?.errors ?? []}
+          />
+        )}
 
         {data.branding.tos_uri && (
           <Form.InlineField

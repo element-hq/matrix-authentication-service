@@ -259,6 +259,7 @@
       "or_separator": "Or",
       "password_confirm_label": "Confirm password",
       "password_label": "Password",
+      "passwordless_notice": "This account doesn't need a password. We'll send a verification code to your email address instead.",
       "terms_of_service": "I agree to the <a>Terms and Conditions</a>",
       "token_checking": "Checking invite code…",
       "token_invalid": "This invite code is invalid or has expired",
