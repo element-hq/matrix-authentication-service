@@ -12,7 +12,8 @@
     "save": "Save",
     "save_and_continue": "Save and continue",
     "sign_out": "Sign out",
-    "start_over": "Start over"
+    "start_over": "Start over",
+    "try_again": "Try again"
   },
   "branding": {
     "privacy_policy": {
@@ -87,6 +88,9 @@
         "inactive_90_days": "All your sessions have been active in the last 90 days."
       },
       "view_all_button": "View all"
+    },
+    "captcha": {
+      "load_failed": "The CAPTCHA failed to load. Check your connection and try again."
     },
     "compat_session_detail": {
       "client_details_title": "Client info",
