@@ -51,6 +51,7 @@ impl SiteConfigExt for SiteConfig {
             account_recovery: self.account_recovery_allowed,
             login_with_email_allowed: self.login_with_email_allowed,
             minimum_password_complexity: self.minimum_password_complexity,
+            registration_token_required: self.registration_token_required,
         }
     }
 }

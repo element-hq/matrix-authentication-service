@@ -29,6 +29,7 @@ Please see LICENSE files in the repository root for full details.
   <div id="register-form"
        data-csrf-token="{{ csrf_token }}"
        {%- if captcha_config %} data-captcha-config='{{ captcha_config | tojson }}'{% endif %}
+       {%- if token %} data-token="{{ token }}"{% endif %}
        data-branding='{{ branding | tojson }}'
        data-features='{{ features | tojson }}'
        data-form='{{ form | tojson }}'

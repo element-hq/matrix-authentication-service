@@ -683,6 +683,8 @@ pub struct RegisterContext {
     form: FormState<RegisterFormField>,
     next: Option<PostAuthContext>,
     graphql_endpoint: String,
+    /// Registration token pre-filled from the query parameter
+    token: Option<String>,
 }
 
 impl TemplateContext for RegisterContext {
@@ -718,6 +720,7 @@ impl RegisterContext {
             form: FormState::default(),
             next: None,
             graphql_endpoint: url_builder.relative_url_for(&GraphQL),
+            token: None,
         }
     }
 
@@ -725,6 +728,15 @@ impl RegisterContext {
     #[must_use]
     pub fn with_form_state(self, form: FormState<RegisterFormField>) -> Self {
         Self { form, ..self }
+    }
+
+    /// Pre-fill the registration token field
+    #[must_use]
+    pub fn with_token(self, token: String) -> Self {
+        Self {
+            token: Some(token),
+            ..self
+        }
     }
 
     /// Add a post authentication action to the context

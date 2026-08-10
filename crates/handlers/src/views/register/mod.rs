@@ -71,6 +71,8 @@ pub(crate) struct RegisterForm {
     password_confirm: String,
     #[serde(default)]
     accept_terms: String,
+    #[serde(default)]
+    token: String,
 
     /// Which upstream provider the user chose, if any: each provider has its
     /// own submit button
@@ -88,6 +90,7 @@ impl ToFormState for RegisterForm {
 #[derive(Deserialize)]
 pub(crate) struct QueryParams {
     username: Option<String>,
+    token: Option<String>,
     #[serde(flatten)]
     action: OptionalPostAuthAction,
 }
@@ -151,6 +154,11 @@ pub(crate) async fn get(
         providers,
         query.action.post_auth_action.as_ref(),
     );
+
+    // If we got a token from the query string, pass it on to the form
+    if let Some(token) = query.token {
+        ctx = ctx.with_token(token);
+    }
 
     // If we got a username from the query string, use it to prefill the form
     if let Some(username) = query.username {
@@ -454,6 +462,24 @@ pub(crate) async fn post(
             .await?
     } else {
         registration
+    };
+
+    // Attach the registration token if provided
+    let registration = if form.token.is_empty() {
+        registration
+    } else {
+        let registration_token = repo
+            .user_registration_token()
+            .find_by_token(&form.token)
+            .await?;
+
+        if let Some(registration_token) = registration_token {
+            repo.user_registration()
+                .set_registration_token(registration, &registration_token)
+                .await?
+        } else {
+            registration
+        }
     };
 
     let registration = if let Some(email) = email {

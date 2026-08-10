@@ -89,8 +89,11 @@ const schema = v.object({
       password_registration: v.boolean(),
       password_registration_email_required: v.boolean(),
       minimum_password_complexity: v.number(),
+      registration_token_required: v.boolean(),
     }),
   ),
+  // Registration token carried by an invite link, if any
+  token: v.optional(v.string()),
   form: v.pipe(
     v.string(),
     v.parseJson(),
@@ -115,6 +118,126 @@ const USERNAME_AVAILABLE_QUERY = graphql(`
     }
   }
 `);
+
+const REGISTRATION_TOKEN_QUERY = graphql(`
+  query RegistrationToken($token: String!) {
+    registrationToken(token: $token) {
+      valid
+      username
+      email
+    }
+  }
+`);
+
+/** What a looked-up registration token imposes on the rest of the form. */
+type TokenInfo = {
+  valid: boolean;
+  username?: string | null;
+  email?: string | null;
+};
+
+/** The settled result of the token lookup, rendered in a live region. */
+const TokenVerdict: React.FC<{
+  checking: boolean;
+  notFound: boolean;
+  info?: TokenInfo;
+}> = ({ checking, notFound, info }) => {
+  const { t } = useTranslation();
+
+  if (checking) {
+    const label = t("frontend.register.token_checking");
+    return (
+      <Form.HelpMessage>
+        {/* The spinner carries the accessible name, so the live region doesn't
+            announce the same text twice */}
+        <InlineSpinner role="img" aria-label={label} />
+        <span aria-hidden="true">{label}</span>
+      </Form.HelpMessage>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <Form.ErrorMessage match="badInput" forceMatch>
+        {t("frontend.register.token_not_found")}
+      </Form.ErrorMessage>
+    );
+  }
+
+  if (!info) return null;
+
+  if (!info.valid) {
+    return (
+      <Form.ErrorMessage match="badInput" forceMatch>
+        {t("frontend.register.token_invalid")}
+      </Form.ErrorMessage>
+    );
+  }
+
+  return (
+    <Form.SuccessMessage match="valid" forceMatch>
+      {t("frontend.register.token_valid")}
+    </Form.SuccessMessage>
+  );
+};
+
+const TokenField: React.FC<{
+  defaultValue: string;
+  /** The token came from the invite link: show it, but don't let it be edited */
+  locked: boolean;
+  onTokenInfo: (info: TokenInfo | undefined) => void;
+}> = ({ defaultValue, locked, onTokenInfo }) => {
+  const { t } = useTranslation();
+  const [token, setToken] = useState(defaultValue);
+
+  const debounced = useDebouncedValue(token, 500);
+  const isDebouncePending = token !== debounced;
+
+  const { data, isFetching } = useQuery({
+    queryKey: ["registrationToken", debounced],
+    queryFn: ({ signal }) =>
+      graphqlRequest({
+        query: REGISTRATION_TOKEN_QUERY,
+        variables: { token: debounced },
+        signal,
+      }),
+    enabled: debounced.length > 0,
+  });
+
+  const settled = !isDebouncePending && data !== undefined;
+  // A `null` token means the server doesn't know this one at all
+  const info = settled ? (data.registrationToken ?? undefined) : undefined;
+  const notFound = settled && data.registrationToken === null;
+  const checking = token.length > 0 && (isFetching || isDebouncePending);
+
+  // The username and email fields lock onto whatever the token was issued for
+  useEffect(() => {
+    onTokenInfo(info);
+  }, [info, onTokenInfo]);
+
+  return (
+    <Form.Field name="token">
+      <Form.Label>{t("frontend.register.token_label")}</Form.Label>
+      <Form.TextControl
+        required
+        readOnly={locked}
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="none"
+        value={token}
+        onChange={(e) => setToken(e.target.value)}
+      />
+
+      <div aria-live="polite" aria-busy={checking}>
+        <TokenVerdict checking={checking} notFound={notFound} info={info} />
+      </div>
+
+      <Form.ErrorMessage match="valueMissing">
+        {t("frontend.errors.field_required")}
+      </Form.ErrorMessage>
+    </Form.Field>
+  );
+};
 
 /**
  * The settled result of the live availability check. Rendered inside an
@@ -194,15 +317,27 @@ const UsernameField: React.FC<{
   serverErrors: ServerError[];
   /** Reports the settled verdict, which is what holds the chooser step back */
   onAvailabilityChange: (available: boolean | undefined) => void;
-}> = ({ serverName, defaultValue, serverErrors, onAvailabilityChange }) => {
+  /** Username the registration token was issued for, which can't be changed */
+  forcedValue?: string | null;
+}> = ({
+  serverName,
+  defaultValue,
+  serverErrors,
+  onAvailabilityChange,
+  forcedValue,
+}) => {
   const { t } = useTranslation();
   const [username, setUsername] = useState(defaultValue);
   // Until the user edits the field, what the POST came back with is the truth
   const [dirty, setDirty] = useState(false);
 
-  const normalized = normalizeUsername(username);
+  const locked = !!forcedValue;
+  const normalized = normalizeUsername(locked ? forcedValue : username);
   const debounced = useDebouncedValue(normalized, 500);
   const isDebouncePending = normalized !== debounced;
+
+  // A forced username was never typed in, but still deserves a verdict
+  const live = dirty || locked;
 
   const { data, isFetching, isError } = useQuery({
     queryKey: ["usernameAvailable", debounced],
@@ -212,12 +347,12 @@ const UsernameField: React.FC<{
         variables: { username: debounced },
         signal,
       }),
-    enabled: dirty && isUsernameCheckable(debounced),
+    enabled: live && isUsernameCheckable(debounced),
   });
 
-  const settled = dirty && !isDebouncePending;
+  const settled = live && !isDebouncePending;
   const checking =
-    dirty &&
+    live &&
     isUsernameCheckable(normalized) &&
     (isFetching || isDebouncePending);
   const availability = settled ? data?.usernameAvailable : undefined;
@@ -236,10 +371,11 @@ const UsernameField: React.FC<{
       <Form.Label>{t("common.username")}</Form.Label>
       <Form.TextControl
         required
+        readOnly={locked}
         autoComplete="username"
         autoCorrect="off"
         autoCapitalize="none"
-        value={username}
+        value={locked ? forcedValue : username}
         onChange={(e) => {
           // Lowercase as the user types, so what is shown is what gets sent
           setUsername(e.target.value.toLocaleLowerCase());
@@ -443,11 +579,24 @@ const PasswordRegisterForm: React.FC<{ data: Data }> = ({ data }) => {
   const [usernameAvailable, setUsernameAvailable] = useState<
     boolean | undefined
   >(undefined);
+  const [tokenInfo, setTokenInfo] = useState<TokenInfo | undefined>(undefined);
 
   const onCaptchaValidChange = useCallback((valid: boolean) => {
     setCaptchaValid(valid);
     if (valid) setCaptchaError(null);
   }, []);
+
+  // The field shows up when the server requires a token, or when an invite link
+  // handed us one
+  const showToken =
+    data.features.registration_token_required || data.token !== undefined;
+
+  // A valid token may pin the identity the account has to be registered with
+  const forcedUsername = tokenInfo?.valid ? tokenInfo.username : undefined;
+  const forcedEmail = tokenInfo?.valid ? tokenInfo.email : undefined;
+
+  const showEmail =
+    data.features.password_registration_email_required || !!forcedEmail;
 
   // With no provider to pick from there is nothing to choose, so the whole form
   // is shown at once
@@ -566,6 +715,7 @@ const PasswordRegisterForm: React.FC<{ data: Data }> = ({ data }) => {
         defaultValue={fields.username?.value ?? ""}
         serverErrors={fields.username?.errors ?? []}
         onAvailabilityChange={setUsernameAvailable}
+        forcedValue={forcedUsername}
       />
 
       {/* Ahead of the details, so that hitting Enter in the username field
@@ -593,17 +743,29 @@ const PasswordRegisterForm: React.FC<{ data: Data }> = ({ data }) => {
         hidden={step === 1}
         disabled={step === 1}
       >
-        {data.features.password_registration_email_required && (
+        {showToken && (
+          <TokenField
+            defaultValue={data.token ?? ""}
+            locked={data.token !== undefined}
+            onTokenInfo={setTokenInfo}
+          />
+        )}
+
+        {showEmail && (
           <Form.Field
             name="email"
             serverInvalid={!!fields.email?.errors.length}
           >
             <Form.Label>{t("common.email_address")}</Form.Label>
             <Form.TextControl
+              // A forced address only arrives once the token resolves, so the
+              // control has to be remounted to pick it up
+              key={forcedEmail ?? "editable"}
               type="email"
               required
+              readOnly={!!forcedEmail}
               autoComplete="email"
-              defaultValue={fields.email?.value ?? ""}
+              defaultValue={forcedEmail ?? fields.email?.value ?? ""}
             />
             <Form.ErrorMessage match="typeMismatch">
               {t("frontend.errors.invalid_email")}

@@ -514,6 +514,7 @@ mod tests {
             account_recovery: true,
             login_with_email_allowed: true,
             minimum_password_complexity: 3,
+            registration_token_required: false,
         };
         let vite_manifest_path =
             Utf8Path::new(env!("CARGO_MANIFEST_DIR")).join("../../frontend/dist/manifest.json");
