@@ -442,12 +442,12 @@
     },
     "loading": "Loading…",
     "@loading": {
-      "context": "pages/register/index.html:38:26-42",
+      "context": "pages/register/index.html:39:26-42",
       "description": "Announced to screen readers while a page loads"
     },
     "loading_failed": "Something went wrong while loading the page. Try reloading it.",
     "@loading_failed": {
-      "context": "app.html:28:9-32, pages/register/index.html:49:7-30"
+      "context": "app.html:28:9-32, pages/register/index.html:50:7-30"
     },
     "login": {
       "call_to_register": "Don't have an account yet?",
@@ -669,7 +669,7 @@
       },
       "javascript_required": "JavaScript is required to create an account. Please enable JavaScript in your browser and reload this page.",
       "@javascript_required": {
-        "context": "pages/register/index.html:56:34-71"
+        "context": "pages/register/index.html:57:34-71"
       },
       "terms_of_service": "I agree to the <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Terms and Conditions</a>",
       "@terms_of_service": {

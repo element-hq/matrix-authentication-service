@@ -33,6 +33,9 @@ pub struct SiteFeatures {
 
     /// The minimum password complexity score required for new passwords.
     pub minimum_password_complexity: u8,
+
+    /// Whether a registration token is required to register.
+    pub registration_token_required: bool,
 }
 
 impl Object for SiteFeatures {
@@ -46,6 +49,7 @@ impl Object for SiteFeatures {
             "account_recovery" => Some(Value::from(self.account_recovery)),
             "login_with_email_allowed" => Some(Value::from(self.login_with_email_allowed)),
             "minimum_password_complexity" => Some(Value::from(self.minimum_password_complexity)),
+            "registration_token_required" => Some(Value::from(self.registration_token_required)),
             _ => None,
         }
     }
@@ -58,6 +62,7 @@ impl Object for SiteFeatures {
             "account_recovery",
             "login_with_email_allowed",
             "minimum_password_complexity",
+            "registration_token_required",
         ])
     }
 }
