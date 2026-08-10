@@ -637,12 +637,15 @@ pub enum RegisterFormField {
 
     /// The terms of service agreement field
     AcceptTerms,
+
+    /// The registration token (a.k.a. invite code) field
+    Token,
 }
 
 impl FormField for RegisterFormField {
     fn keep(&self) -> bool {
         match self {
-            Self::Username | Self::Email | Self::AcceptTerms => true,
+            Self::Username | Self::Email | Self::AcceptTerms | Self::Token => true,
             Self::Password | Self::PasswordConfirm => false,
         }
     }

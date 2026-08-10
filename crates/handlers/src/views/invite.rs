@@ -31,9 +31,9 @@ pub async fn get(
     }
 
     // Redirect to the registration page with the token as a query param
-    let url = url_builder.absolute_url_for(&mas_router::Register::default());
-    let url = format!("{url}?token={token}");
-    Ok(axum::response::Redirect::to(&url).into_response())
+    let mut url = url_builder.absolute_url_for(&mas_router::Register::default());
+    url.query_pairs_mut().append_pair("token", &token);
+    Ok(axum::response::Redirect::to(url.as_str()).into_response())
 }
 
 #[cfg(test)]

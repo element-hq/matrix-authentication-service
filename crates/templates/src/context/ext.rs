@@ -51,7 +51,10 @@ impl SiteConfigExt for SiteConfig {
             account_recovery: self.account_recovery_allowed,
             login_with_email_allowed: self.login_with_email_allowed,
             minimum_password_complexity: self.minimum_password_complexity,
-            registration_token_required: self.registration_token_required,
+            // `registration_token_required` is the deprecated global switch, the
+            // password-specific one also applies here
+            registration_token_required: self.registration_token_required
+                || self.password_registration_token_required,
         }
     }
 }
