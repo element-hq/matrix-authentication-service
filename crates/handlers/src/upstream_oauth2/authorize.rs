@@ -28,7 +28,9 @@ use thiserror::Error;
 use ulid::Ulid;
 use url::Url;
 
-use super::{UpstreamSessionsCookie, cache::LazyProviderInfos, template::environment};
+use super::{
+    UpstreamSessionContext, UpstreamSessionsCookie, cache::LazyProviderInfos, template::environment,
+};
 use crate::{
     impl_from_error_for_route, upstream_oauth2::cache::MetadataCache,
     views::shared::OptionalPostAuthAction,
@@ -77,8 +79,9 @@ pub(crate) enum StartAuthorizationError {
 /// This discovers the provider metadata if needed, records an
 /// `upstream_oauth_authorization_sessions` row and stashes it in the browser's
 /// upstream sessions cookie, along with the action to perform once the user
-/// comes back. It returns the authorization URL to redirect the browser to; it
-/// is up to the caller to commit the repository.
+/// comes back and the context carried from the page which started the flow. It
+/// returns the authorization URL to redirect the browser to; it is up to the
+/// caller to commit the repository.
 #[tracing::instrument(
     name = "handlers.upstream_oauth2.authorize.start",
     fields(upstream_oauth_provider.id = %provider.id),
@@ -94,6 +97,7 @@ pub(crate) async fn start_authorization(
     cookie_jar: CookieJar,
     provider: &UpstreamOAuthProvider,
     post_auth_action: Option<PostAuthAction>,
+    context: Option<UpstreamSessionContext>,
 ) -> Result<(CookieJar, Url), StartAuthorizationError> {
     // Load the session info from the cookie jar. We use this to know whether
     // the browser recently signed out, which we expose to the
@@ -197,7 +201,13 @@ pub(crate) async fn start_authorization(
         .await?;
 
     let cookie_jar = UpstreamSessionsCookie::load(&cookie_jar)
-        .add(session.id, provider.id, data.state, post_auth_action)
+        .add(
+            session.id,
+            provider.id,
+            data.state,
+            post_auth_action,
+            context,
+        )
         .save(cookie_jar, clock);
 
     Ok((cookie_jar, url))
@@ -236,6 +246,7 @@ pub(crate) async fn get(
         cookie_jar,
         &provider,
         query.post_auth_action,
+        None,
     )
     .await?;
 
