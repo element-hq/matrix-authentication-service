@@ -26,6 +26,7 @@ use mas_storage::{
 use minijinja::context;
 use thiserror::Error;
 use ulid::Ulid;
+use url::Url;
 
 use super::{UpstreamSessionsCookie, cache::LazyProviderInfos, template::environment};
 use crate::{
@@ -42,9 +43,8 @@ pub(crate) enum RouteError {
     Internal(Box<dyn std::error::Error>),
 }
 
-impl_from_error_for_route!(mas_oidc_client::error::DiscoveryError);
-impl_from_error_for_route!(mas_oidc_client::error::AuthorizationError);
 impl_from_error_for_route!(mas_storage::RepositoryError);
+impl_from_error_for_route!(StartAuthorizationError);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> axum::response::Response {
@@ -57,22 +57,44 @@ impl IntoResponse for RouteError {
     }
 }
 
+/// Errors which can happen while starting an upstream OAuth 2.0 authorization
+/// flow. They are all internal errors, as the caller is responsible for
+/// checking that the provider exists and is enabled.
+#[derive(Debug, Error)]
+pub(crate) enum StartAuthorizationError {
+    #[error(transparent)]
+    Discovery(#[from] mas_oidc_client::error::DiscoveryError),
+
+    #[error(transparent)]
+    Authorization(#[from] mas_oidc_client::error::AuthorizationError),
+
+    #[error(transparent)]
+    Repository(#[from] mas_storage::RepositoryError),
+}
+
+/// Start an upstream OAuth 2.0 authorization flow with the given provider.
+///
+/// This discovers the provider metadata if needed, records an
+/// `upstream_oauth_authorization_sessions` row and stashes it in the browser's
+/// upstream sessions cookie, along with the action to perform once the user
+/// comes back. It returns the authorization URL to redirect the browser to; it
+/// is up to the caller to commit the repository.
 #[tracing::instrument(
-    name = "handlers.upstream_oauth2.authorize.get",
-    fields(upstream_oauth_provider.id = %provider_id),
+    name = "handlers.upstream_oauth2.authorize.start",
+    fields(upstream_oauth_provider.id = %provider.id),
     skip_all,
 )]
-pub(crate) async fn get(
-    mut rng: BoxRng,
-    clock: BoxClock,
-    State(metadata_cache): State<MetadataCache>,
-    mut repo: BoxRepository,
-    State(url_builder): State<UrlBuilder>,
-    State(http_client): State<reqwest::Client>,
+pub(crate) async fn start_authorization(
+    rng: &mut BoxRng,
+    clock: &BoxClock,
+    metadata_cache: &MetadataCache,
+    http_client: &reqwest::Client,
+    url_builder: &UrlBuilder,
+    repo: &mut BoxRepository,
     cookie_jar: CookieJar,
-    Path(provider_id): Path<Ulid>,
-    Query(query): Query<OptionalPostAuthAction>,
-) -> Result<impl IntoResponse, RouteError> {
+    provider: &UpstreamOAuthProvider,
+    post_auth_action: Option<PostAuthAction>,
+) -> Result<(CookieJar, Url), StartAuthorizationError> {
     // Load the session info from the cookie jar. We use this to know whether
     // the browser recently signed out, which we expose to the
     // `additional_authorization_parameters` templates as `logged_out` so that
@@ -83,17 +105,10 @@ pub(crate) async fn get(
         .logged_out_at()
         .is_some_and(|t| clock.now().signed_duration_since(t) < Duration::minutes(5));
 
-    let provider = repo
-        .upstream_oauth_provider()
-        .lookup(provider_id)
-        .await?
-        .filter(UpstreamOAuthProvider::enabled)
-        .ok_or(RouteError::ProviderNotFound)?;
-
     // First, discover the provider
     // This is done lazyly according to provider.discovery_mode and the various
     // endpoint overrides
-    let mut lazy_metadata = LazyProviderInfos::new(&metadata_cache, &provider, &http_client);
+    let mut lazy_metadata = LazyProviderInfos::new(metadata_cache, provider, http_client);
     lazy_metadata.maybe_discover().await?;
 
     let redirect_uri = url_builder.upstream_oauth_callback(provider.id);
@@ -114,7 +129,7 @@ pub(crate) async fn get(
     // `forward_login_hint` shortcut working for deployments that haven't
     // re-run config sync yet.
     let downstream_grant =
-        if let Some(PostAuthAction::ContinueAuthorizationGrant { id }) = &query.post_auth_action {
+        if let Some(PostAuthAction::ContinueAuthorizationGrant { id }) = &post_auth_action {
             repo.oauth2_authorization_grant().lookup(*id).await?
         } else {
             None
@@ -152,7 +167,7 @@ pub(crate) async fn get(
     let (mut url, data) = mas_oidc_client::requests::authorization_code::build_authorization_url(
         lazy_metadata.authorization_endpoint().await?.clone(),
         data,
-        &mut rng,
+        rng,
     )?;
 
     // Render the templated `additional_authorization_parameters` and
@@ -172,9 +187,9 @@ pub(crate) async fn get(
     let session = repo
         .upstream_oauth_session()
         .add(
-            &mut rng,
-            &clock,
-            &provider,
+            rng,
+            clock,
+            provider,
             data.state.clone(),
             data.code_challenge_verifier,
             data.nonce,
@@ -182,8 +197,47 @@ pub(crate) async fn get(
         .await?;
 
     let cookie_jar = UpstreamSessionsCookie::load(&cookie_jar)
-        .add(session.id, provider.id, data.state, query.post_auth_action)
-        .save(cookie_jar, &clock);
+        .add(session.id, provider.id, data.state, post_auth_action)
+        .save(cookie_jar, clock);
+
+    Ok((cookie_jar, url))
+}
+
+#[tracing::instrument(
+    name = "handlers.upstream_oauth2.authorize.get",
+    fields(upstream_oauth_provider.id = %provider_id),
+    skip_all,
+)]
+pub(crate) async fn get(
+    mut rng: BoxRng,
+    clock: BoxClock,
+    State(metadata_cache): State<MetadataCache>,
+    mut repo: BoxRepository,
+    State(url_builder): State<UrlBuilder>,
+    State(http_client): State<reqwest::Client>,
+    cookie_jar: CookieJar,
+    Path(provider_id): Path<Ulid>,
+    Query(query): Query<OptionalPostAuthAction>,
+) -> Result<impl IntoResponse, RouteError> {
+    let provider = repo
+        .upstream_oauth_provider()
+        .lookup(provider_id)
+        .await?
+        .filter(UpstreamOAuthProvider::enabled)
+        .ok_or(RouteError::ProviderNotFound)?;
+
+    let (cookie_jar, url) = start_authorization(
+        &mut rng,
+        &clock,
+        &metadata_cache,
+        &http_client,
+        &url_builder,
+        &mut repo,
+        cookie_jar,
+        &provider,
+        query.post_auth_action,
+    )
+    .await?;
 
     repo.save().await?;
 
