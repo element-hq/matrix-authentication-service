@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -23,6 +24,7 @@ mod cookie;
 pub(crate) mod link;
 mod template;
 
+pub(crate) use self::cookie::UpstreamSessionContext;
 use self::cookie::UpstreamSessions as UpstreamSessionsCookie;
 
 #[derive(Debug, Error)]

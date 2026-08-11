@@ -393,11 +393,7 @@ where
         .route(mas_router::Logout::route(), post(self::views::logout::post))
         .route(
             mas_router::Register::route(),
-            get(self::views::register::get),
-        )
-        .route(
-            mas_router::PasswordRegister::route(),
-            get(self::views::register::password::get).post(self::views::register::password::post),
+            get(self::views::register::get).post(self::views::register::post),
         )
         .route(
             mas_router::RegisterVerifyEmail::route(),

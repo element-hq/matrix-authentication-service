@@ -170,6 +170,17 @@ impl TestState {
         pool: PgPool,
         site_config: SiteConfig,
     ) -> Result<Self, anyhow::Error> {
+        Self::from_pool_with_site_config_and_policy_data(pool, site_config, serde_json::json!({}))
+            .await
+    }
+
+    /// Create a new test state from the given database pool, site config and
+    /// policy data
+    pub async fn from_pool_with_site_config_and_policy_data(
+        pool: PgPool,
+        site_config: SiteConfig,
+        policy_data: serde_json::Value,
+    ) -> Result<Self, anyhow::Error> {
         // Make sure the rustls crypto provider and tracing are set up, as
         // building the HTTP client below requires a process-level provider to
         // be installed.
@@ -223,7 +234,7 @@ impl TestState {
                 server_name: site_config.server_name.clone(),
                 session_limit: site_config.session_limit.clone(),
             },
-            serde_json::json!({}),
+            policy_data,
         )
         .await?;
 

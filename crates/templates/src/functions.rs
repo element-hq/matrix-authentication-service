@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -105,11 +105,11 @@ fn filter_to_params(params: &Value, kwargs: Kwargs) -> Result<String, Error> {
     }
 }
 
-/// Filter which simplifies a URL to its domain name for HTTP(S) URLs
-fn filter_simplify_url(url: &str, kwargs: Kwargs) -> Result<String, minijinja::Error> {
+/// Simplify a URL to its domain name for HTTP(S) URLs
+pub(crate) fn simplify_url(url: &str, keep_path: bool) -> String {
     // Do nothing if the URL is not valid
     let Ok(mut url) = Url::from_str(url) else {
-        return Ok(url.to_owned());
+        return url.to_owned();
     };
 
     // Always at least remove the query parameters and fragment
@@ -118,26 +118,26 @@ fn filter_simplify_url(url: &str, kwargs: Kwargs) -> Result<String, minijinja::E
 
     // Do nothing else for non-HTTPS URLs
     if url.scheme() != "https" {
-        return Ok(url.to_string());
+        return url.to_string();
     }
-
-    let keep_path = kwargs.get::<Option<bool>>("keep_path")?.unwrap_or_default();
-    kwargs.assert_all_used()?;
 
     // Only return the domain name
     let Some(domain) = url.domain() else {
-        return Ok(url.to_string());
+        return url.to_string();
     };
 
     if keep_path {
-        Ok(format!(
-            "{domain}{path}",
-            domain = domain,
-            path = url.path(),
-        ))
+        format!("{domain}{path}", domain = domain, path = url.path())
     } else {
-        Ok(domain.to_owned())
+        domain.to_owned()
     }
+}
+
+fn filter_simplify_url(url: &str, kwargs: Kwargs) -> Result<String, minijinja::Error> {
+    let keep_path = kwargs.get::<Option<bool>>("keep_path")?.unwrap_or_default();
+    kwargs.assert_all_used()?;
+
+    Ok(simplify_url(url, keep_path))
 }
 
 /// Filter which computes a hash between 1 and 6 of an input string, identitical
