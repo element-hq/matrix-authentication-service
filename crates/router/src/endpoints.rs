@@ -347,6 +347,13 @@ impl PasswordRegister {
         self
     }
 
+    /// Prefill the form with the given username
+    #[must_use]
+    pub fn with_username(mut self, username: String) -> Self {
+        self.username = Some(username);
+        self
+    }
+
     #[must_use]
     pub fn and_continue_grant(mut self, data: Ulid) -> Self {
         self.post_auth_action = Some(PostAuthAction::continue_grant(data));
