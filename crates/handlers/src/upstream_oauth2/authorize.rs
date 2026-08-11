@@ -91,6 +91,7 @@ pub(crate) async fn start_authorization(
     cookie_jar: CookieJar,
     provider: &UpstreamOAuthProvider,
     post_auth_action: Option<PostAuthAction>,
+    username: Option<String>,
 ) -> Result<(CookieJar, Url), StartAuthorizationError> {
     // Load the session info from the cookie jar. We use this to know whether
     // the browser recently signed out, which we expose to the
@@ -194,7 +195,13 @@ pub(crate) async fn start_authorization(
         .await?;
 
     let cookie_jar = UpstreamSessionsCookie::load(&cookie_jar)
-        .add(session.id, provider.id, data.state, post_auth_action)
+        .add(
+            session.id,
+            provider.id,
+            data.state,
+            post_auth_action,
+            username,
+        )
         .save(cookie_jar, clock);
 
     Ok((cookie_jar, url))
@@ -233,6 +240,7 @@ pub(crate) async fn get(
         cookie_jar,
         &provider,
         query.post_auth_action,
+        None,
     )
     .await?;
 
