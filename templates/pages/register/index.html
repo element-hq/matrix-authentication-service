@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 
@@ -11,7 +12,7 @@ Please see LICENSE files in the repository root for full details.
 {% from "components/idp_brand.html" import logo %}
 
 {% block content %}
-  <form method="GET" class="flex flex-col gap-10" action="{{ '/register/password' | prefix_url }}">
+  <form method="POST" class="flex flex-col gap-10" action="{{ '/register' | prefix_url }}">
     <header class="page-heading">
       <div class="icon">
         {{ icon.user_profile_solid() }}
@@ -36,6 +37,8 @@ Please see LICENSE files in the repository root for full details.
     {% endif %}
 
     <div class="cpd-form-root">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}" />
+
       {% for key, value in next["params"] | default({}) | items %}
         <input type="hidden" name="{{ key }}" value="{{ value }}" />
       {% endfor %}
@@ -49,13 +52,12 @@ Please see LICENSE files in the repository root for full details.
       {% endif %}
 
       {% if providers %}
-        {% set params = next["params"] | default({}) | to_params(prefix="?") %}
         {% for provider in providers %}
           {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
-          <a class="cpd-button {%- if provider.brand_name %} has-icon {%- endif %}" data-kind="secondary" data-size="lg" href="{{ ('/upstream/authorize/' ~ provider.id ~ params) | prefix_url }}">
+          <button type="submit" name="provider" value="{{ provider.id }}" class="cpd-button {%- if provider.brand_name %} has-icon {%- endif %}" data-kind="secondary" data-size="lg">
             {{ logo(provider.brand_name) }}
             {{ _("mas.login.continue_with_provider", provider=name) }}
-          </a>
+          </button>
         {% endfor %}
       {% endif %}
 
