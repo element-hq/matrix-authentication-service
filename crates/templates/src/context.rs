@@ -825,16 +825,17 @@ impl TemplateContext for PolicyViolationContext {
                         Vec::new(),
                     );
 
-                    let authorization_grant_invalid_scope = PolicyViolationContext::for_authorization_grant(
-                        grant,
-                        client.clone(),
-                        vec![Violation {
-                            msg: "scope 'foo' not allowed".to_owned(),
-                            redirect_uri: None,
-                            field: None,
-                            variant: None,
-                        }],
-                    );
+                    let authorization_grant_invalid_scope =
+                        PolicyViolationContext::for_authorization_grant(
+                            grant,
+                            client.clone(),
+                            vec![Violation {
+                                msg: "scope 'foo' not allowed".to_owned(),
+                                redirect_uri: None,
+                                field: None,
+                                variant: None,
+                            }],
+                        );
                     let device_code_grant = PolicyViolationContext::for_device_code_grant(
                         DeviceCodeGrant {
                             id: Ulid::from_datetime_with_rng(now, rng),
@@ -850,33 +851,41 @@ impl TemplateContext for PolicyViolationContext {
                             locale: None,
                         },
                         client.clone(),
-                        Vec::new()
+                        Vec::new(),
                     );
 
-                    let device_code_grant_invalid_scope = PolicyViolationContext::for_device_code_grant(
-                        DeviceCodeGrant {
-                            id: Ulid::from_datetime_with_rng(now, rng),
-                            state: mas_data_model::DeviceCodeGrantState::Pending,
-                            client_id: client.id,
-                            scope: [OPENID].into_iter().collect(),
-                            user_code: Alphanumeric.sample_string(rng, 6).to_uppercase(),
-                            device_code: Alphanumeric.sample_string(rng, 32),
-                            created_at: now - Duration::try_minutes(5).unwrap(),
-                            expires_at: now + Duration::try_minutes(25).unwrap(),
-                            ip_address: None,
-                            user_agent: None,
-                            locale: None,
-                        },
-                        client,
-                        vec![Violation {
-                            msg: "user has too many active sessions".to_owned(),
-                            redirect_uri: None,
-                            field: None,
-                            variant: Some(ViolationVariant::TooManySessions { need_to_remove: 1 }),
-                        }],
-                    );
+                    let device_code_grant_invalid_scope =
+                        PolicyViolationContext::for_device_code_grant(
+                            DeviceCodeGrant {
+                                id: Ulid::from_datetime_with_rng(now, rng),
+                                state: mas_data_model::DeviceCodeGrantState::Pending,
+                                client_id: client.id,
+                                scope: [OPENID].into_iter().collect(),
+                                user_code: Alphanumeric.sample_string(rng, 6).to_uppercase(),
+                                device_code: Alphanumeric.sample_string(rng, 32),
+                                created_at: now - Duration::try_minutes(5).unwrap(),
+                                expires_at: now + Duration::try_minutes(25).unwrap(),
+                                ip_address: None,
+                                user_agent: None,
+                                locale: None,
+                            },
+                            client,
+                            vec![Violation {
+                                msg: "user has too many active sessions".to_owned(),
+                                redirect_uri: None,
+                                field: None,
+                                variant: Some(ViolationVariant::TooManySessions {
+                                    need_to_remove: 1,
+                                }),
+                            }],
+                        );
 
-                    [authorization_grant, authorization_grant_invalid_scope, device_code_grant, device_code_grant_invalid_scope]
+                    [
+                        authorization_grant,
+                        authorization_grant_invalid_scope,
+                        device_code_grant,
+                        device_code_grant_invalid_scope,
+                    ]
                 })
                 .collect(),
         )
