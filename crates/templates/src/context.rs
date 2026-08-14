@@ -822,7 +822,12 @@ impl TemplateContext for PolicyViolationContext {
                     let authorization_grant = PolicyViolationContext::for_authorization_grant(
                         grant,
                         client.clone(),
-                        Vec::new(),
+                        vec![Violation {
+                            msg: "scope 'foo' not allowed".to_owned(),
+                            redirect_uri: None,
+                            field: None,
+                            variant: None,
+                        }],
                     );
                     let device_code_grant = PolicyViolationContext::for_device_code_grant(
                         DeviceCodeGrant {
@@ -839,7 +844,12 @@ impl TemplateContext for PolicyViolationContext {
                             locale: None,
                         },
                         client,
-                        Vec::new(),
+                        vec![Violation {
+                            msg: "user has too many active sessions".to_owned(),
+                            redirect_uri: None,
+                            field: None,
+                            variant: Some(ViolationVariant::TooManySessions { need_to_remove: 1 }),
+                        }],
                     );
 
                     [authorization_grant, device_code_grant]
@@ -902,6 +912,14 @@ impl TemplateContext for CompatLoginPolicyViolationContext {
     {
         sample_list(vec![
             CompatLoginPolicyViolationContext { violations: vec![] },
+            CompatLoginPolicyViolationContext {
+                violations: vec![Violation {
+                    msg: "scope 'foo' not allowed".to_owned(),
+                    redirect_uri: None,
+                    field: None,
+                    variant: None,
+                }],
+            },
             CompatLoginPolicyViolationContext {
                 violations: vec![Violation {
                     msg: "user has too many active sessions".to_owned(),
