@@ -4,20 +4,23 @@
 // Please see LICENSE files in the repository root for full details.
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import {
-  CaptchaLoadError,
-  CaptchaPlaceholder,
-  CaptchaSection,
-  captchaPlaceholderHeight,
-} from "./Captcha";
+import { Suspense } from "react";
+import { Captcha, CaptchaPlaceholder } from "./Captcha";
 
 const meta = {
-  component: CaptchaSection,
+  component: Captcha,
   title: "ui/Captcha",
-} satisfies Meta<typeof CaptchaSection>;
+  decorators: [
+    (Story) => (
+      <Suspense fallback={<CaptchaPlaceholder service="hcaptcha" />}>
+        <Story />
+      </Suspense>
+    ),
+  ],
+} satisfies Meta<typeof Captcha>;
 
 export default meta;
-type Story = StoryObj<typeof CaptchaSection>;
+type Story = StoryObj<typeof Captcha>;
 
 // The stories below render a real widget, which loads the provider's SDK from
 // its own CDN. They're kept out of the autodocs page, which would otherwise
@@ -26,14 +29,7 @@ const liveOnly = ["!autodocs"];
 
 export const Placeholder: Story = {
   name: "Loading placeholder",
-  render: () => (
-    <CaptchaPlaceholder height={captchaPlaceholderHeight("hcaptcha")} />
-  ),
-};
-
-export const LoadError: Story = {
-  name: "Failed to load",
-  render: () => <CaptchaLoadError onRetry={() => {}} />,
+  render: () => <CaptchaPlaceholder service="hcaptcha" />,
 };
 
 export const NotConfigured: Story = {
