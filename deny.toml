@@ -29,6 +29,10 @@ ignore = [
     "RUSTSEC-2026-0222",
 ]
 
+# Only warn about unmaintained crates in direct dependencies of the workspace,
+# not transitive dependencies
+unmaintained = "workspace"
+
 [licenses]
 version = 2
 allow = [
