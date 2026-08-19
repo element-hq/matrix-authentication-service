@@ -217,11 +217,14 @@ impl LifecycleManager {
 
         self.hard_shutdown_token().cancel();
 
-        // TODO: we may want to have a time out on the task tracker, in case we have
-        // really stuck tasks on it
-        self.task_tracker().wait().await;
-
-        tracing::info!("All tasks are done, exitting");
+        tokio::select! {
+            () = self.task_tracker().wait() => {
+                tracing::info!("All tasks are done, exiting");
+            },
+            () = tokio::time::sleep(self.timeout) => {
+                tracing::warn!("Hard shutdown timeout reached with tasks still running, exiting anyway");
+            },
+        }
 
         if likely_crashed {
             ExitCode::FAILURE
