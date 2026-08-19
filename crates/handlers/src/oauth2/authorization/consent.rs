@@ -115,7 +115,7 @@ async fn fulfill_grant_and_redirect(
 
     let grant = repo
         .oauth2_authorization_grant()
-        .fulfill(clock, &browser_session, grant)
+        .fulfill(clock, browser_session, grant)
         .await?;
 
     let mut params = AuthorizationResponse::default();
