@@ -937,9 +937,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.5.50"
+version = "4.5.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c2cfd7bf8a6017ddaa4e32ffe7403d547790db06bd171c1c53926faab501623"
+checksum = "2797f34da339ce31042b27d23607e051786132987f595b02ba4f6a6dffb7030a"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -947,9 +947,9 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.5.50"
+version = "4.5.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a4c05b9e80c5ccd3a7ef080ad7b6ba7d6fc00a985b8b157197075677c82c7a0"
+checksum = "24a241312cea5059b13574bb9b3861cabf758b879c15190b37b6d6fd63ab6876"
 dependencies = [
  "anstream",
  "anstyle",
@@ -959,9 +959,9 @@ dependencies = [
 
 [[package]]
 name = "clap_derive"
-version = "4.5.49"
+version = "4.5.55"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a0b5487afeab2deb2ff4e03a807ad1a03ac532ff5a2cee5d86884440c7f7671"
+checksum = "a92793da1a46a5f2a02a6f4c46c6496b28c43638adea8306fcb0caa1634f24e5"
 dependencies = [
  "heck 0.5.0",
  "proc-macro2",
@@ -971,9 +971,9 @@ dependencies = [
 
 [[package]]
 name = "clap_lex"
-version = "0.7.5"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b94f61472cee1439c0b966b47e3aca9ae07e45d070759512cd390ea2bebc6675"
+checksum = "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
 
 [[package]]
 name = "cmake"
@@ -1747,7 +1747,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -2127,9 +2127,9 @@ dependencies = [
 
 [[package]]
 name = "h2"
-version = "0.4.15"
+version = "0.4.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6cb093c84e8bd9b188d4c4a8cb6579fc016968d14c99882163cd3ff402a4f155"
+checksum = "a9f37a958b41b3b19ee2707c06439c0e9e547e847223eb791ecb0cb821c65e27"
 dependencies = [
  "atomic-waker",
  "bytes",
@@ -3198,7 +3198,7 @@ dependencies = [
 
 [[package]]
 name = "mas-axum-utils"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -3233,7 +3233,7 @@ dependencies = [
 
 [[package]]
 name = "mas-cli"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -3308,7 +3308,7 @@ dependencies = [
 
 [[package]]
 name = "mas-config"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "anyhow",
  "camino",
@@ -3339,7 +3339,7 @@ dependencies = [
 
 [[package]]
 name = "mas-context"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "console",
  "opentelemetry",
@@ -3356,7 +3356,7 @@ dependencies = [
 
 [[package]]
 name = "mas-data-model"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "base64ct",
  "chrono",
@@ -3378,7 +3378,7 @@ dependencies = [
 
 [[package]]
 name = "mas-email"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "async-trait",
  "lettre",
@@ -3389,7 +3389,7 @@ dependencies = [
 
 [[package]]
 name = "mas-handlers"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "aide",
  "anyhow",
@@ -3472,7 +3472,7 @@ dependencies = [
 
 [[package]]
 name = "mas-http"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "futures-util",
  "headers",
@@ -3492,7 +3492,7 @@ dependencies = [
 
 [[package]]
 name = "mas-i18n"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "camino",
  "icu_datetime",
@@ -3512,7 +3512,7 @@ dependencies = [
 
 [[package]]
 name = "mas-i18n-scan"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "camino",
  "clap",
@@ -3526,7 +3526,7 @@ dependencies = [
 
 [[package]]
 name = "mas-iana"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "schemars 1.2.1",
  "serde",
@@ -3534,7 +3534,7 @@ dependencies = [
 
 [[package]]
 name = "mas-iana-codegen"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3551,7 +3551,7 @@ dependencies = [
 
 [[package]]
 name = "mas-jose"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "base64ct",
  "chrono",
@@ -3581,7 +3581,7 @@ dependencies = [
 
 [[package]]
 name = "mas-keystore"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "aead",
  "base64ct",
@@ -3609,7 +3609,7 @@ dependencies = [
 
 [[package]]
 name = "mas-listener"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "anyhow",
  "bytes",
@@ -3633,7 +3633,7 @@ dependencies = [
 
 [[package]]
 name = "mas-matrix"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3643,7 +3643,7 @@ dependencies = [
 
 [[package]]
 name = "mas-matrix-synapse"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3660,7 +3660,7 @@ dependencies = [
 
 [[package]]
 name = "mas-oidc-client"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "assert_matches",
  "async-trait",
@@ -3696,7 +3696,7 @@ dependencies = [
 
 [[package]]
 name = "mas-policy"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -3713,7 +3713,7 @@ dependencies = [
 
 [[package]]
 name = "mas-router"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "axum",
  "serde",
@@ -3724,7 +3724,7 @@ dependencies = [
 
 [[package]]
 name = "mas-spa"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "camino",
  "serde",
@@ -3733,7 +3733,7 @@ dependencies = [
 
 [[package]]
 name = "mas-storage"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3755,7 +3755,7 @@ dependencies = [
 
 [[package]]
 name = "mas-storage-pg"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3787,7 +3787,7 @@ dependencies = [
 
 [[package]]
 name = "mas-tasks"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3819,7 +3819,7 @@ dependencies = [
 
 [[package]]
 name = "mas-templates"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -3851,7 +3851,7 @@ dependencies = [
 
 [[package]]
 name = "mas-tower"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "http",
  "opentelemetry",
@@ -4103,7 +4103,7 @@ dependencies = [
 
 [[package]]
 name = "oauth2-types"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "assert_matches",
  "base64ct",
@@ -4182,7 +4182,7 @@ dependencies = [
  "sha1",
  "sha2",
  "sprintf",
- "thiserror 2.0.18",
+ "thiserror 1.0.69",
  "tokio",
  "tracing",
  "urlencoding",
@@ -4310,9 +4310,9 @@ dependencies = [
 
 [[package]]
 name = "opentelemetry-semantic-conventions"
-version = "0.32.0"
+version = "0.32.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ca2f98a0437b427b4b08f19f1caa3c44db885a202bc12cfea13d6c702243d68"
+checksum = "c913ac17a6c451661ee255f4625d143e51647ae78ebd969b75e41c4442f4fe47"
 
 [[package]]
 name = "opentelemetry-stdout"
@@ -5287,7 +5287,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -5345,7 +5345,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -5553,9 +5553,9 @@ checksum = "d767eb0aabc880b29956c35734170f26ed551a859dbd361d140cdbeca61ab1e2"
 
 [[package]]
 name = "sentry"
-version = "0.48.2"
+version = "0.48.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "931a20b0da02350676e3d6d3c9028d58eaa448cf42a866712eec5845a505421e"
+checksum = "d631477761f57c76148456e55e80e9a479ff3fa4c65b2b4a0c3acf1167fd4638"
 dependencies = [
  "cfg_aliases",
  "httpdate",
@@ -5573,9 +5573,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-backtrace"
-version = "0.48.2"
+version = "0.48.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "911ee36abf5b7fa335fccd5f54361ba9c16baea5f0c3bb361a687b6c195c21cf"
+checksum = "448b0981fbde6cdc9eb087ba3dc01035a253fef9a0d9e79aaf198fc26acb2e64"
 dependencies = [
  "backtrace",
  "regex",
@@ -5584,9 +5584,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-contexts"
-version = "0.48.2"
+version = "0.48.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b9d7d469e9e22741c17ca23fb8b42d79861590eb7cf330f3da34fc1e4bc1bc6"
+checksum = "9e5e909d02170ba6d1dc5ebd05bef7999280f5d960e3eaee5d1a18d88d41b334"
 dependencies = [
  "hostname",
  "libc",
@@ -5598,9 +5598,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-core"
-version = "0.48.2"
+version = "0.48.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "545dc562b6758d646ac19e1407f4ebc26d452111386743e03323464bc48bb2e0"
+checksum = "ecf0b1a4a4e9ec88395b52e6fa4868b95564c1fa96b26a0606f5f6288a0f7149"
 dependencies = [
  "rand 0.9.4",
  "sentry-types",
@@ -5611,9 +5611,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-panic"
-version = "0.48.2"
+version = "0.48.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "772d9de150c8ca910c835353c85f434457348fdd21208f9b3da3574202b1dc5d"
+checksum = "0b7d93d6ecb55d2251c5fc084c55c03a2bc68904918d76117e602c999e92f00f"
 dependencies = [
  "sentry-backtrace",
  "sentry-core",
@@ -5621,9 +5621,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-tower"
-version = "0.48.2"
+version = "0.48.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2abea154597936d5df2d39fbe8aac16d584de6b3572c70c39558764d9d2efe15"
+checksum = "a64a8a0a33239c65f95ff719fcb56655f398f4e4e74a01af8daca725cf7c2b5f"
 dependencies = [
  "axum",
  "http",
@@ -5636,9 +5636,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-tracing"
-version = "0.48.2"
+version = "0.48.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c51ec9620a4d398dcdf7ee90effbf8d8691cfa24e91978bfa8565cac039d4980"
+checksum = "58d26379236c4ef97eaf081bca3c7bf0ef6f06b3aa881eca2ee8e8dbc923e5b8"
 dependencies = [
  "bitflags",
  "sentry-backtrace",
@@ -5649,9 +5649,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-types"
-version = "0.48.2"
+version = "0.48.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "041359745a44dd2e14fe21b7510fe7ca8b5beffce6636a0b52e5bc7d5f736887"
+checksum = "2239099d47e76857b0825a182ecdb90159add7aa1097b60247c6e7ca6bf49c6a"
 dependencies = [
  "debugid",
  "hex",
@@ -5953,12 +5953,12 @@ dependencies = [
 
 [[package]]
 name = "socket2"
-version = "0.6.4"
+version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "52d1cfed4120b4d927bf7c0f86d2087a4a7d6027c906d9f9d525a80573b9be51"
+checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -6279,7 +6279,7 @@ dependencies = [
 
 [[package]]
 name = "syn2mas"
-version = "1.22.0-rc.0"
+version = "1.23.0"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -6371,7 +6371,7 @@ dependencies = [
  "getrandom 0.3.3",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -7548,7 +7548,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]

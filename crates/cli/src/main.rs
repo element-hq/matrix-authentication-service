@@ -44,9 +44,13 @@ impl SentryTransportFactory {
 }
 
 impl sentry::TransportFactory for SentryTransportFactory {
-    fn create_transport(&self, options: &sentry::ClientOptions) -> Arc<dyn sentry::Transport> {
-        let transport =
-            sentry::transports::ReqwestHttpTransport::with_client(options, self.client.clone());
+    fn create_transport_with_options(
+        &self,
+        options: sentry::TransportOptions,
+    ) -> Arc<dyn sentry::Transport> {
+        let transport = sentry::transports::ReqwestHttpTransportOptions::from(options)
+            .with_client(self.client.clone())
+            .build();
 
         Arc::new(transport)
     }
