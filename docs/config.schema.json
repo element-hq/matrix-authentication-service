@@ -852,10 +852,6 @@
           "description": "GraphQL endpoint",
           "type": "object",
           "properties": {
-            "playground": {
-              "description": "Enabled the GraphQL playground",
-              "type": "boolean"
-            },
             "undocumented_oauth2_access": {
               "description": "Allow access for OAuth 2.0 clients (undocumented)",
               "type": "boolean"

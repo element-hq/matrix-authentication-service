@@ -23,7 +23,15 @@ ignore = [
     # Rand 0.8.5 unsoundness with custom logger + thread_rng reseeding.
     # Only triggers when the `log` feature is enabled, which we don't use.
     "RUSTSEC-2026-0097",
+    # A bug in wasmtime, but we are not affected, as we only have a single
+    # Engine/Store, and as the advisory says explicitly:
+    # > This bug is not triggerable by guest WebAssembly programs.
+    "RUSTSEC-2026-0222",
 ]
+
+# Only warn about unmaintained crates in direct dependencies of the workspace,
+# not transitive dependencies
+unmaintained = "workspace"
 
 [licenses]
 version = 2

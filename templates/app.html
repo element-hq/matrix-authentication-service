@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 
@@ -15,19 +16,12 @@ Please see LICENSE files in the repository root for full details.
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{ _("app.name") }}</title>
-    {% set config = {
-      'graphqlEndpoint': app_config.graphqlEndpoint,
-      'root': app_config.root,
-    } -%}
-    <script>
-      window.APP_CONFIG = JSON.parse("{{ config | tojson | add_slashes | safe }}");
-    </script>
     {{ include_asset('src/entrypoints/main.tsx') | indent(4) | safe }}
     {# Pre-load the locale data for the current language #}
     {{ include_asset('locales/' ~ lang ~ '.json') | indent(4) | safe }}
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root" data-root="{{ app_config.root }}" data-graphql-endpoint="{{ app_config.graphqlEndpoint }}"></div>
   </body>
 </html>
