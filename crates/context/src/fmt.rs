@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use std::sync::LazyLock;
+
 use console::{Color, Style};
 use opentelemetry::{TraceId, trace::TraceContextExt as _};
 use tracing::{Level, Subscriber};
@@ -12,12 +14,15 @@ use tracing_subscriber::{
     fmt::{
         FormatEvent, FormatFields,
         format::{DefaultFields, Writer},
-        time::{FormatTime, SystemTime},
+        time::{ChronoLocal, FormatTime},
     },
     registry::LookupSpan,
 };
 
 use crate::LogContext;
+
+static TIMER: LazyLock<ChronoLocal> =
+    LazyLock::new(|| ChronoLocal::new("%Y-%m-%dT%H:%M:%S%.6f%:z".to_owned()));
 
 /// An event formatter usable by the [`tracing_subscriber`] crate, which
 /// includes the log context and the OTEL trace ID.
@@ -98,7 +103,7 @@ where
         let ansi = writer.has_ansi_escapes();
         let metadata = event.metadata();
 
-        SystemTime.format_time(&mut writer)?;
+        TIMER.format_time(&mut writer)?;
 
         let level = FmtLevel::new(metadata.level(), ansi);
         write!(&mut writer, " {level} ")?;
