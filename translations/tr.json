@@ -1,0 +1,276 @@
+{
+  "action": {
+    "back": "Geri",
+    "cancel": "İptal",
+    "continue": "Devam Et",
+    "create_account": "Hesap Oluştur",
+    "sign_in": "Giriş Yap",
+    "sign_out": "Çıkış Yap",
+    "skip": "Atla",
+    "start_over": "Baştan başla"
+  },
+  "app": {
+    "human_name": "Matrix Authentication Service",
+    "name": "matrix-authentication-service",
+    "technical_description": "OpenID Connect keşif belgesi: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Hizmet gizlilik politikasına bağlantı",
+      "link": "Gizlilik Politikası"
+    },
+    "terms_and_conditions": {
+      "alt": "Hizmet şartları ve koşullarına bağlantı",
+      "link": "Şartlar & Koşullar"
+    }
+  },
+  "common": {
+    "email_address": "E-posta Adresi",
+    "loading": "Yükleniyor…",
+    "mxid": "Matrix Kimliği",
+    "password": "Şifre",
+    "password_confirm": "Şifreyi onayla",
+    "username": "Kullanıcı Adı"
+  },
+  "error": {
+    "unexpected": "Beklenmeyen hata"
+  },
+  "mas": {
+    "account": {
+      "deactivated": {
+        "description": "Bu hesap (<em>%(mxid)s</em>) silindi. Beklenmedik bir durumsa, sunucu yöneticinizle iletişime geçin.",
+        "heading": "Hesap silindi"
+      },
+      "locked": {
+        "description": "Bu hesap (<em>%(mxid)s</em>) kilitlendi. Bu beklenmedik bir durumsa, sunucu yöneticinizle iletişime geçin.",
+        "heading": "Hesap kilitlendi"
+      },
+      "logged_out": {
+        "description": "Bu oturum sonlandırılmıştır. Tekrar giriş yapabilmek için lütfen oturumu kapatın.",
+        "heading": "Oturum sonlandırıldı"
+      }
+    },
+    "back_to_homepage": "Ana sayfaya geri dön",
+    "captcha": {
+      "noscript": "Bu form bir CAPTCHA ile korunmaktadır ve gönderilebilmesi için JavaScript'in etkinleştirilmesi gerekmektedir. Lütfen tarayıcınızda JavaScript'i etkinleştirin ve bu sayfayı yeniden yükleyin."
+    },
+    "change_password": {
+      "change": "Parola değiştir",
+      "confirm": "Şifreyi onayla",
+      "current": "Mevcut parola",
+      "heading": "Parolamı değiştir",
+      "new": "Yeni parola"
+    },
+    "choose_display_name": {
+      "description": "Bu, diğer kişilerin göreceği isimdir. Bunu istediğiniz zaman değiştirebilirsiniz.",
+      "headline": "Görüntülenecek adınızı seçin"
+    },
+    "consent": {
+      "continue_to": "<span>%(client_name)s</span> devam edilsin mi?",
+      "scope_list_preface": "Devam ederek, <span>%(client_name)s</span>'in şunları yapmasına izin vermiş oluyorsunuz:",
+      "this_will_setup": "Bu işlem, %(client_name)s (<span>%(client_uri)s</span>) cihazını <span>%(server_name)s</span> hesabınızla eşleştirecektir.",
+      "use_another_account": "Başka bir hesap kullanın"
+    },
+    "device_card": {
+      "access_requested": "Erişim talebi",
+      "generic_device": "Cihaz",
+      "ip_address": "IP Adresi",
+      "security_code": "Güvenlik kodu"
+    },
+    "device_code_link": {
+      "description": "Diğer cihazınızda gösterilen güvenlik kodunu girin",
+      "headline": "Hesabınıza yeni bir cihaz bağlayın",
+      "verification_code": "Doğrulama kodu"
+    },
+    "device_consent": {
+      "confirm_device": "Evet, bunun benim cihazım olduğunu ve oturum açmak istediğimi onaylıyorum.",
+      "denied": {
+        "description": "%(client_name)s'e erişimi reddettiniz. Bu pencereyi kapatabilirsiniz.",
+        "heading": "Erişim engellendi"
+      },
+      "grant_access": "Erişim izni ver",
+      "granted": {
+        "description": "%(client_name)s kullanıcısına erişim izni verdiniz. Bu pencereyi kapatabilirsiniz.",
+        "heading": "Erişim izni verildi"
+      },
+      "title": "Hesabınıza erişim izni verecek misiniz?",
+      "warning": {
+        "description": "Bu cihazın gerçekten sizin cihazınız olduğundan emin misiniz? Yöneticiler veya BT destek ekibi sizden bunu kabul etmenizi asla istemez.",
+        "title": "Hesabınıza uzaktan erişim sağlayan bir cihaza erişim izni vermek üzeresiniz"
+      }
+    },
+    "device_display_name": {
+      "client_on_device": "%(client_name)s, %(device_name)s üzerinde",
+      "name_for_platform": "%(name)s / %(platform)s",
+      "unknown_device": "Bilinmeyen cihaz"
+    },
+    "email_in_use": {
+      "description": "Hesap bilgilerinizi unuttuysanız, hesabınızı kurtarabilirsiniz. Ayrıca sıfırdan başlayıp farklı bir e-posta adresi de kullanabilirsiniz.",
+      "title": "<span>%(email)s</span> e-posta adresi zaten kullanımda."
+    },
+    "emails": {
+      "greeting": "Merhaba %(username)s,",
+      "recovery": {
+        "click_button": "Yeni bir parola oluşturmak için aşağıdaki düğmeye tıklayın:",
+        "copy_link": "Yeni bir parola oluşturmak için aşağıdaki bağlantıyı kopyalayıp tarayıcınıza yapıştırın:",
+        "create_new_password": "Yeni parola oluştur",
+        "fallback": "Buton sizde çalışmıyor mu?",
+        "headline": "%(server_name)s hesabınız için parola sıfırlama talebinde bulundunuz.",
+        "subject": "Hesap parolanızı sıfırlayın (%(mxid)s)",
+        "you_can_ignore": "Yeni bir parola talep etmediyseniz, bu e-postayı dikkate almayın. Mevcut parolanız çalışmaya devam edecektir."
+      },
+      "verify": {
+        "body_html": "Bu e-posta adresini doğrulamak için gereken doğrulama kodunuz: <strong>%(code)s</strong>",
+        "body_text": "Bu e-posta adresini doğrulamak için gereken doğrulama kodunuz: %(code)s",
+        "subject": "E-posta doğrulama kodunuz: %(code)s"
+      }
+    },
+    "errors": {
+      "captcha": "CAPTCHA doğrulaması başarısız oldu, lütfen tekrar deneyin",
+      "denied_policy": "Politika gereği reddedildi: %(policy)s",
+      "email_banned": "Sunucu politikası gereği e-posta kullanımı yasaktır.",
+      "email_domain_banned": "E-posta etki alanı, sunucu politikası tarafından yasaklandı",
+      "email_domain_not_allowed": "E-posta alan adı sunucu politikası tarafından izin verilmiyor",
+      "email_not_allowed": "Sunucu politikası gereği e-posta gönderimine izin verilmiyor",
+      "field_required": "Bu alan zorunludur",
+      "invalid_credentials": "Geçersiz kimlik bilgileri",
+      "password_mismatch": "Parola alanları birbiriyle uyuşmuyor",
+      "rate_limit_exceeded": "Kısa süre içinde çok fazla istekte bulundunuz. Lütfen birkaç dakika bekleyin ve tekrar deneyin.",
+      "username_all_numeric": "Kullanıcı adı yalnızca rakamlardan oluşamaz",
+      "username_banned": "Kullanıcı adı sunucu politikası gereği yasaklanmıştır",
+      "username_invalid_chars": "Kullanıcı adı geçersiz karakterler içeriyor. Yalnızca küçük harfler, rakamlar, tire ve alt çizgi kullanın.",
+      "username_not_allowed": "Kullanıcı adı sunucu politikası gereği izin verilmiyor",
+      "username_taken": "Bu kullanıcı adı zaten alınmış",
+      "username_too_long": "Kullanıcı adı çok uzun",
+      "username_too_short": "Kullanıcı adı çok kısa"
+    },
+    "legacy_consent": {
+      "this_will_setup": "Bu işlem, <span>%(client_name)s</span> cihazını <span>%(server_name)s</span> hesabınızla eşleştirecektir."
+    },
+    "login": {
+      "call_to_register": "Henüz hesabınız yok mu?",
+      "continue_with_provider": "%(provider)s ile devam edin",
+      "description": "Devam etmek için lütfen giriş yapın:",
+      "forgot_password": "Parolanızı mı unuttunuz?",
+      "headline": "Giriş Yap",
+      "link": {
+        "description": "<span class=\"break-keep text-links\">%(provider)s</span> hesabınızı bağlama",
+        "headline": "Bağlantıya erişmek için giriş yapın"
+      },
+      "no_login_methods": "Kullanılabilir giriş yöntemi yok.",
+      "username_or_email": "Kullanıcı adı veya E-posta"
+    },
+    "navbar": {
+      "my_account": "Hesabım",
+      "register": "Hesap oluştur",
+      "signed_in_as": "<span class=\"font-semibold\">%(username)s</span> olarak giriş yapıldı."
+    },
+    "not_found": {
+      "description": "Aradığınız sayfa mevcut değil veya taşınmış",
+      "heading": "Sayfa bulunamadı"
+    },
+    "not_you": "%(username)s değil mi?",
+    "policy_violation": {
+      "description": "Bu durum, isteği oluşturan istemci, şu anda oturum açmış olan kullanıcı veya isteğin kendisinden kaynaklanıyor olabilir.",
+      "heading": "Yetkilendirme isteği, bu hizmet tarafından uygulanan politika nedeniyle reddedildi",
+      "logged_as": "<span class=\"font-semibold\">%(username)s</span> olarak kaydedildi.",
+      "too_many_sessions": {
+        "description": "Hesabınız maksimum sayıda cihazda oturum açmış durumda. Devam etmek için, <span class=\"font-semibold\"> mevcut cihazlarınızdan %(num_devices_to_remove)s kaldırın </span> ve tekrar oturum açın.",
+        "heading": "Cihaz limitine ulaşıldı",
+        "manage_devices": "Cihazları yönetin"
+      }
+    },
+    "recovery": {
+      "consumed": {
+        "description": "Yeni bir parola oluşturmak için baştan başlayın ve \"Parolamı unuttum\" seçeneğini seçin.",
+        "heading": "Parolanızı sıfırlamak için kullanılan bağlantı daha önce kullanıldı"
+      },
+      "disabled": {
+        "description": "Giriş bilgilerinizi kaybettiyseniz, hesabınızı kurtarmak için lütfen yöneticiyle iletişime geçin.",
+        "heading": "Hesap kurtarma devre dışı bırakıldı."
+      },
+      "expired": {
+        "description": "Aşağıdaki adreslere gönderilecek yeni bir e-posta isteği gönderin: <span>%(email)s</span>.",
+        "heading": "Parolanızı sıfırlama bağlantısının süresi doldu"
+      },
+      "finish": {
+        "confirm": "Yeni parolayı tekrar girin.",
+        "description": "Hesabınız için yeni bir parola belirleyin.",
+        "heading": "Parolanızı sıfırlayın",
+        "new": "Yeni parola",
+        "save_and_continue": "Kaydet ve devam et"
+      },
+      "progress": {
+        "change_email": "Farklı bir e-posta adresi deneyin",
+        "description": "<span>%(email)s</span> kullanan bir hesabınız varsa, parolanızı sıfırlamak için bağlantı içeren bir e-posta gönderdik.",
+        "heading": "E-postalarınızı kontrol edin"
+      },
+      "start": {
+        "description": "Parolanızı sıfırlamak için bağlantı içeren bir e-posta gönderilecektir.",
+        "heading": "Devam etmek için e-postanızı girin."
+      }
+    },
+    "register": {
+      "call_to_login": "Zaten hesabınız var mı?",
+      "continue_with_email": "E-posta adresiyle devam edin",
+      "continue_with_password": "Parolayla devam et",
+      "create_account": {
+        "description": "Devam etmek için bir kullanıcı adı seçin.",
+        "heading": "Hesap oluştur"
+      },
+      "terms_of_service": "<a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\"> Şartları ve Koşulları </a> kabul ediyorum"
+    },
+    "registration_token": {
+      "description": "Ana sunucu yöneticisi tarafından sağlanan bir kayıt belirteci girin.",
+      "field": "Kayıt anahtarı",
+      "headline": "Kayıt anahtarı"
+    },
+    "scope": {
+      "edit_profile": "Profilinizi ve iletişim bilgilerinizi düzenleyin",
+      "manage_sessions": "Cihazlarınızı ve oturumlarınızı yönetin",
+      "mas_admin": "Kullanıcıları yönet (urn:mas:admin)",
+      "send_messages": "Sizin adınıza mesaj gönderin",
+      "synapse_admin": "Sunucuyu yönetin (urn:synapse:admin:*)",
+      "view_messages": "Mevcut mesajları ve verilerinizi görüntüleyinmessages",
+      "view_profile": "Profil bilgilerinizi ve iletişim bilgilerinizi görüntüleyin"
+    },
+    "upstream_oauth2": {
+      "link_mismatch": {
+        "heading": "Bu üst hesap zaten başka bir hesaba bağlı."
+      },
+      "register": {
+        "choose_username": {
+          "description": "Bu daha sonra değiştirilemez."
+        },
+        "create_account": "Yeni hesap oluşturun",
+        "enforced_by_policy": "Sunucu politikası tarafından uygulanır",
+        "forced_display_name": "Aşağıdaki görünen adı kullanacağız",
+        "forced_email": "Aşağıdaki e-posta adresini kullanacağım",
+        "forced_localpart": "Aşağıdaki kullanıcı adını kullanacağım",
+        "import_data": {
+          "description": "Yeni %(server_name)s hesabınızla ilişkilendirilecek bilgileri onaylayın.",
+          "heading": "Verilerinizi içe aktarın"
+        },
+        "imported_from_upstream": "Ana hesabınızdan içe aktarıldı",
+        "imported_from_upstream_with_name": "%(human_name)s hesabınızdan içe aktarıldı",
+        "link_existing": "Mevcut bir hesaba bağlantı",
+        "provider_name": "%(human_name)s hesabı",
+        "signup_with_upstream": {
+          "heading": "%(human_name)s hesabınızla kaydolmaya devam edin"
+        },
+        "suggested_display_name": "İçe aktarılan görünen ad",
+        "suggested_email": "E-posta adresini içe aktar",
+        "use": "Kullan"
+      },
+      "suggest_link": {
+        "action": "Bağlantı",
+        "heading": "Mevcut hesabınıza bağlanın"
+      }
+    },
+    "verify_email": {
+      "6_digit_code": "6 haneli kod",
+      "description": "Gönderilen 6 haneli kodu girin: <em>%(email)s</em>",
+      "headline": "E-postanızı doğrulayın"
+    }
+  }
+}

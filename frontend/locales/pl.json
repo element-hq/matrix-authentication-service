@@ -146,14 +146,14 @@
       "current_password_label": "Aktualne hasło",
       "failure": {
         "description": {
-          "account_locked": "Twoje konto jest zablokowane i nie można go obecnie odzyskać. Jeśli nie jest to oczekiwane, skontaktuj się z administratorem serwera.",
+          "account_locked": "Twoje konto jest zablokowane i nie można go obecnie odzyskać. Jeśli nie spodziewałeś się tej informacji, skontaktuj się z dostawcą konta.",
           "expired_recovery_ticket": "Link do odzyskiwania wygasł. Rozpocznij proces odzyskiwania konta od początku.",
           "invalid_new_password": "Wybrane nowe hasło jest nieprawidłowe i może nie spełniać skonfigurowanych zasad bezpieczeństwa.",
           "no_current_password": "Nie masz aktualnego hasła.",
           "no_such_recovery_ticket": "Link odzyskiwania jest nieprawidłowy. Jeśli skopiowałeś link z e-maila odzyskiwania, sprawdź, czy został skopiowany w całości.",
           "password_changes_disabled": "Możliwość zmiany hasła jest wyłączona.",
           "recovery_ticket_already_used": "Link odzyskiwania został już użyty. Nie można go użyć ponownie.",
-          "unspecified": "To może być problem tymczasowy, więc spróbuj ponownie później. Jeśli problem będzie się powtarzał, skontaktuj się z administratorem serwera.",
+          "unspecified": "To może być problem tymczasowy, spróbuj ponownie później. Jeśli problem będzie się powtarzał, skontaktuj się z dostawcą konta.",
           "wrong_password": "Podane hasło jest nieprawidłowe. Spróbuj ponownie."
         },
         "title": "Nie udało się zaktualizować hasła"
@@ -240,7 +240,7 @@
         "positive_1": "Twoje dane konta, kontakty, preferencje i lista czatów zostaną zachowane"
       },
       "failure": {
-        "description": "To może być problem tymczasowy, więc spróbuj ponownie później. Jeśli problem będzie się powtarzał, skontaktuj się z administratorem serwera.",
+        "description": "To może być problem tymczasowy, spróbuj ponownie później. Jeśli problem będzie się powtarzał, skontaktuj się z dostawcą konta.",
         "heading": "Nie udało się zezwolić na zresetowanie tożsamości kryptograficznej"
       },
       "finish_reset": "Zakończ resetowanie",
@@ -259,9 +259,9 @@
       "finished_label": "Zakończone",
       "generic_browser_session": "Sesja przeglądarki",
       "ip_label": "Adres IP",
-      "last_active_label": "Ostatnio aktywny",
+      "last_active_label": "Ostatnio aktywne",
       "name_for_platform": "{{name}} dla {{platform}}",
-      "scopes_label": "Zakresy",
+      "scopes_label": "Możliwości",
       "set_device_name": {
         "help": "Ustaw nazwę, która ułatwi identyfikację tego urządzenia.",
         "label": "Nazwa urządzenia",
@@ -345,10 +345,10 @@
       "edit_profile": "Edytuj swój profil i dane kontaktowe",
       "manage_sessions": "Zarządzaj swoimi urządzeniami i sesjami",
       "mas_admin": "Zarządzaj użytkownikami (urn:mas:admin)",
-      "send_messages": "Wysyłaj nowe wiadomości w Twoim imieniu",
+      "send_messages": "Wysyłanie nowych wiadomości w Twoim imieniu",
       "synapse_admin": "Administrowanie serwerem (urn:synapse:admin:*)",
-      "view_messages": "Przegląd istniejących wiadomości i danych",
-      "view_profile": "Przegląd informacji o profilu i danych kontaktowych"
+      "view_messages": "Przeglądanie istniejących wiadomości i danych",
+      "view_profile": "Przeglądanie informacji profilowych i danych kontaktowych"
     }
   }
 }

@@ -2,9 +2,9 @@
   "action": {
     "back": "Zurück",
     "cancel": "Abbrechen",
-    "clear": "Löschen",
+    "clear": "Leeren",
     "close": "Schließen",
-    "collapse": "Zusammenbruch",
+    "collapse": "Reduzieren",
     "confirm": "Bestätigen",
     "continue": "Weiter",
     "edit": "Bearbeiten",
@@ -12,7 +12,7 @@
     "save": "Speichern",
     "save_and_continue": "Speichern und fortfahren",
     "sign_out": "Abmelden",
-    "start_over": "Von vorne anfangen"
+    "start_over": "Neu beginnen"
   },
   "branding": {
     "privacy_policy": {
@@ -26,12 +26,12 @@
   },
   "common": {
     "e2ee": "Ende-zu-Ende-Verschlüsselung",
-    "loading": "Lade …",
+    "loading": "Wird geladen …",
     "next": "Weiter",
     "password": "Passwort",
     "previous": "Zurück",
     "saved": "Gespeichert",
-    "saving": "Speichern..."
+    "saving": "Wird gespeichert …"
   },
   "frontend": {
     "account": {
@@ -41,19 +41,19 @@
         "alert_description": "Dieses Konto wird dauerhaft entfernt und du hast keinen Zugriff mehr auf deine Nachrichten.",
         "alert_title": "Du bist kurz davor, alle deine Daten zu verlieren.",
         "button": "Account löschen",
-        "dialog_description": "<text>Bestätige, dass du dein Konto löschen möchtest:</text>\n<profile />\n<list>\n<item>Du kannst dein Konto nicht reaktivieren</item>\n<item>Du kannst dich nicht mehr anmelden</item>\n<item>Niemand kann deinen Benutzernamen (MXID) wieder verwenden, auch du nicht.</item>\n<item>Du verlässt alle Gruppen und Chats</item>\n<item>Du wirst vom Identitätsserver entfernt und niemand kann dich mit deiner E-Mail-Adresse oder Telefonnummer finden</item>\n</list>\n<text>Deine alten Nachrichten sind für die jeweiligen Empfänger weiterhin sichtbar. Möchtest du deine gesendeten Nachrichten vor zukünftigen Gruppen-Besuchern verbergen?</text>",
+        "dialog_description": "<text>Bestätige, dass du dein Konto löschen möchtest:</text>\n<profile />\n<list>\n<item>Du kannst dein Konto nicht reaktivieren</item>\n<item>Du kannst dich nicht mehr anmelden</item>\n<item>Niemand kann deinen Nutzernamen (MXID) wieder verwenden, auch du nicht.</item>\n<item>Du verlässt alle Gruppen und Chats</item>\n<item>Du wirst vom Identitätsserver entfernt und niemand kann dich mit deiner E-Mail-Adresse oder Telefonnummer finden</item>\n</list>\n<text>Deine alten Nachrichten sind für die jeweiligen Empfänger weiterhin sichtbar. Möchtest du deine gesendeten Nachrichten vor zukünftigen Gruppen-Besuchern verbergen?</text>",
         "dialog_title": "Dieses Konto löschen?",
         "erase_checkbox_label": "Ja, alle meine Nachrichten vor neuen Mitgliedern verbergen",
-        "incorrect_password": "Falsches Passwort, versuch's nochmal",
+        "incorrect_password": "Falsches Passwort, bitte versuche es erneut",
         "mxid_label": "Bestätige deine Matrix-ID ({{ mxid }})",
-        "mxid_mismatch": "Dieser Wert passt nicht zu deiner Matrix-ID.",
+        "mxid_mismatch": "Dieser Wert passt nicht zu deiner Matrix-ID",
         "password_label": "Gib dein Passwort ein, um weiterzumachen"
       },
       "edit_profile": {
         "display_name_help": "Dies ist der öffentliche Nutzername.",
         "display_name_label": "Anzeigename",
         "title": "Profil bearbeiten",
-        "username_label": "Benutzername"
+        "username_label": "Nutzername"
       },
       "password": {
         "change": "Passwort ändern",
@@ -67,12 +67,12 @@
       "title": "Dein Konto"
     },
     "add_email_form": {
-      "email_denied_error": "Die eingegebene E-Mail wird von der Serverrichtlinie nicht zugelassen.",
+      "email_denied_error": "Die eingegebene E-Mail wird von der Serverrichtlinie nicht zugelassen",
       "email_field_help": "Gib eine alternative E-Mail-Adresse an, mit der du auf dieses Konto zugreifen kannst.",
       "email_field_label": "E-Mail-Adresse hinzufügen",
       "email_in_use_error": "Die eingegebene E-Mail wird bereits verwendet",
       "email_invalid_error": "Die eingegebene E-Mail-Adresse ist ungültig",
-      "incorrect_password_error": "Falsches Passwort, versuch's nochmal",
+      "incorrect_password_error": "Falsches Passwort, bitte versuche es erneut",
       "password_confirmation": "Bestätige dein Passwort, um diese E-Mail-Adresse hinzuzufügen."
     },
     "browser_session_details": {
@@ -99,22 +99,22 @@
       "unknown": "Unbekannter Gerätetyp"
     },
     "email_in_use": {
-      "heading": "Die E-Mail-Adresse {{email}} wird bereits verwendet."
+      "heading": "Die E-Mail-Adresse {{email}} wird bereits verwendet"
     },
     "end_session_button": {
       "confirmation_modal_body_text": "Stelle sicher, dass du immer Zugriff auf ein anderes verifiziertes Gerät oder deinen Wiederherstellungsschlüssel hast, um zu vermeiden, dass dein verschlüsselter Chatverlauf verloren geht.",
-      "confirmation_modal_title": "Möchten Sie dieses Gerät wirklich entfernen?",
+      "confirmation_modal_title": "Möchtest du dieses Gerät wirklich entfernen?",
       "text": "Gerät entfernen"
     },
     "error": {
       "hideDetails": "Details ausblenden",
       "showDetails": "Details anzeigen",
-      "subtitle": "Ein unerwarteter Fehler ist aufgetreten, bitte versuch's nochmal.",
+      "subtitle": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.",
       "title": "Etwas ist schief gelaufen"
     },
     "errors": {
       "field_required": "Dieses Feld ist ein Pflichtfeld",
-      "rate_limit_exceeded": "Du hast in kurzer Zeit zu viele Anfragen gestellt. Warte bitte ein paar Minuten und versuch's nochmal."
+      "rate_limit_exceeded": "Du hast in kurzer Zeit zu viele Anfragen gestellt. Bitte warte ein paar Minuten und versuche es erneut."
     },
     "last_active": {
       "active_date": "Aktiv {{relativeDate}}",
@@ -145,15 +145,15 @@
       "current_password_label": "Aktuelles Passwort",
       "failure": {
         "description": {
-          "account_locked": "Dein Konto ist gesperrt und kann im Moment nicht wiederhergestellt werden. Wenn du das nicht erwartet hast, wende dich bitte an deinen Server-Admin.",
+          "account_locked": "Dein Konto ist gesperrt und kann derzeit nicht wiederhergestellt werden. Wenn du das nicht erwartet hast, wende dich an deinen Kontoanbieter.",
           "expired_recovery_ticket": "Der Link zur Kontowiederherstellung ist abgelaufen. Bitte fang den Prozess noch mal von vorne an.",
           "invalid_new_password": "Das neue Passwort, das du gewählt hast, ist ungültig; es entspricht möglicherweise nicht den Sicherheitsrichtlinien.",
           "no_current_password": "Du hast kein aktuelles Passwort.",
           "no_such_recovery_ticket": "Der Link zum Wiederherstellen ist nicht gültig. Wenn du den Link aus der E-Mail zum Wiederherstellen kopiert hast, schau bitte nach, ob du den vollständigen Link kopiert hast.",
           "password_changes_disabled": "Passwortänderungen sind deaktiviert.",
           "recovery_ticket_already_used": "Der Wiederherstellungslink wurde bereits verwendet. Er kann nicht erneut verwendet werden.",
-          "unspecified": "Das könnte ein vorübergehendes Problem sein, also versuch's später nochmal. Wenn das Problem weiterhin besteht, wende dich bitte an deinen Server-Admin.",
-          "wrong_password": "Das Passwort, das du als dein aktuelles Passwort angegeben hast, ist falsch. Versuch's bitte nochmal."
+          "unspecified": "Das könnte ein vorübergehendes Problem sein. Bitte versuche es später erneut. Wenn das Problem weiterhin besteht, wende dich an deinen Kontoanbieter.",
+          "wrong_password": "Das Passwort, das du als aktuelles Passwort angegeben hast, ist falsch. Bitte versuche es erneut."
         },
         "title": "Aktualisierung des Passworts fehlgeschlagen"
       },
@@ -170,7 +170,7 @@
     },
     "password_reset": {
       "consumed": {
-        "subtitle": "Um ein neues Passwort zu erstellen, fang einfach von vorne an und wähle „Passwort vergessen“.",
+        "subtitle": "Um ein neues Passwort zu erstellen, beginne neu und wähle „Passwort vergessen“.",
         "title": "Der Link zum Zurücksetzen deines Passworts wurde bereits verwendet"
       },
       "expired": {
@@ -214,11 +214,11 @@
         "extended_repeat": "Wiederholte Zeichenmuster wie „abcabcabc“ sind leicht zu erraten.",
         "key_pattern": "Kurze Eingaben sind leicht zu erraten.",
         "names_by_themselves": "Einzelne Vor- oder Nachnamen sind leicht zu erraten.",
-        "pwned": "Dein Passwort wurde durch eine Datenpanne im Internet preisgegeben.",
+        "pwned": "Dieses Passwort wird zu häufig verwendet. Bitte wähle ein Passwort, das schwerer zu erraten ist.",
         "recent_years": "Die letzten Jahre sind leicht zu erraten.",
         "sequences": "Gängige Zeichenfolgen wie „abc“ sind leicht zu erraten.",
         "similar_to_common": "Dies ähnelt einem häufig verwendeten Passwort.",
-        "simple_repeat": "Sich wiederholende Zeichen wie \"aaa\" sind leicht zu erraten.",
+        "simple_repeat": "Sich wiederholende Zeichen wie „aaa“ sind leicht zu erraten.",
         "straight_row": "Gerade Reihen von Tasten auf deiner Tastatur sind leicht zu erraten.",
         "top_hundred": "Dies ist ein häufig verwendetes Passwort.",
         "top_ten": "Dies ist ein häufig verwendetes Passwort.",
@@ -229,27 +229,27 @@
     "reset_cross_signing": {
       "cancelled": {
         "description_1": "Du kannst dieses Fenster schließen und zur App zurückgehen, um weiterzumachen.",
-        "description_2": "Wenn du dich überall abgemeldet hast und deinen Wiederherstellungs-Schlüssel nicht mehr weißt, musst du deine Identität zurücksetzen.",
-        "heading": "Identitätszurücksetzung abgebrochen."
+        "description_2": "Wenn du keinen Zugriff auf ein anderes verifiziertes Gerät hast und deinen Wiederherstellungsschlüssel nicht hast, musst du deine digitale Identität zurücksetzen, um die App weiter nutzen zu können.",
+        "heading": "Zurücksetzen der digitalen Identität abgebrochen"
       },
-      "description": "Wenn du auf keinem anderen Gerät angemeldet bist und deinen Wiederherstellungs-Schlüssel verloren hast, musst du deine Identität zurücksetzen, um die App weiter nutzen zu können.",
+      "description": "Wenn du keinen Zugriff auf ein anderes verifiziertes Gerät hast und deinen Wiederherstellungsschlüssel nicht hast, musst du deine digitale Identität zurücksetzen, um die App weiter nutzen zu können.",
       "effect_list": {
-        "neutral_1": "Du verlierst alle Nachrichten, die nur auf dem Server gespeichert sind.",
+        "neutral_1": "Du verlierst alle Nachrichten, die nur auf dem Server gespeichert sind",
         "neutral_2": "Du musst alle deine Geräte und Kontakte nochmal verifizieren.",
-        "positive_1": "Deine Kontodaten, Kontakte, Einstellungen und Chat-Liste bleiben erhalten."
+        "positive_1": "Deine Kontodaten, Kontakte, Einstellungen und Chat-Liste bleiben erhalten"
       },
       "failure": {
-        "description": "Das könnte ein vorübergehendes Problem sein, also versuch's später nochmal. Wenn das Problem weiterhin besteht, wende dich bitte an deinen Server-Admin.",
-        "heading": "Zurücksetzen der Krypto-Identität konnte nicht zugelassen werden"
+        "description": "Das könnte ein vorübergehendes Problem sein. Bitte versuche es später erneut. Wenn das Problem weiterhin besteht, wende dich an deinen Kontoanbieter.",
+        "heading": "Zurücksetzen der digitalen Identität konnte nicht zugelassen werden"
       },
       "finish_reset": "Reset beenden",
-      "heading": "Erstelle eine neue Identität, solltest du sie nicht auf andere Weise bestätigen können.",
+      "heading": "Setze deine digitale Identität zurück, falls du sie nicht anders bestätigen kannst",
       "start_reset": "Reset starten",
       "success": {
-        "description": "Das Zurücksetzen der Identität wurde für die nächsten {{minutes}} Minuten genehmigt. Du kannst dieses Fenster schließen und zur App zurückkehren, um fortzufahren.",
-        "heading": "Identität erfolgreich zurückgesetzt. Geh zurück zur App, um den Vorgang abzuschließen."
+        "description": "Das Zurücksetzen der digitalen Identität wurde für die nächsten {{minutes}} Minuten genehmigt. Du kannst dieses Fenster schließen und zur App zurückkehren, um fortzufahren.",
+        "heading": "Digitale Identität erfolgreich zurückgesetzt. Kehre zur App zurück, um den Vorgang abzuschließen."
       },
-      "warning": "Setze deine Identität nur zurück, wenn du keinen Zugriff auf ein anderes angemeldetes Gerät hast und deinen Wiederherstellungsschlüssel verloren hast."
+      "warning": "Setze deine digitale Identität nur zurück, wenn du keinen Zugriff auf ein anderes verifiziertes Gerät hast und deinen Wiederherstellungsschlüssel nicht hast."
     },
     "session": {
       "client_id_label": "Client-ID",
@@ -283,7 +283,7 @@
       "delete_button_confirmation_modal": {
         "action": "E-Mail löschen",
         "body": "Diese E-Mail löschen?",
-        "incorrect_password": "Falsches Passwort, versuch's nochmal",
+        "incorrect_password": "Falsches Passwort, bitte versuche es erneut",
         "password_confirmation": "Bestätige dein Passwort, um diese E-Mail-Adresse zu löschen."
       },
       "delete_button_title": "E-Mail-Adresse entfernen",
@@ -302,8 +302,8 @@
         "inactive_90_days": "Alle deine Sitzungen waren in den letzten 90 Tagen aktiv."
       },
       "num_sessions_filtered_header": {
-        "header:one": "{{count}} Geräte entsprechen Ihren Suchkriterien ({{unfiltered_session_total}})",
-        "header:other": "{{count}} Geräte entsprechen Ihren Suchkriterien ({{unfiltered_session_total}})",
+        "header:one": "{{count}} Gerät entspricht deinen Suchkriterien ({{unfiltered_session_total}})",
+        "header:other": "{{count}} Geräte entsprechen deinen Suchkriterien ({{unfiltered_session_total}})",
         "unfiltered_session_total:one": "{{count}} insgesamt",
         "unfiltered_session_total:other": "{{count}} insgesamt"
       },
@@ -337,7 +337,7 @@
     "scope": {
       "edit_profile": "Bearbeite dein Profil und deine Kontaktdaten",
       "manage_sessions": "Verwalte deine Geräte und Sitzungen",
-      "mas_admin": "Beliebige Benutzer verwalten (urn:mas:admin)",
+      "mas_admin": "Beliebige Nutzer verwalten (urn:mas:admin)",
       "send_messages": "Neue Nachrichten in deinem Namen senden",
       "synapse_admin": "Den Synapse-Homeserver verwalten (urn:synapse:admin:*)",
       "view_messages": "Zeig deine vorhandenen Nachrichten und Daten an",

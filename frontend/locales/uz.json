@@ -4,15 +4,15 @@
     "cancel": "Bekor qilish",
     "clear": "Tozalash",
     "close": "Yopish",
-    "collapse": "Collapse",
-    "confirm": "Confirm",
+    "collapse": "Yig‘ish",
+    "confirm": "Tasdiqlash",
     "continue": "Davom etish",
     "edit": "Tahrirlash",
-    "expand": "Expand",
+    "expand": "Kengaytirish",
     "save": "Saqlash",
-    "save_and_continue": "Save and continue",
+    "save_and_continue": "Saqlash va davom ettirish",
     "sign_out": "Chiqish",
-    "start_over": "Start over"
+    "start_over": "Qaytadan boshlang"
   },
   "branding": {
     "privacy_policy": {
@@ -25,29 +25,29 @@
     }
   },
   "common": {
-    "e2ee": "End-to-end encryption",
+    "e2ee": "Abonent shifrlash ( E2EE )",
     "loading": "Yuklanmoqda…",
     "next": "Keyingisi",
     "password": "Parol",
     "previous": "Oldingi",
-    "saved": "Saved",
-    "saving": "Saving…"
+    "saved": "Saqlandi",
+    "saving": "Saqlanmoqda…"
   },
   "frontend": {
     "account": {
-      "account_password": "Account password",
-      "contact_info": "Contact info",
+      "account_password": "Hisob paroli",
+      "contact_info": "Kontakt maʼlumoti",
       "delete_account": {
-        "alert_description": "This account will be permanently erased and you’ll no longer have access to any of your messages.",
-        "alert_title": "You’re about to lose all of your data",
-        "button": "Delete account",
-        "dialog_description": "<text>Confirm that you would like to delete your account:</text>\n<profile />\n<list>\n<item>You will not be able to reactivate your account</item>\n<item>You will no longer be able to sign in</item>\n<item>No one will be able to reuse your username (MXID), including you</item>\n<item>You will leave all rooms and direct messages you are in</item>\n<item>You will be removed from the identity server, and no one will be able to find you with your email or phone number</item>\n</list>\n<text>Your old messages will still be visible to people who received them. Would you like to hide your sent messages from people who join rooms in the future?</text>",
-        "dialog_title": "Delete this account?",
-        "erase_checkbox_label": "Yes, hide all my messages from new joiners",
-        "incorrect_password": "Incorrect password, please try again",
-        "mxid_label": "Confirm your Matrix ID ({{ mxid }})",
-        "mxid_mismatch": "This value does not match your Matrix ID",
-        "password_label": "Enter your password to continue"
+        "alert_description": "Bu hisob butunlay oʻchirib tashlanadi va siz endi xabarlaringizning birortasiga ham kira olmaysiz.",
+        "alert_title": "Siz barcha maʻlumotlaringizni yoʻqotish arafasidasiz",
+        "button": "Akkauntni o‘chirish",
+        "dialog_description": "<text> Hisobingizni oʻchirishni xohlayotganingizni tasdiqlang:</text> <profile /> \n<list>\n <item> Hisobingizni qayta faollashtira olmaysiz</item> \n<item> Endi tizimga kira olmaysiz</item> \n<item> Hech kim, shu jumladan siz ham, foydalanuvchi nomingizni (MXID) qayta ishlata olmaydi</item> \n<item> Siz barcha xonalarni va toʻgridan-toʻgʻri xabarlaringizni tark etasiz</item> \n<item> Siz identifikatsiya serveridan oʻchirilasiz va hech kim sizni elektron pochta yoki telefon raqamingiz bilan topa olmaydi</item> </list> \n<text> Eski xabarlaringiz ularni olgan odamlarga koʻrinadigan boʻladi. Kelajakda xonalarga qoʻshilgan odamlardan yuborilgan xabarlaringizni yashirishni xohlaysizmi?</text>",
+        "dialog_title": "Bu akkaunt oʻchirib tashlansinmi?",
+        "erase_checkbox_label": "Ha, barcha xabarlarimni yangi qoʻshilganlardan yashirish",
+        "incorrect_password": "Parol notoʻgʻri,qaytadan urining.",
+        "mxid_label": "Matrix identifikatoringizni tasdiqlang ({{ mxid }})",
+        "mxid_mismatch": "Bu qiymat sizning Matrix ID raqamingizga mos kelmaydi",
+        "password_label": "Davom etish uchun parolingizni kiriting"
       },
       "edit_profile": {
         "display_name_help": "Siz tizimga kirgan joyingizda boshqalar buni koʻrishadi.",
@@ -61,19 +61,19 @@
         "label": "Parol"
       },
       "sign_out": {
-        "button": "Sign out of account",
-        "dialog": "Sign out of this account?"
+        "button": "Hisobdan chiqish",
+        "dialog": "Bu hisobdan chiqilsinmi?"
       },
       "title": "Sizning hisobingiz"
     },
     "add_email_form": {
-      "email_denied_error": "The entered email is not allowed by the server policy",
+      "email_denied_error": "Kiritilgan elektron pochta manzili server siyosati tomonidan ruxsat etilmagan",
       "email_field_help": "Bu hisobga kirish uchun ishlatishingiz mumkin bo‘lgan muqobil email manzilini kiriting.",
       "email_field_label": "Email manzilini kiritish",
-      "email_in_use_error": "The entered email is already in use",
+      "email_in_use_error": "Kiritilgan elektron pochta allaqachon ishlatilmoqda",
       "email_invalid_error": "Kiritilgan elektron pochta manzili notogʻri",
-      "incorrect_password_error": "Incorrect password, please try again",
-      "password_confirmation": "Confirm your account password to add this email address"
+      "incorrect_password_error": "Parol notoʻgʻri,qaytadan urining.",
+      "password_confirmation": "Ushbu elektron pochta manzilini qoʻshish uchun hisobingiz parolini tasdiqlang"
     },
     "browser_session_details": {
       "current_badge": "Hozirgi"
@@ -83,8 +83,8 @@
       "body:other": "{{count}} ta faol seans",
       "heading": "Brauzerlar",
       "no_active_sessions": {
-        "default": "You are not signed in to any web browsers.",
-        "inactive_90_days": "All your sessions have been active in the last 90 days."
+        "default": "Siz hech qanday veb-brauzerga kirmagansiz.",
+        "inactive_90_days": "Soʻnggi 90 kun ichida barcha sessiyalaringiz faol boʻldi."
       },
       "view_all_button": "Hammasini ko‘rish"
     },
@@ -99,10 +99,10 @@
       "unknown": "Noma’lum qurilma turi"
     },
     "email_in_use": {
-      "heading": "The email address {{email}} is already in use."
+      "heading": "{{email}} elektron pochta manzili allaqachon ishlatilmoqda."
     },
     "end_session_button": {
-      "confirmation_modal_body_text": "Make sure you always have access to another verified device or your recovery key to avoid losing your encrypted chat history.",
+      "confirmation_modal_body_text": "Shifrlangan chat tarixingizni yoʻqotmaslik uchun har doim boshqa tasdiqlangan qurilmaga yoki tiklash kalitingizga kirish huquqiga ega ekanligingizga ishonch hosil qiling.",
       "confirmation_modal_title": "Haqiqatan ham bu qurilmani olib tashlamoqchimisiz?",
       "text": "Qurilmani olib tashlash"
     },
@@ -114,7 +114,7 @@
     },
     "errors": {
       "field_required": "Ushbu qator toʻldirilishi shart",
-      "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again."
+      "rate_limit_exceeded": "Qisqa vaqt ichida juda koʻp soʻrov yubordingiz. Iltimos, bir necha daqiqa kuting va qayta urinib koʻring."
     },
     "last_active": {
       "active_date": "Faol {{relativeDate}}",
@@ -122,9 +122,9 @@
       "inactive_90_days": "90+ kun davomida faol emas"
     },
     "nav": {
-      "device_limit_error": "Device limit reached",
+      "device_limit_error": "Qurilma limitiga yetdi",
       "devices": "Qurilmalar",
-      "plan": "Plan",
+      "plan": "Tarif",
       "settings": "Sozlamalar"
     },
     "not_found_alert_title": "Topilmadi.",
@@ -145,19 +145,19 @@
       "current_password_label": "Joriy parol",
       "failure": {
         "description": {
-          "account_locked": "Your account is locked and can not be recovered at this time. If this is not expected, please contact your server administrator.",
-          "expired_recovery_ticket": "The recovery link has expired. Please start the account recovery process again from the start.",
+          "account_locked": "Hisobingiz qulflangan va hozirda uni qayta tiklab boʻlmaydi. Agar bu kutilmasa, iltimos, server administratoringizga murojaat qiling.",
+          "expired_recovery_ticket": "Tiklash havolasi muddati tugagan. Hisobni tiklash jarayonini boshidan qayta boshlang.",
           "invalid_new_password": "Siz tanlagan yangi parol yaroqsiz; u sozlangan xavfsizlik siyosatiga mos kelmasligi mumkin.",
           "no_current_password": "Sizda joriy parol yo‘q.",
-          "no_such_recovery_ticket": "The recovery link is invalid. If you copied the link from the recovery e-mail, please check the full link was copied.",
+          "no_such_recovery_ticket": "Qayta tiklash havolasi yaroqsiz. Agar siz havolani tiklash elektron pochtasidan nusxa koʻchirgan boʻlsangiz, iltimos, toʻliq havola nusxalanganligini tekshiring.",
           "password_changes_disabled": "Parolni o‘zgartirish faolsizlantirildi.",
-          "recovery_ticket_already_used": "The recovery link has already been used. It cannot be used again.",
+          "recovery_ticket_already_used": "Qayta tiklash havolasi allaqachon ishlatilgan. Uni qayta ishlatib boʻlmaydi.",
           "unspecified": "Bu vaqtinchalik muammo bo‘lishi mumkin, keyinroq qayta urining. Agar muammo bartaraf etilmasa, server administratoriga murojaat qiling.",
           "wrong_password": "Joriy parol sifatida kiritgan parolingiz noto‘g‘ri. Iltimos, qayta urinib ko‘ring."
         },
         "title": "Parolni yangilab bo‘lmadi."
       },
-      "new_password_again_label": "Enter new password again",
+      "new_password_again_label": "Yangi parolni qayta kiriting",
       "new_password_label": "Yangi parol",
       "passwords_match": "Parollar mos keldi!",
       "passwords_no_match": "Parollar mos kelmadi",
@@ -170,101 +170,101 @@
     },
     "password_reset": {
       "consumed": {
-        "subtitle": "To create a new password, start over and select ”Forgot password“.",
-        "title": "The link to reset your password has already been used"
+        "subtitle": "Yangi parol yaratish uchun boshidan boshlang va ʼʼParolni unutdingizmiʼʼ ni tanlang.",
+        "title": "Parolingizni tiklash havolasi allaqachon ishlatilgan"
       },
       "expired": {
         "resend_email": "Elektron pochtani qayta yuborish",
-        "subtitle": "Request a new email that will be sent to: {{email}}",
-        "title": "The link to reset your password has expired"
+        "subtitle": "{{email}} manziliga yuboriladigan yangi elektron pochta xabarini soʻrang",
+        "title": "Parolingizni tiklash havolasi muddati tugagan"
       },
       "subtitle": "Hisobingiz uchun yangi parol tanlang.",
-      "title": "Reset your password"
+      "title": "Parolingizni qayta tiklash"
     },
     "password_strength": {
-      "placeholder": "Password strength",
+      "placeholder": "Parol kuchi",
       "score": {
-        "0": "Extremely weak password",
-        "1": "Very weak password",
-        "2": "Weak password",
-        "3": "Strong password",
-        "4": "Very strong password"
+        "0": "Juda zaif parol",
+        "1": "Juda zaif parol",
+        "2": "Zaif parol",
+        "3": "Kuchli parol",
+        "4": "Juda kuchli parol"
       },
       "suggestion": {
-        "all_uppercase": "Capitalise some, but not all letters.",
-        "another_word": "Add more words that are less common.",
-        "associated_years": "Avoid years that are associated with you.",
-        "capitalization": "Capitalise more than the first letter.",
-        "dates": "Avoid dates and years that are associated with you.",
-        "l33t": "Avoid predictable letter substitutions like '@' for 'a'.",
-        "longer_keyboard_pattern": "Use longer keyboard patterns and change typing direction multiple times.",
-        "no_need": "You can create strong passwords without using symbols, numbers, or uppercase letters.",
-        "pwned": "If you use this password elsewhere, you should change it.",
-        "recent_years": "Avoid recent years.",
-        "repeated": "Avoid repeated words and characters.",
-        "reverse_words": "Avoid reversed spellings of common words.",
-        "sequences": "Avoid common character sequences.",
-        "use_words": "Use multiple words, but avoid common phrases."
+        "all_uppercase": "Baʼzi harflarni bosh harf bilan yozing, lekin hammasini emas.",
+        "another_word": "Kamroq uchraydigan soʻzlarni qoʻshing.",
+        "associated_years": "Siz bilan bogʻliq yillardan qoching.",
+        "capitalization": "Birinchi harfdan koʻproq bosh harf bilan yozing.",
+        "dates": "Siz bilan bogʻliq sanalar va yillardan qoching.",
+        "l33t": "“a” harfi o‘rniga “@” kabi oldindan aytib bo‘ladigan harf almashtirishlardan saqlaning.",
+        "longer_keyboard_pattern": "Uzunroq klaviatura naqshlaridan foydalaning va yozish yoʻnalishini bir necha marta oʻzgartiring.",
+        "no_need": "Siz belgilar, raqamlar yoki katta harflardan foydalanmasdan kuchli parollar yaratishingiz mumkin.",
+        "pwned": "Agar siz ushbu parolni boshqa joyda ishlatsangiz, uni oʻzgartirishingiz kerak.",
+        "recent_years": "Soʻnggi yillardagi voqealardan qoching.",
+        "repeated": "Takrorlanadigan soʻzlar va belgilardan saqlaning.",
+        "reverse_words": "Umumiy soʻzlarning teskari yozilishidan saqlaning.",
+        "sequences": "Umumiy belgilar ketma-ketligidan qoching.",
+        "use_words": "Bir nechta soʻzlardan foydalaning, lekin umumiy iboralardan qoching."
       },
-      "too_weak": "This password is too weak",
+      "too_weak": "Bu parol juda zaif",
       "warning": {
-        "common": "This is a commonly used password.",
-        "common_names": "Common names and surnames are easy to guess.",
-        "dates": "Dates are easy to guess.",
-        "extended_repeat": "Repeated character patterns like \"abcabcabc\" are easy to guess.",
-        "key_pattern": "Short keyboard patterns are easy to guess.",
-        "names_by_themselves": "Single names or surnames are easy to guess.",
-        "pwned": "Your password was exposed by a data breach on the Internet.",
-        "recent_years": "Recent years are easy to guess.",
-        "sequences": "Common character sequences like \"abc\" are easy to guess.",
-        "similar_to_common": "This is similar to a commonly used password.",
-        "simple_repeat": "Repeated characters like \"aaa\" are easy to guess.",
-        "straight_row": "Straight rows of keys on your keyboard are easy to guess.",
-        "top_hundred": "This is a frequently used password.",
-        "top_ten": "This is a heavily used password.",
-        "user_inputs": "There should not be any personal or page related data.",
-        "word_by_itself": "Single words are easy to guess."
+        "common": "Bu tez-tez ishlatiladigan parol.",
+        "common_names": "Umumiy ismlar va familiyalarni taxmin qilish oson.",
+        "dates": "Sanalar taxmin qilish oson.",
+        "extended_repeat": "\"abcabcabc\" kabi takroriy belgi naqshlarini taxmin qilish oson.",
+        "key_pattern": "Qisqa klaviatura birikmalarini topish oson.",
+        "names_by_themselves": "Bitta ism yoki familiyani taxmin qilish oson.",
+        "pwned": "Parolingiz internetda maʻlumotlarning oʻgʻirlanishi natijasida oshkor boʻldi.",
+        "recent_years": "Yillar oson topiladi.",
+        "sequences": "\"abc\" kabi keng tarqalgan belgilar ketma-ketligini taxmin qilish oson.",
+        "similar_to_common": "Bu keng tarqalgan parolga oʻxshaydi.",
+        "simple_repeat": "\"aaa\" kabi takroriy belgilarni taxmin qilish oson.",
+        "straight_row": "Klaviaturangizdagi tugmalarning toʻgʻri qatorlarini taxmin qilish oson.",
+        "top_hundred": "Bu tez-tez ishlatiladigan parol.",
+        "top_ten": "Bu juda koʻp ishlatiladigan parol.",
+        "user_inputs": "Shaxsiy yoki sahifa bilan bogʻliq maʻlumotlar boʻlmasligi kerak.",
+        "word_by_itself": "Alohida soʻzlarni taxmin qilish oson."
       }
     },
     "reset_cross_signing": {
       "cancelled": {
-        "description_1": "You can close this window and go back to the app to continue.",
-        "description_2": "If don’t have access to any other verified devices and you don’t have your recovery key, then you’ll need to reset your digital identity to continue using the app.",
-        "heading": "Digital identity reset cancelled."
+        "description_1": "Davom etish uchun ushbu oynani yopib, ilovaga qaytishingiz mumkin.",
+        "description_2": "Agar boshqa tasdiqlangan qurilmalarga kirish imkoningiz boʻlmasa va sizda tiklash kaliti boʻlmasa, ilovadan foydalanishda davom etish uchun raqamli identifikatsiyangizni tiklashingiz kerak boʻladi.",
+        "heading": "Raqamli identifikatsiyani tiklash bekor qilindi."
       },
       "description": "Agar boshqa tasdiqlangan qurilmalarga kirish imkoningiz boʻlmasa va sizda tiklash kaliti boʻlmasa, ilovadan foydalanishda davom etish uchun raqamli identifikatsiyangizni tiklashingiz kerak boʻladi.",
       "effect_list": {
-        "neutral_1": "You will lose any message history that's stored only on the server",
+        "neutral_1": "Faqat serverda saqlangan har qanday xabarlar tarixi oʻchib ketadi",
         "neutral_2": "You will need to verify all your existing devices and contacts again",
-        "positive_1": "Your account details, contacts, preferences, and chat list will be kept"
+        "positive_1": "Hisob maʼlumotlaringiz, kontaktlaringiz, sozlamalaringiz va suhbatlar roʻyxatingiz saqlanib qoladi"
       },
       "failure": {
         "description": "Bu vaqtinchalik muammo bo‘lishi mumkin, keyinroq qayta urining. Agar muammo bartaraf etilmasa, server administratoriga murojaat qiling.",
-        "heading": "Failed to allow digital identity reset"
+        "heading": "Raqamli identifikatsiyani qayta tiklashga ruxsat berilmadi"
       },
-      "finish_reset": "Finish reset",
+      "finish_reset": "Qayta tiklashni tugatish",
       "heading": "Boshqa usulda tasdiqlay olmasangiz, raqamli identifikatoringizni asliga qaytaring",
-      "start_reset": "Start reset",
+      "start_reset": "Qayta tiklashni boshlang",
       "success": {
         "description": "Raqamli identifikatorni tiklash keyingi {{minutes}} daqiqa uchun tasdiqlandi. Bu oynani yopib, davom etish uchun ilovaga qaytishingiz mumkin.",
-        "heading": "Digital identity reset successfully. Go back to the app to finish the process."
+        "heading": "Raqamli identifikatsiya muvaffaqiyatli tiklandi. Jarayonni yakunlash uchun ilovaga qayting."
       },
-      "warning": "Only reset your digital identity if you don't have access to another verified device and you don't have your recovery key."
+      "warning": "Agar boshqa tasdiqlangan qurilmaga kira olmasangiz va zaxira kalitingiz bo‘lmasa, raqamli identifikatoringizni asliga qaytaring."
     },
     "session": {
       "client_id_label": "Mijoz ID raqami",
       "current": "Hozirgi",
       "device_id_label": "Qurilma ID",
       "finished_label": "Tugadi",
-      "generic_browser_session": "Browser session",
+      "generic_browser_session": "Brauzer sessiyasi",
       "ip_label": "IP-manzil",
       "last_active_label": "Oxirgi faollik",
       "name_for_platform": "{{platform}} uchun {{name}}",
       "scopes_label": "Ko‘lamlar",
       "set_device_name": {
-        "help": "Set a name that will help you identify this device.",
-        "label": "Device name",
-        "title": "Edit device name"
+        "help": "Ushbu qurilmani aniqlashga yordam beradigan nom oʻrnating.",
+        "label": "Qurilma nomi",
+        "title": "Qurilma nomini tahrirlash"
       },
       "signed_in_label": "Kirish",
       "title": "Qurilma tafsilotlari",
@@ -283,39 +283,39 @@
       "delete_button_confirmation_modal": {
         "action": "Elektron pochtani oʻchirish",
         "body": "Bu email o‘chirib tashlansinmi?",
-        "incorrect_password": "Incorrect password, please try again",
-        "password_confirmation": "Confirm your account password to delete this email address"
+        "incorrect_password": "Parol notoʻgʻri,qaytadan urining.",
+        "password_confirmation": "Ushbu elektron pochta manzilini oʻchirish uchun hisobingiz parolini tasdiqlang"
       },
       "delete_button_title": "Elektron pochta manzilini olib tashlash",
       "email": "Elektron pochta"
     },
     "user_sessions_overview": {
-      "approaching_session_limit_warning_description:one": "You've used {{num_sessions}} of {{count}} device slot. Once you reach your limit, you'll need to remove an existing device to add another.",
-      "approaching_session_limit_warning_description:other": "You've used {{num_sessions}} of {{count}} device slots. Once you reach your limit, you'll need to remove an existing device to add another.",
-      "approaching_session_limit_warning_header": "Heads up, you're close to your device limit",
+      "approaching_session_limit_warning_description:one": "Siz {{count}} qurilma uyasidan {{num_sessions}} dan foydalandingiz. Cheklovga yetganingizdan soʻng, yangi qurilma qoʻshish uchun mavjud qurilmadan birini olib tashlashingiz kerak boʻladi.",
+      "approaching_session_limit_warning_description:other": "Siz {{count}} qurilma uyalaridan {{num_sessions}} dan foydalangansiz. Cheklovga yetganingizdan soʻng, boshqa qurilma qoʻshish uchun mavjud qurilmadan birini olib tashlashingiz kerak boʻladi.",
+      "approaching_session_limit_warning_header": "Diqqat! Qurilmangiz limitiga yaqinlashdingiz",
       "heading": "Qayerda tizimga kirgansiz",
-      "hit_session_limit_warning_description:one": "You've used {{num_sessions}} of {{count}} device slot. When you try to sign-in again, you'll need to remove an existing device.",
-      "hit_session_limit_warning_description:other": "You've used {{num_sessions}} of {{count}} device slots. When you try to sign-in again, you'll need to remove an existing device.",
-      "hit_session_limit_warning_header": "You've hit the device limit",
+      "hit_session_limit_warning_description:one": "Siz {{count}} qurilma uyasidan {{num_sessions}} dan foydalandingiz. Qayta kirishga urinayotganingizda, mavjud qurilmani olib tashlashingiz kerak boʻladi.",
+      "hit_session_limit_warning_description:other": "Siz {{count}} qurilma uyalaridan {{num_sessions}} dan foydalangansiz. Qayta kirishga urinayotganingizda, mavjud qurilmani olib tashlashingiz kerak boʻladi.",
+      "hit_session_limit_warning_header": "Qurilmalar soni limitiga yetdingiz",
       "no_active_sessions": {
-        "default": "You are not signed in to any application.",
-        "inactive_90_days": "All your sessions have been active in the last 90 days."
+        "default": "Siz hech qanday ilovaga kirmagansiz.",
+        "inactive_90_days": "Soʻnggi 90 kun ichida barcha sessiyalaringiz faol boʻldi."
       },
       "num_sessions_filtered_header": {
-        "header:one": "{{count}} device matches your filter ({{unfiltered_session_total}})",
-        "header:other": "{{count}} devices match your filter ({{unfiltered_session_total}})",
-        "unfiltered_session_total:one": "{{count}} total",
-        "unfiltered_session_total:other": "{{count}} total"
+        "header:one": "{{count}} qurilmasi sizning filtringizga mos keladi ({{unfiltered_session_total}})",
+        "header:other": "{{count}} qurilmalari sizning filtringizga mos keladi ({{unfiltered_session_total}})",
+        "unfiltered_session_total:one": "Jami {{count}}",
+        "unfiltered_session_total:other": "Jami {{count}}"
       },
-      "num_sessions_header:one": "{{count}} device",
-      "num_sessions_header:other": "{{count}} devices",
-      "session_limit_info:one": "You've used {{count}}/{{limit}} device slots",
-      "session_limit_info:other": "You've used {{count}}/{{limit}} device slots"
+      "num_sessions_header:one": "{{count}} qurilmasi",
+      "num_sessions_header:other": "{{count}} qurilmalari",
+      "session_limit_info:one": "Siz {{count}}/{{limit}} qurilma uyalaridan foydalangansiz",
+      "session_limit_info:other": "Siz {{count}}/{{limit}} qurilma uyalaridan foydalangansiz"
     },
     "verify_email": {
       "code_expired_alert": {
-        "description": "The code has expired. Please request a new code.",
-        "title": "Code expired"
+        "description": "Kodning amal qilish muddati tugagan. Iltimos, yangi kod soʻrang.",
+        "title": "Kod muddati tugagan"
       },
       "code_field_error": "Kod tan olinmadi",
       "code_field_label": "6 xonali kod",

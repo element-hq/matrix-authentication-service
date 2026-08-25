@@ -7,7 +7,7 @@
     "sign_in": "Anmelden",
     "sign_out": "Abmelden",
     "skip": "Überspringen",
-    "start_over": "Von vorne anfangen"
+    "start_over": "Neu beginnen"
   },
   "app": {
     "human_name": "Matrix Authentication Service",
@@ -27,11 +27,11 @@
   "common": {
     "display_name": "Anzeigename",
     "email_address": "E-Mail-Adresse",
-    "loading": "Lade …",
+    "loading": "Wird geladen …",
     "mxid": "Matrix-ID",
     "password": "Passwort",
-    "password_confirm": "Passwort wiederholen",
-    "username": "Benutzername"
+    "password_confirm": "Passwort bestätigen",
+    "username": "Nutzername"
   },
   "error": {
     "unexpected": "Unerwarteter Fehler"
@@ -39,11 +39,11 @@
   "mas": {
     "account": {
       "deactivated": {
-        "description": "Dieses Konto (<em>%(mxid)s</em>) wurde entfernt. Wenn du dies nicht erwartet hast, wende dich an den Server Admin",
+        "description": "Dieses Konto (<em>%(mxid)s</em>) wurde entfernt. Wenn du dies nicht erwartet hast, wende dich an den Kontoanbieter.",
         "heading": "Konto gelöscht"
       },
       "locked": {
-        "description": "Dieses Konto (<em>%(mxid)s</em>) wurde gesperrt. Wenn du dies nicht erwartet hast, wende dich an den Server Admin.",
+        "description": "Dieses Konto (<em>%(mxid)s</em>) wurde gesperrt. Wenn du dies nicht erwartet hast, wende dich an den Kontoanbieter.",
         "heading": "Konto gesperrt"
       },
       "logged_out": {
@@ -57,7 +57,7 @@
     },
     "change_password": {
       "change": "Passwort ändern",
-      "confirm": "Passwort wiederholen",
+      "confirm": "Passwort bestätigen",
       "current": "Aktuelles Passwort",
       "heading": "Mein Passwort ändern",
       "new": "Neues Passwort"
@@ -79,8 +79,8 @@
       "security_code": "Sicherheitscode"
     },
     "device_code_link": {
-      "description": "Eingeben Sie den Sicherheitscode ein, der auf Ihrem anderen Gerät angezeigt wird",
-      "headline": "Gib den Code ein, der auf deinem Gerät angezeigt wird.",
+      "description": "Gib den Sicherheitscode ein, der auf deinem anderen Gerät angezeigt wird",
+      "headline": "Gerät zu deinem Konto hinzufügen",
       "verification_code": "Bestätigungscode"
     },
     "device_consent": {
@@ -113,10 +113,10 @@
     "emails": {
       "greeting": "Hallo %(username)s,",
       "recovery": {
-        "click_button": "Klick unten, um ein neues Passwort zu erstellen:",
+        "click_button": "Wähle die Schaltfläche unten, um ein neues Passwort zu erstellen:",
         "copy_link": "Kopier den folgenden Link und füge ihn in deinen Browser ein, um ein neues Passwort zu erstellen:",
         "create_new_password": "Neues Passwort erstellen",
-        "fallback": "Funktioniert der Button bei Ihnen nicht?",
+        "fallback": "Funktioniert die Schaltfläche bei dir nicht?",
         "headline": "Du hast das Zurücksetzen des Passworts für dein Konto bei %(server_name)s angefordert.",
         "subject": "Setze dein Konto Passwort zurück (%(mxid)s)",
         "you_can_ignore": "Wenn du kein neues Passwort angefordert hast, kannst du diese E-Mail einfach ignorieren. Dein aktuelles Passwort funktioniert weiterhin."
@@ -128,7 +128,7 @@
       }
     },
     "errors": {
-      "captcha": "Die CAPTCHA-Überprüfung hat nicht geklappt, versuch's nochmal.",
+      "captcha": "Die CAPTCHA-Überprüfung ist fehlgeschlagen, bitte versuche es erneut",
       "denied_policy": "Abgelehnt durch Richtlinie: %(policy)s",
       "email_banned": "E-Mail ist durch die Serverrichtlinie gesperrt",
       "email_domain_banned": "Die E-Mail-Domain ist durch die Serverrichtlinie gesperrt",
@@ -137,14 +137,14 @@
       "field_required": "Dieses Feld ist ein Pflichtfeld",
       "invalid_credentials": "Ungültige Anmeldeinformationen",
       "password_mismatch": "Die Passwortfelder stimmen nicht überein",
-      "rate_limit_exceeded": "Du hast in kurzer Zeit zu viele Anfragen gestellt. Warte bitte ein paar Minuten und versuch's nochmal.",
-      "username_all_numeric": "Der Benutzername darf nicht nur aus Zahlen bestehen",
-      "username_banned": "Der Benutzername ist durch die Serverrichtlinie gesperrt",
+      "rate_limit_exceeded": "Du hast in kurzer Zeit zu viele Anfragen gestellt. Bitte warte ein paar Minuten und versuche es erneut.",
+      "username_all_numeric": "Der Nutzername darf nicht nur aus Zahlen bestehen",
+      "username_banned": "Der Nutzername ist durch die Serverrichtlinie gesperrt",
       "username_invalid_chars": "Der Nutzername enthält ungültige Zeichen. Verwende nur Kleinbuchstaben, Zahlen, Bindestriche und Unterstriche.",
-      "username_not_allowed": "Der Benutzername ist gemäß der Serverrichtlinie nicht zulässig",
-      "username_taken": "Dieser Benutzername ist bereits vergeben",
-      "username_too_long": "Der Benutzername ist zu lang",
-      "username_too_short": "Der Benutzername ist zu kurz"
+      "username_not_allowed": "Der Nutzername ist gemäß der Serverrichtlinie nicht zulässig",
+      "username_taken": "Dieser Nutzername ist bereits vergeben",
+      "username_too_long": "Der Nutzername ist zu lang",
+      "username_too_short": "Der Nutzername ist zu kurz"
     },
     "legacy_consent": {
       "this_will_setup": "Dadurch wird <span>%(client_name)s</span> mit deinem <span>%(server_name)s</span> Konto eingerichtet."
@@ -160,7 +160,7 @@
         "headline": "Melde dich zum Verbinden an"
       },
       "no_login_methods": "Keine Anmeldemethoden verfügbar.",
-      "username_or_email": "Benutzername oder E-Mail-Adresse"
+      "username_or_email": "Nutzername oder E-Mail-Adresse"
     },
     "navbar": {
       "my_account": "Mein Konto",
@@ -168,13 +168,13 @@
       "signed_in_as": "Angemeldet als <span class=\"font-semibold\">%(username)s</span>."
     },
     "not_found": {
-      "description": "Die Seite, die du gesucht hast, gibt's nicht oder wurde verschoben.",
+      "description": "Die Seite, die du gesucht hast, existiert nicht oder wurde verschoben",
       "heading": "Seite nicht gefunden"
     },
     "not_you": "Nicht %(username)s?",
     "or_separator": "Oder",
     "policy_violation": {
-      "description": "Dies kann am Client liegen, der die Anfrage erstellt hat, am aktuell angemeldeten Benutzer oder an der Anfrage selbst.",
+      "description": "Dies kann an der Anwendung liegen, die die Anfrage erstellt hat, am aktuell angemeldeten Nutzer oder an der Anfrage selbst.",
       "heading": "Die Autorisierungsanfrage wurde durch eine Richtlinie dieses Dienstes abgelehnt",
       "logged_as": "Eingeloggt als <span class=\"font-semibold\">%(username)s</span>",
       "too_many_sessions": {
@@ -185,7 +185,7 @@
     },
     "recovery": {
       "consumed": {
-        "description": "Um ein neues Passwort zu erstellen, fang einfach von vorne an und wähle „Passwort vergessen”.",
+        "description": "Um ein neues Passwort zu erstellen, beginne neu und wähle „Passwort vergessen“.",
         "heading": "Der Link zum Zurücksetzen deines Passworts wurde bereits verwendet"
       },
       "disabled": {
@@ -205,7 +205,7 @@
         "save_and_continue": "Speichern und fortfahren"
       },
       "progress": {
-        "change_email": "Probier's mal mit einer anderen E-Mail-Adresse",
+        "change_email": "Andere E-Mail-Adresse versuchen",
         "description": "Eine E-Mail mit einem Link zum Zurücksetzen deines Passworts wurde versendet, wenn es ein Konto mit <span>%(email)s</span> gibt.",
         "heading": "Überprüfe deine E-Mails!",
         "resend_email": "E-Mail erneut senden"
@@ -223,17 +223,17 @@
         "description": "Wähle einen Nutzernamen, um fortzufahren.",
         "heading": "Konto erstellen"
       },
-      "terms_of_service": "Ich stimme den <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Allgemeinen Geschäftsbedingungen</a> zu."
+      "terms_of_service": "Ich stimme den <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Allgemeinen Geschäftsbedingungen</a> zu"
     },
     "registration_token": {
-      "description": "Gib das Registrierungstoken ein, das du vom Homeserver-Admin bekommen hast.",
+      "description": "Gib ein Registrierungstoken ein, das du von deinem Kontoanbieter erhalten hast.",
       "field": "Registrierungstoken",
       "headline": "Registrierungstoken"
     },
     "scope": {
       "edit_profile": "Bearbeite dein Profil und deine Kontaktdaten",
       "manage_sessions": "Verwalte deine Geräte und Sitzungen",
-      "mas_admin": "Beliebige Benutzer verwalten (urn:mas:admin)",
+      "mas_admin": "Beliebige Nutzer verwalten (urn:mas:admin)",
       "send_messages": "Neue Nachrichten in deinem Namen senden",
       "synapse_admin": "Den Synapse-Homeserver verwalten (urn:synapse:admin:*)",
       "view_messages": "Zeig deine vorhandenen Nachrichten und Daten an",
@@ -252,7 +252,7 @@
         "enforced_by_policy": "Erzwungen durch Server-Richtlinie",
         "forced_display_name": "Verwendet den folgenden Anzeigenamen",
         "forced_email": "Verwendet die folgende E-Mail-Adresse",
-        "forced_localpart": "Verwendet den folgenden Benutzernamen",
+        "forced_localpart": "Verwendet den folgenden Nutzernamen",
         "import_data": {
           "description": "Bestätige die Informationen, die mit dem neuen %(server_name)s Konto verknüpft werden.",
           "heading": "Deine Daten importieren"
@@ -262,7 +262,7 @@
         "link_existing": "Mit einem bestehenden Konto verknüpfen",
         "provider_name": "%(human_name)s Konto",
         "signup_with_upstream": {
-          "heading": "Setze die Anmeldung mit %(human_name)s Konto fort."
+          "heading": "Setze die Anmeldung mit %(human_name)s Konto fort"
         },
         "suggested_display_name": "Anzeigenamen importieren",
         "suggested_email": "E-Mail-Adresse importieren",
