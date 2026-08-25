@@ -1,0 +1,347 @@
+{
+  "action": {
+    "back": "Geri",
+    "cancel": "İptal",
+    "clear": "Temizle",
+    "close": "Kapat",
+    "collapse": "Daralt",
+    "confirm": "Onayla",
+    "continue": "Devam Et",
+    "edit": "Düzenle",
+    "expand": "Genişlet",
+    "save": "Kaydet",
+    "save_and_continue": "Kaydet ve devam et",
+    "sign_out": "Çıkış Yap",
+    "start_over": "Baştan başla"
+  },
+  "branding": {
+    "privacy_policy": {
+      "alt": "Hizmet gizlilik politikasına bağlantı",
+      "link": "Gizlilik Politikası"
+    },
+    "terms_and_conditions": {
+      "alt": "Hizmet şartları ve koşullarına bağlantı",
+      "link": "Şartlar & Koşullar"
+    }
+  },
+  "common": {
+    "e2ee": "Uçtan uca şifreleme",
+    "loading": "Yükleniyor…",
+    "next": "Sonraki",
+    "password": "Şifre",
+    "previous": "Önceki",
+    "saved": "Kaydedildi",
+    "saving": "Kaydediliyor…"
+  },
+  "frontend": {
+    "account": {
+      "account_password": "Hesap parolası",
+      "contact_info": "İletişim bilgileri",
+      "delete_account": {
+        "alert_description": "Bu hesap kalıcı olarak silinecek ve artık mesajlarınıza erişemeyeceksiniz.",
+        "alert_title": "Verilerinizin tamamını kaybetmek üzeresiniz.",
+        "button": "Hesabı sil",
+        "dialog_description": "<text> Hesabınızı silmek istediğinizi onaylayın: </text>\n<profile />\n<list> \n<item> Hesabınızı yeniden etkinleştiremeyeceksiniz </item> \n<item> Artık oturum açamayacaksınız </item> \n<item> Siz de dahil olmak üzere hiç kimse kullanıcı adınızı (MXID) yeniden kullanamayacak </item>\n<item> Katıldığınız tüm odalardan ve doğrudan mesajlardan ayrılacaksınız </item>\n<item> Kimlik sunucusundan kaldırılacaksınız ve hiç kimse sizi e-posta adresiniz veya telefon numaranızla bulamayacak </item>\n</list> \n<text> Eski mesajlarınız, onları alan kişiler tarafından hala görülebilir. Gelecekte odalara katılan kişilerden gönderdiğiniz mesajları gizlemek ister misiniz? </text>",
+        "dialog_title": "Bu hesabı silmek istiyor musunuz?",
+        "erase_checkbox_label": "Evet, yeni katılanlardan tüm mesajlarımı gizle.",
+        "incorrect_password": "Hatalı parola, lütfen tekrar deneyin",
+        "mxid_label": "Matrix Kimliğinizi ({{ mxid }}) onaylayın",
+        "mxid_mismatch": "Bu değer, Matrix Kimliğinizle eşleşmiyor.",
+        "password_label": "Devam etmek için şifrenizi girin"
+      },
+      "edit_profile": {
+        "display_name_help": "Oturum açtığınız her yerde diğerler kullanıcılar bunu görecektir.",
+        "display_name_label": "Görünen ad",
+        "title": "Profili düzenle",
+        "username_label": "Kullanıcı Adı"
+      },
+      "password": {
+        "change": "Parola değiştir",
+        "change_disabled": "Yönetici tarafından parola değiştirme özelliği devre dışı bırakılmıştır.",
+        "label": "Şifre"
+      },
+      "sign_out": {
+        "button": "Hesaptan çıkış yap",
+        "dialog": "Bu hesaptan çıkış yapmak ister misiniz?"
+      },
+      "title": "Hesabınız"
+    },
+    "add_email_form": {
+      "email_denied_error": "Girilen e-posta adresi, sunucu politikası gereği kabul edilmiyor",
+      "email_field_help": "Bu hesaba erişmek için kullanabileceğiniz alternatif bir e-posta adresi ekleyin.",
+      "email_field_label": "E-posta ekle",
+      "email_in_use_error": "Girilen e-posta adresi zaten kullanımda",
+      "email_invalid_error": "The entered email is invalid",
+      "incorrect_password_error": "Hatalı parola, lütfen tekrar deneyin",
+      "password_confirmation": "Bu e-posta adresini eklemek için hesap şifrenizi onaylayın"
+    },
+    "browser_session_details": {
+      "current_badge": "Geçerli"
+    },
+    "browser_sessions_overview": {
+      "body:one": "{{count}} aktif oturum",
+      "body:other": "{{count}} aktif oturumlar",
+      "heading": "Tarayıcılar",
+      "no_active_sessions": {
+        "default": "Herhangi bir web tarayıcısına giriş yapmadınız.",
+        "inactive_90_days": "Son 90 gün içinde tüm oturumlarınız aktif olmuştur."
+      },
+      "view_all_button": "Tümünü görüntüle"
+    },
+    "compat_session_detail": {
+      "client_details_title": "Müşteri bilgileri",
+      "name": "İsim"
+    },
+    "device_type_icon_label": {
+      "mobile": "Mobil",
+      "pc": "Bilgisayar",
+      "tablet": "Tablet",
+      "unknown": "Bilinmeyen cihaz türü"
+    },
+    "email_in_use": {
+      "heading": "{{email}} e-posta adresi zaten kullanımda."
+    },
+    "end_session_button": {
+      "confirmation_modal_body_text": "Şifrelenmiş sohbet geçmişinizi kaybetmemek için her zaman başka bir doğrulanmış cihaza veya kurtarma anahtarınıza erişiminizin olduğundan emin olun.",
+      "confirmation_modal_title": "Bu cihazı kaldırmak istediğinizden emin misiniz?",
+      "text": "Cihazı kaldır"
+    },
+    "error": {
+      "hideDetails": "Ayrıntıları gizle",
+      "showDetails": "Detayları göster",
+      "subtitle": "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.",
+      "title": "Bir şeyler ters gitti."
+    },
+    "errors": {
+      "field_required": "Bu alan zorunludur",
+      "rate_limit_exceeded": "Kısa süre içinde çok fazla istekte bulundunuz. Lütfen birkaç dakika bekleyin ve tekrar deneyin."
+    },
+    "last_active": {
+      "active_date": "Aktif {{relativeDate}}",
+      "active_now": "Şu anda aktif",
+      "inactive_90_days": "90 günden fazla süredir aktif değil"
+    },
+    "nav": {
+      "device_limit_error": "Cihaz limitine ulaşıldı",
+      "devices": "Cihazlar",
+      "plan": "Plan",
+      "settings": "Ayarlar"
+    },
+    "not_found_alert_title": "Bulunamadı.",
+    "oauth2_client_detail": {
+      "details_title": "Müşteri bilgileri",
+      "name": "İsim",
+      "policy": "Politika",
+      "terms": "Hizmet şartları"
+    },
+    "oauth2_session_detail": {
+      "client_details_name": "İsim",
+      "client_title": "Müşteri bilgileri"
+    },
+    "pagination_controls": {
+      "total": "Toplam: {{totalCount}}"
+    },
+    "password_change": {
+      "current_password_label": "Mevcut parola",
+      "failure": {
+        "description": {
+          "account_locked": "Hesabınız kilitlendi ve şu anda kurtarılamıyor. Bu durum beklenmedik bir şeyse, lütfen sunucu yöneticinizle iletişime geçin.",
+          "expired_recovery_ticket": "Kurtarma bağlantısının süresi doldu. Lütfen hesap kurtarma işlemine baştan başlayın.",
+          "invalid_new_password": "Seçtiğiniz yeni parola geçersiz; yapılandırılmış güvenlik politikasına uymuyor olabilir.",
+          "no_current_password": "Şu anda geçerli bir parolanız yok.",
+          "no_such_recovery_ticket": "Kurtarma bağlantısı geçersiz. Kurtarma e-postasındaki bağlantıyı kopyaladıysanız, lütfen bağlantının tamamının kopyalandığından emin olun.",
+          "password_changes_disabled": "Parola değiştirme özelliği devre dışı bırakılmıştır.",
+          "recovery_ticket_already_used": "Kurtarma bağlantısı daha önce kullanıldı. Tekrar kullanılamaz.",
+          "unspecified": "Bu geçici bir sorun olabilir, lütfen daha sonra tekrar deneyin. Sorun devam ederse, lütfen sunucu yöneticinizle iletişime geçin.",
+          "wrong_password": "Girdiğiniz geçerli parola yanlış. Lütfen tekrar deneyin."
+        },
+        "title": "Parola güncelleme başarısız oldu."
+      },
+      "new_password_again_label": "Yeni parolayı tekrar girin.",
+      "new_password_label": "Yeni parola",
+      "passwords_match": "Parolalar eşleşiyor!",
+      "passwords_no_match": "Parolalar eşleşmiyor",
+      "subtitle": "Hesabınız için yeni bir parola belirleyin.",
+      "success": {
+        "description": "Parolanız başarıyla güncellendi.",
+        "title": "Parola güncellendi"
+      },
+      "title": "Parolanızı değiştirin"
+    },
+    "password_reset": {
+      "consumed": {
+        "subtitle": "Yeni bir parola oluşturmak için, baştan başlayın ve \"Parolamı unuttum\" seçeneğini seçin.",
+        "title": "Parolanızı sıfırlamak için kullanılan bağlantı daha önce kullanıldı"
+      },
+      "expired": {
+        "resend_email": "Resend email",
+        "subtitle": "{{email}} adresine gönderilecek yeni bir e-posta isteği gönderin.",
+        "title": "Parolanızı sıfırlama bağlantısının süresi doldu"
+      },
+      "subtitle": "Hesabınız için yeni bir parola belirleyin.",
+      "title": "Parolanızı sıfırlayın"
+    },
+    "password_strength": {
+      "placeholder": "Parola gücü",
+      "score": {
+        "0": "Son derece zayıf bir parola",
+        "1": "Çok zayıf bir parola",
+        "2": "Zayıf parola",
+        "3": "Güçlü parola",
+        "4": "Çok güçlü parola"
+      },
+      "suggestion": {
+        "all_uppercase": "Bazı harfleri büyük harfle yazın, ancak hepsini değil.",
+        "another_word": "Daha az kullanılan kelimeler ekleyin.",
+        "associated_years": "Sizinle ilişkilendirilen yıllardan kaçının.",
+        "capitalization": "İlk harften başlayarak diğer harfleri de büyük harfle yazın.",
+        "dates": "Sizinle ilişkilendirilen tarih ve yıllardan kaçının.",
+        "l33t": "'a' yerine '@' gibi tahmin edilebilir harf değişikliklerinden kaçının.",
+        "longer_keyboard_pattern": "Daha uzun kalıplar kullanın ve yazma yönünü birden fazla kez değiştirin.",
+        "no_need": "Semboller, rakamlar veya büyük harfler kullanmadan da güçlü şifreler oluşturabilirsiniz.",
+        "pwned": "Bu parolayı başka yerlerde kullanıyorsanız, değiştirmeniz gerekir.",
+        "recent_years": "Son yılları göz ardı edin.",
+        "repeated": "Aynı kelimeleri ve karakterleri tekrar etmekten kaçının.",
+        "reverse_words": "Sık kullanılan kelimelerin ters yazılışlarından kaçının.",
+        "sequences": "Sık kullanılan karakter dizilerinden kaçının.",
+        "use_words": "Birden fazla kelime kullanın, ancak yaygın ifadelerden kaçının."
+      },
+      "too_weak": "Bu parola çok zayıf.",
+      "warning": {
+        "common": "Bu, yaygın olarak kullanılan bir paroladır.",
+        "common_names": "Yaygın isimler ve soyadları tahmin etmek kolaydır.",
+        "dates": "Tarihleri ​​tahmin etmek kolaydır.",
+        "extended_repeat": "\"abcabcabc\" gibi tekrarlanan karakter dizileri tahmin edilmesi kolaydır.",
+        "key_pattern": "Kısa metin kalıplarını tahmin etmek kolaydır.",
+        "names_by_themselves": "Tek isim veya soyadı tahmin etmek kolaydır.",
+        "pwned": "Parolanız internette yaşanan bir veri ihlali sonucu ifşa edildi.",
+        "recent_years": "Son yılları tahmin etmek kolaydır.",
+        "sequences": "\"abc\" gibi yaygın karakter dizileri tahmin edilmesi kolaydır.",
+        "similar_to_common": "Bu, yaygın olarak kullanılan bir parolaya benziyor.",
+        "simple_repeat": "\"aaa\" gibi tekrarlanan karakterler tahmin edilmesi kolaydır.",
+        "straight_row": "Girdiğiniz harflerin düz sıralar halinde dizilmiş olması tahmin etmeyi kolaylaştırır.",
+        "top_hundred": "Bu, sık kullanılan bir paroladır.",
+        "top_ten": "Bu, çok sık kullanılan bir parola.",
+        "user_inputs": "Kişisel veya sayfa ile ilgili herhangi bir veri bulunmamalıdır.",
+        "word_by_itself": "Tek kelimeleri tahmin etmek kolaydır."
+      }
+    },
+    "reset_cross_signing": {
+      "cancelled": {
+        "description_1": "Bu pencereyi kapatıp uygulamaya geri dönerek devam edebilirsiniz.",
+        "description_2": "Başka doğrulanmış cihazlara erişiminiz yoksa ve kurtarma anahtarınız da yoksa, uygulamayı kullanmaya devam etmek için dijital kimliğinizi sıfırlamanız gerekecektir.",
+        "heading": "Dijital kimlik sıfırlama işlemi iptal edildi."
+      },
+      "description": "Başka doğrulanmış cihazlara erişiminiz yoksa ve kurtarma anahtarınız da yoksa, uygulamayı kullanmaya devam etmek için dijital kimliğinizi sıfırlamanız gerekecektir.",
+      "effect_list": {
+        "neutral_1": "Yalnızca sunucuda saklanan tüm mesaj geçmişinizi kaybedeceksiniz",
+        "neutral_2": "You will need to verify all your existing devices and contacts again",
+        "positive_1": "Hesap bilgileriniz, kişileriniz, tercihleriniz ve sohbet listeniz saklanacaktır"
+      },
+      "failure": {
+        "description": "Bu geçici bir sorun olabilir, lütfen daha sonra tekrar deneyin. Sorun devam ederse, lütfen sunucu yöneticinizle iletişime geçin.",
+        "heading": "Dijital kimlik sıfırlama işlemi başarısız oldu"
+      },
+      "finish_reset": "Sıfırlamayı tamamla",
+      "heading": "Başka bir şekilde doğrulama yapamıyorsanız dijital kimliğinizi sıfırlayın",
+      "start_reset": "Sıfırlamayı başlat",
+      "success": {
+        "description": "Dijital kimlik sıfırlama işlemi {{minutes}} dakika boyunca onaylanmıştır. Bu pencereyi kapatıp uygulamaya geri dönerek devam edebilirsiniz.",
+        "heading": "Dijital kimlik sıfırlama işlemi başarıyla oluşturuldu. İşlemi tamamlamak için uygulamaya geri dönün."
+      },
+      "warning": "Kimliğinizi yalnızca oturum açtığınız başka bir cihaza erişiminiz yoksa ve kurtarma anahtarınızı kaybettiyseniz sıfırlayın."
+    },
+    "session": {
+      "client_id_label": "Client ID",
+      "current": "Geçerli",
+      "device_id_label": "Cihaz Kimliği",
+      "finished_label": "Tamamlandı",
+      "generic_browser_session": "Tarayıcı oturumu",
+      "ip_label": "IP Adresi",
+      "last_active_label": "Son Etkinlik",
+      "name_for_platform": "{{name}}, {{platform}} için",
+      "scopes_label": "Kapsamlar",
+      "set_device_name": {
+        "help": "Bu cihazı kolayca tanımanıza yardımcı olacak bir ad belirleyin.",
+        "label": "Cihaz adı",
+        "title": "Cihaz adını düzenle"
+      },
+      "signed_in_label": "Giriş yapıldı",
+      "title": "Cihaz detayları",
+      "unknown_browser": "Bilinmeyen tarayıcı",
+      "unknown_device": "Bilinmeyen cihaz",
+      "uri_label": "Uri"
+    },
+    "session_detail": {
+      "alert": {
+        "button": "Geri dön",
+        "text": "Bu oturum mevcut değil veya artık aktif değil.",
+        "title": "{{deviceId}} oturumu bulunamadı"
+      }
+    },
+    "user_email": {
+      "delete_button_confirmation_modal": {
+        "action": "E-postayı sil",
+        "body": "Bu e-postayı silmek ister misiniz?",
+        "incorrect_password": "Hatalı parola, lütfen tekrar deneyin",
+        "password_confirmation": "Bu e-posta adresini silmek için hesap parolanızı onaylayın"
+      },
+      "delete_button_title": "E-posta adresini kaldır",
+      "email": "E-posta"
+    },
+    "user_sessions_overview": {
+      "approaching_session_limit_warning_description:one": "{{count}} cihaz sayısının {{num_sessions}}ini kullandınız. Sınırınıza ulaştığınızda, başka bir cihaz eklemek için mevcut bir cihazı kaldırmanız gerekecektir.",
+      "approaching_session_limit_warning_description:other": "{{num_sessions}} veya {{count}} cihaz sayısından birini kullandınız. Sınırınıza ulaştığınızda, başka bir cihaz eklemek için mevcut bir cihazı kaldırmanız gerekecektir.",
+      "approaching_session_limit_warning_header": "Dikkat, cihaz limitinize yaklaşıyorsunuz",
+      "heading": "Oturum açtığınız yer",
+      "hit_session_limit_warning_description:one": "{{count}} aygıt yuvasından {{num_sessions}} aygıtını kullandınız. Tekrar oturum açmayı denediğinizde, mevcut bir aygıtı kaldırmanız gerekecektir.",
+      "hit_session_limit_warning_description:other": "{{num_sessions}} veya {{count}} aygıt yuvalarından birini kullandınız. Tekrar oturum açmayı denediğinizde, mevcut bir aygıtı kaldırmanız gerekecektir.",
+      "hit_session_limit_warning_header": "Cihaz limitine ulaştınız",
+      "no_active_sessions": {
+        "default": "Şu anda hiçbir uygulamaya giriş yapmadınız.",
+        "inactive_90_days": "Son 90 gün içinde tüm oturumlarınız aktif olmuştur."
+      },
+      "num_sessions_filtered_header": {
+        "header:one": "Filtrenize uyan {{count}} cihaz var ({{unfiltered_session_total}})",
+        "header:other": "Filtrenize uyan {{count}} cihaz var ({{unfiltered_session_total}})",
+        "unfiltered_session_total:one": "Toplam {{count}}",
+        "unfiltered_session_total:other": "Toplam {{count}}"
+      },
+      "num_sessions_header:one": "{{count}} cihaz",
+      "num_sessions_header:other": "{{count}} cihaz",
+      "session_limit_info:one": "{{count}}/{{limit}} aygıt yuvalarını kullandınız.",
+      "session_limit_info:other": "{{count}}/{{limit}} aygıt yuvalarını kullandınız."
+    },
+    "verify_email": {
+      "code_expired_alert": {
+        "description": "Kodun süresi doldu. Lütfen yeni bir kod talep edin.",
+        "title": "Kodun süresi doldu."
+      },
+      "code_field_error": "Kod tanınmadı",
+      "code_field_label": "6 haneli kod",
+      "code_field_wrong_shape": "Kod 6 rakamdan oluşmalıdır",
+      "email_sent_alert": {
+        "description": "Yeni kodu aşağıya girin",
+        "title": "Yeni kod gönderildi"
+      },
+      "enter_code_prompt": "Gönderilen 6 haneli kodu girin: <email>{{email}}</email>",
+      "heading": "E-postanızı doğrulayın",
+      "invalid_code_alert": {
+        "description": "E-postanıza gönderilen kodu kontrol edin ve devam etmek için aşağıdaki alanları güncelleyin.",
+        "title": "Yanlış kod girdiniz"
+      },
+      "resend_code": "Resend code"
+    }
+  },
+  "mas": {
+    "scope": {
+      "edit_profile": "Profilinizi ve iletişim bilgilerinizi düzenleyin",
+      "manage_sessions": "Cihazlarınızı ve oturumlarınızı yönetin",
+      "mas_admin": "Kullanıcıları yönet (urn:mas:admin)",
+      "send_messages": "Sizin adınıza mesaj gönderin",
+      "synapse_admin": "Sunucuyu yönetin (urn:synapse:admin:*)",
+      "view_messages": "Mevcut mesajları ve verilerinizi görüntüleyinmessages",
+      "view_profile": "Profil bilgilerinizi ve iletişim bilgilerinizi görüntüleyin"
+    }
+  }
+}

@@ -79,7 +79,7 @@
       "security_code": "安全代码"
     },
     "device_code_link": {
-      "description": "关联设备",
+      "description": "输入你另一设备上显示的安全代码",
       "headline": "关联新设备到账户",
       "verification_code": "验证码"
     },
