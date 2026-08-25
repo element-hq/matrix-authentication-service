@@ -88,7 +88,6 @@
         "description": "%(client_name)s'e erişimi reddettiniz. Bu pencereyi kapatabilirsiniz.",
         "heading": "Erişim engellendi"
       },
-      "description": "<strong> Başka bir cihaz olan </strong>, %(client_name)s (<span>, %(client_uri)s, </span>) cihazını <span>, %(server_name)s, </span> hesabınızla bağlantı istiyor. Bu cihazı tanıdığınızdan emin olun.",
       "grant_access": "Erişim izni ver",
       "granted": {
         "description": "%(client_name)s kullanıcısına erişim izni verdiniz. Bu pencereyi kapatabilirsiniz.",
