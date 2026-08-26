@@ -89,6 +89,7 @@
         "description": "Siz %(client_name)s uchun ruxsatni rad etdingiz. Bu oynani yopishingiz mumkin.",
         "heading": "Ruxsat berilmadi"
       },
+      "description": "<strong>Boshqa qurilma</strong> %(client_name)s ni sizning <span>%(server_name)s</span> hisobingiz bilan bogʻlamoqchi. Ushbu qurilmani tanib olganingizga ishonch hosil qiling.",
       "grant_access": "Kirishga ruxsat berish",
       "granted": {
         "description": "Siz %(client_name)s uchun ruxsat berdingiz. Bu oynani yopishingiz mumkin.",
