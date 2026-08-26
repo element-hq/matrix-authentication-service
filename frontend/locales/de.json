@@ -39,7 +39,7 @@
       "contact_info": "Kontaktinformation",
       "delete_account": {
         "alert_description": "Dieses Konto wird dauerhaft entfernt und du hast keinen Zugriff mehr auf deine Nachrichten.",
-        "alert_title": "Du bist kurz davor, alle deine Daten zu verlieren.",
+        "alert_title": "Du bist kurz davor, alle deine Daten zu verlieren",
         "button": "Account löschen",
         "dialog_description": "<text>Bestätige, dass du dein Konto löschen möchtest:</text>\n<profile />\n<list>\n<item>Du kannst dein Konto nicht reaktivieren</item>\n<item>Du kannst dich nicht mehr anmelden</item>\n<item>Niemand kann deinen Nutzernamen (MXID) wieder verwenden, auch du nicht.</item>\n<item>Du verlässt alle Gruppen und Chats</item>\n<item>Du wirst vom Identitätsserver entfernt und niemand kann dich mit deiner E-Mail-Adresse oder Telefonnummer finden</item>\n</list>\n<text>Deine alten Nachrichten sind für die jeweiligen Empfänger weiterhin sichtbar. Möchtest du deine gesendeten Nachrichten vor zukünftigen Gruppen-Besuchern verbergen?</text>",
         "dialog_title": "Dieses Konto löschen?",
@@ -73,7 +73,7 @@
       "email_in_use_error": "Die eingegebene E-Mail wird bereits verwendet",
       "email_invalid_error": "Die eingegebene E-Mail-Adresse ist ungültig",
       "incorrect_password_error": "Falsches Passwort, bitte versuche es erneut",
-      "password_confirmation": "Bestätige dein Passwort, um diese E-Mail-Adresse hinzuzufügen."
+      "password_confirmation": "Bestätige dein Passwort, um diese E-Mail-Adresse hinzuzufügen"
     },
     "browser_session_details": {
       "current_badge": "Aktuell"
@@ -284,7 +284,7 @@
         "action": "E-Mail löschen",
         "body": "Diese E-Mail löschen?",
         "incorrect_password": "Falsches Passwort, bitte versuche es erneut",
-        "password_confirmation": "Bestätige dein Passwort, um diese E-Mail-Adresse zu löschen."
+        "password_confirmation": "Bestätige dein Passwort, um diese E-Mail-Adresse zu löschen"
       },
       "delete_button_title": "E-Mail-Adresse entfernen",
       "email": "E-Mail"
@@ -328,7 +328,7 @@
       "heading": "Bestätige deine E-Mail",
       "invalid_code_alert": {
         "description": "Überprüfe den Code, der an deine E-Mail-Adresse gesendet wurde, und aktualisiere die folgenden Felder, um fortzufahren.",
-        "title": "Du hast den falschen Code eingegeben."
+        "title": "Du hast den falschen Code eingegeben"
       },
       "resend_code": "Code erneut senden"
     }
