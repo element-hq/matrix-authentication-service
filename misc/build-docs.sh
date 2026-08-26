@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -22,8 +23,8 @@ if [ "${CF_PAGES:-""}" = "1" ]; then
   # Source the environment variables to add cargo to the path
   . "$HOME/.cargo/env"
 
-  # Install the minimal toolchain, which includes rustc, rustdoc, and cargo
-  rustup toolchain install stable --profile minimal
+  # Install the toolchain pinned in rust-toolchain.toml
+  rustup toolchain install
 
   # Install mdbook
   MDBOOK_URL="https://github.com/rust-lang/mdBook/releases/download/v${MDBOOK_VERSION}/mdbook-v${MDBOOK_VERSION}-$(uname -m)-unknown-linux-gnu.tar.gz"
