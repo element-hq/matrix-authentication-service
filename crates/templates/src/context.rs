@@ -32,7 +32,10 @@ use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
 use mas_policy::{Violation, ViolationVariant};
 use mas_router::{Account, GraphQL, PostAuthAction, UrlBuilder};
-use oauth2_types::scope::{OPENID, Scope};
+use oauth2_types::{
+    requests::ResponseMode,
+    scope::{OPENID, Scope},
+};
 use rand::{
     Rng, SeedableRng,
     distributions::{Alphanumeric, DistString},
@@ -750,20 +753,32 @@ impl TemplateContext for ConsentContext {
         sample_list(
             Client::samples(now, rng)
                 .into_iter()
-                .map(|client| {
-                    let mut grant = AuthorizationGrant::sample(now, rng);
-                    let action = PostAuthAction::continue_grant(grant.id);
-                    // XXX
-                    grant.client_id = client.id;
-                    Self {
-                        grant,
-                        client,
-                        action,
-                        matrix_user: MatrixUser {
-                            mxid: "@alice:example.com".to_owned(),
-                            display_name: Some("Alice".to_owned()),
-                        },
-                    }
+                .flat_map(|client| {
+                    [
+                        (None, ResponseMode::Query),
+                        (None, ResponseMode::Fragment),
+                        (None, ResponseMode::FormPost),
+                        (Some("some-state".to_owned()), ResponseMode::Query),
+                        (Some("some-state".to_owned()), ResponseMode::Fragment),
+                        (Some("some-state".to_owned()), ResponseMode::FormPost),
+                    ]
+                    .map(|(state, response_mode)| {
+                        let mut grant = AuthorizationGrant::sample(now, rng);
+                        let action = PostAuthAction::continue_grant(grant.id);
+                        // XXX
+                        grant.client_id = client.id;
+                        grant.state = state;
+                        grant.response_mode = response_mode;
+                        Self {
+                            grant,
+                            client: client.clone(),
+                            action,
+                            matrix_user: MatrixUser {
+                                mxid: "@alice:example.com".to_owned(),
+                                display_name: Some("Alice".to_owned()),
+                            },
+                        }
+                    })
                 })
                 .collect(),
         )
