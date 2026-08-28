@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -228,6 +229,14 @@ impl FromIterator<Part> for Message {
 impl Message {
     pub(crate) fn parts(&self) -> std::slice::Iter<'_, Part> {
         self.parts.iter()
+    }
+
+    /// Iterate over the placeholders of the message, skipping literal text.
+    pub(crate) fn placeholders(&self) -> impl Iterator<Item = &Placeholder> {
+        self.parts().filter_map(|part| match part {
+            Part::Placeholder(placeholder) => Some(placeholder),
+            _ => None,
+        })
     }
 
     /// Create a message from a literal string, without any placeholders.
