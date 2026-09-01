@@ -1686,6 +1686,27 @@ mod tests {
         "###);
     }
 
+    /// Test the response of an `m.login.application_service` login.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_appservice_login_unsupported(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+            "type": "m.login.application_service",
+        }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::BAD_REQUEST);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_APPSERVICE_LOGIN_UNSUPPORTED",
+          "error": "Application services can't log in through the legacy authentication API on this server"
+        }
+        "###);
+    }
+
     /// Test `m.login.token` login flow.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_login_token_login(pool: PgPool) {
