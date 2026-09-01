@@ -155,6 +155,9 @@ pub enum Credentials {
     #[serde(rename = "m.login.token")]
     Token { token: String },
 
+    #[serde(rename = "m.login.application_service")]
+    ApplicationService,
+
     #[serde(other)]
     Unsupported,
 }
@@ -164,6 +167,7 @@ impl Credentials {
         match self {
             Self::Password { .. } => "m.login.password",
             Self::Token { .. } => "m.login.token",
+            Self::ApplicationService => "m.login.application_service",
             Self::Unsupported => "unsupported",
         }
     }
@@ -198,6 +202,9 @@ pub enum RouteError {
 
     #[error("unsupported login method")]
     Unsupported,
+
+    #[error("appservice login not supported")]
+    AppserviceLoginUnsupported,
 
     #[error("unsupported identifier type")]
     UnsupportedIdentifier,
@@ -264,6 +271,11 @@ impl IntoResponse for RouteError {
             Self::Unsupported => MatrixError {
                 errcode: "M_UNKNOWN",
                 error: "Invalid login type",
+                status: StatusCode::BAD_REQUEST,
+            },
+            Self::AppserviceLoginUnsupported => MatrixError {
+                errcode: "M_APPSERVICE_LOGIN_UNSUPPORTED",
+                error: "Application services can't log in through the legacy authentication API on this server",
                 status: StatusCode::BAD_REQUEST,
             },
             Self::UnsupportedIdentifier => MatrixError {
@@ -392,6 +404,10 @@ pub(crate) async fn post(
                 input.initial_device_display_name,
             )
             .await?
+        }
+
+        (_, Credentials::ApplicationService) => {
+            return Err(RouteError::AppserviceLoginUnsupported);
         }
 
         _ => {
