@@ -379,7 +379,7 @@ jobs:
           ess-helm-ref: ${{ steps.check-branch.outputs.ref }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
         with:
           # The builder runs in a container, so it needs the host network to
           # push to the registry listening on the host's localhost:5000
