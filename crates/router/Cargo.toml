@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -20,5 +21,6 @@ workspace = true
 axum.workspace = true
 serde_urlencoded.workspace = true
 serde.workspace = true
+serde_with.workspace = true
 ulid.workspace = true
 url.workspace = true

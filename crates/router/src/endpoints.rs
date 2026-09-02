@@ -6,6 +6,7 @@
 // Please see LICENSE files in the repository root for full details.
 
 use serde::{Deserialize, Serialize};
+use serde_with::{DeserializeFromStr, SerializeDisplay};
 use ulid::Ulid;
 
 use crate::UrlBuilder;
@@ -172,13 +173,72 @@ impl SimpleRoute for Healthcheck {
     const PATH: &'static str = "/health";
 }
 
+/// The wire prefix of the [`LoginMethodHint::UpstreamOAuth2`] value space.
+const UPSTREAM_OAUTH2_PREFIX: &str = "upstream-oauth2:";
+
+/// A login method a client asked us to use, as carried by the
+/// `io.element.login_method` parameter.
+///
+/// The variants mirror `mas_data_model::AuthenticationMethod` and
+/// `mas_policy::RegistrationMethod`, which record how a session was
+/// authenticated; this type carries the client's request, keyed by provider
+/// id.
+#[derive(Debug, Clone, PartialEq, Eq, SerializeDisplay, DeserializeFromStr)]
+pub enum LoginMethodHint {
+    /// The local password method.
+    Password,
+
+    /// The upstream OAuth 2.0 provider with the given id.
+    UpstreamOAuth2(Ulid),
+
+    /// A value we don't know about, kept verbatim so that it can be logged.
+    Unknown(String),
+}
+
+impl std::fmt::Display for LoginMethodHint {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            LoginMethodHint::Password => f.write_str("password"),
+            LoginMethodHint::UpstreamOAuth2(id) => write!(f, "{UPSTREAM_OAUTH2_PREFIX}{id}"),
+            LoginMethodHint::Unknown(value) => f.write_str(value),
+        }
+    }
+}
+
+impl std::str::FromStr for LoginMethodHint {
+    type Err = std::convert::Infallible;
+
+    /// The keyword and the prefix are lowercase-only; the ULID is parsed by the
+    /// `ulid` crate, which is case-insensitive.
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s == "password" {
+            return Ok(LoginMethodHint::Password);
+        }
+
+        if let Some(id) = s.strip_prefix(UPSTREAM_OAUTH2_PREFIX)
+            && let Ok(id) = Ulid::from_str(id)
+        {
+            return Ok(LoginMethodHint::UpstreamOAuth2(id));
+        }
+
+        Ok(LoginMethodHint::Unknown(s.to_owned()))
+    }
+}
+
 /// `GET|POST /login`
+#[expect(
+    clippy::struct_field_names,
+    reason = "`login_hint` and `login_method` mirror their query parameter names"
+)]
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Login {
     #[serde(flatten)]
     post_auth_action: Option<PostAuthAction>,
 
     login_hint: Option<String>,
+
+    #[serde(rename = "io.element.login_method")]
+    login_method: Option<LoginMethodHint>,
 }
 
 impl Route for Login {
@@ -199,6 +259,7 @@ impl Login {
         Self {
             post_auth_action: Some(action),
             login_hint: None,
+            login_method: None,
         }
     }
 
@@ -207,6 +268,7 @@ impl Login {
         Self {
             post_auth_action: Some(PostAuthAction::continue_grant(id)),
             login_hint: None,
+            login_method: None,
         }
     }
 
@@ -215,6 +277,7 @@ impl Login {
         Self {
             post_auth_action: Some(PostAuthAction::continue_device_code_grant(id)),
             login_hint: None,
+            login_method: None,
         }
     }
 
@@ -223,6 +286,7 @@ impl Login {
         Self {
             post_auth_action: Some(PostAuthAction::continue_compat_sso_login(id)),
             login_hint: None,
+            login_method: None,
         }
     }
 
@@ -231,12 +295,19 @@ impl Login {
         Self {
             post_auth_action: Some(PostAuthAction::link_upstream(id)),
             login_hint: None,
+            login_method: None,
         }
     }
 
     #[must_use]
     pub fn with_login_hint(mut self, login_hint: String) -> Self {
         self.login_hint = Some(login_hint);
+        self
+    }
+
+    #[must_use]
+    pub fn with_login_method(mut self, login_method: LoginMethodHint) -> Self {
+        self.login_method = Some(login_method);
         self
     }
 
@@ -259,6 +330,7 @@ impl From<Option<PostAuthAction>> for Login {
         Self {
             post_auth_action,
             login_hint: None,
+            login_method: None,
         }
     }
 }
@@ -902,4 +974,56 @@ pub struct ApiDocCallback;
 
 impl SimpleRoute for ApiDocCallback {
     const PATH: &'static str = "/api/doc/oauth2-callback";
+}
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr as _;
+
+    use super::*;
+
+    const PROVIDER_ID: &str = "01HFRQFT5QFMJFGF01P7JAV2ME";
+
+    #[test]
+    fn login_method_hint_password() {
+        let hint = LoginMethodHint::from_str("password").unwrap();
+        assert_eq!(hint, LoginMethodHint::Password);
+        assert_eq!(hint.to_string(), "password");
+    }
+
+    #[test]
+    fn login_method_hint_upstream_oauth2() {
+        let hint = LoginMethodHint::from_str(&format!("upstream-oauth2:{PROVIDER_ID}")).unwrap();
+        assert_eq!(
+            hint,
+            LoginMethodHint::UpstreamOAuth2(Ulid::from_str(PROVIDER_ID).unwrap())
+        );
+        assert_eq!(hint.to_string(), format!("upstream-oauth2:{PROVIDER_ID}"));
+    }
+
+    #[test]
+    fn login_method_hint_upstream_oauth2_lowercase_ulid() {
+        let hint =
+            LoginMethodHint::from_str(&format!("upstream-oauth2:{}", PROVIDER_ID.to_lowercase()))
+                .unwrap();
+        assert_eq!(
+            hint,
+            LoginMethodHint::UpstreamOAuth2(Ulid::from_str(PROVIDER_ID).unwrap())
+        );
+    }
+
+    #[test]
+    fn login_method_hint_unknown_values() {
+        for value in [
+            "PASSWORD",
+            &format!("Upstream-OAuth2:{PROVIDER_ID}"),
+            &format!("upstream-oauth2:{}", "not-a-ulid"),
+            PROVIDER_ID,
+            "",
+        ] {
+            let hint = LoginMethodHint::from_str(value).unwrap();
+            assert_eq!(hint, LoginMethodHint::Unknown(value.to_owned()));
+            assert_eq!(hint.to_string(), value);
+        }
+    }
 }
