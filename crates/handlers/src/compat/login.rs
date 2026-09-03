@@ -1710,6 +1710,10 @@ mod tests {
 
         let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
             "type": "m.login.application_service",
+            "identifier": {
+                "type": "m.id.user",
+                "user": "_irc_example",
+            },
         }));
 
         let response = state.request(request).await;
