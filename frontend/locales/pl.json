@@ -76,7 +76,7 @@
       "password_confirmation": "Potwierdź hasło do swojego konta, aby dodać ten adres e-mail"
     },
     "browser_session_details": {
-      "current_badge": "Aktualny"
+      "current_badge": "Aktualne"
     },
     "browser_sessions_overview": {
       "body:one": "{{count}} aktywna sesja",
@@ -254,7 +254,7 @@
     },
     "session": {
       "client_id_label": "Identyfikator klienta",
-      "current": "Aktualny",
+      "current": "Aktualne",
       "device_id_label": "Identyfikator urządzenia",
       "finished_label": "Zakończone",
       "generic_browser_session": "Sesja przeglądarki",

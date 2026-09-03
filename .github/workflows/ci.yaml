@@ -153,15 +153,12 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
-        # Then install rustfmt for `cargo fmt`.
-        #
-        # --override sets this as the default rust toolchain version in this directory.
+        # rustfmt runs on nightly because .rustfmt.toml uses nightly-only options.
         run: |
-          rustup toolchain install nightly --profile minimal --component rustfmt --override
+          rustup toolchain install nightly --profile minimal --component rustfmt
 
       - name: Check style
-        run: cargo fmt --all -- --check
+        run: cargo +nightly fmt --all -- --check
 
   cargo-deny:
     name: Run `cargo deny` checks
@@ -182,8 +179,6 @@ jobs:
 
       - name: Run `cargo-deny`
         uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
-        with:
-          rust-version: stable
 
   check-schema:
     name: Check schema
@@ -200,7 +195,7 @@ jobs:
 
       - name: Install Rust toolchain
         run: |
-          rustup toolchain install stable
+          rustup toolchain install
 
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
@@ -241,11 +236,7 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        # Install the minimal toolchain with clippy, pinned to a version kept in
-        # sync with Dockerfile.
-        #
-        # --override sets this as the default rust toolchain version in this directory.
-        run: rustup toolchain install 1.96.0 --profile minimal --component clippy --override
+        run: rustup toolchain install
 
       - uses: ./.github/actions/build-policies
 
@@ -270,8 +261,7 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
-        run: rustup toolchain install stable --profile minimal
+        run: rustup toolchain install
 
       - name: Install nextest
         uses: taiki-e/install-action@b6ff580856c41316412a0b9b60540fbc6f8c82cc # v2
@@ -293,7 +283,7 @@ jobs:
           path: nextest-archive.tar.zst
 
   test:
-    name: Run test suite with Rust stable
+    name: Run test suite
     needs: [rustfmt, opa-lint, compile-test-artifacts]
     runs-on: ubuntu-24.04
 
@@ -326,8 +316,7 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
-        run: rustup toolchain install stable --profile minimal
+        run: rustup toolchain install
 
       - name: Install nextest
         uses: taiki-e/install-action@b6ff580856c41316412a0b9b60540fbc6f8c82cc # v2

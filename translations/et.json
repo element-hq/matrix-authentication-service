@@ -39,11 +39,11 @@
   "mas": {
     "account": {
       "deactivated": {
-        "description": "See kasutajakonto (<em>%(mxid)s</em>) on kustutatud. Kui see nii ei peaks olema, siis palun võta ühendust oma serveri haldajaga.",
+        "description": "See kasutajakonto (<em>%(mxid)s</em>) on kustutatud. Kui see nii ei peaks olema, siis palun võta ühendust oma teenusepakkujaga.",
         "heading": "Kasutajakonto on kustutatud"
       },
       "locked": {
-        "description": "See kasutajakonto (<em>%(mxid)s</em>) on lukustatud. Kui see nii ei peaks olema, siis palun võta ühendust oma serveri haldajaga.",
+        "description": "See kasutajakonto (<em>%(mxid)s</em>) on lukustatud. Kui see nii ei peaks olema, siis palun võta ühendust oma teenusepakkujaga.",
         "heading": "Kasutajakonto on lukustatud"
       },
       "logged_out": {
@@ -226,7 +226,7 @@
       "terms_of_service": "Ma nõustun <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">teenuse kasutustingimustega</a>"
     },
     "registration_token": {
-      "description": "Palun sisesta registreerimise tunnusluba, mille serveri haldaja on sulle andnud.",
+      "description": "Palun sisesta registreerimise tunnusluba, mille sinu teenusepakkuja on sulle andnud.",
       "field": "Registreerimise tunnusluba",
       "headline": "Registreerimise tunnusluba"
     },

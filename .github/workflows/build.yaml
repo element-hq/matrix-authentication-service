@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -123,9 +124,8 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
         run: |
-          rustup toolchain install stable --profile minimal
+          rustup toolchain install
           rustup target add ${{ matrix.target }}
 
       - name: Setup sccache
