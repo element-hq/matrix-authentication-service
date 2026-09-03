@@ -13,8 +13,7 @@
 # The Debian version and version name must be in sync
 ARG DEBIAN_VERSION=13
 ARG DEBIAN_VERSION_NAME=trixie
-# Keep in sync with .github/workflows/ci.yaml
-ARG RUSTC_VERSION=1.96.0
+ARG RUSTUP_VERSION=1.29.0
 # Keep in sync with .node-version
 ARG NODEJS_VERSION=24.15.0
 # Keep in sync with .github/actions/build-policies/action.yml and policies/Makefile
@@ -76,24 +75,48 @@ RUN --network=none  \
 ########################################
 ## Build stage that builds the binary ##
 ########################################
-FROM --platform=${BUILDPLATFORM} docker.io/library/rust:${RUSTC_VERSION}-${DEBIAN_VERSION_NAME} AS builder
+FROM --platform=${BUILDPLATFORM} docker.io/library/buildpack-deps:${DEBIAN_VERSION_NAME} AS builder
 
+ARG BUILDARCH
 ARG CARGO_AUDITABLE_VERSION
-ARG RUSTC_VERSION
+ARG RUSTUP_VERSION
+
+ENV RUSTUP_HOME=/usr/local/rustup \
+  CARGO_HOME=/usr/local/cargo \
+  PATH=/usr/local/cargo/bin:$PATH
+
+# Checksums come from https://static.rust-lang.org/rustup/archive/<version>/<triple>/rustup-init.sha256
+# Network access: to download rustup
+RUN --network=default \
+  case "${BUILDARCH}" in \
+    amd64) RUSTUP_TRIPLE="x86_64-unknown-linux-gnu"; RUSTUP_SHA256="4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10" ;; \
+    arm64) RUSTUP_TRIPLE="aarch64-unknown-linux-gnu"; RUSTUP_SHA256="9732d6c5e2a098d3521fca8145d826ae0aaa067ef2385ead08e6feac88fa5792" ;; \
+    *) echo "unsupported architecture: ${BUILDARCH}" >&2; exit 1 ;; \
+  esac && \
+  curl -fsSLo rustup-init "https://static.rust-lang.org/rustup/archive/${RUSTUP_VERSION}/${RUSTUP_TRIPLE}/rustup-init" && \
+  echo "${RUSTUP_SHA256} *rustup-init" | sha256sum -c - && \
+  chmod +x rustup-init && \
+  ./rustup-init -y --no-modify-path --default-toolchain none && \
+  rm rustup-init
+
+# Set the working directory
+WORKDIR /app
+
+# Copied on its own so the toolchain layer is cached independently of the source tree
+COPY rust-toolchain.toml ./
+
+# Network access: to download the toolchain and the cross-compilation targets
+RUN --network=default \
+  rustup toolchain install && \
+  rustup target add \
+  x86_64-unknown-linux-gnu \
+  aarch64-unknown-linux-gnu
 
 # Install pinned versions of cargo-auditable
 # Network access: to fetch dependencies
 RUN --network=default \
   cargo install --locked \
   cargo-auditable@=${CARGO_AUDITABLE_VERSION}
-
-# Install all cross-compilation targets
-# Network access: to download the targets
-RUN --network=default \
-  rustup target add  \
-  --toolchain "${RUSTC_VERSION}" \
-  x86_64-unknown-linux-gnu \
-  aarch64-unknown-linux-gnu
 
 RUN --network=none \
   dpkg --add-architecture arm64 && \
@@ -120,9 +143,6 @@ ENV \
   CC_x86_64_unknown_linux_gnu=x86_64-linux-gnu-gcc \
   CXX_x86_64_unknown_linux_gnu=x86_64-linux-gnu-g++
 
-# Set the working directory
-WORKDIR /app
-
 # Copy the code
 COPY ./ /app
 ENV SQLX_OFFLINE=true
@@ -134,7 +154,7 @@ ARG TARGETARCH
 
 # Network access: cargo auditable needs it
 RUN --network=default \
-  --mount=type=cache,target=/root/.cargo/registry \
+  --mount=type=cache,target=/usr/local/cargo/registry \
   --mount=type=cache,target=/app/target \
   RUST_TARGET=$(case "${TARGETARCH}" in \
     amd64) echo "x86_64-unknown-linux-gnu" ;; \
