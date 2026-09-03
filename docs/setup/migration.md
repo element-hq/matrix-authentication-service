@@ -30,6 +30,15 @@ If your Synapse homeserver currently uses a custom password provider module, ple
 It is worth noting that MAS currently only supports PostgreSQL as a database backend.
 The migration tool only supports reading from PostgreSQL for the Synapse database as well.
 
+#### Encrypted bridges need MSC4190 support
+
+Application services used to log in through the legacy `m.login.application_service` login type to create encryption-capable devices for their users.
+This login type is not available once authentication is delegated to MAS: encrypted bridges must instead create devices through the [device management endpoints](https://spec.matrix.org/v1.19/application-service-api/#device-management) introduced by [MSC4190](https://github.com/matrix-org/matrix-spec-proposals/pull/4190).
+
+This requires Synapse 1.141.0 or later, and a bridge which implements MSC4190.
+mautrix-based bridges do, with the `encryption.msc4190` option; see [their documentation](https://docs.mau.fi/bridges/general/end-to-bridge-encryption.html#use-with-next-gen-auth-oauth-mas-msc4190).
+For other bridges, check with their author.
+
 ### Install and configure MAS alongside your existing homeserver
 
 Follow the instructions in the [installation guide](installation.md) to install MAS alongside your existing homeserver.
