@@ -627,4 +627,61 @@ mod tests {
         let manager = password_manager_from_config(&config).await;
         assert!(manager.is_err());
     }
+
+    /// RAII guard that removes an environment variable when dropped,
+    /// ensuring cleanup even if the test panics.
+    struct EnvVarGuard(&'static str);
+
+    impl EnvVarGuard {
+        fn set(key: &'static str, value: impl AsRef<std::ffi::OsStr>) -> Self {
+            // SAFETY: single-threaded tokio test runtime; no other thread
+            // is reading or writing the environment concurrently.
+            #[expect(unsafe_code)]
+            unsafe {
+                std::env::set_var(key, value);
+            }
+            Self(key)
+        }
+    }
+
+    impl Drop for EnvVarGuard {
+        fn drop(&mut self) {
+            // SAFETY: single-threaded tokio test runtime; no other thread
+            // is reading or writing the environment concurrently.
+            #[expect(unsafe_code)]
+            unsafe {
+                std::env::remove_var(self.0);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_database_connection_with_pgpass() {
+        // Write a temporary pgpass file and point PGPASSFILE at it
+        let pgpass_content = "*:*:*:testuser:testpassword\n";
+        let pgpass_file = tempfile::NamedTempFile::new().expect("failed to create temp file");
+        tokio::fs::write(pgpass_file.path(), pgpass_content)
+            .await
+            .expect("failed to write pgpass file");
+
+        // Set PGPASSFILE for sqlx to pick up the password from the pgpass file
+        let _guard = EnvVarGuard::set("PGPASSFILE", pgpass_file.path());
+
+        let config = serde_json::from_value(serde_json::json!({
+            "uri": "postgresql://testuser@localhost/test"
+        }))
+        .unwrap();
+
+        let opts = DatabaseConnectOptions {
+            log_slow_statements: false,
+        };
+
+        let result = database_connect_options_from_config(&config, &opts).await;
+        assert!(result.is_ok());
+        let debug = format!("{:?}", result.unwrap());
+        assert!(
+            debug.contains("testpassword"),
+            "pgpass password was not resolved: {debug}"
+        );
+    }
 }
