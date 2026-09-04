@@ -3673,6 +3673,7 @@ dependencies = [
  "http",
  "http-body-util",
  "language-tags",
+ "mas-data-model",
  "mas-http",
  "mas-iana",
  "mas-jose",
