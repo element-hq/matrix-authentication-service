@@ -60,7 +60,7 @@
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@types/swagger-ui-dist": "^3.30.6",
-    "@vitejs/plugin-react": "^6.0.4",
+    "@vitejs/plugin-react": "^6.0.5",
     "@vitest/coverage-v8": "^4.1.9",
     "browserslist-to-esbuild": "^2.1.1",
     "graphql": "^16.14.0",
@@ -74,7 +74,7 @@
     "tailwindcss": "^4.3.2",
     "tinyglobby": "^0.2.17",
     "typescript": "^6.0.3",
-    "vite": "8.1.5",
+    "vite": "8.2.1",
     "vite-plugin-graphql-codegen": "^4.0.1",
     "vitest": "^4.1.9"
   },
