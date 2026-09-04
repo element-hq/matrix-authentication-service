@@ -42,7 +42,7 @@ jobs:
         run: rustup toolchain install
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.9
+        uses: pnpm/action-setup@v6.0.10
 
       - name: Install Node
         uses: actions/setup-node@v7.0.0
