@@ -64,12 +64,15 @@ $ mas-cli manage set-password <username> <password> --ignore-complexity
 
 Issue a compatibility token for a user.
 
+Arguments:
+- `<username>`: User for which to issue the token.
+- `[device_id]`: Device ID to set in the token. If not specified, a random device ID will be generated.
+
 Options:
-- `--device-id <device_id>`: Device ID to set in the token. If not specified, a random device ID will be generated.
 - `--yes-i-want-to-grant-synapse-admin-privileges`: Whether the token should be given admin privileges.
 
 ```
-$ mas-cli manage issue-compatibility-token <username> --device-id <device_id> --yes-i-want-to-grant-synapse-admin-privileges
+$ mas-cli manage issue-compatibility-token <username> <device_id> --yes-i-want-to-grant-synapse-admin-privileges
 ```
 
 ## `manage issue-user-registration-token`
@@ -131,8 +134,10 @@ $ mas-cli manage unlock-user <username> --reactivate
 
 Register a user. This will interactively prompt for the user's attributes unless the `--yes` flag is set. It bypasses any policy check on the password, email, etc.
 
+Arguments:
+- `[username]`: Username to register. Required when using `--yes`.
+
 Options:
-- `--username <username>`: Username to register.
 - `--password <password>`: Password to set.
 - `--email <email>`: Email to add. Can be specified multiple times.
 - `--upstream-provider-mapping <UPSTREAM_PROVIDER_ID:SUBJECT>`: Upstream OAuth 2.0 provider mapping. Can be specified multiple times.
@@ -144,4 +149,5 @@ Options:
 
 ```
 $ mas-cli manage register-user
+$ mas-cli manage register-user --yes <username>
 ```
