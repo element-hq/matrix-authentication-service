@@ -21,7 +21,7 @@ use mas_axum_utils::{
 use mas_data_model::{BoxClock, BoxRng, Clock};
 use mas_i18n::DataLocale;
 use mas_matrix::HomeserverConnection;
-use mas_router::{UpstreamOAuth2Authorize, UrlBuilder};
+use mas_router::{LoginMethodHint, PostAuthAction, UpstreamOAuth2Authorize, UrlBuilder};
 use mas_storage::{
     BoxRepository, RepositoryAccess,
     upstream_oauth2::UpstreamOAuthProviderRepository,
@@ -36,7 +36,10 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroizing;
 
-use super::shared::{LoginHint, OptionalPostAuthAction, QueryLoginHint};
+use super::shared::{
+    LoginHint, OptionalPostAuthAction, QueryLoginHint, QueryLoginMethod, Resolved,
+    resolve_login_method,
+};
 use crate::{
     BoundActivityTracker, Limiter, METER, PreferredLanguage, RequesterFingerprint, SiteConfig,
     passwords::{PasswordManager, PasswordVerificationResult},
@@ -62,6 +65,19 @@ impl ToFormState for LoginForm {
     type Field = LoginFormField;
 }
 
+/// The hints a client can put in the login page's query string.
+struct LoginHints {
+    login_hint: QueryLoginHint,
+    login_method: QueryLoginMethod,
+}
+
+impl LoginHints {
+    /// See [`QueryLoginMethod::login_method`].
+    fn login_method(&self, action: Option<&PostAuthAction>) -> Option<&LoginMethodHint> {
+        self.login_method.login_method(action)
+    }
+}
+
 #[tracing::instrument(name = "handlers.views.login.get", skip_all)]
 pub(crate) async fn get(
     mut rng: BoxRng,
@@ -75,6 +91,7 @@ pub(crate) async fn get(
     activity_tracker: BoundActivityTracker,
     Query(query): Query<OptionalPostAuthAction>,
     Query(query_login_hint): Query<QueryLoginHint>,
+    Query(query_login_method): Query<QueryLoginMethod>,
     cookie_jar: CookieJar,
 ) -> Result<Response, InternalError> {
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
@@ -107,6 +124,33 @@ pub(crate) async fn get(
 
     let providers = repo.upstream_oauth_provider().all_enabled().await?;
 
+    let hints = LoginHints {
+        login_hint: query_login_hint,
+        login_method: query_login_method,
+    };
+
+    // The hint comes from the URL, not from the authorization grant: the
+    // `/account/` deeplink has no grant, and this redirect happens before the
+    // grant is loaded to render the page.
+    match resolve_login_method(
+        hints.login_method(query.post_auth_action.as_ref()),
+        &providers,
+        site_config.password_login_enabled,
+    ) {
+        Resolved::UpstreamOAuth2(provider) => {
+            let mut destination = UpstreamOAuth2Authorize::new(provider.id);
+
+            if let Some(action) = query.post_auth_action.clone() {
+                destination = destination.and_then(action);
+            }
+
+            return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
+        }
+
+        // `render` hides the provider buttons for the password hint.
+        Resolved::Password | Resolved::None => {}
+    }
+
     // If password-based login is disabled, and there is only one upstream provider,
     // we can directly start an authorization flow
     if !site_config.password_login_enabled && providers.len() == 1 {
@@ -132,7 +176,7 @@ pub(crate) async fn get(
         &templates,
         &homeserver,
         &site_config,
-        query_login_hint,
+        &hints,
     )
     .await
 }
@@ -151,12 +195,21 @@ pub(crate) async fn post(
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
     requester: RequesterFingerprint,
-    (Query(query), Query(query_login_hint)): (Query<OptionalPostAuthAction>, Query<QueryLoginHint>),
+    (Query(query), Query(query_login_hint), Query(query_login_method)): (
+        Query<OptionalPostAuthAction>,
+        Query<QueryLoginHint>,
+        Query<QueryLoginMethod>,
+    ),
     cookie_jar: CookieJar,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     Form(form): Form<ProtectedForm<LoginForm>>,
 ) -> Result<Response, InternalError> {
     let user_agent = user_agent.map(|ua| ua.as_str().to_owned());
+    let hints = LoginHints {
+        login_hint: query_login_hint,
+        login_method: query_login_method,
+    };
+
     if !site_config.password_login_enabled {
         // XXX: is it necessary to have better errors here?
         return Ok(StatusCode::METHOD_NOT_ALLOWED.into_response());
@@ -189,7 +242,7 @@ pub(crate) async fn post(
             &templates,
             &homeserver,
             &site_config,
-            query_login_hint,
+            &hints,
         )
         .await;
     }
@@ -216,7 +269,7 @@ pub(crate) async fn post(
             &templates,
             &homeserver,
             &site_config,
-            query_login_hint,
+            &hints,
         )
         .await;
     };
@@ -237,7 +290,7 @@ pub(crate) async fn post(
             &templates,
             &homeserver,
             &site_config,
-            query_login_hint,
+            &hints,
         )
         .await;
     }
@@ -260,7 +313,7 @@ pub(crate) async fn post(
             &templates,
             &homeserver,
             &site_config,
-            query_login_hint,
+            &hints,
         )
         .await;
     };
@@ -306,7 +359,7 @@ pub(crate) async fn post(
                 &templates,
                 &homeserver,
                 &site_config,
-                query_login_hint,
+                &hints,
             )
             .await;
         }
@@ -434,16 +487,30 @@ async fn render(
     templates: &Templates,
     homeserver: &dyn HomeserverConnection,
     site_config: &SiteConfig,
-    query_login_hint: QueryLoginHint,
+    hints: &LoginHints,
 ) -> Result<Response, InternalError> {
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(clock, rng);
     let providers = repo.upstream_oauth_provider().all_enabled().await?;
 
+    // Only the `password` keyword is acted on here: the GET handler already
+    // turned a usable provider hint into a redirect, and on POST a provider
+    // hint must not turn a form submission into one. The hint was resolved
+    // and warned about before this point, so `resolve_login_method` isn't
+    // called again.
+    let hide_providers = match hints.login_method(action.post_auth_action.as_ref()) {
+        Some(LoginMethodHint::Password) => site_config.password_login_enabled,
+        Some(LoginMethodHint::UpstreamOAuth2(_) | LoginMethodHint::Unknown(_)) | None => false,
+    };
+
     let ctx = LoginContext::default()
         .with_form_state(form_state)
-        .with_upstream_providers(providers);
+        .with_upstream_providers(if hide_providers {
+            Vec::new()
+        } else {
+            providers
+        });
 
-    let ctx = handle_login_hint(ctx, &query_login_hint, homeserver, site_config);
+    let ctx = handle_login_hint(ctx, &hints.login_hint, homeserver, site_config);
 
     let next = action
         .load_context(repo)
@@ -479,12 +546,14 @@ mod test {
     use mas_templates::escape_html;
     use oauth2_types::scope::OPENID;
     use sqlx::PgPool;
+    use ulid::Ulid;
     use zeroize::Zeroizing;
 
     use crate::{
         SiteConfig,
         test_utils::{
             CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup, test_site_config,
+            upstream_oauth_provider_params,
         },
     };
 
@@ -693,6 +762,285 @@ mod test {
                 .body()
                 .contains(&escape_html(&second_provider_login.path_and_query()))
         );
+    }
+
+    /// Add an enabled upstream provider.
+    async fn add_provider(
+        state: &TestState,
+        issuer: &str,
+        human_name: &str,
+        ui_order: i32,
+    ) -> mas_data_model::UpstreamOAuthProvider {
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+        let provider = repo
+            .upstream_oauth_provider()
+            .add(
+                &mut rng,
+                &state.clock,
+                UpstreamOAuthProviderParams {
+                    ui_order,
+                    ..upstream_oauth_provider_params(issuer, human_name)
+                },
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+        provider
+    }
+
+    /// Assert whether the rendered login page links to the given provider's
+    /// authorization endpoint.
+    fn assert_provider_link(body: &str, provider_id: Ulid, expected: bool) {
+        let link = mas_router::UpstreamOAuth2Authorize::new(provider_id).path_and_query();
+        assert_eq!(
+            body.contains(&escape_html(&link)),
+            expected,
+            "expected the link to {link} to be {}, body: {body}",
+            if expected { "present" } else { "absent" }
+        );
+    }
+
+    /// A provider hint skips the login page and starts that provider's
+    /// authorization flow, carrying the post-auth action over.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_login_method_hint_provider(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        add_provider(&state, "first.com", "First Ltd.", 0).await;
+        let second = add_provider(&state, "second.com", "Second Ltd.", 1).await;
+
+        let request = Request::get(format!(
+            "/login?kind=continue_authorization_grant&id={GRANT_ID}\
+             &io.element.login_method=upstream-oauth2:{}",
+            second.id
+        ))
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(
+            LOCATION,
+            &mas_router::UpstreamOAuth2Authorize::new(second.id)
+                .and_then(mas_router::PostAuthAction::continue_grant(
+                    GRANT_ID.parse().unwrap(),
+                ))
+                .path_and_query(),
+        );
+    }
+
+    /// The `password` hint renders the page with only the password form.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_login_method_hint_password(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let first = add_provider(&state, "first.com", "First Ltd.", 0).await;
+        let second = add_provider(&state, "second.com", "Second Ltd.", 1).await;
+
+        let request = Request::get("/login?io.element.login_method=password").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body = response.body();
+        assert!(body.contains(r#"name="password""#), "body: {body}");
+        assert_provider_link(body, first.id, false);
+        assert_provider_link(body, second.id, false);
+    }
+
+    /// Unusable hints leave the login page unchanged.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_unusable_login_method_hints(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let first = add_provider(&state, "first.com", "First Ltd.", 0).await;
+        let second = add_provider(&state, "second.com", "Second Ltd.", 1).await;
+
+        let disabled = add_provider(&state, "disabled.com", "Disabled Ltd.", 2).await;
+        let mut repo = state.repository().await.unwrap();
+        repo.upstream_oauth_provider()
+            .disable(&state.clock, disabled.clone())
+            .await
+            .unwrap();
+
+        // A ULID which is not a provider at all
+        let mut rng = state.rng();
+        let user = repo
+            .user()
+            .add(&mut rng, &state.clock, "john".to_owned())
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        for hint in [
+            "upstream-oauth2:01ARZ3NDEKTSV4RRFFQ69G5FAV".to_owned(),
+            format!("upstream-oauth2:{}", disabled.id),
+            format!("upstream-oauth2:{}", user.id),
+            "upstream-oauth2:not-a-ulid".to_owned(),
+            "password-please".to_owned(),
+            String::new(),
+        ] {
+            let request = Request::get(format!("/login?io.element.login_method={hint}")).empty();
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::OK);
+            let body = response.body();
+            assert!(
+                body.contains(r#"name="password""#),
+                "hint {hint}, body: {body}"
+            );
+            assert_provider_link(body, first.id, true);
+            assert_provider_link(body, second.id, true);
+            assert_provider_link(body, disabled.id, false);
+        }
+    }
+
+    /// The hint never enables a method the operator turned off.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_login_method_hint_password_disabled(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_login_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let first = add_provider(&state, "first.com", "First Ltd.", 0).await;
+        let second = add_provider(&state, "second.com", "Second Ltd.", 1).await;
+
+        let request = Request::get("/login?io.element.login_method=password").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body = response.body();
+        assert!(!body.contains(r#"name="password""#), "body: {body}");
+        assert_provider_link(body, first.id, true);
+        assert_provider_link(body, second.id, true);
+    }
+
+    /// With a live session the hint is ignored and the user is sent on.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_login_method_hint_with_a_session(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let provider = add_provider(&state, "first.com", "First Ltd.", 0).await;
+        let user = user_with_password(&state, "john", "hunter2").await;
+        login_with_session(&state, &cookies, &user).await;
+
+        let request = Request::get(format!(
+            "/login?io.element.login_method=upstream-oauth2:{}",
+            provider.id
+        ))
+        .empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/");
+    }
+
+    /// When both the hint and the single-provider shortcut apply, we redirect
+    /// once, to the same place.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_login_method_hint_and_single_provider(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_login_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let provider = add_provider(&state, "first.com", "First Ltd.", 0).await;
+
+        let request = Request::get(format!(
+            "/login?io.element.login_method=upstream-oauth2:{}",
+            provider.id
+        ))
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(
+            LOCATION,
+            &mas_router::UpstreamOAuth2Authorize::new(provider.id).path_and_query(),
+        );
+    }
+
+    /// A hint must not hijack an upstream-account linking flow into a
+    /// different provider.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_login_method_hint_ignored_when_linking(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let first = add_provider(&state, "first.com", "First Ltd.", 0).await;
+        let second = add_provider(&state, "second.com", "Second Ltd.", 1).await;
+
+        let request = Request::get(format!(
+            "/login?kind=link_upstream&id={GRANT_ID}\
+             &io.element.login_method=upstream-oauth2:{}",
+            second.id
+        ))
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body = response.body();
+        assert_provider_link(body, first.id, true);
+        assert_provider_link(body, second.id, true);
+    }
+
+    /// On a failed password attempt the `password` hint keeps the provider
+    /// buttons hidden, and a provider hint does not turn the form submission
+    /// into a redirect.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_login_method_hint_on_post(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let first = add_provider(&state, "first.com", "First Ltd.", 0).await;
+        let second = add_provider(&state, "second.com", "Second Ltd.", 1).await;
+
+        let request = Request::get("/login?io.element.login_method=password").empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        let csrf_token = extract_csrf(response.body()).to_owned();
+
+        let form = serde_json::json!({
+            "csrf": csrf_token,
+            "username": "john",
+            "password": "hunter2",
+        });
+
+        let request = Request::post("/login?io.element.login_method=password").form(form.clone());
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body = response.body();
+        assert!(body.contains("Invalid credentials"), "body: {body}");
+        assert_provider_link(body, first.id, false);
+        assert_provider_link(body, second.id, false);
+
+        let request = Request::post(format!(
+            "/login?io.element.login_method=upstream-oauth2:{}",
+            second.id
+        ))
+        .form(form);
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body = response.body();
+        assert!(body.contains("Invalid credentials"), "body: {body}");
+        assert_provider_link(body, first.id, true);
+        assert_provider_link(body, second.id, true);
     }
 
     async fn user_with_password(

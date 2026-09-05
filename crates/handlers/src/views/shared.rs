@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -7,7 +8,8 @@
 use std::str::FromStr as _;
 
 use anyhow::Context;
-use mas_router::{PostAuthAction, Route, UrlBuilder};
+use mas_data_model::UpstreamOAuthProvider;
+use mas_router::{LoginMethodHint, PostAuthAction, Route, UrlBuilder};
 use mas_storage::{
     RepositoryAccess,
     compat::CompatSsoLoginRepository,
@@ -144,6 +146,92 @@ impl QueryLoginHint {
             LoginHint::Email(email)
         } else {
             LoginHint::None
+        }
+    }
+}
+
+/// The login method a client asked for, resolved against the methods this
+/// deployment offers.
+pub(crate) enum Resolved<'a> {
+    /// No usable hint: offer the login methods as usual.
+    None,
+
+    /// Offer only the local password method.
+    Password,
+
+    /// Start an authorization flow with this upstream provider.
+    UpstreamOAuth2(&'a UpstreamOAuthProvider),
+}
+
+#[derive(Debug, Deserialize)]
+pub(crate) struct QueryLoginMethod {
+    #[serde(rename = "io.element.login_method")]
+    login_method: Option<LoginMethodHint>,
+}
+
+impl QueryLoginMethod {
+    /// The hint, unless the user is linking an upstream account: that flow is
+    /// already bound to a provider, and a hint must not send the user to a
+    /// different one.
+    pub(crate) fn login_method(&self, action: Option<&PostAuthAction>) -> Option<&LoginMethodHint> {
+        if matches!(action, Some(PostAuthAction::LinkUpstream { .. })) {
+            return None;
+        }
+
+        self.login_method.as_ref()
+    }
+}
+
+/// Resolve the `io.element.login_method` hint against the enabled login
+/// methods.
+///
+/// The hint is advisory: an unusable value resolves to [`Resolved::None`] and
+/// the request goes on as if the parameter was absent. There is no
+/// configuration flag to refuse it, since it widens nothing: the login page
+/// already offers every enabled provider, and `/upstream/authorize/{id}` is
+/// reachable without any client involved.
+///
+/// `providers` is the `all_enabled()` list the caller already loaded. Matching
+/// against it keeps the hint from telling an unknown provider id apart from a
+/// disabled one, which matches `/upstream/authorize/{id}` answering 404 for
+/// both.
+///
+/// `password_enabled` is the caller's flag: password login on `/login`,
+/// password registration on `/register`.
+pub(crate) fn resolve_login_method<'a>(
+    hint: Option<&LoginMethodHint>,
+    providers: &'a [UpstreamOAuthProvider],
+    password_enabled: bool,
+) -> Resolved<'a> {
+    match hint {
+        None => Resolved::None,
+
+        Some(LoginMethodHint::Password) => {
+            if password_enabled {
+                Resolved::Password
+            } else {
+                warn!(
+                    "The io.element.login_method parameter asked for the password method, which is disabled; ignoring it"
+                );
+                Resolved::None
+            }
+        }
+
+        Some(LoginMethodHint::UpstreamOAuth2(id)) => {
+            if let Some(provider) = providers.iter().find(|provider| provider.id == *id) {
+                Resolved::UpstreamOAuth2(provider)
+            } else {
+                warn!(%id, "The io.element.login_method parameter asked for an upstream provider which doesn't exist or is disabled; ignoring it");
+                Resolved::None
+            }
+        }
+
+        Some(LoginMethodHint::Unknown(value)) => {
+            warn!(
+                login_method = value,
+                "Unknown io.element.login_method value, ignoring it"
+            );
+            Resolved::None
         }
     }
 }
