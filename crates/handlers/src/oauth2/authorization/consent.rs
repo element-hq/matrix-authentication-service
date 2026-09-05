@@ -18,14 +18,21 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::{AuthorizationGrantStage, BoxClock, BoxRng, MatrixUser};
+use mas_data_model::{
+    AuthorizationGrant, AuthorizationGrantStage, BoxClock, BoxRng, BrowserSession, Client,
+    MatrixUser,
+};
+use mas_i18n::DataLocale;
 use mas_keystore::Keystore;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::{
     BoxRepository,
-    oauth2::{OAuth2AuthorizationGrantRepository, OAuth2ClientRepository},
+    oauth2::{
+        OAuth2AuthorizationGrantRepository, OAuth2ClientRepository, OAuth2SessionFilter,
+        OAuth2SessionRepository,
+    },
 };
 use mas_templates::{ConsentContext, PolicyViolationContext, TemplateContext, Templates};
 use oauth2_types::requests::AuthorizationResponse;
@@ -80,6 +87,73 @@ impl IntoResponse for RouteError {
     }
 }
 
+async fn fulfill_grant_and_redirect(
+    rng: &mut BoxRng,
+    clock: &BoxClock,
+    mut repo: BoxRepository,
+    key_store: &Keystore,
+    url_builder: &UrlBuilder,
+    templates: &Templates,
+    locale: &DataLocale,
+    activity_tracker: &BoundActivityTracker,
+    client: &Client,
+    browser_session: &BrowserSession,
+    grant: AuthorizationGrant,
+) -> Result<Response, RouteError> {
+    let callback_destination = CallbackDestination::try_from(&grant)?;
+
+    let session = repo
+        .oauth2_session()
+        .add_from_browser_session(
+            &mut *rng,
+            clock,
+            client,
+            browser_session,
+            grant.scope.clone(),
+        )
+        .await?;
+
+    let grant = repo
+        .oauth2_authorization_grant()
+        .fulfill(clock, browser_session, grant)
+        .await?;
+
+    let mut params = AuthorizationResponse::default();
+
+    // Did they request an ID token?
+    if grant.response_type_id_token {
+        // Fetch the last authentication
+        let last_authentication = repo
+            .browser_session()
+            .get_last_authentication(browser_session)
+            .await?;
+
+        params.id_token = Some(generate_id_token(
+            &mut *rng,
+            clock,
+            url_builder,
+            key_store,
+            client,
+            Some(&grant),
+            browser_session,
+            None,
+            last_authentication.as_ref(),
+        )?);
+    }
+
+    if let Some(code) = grant.code {
+        params.code = Some(code.code);
+    }
+
+    repo.save().await?;
+
+    activity_tracker
+        .record_oauth2_session(clock, &session)
+        .await;
+
+    Ok(callback_destination.go(templates, locale, params)?)
+}
+
 #[tracing::instrument(
     name = "handlers.oauth2.authorization.consent.get",
     fields(grant.id = %grant_id),
@@ -91,6 +165,7 @@ pub(crate) async fn get(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
+    State(key_store): State<Keystore>,
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
     mut policy: Policy,
     mut repo: BoxRepository,
@@ -149,9 +224,6 @@ pub(crate) async fn get(
 
     let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
 
-    // We can close the repository early, we don't need it at this point
-    repo.save().await?;
-
     let res = policy
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
             user: Some(&session.user),
@@ -175,6 +247,40 @@ pub(crate) async fn get(
 
         return Ok((cookie_jar, Html(content)).into_response());
     }
+
+    let has_prior_consent = repo
+        .oauth2_session()
+        .count(
+            OAuth2SessionFilter::new()
+                .for_user(&session.user)
+                .for_client(&client)
+                .with_scope(&grant.scope)
+                .active_only(),
+        )
+        .await?
+        > 0;
+
+    if client.skip_consent || has_prior_consent {
+        let response = fulfill_grant_and_redirect(
+            &mut rng,
+            &clock,
+            repo,
+            &key_store,
+            &url_builder,
+            &templates,
+            &locale,
+            &activity_tracker,
+            &client,
+            &session,
+            grant,
+        )
+        .await?;
+
+        return Ok((cookie_jar, response).into_response());
+    }
+
+    // Close the repository, we don't need it for rendering the consent page
+    repo.save().await?;
 
     // Fetch informations about the user. This is purely cosmetic, so we let it
     // fail and put a 1s timeout to it in case we fail to query it
@@ -266,7 +372,6 @@ pub(crate) async fn post(
         .lookup(grant_id)
         .await?
         .ok_or(RouteError::GrantNotFound)?;
-    let callback_destination = CallbackDestination::try_from(&grant)?;
 
     let Some(browser_session) = maybe_session else {
         let next = PostAuthAction::continue_grant(grant_id);
@@ -315,46 +420,21 @@ pub(crate) async fn post(
         return Ok((cookie_jar, Html(content)).into_response());
     }
 
-    // All good, let's fulfill the grant with the browser session.
-    // The OAuth2 session will be created later at token exchange time.
-    let grant = repo
-        .oauth2_authorization_grant()
-        .fulfill(&clock, &browser_session, grant)
-        .await?;
-
-    let mut params = AuthorizationResponse::default();
-
-    // Did they request an ID token?
-    if grant.response_type_id_token {
-        // Fetch the last authentication
-        let last_authentication = repo
-            .browser_session()
-            .get_last_authentication(&browser_session)
-            .await?;
-
-        params.id_token = Some(generate_id_token(
-            &mut rng,
-            &clock,
-            &url_builder,
-            &key_store,
-            &client,
-            Some(&grant),
-            &browser_session,
-            None,
-            last_authentication.as_ref(),
-        )?);
-    }
-
-    // Did they request an auth code?
-    if let Some(code) = grant.code {
-        params.code = Some(code.code);
-    }
-
-    repo.save().await?;
-
-    Ok((
-        cookie_jar,
-        callback_destination.go(&templates, &locale, params)?,
+    // All good, let's start the session
+    let response = fulfill_grant_and_redirect(
+        &mut rng,
+        &clock,
+        repo,
+        &key_store,
+        &url_builder,
+        &templates,
+        &locale,
+        &activity_tracker,
+        &client,
+        &browser_session,
+        grant,
     )
-        .into_response())
+    .await?;
+
+    Ok((cookie_jar, response).into_response())
 }
