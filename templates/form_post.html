@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 
@@ -28,5 +29,5 @@ Please see LICENSE files in the repository root for full details.
 
   {# Submit the form in JavaScript on the next tick, so that if the browser
      wants to display the placeholder instead of a blank page, it can #}
-  <script>setTimeout(function() { document.forms[0].submit(); }, 0);</script>
+  {{ include_asset('src/entrypoints/form-post.ts') | indent(2) | safe }}
 {% endblock %}

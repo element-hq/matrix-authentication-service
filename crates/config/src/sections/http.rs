@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -272,10 +273,6 @@ pub enum Resource {
 
     /// GraphQL endpoint
     GraphQL {
-        /// Enabled the GraphQL playground
-        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-        playground: bool,
-
         /// Allow access for OAuth 2.0 clients (undocumented)
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         undocumented_oauth2_access: bool,
@@ -367,7 +364,6 @@ impl Default for HttpConfig {
                         Resource::OAuth,
                         Resource::Compat,
                         Resource::GraphQL {
-                            playground: false,
                             undocumented_oauth2_access: false,
                         },
                         Resource::Assets {

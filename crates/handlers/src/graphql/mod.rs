@@ -12,7 +12,7 @@ use std::{net::IpAddr, ops::Deref, sync::Arc};
 use async_graphql::{
     EmptySubscription, InputObject,
     extensions::Tracing,
-    http::{GraphQLPlaygroundConfig, MultipartOptions, playground_source},
+    http::MultipartOptions,
     parser::types::{DocumentOperations, OperationType},
 };
 use axum::{
@@ -20,7 +20,7 @@ use axum::{
     body::Body,
     extract::{RawQuery, State as AxumState},
     http::StatusCode,
-    response::{Html, IntoResponse, Response},
+    response::{IntoResponse, Response},
 };
 use axum_extra::typed_header::TypedHeader;
 use chrono::{DateTime, Utc};
@@ -504,12 +504,6 @@ pub async fn get(
         cookie_jar,
         Extension(operation),
         Json(response),
-    ))
-}
-
-pub async fn playground() -> impl IntoResponse {
-    Html(playground_source(
-        GraphQLPlaygroundConfig::new("/graphql").with_setting("request.credentials", "include"),
     ))
 }
 

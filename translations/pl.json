@@ -39,11 +39,11 @@
   "mas": {
     "account": {
       "deactivated": {
-        "description": "To konto (<em>%(mxid)s</em>) zostało usunięte. Jeśli jest to nieoczekiwane, skontaktuj się z administratorem serwera.",
+        "description": "To konto (<em>%(mxid)s</em>) zostało usunięte. Jeśli jest to nieoczekiwane, skontaktuj się z dostawcą konta.",
         "heading": "Konto usunięte"
       },
       "locked": {
-        "description": "To konto (<em>%(mxid)s</em>) zostało zablokowane. Jeśli jest to nieoczekiwane, skontaktuj się z administratorem serwera.",
+        "description": "To konto (<em>%(mxid)s</em>) zostało zablokowane. Jeśli jest to nieoczekiwane, skontaktuj się z dostawcą konta.",
         "heading": "Konto zablokowane"
       },
       "logged_out": {
@@ -226,7 +226,7 @@
       "terms_of_service": "Wyrażam zgodę na <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">warunki korzystania z serwisu</a>"
     },
     "registration_token": {
-      "description": "Wprowadź token rejestracyjny dostarczony przez administratora serwera domowego.",
+      "description": "Wprowadź token rejestracyjny dostarczony przez dostawcę Twojego konta.",
       "field": "Token rejestracyjny",
       "headline": "Token rejestracyjny"
     },
@@ -234,10 +234,10 @@
       "edit_profile": "Edytuj swój profil i dane kontaktowe",
       "manage_sessions": "Zarządzaj swoimi urządzeniami i sesjami",
       "mas_admin": "Zarządzaj użytkownikami (urn:mas:admin)",
-      "send_messages": "Wysyłaj nowe wiadomości w Twoim imieniu",
+      "send_messages": "Wysyłanie nowych wiadomości w Twoim imieniu",
       "synapse_admin": "Administrowanie serwerem (urn:synapse:admin:*)",
-      "view_messages": "Przegląd istniejących wiadomości i danych",
-      "view_profile": "Przegląd informacji o profilu i danych kontaktowych"
+      "view_messages": "Przeglądanie istniejących wiadomości i danych",
+      "view_profile": "Przeglądanie informacji profilowych i danych kontaktowych"
     },
     "upstream_oauth2": {
       "link_mismatch": {

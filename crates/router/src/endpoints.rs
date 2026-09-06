@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -949,13 +950,6 @@ pub struct GraphQL;
 
 impl SimpleRoute for GraphQL {
     const PATH: &'static str = "/graphql";
-}
-
-/// `GET /graphql/playground`
-pub struct GraphQLPlayground;
-
-impl SimpleRoute for GraphQLPlayground {
-    const PATH: &'static str = "/graphql/playground";
 }
 
 /// `GET /api/spec.json`

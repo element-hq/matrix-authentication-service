@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -354,7 +354,7 @@ impl TestState {
             .merge(crate::human_router(self.templates.clone()))
             // We enable undocumented_oauth2_access for the tests, as it is easier to query the API
             // with it
-            .merge(crate::graphql_router(false, true))
+            .merge(crate::graphql_router(true))
             .merge(crate::admin_api_router().1)
             .with_state(self.clone())
             .into_service();

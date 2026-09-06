@@ -195,7 +195,13 @@ fn function_add_params_to_url(
 
     // Merge the exising and the additional parameters together
     // Use a BTreeMap for determinism (because it orders keys)
-    let params: BTreeMap<&String, &Value> = params.iter().chain(existing.iter()).collect();
+    // Parameters which have no value (e.g. an absent `state`) are skipped, as they
+    // can't be serialized back to a query string
+    let params: BTreeMap<&String, &Value> = params
+        .iter()
+        .chain(existing.iter())
+        .filter(|(_key, value)| !value.is_none() && !value.is_undefined())
+        .collect();
 
     // Transform them back to urlencoded
     let params = serde_urlencoded::to_string(params).map_err(|e| {
@@ -485,6 +491,20 @@ impl Object for IncludeAsset {
         // We'll accumulate the output in this string
         let mut output = String::new();
         match main.file_type() {
+            mas_spa::FileType::Script if main.is_dynamic_entry() => {
+                // Chunks which are only reachable through a dynamic `import()`
+                // (like the translation files) must not be evaluated eagerly,
+                // we only hint the browser to fetch them
+                let integrity = main.integrity_attr();
+                let src = main.src(assets_base);
+                if tracker.mark_preloaded(&src) {
+                    writeln!(
+                        output,
+                        r#"<link rel="modulepreload" href="{src}" crossorigin="anonymous"{integrity} />"#
+                    )
+                    .unwrap();
+                }
+            }
             mas_spa::FileType::Script => {
                 let integrity = main.integrity_attr();
                 let src = main.src(assets_base);
@@ -505,14 +525,6 @@ impl Object for IncludeAsset {
                         r#"<link rel="stylesheet" href="{src}" crossorigin="anonymous"{integrity} />"#
                     )
                     .unwrap();
-                }
-            }
-
-            mas_spa::FileType::Json => {
-                // When a JSON is included at the top level (a translation), we preload it
-                let src = main.src(assets_base);
-                if tracker.mark_preloaded(&src) {
-                    writeln!(output, r#"<link rel="preload" href="{src}" as="fetch" />"#).unwrap();
                 }
             }
 
@@ -560,10 +572,8 @@ impl Object for IncludeAsset {
                     }
                 }
                 mas_spa::FileType::Woff | mas_spa::FileType::Woff2 | mas_spa::FileType::Json => {
-                    // Skip pre-loading fonts and JSON (translations) as it will
-                    // lead to many wasted preloads. For translations, we only
-                    // include them as preload if they are included on the
-                    // top-level
+                    // Skip pre-loading fonts and raw JSON assets, as it will
+                    // lead to many wasted preloads
                 }
             }
         }

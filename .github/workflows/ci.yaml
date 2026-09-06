@@ -72,7 +72,7 @@ jobs:
         uses: pnpm/action-setup@v6.0.9
 
       - name: Install Node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .node-version
           cache: "pnpm"
@@ -100,7 +100,7 @@ jobs:
         uses: pnpm/action-setup@v6.0.9
 
       - name: Install Node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .node-version
           cache: "pnpm"
@@ -128,7 +128,7 @@ jobs:
         uses: pnpm/action-setup@v6.0.9
 
       - name: Install Node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .node-version
           cache: "pnpm"
@@ -153,15 +153,12 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
-        # Then install rustfmt for `cargo fmt`.
-        #
-        # --override sets this as the default rust toolchain version in this directory.
+        # rustfmt runs on nightly because .rustfmt.toml uses nightly-only options.
         run: |
-          rustup toolchain install nightly --profile minimal --component rustfmt --override
+          rustup toolchain install nightly --profile minimal --component rustfmt
 
       - name: Check style
-        run: cargo fmt --all -- --check
+        run: cargo +nightly fmt --all -- --check
 
   cargo-deny:
     name: Run `cargo deny` checks
@@ -181,9 +178,7 @@ jobs:
           persist-credentials: false
 
       - name: Run `cargo-deny`
-        uses: EmbarkStudios/cargo-deny-action@bb137d7af7e4fb67e5f82a49c4fce4fad40782fe # v2.0.20
-        with:
-          rust-version: stable
+        uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
 
   check-schema:
     name: Check schema
@@ -200,7 +195,7 @@ jobs:
 
       - name: Install Rust toolchain
         run: |
-          rustup toolchain install stable
+          rustup toolchain install
 
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
@@ -241,11 +236,7 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        # Install the minimal toolchain with clippy, pinned to a version kept in
-        # sync with Dockerfile.
-        #
-        # --override sets this as the default rust toolchain version in this directory.
-        run: rustup toolchain install 1.96.0 --profile minimal --component clippy --override
+        run: rustup toolchain install
 
       - uses: ./.github/actions/build-policies
 
@@ -270,11 +261,10 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
-        run: rustup toolchain install stable --profile minimal
+        run: rustup toolchain install
 
       - name: Install nextest
-        uses: taiki-e/install-action@b8cecb83565409bcc297b2df6e77f030b2a468d5 # v2
+        uses: taiki-e/install-action@b6ff580856c41316412a0b9b60540fbc6f8c82cc # v2
         with:
           tool: cargo-nextest
 
@@ -293,7 +283,7 @@ jobs:
           path: nextest-archive.tar.zst
 
   test:
-    name: Run test suite with Rust stable
+    name: Run test suite
     needs: [rustfmt, opa-lint, compile-test-artifacts]
     runs-on: ubuntu-24.04
 
@@ -326,11 +316,10 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo.
-        run: rustup toolchain install stable --profile minimal
+        run: rustup toolchain install
 
       - name: Install nextest
-        uses: taiki-e/install-action@b8cecb83565409bcc297b2df6e77f030b2a468d5 # v2
+        uses: taiki-e/install-action@b6ff580856c41316412a0b9b60540fbc6f8c82cc # v2
         with:
           tool: cargo-nextest
 
@@ -410,7 +399,7 @@ jobs:
 
       - name: Upload logs
         if: ${{ failure() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ess-helm-logs
           path: ess-helm-logs

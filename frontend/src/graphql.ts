@@ -1,26 +1,22 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-import { QueryClient } from "@tanstack/react-query";
 import type { ExecutionResult } from "graphql";
-import appConfig from "./config";
 import type { TypedDocumentString } from "./gql/graphql";
 
-let graphqlEndpoint: string;
-if (import.meta.env.TEST && typeof window === "undefined") {
-  graphqlEndpoint = new URL(
-    appConfig.graphqlEndpoint,
-    "http:://localhost/",
-  ).toString();
-} else {
-  graphqlEndpoint = new URL(
-    appConfig.graphqlEndpoint,
-    window.location.toString(),
-  ).toString();
-}
+let graphqlEndpoint = "/graphql";
+
+/**
+ * Sets the GraphQL endpoint to use for requests.
+ * This is called during initialization, once config has been loaded.
+ */
+export const setGraphqlEndpoint = (endpoint: string): void => {
+  graphqlEndpoint = endpoint;
+};
 
 type RequestOptions<TData, TVariables> = {
   query: TypedDocumentString<TData, TVariables>;
@@ -35,9 +31,14 @@ export const graphqlRequest = async <TData, TVariables>({
   variables,
   signal,
 }: RequestOptions<TData, TVariables>): Promise<TData> => {
+  const endpoint =
+    import.meta.env.TEST && typeof window === "undefined"
+      ? new URL(graphqlEndpoint, "http://localhost/").toString()
+      : new URL(graphqlEndpoint, window.location.toString()).toString();
+
   let response: Response;
   try {
-    response = await fetch(graphqlEndpoint, {
+    response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -49,14 +50,14 @@ export const graphqlRequest = async <TData, TVariables>({
       signal,
     });
   } catch (cause) {
-    throw new Error(`GraphQL request to ${graphqlEndpoint} request failed`, {
+    throw new Error(`GraphQL request to ${endpoint} request failed`, {
       cause,
     });
   }
 
   if (!response.ok) {
     throw new Error(
-      `GraphQL request to ${graphqlEndpoint} failed: ${response.status}`,
+      `GraphQL request to ${endpoint} failed: ${response.status}`,
     );
   }
 
@@ -66,16 +67,8 @@ export const graphqlRequest = async <TData, TVariables>({
   }
 
   if (!json.data) {
-    throw new Error(`GraphQL request to ${graphqlEndpoint} returned no data`);
+    throw new Error(`GraphQL request to ${endpoint} returned no data`);
   }
 
   return json.data;
 };
-
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    mutations: {
-      throwOnError: true,
-    },
-  },
-});

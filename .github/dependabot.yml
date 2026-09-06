@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -40,6 +41,17 @@ updates:
         patterns:
           - "icu"
           - "icu_*"
+    cooldown:
+      default-days: 14
+
+  # Rust releases every six weeks; the cooldown lets the .1 point release land first.
+  - package-ecosystem: "rust-toolchain"
+    directory: "/"
+    labels:
+      - "A-Dependencies"
+      - "Z-Deps-Backend"
+    schedule:
+      interval: "weekly"
     cooldown:
       default-days: 14
 

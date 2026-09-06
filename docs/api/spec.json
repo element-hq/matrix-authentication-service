@@ -2310,7 +2310,7 @@
             }
           },
           "409": {
-            "description": "Username is reserved by the homeserver",
+            "description": "User already exists or the username is reserved by the homeserver",
             "content": {
               "application/json": {
                 "schema": {

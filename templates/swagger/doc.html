@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2024 The Matrix.org Foundation C.I.C.
 
@@ -12,16 +13,10 @@ Please see LICENSE files in the repository root for full details.
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>API documentation</title>
-    <script>
-      window.API_CONFIG = {
-        openapiUrl: "{{ openapi_url | add_slashes | safe }}",
-        callbackUrl: "{{ callback_url | add_slashes | safe }}",
-      };
-    </script>
     {{ include_asset('src/entrypoints/swagger.ts') | indent(4) | safe }}
   </head>
 
   <body>
-    <div id="swagger-ui"></div>
+    <div id="swagger-ui" data-openapi-url="{{ openapi_url }}" data-callback-url="{{ callback_url }}"></div>
   </body>
 </html>
