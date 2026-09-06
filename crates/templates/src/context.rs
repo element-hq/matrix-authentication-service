@@ -32,7 +32,10 @@ use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
 use mas_policy::{Violation, ViolationVariant};
 use mas_router::{Account, GraphQL, PostAuthAction, UrlBuilder};
-use oauth2_types::scope::{OPENID, Scope};
+use oauth2_types::{
+    requests::ResponseMode,
+    scope::{OPENID, Scope},
+};
 use rand::{
     Rng, SeedableRng,
     distributions::{Alphanumeric, DistString},
@@ -750,20 +753,32 @@ impl TemplateContext for ConsentContext {
         sample_list(
             Client::samples(now, rng)
                 .into_iter()
-                .map(|client| {
-                    let mut grant = AuthorizationGrant::sample(now, rng);
-                    let action = PostAuthAction::continue_grant(grant.id);
-                    // XXX
-                    grant.client_id = client.id;
-                    Self {
-                        grant,
-                        client,
-                        action,
-                        matrix_user: MatrixUser {
-                            mxid: "@alice:example.com".to_owned(),
-                            display_name: Some("Alice".to_owned()),
-                        },
-                    }
+                .flat_map(|client| {
+                    [
+                        (None, ResponseMode::Query),
+                        (None, ResponseMode::Fragment),
+                        (None, ResponseMode::FormPost),
+                        (Some("some-state".to_owned()), ResponseMode::Query),
+                        (Some("some-state".to_owned()), ResponseMode::Fragment),
+                        (Some("some-state".to_owned()), ResponseMode::FormPost),
+                    ]
+                    .map(|(state, response_mode)| {
+                        let mut grant = AuthorizationGrant::sample(now, rng);
+                        let action = PostAuthAction::continue_grant(grant.id);
+                        // XXX
+                        grant.client_id = client.id;
+                        grant.state = state;
+                        grant.response_mode = response_mode;
+                        Self {
+                            grant,
+                            client: client.clone(),
+                            action,
+                            matrix_user: MatrixUser {
+                                mxid: "@alice:example.com".to_owned(),
+                                display_name: Some("Alice".to_owned()),
+                            },
+                        }
+                    })
                 })
                 .collect(),
         )
@@ -820,10 +835,22 @@ impl TemplateContext for PolicyViolationContext {
                     grant.client_id = client.id;
 
                     let authorization_grant = PolicyViolationContext::for_authorization_grant(
-                        grant,
+                        grant.clone(),
                         client.clone(),
                         Vec::new(),
                     );
+
+                    let authorization_grant_invalid_scope =
+                        PolicyViolationContext::for_authorization_grant(
+                            grant,
+                            client.clone(),
+                            vec![Violation {
+                                msg: "scope 'foo' not allowed".to_owned(),
+                                redirect_uri: None,
+                                field: None,
+                                variant: None,
+                            }],
+                        );
                     let device_code_grant = PolicyViolationContext::for_device_code_grant(
                         DeviceCodeGrant {
                             id: Ulid::from_datetime_with_rng(now, rng),
@@ -838,11 +865,42 @@ impl TemplateContext for PolicyViolationContext {
                             user_agent: None,
                             locale: None,
                         },
-                        client,
+                        client.clone(),
                         Vec::new(),
                     );
 
-                    [authorization_grant, device_code_grant]
+                    let device_code_grant_invalid_scope =
+                        PolicyViolationContext::for_device_code_grant(
+                            DeviceCodeGrant {
+                                id: Ulid::from_datetime_with_rng(now, rng),
+                                state: mas_data_model::DeviceCodeGrantState::Pending,
+                                client_id: client.id,
+                                scope: [OPENID].into_iter().collect(),
+                                user_code: Alphanumeric.sample_string(rng, 6).to_uppercase(),
+                                device_code: Alphanumeric.sample_string(rng, 32),
+                                created_at: now - Duration::try_minutes(5).unwrap(),
+                                expires_at: now + Duration::try_minutes(25).unwrap(),
+                                ip_address: None,
+                                user_agent: None,
+                                locale: None,
+                            },
+                            client,
+                            vec![Violation {
+                                msg: "user has too many active sessions".to_owned(),
+                                redirect_uri: None,
+                                field: None,
+                                variant: Some(ViolationVariant::TooManySessions {
+                                    need_to_remove: 1,
+                                }),
+                            }],
+                        );
+
+                    [
+                        authorization_grant,
+                        authorization_grant_invalid_scope,
+                        device_code_grant,
+                        device_code_grant_invalid_scope,
+                    ]
                 })
                 .collect(),
         )
@@ -902,6 +960,14 @@ impl TemplateContext for CompatLoginPolicyViolationContext {
     {
         sample_list(vec![
             CompatLoginPolicyViolationContext { violations: vec![] },
+            CompatLoginPolicyViolationContext {
+                violations: vec![Violation {
+                    msg: "scope 'foo' not allowed".to_owned(),
+                    redirect_uri: None,
+                    field: None,
+                    variant: None,
+                }],
+            },
             CompatLoginPolicyViolationContext {
                 violations: vec![Violation {
                     msg: "user has too many active sessions".to_owned(),

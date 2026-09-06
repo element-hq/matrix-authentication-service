@@ -25,7 +25,9 @@ Please see LICENSE files in the repository root for full details.
   {% if mode == "form_post" %}
     <form method="post" action="{{ uri }}">
       {% for key, value in params|items %}
-        <input type="hidden" name="{{ key }}" value="{{ value }}" />
+        {% if value is not none and value is defined %}
+          <input type="hidden" name="{{ key }}" value="{{ value }}" />
+        {% endif %}
       {% endfor %}
       <button class="{{ class }}" data-kind="{{ kind }}" data-size="lg" type="submit">{{ text }}</button>
     </form>

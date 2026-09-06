@@ -99,7 +99,7 @@
       "unknown": "Unknown device type"
     },
     "email_in_use": {
-      "heading": "The email address {{email}} is already in use."
+      "heading": "The email address {{email}} is already in use"
     },
     "end_session_button": {
       "confirmation_modal_body_text": "Make sure you always have access to another verified device or your recovery key to avoid losing your encrypted chat history.",
@@ -145,14 +145,14 @@
       "current_password_label": "Senha atual",
       "failure": {
         "description": {
-          "account_locked": "Your account is locked and can not be recovered at this time. If this is not expected, please contact your server administrator.",
+          "account_locked": "Your account is locked and can not be recovered at this time. If this is not expected, please contact your account provider.",
           "expired_recovery_ticket": "The recovery link has expired. Please start the account recovery process again from the start.",
           "invalid_new_password": "The new password you chose is invalid; it may not meet the configured security policy.",
           "no_current_password": "You don't have a current password.",
           "no_such_recovery_ticket": "The recovery link is invalid. If you copied the link from the recovery e-mail, please check the full link was copied.",
           "password_changes_disabled": "Password changes are disabled.",
           "recovery_ticket_already_used": "The recovery link has already been used. It cannot be used again.",
-          "unspecified": "This might be a temporary problem, so please try again later. If the problem persists, please contact your server administrator.",
+          "unspecified": "This might be a temporary problem, so please try again later. If the problem persists, please contact your account provider.",
           "wrong_password": "The password you supplied as your current password is incorrect. Please try again."
         },
         "title": "Failed to update password"
@@ -230,7 +230,7 @@
       "cancelled": {
         "description_1": "You can close this window and go back to the app to continue.",
         "description_2": "If don’t have access to any other verified devices and you don’t have your recovery key, then you’ll need to reset your digital identity to continue using the app.",
-        "heading": "Digital identity reset cancelled."
+        "heading": "Digital identity reset cancelled"
       },
       "description": "If don’t have access to any other verified devices and you don’t have your recovery key, then you’ll need to reset your digital identity to continue using the app.",
       "effect_list": {
@@ -239,7 +239,7 @@
         "positive_1": "Your account details, contacts, preferences, and chat list will be kept"
       },
       "failure": {
-        "description": "This might be a temporary problem, so please try again later. If the problem persists, please contact your server administrator.",
+        "description": "This might be a temporary problem, so please try again later. If the problem persists, please contact your account provider.",
         "heading": "Failed to allow digital identity reset"
       },
       "finish_reset": "Finish reset",

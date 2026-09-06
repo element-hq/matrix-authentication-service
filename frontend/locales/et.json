@@ -145,14 +145,14 @@
       "current_password_label": "Senine salasõna",
       "failure": {
         "description": {
-          "account_locked": "Sinu kasutajakonto on lukustatud ning salasõna taastamist ei ole hetkel võimalik teha. Kui antud olukord tundub sulle kahtlane, siis palun teavita sellest sinu serveri haldajat.",
+          "account_locked": "Sinu kasutajakonto on lukustatud ning salasõna taastamist ei ole hetkel võimalik teha. Kui antud olukord tundub sulle kahtlane, siis palun teavita sellest sinu teenusepakkujat.",
           "expired_recovery_ticket": "Salasõna taastamiseks mõeldud link on aegunud. Palun alusta taastamisprotsessi algusest.",
           "invalid_new_password": "Sinu sisestatud uus salasõna pole korrektne, ta ilmselt ei vasta seadistatud turvareeglitele.",
           "no_current_password": "Sul on hetkel kehtiv salasõna määramata.",
           "no_such_recovery_ticket": "Salasõna taastamiseks mõeldud link on vigane. Kui sa kopeerisid ja e-kirjast, siis palun kontrolli, et kopeerisid kogu lingi ühe tervikuna.",
           "password_changes_disabled": "Salasõnade muutmine pole lubatud.",
           "recovery_ticket_already_used": "Sa oled salasõna taastamiseks mõeldud linki juba kasutanud ja seda ei saa uuesti teha.",
-          "unspecified": "See ilmselt on ajutine probleem, palun proovi mõne aja pärast uuesti. Kui viga ei kao, siis abi saad serveri haldajalt.",
+          "unspecified": "See ilmselt on ajutine probleem, palun proovi mõne aja pärast uuesti. Kui viga ei kao, siis abi saad oma teenusepakkujalt.",
           "wrong_password": "Sinu sisestatud salasõna ei vasta hetkel kehtivale salasõnale. Palun proovi uuesti.,"
         },
         "title": "Salasõna uuendamine ei õnnestunud"
@@ -239,7 +239,7 @@
         "positive_1": "Sinu kasutajakonto andmed, kontaktid, eelistused ja vestluste loendid jäävad muutmata"
       },
       "failure": {
-        "description": "See ilmselt on ajutine probleem, palun proovi mõne aja pärast uuesti. Kui viga ei kao, siis abi saad serveri haldajalt.",
+        "description": "See ilmselt on ajutine probleem, palun proovi mõne aja pärast uuesti. Kui viga ei kao, siis abi saad oma teenusepakkujalt.",
         "heading": "Krüptoidentiteedi lähtestamise lubamine ei õnnestunud"
       },
       "finish_reset": "Lõpeta lähtestamine",
