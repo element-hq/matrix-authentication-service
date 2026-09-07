@@ -1,0 +1,11 @@
+# Copyright 2026 Element Creations Ltd.
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
+[toolchain]
+channel = "1.96.0"
+profile = "minimal"
+# No rustfmt: .rustfmt.toml uses nightly-only options, so formatting runs as `cargo +nightly fmt`.
+# No cross-compilation targets: the Dockerfile and build.yaml add the ones they need.
+components = ["clippy"]

@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -39,8 +40,7 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        # Only the minimal profile is required here to run `cargo metadata`
-        run: rustup toolchain install stable --profile minimal
+        run: rustup toolchain install
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6.0.9

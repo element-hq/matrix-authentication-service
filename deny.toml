@@ -27,6 +27,9 @@ ignore = [
     # Engine/Store, and as the advisory says explicitly:
     # > This bug is not triggerable by guest WebAssembly programs.
     "RUSTSEC-2026-0222",
+    # A bug in wasmtime, but we are not affected as we're not using the WASI
+    # capabilities and filesystem APIs
+    "RUSTSEC-2026-0269",
 ]
 
 # Only warn about unmaintained crates in direct dependencies of the workspace,
