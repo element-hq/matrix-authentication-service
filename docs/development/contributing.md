@@ -20,7 +20,7 @@ There are two main ways to contribute to MAS:
 To get MAS running locally from source you will need to:
 
 - [Install Rust and Cargo](https://www.rust-lang.org/learn/get-started). The exact version is pinned in `rust-toolchain.toml`; rustup installs it automatically when you run cargo in the repo.
-- [Install Node.js](https://nodejs.org/). We recommend using the latest LTS version of Node.js. The frontend uses pnpm, which is installed automatically via corepack — see below.
+- [Install Node.js](https://nodejs.org/). Any recent version works to bootstrap: the exact version is pinned in `devEngines.runtime` in `package.json`, and pnpm downloads it on install. The frontend uses pnpm, which is installed automatically via corepack — see below.
 - [Install Open Policy Agent](https://www.openpolicyagent.org/docs#1-download-opa)
 
 ## 4. Get the source
