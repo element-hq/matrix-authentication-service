@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -18,7 +19,17 @@ use serde::{
 
 use crate::sprintf::Message;
 
-fn plural_category_as_str(category: PluralCategory) -> &'static str {
+/// All CLDR plural categories.
+pub(crate) const PLURAL_CATEGORIES: [PluralCategory; 6] = [
+    PluralCategory::Zero,
+    PluralCategory::One,
+    PluralCategory::Two,
+    PluralCategory::Few,
+    PluralCategory::Many,
+    PluralCategory::Other,
+];
+
+pub(crate) fn plural_category_as_str(category: PluralCategory) -> &'static str {
     match category {
         PluralCategory::Zero => "zero",
         PluralCategory::One => "one",
