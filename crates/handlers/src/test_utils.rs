@@ -31,18 +31,28 @@ use mas_axum_utils::{
 };
 use mas_config::RateLimitingConfig;
 use mas_context::LogContext;
-use mas_data_model::{AppVersion, BoxClock, BoxRng, SiteConfig, clock::MockClock};
+use mas_data_model::{
+    AppVersion, BoxClock, BoxRng, SiteConfig, UpstreamOAuthProviderClaimsImports,
+    UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderOnBackchannelLogout,
+    UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderTokenAuthMethod, clock::MockClock,
+};
 use mas_email::{MailTransport, Mailer};
 use mas_i18n::Translator;
+use mas_iana::jose::JsonWebSignatureAlg;
 use mas_keystore::{Encrypter, JsonWebKey, JsonWebKeySet, Keystore, PrivateKey};
 use mas_matrix::{HomeserverConnection, MockHomeserverConnection};
 use mas_policy::{InstantiateError, Policy, PolicyFactory};
 use mas_router::{SimpleRoute, UrlBuilder};
-use mas_storage::{BoxRepository, BoxRepositoryFactory, RepositoryError, RepositoryFactory};
+use mas_storage::{
+    BoxRepository, BoxRepositoryFactory, RepositoryError, RepositoryFactory,
+    upstream_oauth2::UpstreamOAuthProviderParams,
+};
 use mas_storage_pg::PgRepositoryFactory;
 use mas_tasks::QueueWorker;
 use mas_templates::{SiteConfigExt, Templates};
-use oauth2_types::{registration::ClientRegistrationResponse, requests::AccessTokenResponse};
+use oauth2_types::{
+    registration::ClientRegistrationResponse, requests::AccessTokenResponse, scope::OPENID,
+};
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
 use serde::{Serialize, de::DeserializeOwned};
@@ -156,6 +166,43 @@ pub fn test_site_config() -> SiteConfig {
         session_limit: None,
         device_code_grant_enabled: true,
         device_code_user_code_auto_fill_enabled: true,
+    }
+}
+
+/// Parameters for an upstream provider on the given issuer host, with
+/// discovery disabled and the authorization endpoint overridden, so that
+/// redirects to it make no network call.
+pub(crate) fn upstream_oauth_provider_params(
+    issuer: &str,
+    human_name: &str,
+) -> UpstreamOAuthProviderParams {
+    UpstreamOAuthProviderParams {
+        issuer: Some(format!("https://{issuer}/")),
+        human_name: Some(human_name.to_owned()),
+        brand_name: None,
+        scope: [OPENID].into_iter().collect(),
+        token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
+        token_endpoint_signing_alg: None,
+        id_token_signed_response_alg: JsonWebSignatureAlg::Rs256,
+        fetch_userinfo: false,
+        userinfo_signed_response_alg: None,
+        client_id: "client".to_owned(),
+        encrypted_client_secret: None,
+        claims_imports: UpstreamOAuthProviderClaimsImports::default(),
+        authorization_endpoint_override: Some(
+            format!("https://{issuer}/authorize").parse().unwrap(),
+        ),
+        token_endpoint_override: None,
+        userinfo_endpoint_override: None,
+        jwks_uri_override: None,
+        discovery_mode: UpstreamOAuthProviderDiscoveryMode::Disabled,
+        pkce_mode: UpstreamOAuthProviderPkceMode::Disabled,
+        response_mode: None,
+        additional_authorization_parameters: Vec::new(),
+        forward_login_hint: false,
+        ui_order: 0,
+        on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+        registration_token_required: false,
     }
 }
 

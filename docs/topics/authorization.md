@@ -105,6 +105,8 @@ The client then exchanges this authorization code for an access token and a refr
 
 This grant is not meant for automation: it requires user interaction on the same device as where the client lives.
 
+When several login methods are configured, the client can add an `io.element.login_method` parameter to the authorization request to skip straight to one of them (a given upstream provider, or the local password form) instead of showing the user a chooser. See [Letting clients choose the login method](../setup/sso.md#letting-clients-choose-the-login-method) for details.
+
 #### Device authorization grant
 
 The device authorization grant ([RFC 8628]) is similar to the authorization code grant, but separates the user interaction from where the client lives.
