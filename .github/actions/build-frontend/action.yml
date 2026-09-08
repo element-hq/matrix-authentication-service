@@ -1,26 +1,20 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 # Please see LICENSE files in the repository root for full details.
 
 name: Build the frontend assets
-description: Installs Node.js and builds the frontend assets from the frontend directory
+description: Installs pnpm, Node.js and the dependencies, then builds the frontend assets
 
 runs:
   using: composite
   steps:
-    - name: Install pnpm
-      uses: pnpm/action-setup@v6.0.5
-
-    - name: Install Node
-      uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+    - name: Install pnpm, Node.js and the dependencies
+      uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
       with:
-        node-version-file: .node-version
-        cache: "pnpm"
-
-    - name: Install dependencies
-      run: pnpm install --frozen-lockfile
-      shell: sh
+        cache: true
+        require-lockfile: true
 
     - name: Build the frontend assets
       run: pnpm --filter mas-frontend run build
