@@ -29,6 +29,9 @@ pub struct Params {
 
     #[serde(rename = "org.matrix.msc4198.login_hint")]
     unstable_login_hint: Option<String>,
+
+    #[serde(default)]
+    upstream_idp: Option<String>,
 }
 
 #[tracing::instrument(name = "handlers.views.app.get", skip_all)]
@@ -40,6 +43,7 @@ pub async fn get(
     Query(Params {
         action,
         unstable_login_hint,
+        upstream_idp,
     }): Query<Params>,
     mut repo: BoxRepository,
     clock: BoxClock,
@@ -72,6 +76,10 @@ pub async fn get(
         if let Some(login_hint) = unstable_login_hint {
             url = url.with_login_hint(login_hint);
         }
+
+        if let Some(upstream_idp) = upstream_idp {
+            url = url.with_upstream_idp(upstream_idp)
+        };
 
         return Ok((cookie_jar, url_builder.redirect(&url)).into_response());
     };

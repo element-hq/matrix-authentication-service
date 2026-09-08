@@ -39,6 +39,7 @@ use crate::{
 #[derive(Debug, Deserialize)]
 pub struct Params {
     action: Option<CompatLoginSsoAction>,
+    upstream_idp: Option<String>,
 }
 
 #[tracing::instrument(
@@ -91,7 +92,13 @@ pub async fn get(
                 url_builder.redirect(&mas_router::Register::and_continue_compat_sso_login(id))
             }
             Some(CompatLoginSsoAction::Login | CompatLoginSsoAction::Unknown) | None => {
-                url_builder.redirect(&mas_router::Login::and_continue_compat_sso_login(id))
+                let mut url = mas_router::Login::and_continue_compat_sso_login(id);
+
+                if let Some(upstream_idp) = params.upstream_idp {
+                    url = url.with_upstream_idp(upstream_idp)
+                };
+
+                url_builder.redirect(&url)
             }
         };
 
@@ -238,7 +245,13 @@ pub async fn post(
                 url_builder.redirect(&mas_router::Register::and_continue_compat_sso_login(id))
             }
             Some(CompatLoginSsoAction::Login | CompatLoginSsoAction::Unknown) | None => {
-                url_builder.redirect(&mas_router::Login::and_continue_compat_sso_login(id))
+                let mut url = mas_router::Login::and_continue_compat_sso_login(id);
+
+                if let Some(upstream_idp) = params.upstream_idp {
+                    url = url.with_upstream_idp(upstream_idp)
+                };
+
+                url_builder.redirect(&url)
             }
         };
 
