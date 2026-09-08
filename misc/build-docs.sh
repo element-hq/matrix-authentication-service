@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -22,14 +23,15 @@ if [ "${CF_PAGES:-""}" = "1" ]; then
   # Source the environment variables to add cargo to the path
   . "$HOME/.cargo/env"
 
-  # Install the minimal toolchain, which includes rustc, rustdoc, and cargo
-  rustup toolchain install stable --profile minimal
+  # Install the toolchain pinned in rust-toolchain.toml
+  rustup toolchain install
 
   # Install mdbook
   MDBOOK_URL="https://github.com/rust-lang/mdBook/releases/download/v${MDBOOK_VERSION}/mdbook-v${MDBOOK_VERSION}-$(uname -m)-unknown-linux-gnu.tar.gz"
   curl --proto '=https' --tlsv1.2 -sSfL "${MDBOOK_URL}" | tar -C "$HOME/.cargo/bin" -xzv
 
-  # Enable pnpm via corepack (Node and corepack are pre-installed on Cloudflare Pages)
+  # Enable pnpm via corepack (Node and corepack are pre-installed on Cloudflare
+  # Pages, which picks the Node version from .node-version)
   corepack enable
 fi
 
@@ -55,5 +57,7 @@ rm -rf target/book/rustdoc
 mv target/doc target/book/rustdoc
 
 # Build the frontend storybook
-pnpm install --frozen-lockfile
+# Node is already provided by Cloudflare Pages / the CI runner, so skip pnpm's
+# own runtime download.
+pnpm install --frozen-lockfile --no-runtime
 pnpm --filter mas-frontend exec storybook build -o ../target/book/storybook

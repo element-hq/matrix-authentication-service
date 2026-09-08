@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -30,25 +31,21 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        # Install the minimal toolchain, which includes rustc, rustdoc, and cargo
-        run: rustup toolchain install stable --profile minimal
+        run: rustup toolchain install
 
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
 
       - name: Install mdbook
-        uses: taiki-e/install-action@b8cecb83565409bcc297b2df6e77f030b2a468d5 # v2
+        uses: taiki-e/install-action@b6ff580856c41316412a0b9b60540fbc6f8c82cc # v2
         with:
           tool: mdbook
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.9
-
-      - name: Install Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - name: Install pnpm, Node.js and the dependencies
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
-          node-version-file: .node-version
-          cache: "pnpm"
+          cache: true
+          require-lockfile: true
 
       - name: Build the documentation
         run: sh misc/build-docs.sh

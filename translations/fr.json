@@ -79,8 +79,8 @@
       "security_code": "Code de sécurité"
     },
     "device_code_link": {
-      "description": "Associer un appareil",
-      "headline": "Entrez le code affiché sur votre appareil",
+      "description": "Saisissez le code de sécurité affiché sur votre autre appareil",
+      "headline": "Associer un nouvel appareil à votre compte",
       "verification_code": "Code de vérification"
     },
     "device_consent": {

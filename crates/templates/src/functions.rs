@@ -195,7 +195,13 @@ fn function_add_params_to_url(
 
     // Merge the exising and the additional parameters together
     // Use a BTreeMap for determinism (because it orders keys)
-    let params: BTreeMap<&String, &Value> = params.iter().chain(existing.iter()).collect();
+    // Parameters which have no value (e.g. an absent `state`) are skipped, as they
+    // can't be serialized back to a query string
+    let params: BTreeMap<&String, &Value> = params
+        .iter()
+        .chain(existing.iter())
+        .filter(|(_key, value)| !value.is_none() && !value.is_undefined())
+        .collect();
 
     // Transform them back to urlencoded
     let params = serde_urlencoded::to_string(params).map_err(|e| {

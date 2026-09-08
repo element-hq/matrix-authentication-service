@@ -116,9 +116,9 @@
       "rate_limit_exceeded": "你在短时间内发出了过多请求。请于几分钟后重试。"
     },
     "last_active": {
-      "active_date": "活跃 {{relativeDate}}",
+      "active_date": "活跃于 {{relativeDate}}",
       "active_now": "活跃",
-      "inactive_90_days": "已停用90天以上"
+      "inactive_90_days": "已停用 90 天以上"
     },
     "nav": {
       "device_limit_error": "已达到设备数量上限",

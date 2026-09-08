@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -38,20 +39,13 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        # Only the minimal profile is required here to run `cargo`
-        run: rustup toolchain install stable --profile minimal
+        run: rustup toolchain install
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.9
-
-      - name: Install Node
-        uses: actions/setup-node@v7.0.0
+      - name: Install pnpm, Node.js and the dependencies
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
-          node-version-file: .node-version
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          cache: true
+          require-lockfile: true
 
       - name: Extract the current version
         id: current
