@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE upstream_oauth_link_tokens\n                SET\n                    encrypted_access_token = $2,\n                    encrypted_refresh_token = COALESCE($3, encrypted_refresh_token),\n                    access_token_expires_at = $4,\n                    token_scope = COALESCE($5, token_scope),\n                    updated_at = $6\n                WHERE upstream_oauth_link_token_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Timestamptz",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "972f8569fec01b8be5592246d07875aebcc789c29c2b08e1995b7e90cf1d3fb2"
+}

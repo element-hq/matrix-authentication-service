@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -89,6 +90,7 @@ pub(crate) async fn get(
             GrantType::AuthorizationCode,
             GrantType::RefreshToken,
             GrantType::ClientCredentials,
+            GrantType::TokenExchange,
         ];
         if site_config.device_code_grant_enabled {
             types.push(GrantType::DeviceCode);

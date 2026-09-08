@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -26,7 +27,7 @@ mod template;
 use self::cookie::UpstreamSessions as UpstreamSessionsCookie;
 
 #[derive(Debug, Error)]
-enum ProviderCredentialsError {
+pub(crate) enum ProviderCredentialsError {
     #[error("Provider doesn't have a client secret")]
     MissingClientSecret,
 
@@ -62,7 +63,7 @@ pub struct SignInWithApple {
     pub key_id: String,
 }
 
-fn client_credentials_for_provider(
+pub(crate) fn client_credentials_for_provider(
     provider: &UpstreamOAuthProvider,
     token_endpoint: &Url,
     keystore: &Keystore,

@@ -67,6 +67,7 @@ struct OAuth2ClientLookup {
     grant_type_refresh_token: bool,
     grant_type_client_credentials: bool,
     grant_type_device_code: bool,
+    grant_type_token_exchange: bool,
     client_name: Option<String>,
     logo_uri: Option<String>,
     client_uri: Option<String>,
@@ -109,6 +110,7 @@ impl Filter for OAuth2ClientFilter<'_> {
                     GrantType::RefreshToken => OAuth2Clients::GrantTypeRefreshToken,
                     GrantType::ClientCredentials => OAuth2Clients::GrantTypeClientCredentials,
                     GrantType::DeviceCode => OAuth2Clients::GrantTypeDeviceCode,
+                    GrantType::TokenExchange => OAuth2Clients::GrantTypeTokenExchange,
                     // The other grant types don't have a dedicated column, so no
                     // client can declare them: the filter matches nothing.
                     _ => return Expr::val(false),
@@ -173,6 +175,9 @@ impl TryFrom<OAuth2ClientLookup> for Client {
         }
         if value.grant_type_device_code {
             grant_types.push(GrantType::DeviceCode);
+        }
+        if value.grant_type_token_exchange {
+            grant_types.push(GrantType::TokenExchange);
         }
 
         let logo_uri = value.logo_uri.map(|s| s.parse()).transpose().map_err(|e| {
@@ -344,6 +349,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                      , grant_type_refresh_token
                      , grant_type_client_credentials
                      , grant_type_device_code
+                     , grant_type_token_exchange
                      , client_name
                      , logo_uri
                      , client_uri
@@ -396,6 +402,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                     , grant_type_refresh_token
                     , grant_type_client_credentials
                     , grant_type_device_code
+                    , grant_type_token_exchange
                     , client_name
                     , logo_uri
                     , client_uri
@@ -448,6 +455,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                      , grant_type_refresh_token
                      , grant_type_client_credentials
                      , grant_type_device_code
+                     , grant_type_token_exchange
                      , client_name
                      , logo_uri
                      , client_uri
@@ -536,6 +544,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                     , grant_type_refresh_token
                     , grant_type_client_credentials
                     , grant_type_device_code
+                    , grant_type_token_exchange
                     , client_name
                     , logo_uri
                     , client_uri
@@ -552,7 +561,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                     )
                 VALUES
                     ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-                    $14, $15, $16, $17, $18, $19, $20, $21, FALSE)
+                    $14, $15, $16, $17, $18, $19, $20, $21, $22, FALSE)
             "#,
             Uuid::from(id),
             metadata_digest,
@@ -563,6 +572,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
             grant_types.contains(&GrantType::RefreshToken),
             grant_types.contains(&GrantType::ClientCredentials),
             grant_types.contains(&GrantType::DeviceCode),
+            grant_types.contains(&GrantType::TokenExchange),
             client_name,
             logo_uri.as_ref().map(Url::as_str),
             client_uri.as_ref().map(Url::as_str),
@@ -655,6 +665,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                     , grant_type_refresh_token
                     , grant_type_client_credentials
                     , grant_type_device_code
+                    , grant_type_token_exchange
                     , token_endpoint_auth_method
                     , jwks
                     , client_name
@@ -663,7 +674,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                     , is_static
                     )
                 VALUES
-                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, TRUE)
+                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, TRUE)
                 ON CONFLICT (oauth2_client_id)
                 DO
                     UPDATE SET encrypted_client_secret = EXCLUDED.encrypted_client_secret
@@ -672,6 +683,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                              , grant_type_refresh_token = EXCLUDED.grant_type_refresh_token
                              , grant_type_client_credentials = EXCLUDED.grant_type_client_credentials
                              , grant_type_device_code = EXCLUDED.grant_type_device_code
+                             , grant_type_token_exchange = EXCLUDED.grant_type_token_exchange
                              , token_endpoint_auth_method = EXCLUDED.token_endpoint_auth_method
                              , jwks = EXCLUDED.jwks
                              , client_name = EXCLUDED.client_name
@@ -682,6 +694,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
             Uuid::from(client_id),
             encrypted_client_secret,
             &redirect_uris_array,
+            true,
             true,
             true,
             true,
@@ -751,6 +764,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                      , grant_type_refresh_token
                      , grant_type_client_credentials
                      , grant_type_device_code
+                     , grant_type_token_exchange
                      , client_name
                      , logo_uri
                      , client_uri
@@ -980,6 +994,10 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
             .expr_as(
                 Expr::cust("grant_type_device_code"),
                 OAuth2ClientLookupIden::GrantTypeDeviceCode,
+            )
+            .expr_as(
+                Expr::cust("grant_type_token_exchange"),
+                OAuth2ClientLookupIden::GrantTypeTokenExchange,
             )
             .expr_as(
                 Expr::col((OAuth2Clients::Table, OAuth2Clients::ClientName)),
