@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -142,7 +143,9 @@ pub(crate) async fn get(
         site_config.password_registration_token_required || site_config.registration_token_required
     };
 
-    let registration_token = if token_required {
+    // Whenever a token was used, it must still be valid, and we'll consume it
+    // below — even if the server doesn't require one
+    let registration_token =
         if let Some(registration_token_id) = registration.user_registration_token_id {
             let registration_token = repo
                 .user_registration_token()
@@ -160,17 +163,16 @@ pub(crate) async fn get(
             }
 
             Some(registration_token)
-        } else {
+        } else if token_required {
             // Else redirect to the registration token page
             return Ok((
                 cookie_jar,
                 url_builder.redirect(&mas_router::RegisterToken::new(registration.id)),
             )
                 .into_response());
-        }
-    } else {
-        None
-    };
+        } else {
+            None
+        };
 
     // If there is an email authentication, we need to check that the email
     // address was verified. If there is no email authentication attached, we

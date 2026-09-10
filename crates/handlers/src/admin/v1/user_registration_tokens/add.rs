@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 // Copyright 2025 The Matrix.org Foundation C.I.C.
 //
@@ -5,11 +6,12 @@
 // Please see LICENSE files in the repository root for full details.
 
 use aide::{NoApi, OperationIo, transform::TransformOperation};
-use axum::{Json, response::IntoResponse};
+use axum::{Json, extract::State, response::IntoResponse};
 use chrono::{DateTime, Utc};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
 use mas_data_model::BoxRng;
+use mas_router::UrlBuilder;
 use rand::distributions::{Alphanumeric, DistString};
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -27,7 +29,7 @@ use crate::{
 #[aide(output_with = "Json<ErrorResponse>")]
 pub enum RouteError {
     #[error("A registration token with the same token already exists")]
-    Conflict(mas_data_model::UserRegistrationToken),
+    Conflict(Box<mas_data_model::UserRegistrationToken>),
 
     #[error(transparent)]
     Internal(Box<dyn std::error::Error + Send + Sync + 'static>),
@@ -60,6 +62,19 @@ pub struct Request {
 
     /// When the token expires. If not provided, the token never expires.
     expires_at: Option<DateTime<Utc>>,
+
+    /// A username to impose on the registering user. If set, the user cannot
+    /// choose their own username.
+    username: Option<String>,
+
+    /// An email address to impose on the registering user. If set, the user
+    /// cannot choose their own email.
+    email: Option<String>,
+
+    /// Whether registering with this token skips the password step. The user's
+    /// identity is then established by verifying their email address.
+    #[serde(default)]
+    passwordless: bool,
 }
 
 pub fn doc(operation: TransformOperation) -> TransformOperation {
@@ -80,6 +95,7 @@ pub async fn handler(
     CallContext {
         mut repo, clock, ..
     }: CallContext,
+    State(url_builder): State<UrlBuilder>,
     NoApi(mut rng): NoApi<BoxRng>,
     Json(params): Json<Request>,
 ) -> Result<(StatusCode, Json<SingleResponse<UserRegistrationToken>>), RouteError> {
@@ -91,7 +107,7 @@ pub async fn handler(
     // See if we have an existing token with the same token
     let existing_token = repo.user_registration_token().find_by_token(&token).await?;
     if let Some(existing_token) = existing_token {
-        return Err(RouteError::Conflict(existing_token));
+        return Err(RouteError::Conflict(Box::new(existing_token)));
     }
 
     let registration_token = repo
@@ -102,6 +118,9 @@ pub async fn handler(
             token,
             params.usage_limit,
             params.expires_at,
+            params.username,
+            params.email,
+            params.passwordless,
         )
         .await?;
 
@@ -112,6 +131,7 @@ pub async fn handler(
         Json(SingleResponse::new_canonical(UserRegistrationToken::new(
             registration_token,
             clock.now(),
+            &url_builder,
         ))),
     ))
 }
@@ -148,12 +168,16 @@ mod tests {
             "attributes": {
               "token": "test_token_123",
               "valid": true,
+              "username": null,
+              "email": null,
+              "passwordless": false,
               "usage_limit": 5,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
               "last_used_at": null,
               "expires_at": null,
-              "revoked_at": null
+              "revoked_at": null,
+              "invite_url": "https://example.com/invite/test_token_123"
             },
             "links": {
               "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -190,12 +214,16 @@ mod tests {
             "attributes": {
               "token": "42oTpLoieH5I",
               "valid": true,
+              "username": null,
+              "email": null,
+              "passwordless": false,
               "usage_limit": 1,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
               "last_used_at": null,
               "expires_at": null,
-              "revoked_at": null
+              "revoked_at": null,
+              "invite_url": "https://example.com/invite/42oTpLoieH5I"
             },
             "links": {
               "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0QMGC989M0XSFVF2X"
@@ -203,6 +231,54 @@ mod tests {
           },
           "links": {
             "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0QMGC989M0XSFVF2X"
+          }
+        }
+        "#);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_create_passwordless(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+
+        let request = Request::post("/api/admin/v1/user-registration-tokens")
+            .bearer(&token)
+            .json(serde_json::json!({
+                "token": "invite_alice",
+                "username": "alice",
+                "email": "alice@example.com",
+                "passwordless": true,
+            }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+        let body: serde_json::Value = response.json();
+
+        assert_json_snapshot!(body, @r#"
+        {
+          "data": {
+            "type": "user-registration_token",
+            "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+            "attributes": {
+              "token": "invite_alice",
+              "valid": true,
+              "username": "alice",
+              "email": "alice@example.com",
+              "passwordless": true,
+              "usage_limit": null,
+              "times_used": 0,
+              "created_at": "2022-01-16T14:40:00Z",
+              "last_used_at": null,
+              "expires_at": null,
+              "revoked_at": null,
+              "invite_url": "https://example.com/invite/invite_alice"
+            },
+            "links": {
+              "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
+            }
+          },
+          "links": {
+            "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
           }
         }
         "#);
@@ -233,12 +309,16 @@ mod tests {
             "attributes": {
               "token": "test_token_123",
               "valid": true,
+              "username": null,
+              "email": null,
+              "passwordless": false,
               "usage_limit": 5,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
               "last_used_at": null,
               "expires_at": null,
-              "revoked_at": null
+              "revoked_at": null,
+              "invite_url": "https://example.com/invite/test_token_123"
             },
             "links": {
               "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
