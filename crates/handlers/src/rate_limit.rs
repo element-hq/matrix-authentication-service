@@ -1,11 +1,11 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::{convert::Infallible, net::IpAddr, sync::Arc, time::Duration};
+use std::{convert::Infallible, future::ready, net::IpAddr, sync::Arc, time::Duration};
 
 use axum::extract::FromRequestParts;
 use governor::{RateLimiter, clock::QuantaClock, state::keyed::DashMapStateStore};
@@ -82,22 +82,24 @@ impl RequesterFingerprint {
 impl<S: Send + Sync> FromRequestParts<S> for RequesterFingerprint {
     type Rejection = Infallible;
 
-    async fn from_request_parts(
+    fn from_request_parts(
         parts: &mut axum::http::request::Parts,
         _state: &S,
-    ) -> Result<Self, Self::Rejection> {
+    ) -> impl Future<Output = Result<Self, Self::Rejection>> + Send {
         let ip = parts.extensions.get::<ClientIp>().and_then(|ip| ip.0);
 
-        if let Some(ip) = ip {
-            Ok(Self::new(ip))
+        let fingerprint = if let Some(ip) = ip {
+            Self::new(ip)
         } else {
             // If we can't infer the IP address, we'll just use an empty fingerprint and
             // warn about it
             tracing::warn!(
                 "Could not infer client IP address for an operation which rate-limits based on IP addresses"
             );
-            Ok(Self::EMPTY)
-        }
+            Self::EMPTY
+        };
+
+        ready(Ok(fingerprint))
     }
 }
 

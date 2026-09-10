@@ -5,7 +5,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-#![allow(clippy::module_name_repetitions)]
+#![allow(
+    clippy::module_name_repetitions,
+    // async-graphql's `#[Object]` requires resolvers to be `async fn`, and its
+    // `Enum` derive emits async trait impls without awaits
+    clippy::unused_async_trait_impl,
+)]
 
 use std::{net::IpAddr, ops::Deref, sync::Arc};
 
