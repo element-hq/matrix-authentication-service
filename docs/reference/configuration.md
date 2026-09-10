@@ -640,6 +640,14 @@ rate_limiting:
     attempt_per_session:
       burst: 10
       per_second: 0.016666
+
+  # Limits how many `usernameAvailable` GraphQL queries are allowed,
+  # based on source address.
+  # This query is an availability oracle usable during registration, so this
+  # limit protects against username enumeration.
+  username_availability:
+    burst: 5
+    per_second: 1.0
 ```
 
 ## `telemetry`

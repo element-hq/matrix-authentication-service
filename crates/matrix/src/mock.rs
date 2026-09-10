@@ -1,10 +1,14 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::atomic::{AtomicBool, Ordering},
+};
 
 use anyhow::Context;
 use async_trait::async_trait;
@@ -24,12 +28,13 @@ pub struct MockUser {
     pub locked: bool,
 }
 
-/// A mock implementation of a [`HomeserverConnection`], which never fails and
-/// doesn't do anything.
+/// A mock implementation of a [`HomeserverConnection`], which doesn't do
+/// anything and only fails when explicitly told to.
 pub struct HomeserverConnection {
     homeserver: String,
     users: RwLock<HashMap<String, MockUser>>,
     reserved_localparts: RwLock<HashSet<&'static str>>,
+    fail_localpart_availability: AtomicBool,
 }
 
 impl HomeserverConnection {
@@ -46,11 +51,19 @@ impl HomeserverConnection {
             homeserver: homeserver.into(),
             users: RwLock::new(HashMap::new()),
             reserved_localparts: RwLock::new(HashSet::new()),
+            fail_localpart_availability: AtomicBool::new(false),
         }
     }
 
     pub async fn reserve_localpart(&self, localpart: &'static str) {
         self.reserved_localparts.write().await.insert(localpart);
+    }
+
+    /// Make [`crate::HomeserverConnection::is_localpart_available`] fail, to
+    /// exercise homeserver failures.
+    pub fn fail_localpart_availability(&self) {
+        self.fail_localpart_availability
+            .store(true, Ordering::Relaxed);
     }
 
     /// Like `query_user` but get the raw test state of the user.
@@ -125,6 +138,11 @@ impl crate::HomeserverConnection for HomeserverConnection {
     }
 
     async fn is_localpart_available(&self, localpart: &str) -> Result<bool, anyhow::Error> {
+        anyhow::ensure!(
+            !self.fail_localpart_availability.load(Ordering::Relaxed),
+            "Mock homeserver failure while checking localpart availability"
+        );
+
         if self.reserved_localparts.read().await.contains(localpart) {
             return Ok(false);
         }

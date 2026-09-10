@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -49,6 +50,7 @@ impl SiteConfigExt for SiteConfig {
             password_login: self.password_login_enabled,
             account_recovery: self.account_recovery_allowed,
             login_with_email_allowed: self.login_with_email_allowed,
+            minimum_password_complexity: self.minimum_password_complexity,
         }
     }
 }
