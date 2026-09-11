@@ -640,6 +640,14 @@ rate_limiting:
     attempt_per_session:
       burst: 10
       per_second: 0.016666
+
+  # Limits how many user codes can be submitted on the device link page,
+  # based on source IP address.
+  # This protects against brute-forcing the user code of the
+  # Device Authorization Grant.
+  device_code_link:
+    burst: 10
+    per_second: 0.016666
 ```
 
 ## `telemetry`
