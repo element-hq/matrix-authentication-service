@@ -5,12 +5,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::{convert::Infallible, future::ready, net::IpAddr, sync::Arc, time::Duration};
+use std::{
+    convert::Infallible, future::ready, net::IpAddr, num::NonZeroU32, sync::Arc, time::Duration,
+};
 
 use axum::extract::FromRequestParts;
-use governor::{RateLimiter, clock::QuantaClock, state::keyed::DashMapStateStore};
+use governor::{Quota, RateLimiter, clock::QuantaClock, state::keyed::DashMapStateStore};
 use mas_config::RateLimitingConfig;
 use mas_data_model::{User, UserEmailAuthentication};
+use oauth2_types::requests::DEFAULT_DEVICE_AUTHORIZATION_INTERVAL;
 use ulid::Ulid;
 
 use crate::ClientIp;
@@ -49,6 +52,18 @@ pub enum EmailAuthenticationLimitedError {
 
     #[error("Too many email authentication requests for email {0}")]
     Email(String),
+}
+
+#[derive(Debug, Clone, thiserror::Error)]
+pub enum DeviceCodeExchangeLimitedError {
+    #[error("Too many unknown device codes presented by requester {0}")]
+    Requester(RequesterFingerprint),
+}
+
+#[derive(Debug, Clone, Copy, thiserror::Error)]
+pub enum DeviceCodePollLimitedError {
+    #[error("Device code grant {0} was polled faster than the advertised interval")]
+    Grant(Ulid),
 }
 
 /// Key used to rate limit requests per requester
@@ -122,6 +137,8 @@ struct LimiterInner {
     email_authentication_per_email: KeyedRateLimiter<String>,
     email_authentication_emails_per_session: KeyedRateLimiter<Ulid>,
     email_authentication_attempt_per_session: KeyedRateLimiter<Ulid>,
+    device_code_exchange_per_requester: KeyedRateLimiter<RequesterFingerprint>,
+    device_code_poll_per_grant: KeyedRateLimiter<Ulid>,
 }
 
 impl LimiterInner {
@@ -147,6 +164,16 @@ impl LimiterInner {
             ),
             email_authentication_attempt_per_session: RateLimiter::keyed(
                 config.email_authentication.attempt_per_session.to_quota()?,
+            ),
+            device_code_exchange_per_requester: RateLimiter::keyed(
+                config.device_code_exchange.to_quota()?,
+            ),
+            // This one isn't configurable: it has to match the polling interval we
+            // advertise in the device authorization response, else we would be telling
+            // clients to slow down whilst they poll at exactly the rate we asked for
+            device_code_poll_per_grant: RateLimiter::keyed(
+                Quota::with_period(DEFAULT_DEVICE_AUTHORIZATION_INTERVAL.to_std().ok()?)?
+                    .allow_burst(NonZeroU32::MIN),
             ),
         })
     }
@@ -193,6 +220,10 @@ impl Limiter {
                 this.inner
                     .email_authentication_attempt_per_session
                     .retain_recent();
+                this.inner
+                    .device_code_exchange_per_requester
+                    .retain_recent();
+                this.inner.device_code_poll_per_grant.retain_recent();
 
                 interval.tick().await;
             }
@@ -325,6 +356,46 @@ impl Limiter {
             .check_key(&authentication.id)
             .map_err(|_| EmailAuthenticationLimitedError::Authentication(authentication.id))
     }
+
+    /// Check if an unknown device code can be presented to the token endpoint
+    ///
+    /// This bounds how fast a requester can enumerate device codes, as
+    /// described in RFC 8628 section 5.2. It is only consulted for device
+    /// codes which don't match a grant, so that clients polling with a valid
+    /// device code are never held back by it.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation is rate limited.
+    pub fn check_device_code_exchange(
+        &self,
+        requester: RequesterFingerprint,
+    ) -> Result<(), DeviceCodeExchangeLimitedError> {
+        self.inner
+            .device_code_exchange_per_requester
+            .check_key(&requester)
+            .map_err(|_| DeviceCodeExchangeLimitedError::Requester(requester))?;
+
+        Ok(())
+    }
+
+    /// Check if a pending device code grant can be polled again
+    ///
+    /// This enforces the interval we advertise in the device authorization
+    /// response: clients polling faster than that should be told to slow
+    /// down, as described in RFC 8628 section 3.5.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the grant was polled too soon.
+    pub fn check_device_code_poll(&self, grant_id: Ulid) -> Result<(), DeviceCodePollLimitedError> {
+        self.inner
+            .device_code_poll_per_grant
+            .check_key(&grant_id)
+            .map_err(|_| DeviceCodePollLimitedError::Grant(grant_id))?;
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -400,5 +471,42 @@ mod tests {
 
         // The other account isn't rate-limited
         assert!(limiter.check_password(requesters[603], &bob).is_ok());
+    }
+
+    #[test]
+    fn test_device_code_exchange_limiter() {
+        let limiter = Limiter::new(&RateLimitingConfig::default()).unwrap();
+
+        let alice = RequesterFingerprint::new([1, 2, 3, 4].into());
+        let bob = RequesterFingerprint::new([4, 3, 2, 1].into());
+
+        // The default burst allowance is 10 unknown device codes per requester
+        for _ in 0..10 {
+            assert!(limiter.check_device_code_exchange(alice).is_ok());
+        }
+        assert!(limiter.check_device_code_exchange(alice).is_err());
+
+        // Another requester is unaffected
+        assert!(limiter.check_device_code_exchange(bob).is_ok());
+    }
+
+    #[test]
+    fn test_device_code_poll_limiter() {
+        let now = MockClock::default().now();
+        let mut rng = rand_chacha::ChaChaRng::seed_from_u64(42);
+
+        let limiter = Limiter::new(&RateLimitingConfig::default()).unwrap();
+
+        let first = Ulid::from_datetime_with_rng(now, &mut rng);
+        let second = Ulid::from_datetime_with_rng(now, &mut rng);
+
+        // A grant may be polled once per advertised interval, so a second poll
+        // straight away is refused
+        assert!(limiter.check_device_code_poll(first).is_ok());
+        assert!(limiter.check_device_code_poll(first).is_err());
+
+        // Another grant has its own allowance
+        assert!(limiter.check_device_code_poll(second).is_ok());
+        assert!(limiter.check_device_code_poll(second).is_err());
     }
 }

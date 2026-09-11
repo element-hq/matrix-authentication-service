@@ -2021,6 +2021,18 @@
               "$ref": "#/definitions/EmailauthenticationRateLimitingConfig"
             }
           ]
+        },
+        "device_code_exchange": {
+          "description": "Controls how many unknown device codes may be presented to the token\nendpoint, based on source IP address.\nThis bounds enumeration of device codes of the\nDevice Authorization Grant.\n\nNote: this limit only applies to device codes which don't match a\ngrant, so clients polling with a valid device code are unaffected.\nTheir polling rate is governed by the interval advertised in the\ndevice authorization response instead.",
+          "default": {
+            "burst": 10,
+            "per_second": 0.016666666666666666
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/RateLimiterConfiguration"
+            }
+          ]
         }
       }
     },

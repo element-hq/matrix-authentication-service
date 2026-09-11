@@ -640,6 +640,18 @@ rate_limiting:
     attempt_per_session:
       burst: 10
       per_second: 0.016666
+
+  # Limits how many unknown device codes may be presented to the token
+  # endpoint, based on source IP address.
+  # This bounds enumeration of device codes of the Device Authorization Grant.
+  #
+  # Note: this only counts device codes which don't match a grant. Clients
+  # polling with a valid device code are instead held to the `interval` of the
+  # device authorization response, and are told to `slow_down` if they poll
+  # faster than that.
+  device_code_exchange:
+    burst: 10
+    per_second: 0.016666
 ```
 
 ## `telemetry`
