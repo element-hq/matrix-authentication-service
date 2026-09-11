@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                WITH to_delete AS (\n                    SELECT up.user_password_id\n                    FROM user_passwords up\n                    JOIN users u USING (user_id)\n                    WHERE u.deactivated_at < $1\n                    LIMIT $2\n                )\n                DELETE FROM user_passwords\n                USING to_delete\n                WHERE user_passwords.user_password_id = to_delete.user_password_id\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3605cccea4306b9fc354b6ab0add293ef335306e54bcd4d089db693fc91a99bf"
+}

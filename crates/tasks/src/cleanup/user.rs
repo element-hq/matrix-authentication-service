@@ -9,7 +9,8 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use mas_storage::queue::{
-    CleanupUserEmailAuthenticationsJob, CleanupUserRecoverySessionsJob, CleanupUserRegistrationsJob,
+    CleanupDeactivatedUsersJob, CleanupUserEmailAuthenticationsJob, CleanupUserRecoverySessionsJob,
+    CleanupUserRegistrationsJob,
 };
 use tracing::{debug, info};
 use ulid::Ulid;
@@ -176,6 +177,63 @@ impl RunnableJob for CleanupUserEmailAuthenticationsJob {
 
     fn timeout(&self) -> Option<Duration> {
         // This job runs every hour, so having it running it for 10 minutes is fine
+        Some(Duration::from_mins(10))
+    }
+}
+
+#[async_trait]
+impl RunnableJob for CleanupDeactivatedUsersJob {
+    #[tracing::instrument(name = "job.cleanup_deactivated_users", skip_all)]
+    async fn run(&self, state: &State, context: JobContext) -> Result<(), JobError> {
+        let threshold = state.clock.now() - chrono::Duration::days(30);
+
+        let mut links = 0;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+            let count = repo
+                .upstream_oauth_link()
+                .cleanup_deactivated(threshold, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+
+            repo.save().await.map_err(JobError::retry)?;
+            links += count;
+
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        let mut passwords = 0;
+        while !context.cancellation_token.is_cancelled() {
+            let mut repo = state.repository().await.map_err(JobError::retry)?;
+            let count = repo
+                .user_password()
+                .cleanup_deactivated(threshold, BATCH_SIZE)
+                .await
+                .map_err(JobError::retry)?;
+
+            repo.save().await.map_err(JobError::retry)?;
+            passwords += count;
+
+            if count != BATCH_SIZE {
+                break;
+            }
+        }
+
+        if links == 0 && passwords == 0 {
+            debug!("no deactivated users to clean up");
+        } else {
+            info!(
+                links,
+                passwords, "cleaned up upstream OAuth links and passwords of deactivated users"
+            );
+        }
+
+        Ok(())
+    }
+
+    fn timeout(&self) -> Option<Duration> {
         Some(Duration::from_mins(10))
     }
 }

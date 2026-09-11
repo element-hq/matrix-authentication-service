@@ -146,4 +146,40 @@ impl UserPasswordRepository for PgUserPasswordRepository<'_> {
             created_at,
         })
     }
+
+    #[tracing::instrument(
+        name = "db.user_password.cleanup_deactivated",
+        skip_all,
+        fields(
+            db.query.text,
+        ),
+        err,
+    )]
+    async fn cleanup_deactivated(
+        &mut self,
+        deactivated_before: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<usize, Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                WITH to_delete AS (
+                    SELECT up.user_password_id
+                    FROM user_passwords up
+                    JOIN users u USING (user_id)
+                    WHERE u.deactivated_at < $1
+                    LIMIT $2
+                )
+                DELETE FROM user_passwords
+                USING to_delete
+                WHERE user_passwords.user_password_id = to_delete.user_password_id
+            "#,
+            deactivated_before,
+            i64::try_from(limit).unwrap_or(i64::MAX),
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        Ok(usize::try_from(res.rows_affected()).unwrap_or(usize::MAX))
+    }
 }
