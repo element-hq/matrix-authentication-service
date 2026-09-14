@@ -37,6 +37,7 @@ pub use self::{
     oauth2::{
         AuthorizationCode, AuthorizationGrant, AuthorizationGrantStage, Client, DeviceCodeGrant,
         DeviceCodeGrantState, InvalidRedirectUriError, JwksOrJwksUri, Pkce, Session, SessionState,
+        generate_user_code, normalize_user_code,
     },
     policy_data::PolicyData,
     site_config::{
