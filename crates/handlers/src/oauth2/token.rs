@@ -51,7 +51,9 @@ use tracing::{debug, info, warn};
 use ulid::Ulid;
 
 use super::{generate_id_token, generate_token_pair};
-use crate::{BoundActivityTracker, METER, impl_from_error_for_route};
+use crate::{
+    BoundActivityTracker, Limiter, METER, RequesterFingerprint, impl_from_error_for_route,
+};
 
 static TOKEN_REQUEST_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
     METER
@@ -155,6 +157,12 @@ pub(crate) enum RouteError {
     #[error("device code grant was already exchanged")]
     DeviceCodeExchanged,
 
+    #[error("too many unknown device codes presented")]
+    DeviceCodeExchangeRateLimited,
+
+    #[error("device code grant was polled faster than the advertised interval")]
+    DeviceCodeSlowDown,
+
     #[error("failed to provision device")]
     ProvisionDeviceFailed(#[source] anyhow::Error),
 }
@@ -240,6 +248,21 @@ impl IntoResponse for RouteError {
                 Json(ClientError::from(ClientErrorCode::AuthorizationPending)),
             ),
 
+            // RFC 8628 defines `slow_down` as a variant of `authorization_pending`: the
+            // client should keep polling, but increase its interval by 5 seconds
+            Self::DeviceCodeSlowDown => (
+                StatusCode::BAD_REQUEST,
+                Json(ClientError::from(ClientErrorCode::SlowDown)),
+            ),
+
+            // `slow_down` is also the most useful thing we can tell a client which is
+            // burning through device codes: a well-behaved one will back off, and it
+            // tells an attacker nothing about whether any code was valid
+            Self::DeviceCodeExchangeRateLimited => (
+                StatusCode::TOO_MANY_REQUESTS,
+                Json(ClientError::from(ClientErrorCode::SlowDown)),
+            ),
+
             Self::InvalidGrant(_)
             | Self::DeviceCodeExchanged
             | Self::RefreshTokenNotFound
@@ -285,7 +308,9 @@ pub(crate) async fn post(
     State(site_config): State<SiteConfig>,
     State(encrypter): State<Encrypter>,
     State(templates): State<Templates>,
+    State(limiter): State<Limiter>,
     policy: Policy,
+    requester: RequesterFingerprint,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     client_authorization: ClientAuthorization<AccessTokenRequest>,
 ) -> Result<impl IntoResponse, RouteError> {
@@ -385,6 +410,8 @@ pub(crate) async fn post(
                 &url_builder,
                 &templates,
                 &site_config,
+                &limiter,
+                requester,
                 repo,
                 &homeserver,
                 user_agent,
@@ -871,6 +898,7 @@ async fn client_credentials_grant(
     Ok((params, repo))
 }
 
+#[expect(clippy::too_many_arguments)]
 async fn device_code_grant(
     rng: &mut BoxRng,
     clock: &impl Clock,
@@ -881,6 +909,8 @@ async fn device_code_grant(
     url_builder: &UrlBuilder,
     templates: &Templates,
     site_config: &SiteConfig,
+    limiter: &Limiter,
+    requester: RequesterFingerprint,
     mut repo: BoxRepository,
     homeserver: &Arc<dyn HomeserverConnection>,
     user_agent: Option<String>,
@@ -898,8 +928,19 @@ async fn device_code_grant(
     let grant = repo
         .oauth2_device_code_grant()
         .find_by_device_code(&grant.device_code)
-        .await?
-        .ok_or(RouteError::GrantNotFound)?;
+        .await?;
+
+    let Some(grant) = grant else {
+        // The device code doesn't match any grant. Rate-limit how many of those a
+        // single requester may present, to bound enumeration of device codes.
+        // RFC 8628 section 5.2
+        if let Err(e) = limiter.check_device_code_exchange(requester) {
+            warn!(error = &e as &dyn std::error::Error);
+            return Err(RouteError::DeviceCodeExchangeRateLimited);
+        }
+
+        return Err(RouteError::GrantNotFound);
+    };
 
     // Check that the client match
     if client.id != grant.client_id {
@@ -915,6 +956,15 @@ async fn device_code_grant(
 
     let browser_session_id = match &grant.state {
         DeviceCodeGrantState::Pending => {
+            // Enforce the polling interval we advertised in the device authorization
+            // response. We only do this whilst the grant is pending, so that a client
+            // which polls too eagerly is never stopped from picking up a grant the user
+            // has already approved. RFC 8628 section 3.5
+            if let Err(e) = limiter.check_device_code_poll(grant.id) {
+                debug!(error = &e as &dyn std::error::Error);
+                return Err(RouteError::DeviceCodeSlowDown);
+            }
+
             return Err(RouteError::DeviceCodePending);
         }
         DeviceCodeGrantState::Rejected { .. } => {
@@ -1049,7 +1099,9 @@ mod tests {
     use mas_router::SimpleRoute;
     use oauth2_types::{
         registration::ClientRegistrationResponse,
-        requests::{DeviceAuthorizationResponse, ResponseMode},
+        requests::{
+            DEFAULT_DEVICE_AUTHORIZATION_INTERVAL, DeviceAuthorizationResponse, ResponseMode,
+        },
         scope::{OPENID, Scope},
     };
     use sqlx::PgPool;
@@ -1906,6 +1958,146 @@ mod tests {
 
         let ClientError { error, .. } = response.json();
         assert_eq!(error, ClientErrorCode::AccessDenied);
+    }
+
+    /// Provision a public client which is allowed to use the device code grant
+    async fn provision_device_code_client(state: &TestState) -> String {
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://example.com/",
+                "token_endpoint_auth_method": "none",
+                "grant_types": ["urn:ietf:params:oauth:grant-type:device_code"],
+                "response_types": [],
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+
+        let response: ClientRegistrationResponse = response.json();
+        response.client_id
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_device_code_grant_slow_down(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let client_id = provision_device_code_client(&state).await;
+
+        // Start a device code grant
+        let request = Request::post(mas_router::OAuth2DeviceAuthorizationEndpoint::PATH).form(
+            serde_json::json!({
+                "client_id": client_id,
+                "scope": "openid",
+            }),
+        );
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let device_grant: DeviceAuthorizationResponse = response.json();
+
+        // We advertise a polling interval, and that is what we hold clients to
+        assert_eq!(
+            device_grant.interval(),
+            DEFAULT_DEVICE_AUTHORIZATION_INTERVAL
+        );
+
+        let request =
+            Request::post(mas_router::OAuth2TokenEndpoint::PATH).form(serde_json::json!({
+                "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+                "device_code": device_grant.device_code,
+                "client_id": client_id,
+            }));
+
+        // The first poll is told the authorization is still pending
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::FORBIDDEN);
+        let ClientError { error, .. } = response.json();
+        assert_eq!(error, ClientErrorCode::AuthorizationPending);
+
+        // Polling again straight away is too fast, so we ask the client to slow down
+        let response = state.request(request.clone()).await;
+        response.assert_status(StatusCode::BAD_REQUEST);
+        let ClientError { error, .. } = response.json();
+        assert_eq!(error, ClientErrorCode::SlowDown);
+
+        // A second grant has its own allowance, so an impatient client polling one
+        // grant doesn't hold up another
+        let request = Request::post(mas_router::OAuth2DeviceAuthorizationEndpoint::PATH).form(
+            serde_json::json!({
+                "client_id": client_id,
+                "scope": "openid",
+            }),
+        );
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let other_grant: DeviceAuthorizationResponse = response.json();
+
+        let request =
+            Request::post(mas_router::OAuth2TokenEndpoint::PATH).form(serde_json::json!({
+                "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+                "device_code": other_grant.device_code,
+                "client_id": client_id,
+            }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::FORBIDDEN);
+        let ClientError { error, .. } = response.json();
+        assert_eq!(error, ClientErrorCode::AuthorizationPending);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_device_code_grant_unknown_code_rate_limit(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let client_id = provision_device_code_client(&state).await;
+
+        // The default burst allowance is 10 unknown device codes, each of which just
+        // gets told the grant is invalid
+        for i in 0..10 {
+            let request =
+                Request::post(mas_router::OAuth2TokenEndpoint::PATH).form(serde_json::json!({
+                    "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+                    "device_code": format!("thisisnotavaliddevicecode{i:07}"),
+                    "client_id": client_id,
+                }));
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::BAD_REQUEST);
+            let ClientError { error, .. } = response.json();
+            assert_eq!(error, ClientErrorCode::InvalidGrant);
+        }
+
+        // Past that, we stop answering and tell the client to back off instead
+        let request =
+            Request::post(mas_router::OAuth2TokenEndpoint::PATH).form(serde_json::json!({
+                "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+                "device_code": "thisisnotavaliddevicecode9999999",
+                "client_id": client_id,
+            }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::TOO_MANY_REQUESTS);
+        let ClientError { error, .. } = response.json();
+        assert_eq!(error, ClientErrorCode::SlowDown);
+
+        // A real device code is unaffected: that limit only counts codes which don't
+        // match a grant
+        let request = Request::post(mas_router::OAuth2DeviceAuthorizationEndpoint::PATH).form(
+            serde_json::json!({
+                "client_id": client_id,
+                "scope": "openid",
+            }),
+        );
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let device_grant: DeviceAuthorizationResponse = response.json();
+
+        let request =
+            Request::post(mas_router::OAuth2TokenEndpoint::PATH).form(serde_json::json!({
+                "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+                "device_code": device_grant.device_code,
+                "client_id": client_id,
+            }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::FORBIDDEN);
+        let ClientError { error, .. } = response.json();
+        assert_eq!(error, ClientErrorCode::AuthorizationPending);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

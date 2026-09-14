@@ -20,7 +20,10 @@ use mas_router::UrlBuilder;
 use mas_storage::{BoxRepository, oauth2::OAuth2DeviceCodeGrantParams};
 use oauth2_types::{
     errors::{ClientError, ClientErrorCode},
-    requests::{DeviceAuthorizationRequest, DeviceAuthorizationResponse, GrantType},
+    requests::{
+        DEFAULT_DEVICE_AUTHORIZATION_INTERVAL, DeviceAuthorizationRequest,
+        DeviceAuthorizationResponse, GrantType,
+    },
     scope::ScopeToken,
 };
 use rand::distributions::{Alphanumeric, DistString};
@@ -191,7 +194,9 @@ pub(crate) async fn post(
         verification_uri: url_builder.device_code_link(),
         verification_uri_complete,
         expires_in,
-        interval: Some(Duration::microseconds(5 * 1000 * 1000)),
+        // The token endpoint holds clients to this interval, so both sides read it
+        // from the same constant
+        interval: Some(DEFAULT_DEVICE_AUTHORIZATION_INTERVAL),
     };
 
     Ok((

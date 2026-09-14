@@ -31,6 +31,18 @@ pub struct RateLimitingConfig {
     /// Email authentication-specific rate limits
     #[serde(default)]
     pub email_authentication: EmailauthenticationRateLimitingConfig,
+
+    /// Controls how many unknown device codes may be presented to the token
+    /// endpoint, based on source IP address.
+    /// This bounds enumeration of device codes of the
+    /// Device Authorization Grant.
+    ///
+    /// Note: this limit only applies to device codes which don't match a
+    /// grant, so clients polling with a valid device code are unaffected.
+    /// Their polling rate is governed by the interval advertised in the
+    /// device authorization response instead.
+    #[serde(default = "default_device_code_exchange")]
+    pub device_code_exchange: RateLimiterConfiguration,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
@@ -174,6 +186,10 @@ impl ConfigurationSection for RateLimitingConfig {
             return Err(error_on_nested_field(error, "login", "per_account").into());
         }
 
+        if let Some(error) = error_on_limiter(&self.device_code_exchange) {
+            return Err(error_on_field(error, "device_code_exchange").into());
+        }
+
         Ok(())
     }
 }
@@ -257,6 +273,13 @@ fn default_email_authentication_attempt_per_session() -> RateLimiterConfiguratio
     }
 }
 
+fn default_device_code_exchange() -> RateLimiterConfiguration {
+    RateLimiterConfiguration {
+        burst: NonZeroU32::new(10).unwrap(),
+        per_second: 1.0 / 60.0,
+    }
+}
+
 impl Default for RateLimitingConfig {
     fn default() -> Self {
         RateLimitingConfig {
@@ -264,6 +287,7 @@ impl Default for RateLimitingConfig {
             registration: default_registration(),
             account_recovery: AccountRecoveryRateLimitingConfig::default(),
             email_authentication: EmailauthenticationRateLimitingConfig::default(),
+            device_code_exchange: default_device_code_exchange(),
         }
     }
 }

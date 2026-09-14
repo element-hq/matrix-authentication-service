@@ -210,6 +210,7 @@ where
     BoxClock: FromRequestParts<S>,
     BoxRng: FromRequestParts<S>,
     Policy: FromRequestParts<S>,
+    Limiter: FromRef<S>,
 {
     // All those routes are API-like, with a common CORS layer
     Router::new()
