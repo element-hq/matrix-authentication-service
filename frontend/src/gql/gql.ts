@@ -25,6 +25,7 @@ type Documents = {
     "\n  fragment Footer_siteConfig on SiteConfig {\n    id\n    imprint\n    tosUri\n    policyUri\n  }\n": typeof types.Footer_SiteConfigFragmentDoc,
     "\n  query Footer {\n    siteConfig {\n      id\n      ...Footer_siteConfig\n    }\n  }\n": typeof types.FooterDocument,
     "\n  fragment OAuth2Session_session on Oauth2Session {\n    id\n    scope\n    createdAt\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n    humanName\n\n    ...EndOAuth2SessionButton_session\n\n    userAgent {\n      name\n      model\n      os\n      deviceType\n    }\n\n    client {\n      id\n      clientId\n      clientName\n      applicationType\n      logoUri\n    }\n  }\n": typeof types.OAuth2Session_SessionFragmentDoc,
+    "\n  query UsernameAvailable($username: String!) {\n    usernameAvailable(username: $username) {\n      available\n      reason\n      violationCodes\n    }\n  }\n": typeof types.UsernameAvailableDocument,
     "\n  fragment EndBrowserSessionButton_session on BrowserSession {\n    id\n    userAgent {\n      name\n      os\n      model\n      deviceType\n    }\n  }\n": typeof types.EndBrowserSessionButton_SessionFragmentDoc,
     "\n  mutation EndBrowserSession($id: ID!) {\n    endBrowserSession(input: { browserSessionId: $id }) {\n      status\n      browserSession {\n        id\n      }\n    }\n  }\n": typeof types.EndBrowserSessionDocument,
     "\n  fragment EndCompatSessionButton_session on CompatSession {\n    id\n    userAgent {\n      name\n      os\n      model\n      deviceType\n    }\n    ssoLogin {\n      id\n      redirectUri\n    }\n  }\n": typeof types.EndCompatSessionButton_SessionFragmentDoc,
@@ -81,6 +82,7 @@ const documents: Documents = {
     "\n  fragment Footer_siteConfig on SiteConfig {\n    id\n    imprint\n    tosUri\n    policyUri\n  }\n": types.Footer_SiteConfigFragmentDoc,
     "\n  query Footer {\n    siteConfig {\n      id\n      ...Footer_siteConfig\n    }\n  }\n": types.FooterDocument,
     "\n  fragment OAuth2Session_session on Oauth2Session {\n    id\n    scope\n    createdAt\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n    humanName\n\n    ...EndOAuth2SessionButton_session\n\n    userAgent {\n      name\n      model\n      os\n      deviceType\n    }\n\n    client {\n      id\n      clientId\n      clientName\n      applicationType\n      logoUri\n    }\n  }\n": types.OAuth2Session_SessionFragmentDoc,
+    "\n  query UsernameAvailable($username: String!) {\n    usernameAvailable(username: $username) {\n      available\n      reason\n      violationCodes\n    }\n  }\n": types.UsernameAvailableDocument,
     "\n  fragment EndBrowserSessionButton_session on BrowserSession {\n    id\n    userAgent {\n      name\n      os\n      model\n      deviceType\n    }\n  }\n": types.EndBrowserSessionButton_SessionFragmentDoc,
     "\n  mutation EndBrowserSession($id: ID!) {\n    endBrowserSession(input: { browserSessionId: $id }) {\n      status\n      browserSession {\n        id\n      }\n    }\n  }\n": types.EndBrowserSessionDocument,
     "\n  fragment EndCompatSessionButton_session on CompatSession {\n    id\n    userAgent {\n      name\n      os\n      model\n      deviceType\n    }\n    ssoLogin {\n      id\n      redirectUri\n    }\n  }\n": types.EndCompatSessionButton_SessionFragmentDoc,
@@ -167,6 +169,10 @@ export function graphql(source: "\n  query Footer {\n    siteConfig {\n      id\
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  fragment OAuth2Session_session on Oauth2Session {\n    id\n    scope\n    createdAt\n    finishedAt\n    lastActiveIp\n    lastActiveAt\n    humanName\n\n    ...EndOAuth2SessionButton_session\n\n    userAgent {\n      name\n      model\n      os\n      deviceType\n    }\n\n    client {\n      id\n      clientId\n      clientName\n      applicationType\n      logoUri\n    }\n  }\n"): typeof import('./graphql').OAuth2Session_SessionFragmentDoc;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query UsernameAvailable($username: String!) {\n    usernameAvailable(username: $username) {\n      available\n      reason\n      violationCodes\n    }\n  }\n"): typeof import('./graphql').UsernameAvailableDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

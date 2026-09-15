@@ -33,7 +33,8 @@ Please see LICENSE files in the repository root for full details.
        data-features='{{ features | tojson }}'
        data-form='{{ form | tojson }}'
        data-providers='{{ providers | tojson }}'
-       data-login-link="{{ login_link }}">
+       data-login-link="{{ login_link }}"
+       data-graphql-endpoint="{{ graphql_endpoint }}">
     <p class="sr-only">{{ _("mas.loading") }}</p>
 
     {# Rough outline of the form, to keep the page from jumping once it mounts #}

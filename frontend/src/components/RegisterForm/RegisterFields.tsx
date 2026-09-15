@@ -3,17 +3,105 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-import { Form } from "@vector-im/compound-web";
+import { useQuery } from "@tanstack/react-query";
+import { Form, InlineSpinner } from "@vector-im/compound-web";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { graphql } from "../../gql";
+import { graphqlRequest } from "../../graphql";
 import {
   fieldErrorMessage,
+  isUsernameCheckable,
   normalizeUsername,
+  policyCodeMessage,
   type ServerError,
   VALID_LOCALPART_RE,
 } from "../../utils/registration";
+import { useDebouncedValue } from "../../utils/useDebouncedValue";
 import FieldMessageSlot from "../FieldMessageSlot";
 import PasswordComplexityFeedback from "../PasswordComplexityFeedback";
+
+const USERNAME_AVAILABLE_QUERY = graphql(`
+  query UsernameAvailable($username: String!) {
+    usernameAvailable(username: $username) {
+      available
+      reason
+      violationCodes
+    }
+  }
+`);
+
+/**
+ * The settled result of the live availability check. Rendered inside an
+ * `aria-live` region, so it must only ever hold states the user has stopped
+ * typing into.
+ */
+const UsernameVerdict: React.FC<{
+  checking: boolean;
+  checkFailed: boolean;
+  availability?: {
+    available: boolean;
+    reason?: string | null;
+    violationCodes?: readonly string[] | null;
+  };
+}> = ({ checking, checkFailed, availability }) => {
+  const { t } = useTranslation();
+
+  if (checking) {
+    const label = t("frontend.register.username_checking");
+    return (
+      <Form.HelpMessage>
+        {/* The spinner carries the accessible name, so the live region doesn't
+            announce the same text twice */}
+        <InlineSpinner role="img" aria-label={label} />
+        <span aria-hidden="true">{label}</span>
+      </Form.HelpMessage>
+    );
+  }
+
+  if (checkFailed) {
+    return (
+      <Form.HelpMessage>
+        {t("frontend.register.username_check_failed")}
+      </Form.HelpMessage>
+    );
+  }
+
+  if (!availability) return null;
+
+  if (availability.available) {
+    return (
+      <Form.SuccessMessage match="valid" forceMatch>
+        {t("frontend.register.username_available")}
+      </Form.SuccessMessage>
+    );
+  }
+
+  if (availability.reason === "INVALID") {
+    const messages = (availability.violationCodes ?? [])
+      .map((code) => policyCodeMessage(t, code))
+      .filter((message): message is string => message !== undefined);
+
+    return (
+      <>
+        {(messages.length > 0
+          ? messages
+          : [t("frontend.errors.username_invalid")]
+        ).map((message) => (
+          <Form.ErrorMessage key={message} match="badInput" forceMatch>
+            {message}
+          </Form.ErrorMessage>
+        ))}
+      </>
+    );
+  }
+
+  return (
+    <Form.ErrorMessage match="badInput" forceMatch>
+      {t("frontend.errors.username_taken")}
+    </Form.ErrorMessage>
+  );
+};
 
 export const UsernameField: React.FC<{
   serverName: string;
@@ -22,11 +110,38 @@ export const UsernameField: React.FC<{
 }> = ({ serverName, defaultValue, serverErrors }) => {
   const { t } = useTranslation();
   const [username, setUsername] = useState(defaultValue);
+  // The value the page was rendered with has been checked by the POST already
+  const [dirty, setDirty] = useState(false);
 
   const normalized = normalizeUsername(username);
+  const debounced = useDebouncedValue(normalized, 500);
+  const isDebouncePending = normalized !== debounced;
+
+  const { data, isFetching, isError } = useQuery({
+    queryKey: ["usernameAvailable", debounced],
+    queryFn: ({ signal }) =>
+      graphqlRequest({
+        query: USERNAME_AVAILABLE_QUERY,
+        variables: { username: debounced },
+        signal,
+      }),
+    enabled: dirty && isUsernameCheckable(debounced),
+  });
+
+  const settled = dirty && !isDebouncePending;
+  const checking =
+    dirty &&
+    isUsernameCheckable(normalized) &&
+    (isFetching || isDebouncePending);
+  const availability = settled ? data?.usernameAvailable : undefined;
 
   return (
-    <Form.Field name="username" serverInvalid={serverErrors.length > 0}>
+    <Form.Field
+      name="username"
+      // Only actual POST-returned errors make the control invalid: flipping
+      // this from the live check would steal the focus while typing
+      serverInvalid={serverErrors.length > 0}
+    >
       <Form.Label>{t("common.username")}</Form.Label>
       <Form.TextControl
         required
@@ -37,11 +152,21 @@ export const UsernameField: React.FC<{
         onChange={(e) => {
           // Lowercase as the user types, so what is shown is what gets sent
           setUsername(e.target.value.toLowerCase());
+          setDirty(true);
         }}
         onBlur={() => setUsername(normalizeUsername(username))}
       />
 
+      {/* Outside the live region: it changes on every keystroke */}
       <Form.HelpMessage>{`@${normalized || "—"}:${serverName}`}</Form.HelpMessage>
+
+      <div aria-live="polite" aria-busy={checking}>
+        <UsernameVerdict
+          checking={checking}
+          checkFailed={settled && isError}
+          availability={availability}
+        />
+      </div>
 
       <Form.ErrorMessage match="valueMissing">
         {t("frontend.errors.field_required")}

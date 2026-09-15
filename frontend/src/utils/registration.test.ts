@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 import {
   fieldErrorMessage,
   formErrorMessage,
+  isUsernameCheckable,
   normalizeUsername,
   policyCodeMessage,
 } from "./registration";
@@ -21,6 +22,20 @@ describe("normalizeUsername()", () => {
     expect(normalizeUsername("  Alice  ")).toBe("alice");
     expect(normalizeUsername("ÉLODIE")).toBe("élodie");
     expect(normalizeUsername("")).toBe("");
+  });
+});
+
+describe("isUsernameCheckable()", () => {
+  it("accepts valid localparts", () => {
+    expect(isUsernameCheckable("alice")).toBe(true);
+    expect(isUsernameCheckable("a.b_c-d=e/f+g0")).toBe(true);
+  });
+
+  it("rejects empty and invalid localparts", () => {
+    expect(isUsernameCheckable("")).toBe(false);
+    expect(isUsernameCheckable("Alice")).toBe(false);
+    expect(isUsernameCheckable("alice bob")).toBe(false);
+    expect(isUsernameCheckable("élodie")).toBe(false);
   });
 });
 
