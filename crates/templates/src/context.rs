@@ -684,6 +684,7 @@ pub struct RegisterContext {
     providers: Vec<RegisterPageProvider>,
     login_link: String,
     form: FormState<RegisterFormField>,
+    graphql_endpoint: String,
 }
 
 impl TemplateContext for RegisterContext {
@@ -717,6 +718,7 @@ impl RegisterContext {
                 .collect(),
             login_link: url_builder.relative_url_for(&Login::from(post_auth_action.cloned())),
             form: FormState::default(),
+            graphql_endpoint: url_builder.relative_url_for(&GraphQL),
         }
     }
 
