@@ -253,7 +253,10 @@
       "or_separator": "Or",
       "password_confirm_label": "Confirm password",
       "password_label": "Password",
-      "terms_of_service": "I agree to the <a>Terms and Conditions</a>"
+      "terms_of_service": "I agree to the <a>Terms and Conditions</a>",
+      "username_available": "This username is available",
+      "username_check_failed": "We couldn't check if this username is available",
+      "username_checking": "Checking availability…"
     },
     "reset_cross_signing": {
       "cancelled": {
