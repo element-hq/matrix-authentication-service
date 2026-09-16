@@ -25,7 +25,7 @@ use mas_storage::{
     oauth2::OAuth2SessionFilter,
     queue::{
         DeactivateUserJob, ProvisionUserJob, QueueJobRepositoryExt as _, ReactivateUserJob,
-        SyncDevicesJob,
+        SendRoomInviteEmailsJob, SyncDevicesJob,
     },
     user::{
         BrowserSessionFilter, UserEmailRepository, UserFilter, UserPasswordRepository,
@@ -229,6 +229,16 @@ enum Subcommand {
         /// configured complexity.
         #[clap(long)]
         ignore_password_complexity: bool,
+    },
+
+    /// Send a room invite email to a list of addresses
+    SendRoomInvites {
+        /// The room to invite the recipients to
+        room_id: String,
+
+        /// The addresses to invite
+        #[arg(required = true)]
+        emails: Vec<String>,
     },
 }
 
@@ -565,6 +575,29 @@ impl Options {
                 }
 
                 repo.into_inner().commit().await?;
+
+                Ok(ExitCode::SUCCESS)
+            }
+
+            SC::SendRoomInvites { room_id, emails } => {
+                let _span = info_span!(
+                    "cli.manage.send_room_invites",
+                    room.id = room_id,
+                    recipients.count = emails.len(),
+                )
+                .entered();
+                let database_config = DatabaseConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
+                let mut conn = database_connection_from_config(&database_config).await?;
+                let txn = conn.begin().await?;
+                let mut repo = PgRepository::from_conn(txn);
+
+                let job = SendRoomInviteEmailsJob::new(room_id, emails);
+                repo.queue_job().schedule_job(&mut rng, &clock, job).await?;
+
+                repo.into_inner().commit().await?;
+
+                info!("Scheduled the room invite emails. A worker must be running to send them.");
 
                 Ok(ExitCode::SUCCESS)
             }

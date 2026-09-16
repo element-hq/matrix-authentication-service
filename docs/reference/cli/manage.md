@@ -151,3 +151,16 @@ Options:
 $ mas-cli manage register-user
 $ mas-cli manage register-user --yes <username>
 ```
+
+## `manage send-room-invites`
+
+Send a room invite email to a list of addresses. This schedules the job; a
+worker must be running to actually send the emails.
+
+Arguments:
+- `<room_id>`: The room to invite the recipients to.
+- `<emails>...`: The addresses to invite. At least one is required.
+
+```
+$ mas-cli manage send-room-invites '!room:example.com' alice@example.com bob@example.com
+```
