@@ -1,0 +1,51 @@
+{#
+Copyright 2026 Element Creations Ltd.
+
+SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE files in the repository root for full details.
+-#}
+
+{%- set _ = translator(lang) -%}
+
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="{{ lang }}">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <style type="text/css">
+        a#button:hover { background-color: #3C4045!important; }
+        a#button:active { background-color: #4C5158!important; }
+    </style>
+</head>
+
+<body style="
+    color: black;
+    background-color: white;
+    font-family: Inter, system-ui, ui-sans-serif, sans-serif;
+">
+    {{ _("mas.emails.room_invite.headline", server_name=branding.server_name) }}<br />
+    <br />
+    {{ _("mas.emails.room_invite.click_button") }}<br />
+    <br />
+    <a id="button" href="{{ invite_link }}" target="_blank" style="
+        display: inline-block;
+        transition: background-color 0.1s ease;
+        font-size: 18px;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #FFF;
+        background-color: #1B1D22;
+        padding: 16px 32px;
+        padding: 1rem 2rem;
+        border-radius: 32px;
+        border-radius: 2rem;
+        text-decoration: none;
+    ">{{ _("mas.emails.room_invite.join_room") }}</a><br />
+    <p style="font-size: 14px; font-size: 0.875rem;">
+      {{ _("mas.emails.room_invite.fallback") }} {{ _("mas.emails.room_invite.copy_link") }}
+    </p>
+    <p style="font-size: 14px; font-size: 0.875rem;">
+      <a href="{{ invite_link }}" target="_blank">{{ invite_link }}</a>
+    </p>
+    {{ _("mas.emails.room_invite.you_can_ignore") }}
+</body>
+</html>

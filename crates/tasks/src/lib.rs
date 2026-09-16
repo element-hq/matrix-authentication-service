@@ -26,6 +26,7 @@ mod email;
 mod matrix;
 mod new_queue;
 mod recovery;
+mod room_invite;
 mod sessions;
 mod user;
 
@@ -151,6 +152,8 @@ pub async fn init(
         .register_handler::<mas_storage::queue::ReactivateUserJob>()
         .register_handler::<mas_storage::queue::SendAccountRecoveryEmailsJob>()
         .register_handler::<mas_storage::queue::SendEmailAuthenticationCodeJob>()
+        .register_handler::<mas_storage::queue::SendRoomInviteEmailsJob>()
+        .register_handler::<mas_storage::queue::SendRoomInviteEmailJob>()
         .register_handler::<mas_storage::queue::SyncDevicesJob>()
         .register_handler::<mas_storage::queue::VerifyEmailJob>()
         .register_handler::<mas_storage::queue::ExpireInactiveSessionsJob>()

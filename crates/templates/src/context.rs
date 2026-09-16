@@ -1189,6 +1189,46 @@ impl TemplateContext for EmailVerificationContext {
     }
 }
 
+/// Context used by the `emails/room_invite.{txt,html,subject}` templates
+#[derive(Serialize)]
+pub struct EmailRoomInviteContext {
+    room_id: String,
+    invite_link: Url,
+}
+
+impl EmailRoomInviteContext {
+    /// Constructs a context for the room invite email
+    #[must_use]
+    pub fn new(room_id: String, invite_link: Url) -> Self {
+        Self {
+            room_id,
+            invite_link,
+        }
+    }
+
+    /// Returns the room the recipient is invited to
+    #[must_use]
+    pub fn room_id(&self) -> &str {
+        &self.room_id
+    }
+}
+
+impl TemplateContext for EmailRoomInviteContext {
+    fn sample<R: Rng>(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut R,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
+    where
+        Self: Sized,
+    {
+        sample_list(vec![Self::new(
+            "!room:example.com".to_owned(),
+            "https://matrix.to/#/!room:example.com".parse().unwrap(),
+        )])
+    }
+}
+
 /// Fields of the email verification form
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]

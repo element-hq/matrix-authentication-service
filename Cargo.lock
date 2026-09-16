@@ -3817,6 +3817,7 @@ dependencies = [
  "tracing",
  "tracing-opentelemetry",
  "ulid",
+ "url",
 ]
 
 [[package]]

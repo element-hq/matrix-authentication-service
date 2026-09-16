@@ -344,6 +344,38 @@
           "context": "emails/recovery.html:50:7-46, emails/recovery.txt:16:3-42"
         }
       },
+      "room_invite": {
+        "click_button": "Click on the button below to join the room:",
+        "@click_button": {
+          "context": "emails/room_invite.html:28:7-47"
+        },
+        "copy_link": "Copy the following link and paste it into a browser to join the room:",
+        "@copy_link": {
+          "context": "emails/room_invite.html:45:49-86, emails/room_invite.txt:12:3-40"
+        },
+        "fallback": "The button doesn't work for you?",
+        "@fallback": {
+          "context": "emails/room_invite.html:45:9-45"
+        },
+        "headline": "You have been invited to a room on %(server_name)s.",
+        "@headline": {
+          "context": "emails/room_invite.html:26:7-77, emails/room_invite.txt:10:3-73",
+          "description": "Headline of the email sent when inviting someone to a room"
+        },
+        "join_room": "Join the room",
+        "@join_room": {
+          "context": "emails/room_invite.html:43:9-49"
+        },
+        "subject": "You have been invited to a room on %(server_name)s",
+        "@subject": {
+          "context": "emails/room_invite.subject:11:3-72",
+          "description": "The subject line of the room invite email"
+        },
+        "you_can_ignore": "If you weren't expecting this invitation, you can ignore this email.",
+        "@you_can_ignore": {
+          "context": "emails/room_invite.html:50:7-49, emails/room_invite.txt:16:3-45"
+        }
+      },
       "verify": {
         "body_html": "Your verification code to confirm this email address is: <strong>%(code)s</strong>",
         "@body_html": {

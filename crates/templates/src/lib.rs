@@ -40,12 +40,13 @@ pub use self::{
     context::{
         AccountInactiveContext, ApiDocContext, AppContext, CompatLoginPolicyViolationContext,
         CompatSsoContext, ConsentContext, DeviceConsentContext, DeviceLinkContext,
-        DeviceLinkFormField, DeviceNameContext, EmailRecoveryContext, EmailVerificationContext,
-        EmptyContext, ErrorContext, FormPostContext, IndexContext, LoginContext, LoginFormField,
-        NotFoundContext, PolicyViolationContext, PostAuthContext, PostAuthContextInner,
-        RecoveryExpiredContext, RecoveryFinishContext, RecoveryFinishFormField,
-        RecoveryProgressContext, RecoveryStartContext, RecoveryStartFormField, RegisterContext,
-        RegisterFormField, RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
+        DeviceLinkFormField, DeviceNameContext, EmailRecoveryContext, EmailRoomInviteContext,
+        EmailVerificationContext, EmptyContext, ErrorContext, FormPostContext, IndexContext,
+        LoginContext, LoginFormField, NotFoundContext,
+        PolicyViolationContext, PostAuthContext, PostAuthContextInner, RecoveryExpiredContext,
+        RecoveryFinishContext, RecoveryFinishFormField, RecoveryProgressContext,
+        RecoveryStartContext, RecoveryStartFormField, RegisterContext, RegisterFormField,
+        RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
         RegisterStepsEmailInUseContext, RegisterStepsRegistrationTokenContext,
         RegisterStepsRegistrationTokenFormField, RegisterStepsVerifyEmailContext,
         RegisterStepsVerifyEmailFormField, SiteBranding, SiteConfigExt, SiteFeatures,
@@ -432,6 +433,15 @@ register_templates! {
 
     /// Render the email recovery subject
     pub fn render_email_recovery_subject(WithLanguage<EmailRecoveryContext>) { "emails/recovery.subject" }
+
+    /// Render the room invite email (plain text variant)
+    pub fn render_email_room_invite_txt(WithLanguage<EmailRoomInviteContext>) { "emails/room_invite.txt" }
+
+    /// Render the room invite email (HTML variant)
+    pub fn render_email_room_invite_html(WithLanguage<EmailRoomInviteContext>) { "emails/room_invite.html" }
+
+    /// Render the room invite email subject
+    pub fn render_email_room_invite_subject(WithLanguage<EmailRoomInviteContext>) { "emails/room_invite.subject" }
 
     /// Render the email verification email (plain text variant)
     pub fn render_email_verification_txt(WithLanguage<EmailVerificationContext>) { "emails/verification.txt" }
