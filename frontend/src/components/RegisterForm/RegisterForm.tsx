@@ -3,13 +3,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-import { Button, Form, Link } from "@vector-im/compound-web";
+import { Button, Form, Link, Text } from "@vector-im/compound-web";
 import { Suspense, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import {
   type FieldState,
   fieldErrorMessage,
   formErrorMessage,
+  type Invite,
   type Provider,
   type ServerError,
 } from "../../utils/registration";
@@ -89,6 +90,7 @@ export const PasswordRegisterForm: React.FC<{
   fields: Partial<Record<string, FieldState>>;
   providers: Provider[];
   loginLink: string;
+  invite?: Invite;
 }> = ({
   csrfToken,
   serverName,
@@ -100,8 +102,19 @@ export const PasswordRegisterForm: React.FC<{
   fields,
   providers,
   loginLink,
+  invite,
 }) => {
   const { t } = useTranslation();
+  // A valid invite code may pin the identity the account is registered with,
+  // and waive the password entirely
+  const pinnedUsername = invite?.valid ? invite.username : null;
+  const pinnedEmail = invite?.valid ? invite.email : null;
+  const passwordless = invite?.valid === true && invite.passwordless;
+  // The server reports a code it refused both in the mount data and as an
+  // error on the `token` field, which has no control of its own to carry it
+  const inviteInvalid =
+    invite?.valid === false || (fields.token?.errors.length ?? 0) > 0;
+  const showEmailField = !pinnedEmail && (emailRequired || passwordless);
   // `null` until the widget has mounted; the handle reports `valid: true`
   // straight away when there is no captcha to solve.
   const captchaRef = useRef<CaptchaHandle>(null);
@@ -114,9 +127,11 @@ export const PasswordRegisterForm: React.FC<{
   );
   const serverErrors = (field: string): ServerError[] =>
     fieldErrors[field] ?? [];
-  // A submission which came back with errors went through both steps already
+  // A submission which came back with errors went through both steps already,
+  // and an invite link goes straight to the form it may have pinned fields of
   const [initialStep] = useState<Step>(() =>
     providers.length > 0 &&
+    !invite &&
     formErrors.length === 0 &&
     Object.values(fields).every((field) => !field?.errors.length)
       ? "username"
@@ -186,6 +201,12 @@ export const PasswordRegisterForm: React.FC<{
         <input type="hidden" name="token" value={fields.token.value} />
       )}
 
+      {inviteInvalid && (
+        <div role="alert" className="text-critical font-medium">
+          {t("frontend.register.invite_invalid")}
+        </div>
+      )}
+
       {formErrors.map((error, index) => (
         <div
           // biome-ignore lint/suspicious/noArrayIndexKey: the server error list is static
@@ -197,15 +218,26 @@ export const PasswordRegisterForm: React.FC<{
         </div>
       ))}
 
-      <UsernameField
-        serverName={serverName}
-        defaultValue={fields.username?.value ?? ""}
-        serverErrors={serverErrors("username")}
-      />
+      {/* A pinned username is not the user's to pick, so it isn't shown */}
+      {!pinnedUsername && (
+        <UsernameField
+          serverName={serverName}
+          defaultValue={fields.username?.value ?? ""}
+          serverErrors={serverErrors("username")}
+        />
+      )}
 
       {step === "password" && (
         <>
-          {emailRequired && (
+          {pinnedEmail && (
+            <Text size="sm" className="text-secondary">
+              {t("frontend.register.email_verification_notice", {
+                email: pinnedEmail,
+              })}
+            </Text>
+          )}
+
+          {showEmailField && (
             <Form.Field
               name="email"
               serverInvalid={serverErrors("email").length > 0}
@@ -233,12 +265,21 @@ export const PasswordRegisterForm: React.FC<{
             </Form.Field>
           )}
 
-          <PasswordFields
-            autoFocus={advanced && !emailRequired}
-            minimumPasswordComplexity={minimumPasswordComplexity}
-            serverErrors={serverErrors("password")}
-            confirmServerErrors={serverErrors("password_confirm")}
-          />
+          {passwordless ? (
+            // The line about the pinned address already says a code is coming
+            !pinnedEmail && (
+              <Text size="sm" className="text-secondary">
+                {t("frontend.register.passwordless_notice")}
+              </Text>
+            )
+          ) : (
+            <PasswordFields
+              autoFocus={advanced && !showEmailField}
+              minimumPasswordComplexity={minimumPasswordComplexity}
+              serverErrors={serverErrors("password")}
+              confirmServerErrors={serverErrors("password_confirm")}
+            />
+          )}
 
           {tosUri && (
             <Form.InlineField
@@ -284,7 +325,11 @@ export const PasswordRegisterForm: React.FC<{
 
           {/* The form's first submit button, so that Enter in any of the fields
           registers rather than picking a provider */}
-          <Form.Submit>{t("action.continue")}</Form.Submit>
+          <Form.Submit>
+            {passwordless
+              ? t("frontend.register.send_code")
+              : t("action.continue")}
+          </Form.Submit>
 
           {providers.length > 0 && (
             <Button

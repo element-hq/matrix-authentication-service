@@ -387,6 +387,10 @@
       "@email_not_allowed": {
         "context": "components/field.html:49:11-44"
       },
+      "field_invalid": "This field is invalid",
+      "@field_invalid": {
+        "context": "components/field.html:58:9-38"
+      },
       "field_required": "This field is required",
       "@field_required": {
         "context": "components/field.html:28:9-39"
@@ -442,11 +446,11 @@
     },
     "loading": "Loading…",
     "@loading": {
-      "context": "pages/register/index.html:38:26-42"
+      "context": "pages/register/index.html:39:26-42"
     },
     "loading_failed": "Something went wrong while loading the page. Try reloading it.",
     "@loading_failed": {
-      "context": "app.html:28:9-32, pages/register/index.html:50:7-30"
+      "context": "app.html:28:9-32, pages/register/index.html:51:7-30"
     },
     "login": {
       "call_to_register": "Don't have an account yet?",
@@ -521,7 +525,7 @@
     },
     "or_separator": "Or",
     "@or_separator": {
-      "context": "components/field.html:114:10-31",
+      "context": "components/field.html:116:10-31",
       "description": "Separator between the login methods"
     },
     "policy_violation": {
@@ -688,7 +692,7 @@
       },
       "javascript_required": "JavaScript is required to create an account. Please enable JavaScript in your browser and reload this page.",
       "@javascript_required": {
-        "context": "pages/register/index.html:57:34-71"
+        "context": "pages/register/index.html:58:34-71"
       },
       "terms_of_service": "I agree to the <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Terms and Conditions</a>",
       "@terms_of_service": {

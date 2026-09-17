@@ -54,6 +54,8 @@ Please see LICENSE files in the repository root for full details.
       {% endif %}
     {% elif error.kind == "password_mismatch" %}
       {{ _("mas.errors.password_mismatch") }}
+    {% elif error.kind == "invalid" %}
+      {{ _("mas.errors.field_invalid") }}
     {% else %}
       {{ error.kind }}
     {% endif %}
