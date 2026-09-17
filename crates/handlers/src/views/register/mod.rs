@@ -123,7 +123,10 @@ pub(crate) async fn get(
         ctx = ctx.with_post_action(action);
     }
 
-    let ctx = ctx.with_csrf(csrf_token.form_value()).with_language(locale);
+    let ctx = ctx
+        .with_captcha(site_config.captcha.clone())
+        .with_csrf(csrf_token.form_value())
+        .with_language(locale);
 
     let content = templates.render_register(&ctx)?;
 
