@@ -8,7 +8,7 @@ import {
   QueryClientProvider,
   useQuery,
 } from "@tanstack/react-query";
-import { Form, InlineSpinner } from "@vector-im/compound-web";
+import { Form, InlineSpinner, Text } from "@vector-im/compound-web";
 import { Suspense, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import * as v from "valibot";
@@ -110,6 +110,24 @@ const schema = v.object({
   providers: v.pipe(v.string(), v.parseJson(), v.array(providerSchema)),
   /** Href for the "already have an account?" call to action */
   loginLink: v.string(),
+  /** The invite code the page was opened with, resolved server-side */
+  invite: v.optional(
+    v.pipe(
+      v.string(),
+      v.parseJson(),
+      v.union([
+        v.object({ valid: v.literal(false) }),
+        v.object({
+          valid: v.literal(true),
+          /** The username the code was issued for, hidden from the user */
+          username: v.nullable(v.string()),
+          /** The email address the code was issued for */
+          email: v.nullable(v.string()),
+          passwordless: v.boolean(),
+        }),
+      ]),
+    ),
+  ),
 });
 
 type Data = v.InferOutput<typeof schema>;
@@ -425,7 +443,19 @@ const LoginLink: React.FC<{ href: string }> = ({ href }) => {
 const PasswordRegisterForm: React.FC<{ data: Data }> = ({ data }) => {
   const { t } = useTranslation();
   const { fields, errors: formErrors } = data.form;
-  const { providers } = data;
+  const { invite, providers } = data;
+  // A valid invite code may pin the identity the account is registered with,
+  // and waive the password entirely
+  const pinnedUsername = invite?.valid ? invite.username : null;
+  const pinnedEmail = invite?.valid ? invite.email : null;
+  const passwordless = invite?.valid === true && invite.passwordless;
+  // The server reports a code it refused both in the mount data and as an
+  // error on the `token` field, which has no control of its own to carry it
+  const inviteInvalid =
+    invite?.valid === false || (fields.token?.errors.length ?? 0) > 0;
+  const showEmailField =
+    !pinnedEmail &&
+    (data.features.password_registration_email_required || passwordless);
   // `null` until the widget has mounted; the handle reports `valid: true`
   // straight away when there is no captcha to solve.
   const captchaRef = useRef<CaptchaHandle>(null);
@@ -477,6 +507,12 @@ const PasswordRegisterForm: React.FC<{ data: Data }> = ({ data }) => {
         <input type="hidden" name="token" value={fields.token.value} />
       )}
 
+      {inviteInvalid && (
+        <div role="alert" className="text-critical font-medium">
+          {t("frontend.register.invite_invalid")}
+        </div>
+      )}
+
       {formErrors.map((error, index) => (
         <div
           // biome-ignore lint/suspicious/noArrayIndexKey: the server error list is static
@@ -488,13 +524,24 @@ const PasswordRegisterForm: React.FC<{ data: Data }> = ({ data }) => {
         </div>
       ))}
 
-      <UsernameField
-        serverName={data.branding.server_name}
-        defaultValue={fields.username?.value ?? ""}
-        serverErrors={fields.username?.errors ?? []}
-      />
+      {/* A pinned username is not the user's to pick, so it isn't shown */}
+      {!pinnedUsername && (
+        <UsernameField
+          serverName={data.branding.server_name}
+          defaultValue={fields.username?.value ?? ""}
+          serverErrors={fields.username?.errors ?? []}
+        />
+      )}
 
-      {data.features.password_registration_email_required && (
+      {pinnedEmail && (
+        <Text size="sm" className="text-secondary">
+          {t("frontend.register.email_verification_notice", {
+            email: pinnedEmail,
+          })}
+        </Text>
+      )}
+
+      {showEmailField && (
         <Form.Field name="email" serverInvalid={!!fields.email?.errors.length}>
           <Form.Label>{t("common.email_address")}</Form.Label>
           <Form.TextControl
@@ -518,11 +565,20 @@ const PasswordRegisterForm: React.FC<{ data: Data }> = ({ data }) => {
         </Form.Field>
       )}
 
-      <PasswordFields
-        minimumPasswordComplexity={data.features.minimum_password_complexity}
-        serverErrors={fields.password?.errors ?? []}
-        confirmServerErrors={fields.password_confirm?.errors ?? []}
-      />
+      {passwordless ? (
+        // The line about the pinned address already says a code is coming
+        !pinnedEmail && (
+          <Text size="sm" className="text-secondary">
+            {t("frontend.register.passwordless_notice")}
+          </Text>
+        )
+      ) : (
+        <PasswordFields
+          minimumPasswordComplexity={data.features.minimum_password_complexity}
+          serverErrors={fields.password?.errors ?? []}
+          confirmServerErrors={fields.password_confirm?.errors ?? []}
+        />
+      )}
 
       {data.branding.tos_uri && (
         <Form.InlineField
@@ -577,7 +633,9 @@ const PasswordRegisterForm: React.FC<{ data: Data }> = ({ data }) => {
 
       {/* The form's first submit button, so that Enter in any of the fields
           registers rather than picking a provider */}
-      <Form.Submit>{t("action.continue")}</Form.Submit>
+      <Form.Submit>
+        {passwordless ? t("frontend.register.send_code") : t("action.continue")}
+      </Form.Submit>
 
       {providers.length > 0 && (
         <>
@@ -592,10 +650,15 @@ const PasswordRegisterForm: React.FC<{ data: Data }> = ({ data }) => {
 };
 
 const RegisterPage: React.FC<{ data: Data }> = ({ data }) => {
+  // A passwordless invite is a way to register on its own, whatever the server
+  // allows otherwise
+  const passwordlessInvite =
+    data.invite?.valid === true && data.invite.passwordless;
+
   // Without password registration there is nothing to fill in: the providers
   // and the sign-in link are the whole page. The form is still what carries the
   // provider buttons, so it stays, with nothing in it but the CSRF token.
-  if (!data.features.password_registration) {
+  if (!data.features.password_registration && !passwordlessInvite) {
     return (
       <form method="POST" className="cpd-form-root">
         <input type="hidden" name="csrf" value={data.csrfToken} />
