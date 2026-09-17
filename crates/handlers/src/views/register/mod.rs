@@ -95,16 +95,7 @@ pub(crate) async fn get(
         }
     }
 
-    let mut ctx = RegisterContext::new(providers);
-    let post_action = query
-        .load_context(&mut repo)
-        .await
-        .map_err(InternalError::from_anyhow)?;
-    if let Some(action) = post_action {
-        ctx = ctx.with_post_action(action);
-    }
-
-    let ctx = ctx
+    let ctx = RegisterContext::new(&url_builder, providers, query.post_auth_action.as_ref())
         .with_captcha(site_config.captcha.clone())
         .with_csrf(csrf_token.form_value())
         .with_language(locale);
@@ -327,6 +318,28 @@ mod tests {
         provider.id
     }
 
+    /// Extract the CSRF token the form island was booted with
+    pub(super) fn csrf_token(body: &str) -> &str {
+        body.split("data-csrf-token=\"")
+            .nth(1)
+            .expect("the page should have a CSRF token")
+            .split('"')
+            .next()
+            .unwrap()
+    }
+
+    /// Extract and parse a JSON data attribute the island was booted with
+    fn json_attribute(body: &str, attribute: &str) -> serde_json::Value {
+        let raw = body
+            .split(&format!("{attribute}='"))
+            .nth(1)
+            .unwrap_or_else(|| panic!("no {attribute} attribute in body: {body}"))
+            .split('\'')
+            .next()
+            .unwrap();
+        serde_json::from_str(raw).unwrap()
+    }
+
     /// Render the registration page, saving its cookies and returning its CSRF
     /// token and body
     async fn render_page(state: &TestState, cookies: &CookieHelper) -> (String, String) {
@@ -335,17 +348,10 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
 
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .expect("the page should have a CSRF token")
-            .split('\"')
-            .next()
-            .unwrap()
-            .to_owned();
-
-        (csrf_token, response.body().clone())
+        (
+            csrf_token(response.body()).to_owned(),
+            response.body().clone(),
+        )
     }
 
     /// Mint a CSRF token out of band, for the configurations where the page
@@ -371,7 +377,7 @@ mod tests {
             .expect("the upstream sessions cookie should decode")
     }
 
-    /// With no upstream provider, the page is the password registration form
+    /// With no upstream provider, the page is the bare form island
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_get_without_provider(pool: PgPool) {
         setup();
@@ -379,9 +385,22 @@ mod tests {
         let cookies = CookieHelper::new();
 
         let (_csrf_token, body) = render_page(&state, &cookies).await;
-        assert!(body.contains(r#"name="username""#));
-        assert!(body.contains(r#"name="password""#));
-        assert!(body.contains(r#"name="password_confirm""#));
+        assert!(
+            body.contains(r#"id="register-form""#),
+            "response body: {body}"
+        );
+        assert_eq!(
+            json_attribute(&body, "data-providers"),
+            serde_json::json!([])
+        );
+        assert_eq!(
+            json_attribute(&body, "data-form"),
+            serde_json::json!({"errors": [], "fields": {}})
+        );
+        assert!(
+            body.contains(r#"data-login-link="&#x2f;login""#),
+            "response body: {body}"
+        );
     }
 
     /// The page renders with a CAPTCHA configured
@@ -404,9 +423,9 @@ mod tests {
         let cookies = CookieHelper::new();
 
         let (_csrf_token, body) = render_page(&state, &cookies).await;
-        assert!(
-            body.contains(r#"data-captcha-site-key="site-key""#),
-            "response body: {body}"
+        assert_eq!(
+            json_attribute(&body, "data-captcha-config")["site_key"],
+            serde_json::json!("site-key")
         );
     }
 
@@ -430,9 +449,17 @@ mod tests {
         let second = provider(&state).await;
 
         let (_csrf_token, body) = render_page(&state, &cookies).await;
-        assert!(body.contains(&format!(r#"name="provider" value="{first}""#)));
-        assert!(body.contains(&format!(r#"name="provider" value="{second}""#)));
-        assert!(!body.contains(r#"name="password""#));
+        assert_eq!(
+            json_attribute(&body, "data-providers"),
+            serde_json::json!([
+                {"name": "Upstream Ltd.", "brand": null, "id": first.to_string()},
+                {"name": "Upstream Ltd.", "brand": null, "id": second.to_string()},
+            ])
+        );
+        assert_eq!(
+            json_attribute(&body, "data-features")["password_registration"],
+            serde_json::json!(false)
+        );
     }
 
     /// With both password registration and a provider, the page carries the
@@ -446,8 +473,18 @@ mod tests {
         let provider_id = provider(&state).await;
 
         let (csrf_token, body) = render_page(&state, &cookies).await;
-        assert!(body.contains(r#"name="password""#));
-        assert!(body.contains(&format!(r#"name="provider" value="{provider_id}""#)));
+        assert_eq!(
+            json_attribute(&body, "data-features")["password_registration"],
+            serde_json::json!(true)
+        );
+        assert_eq!(
+            json_attribute(&body, "data-providers"),
+            serde_json::json!([{
+                "name": "Upstream Ltd.",
+                "brand": null,
+                "id": provider_id.to_string(),
+            }])
+        );
 
         let request = cookies.with_cookies(Request::post("/register").form(serde_json::json!({
             "csrf": csrf_token,
@@ -459,11 +496,18 @@ mod tests {
         })));
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
-        assert!(response.body().contains("Password fields don't match"));
-        assert!(
-            response
-                .body()
-                .contains(&format!(r#"name="provider" value="{provider_id}""#))
+        let body = response.body();
+        assert_eq!(
+            json_attribute(body, "data-form")["fields"]["password_confirm"]["errors"],
+            serde_json::json!([{"kind": "password_mismatch"}])
+        );
+        assert_eq!(
+            json_attribute(body, "data-providers"),
+            serde_json::json!([{
+                "name": "Upstream Ltd.",
+                "brand": null,
+                "id": provider_id.to_string(),
+            }])
         );
     }
 
@@ -529,8 +573,15 @@ mod tests {
         let provider_id = provider(&state).await;
         let (csrf_token, body) = render_page(&state, &cookies).await;
 
-        // The provider is rendered as a submit button of the form
-        assert!(body.contains(&format!(r#"name="provider" value="{provider_id}""#)));
+        // The island renders the provider as a submit button of the form
+        assert_eq!(
+            json_attribute(&body, "data-providers"),
+            serde_json::json!([{
+                "name": "Upstream Ltd.",
+                "brand": null,
+                "id": provider_id.to_string(),
+            }])
+        );
 
         let grant = Ulid::from_datetime_with_rng(state.clock.now(), &mut state.rng());
         let request = cookies.with_cookies(
@@ -632,10 +683,9 @@ mod tests {
         })));
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
-        assert!(
-            response.body().contains("Username is too long"),
-            "response body: {}",
-            response.body()
+        assert_eq!(
+            json_attribute(response.body(), "data-form")["fields"]["username"]["errors"][0]["code"],
+            serde_json::json!("username-too-long")
         );
     }
 
