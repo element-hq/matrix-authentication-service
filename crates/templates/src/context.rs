@@ -26,7 +26,7 @@ use mas_data_model::{
     UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
     UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderPkceMode,
     UpstreamOAuthProviderTokenAuthMethod, User, UserEmailAuthentication,
-    UserEmailAuthenticationCode, UserRecoverySession, UserRegistration,
+    UserEmailAuthenticationCode, UserRecoverySession, UserRegistration, UserRegistrationToken,
 };
 use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
@@ -681,6 +681,39 @@ impl RegisterPageProvider {
     }
 }
 
+/// The identity an invite code was issued for
+#[derive(Serialize)]
+struct InvitePinnedIdentity {
+    username: Option<String>,
+    email: Option<String>,
+    passwordless: bool,
+}
+
+/// The invite code the registration page was opened with, as the island sees it
+#[derive(Serialize)]
+pub struct InviteContext {
+    valid: bool,
+
+    #[serde(flatten)]
+    pinned: Option<InvitePinnedIdentity>,
+}
+
+impl InviteContext {
+    /// Describe the invite code a link carried, `None` standing for a code
+    /// which is unknown, expired, revoked or exhausted
+    #[must_use]
+    pub fn new(token: Option<&UserRegistrationToken>) -> Self {
+        Self {
+            valid: token.is_some(),
+            pinned: token.map(|token| InvitePinnedIdentity {
+                username: token.username.clone(),
+                email: token.email.clone(),
+                passwordless: token.passwordless,
+            }),
+        }
+    }
+}
+
 /// Context used by the `register/index.html` template
 #[derive(Serialize)]
 pub struct RegisterContext {
@@ -688,6 +721,7 @@ pub struct RegisterContext {
     login_link: String,
     form: FormState<RegisterFormField>,
     graphql_endpoint: String,
+    invite: Option<InviteContext>,
 }
 
 impl TemplateContext for RegisterContext {
@@ -722,6 +756,7 @@ impl RegisterContext {
             login_link: url_builder.relative_url_for(&Login::from(post_auth_action.cloned())),
             form: FormState::default(),
             graphql_endpoint: url_builder.relative_url_for(&GraphQL),
+            invite: None,
         }
     }
 
@@ -729,6 +764,15 @@ impl RegisterContext {
     #[must_use]
     pub fn with_form_state(self, form: FormState<RegisterFormField>) -> Self {
         Self { form, ..self }
+    }
+
+    /// Set the invite code the page was opened with
+    #[must_use]
+    pub fn with_invite(self, invite: InviteContext) -> Self {
+        Self {
+            invite: Some(invite),
+            ..self
+        }
     }
 }
 
