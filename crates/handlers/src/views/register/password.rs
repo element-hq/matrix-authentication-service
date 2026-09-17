@@ -233,10 +233,11 @@ pub(super) async fn register(
         let content = render(
             locale,
             state,
-            query,
+            &query,
             csrf_token,
             &mut repo,
             templates,
+            url_builder,
             site_config.captcha.clone(),
         )
         .await?;
@@ -318,28 +319,20 @@ pub(super) async fn register(
 }
 
 /// Render the registration page again, with the errors the form collected
+#[expect(clippy::too_many_arguments)]
 async fn render(
     locale: DataLocale,
     form_state: FormState<RegisterFormField>,
-    action: OptionalPostAuthAction,
+    action: &OptionalPostAuthAction,
     csrf_token: CsrfToken,
     repo: &mut BoxRepository,
     templates: &Templates,
+    url_builder: &UrlBuilder,
     captcha_config: Option<CaptchaConfig>,
 ) -> Result<String, InternalError> {
     let providers = repo.upstream_oauth_provider().all_enabled().await?;
-    let ctx = RegisterContext::new(providers).with_form_state(form_state);
-
-    let next = action
-        .load_context(repo)
-        .await
-        .map_err(InternalError::from_anyhow)?;
-    let ctx = if let Some(next) = next {
-        ctx.with_post_action(next)
-    } else {
-        ctx
-    };
-    let ctx = ctx
+    let ctx = RegisterContext::new(url_builder, providers, action.post_auth_action.as_ref())
+        .with_form_state(form_state)
         .with_captcha(captcha_config)
         .with_csrf(csrf_token.form_value())
         .with_language(locale);
@@ -357,12 +350,25 @@ mod tests {
     use mas_router::Route;
     use sqlx::PgPool;
 
+    use super::super::tests::csrf_token;
     use crate::{
         SiteConfig,
         test_utils::{
             CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup, test_site_config,
         },
     };
+
+    /// Extract and parse the form state the island was booted with
+    fn form_state(body: &str) -> serde_json::Value {
+        let raw = body
+            .split("data-form='")
+            .nth(1)
+            .unwrap_or_else(|| panic!("no data-form attribute in body: {body}"))
+            .split('\'')
+            .next()
+            .unwrap();
+        serde_json::from_str(raw).unwrap()
+    }
 
     /// Test the registration happy path
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -378,15 +384,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Submit the registration form
         let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
@@ -444,15 +442,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Submit the registration form
         let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
@@ -469,7 +459,10 @@ mod tests {
         let response = state.request(request).await;
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
-        assert!(response.body().contains("Password fields don't match"));
+        assert_eq!(
+            form_state(response.body())["fields"]["password_confirm"]["errors"],
+            serde_json::json!([{"kind": "password_mismatch"}])
+        );
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -485,15 +478,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Submit the registration form
         let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
@@ -510,10 +495,9 @@ mod tests {
         let response = state.request(request).await;
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
-        assert!(
-            response.body().contains("Username is too long"),
-            "response body: {}",
-            response.body()
+        assert_eq!(
+            form_state(response.body())["fields"]["username"]["errors"][0]["code"],
+            serde_json::json!("username-too-long")
         );
     }
 
@@ -540,15 +524,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Submit the registration form
         let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
@@ -565,7 +541,10 @@ mod tests {
         let response = state.request(request).await;
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
-        assert!(response.body().contains("This username is already taken"));
+        assert_eq!(
+            form_state(response.body())["fields"]["username"]["errors"],
+            serde_json::json!([{"kind": "exists"}])
+        );
     }
 
     /// When the username is already reserved on the homeserver, it should give
@@ -583,15 +562,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Reserve "john" on the homeserver
         state.homeserver_connection.reserve_localpart("john").await;
@@ -611,7 +582,10 @@ mod tests {
         let response = state.request(request).await;
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
-        assert!(response.body().contains("This username is already taken"));
+        assert_eq!(
+            form_state(response.body())["fields"]["username"]["errors"],
+            serde_json::json!([{"kind": "exists"}])
+        );
     }
 
     /// Test registration without email when email is not required
@@ -636,15 +610,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Submit the registration form without email
         let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
@@ -705,15 +671,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Submit the registration form with valid email
         let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
@@ -775,15 +733,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Submit the registration form without email
         let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
@@ -801,9 +751,10 @@ mod tests {
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
 
-        // Check that the response contains an error about the email field
-        let body = response.body();
-        assert!(body.contains("email") || body.contains("Email"));
+        assert_eq!(
+            form_state(response.body())["fields"]["email"]["errors"],
+            serde_json::json!([{"kind": "required"}])
+        );
 
         // Ensure no registration was created
         let mut repo = state.repository().await.unwrap();
@@ -833,15 +784,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Submit the registration form with empty email
         let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
@@ -860,9 +803,10 @@ mod tests {
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
 
-        // Check that the response contains an error about the email field
-        let body = response.body();
-        assert!(body.contains("email") || body.contains("Email"));
+        assert_eq!(
+            form_state(response.body())["fields"]["email"]["errors"],
+            serde_json::json!([{"kind": "required"}])
+        );
 
         // Ensure no registration was created
         let mut repo = state.repository().await.unwrap();
@@ -892,15 +836,7 @@ mod tests {
         cookies.save_cookies(&response);
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
-        // Extract the CSRF token from the response body
-        let csrf_token = response
-            .body()
-            .split("name=\"csrf\" value=\"")
-            .nth(1)
-            .unwrap()
-            .split('\"')
-            .next()
-            .unwrap();
+        let csrf_token = csrf_token(response.body());
 
         // Submit the registration form with invalid email
         let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
@@ -919,9 +855,10 @@ mod tests {
         response.assert_status(StatusCode::OK);
         response.assert_header_value(CONTENT_TYPE, "text/html; charset=utf-8");
 
-        // Check that the response contains an error about the email field
-        let body = response.body();
-        assert!(body.contains("email") || body.contains("Email"));
+        assert_eq!(
+            form_state(response.body())["fields"]["email"]["errors"],
+            serde_json::json!([{"kind": "invalid"}])
+        );
 
         // Ensure no registration was created
         let mut repo = state.repository().await.unwrap();
