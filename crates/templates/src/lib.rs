@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -372,7 +372,7 @@ register_templates! {
     pub fn render_login(WithLanguage<WithCsrf<LoginContext>>) { "pages/login.html" }
 
     /// Render the registration page
-    pub fn render_register(WithLanguage<WithCsrf<RegisterContext>>) { "pages/register/index.html" }
+    pub fn render_register(WithLanguage<WithCsrf<WithCaptcha<RegisterContext>>>) { "pages/register/index.html" }
 
     /// Render the password registration page
     pub fn render_password_register(WithLanguage<WithCsrf<WithCaptcha<PasswordRegisterContext>>>) { "pages/register/password.html" }
