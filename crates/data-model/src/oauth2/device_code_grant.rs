@@ -194,6 +194,9 @@ pub struct DeviceCodeGrant {
     /// The user agent used to request this device code grant.
     pub user_agent: Option<String>,
 
+    /// The login hint within the request
+    pub login_hint: Option<String>,
+
     /// The locale detected from the browser which fulfilled this device code
     /// grant. Used to render a human-readable device name. [`None`] until the
     /// grant is fulfilled.

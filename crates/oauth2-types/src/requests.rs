@@ -387,10 +387,13 @@ impl fmt::Debug for AuthorizationResponse {
 /// A request to the [Device Authorization Endpoint].
 ///
 /// [Device Authorization Endpoint]: https://www.rfc-editor.org/rfc/rfc8628
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Default, Debug, Clone, PartialEq, Eq)]
 pub struct DeviceAuthorizationRequest {
     /// The scope of the access request.
     pub scope: Option<Scope>,
+    /// The login hint of the access request
+    #[serde(rename = "org.matrix.msc4198.login_hint")]
+    pub login_hint: Option<String>,
 }
 
 /// The default value of the `interval` between polling requests, if it is not

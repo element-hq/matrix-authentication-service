@@ -38,6 +38,9 @@ pub struct OAuth2DeviceCodeGrantParams<'a> {
 
     /// The user agent from which the request was made
     pub user_agent: Option<String>,
+
+    /// The login hint within the request
+    pub login_hint: Option<String>,
 }
 
 /// An [`OAuth2DeviceCodeGrantRepository`] helps interacting with
