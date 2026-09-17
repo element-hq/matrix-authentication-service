@@ -26,8 +26,8 @@ use mas_storage::{
     user::{UserEmailRepository, UserRegistrationRepository as _, UserRepository},
 };
 use mas_templates::{
-    FieldError, FormError, FormState, RegisterContext, RegisterFormField, TemplateContext,
-    Templates, ToFormState as _,
+    FieldError, FormError, FormState, InviteContext, RegisterContext, RegisterFormField,
+    TemplateContext, Templates, ToFormState as _,
 };
 use zeroize::Zeroizing;
 
@@ -277,6 +277,11 @@ pub(super) async fn register(
     };
 
     if !state.is_valid() {
+        // Re-render with what the invite code resolved to, so the form keeps
+        // the shape the user submitted it in
+        let invite =
+            (!form.token.is_empty()).then(|| InviteContext::new(registration_token.as_ref()));
+
         let content = render(
             locale,
             state,
@@ -286,6 +291,7 @@ pub(super) async fn register(
             templates,
             url_builder,
             site_config.captcha.clone(),
+            invite,
         )
         .await?;
 
@@ -387,10 +393,17 @@ async fn render(
     templates: &Templates,
     url_builder: &UrlBuilder,
     captcha_config: Option<CaptchaConfig>,
+    invite: Option<InviteContext>,
 ) -> Result<String, InternalError> {
     let providers = repo.upstream_oauth_provider().all_enabled().await?;
-    let ctx = RegisterContext::new(url_builder, providers, action.post_auth_action.as_ref())
-        .with_form_state(form_state)
+    let mut ctx = RegisterContext::new(url_builder, providers, action.post_auth_action.as_ref())
+        .with_form_state(form_state);
+
+    if let Some(invite) = invite {
+        ctx = ctx.with_invite(invite);
+    }
+
+    let ctx = ctx
         .with_captcha(captcha_config)
         .with_csrf(csrf_token.form_value())
         .with_language(locale);
