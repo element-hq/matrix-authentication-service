@@ -42,22 +42,16 @@ pub fn generate_user_code<R: RngCore + ?Sized>(rng: &mut R) -> String {
 /// On top of uppercasing, this folds `O` onto `0` and `I` and `L` onto `1`,
 /// repairing a user who read a `0` as an `O` or a `1` as an `I`.
 ///
-/// Note that Crockford only defines those two foldings: it keeps both members
-/// of `2`/`Z`, `5`/`S`, `6`/`G`, `8`/`B` and `9`/`Q`, so those stay ambiguous
-/// and are deliberately left alone here.
-///
 /// `U` is not in the alphabet but has no mapping defined for it either, so it
 /// is passed through unchanged.
 ///
-/// Crockford also allows hyphens as readability separators and ignores them
-/// when decoding, but we never put any into the codes we hand out, so there is
-/// nothing for a user to optionally include and nothing to strip here.
-/// Whitespace and punctuation are likewise left alone, and so will simply fail
-/// to match.
+/// Crockford ignores hyphens when decoding, but we issue none, so nothing is
+/// stripped here: hyphens, whitespace and punctuation all just fail to match.
 ///
-/// This mapping is lossy against the alphanumeric alphabet user codes used to
-/// be drawn from, so callers must look a code up as plainly uppercased
-/// *before* falling back to this — see the lookup in the device link handler.
+/// The mapping is lossy, so a caller which looks up both the code as the user
+/// typed and its normalized form should try the code as typed first: a legacy
+/// code containing `I`, `L` or `O` is otherwise shadowed by any live grant at
+/// the code it folds onto. See the lookup in the device link handler.
 ///
 /// [Crockford Base32]: https://www.crockford.com/base32.html
 #[must_use]
