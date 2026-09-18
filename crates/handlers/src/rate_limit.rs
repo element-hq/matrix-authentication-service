@@ -51,6 +51,12 @@ pub enum EmailAuthenticationLimitedError {
     Email(String),
 }
 
+#[derive(Debug, Clone, thiserror::Error)]
+pub enum DeviceCodeLinkLimitedError {
+    #[error("Too many device code link attempts for requester {0}")]
+    Requester(RequesterFingerprint),
+}
+
 /// Key used to rate limit requests per requester
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RequesterFingerprint {
@@ -122,6 +128,7 @@ struct LimiterInner {
     email_authentication_per_email: KeyedRateLimiter<String>,
     email_authentication_emails_per_session: KeyedRateLimiter<Ulid>,
     email_authentication_attempt_per_session: KeyedRateLimiter<Ulid>,
+    device_code_link_per_requester: KeyedRateLimiter<RequesterFingerprint>,
 }
 
 impl LimiterInner {
@@ -148,6 +155,7 @@ impl LimiterInner {
             email_authentication_attempt_per_session: RateLimiter::keyed(
                 config.email_authentication.attempt_per_session.to_quota()?,
             ),
+            device_code_link_per_requester: RateLimiter::keyed(config.device_code_link.to_quota()?),
         })
     }
 }
@@ -193,6 +201,7 @@ impl Limiter {
                 this.inner
                     .email_authentication_attempt_per_session
                     .retain_recent();
+                this.inner.device_code_link_per_requester.retain_recent();
 
                 interval.tick().await;
             }
@@ -325,6 +334,24 @@ impl Limiter {
             .check_key(&authentication.id)
             .map_err(|_| EmailAuthenticationLimitedError::Authentication(authentication.id))
     }
+
+    /// Check if a user code can be submitted on the device link page
+    ///
+    /// This protects against brute-forcing the user code of a device code
+    /// grant, as described in RFC 8628 section 5.1.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation is rate limited.
+    pub fn check_device_code_link(
+        &self,
+        requester: RequesterFingerprint,
+    ) -> Result<(), DeviceCodeLinkLimitedError> {
+        self.inner
+            .device_code_link_per_requester
+            .check_key(&requester)
+            .map_err(|_| DeviceCodeLinkLimitedError::Requester(requester))
+    }
 }
 
 #[cfg(test)]
@@ -400,5 +427,22 @@ mod tests {
 
         // The other account isn't rate-limited
         assert!(limiter.check_password(requesters[603], &bob).is_ok());
+    }
+
+    #[test]
+    fn test_device_code_link_limiter() {
+        let limiter = Limiter::new(&RateLimitingConfig::default()).unwrap();
+
+        let alice = RequesterFingerprint::new([1, 2, 3, 4].into());
+        let bob = RequesterFingerprint::new([4, 3, 2, 1].into());
+
+        // The default burst allowance is 10 attempts per requester
+        for _ in 0..10 {
+            assert!(limiter.check_device_code_link(alice).is_ok());
+        }
+        assert!(limiter.check_device_code_link(alice).is_err());
+
+        // Another requester is unaffected
+        assert!(limiter.check_device_code_link(bob).is_ok());
     }
 }

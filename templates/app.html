@@ -23,5 +23,9 @@ Please see LICENSE files in the repository root for full details.
 
   <body>
     <div id="root" data-root="{{ app_config.root }}" data-graphql-endpoint="{{ app_config.graphqlEndpoint }}"></div>
+
+    <div id="root-error" class="critical-notice" hidden>
+      {{ _("mas.loading_failed") }}
+    </div>
   </body>
 </html>
