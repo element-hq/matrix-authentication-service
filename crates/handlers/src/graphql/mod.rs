@@ -668,10 +668,6 @@ impl RequestingEntity {
             Self::BrowserSession(_) | Self::Anonymous => false,
         }
     }
-
-    fn is_unauthenticated(&self) -> bool {
-        matches!(self, Self::Anonymous)
-    }
 }
 
 impl From<BrowserSession> for RequestingEntity {
