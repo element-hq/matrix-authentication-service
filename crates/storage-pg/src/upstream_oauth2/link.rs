@@ -508,4 +508,37 @@ impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
 
         Ok((count, max_id.map(Ulid::from)))
     }
+
+    async fn cleanup_deactivated(
+        &mut self,
+        deactivated_before: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<usize, Self::Error> {
+        let res = sqlx::query!(
+            r#"
+            WITH to_delete AS (
+                SELECT l.upstream_oauth_link_id
+                FROM upstream_oauth_links l
+                JOIN users u USING (user_id)
+                WHERE u.deactivated_at < $1
+                LIMIT $2
+            ),
+            deleted_sessions AS (
+                DELETE FROM upstream_oauth_authorization_sessions s
+                USING to_delete
+                WHERE s.upstream_oauth_link_id = to_delete.upstream_oauth_link_id
+            )
+            DELETE FROM upstream_oauth_links
+            USING to_delete
+            WHERE upstream_oauth_links.upstream_oauth_link_id = to_delete.upstream_oauth_link_id
+        "#,
+            deactivated_before,
+            i64::try_from(limit).unwrap_or(i64::MAX),
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        Ok(usize::try_from(res.rows_affected()).unwrap_or(usize::MAX))
+    }
 }

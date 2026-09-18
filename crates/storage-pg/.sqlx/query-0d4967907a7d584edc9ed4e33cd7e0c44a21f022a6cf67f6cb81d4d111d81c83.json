@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH to_delete AS (\n                SELECT l.upstream_oauth_link_id\n                FROM upstream_oauth_links l\n                JOIN users u USING (user_id)\n                WHERE u.deactivated_at < $1\n                LIMIT $2\n            ),\n            deleted_sessions AS (\n                DELETE FROM upstream_oauth_authorization_sessions s\n                USING to_delete\n                WHERE s.upstream_oauth_link_id = to_delete.upstream_oauth_link_id\n            )\n            DELETE FROM upstream_oauth_links\n            USING to_delete\n            WHERE upstream_oauth_links.upstream_oauth_link_id = to_delete.upstream_oauth_link_id\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0d4967907a7d584edc9ed4e33cd7e0c44a21f022a6cf67f6cb81d4d111d81c83"
+}
