@@ -795,13 +795,7 @@ impl UserMutations {
         input: SetPasswordByRecoveryInput,
     ) -> Result<SetPasswordPayload, async_graphql::Error> {
         let state = ctx.state();
-        let requester = ctx.requester();
         let clock = state.clock();
-        if !requester.is_unauthenticated() {
-            return Err(async_graphql::Error::new(
-                "Account recovery is only for anonymous users.",
-            ));
-        }
 
         let password_manager = state.password_manager();
 
