@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -47,12 +48,13 @@ pub use self::{
     },
     upstream_oauth2::{
         UpstreamOAuthAuthorizationSession, UpstreamOAuthAuthorizationSessionState,
-        UpstreamOAuthLink, UpstreamOAuthProvider, UpstreamOAuthProviderClaimsImports,
-        UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderImportAction,
-        UpstreamOAuthProviderImportPreference, UpstreamOAuthProviderLocalpartPreference,
-        UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderOnConflict,
-        UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderResponseMode,
-        UpstreamOAuthProviderSubjectPreference, UpstreamOAuthProviderTokenAuthMethod,
+        UpstreamOAuthLink, UpstreamOAuthLinkToken, UpstreamOAuthProvider,
+        UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
+        UpstreamOAuthProviderImportAction, UpstreamOAuthProviderImportPreference,
+        UpstreamOAuthProviderLocalpartPreference, UpstreamOAuthProviderOnBackchannelLogout,
+        UpstreamOAuthProviderOnConflict, UpstreamOAuthProviderPkceMode,
+        UpstreamOAuthProviderResponseMode, UpstreamOAuthProviderSubjectPreference,
+        UpstreamOAuthProviderTokenAuthMethod,
     },
     user_agent::{DeviceType, UserAgent},
     users::{

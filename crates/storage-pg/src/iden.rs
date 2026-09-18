@@ -103,6 +103,7 @@ pub enum OAuth2Clients {
     GrantTypeRefreshToken,
     GrantTypeClientCredentials,
     GrantTypeDeviceCode,
+    GrantTypeTokenExchange,
 }
 
 #[derive(sea_query::Iden)]
