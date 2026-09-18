@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT oauth2_device_code_grant_id\n                     , oauth2_client_id\n                     , scope\n                     , device_code\n                     , user_code\n                     , created_at\n                     , expires_at\n                     , fulfilled_at\n                     , rejected_at\n                     , exchanged_at\n                     , user_session_id\n                     , oauth2_session_id\n                     , ip_address as \"ip_address: IpAddr\"\n                     , user_agent\n                     , locale\n                FROM\n                    oauth2_device_code_grant\n\n                WHERE user_code = $1\n            ",
+  "query": "\n                SELECT oauth2_device_code_grant_id\n                     , oauth2_client_id\n                     , scope\n                     , device_code\n                     , user_code\n                     , created_at\n                     , expires_at\n                     , fulfilled_at\n                     , rejected_at\n                     , exchanged_at\n                     , user_session_id\n                     , oauth2_session_id\n                     , ip_address as \"ip_address: IpAddr\"\n                     , user_agent\n                     , login_hint\n                     , locale\n                FROM\n                    oauth2_device_code_grant\n\n                WHERE oauth2_device_code_grant_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -75,13 +75,18 @@
       },
       {
         "ordinal": 14,
+        "name": "login_hint",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
         "name": "locale",
         "type_info": "Text"
       }
     ],
     "parameters": {
       "Left": [
-        "Text"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -99,8 +104,9 @@
       true,
       true,
       true,
+      true,
       true
     ]
   },
-  "hash": "89674770c8d7929382e266a88937df017289d5cabe62ad00b115a2a408f4936b"
+  "hash": "c40d99397488a1a516bb0ae1d1b2bbfeafa1e6bfde5e87f9999df261edea19e3"
 }
