@@ -21,8 +21,14 @@ use mas_data_model::{BoxClock, BoxRng, SiteConfig, UpstreamOAuthProvider};
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::{Register, UpstreamOAuth2Authorize, UrlBuilder};
-use mas_storage::{BoxRepository, upstream_oauth2::UpstreamOAuthProviderRepository};
-use mas_templates::{RegisterContext, RegisterFormField, TemplateContext, Templates, ToFormState};
+use mas_storage::{
+    BoxRepository, upstream_oauth2::UpstreamOAuthProviderRepository,
+    user::UserRegistrationTokenRepository,
+};
+use mas_templates::{
+    FormState, InviteContext, RegisterContext, RegisterFormField, TemplateContext, Templates,
+    ToFormState,
+};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use ulid::Ulid;
@@ -45,6 +51,16 @@ pub use self::cookie::UserRegistrationSessions as UserRegistrationSessionsCookie
 #[error("Upstream OAuth 2.0 provider not found")]
 struct ProviderNotFound;
 
+/// The query parameters of the registration page: an invite link deep-links
+/// with a registration token, on top of the usual post-auth action
+#[derive(Deserialize)]
+pub(crate) struct QueryParams {
+    token: Option<String>,
+
+    #[serde(flatten)]
+    action: OptionalPostAuthAction,
+}
+
 #[tracing::instrument(name = "handlers.views.register.get", skip_all)]
 pub(crate) async fn get(
     mut rng: BoxRng,
@@ -55,7 +71,7 @@ pub(crate) async fn get(
     State(site_config): State<SiteConfig>,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
-    Query(query): Query<OptionalPostAuthAction>,
+    Query(query): Query<QueryParams>,
     cookie_jar: CookieJar,
 ) -> Result<Response, InternalError> {
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
@@ -68,21 +84,36 @@ pub(crate) async fn get(
             .record_browser_session(&clock, &session)
             .await;
 
-        let reply = query.go_next(&url_builder);
+        let reply = query.action.go_next(&url_builder);
         return Ok((cookie_jar, reply).into_response());
     }
+
+    // Resolve the invite code the link carried, so that the form can show what
+    // it was issued for
+    let registration_token = match &query.token {
+        Some(token) => repo
+            .user_registration_token()
+            .find_by_token(token)
+            .await?
+            .filter(|token| token.is_valid(clock.now())),
+        None => None,
+    };
+    let passwordless_invite = registration_token
+        .as_ref()
+        .is_some_and(|token| token.passwordless);
 
     let providers = repo.upstream_oauth_provider().all_enabled().await?;
 
     // Without a password form there is nothing to show beyond the provider
-    // buttons, which isn't worth a page for one provider or none
-    if !site_config.password_registration_enabled {
+    // buttons, which isn't worth a page for one provider or none. A
+    // passwordless invite is a way to register on its own, so it keeps the page
+    if !site_config.password_registration_enabled && !passwordless_invite {
         if providers.len() == 1 {
             let provider = providers.into_iter().next().unwrap();
 
             let mut destination = UpstreamOAuth2Authorize::new(provider.id);
 
-            if let Some(action) = query.post_auth_action {
+            if let Some(action) = query.action.post_auth_action {
                 destination = destination.and_then(action);
             }
 
@@ -90,12 +121,28 @@ pub(crate) async fn get(
         }
 
         if providers.is_empty() {
-            let destination = mas_router::Login::from(query.post_auth_action);
+            let destination = mas_router::Login::from(query.action.post_auth_action);
             return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
         }
     }
 
-    let ctx = RegisterContext::new(&url_builder, providers, query.post_auth_action.as_ref())
+    let mut ctx = RegisterContext::new(
+        &url_builder,
+        providers,
+        query.action.post_auth_action.as_ref(),
+    );
+
+    // The code travels back on submission through a hidden field, whether it
+    // resolved or not
+    if let Some(token) = query.token {
+        let mut form = FormState::default();
+        form.set_value(RegisterFormField::Token, Some(token));
+        ctx = ctx
+            .with_form_state(form)
+            .with_invite(InviteContext::new(registration_token.as_ref()));
+    }
+
+    let ctx = ctx
         .with_captcha(site_config.captcha.clone())
         .with_csrf(csrf_token.form_value())
         .with_language(locale);
@@ -128,6 +175,11 @@ pub(crate) struct RegisterForm {
 
     #[serde(default)]
     accept_terms: String,
+
+    /// The invite code, carried by a hidden field when the page was opened
+    /// from an invite link
+    #[serde(default)]
+    token: String,
 
     /// Which upstream provider the user chose, if any: each provider has its
     /// own submit button
@@ -162,7 +214,7 @@ pub(crate) async fn post(
         Option<TypedHeader<headers::UserAgent>>,
         BoundActivityTracker,
     ),
-    Query(query): Query<OptionalPostAuthAction>,
+    Query(query): Query<QueryParams>,
     cookie_jar: CookieJar,
     Form(form): Form<ProtectedForm<RegisterForm>>,
 ) -> Result<Response, InternalError> {
@@ -172,7 +224,10 @@ pub(crate) async fn post(
         // The CSRF token expires after an hour, which a registration page left
         // open in a tab will outlive.
         tracing::debug!("Invalid CSRF token on the registration form, redirecting to a fresh one");
-        let destination = Register::from(query.post_auth_action);
+        let mut destination = Register::from(query.action.post_auth_action);
+        if let Some(token) = query.token {
+            destination = destination.with_token(token);
+        }
         return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
     };
 
@@ -209,7 +264,7 @@ pub(crate) async fn post(
             &mut repo,
             cookie_jar,
             &provider,
-            query.post_auth_action,
+            query.action.post_auth_action,
             carried_username,
         )
         .await?;
@@ -219,7 +274,22 @@ pub(crate) async fn post(
         return Ok((cookie_jar, Redirect::to(url.as_str())).into_response());
     }
 
-    if !site_config.password_registration_enabled {
+    // Resolve the invite code now: it decides whether a password is needed at
+    // all, and a passwordless one is a way to register on its own
+    let registration_token = if form.token.is_empty() {
+        None
+    } else {
+        repo.user_registration_token()
+            .find_by_token(&form.token)
+            .await?
+            .filter(|token| token.is_valid(clock.now()))
+    };
+    let token_invalid = !form.token.is_empty() && registration_token.is_none();
+    let passwordless_invite = registration_token
+        .as_ref()
+        .is_some_and(|token| token.passwordless);
+
+    if !site_config.password_registration_enabled && !passwordless_invite {
         return Ok(StatusCode::METHOD_NOT_ALLOWED.into_response());
     }
 
@@ -239,9 +309,11 @@ pub(crate) async fn post(
         repo,
         user_agent,
         &activity_tracker,
-        query,
+        query.action,
         cookie_jar,
         form,
+        registration_token,
+        token_invalid,
     )
     .await
 }
@@ -259,6 +331,7 @@ mod tests {
     use mas_storage::{
         RepositoryAccess,
         upstream_oauth2::{UpstreamOAuthProviderParams, UpstreamOAuthSessionRepository},
+        user::UserRegistrationTokenRepository as _,
     };
     use oauth2_types::scope::{OPENID, Scope};
     use sqlx::PgPool;
@@ -356,7 +429,7 @@ mod tests {
 
     /// Mint a CSRF token out of band, for the configurations where the page
     /// doesn't render a form to read one from
-    fn mint_csrf_token(state: &TestState, cookies: &CookieHelper) -> String {
+    pub(super) fn mint_csrf_token(state: &TestState, cookies: &CookieHelper) -> String {
         let (csrf_token, cookie_jar) = state.cookie_jar().csrf_token(&state.clock, state.rng());
         cookies.import(cookie_jar);
         csrf_token.form_value().clone()
@@ -401,6 +474,101 @@ mod tests {
             body.contains(r#"data-login-link="&#x2f;login""#),
             "response body: {body}"
         );
+    }
+
+    /// Opening the page with an invite code resolves it server-side, and the
+    /// code travels back through the form
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_get_with_invite(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let mut rng = state.rng();
+
+        let mut repo = state.repository().await.unwrap();
+        repo.user_registration_token()
+            .add(
+                &mut rng,
+                &state.clock,
+                "invite_alice".to_owned(),
+                None,
+                None,
+                Some("alice".to_owned()),
+                Some("alice@example.com".to_owned()),
+                true,
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let request = Request::get("/register?token=invite_alice").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-invite"),
+            serde_json::json!({
+                "valid": true,
+                "username": "alice",
+                "email": "alice@example.com",
+                "passwordless": true,
+            })
+        );
+        assert_eq!(
+            json_attribute(response.body(), "data-form")["fields"]["token"]["value"],
+            serde_json::json!("invite_alice")
+        );
+
+        // A code the server doesn't know only says so
+        let request = Request::get("/register?token=nope").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-invite"),
+            serde_json::json!({ "valid": false })
+        );
+    }
+
+    /// A passwordless invite is a way to register on its own, so the page keeps
+    /// the form even when password registration is disabled
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_get_with_invite_without_password_registration(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_login_enabled: false,
+                password_registration_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        let mut rng = state.rng();
+
+        let mut repo = state.repository().await.unwrap();
+        repo.user_registration_token()
+            .add(
+                &mut rng,
+                &state.clock,
+                "invite_alice".to_owned(),
+                None,
+                None,
+                Some("alice".to_owned()),
+                Some("alice@example.com".to_owned()),
+                true,
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let request = Request::get("/register?token=invite_alice").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+
+        // Without the code, there is nothing to register with here
+        let request = Request::get("/register").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/login");
     }
 
     /// Without password registration, the page is just the provider buttons

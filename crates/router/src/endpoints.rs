@@ -274,6 +274,17 @@ impl SimpleRoute for Logout {
 /// `GET|POST /register`
 #[derive(Default, Debug, Clone)]
 pub struct Register {
+    query: RegisterQuery,
+}
+
+/// The query parameters of the registration page
+#[derive(Default, Debug, Clone, Serialize)]
+pub struct RegisterQuery {
+    /// The registration token an invite link deep-links with
+    #[serde(skip_serializing_if = "Option::is_none")]
+    token: Option<String>,
+
+    #[serde(flatten)]
     post_auth_action: Option<PostAuthAction>,
 }
 
@@ -281,32 +292,38 @@ impl Register {
     #[must_use]
     pub fn and_then(action: PostAuthAction) -> Self {
         Self {
-            post_auth_action: Some(action),
+            query: RegisterQuery {
+                token: None,
+                post_auth_action: Some(action),
+            },
         }
     }
 
     #[must_use]
     pub fn and_continue_grant(data: Ulid) -> Self {
-        Self {
-            post_auth_action: Some(PostAuthAction::continue_grant(data)),
-        }
+        Self::and_then(PostAuthAction::continue_grant(data))
     }
 
     #[must_use]
     pub fn and_continue_compat_sso_login(data: Ulid) -> Self {
-        Self {
-            post_auth_action: Some(PostAuthAction::continue_compat_sso_login(data)),
-        }
+        Self::and_then(PostAuthAction::continue_compat_sso_login(data))
+    }
+
+    /// Deep-link to the registration page with a registration token
+    #[must_use]
+    pub fn with_token(mut self, token: String) -> Self {
+        self.query.token = Some(token);
+        self
     }
 
     /// Get a reference to the reauth's post auth action.
     #[must_use]
     pub fn post_auth_action(&self) -> Option<&PostAuthAction> {
-        self.post_auth_action.as_ref()
+        self.query.post_auth_action.as_ref()
     }
 
     pub fn go_next(&self, url_builder: &UrlBuilder) -> axum::response::Redirect {
-        match &self.post_auth_action {
+        match &self.query.post_auth_action {
             Some(action) => action.go_next(url_builder),
             None => url_builder.redirect(&Index),
         }
@@ -314,20 +331,25 @@ impl Register {
 }
 
 impl Route for Register {
-    type Query = PostAuthAction;
+    type Query = RegisterQuery;
 
     fn route() -> &'static str {
         "/register"
     }
 
     fn query(&self) -> Option<&Self::Query> {
-        self.post_auth_action.as_ref()
+        Some(&self.query)
     }
 }
 
 impl From<Option<PostAuthAction>> for Register {
     fn from(post_auth_action: Option<PostAuthAction>) -> Self {
-        Self { post_auth_action }
+        Self {
+            query: RegisterQuery {
+                token: None,
+                post_auth_action,
+            },
+        }
     }
 }
 

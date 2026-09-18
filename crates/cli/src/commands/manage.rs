@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -132,6 +133,19 @@ enum Subcommand {
         /// If not provided, the token never expires.
         #[arg(long)]
         expires_in: Option<u32>,
+
+        /// Only allow registering with this username
+        #[arg(long)]
+        username: Option<String>,
+
+        /// Only allow registering with this email address
+        #[arg(long)]
+        email: Option<String>,
+
+        /// Don't require a password when registering with this token; the
+        /// user is identified by a code sent to their email address
+        #[arg(long, action = ArgAction::SetTrue)]
+        passwordless: bool,
     },
 
     /// Trigger a provisioning job for all users
@@ -481,6 +495,9 @@ impl Options {
                 usage_limit,
                 unlimited,
                 expires_in,
+                username,
+                email,
+                passwordless,
             } => {
                 let _span = info_span!("cli.manage.add_user_registration_token").entered();
 
@@ -507,7 +524,16 @@ impl Options {
                 // Create the token
                 let registration_token = repo
                     .user_registration_token()
-                    .add(&mut rng, &clock, token_str, usage_limit, expires_at)
+                    .add(
+                        &mut rng,
+                        &clock,
+                        token_str,
+                        usage_limit,
+                        expires_at,
+                        username,
+                        email,
+                        passwordless,
+                    )
                     .await?;
 
                 repo.into_inner().commit().await?;
