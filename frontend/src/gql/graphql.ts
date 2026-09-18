@@ -183,6 +183,19 @@ export type UserRecoveryTicketStatus =
   /** The ticket is valid */
   | 'VALID';
 
+/** Why a username is not available for registration. */
+export type UsernameUnavailableReason =
+  /**
+   * The username does not pass the registration policy. See
+   * `violationCodes` for the specific reasons.
+   */
+  | 'INVALID'
+  /**
+   * The username is already in use, either by an existing MAS user or
+   * reserved by the homeserver.
+   */
+  | 'TAKEN';
+
 export type AccountDeleteButton_UserFragment = { username: string, hasPassword: boolean, matrix: { mxid: string, displayName: string | null } } & { ' $fragmentName'?: 'AccountDeleteButton_UserFragment' };
 
 export type AccountDeleteButton_SiteConfigFragment = { passwordLoginEnabled: boolean } & { ' $fragmentName'?: 'AccountDeleteButton_SiteConfigFragment' };
@@ -335,6 +348,13 @@ export type UserEmailList_UserFragment = { hasPassword: boolean } & { ' $fragmen
 export type UserEmailList_SiteConfigFragment = { emailChangeAllowed: boolean, passwordLoginEnabled: boolean } & { ' $fragmentName'?: 'UserEmailList_SiteConfigFragment' };
 
 export type BrowserSessionsOverview_UserFragment = { browserSessions: { totalCount: number } } & { ' $fragmentName'?: 'BrowserSessionsOverview_UserFragment' };
+
+export type UsernameAvailableQueryVariables = Exact<{
+  username: string;
+}>;
+
+
+export type UsernameAvailableQuery = { usernameAvailable: { available: boolean, reason: UsernameUnavailableReason | null, violationCodes: Array<string> | null } };
 
 export type UserProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1042,6 +1062,15 @@ export const UserEmailListDocument = new TypedDocumentString(`
   id
   email
 }`) as unknown as TypedDocumentString<UserEmailListQuery, UserEmailListQueryVariables>;
+export const UsernameAvailableDocument = new TypedDocumentString(`
+    query UsernameAvailable($username: String!) {
+  usernameAvailable(username: $username) {
+    available
+    reason
+    violationCodes
+  }
+}
+    `) as unknown as TypedDocumentString<UsernameAvailableQuery, UsernameAvailableQueryVariables>;
 export const UserProfileDocument = new TypedDocumentString(`
     query UserProfile {
   viewerSession {
@@ -1790,6 +1819,28 @@ export const mockAddEmailMutation = (resolver: GraphQLResponseResolver<AddEmailM
 export const mockUserEmailListQuery = (resolver: GraphQLResponseResolver<UserEmailListQuery, UserEmailListQueryVariables>, options?: RequestHandlerOptions) =>
   graphql.query<UserEmailListQuery, UserEmailListQueryVariables>(
     'UserEmailList',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockUsernameAvailableQuery(
+ *   ({ query, variables }) => {
+ *     const { username } = variables;
+ *     return HttpResponse.json({
+ *       data: { usernameAvailable }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockUsernameAvailableQuery = (resolver: GraphQLResponseResolver<UsernameAvailableQuery, UsernameAvailableQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<UsernameAvailableQuery, UsernameAvailableQueryVariables>(
+    'UsernameAvailable',
     resolver,
     options
   )
