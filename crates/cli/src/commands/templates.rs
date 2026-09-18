@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -17,7 +18,7 @@ use mas_config::{
 };
 use mas_data_model::{Clock, SystemClock};
 use rand::SeedableRng;
-use tracing::info_span;
+use tracing::{info_span, warn};
 
 use crate::util::{site_config_from_config, templates_from_config};
 
@@ -53,6 +54,30 @@ impl Options {
 
                 let template_config = TemplatesConfig::extract_or_default(figment)
                     .map_err(anyhow::Error::from_boxed)?;
+
+                // Validate the downloaded translations against the English
+                // source: every translated string must have the same set of
+                // placeholders and HTML tags. Template markup is rendered as
+                // trusted HTML, so a mismatch is a potential injection vector.
+                let translation_report =
+                    mas_i18n::check_translations(&template_config.translations_path)
+                        .context("could not check translations")?;
+                for issue in &translation_report.unknown_keys {
+                    warn!("{issue} (ignored)");
+                }
+                if translation_report.has_issues() {
+                    let details = translation_report
+                        .issues
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>()
+                        .join("\n");
+                    bail!(
+                        "found {} translation issue(s):\n{details}",
+                        translation_report.issues.len()
+                    );
+                }
+
                 let branding_config = BrandingConfig::extract_or_default(figment)
                     .map_err(anyhow::Error::from_boxed)?;
                 let matrix_config =
