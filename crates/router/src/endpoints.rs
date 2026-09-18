@@ -271,7 +271,7 @@ impl SimpleRoute for Logout {
     const PATH: &'static str = "/logout";
 }
 
-/// `POST /register`
+/// `GET|POST /register`
 #[derive(Default, Debug, Clone)]
 pub struct Register {
     post_auth_action: Option<PostAuthAction>,
@@ -344,6 +344,13 @@ impl PasswordRegister {
     #[must_use]
     pub fn and_then(mut self, action: PostAuthAction) -> Self {
         self.post_auth_action = Some(action);
+        self
+    }
+
+    /// Prefill the form with the given username
+    #[must_use]
+    pub fn with_username(mut self, username: String) -> Self {
+        self.username = Some(username);
         self
     }
 
