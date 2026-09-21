@@ -13,7 +13,7 @@ MAS follows the same release cadence as Synapse, meaning usually one full releas
    1. Check the "Set as pre-release" checkbox, and publish the release.
    1. Delete the N-2 release branch on [Localazy](https://localazy.com/console/branching), meaning that once the 0.16 release cycle begins, the 0.14 release branch will be deleted.
  - Create new release candidates if needed:
-   1. Run the `translations-download` workflow on the release branch.
+   1. Run the [`translations-download` workflow] on the release branch.
    1. Wait for the [translation download PR] to be automatically merged.
    1. Run the [`release-bump` workflow] on the release branch, with the `rc` input **checked**.
    1. Wait for [CI to churn] and the [draft release to appear]. This takes about 30 minutes.
