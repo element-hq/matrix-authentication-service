@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 
@@ -8,8 +9,8 @@ Please see LICENSE files in the repository root for full details.
 
 {% extends "base.html" %}
 
-{% set is_too_many_sessions = violations | length == 1 and violations[0].code | default("") == "too-many-sessions" %}
-{% set num_sessions_need_to_remove = violations[0].need_to_remove if is_too_many_sessions else none %}
+{% set violation = violations | selectattr("code", "defined") | first | default({}) %}
+{% set code = violation.code | default("") %}
 
 {% block content %}
   {% set client_display_name = client.client_name or client.client_id %}
@@ -19,17 +20,21 @@ Please see LICENSE files in the repository root for full details.
       {{ icon.error_solid() }}
     </div>
 
-    {% if is_too_many_sessions %}
-      <div class="header">
+    <div class="header">
+      {% if code == "too-many-sessions" %}
         <h1 class="title">{{ _("mas.policy_violation.too_many_sessions.heading") }}</h1>
-        <p class="text">{{ _("mas.policy_violation.too_many_sessions.description", num_devices_to_remove=num_sessions_need_to_remove) }}</p>
-      </div>
-    {% else %}
-      <div class="header">
+        <p class="text">{{ _("mas.policy_violation.too_many_sessions.description", num_devices_to_remove=violation.need_to_remove) }}</p>
+      {% elif code == "admin-scope-not-allowed" %}
+        <h1 class="title">{{ _("mas.policy_violation.admin_scope_not_allowed.heading") }}</h1>
+        <p class="text">{{ _("mas.policy_violation.admin_scope_not_allowed.description") }}</p>
+      {% elif code == "client-not-allowed" %}
+        <h1 class="title">{{ _("mas.policy_violation.client_not_allowed.heading") }}</h1>
+        <p class="text">{{ _("mas.policy_violation.client_not_allowed.description") }}</p>
+      {% else %}
         <h1 class="title">{{ _("mas.policy_violation.heading") }}</h1>
         <p class="text">{{ _("mas.policy_violation.description") }}</p>
-      </div>
-    {% endif %}
+      {% endif %}
+    </div>
   </header>
 
   <main class="flex flex-col gap-10">
@@ -60,7 +65,7 @@ Please see LICENSE files in the repository root for full details.
     </div>
 
     <div class="flex flex-col gap-6">
-      {% if is_too_many_sessions %}
+      {% if code == "too-many-sessions" %}
         {{ button.link(text=_("mas.policy_violation.too_many_sessions.manage_devices"), href="/account/sessions") }}
       {% endif %}
 
