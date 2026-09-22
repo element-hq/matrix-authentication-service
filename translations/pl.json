@@ -149,6 +149,7 @@
     "legacy_consent": {
       "this_will_setup": "Spowoduje to skonfigurowanie <span>%(client_name)s</span> z kontem <span>%(server_name)s</span>."
     },
+    "loading_failed": "Coś poszło nie tak podczas ładowania strony. Spróbuj ją odświeżyć.",
     "login": {
       "call_to_register": "Nie masz jeszcze konta?",
       "continue_with_provider": "Kontynuuj z %(provider)s",
