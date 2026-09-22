@@ -149,6 +149,7 @@
     "legacy_consent": {
       "this_will_setup": "Це налаштує <span>%(client_name)s</span> з вашим обліковим записом <span>%(server_name)s</span>."
     },
+    "loading_failed": "Під час завантаження сторінки сталася помилка. Спробуйте перезавантажити її.",
     "login": {
       "call_to_register": "У вас ще немає облікового запису?",
       "continue_with_provider": "Продовжити з %(provider)s",
