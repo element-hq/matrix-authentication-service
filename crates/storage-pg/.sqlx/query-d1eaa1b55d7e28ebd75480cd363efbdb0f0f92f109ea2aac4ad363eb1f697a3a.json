@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT oauth2_client_id\n                     , metadata_digest\n                     , encrypted_client_secret\n                     , application_type\n                     , redirect_uris\n                     , grant_type_authorization_code\n                     , grant_type_refresh_token\n                     , grant_type_client_credentials\n                     , grant_type_device_code\n                     , client_name\n                     , logo_uri\n                     , client_uri\n                     , policy_uri\n                     , tos_uri\n                     , jwks_uri\n                     , jwks\n                     , id_token_signed_response_alg\n                     , userinfo_signed_response_alg\n                     , token_endpoint_auth_method\n                     , token_endpoint_auth_signing_alg\n                     , initiate_login_uri\n                     , is_static\n                FROM oauth2_clients c\n                WHERE is_static = TRUE\n            ",
+  "query": "\n                SELECT oauth2_client_id\n                     , metadata_digest\n                     , encrypted_client_secret\n                     , application_type\n                     , redirect_uris\n                     , grant_type_authorization_code\n                     , grant_type_refresh_token\n                     , grant_type_client_credentials\n                     , grant_type_device_code\n                     , grant_type_token_exchange\n                     , client_name\n                     , logo_uri\n                     , client_uri\n                     , policy_uri\n                     , tos_uri\n                     , jwks_uri\n                     , jwks\n                     , id_token_signed_response_alg\n                     , userinfo_signed_response_alg\n                     , token_endpoint_auth_method\n                     , token_endpoint_auth_signing_alg\n                     , initiate_login_uri\n                     , is_static\n                FROM oauth2_clients c\n\n                WHERE oauth2_client_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -50,78 +50,86 @@
       },
       {
         "ordinal": 9,
+        "name": "grant_type_token_exchange",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
         "name": "client_name",
         "type_info": "Text"
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "logo_uri",
         "type_info": "Text"
       },
       {
-        "ordinal": 11,
+        "ordinal": 12,
         "name": "client_uri",
         "type_info": "Text"
       },
       {
-        "ordinal": 12,
+        "ordinal": 13,
         "name": "policy_uri",
         "type_info": "Text"
       },
       {
-        "ordinal": 13,
+        "ordinal": 14,
         "name": "tos_uri",
         "type_info": "Text"
       },
       {
-        "ordinal": 14,
+        "ordinal": 15,
         "name": "jwks_uri",
         "type_info": "Text"
       },
       {
-        "ordinal": 15,
+        "ordinal": 16,
         "name": "jwks",
         "type_info": "Jsonb"
       },
       {
-        "ordinal": 16,
+        "ordinal": 17,
         "name": "id_token_signed_response_alg",
         "type_info": "Text"
       },
       {
-        "ordinal": 17,
+        "ordinal": 18,
         "name": "userinfo_signed_response_alg",
         "type_info": "Text"
       },
       {
-        "ordinal": 18,
+        "ordinal": 19,
         "name": "token_endpoint_auth_method",
         "type_info": "Text"
       },
       {
-        "ordinal": 19,
+        "ordinal": 20,
         "name": "token_endpoint_auth_signing_alg",
         "type_info": "Text"
       },
       {
-        "ordinal": 20,
+        "ordinal": 21,
         "name": "initiate_login_uri",
         "type_info": "Text"
       },
       {
-        "ordinal": 21,
+        "ordinal": 22,
         "name": "is_static",
         "type_info": "Bool"
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Uuid"
+      ]
     },
     "nullable": [
       false,
       true,
       true,
       true,
+      false,
       false,
       false,
       false,
@@ -142,5 +150,5 @@
       false
     ]
   },
-  "hash": "3561fb73c2ac9a0e00acbabaee3a6fff41a6768538067c875b9a36f2d93e36b1"
+  "hash": "d1eaa1b55d7e28ebd75480cd363efbdb0f0f92f109ea2aac4ad363eb1f697a3a"
 }
