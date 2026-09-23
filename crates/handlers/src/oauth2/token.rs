@@ -821,6 +821,7 @@ async fn client_credentials_grant(
             user: None,
             client,
             session_counts: None,
+            session_limit: None,
             scope: &scope,
             grant_type: mas_policy::GrantType::ClientCredentials,
             requester: mas_policy::Requester {

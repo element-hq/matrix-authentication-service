@@ -131,6 +131,7 @@ pub async fn get(
             // which happens too late.
             session_replaced: false,
             session_counts,
+            session_limit: None,
             requester: mas_policy::Requester {
                 ip_address: activity_tracker.ip(),
                 user_agent,
@@ -282,6 +283,7 @@ pub async fn post(
                 redirect_uri: login.redirect_uri.to_string(),
             },
             session_counts,
+            session_limit: None,
             // We don't know if there's going to be a replacement until we received the device ID,
             // which happens too late.
             session_replaced: false,

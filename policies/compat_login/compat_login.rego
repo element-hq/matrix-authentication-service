@@ -30,10 +30,10 @@ violation contains {
 	"msg": "user has too many active sessions (soft limit)",
 	# `+ 1` because when you're at 2 sessions, and the limit is 2, you have to make room
 	# for the new session
-	"need_to_remove": (input.session_counts.total - data.session_limit.soft_limit) + 1,
+	"need_to_remove": (against_limit - effective_session_limit.soft_limit) + 1,
 } if {
-	# Only apply if session limits are enabled in the config
-	data.session_limit != null
+	# Only apply if session limits are enabled
+	effective_session_limit != null
 
 	# This is a web-based interactive login (like `m.login.sso`)
 	is_interactive
@@ -49,7 +49,7 @@ violation contains {
 	# reached or exceeded.
 	# We use the soft limit because the user will be able to interactively remove
 	# sessions to return under the limit.
-	data.session_limit.soft_limit <= input.session_counts.total
+	effective_session_limit.soft_limit <= against_limit
 }
 
 violation contains {
@@ -57,10 +57,10 @@ violation contains {
 	"msg": "user has too many active sessions (hard limit)",
 	# `+ 1` because when you're at 2 sessions, and the limit is 2, you have to make room
 	# for the new session
-	"need_to_remove": (input.session_counts.total - data.session_limit.hard_limit) + 1,
+	"need_to_remove": (against_limit - effective_session_limit.hard_limit) + 1,
 } if {
-	# Only apply if session limits are enabled in the config
-	data.session_limit != null
+	# Only apply if session limits are enabled
+	effective_session_limit != null
 
 	# This is *not* a web-based interactive login (like `m.login.password`)
 	not is_interactive
@@ -76,7 +76,7 @@ violation contains {
 	# reached or exceeded.
 	# We don't use the soft limit because the user won't be able to interactively remove
 	# sessions to return under the limit.
-	data.session_limit.hard_limit <= input.session_counts.total
+	effective_session_limit.hard_limit <= against_limit
 }
 
 is_interactive if {
@@ -85,22 +85,32 @@ is_interactive if {
 	input.login.type == "m.login.sso"
 }
 
+# Prefer limits from the evaluation input (per-user / per-client); fall back to
+# static policy data for custom policies that only set `data.session_limit`.
+# `else` is required so this is defined when `data.session_limit` is undefined
+# (`object.get` is undefined if its default argument is undefined).
+effective_session_limit := input.session_limit if {
+	input.session_limit
+} else := data.session_limit
+
+against_limit := object.get(input.session_counts, "against_limit", input.session_counts.total)
+
 # The session limits only apply to accounts within the `max_session_threshold`.
 #
-# True if the `max_session_threshold` isn't configured or <= `max_session_threshold`.
+# True if the `session_limit` isn't configured or <= `max_session_threshold`.
 passes_session_threshold if {
 	# If no `session_limit` configured, automatically passes (undefined)
-	not data.session_limit
+	not effective_session_limit
 } else if {
 	# If no `session_limit` configured, automatically passes (null)
-	data.session_limit == null
+	effective_session_limit == null
 } else if {
 	# If no `max_session_threshold` configured, automatically passes (undefined)
-	not data.session_limit.max_session_threshold
+	not effective_session_limit.max_session_threshold
 } else if {
 	# If no `max_session_threshold` configured, automatically passes (null)
-	data.session_limit.max_session_threshold == null
+	effective_session_limit.max_session_threshold == null
 } else if {
-	# Otherwise, check whether the total number of sessions is under the threshold
-	input.session_counts.total <= data.session_limit.max_session_threshold
+	# Otherwise, check whether the counted sessions are under the threshold
+	against_limit <= effective_session_limit.max_session_threshold
 }

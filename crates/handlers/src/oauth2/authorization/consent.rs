@@ -157,6 +157,7 @@ pub(crate) async fn get(
             user: Some(&session.user),
             client: &client,
             session_counts: Some(session_counts),
+            session_limit: None,
             scope: &grant.scope,
             grant_type: mas_policy::GrantType::AuthorizationCode,
             requester: mas_policy::Requester {
@@ -295,6 +296,7 @@ pub(crate) async fn post(
             user: Some(&browser_session.user),
             client: &client,
             session_counts: Some(session_counts),
+            session_limit: None,
             scope: &grant.scope,
             grant_type: mas_policy::GrantType::AuthorizationCode,
             requester: mas_policy::Requester {

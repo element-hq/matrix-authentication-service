@@ -203,5 +203,6 @@ pub(crate) async fn count_user_sessions_for_limiting(
         oauth2,
         compat,
         personal,
+        against_limit: Some(oauth2 + compat + personal),
     })
 }
