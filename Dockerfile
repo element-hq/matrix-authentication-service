@@ -14,7 +14,7 @@
 ARG DEBIAN_VERSION=13
 ARG DEBIAN_VERSION_NAME=trixie
 ARG RUSTUP_VERSION=1.29.0
-# Keep in sync with .node-version
+# Keep in sync with .node-version and devEngines.runtime in package.json
 ARG NODEJS_VERSION=24.15.0
 # Keep in sync with .github/actions/build-policies/action.yml and policies/Makefile
 ARG OPA_VERSION=1.13.1
@@ -38,8 +38,10 @@ COPY ./package.json ./pnpm-workspace.yaml ./pnpm-lock.yaml /app/
 COPY ./frontend/package.json /app/frontend/
 
 # Network access: to fetch dependencies
+# The base image already provides the Node.js version pinned in
+# `devEngines.runtime`, so skip pnpm's own runtime download.
 RUN --network=default \
-  pnpm install --frozen-lockfile
+  pnpm install --frozen-lockfile --no-runtime
 
 COPY ./frontend/ /app/frontend/
 COPY ./templates/ /app/templates/

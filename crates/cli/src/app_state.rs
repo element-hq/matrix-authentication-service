@@ -1,11 +1,11 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::{convert::Infallible, net::IpAddr, sync::Arc};
+use std::{convert::Infallible, future::ready, net::IpAddr, sync::Arc};
 
 use axum::extract::{FromRef, FromRequestParts, State};
 use ipnetwork::IpNetwork;
@@ -224,28 +224,30 @@ impl FromRef<AppState> for AppVersion {
 impl FromRequestParts<AppState> for BoxClock {
     type Rejection = Infallible;
 
-    async fn from_request_parts(
+    fn from_request_parts(
         _parts: &mut axum::http::request::Parts,
         _state: &AppState,
-    ) -> Result<Self, Self::Rejection> {
+    ) -> impl Future<Output = Result<Self, Self::Rejection>> + Send {
         let clock = SystemClock::default();
-        Ok(Box::new(clock))
+        let clock: Self = Box::new(clock);
+        ready(Ok(clock))
     }
 }
 
 impl FromRequestParts<AppState> for BoxRng {
     type Rejection = Infallible;
 
-    async fn from_request_parts(
+    fn from_request_parts(
         _parts: &mut axum::http::request::Parts,
         _state: &AppState,
-    ) -> Result<Self, Self::Rejection> {
+    ) -> impl Future<Output = Result<Self, Self::Rejection>> + Send {
         // This rng is used to source the local rng
         #[expect(clippy::disallowed_methods)]
         let rng = rand::thread_rng();
 
         let rng = rand_chacha::ChaChaRng::from_rng(rng).expect("Failed to seed RNG");
-        Ok(Box::new(rng))
+        let rng: Self = Box::new(rng);
+        ready(Ok(rng))
     }
 }
 
@@ -264,11 +266,11 @@ impl FromRequestParts<AppState> for Policy {
 impl FromRequestParts<AppState> for ActivityTracker {
     type Rejection = Infallible;
 
-    async fn from_request_parts(
+    fn from_request_parts(
         _parts: &mut axum::http::request::Parts,
         state: &AppState,
-    ) -> Result<Self, Self::Rejection> {
-        Ok(state.activity_tracker.clone())
+    ) -> impl Future<Output = Result<Self, Self::Rejection>> + Send {
+        ready(Ok(state.activity_tracker.clone()))
     }
 }
 

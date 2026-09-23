@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -42,7 +43,7 @@ impl Object for CaptchaConfig {
 /// Context with an optional CAPTCHA configuration in it
 #[derive(Serialize)]
 pub struct WithCaptcha<T> {
-    captcha: Option<Value>,
+    captcha_config: Option<Value>,
 
     #[serde(flatten)]
     inner: T,
@@ -52,7 +53,7 @@ impl<T> WithCaptcha<T> {
     #[must_use]
     pub(crate) fn new(captcha: Option<mas_data_model::CaptchaConfig>, inner: T) -> Self {
         Self {
-            captcha: captcha.map(|captcha| Value::from_object(CaptchaConfig(captcha))),
+            captcha_config: captcha.map(|captcha| Value::from_object(CaptchaConfig(captcha))),
             inner,
         }
     }
@@ -67,9 +68,24 @@ impl<T: TemplateContext> TemplateContext for WithCaptcha<T> {
     where
         Self: Sized,
     {
-        T::sample(now, rng, locales)
+        let config = mas_data_model::CaptchaConfig {
+            service: mas_data_model::CaptchaService::RecaptchaV2,
+            site_key: "site-key".to_owned(),
+            secret_key: "secret-key".to_owned(),
+        };
+
+        [("none", None), ("some", Some(config))]
             .into_iter()
-            .map(|(k, inner)| (k, Self::new(None, inner)))
+            .flat_map(|(label, config)| {
+                T::sample(now, rng, locales)
+                    .into_iter()
+                    .map(move |(k, inner)| {
+                        (
+                            k.with_appended("captcha", label.to_owned()),
+                            Self::new(config.clone(), inner),
+                        )
+                    })
+            })
             .collect()
     }
 }

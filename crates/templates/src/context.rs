@@ -842,7 +842,7 @@ impl TemplateContext for PolicyViolationContext {
 
                     let authorization_grant_invalid_scope =
                         PolicyViolationContext::for_authorization_grant(
-                            grant,
+                            grant.clone(),
                             client.clone(),
                             vec![Violation {
                                 msg: "scope 'foo' not allowed".to_owned(),
@@ -851,13 +851,37 @@ impl TemplateContext for PolicyViolationContext {
                                 variant: None,
                             }],
                         );
+                    let authorization_grant_admin_scope =
+                        PolicyViolationContext::for_authorization_grant(
+                            grant.clone(),
+                            client.clone(),
+                            vec![Violation {
+                                msg: "scope 'urn:mas:admin' requires admin privileges".to_owned(),
+                                redirect_uri: None,
+                                field: None,
+                                variant: Some(ViolationVariant::AdminScopeNotAllowed),
+                            }],
+                        );
+
+                    let authorization_grant_client_not_allowed =
+                        PolicyViolationContext::for_authorization_grant(
+                            grant,
+                            client.clone(),
+                            vec![Violation {
+                                msg: "This client is not allowed to login".to_owned(),
+                                redirect_uri: None,
+                                field: None,
+                                variant: Some(ViolationVariant::ClientNotAllowed),
+                            }],
+                        );
+
                     let device_code_grant = PolicyViolationContext::for_device_code_grant(
                         DeviceCodeGrant {
                             id: Ulid::from_datetime_with_rng(now, rng),
                             state: mas_data_model::DeviceCodeGrantState::Pending,
                             client_id: client.id,
                             scope: [OPENID].into_iter().collect(),
-                            user_code: Alphanumeric.sample_string(rng, 6).to_uppercase(),
+                            user_code: mas_data_model::generate_user_code(rng),
                             device_code: Alphanumeric.sample_string(rng, 32),
                             created_at: now - Duration::try_minutes(5).unwrap(),
                             expires_at: now + Duration::try_minutes(25).unwrap(),
@@ -876,7 +900,7 @@ impl TemplateContext for PolicyViolationContext {
                                 state: mas_data_model::DeviceCodeGrantState::Pending,
                                 client_id: client.id,
                                 scope: [OPENID].into_iter().collect(),
-                                user_code: Alphanumeric.sample_string(rng, 6).to_uppercase(),
+                                user_code: mas_data_model::generate_user_code(rng),
                                 device_code: Alphanumeric.sample_string(rng, 32),
                                 created_at: now - Duration::try_minutes(5).unwrap(),
                                 expires_at: now + Duration::try_minutes(25).unwrap(),
@@ -898,6 +922,8 @@ impl TemplateContext for PolicyViolationContext {
                     [
                         authorization_grant,
                         authorization_grant_invalid_scope,
+                        authorization_grant_admin_scope,
+                        authorization_grant_client_not_allowed,
                         device_code_grant,
                         device_code_grant_invalid_scope,
                     ]
@@ -975,6 +1001,30 @@ impl TemplateContext for CompatLoginPolicyViolationContext {
                     field: None,
                     variant: Some(ViolationVariant::TooManySessions { need_to_remove: 1 }),
                 }],
+            },
+            CompatLoginPolicyViolationContext {
+                violations: vec![Violation {
+                    msg: "This client is not allowed to login".to_owned(),
+                    redirect_uri: None,
+                    field: None,
+                    variant: Some(ViolationVariant::ClientNotAllowed),
+                }],
+            },
+            CompatLoginPolicyViolationContext {
+                violations: vec![
+                    Violation {
+                        msg: "scope 'foo' not allowed".to_owned(),
+                        redirect_uri: None,
+                        field: None,
+                        variant: None,
+                    },
+                    Violation {
+                        msg: "user has too many active sessions".to_owned(),
+                        redirect_uri: None,
+                        field: None,
+                        variant: Some(ViolationVariant::TooManySessions { need_to_remove: 1 }),
+                    },
+                ],
             },
         ])
     }
@@ -1918,7 +1968,7 @@ impl TemplateContext for DeviceConsentContext {
                     state: mas_data_model::DeviceCodeGrantState::Pending,
                     client_id: client.id,
                     scope: [OPENID].into_iter().collect(),
-                    user_code: Alphanumeric.sample_string(rng, 6).to_uppercase(),
+                    user_code: mas_data_model::generate_user_code(rng),
                     device_code: Alphanumeric.sample_string(rng, 32),
                     created_at: now - Duration::try_minutes(5).unwrap(),
                     expires_at: now + Duration::try_minutes(25).unwrap(),
