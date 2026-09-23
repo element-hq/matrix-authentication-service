@@ -6,11 +6,11 @@
     },
     "cancel": "Cancel",
     "@cancel": {
-      "context": "pages/consent.html:81:11-29, pages/device_consent.html:179:13-31, pages/device_link.html:45:33-51, pages/policy_violation.html:70:15-33, pages/reauth.html:37:13-31"
+      "context": "pages/consent.html:81:11-29, pages/device_consent.html:179:13-31, pages/device_link.html:57:33-51, pages/policy_violation.html:75:15-33, pages/reauth.html:37:13-31"
     },
     "continue": "Continue",
     "@continue": {
-      "context": "form_post.html:26:28-48, pages/consent.html:71:28-48, pages/device_link.html:42:28-48, pages/login.html:68:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:77:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:52:28-48"
+      "context": "form_post.html:26:28-48, pages/consent.html:71:28-48, pages/device_link.html:54:28-48, pages/login.html:68:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:78:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:52:28-48"
     },
     "create_account": "Create Account",
     "@create_account": {
@@ -22,7 +22,7 @@
     },
     "sign_out": "Sign out",
     "@sign_out": {
-      "context": "pages/account/logged_out.html:23:28-48, pages/compat_login_policy_violation.html:38:28-48, pages/index.html:28:28-48, pages/policy_violation.html:59:28-48, pages/upstream_oauth2/link_mismatch.html:24:24-44, pages/upstream_oauth2/suggest_link.html:32:26-46"
+      "context": "pages/account/logged_out.html:23:28-48, pages/compat_login_policy_violation.html:44:28-48, pages/index.html:28:28-48, pages/policy_violation.html:64:28-48, pages/upstream_oauth2/link_mismatch.html:24:24-44, pages/upstream_oauth2/suggest_link.html:32:26-46"
     },
     "skip": "Skip",
     "@skip": {
@@ -41,7 +41,7 @@
     },
     "name": "matrix-authentication-service",
     "@name": {
-      "context": "app.html:18:14-27, base.html:24:31-44",
+      "context": "app.html:18:14-27, base.html:25:31-44",
       "description": "Name of the application"
     },
     "technical_description": "OpenID Connect discovery document: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>",
@@ -79,7 +79,7 @@
     },
     "email_address": "Email address",
     "@email_address": {
-      "context": "pages/recovery/start.html:34:33-58, pages/register/password.html:40:35-60, pages/upstream_oauth2/do_register.html:115:37-62"
+      "context": "pages/recovery/start.html:34:33-58, pages/register/password.html:41:35-60, pages/upstream_oauth2/do_register.html:115:37-62"
     },
     "loading": "Loading…",
     "@loading": {
@@ -91,15 +91,15 @@
     },
     "password": "Password",
     "@password": {
-      "context": "pages/login.html:56:37-57, pages/reauth.html:28:35-55, pages/register/password.html:45:33-53"
+      "context": "pages/login.html:56:37-57, pages/reauth.html:28:35-55, pages/register/password.html:46:33-53"
     },
     "password_confirm": "Confirm password",
     "@password_confirm": {
-      "context": "pages/register/password.html:49:33-61"
+      "context": "pages/register/password.html:50:33-61"
     },
     "username": "Username",
     "@username": {
-      "context": "pages/login.html:51:39-59, pages/register/index.html:30:35-55, pages/register/password.html:34:33-53, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:107:39-59"
+      "context": "pages/login.html:51:39-59, pages/register/index.html:30:35-55, pages/register/password.html:35:33-53, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:107:39-59"
     }
   },
   "error": {
@@ -149,7 +149,7 @@
     "captcha": {
       "noscript": "This form is protected by a CAPTCHA and requires JavaScript to be enabled to submit it. Please enable JavaScript in your browser and reload this page.",
       "@noscript": {
-        "context": "components/captcha.html:13:11-36"
+        "context": "components/captcha.html:14:11-36"
       }
     },
     "change_password": {
@@ -234,7 +234,7 @@
       },
       "verification_code": "Verification code",
       "@verification_code": {
-        "context": "pages/device_link.html:26:35-78",
+        "context": "pages/device_link.html:34:35-78",
         "description": "On the device link page, label of the text field where the user enters the verification code shown on the other device."
       }
     },
@@ -450,6 +450,10 @@
         "context": "pages/sso.html:28:11-109"
       }
     },
+    "loading_failed": "Something went wrong while loading the page. Try reloading it.",
+    "@loading_failed": {
+      "context": "app.html:28:9-32"
+    },
     "login": {
       "call_to_register": "Don't have an account yet?",
       "@call_to_register": {
@@ -527,32 +531,56 @@
       "description": "Separator between the login methods"
     },
     "policy_violation": {
-      "description": "This might be because of the client which authored the request, the currently logged in user, or the request itself.",
+      "admin_scope_not_allowed": {
+        "description": "This application requires administrator privileges. Sign in with an administrator account to continue.",
+        "@description": {
+          "context": "pages/policy_violation.html:29:27-88",
+          "description": "Displayed when the client requested an admin scope and the user is not an administrator"
+        },
+        "heading": "Administrator access required",
+        "@heading": {
+          "context": "pages/policy_violation.html:28:29-86",
+          "description": "Displayed when the client requested an admin scope and the user is not an administrator"
+        }
+      },
+      "client_not_allowed": {
+        "description": "This application is not allowed to sign in to this service.",
+        "@description": {
+          "context": "pages/compat_login_policy_violation.html:29:29-85, pages/policy_violation.html:32:27-83",
+          "description": "Displayed when the policy does not allow the client"
+        },
+        "heading": "Application not allowed",
+        "@heading": {
+          "context": "pages/compat_login_policy_violation.html:28:31-83, pages/policy_violation.html:31:29-81",
+          "description": "Displayed when the policy does not allow the client"
+        }
+      },
+      "description": "Your request has been denied by the policy of this service. This might be because of the application, your account, or the request itself.",
       "@description": {
-        "context": "pages/compat_login_policy_violation.html:27:27-64, pages/policy_violation.html:30:27-64",
+        "context": "pages/compat_login_policy_violation.html:32:29-66, pages/policy_violation.html:35:27-64",
         "description": "Displayed when an authorization request is denied by the policy"
       },
-      "heading": "The authorization request was denied by the policy enforced by this service",
+      "heading": "Request denied",
       "@heading": {
-        "context": "pages/compat_login_policy_violation.html:26:29-62, pages/policy_violation.html:29:29-62",
+        "context": "pages/compat_login_policy_violation.html:31:31-64, pages/policy_violation.html:34:29-62",
         "description": "Displayed when an authorization request is denied by the policy"
       },
       "logged_as": "Logged as <span class=\"font-semibold\">%(username)s</span>",
       "@logged_as": {
-        "context": "pages/compat_login_policy_violation.html:35:11-86, pages/policy_violation.html:56:11-86"
+        "context": "pages/compat_login_policy_violation.html:41:11-86, pages/policy_violation.html:61:11-86"
       },
       "too_many_sessions": {
         "description": "Your account is already signed in on the maximum number of devices. To continue, <span class=\"font-semibold\">remove %(num_devices_to_remove)s of your existing devices</span> and sign in again.",
         "@description": {
-          "context": "pages/compat_login_policy_violation.html:22:27-133, pages/policy_violation.html:25:27-133"
+          "context": "pages/compat_login_policy_violation.html:23:27-130, pages/policy_violation.html:26:27-130"
         },
         "heading": "Device limit reached",
         "@heading": {
-          "context": "pages/compat_login_policy_violation.html:21:29-80, pages/policy_violation.html:24:29-80"
+          "context": "pages/compat_login_policy_violation.html:22:29-80, pages/policy_violation.html:25:29-80"
         },
         "manage_devices": "Manage devices",
         "@manage_devices": {
-          "context": "pages/compat_login_policy_violation.html:42:26-84, pages/policy_violation.html:64:28-86"
+          "context": "pages/compat_login_policy_violation.html:48:26-84, pages/policy_violation.html:69:28-86"
         }
       }
     },
@@ -660,7 +688,7 @@
     "register": {
       "call_to_login": "Already have an account?",
       "@call_to_login": {
-        "context": "pages/register/index.html:63:35-66, pages/register/password.html:80:33-64",
+        "context": "pages/register/index.html:63:35-66, pages/register/password.html:81:33-64",
         "description": "Displayed on the registration page to suggest to log in instead"
       },
       "continue_with_email": "Continue with email address",
@@ -678,12 +706,12 @@
         },
         "heading": "Create an account",
         "@heading": {
-          "context": "pages/register/index.html:21:29-69, pages/register/password.html:18:27-67"
+          "context": "pages/register/index.html:21:29-69, pages/register/password.html:19:27-67"
         }
       },
       "terms_of_service": "I agree to the <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Terms and Conditions</a>",
       "@terms_of_service": {
-        "context": "pages/register/password.html:54:35-95, pages/upstream_oauth2/do_register.html:180:35-95"
+        "context": "pages/register/password.html:55:35-95, pages/upstream_oauth2/do_register.html:180:35-95"
       }
     },
     "registration_token": {

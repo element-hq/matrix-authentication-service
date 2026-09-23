@@ -515,7 +515,7 @@ pub(crate) async fn post(
                 .ok_or(RouteError::CantLoadUser(session.user_id))?;
 
             if !user.is_valid() {
-                return Err(RouteError::InvalidUser(user.id))?;
+                return Err(RouteError::InvalidUser(user.id));
             }
 
             // Grant the synapse admin scope if the session has the admin flag set.
@@ -599,7 +599,7 @@ pub(crate) async fn post(
                 .ok_or(RouteError::CantLoadUser(session.user_id))?;
 
             if !user.is_valid() {
-                return Err(RouteError::InvalidUser(user.id))?;
+                return Err(RouteError::InvalidUser(user.id));
             }
 
             // Grant the synapse admin scope if the session has the admin flag set.
