@@ -20,7 +20,7 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::{BoxClock, BoxRng, Clock, MatrixUser};
+use mas_data_model::{BoxClock, BoxRng, Clock, MatrixUser, SiteConfig};
 use mas_matrix::HomeserverConnection;
 use mas_policy::{Policy, model::CompatLogin};
 use mas_router::{CompatLoginSsoAction, PostAuthAction, UrlBuilder};
@@ -33,7 +33,10 @@ use ulid::Ulid;
 
 use crate::{
     BoundActivityTracker, PreferredLanguage,
-    session::{SessionOrFallback, count_user_sessions_for_limiting, load_session_or_fallback},
+    session::{
+        ResolvedSessionLimit, SessionOrFallback, load_session_or_fallback,
+        resolve_session_limit_for_login,
+    },
 };
 
 #[derive(Debug, Deserialize)]
@@ -54,6 +57,7 @@ pub async fn get(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
+    State(site_config): State<SiteConfig>,
     mut policy: Policy,
     activity_tracker: BoundActivityTracker,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
@@ -116,7 +120,8 @@ pub async fn get(
         return Ok((cookie_jar, Html(content)).into_response());
     }
 
-    let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
+    let (resolved, session_counts) =
+        resolve_session_limit_for_login(&mut repo, &site_config, &session.user, None).await?;
 
     // We can close the repository early, we don't need it at this point
     repo.save().await?;
@@ -131,7 +136,7 @@ pub async fn get(
             // which happens too late.
             session_replaced: false,
             session_counts,
-            session_limit: None,
+            session_limit: resolved.map(ResolvedSessionLimit::as_policy_input),
             requester: mas_policy::Requester {
                 ip_address: activity_tracker.ip(),
                 user_agent,
@@ -201,6 +206,7 @@ pub async fn post(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
+    State(site_config): State<SiteConfig>,
     mut policy: Policy,
     activity_tracker: BoundActivityTracker,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
@@ -274,7 +280,8 @@ pub async fn post(
         redirect_uri
     };
 
-    let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
+    let (resolved, session_counts) =
+        resolve_session_limit_for_login(&mut repo, &site_config, &session.user, None).await?;
 
     let res = policy
         .evaluate_compat_login(mas_policy::CompatLoginInput {
@@ -283,7 +290,7 @@ pub async fn post(
                 redirect_uri: login.redirect_uri.to_string(),
             },
             session_counts,
-            session_limit: None,
+            session_limit: resolved.map(ResolvedSessionLimit::as_policy_input),
             // We don't know if there's going to be a replacement until we received the device ID,
             // which happens too late.
             session_replaced: false,

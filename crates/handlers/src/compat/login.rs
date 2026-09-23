@@ -16,7 +16,7 @@ use chrono::Duration;
 use hyper::StatusCode;
 use mas_axum_utils::{RecordAsRequester, record_error};
 use mas_data_model::{
-    BoxClock, BoxRng, Clock, CompatSession, CompatSsoLoginState, Device, SessionLimitConfig,
+    BoxClock, BoxRng, Clock, CompatSession, CompatSsoLoginState, Device, SessionLimitRules,
     SiteConfig, TokenType, User,
 };
 use mas_matrix::HomeserverConnection;
@@ -42,7 +42,7 @@ use crate::{
     BoundActivityTracker, Limiter, METER, RequesterFingerprint, impl_from_error_for_route,
     passwords::{PasswordManager, PasswordVerificationResult},
     rate_limit::PasswordCheckLimitedError,
-    session::count_user_sessions_for_limiting,
+    session::{ResolvedSessionLimit, resolve_session_limit_for_login},
 };
 
 static LOGIN_COUNTER: LazyLock<Counter<u64>> = LazyLock::new(|| {
@@ -379,7 +379,7 @@ pub(crate) async fn post(
                     ip_address: activity_tracker.ip(),
                     user_agent: user_agent.clone(),
                 },
-                site_config.session_limit.as_ref(),
+                &site_config,
                 username,
                 password,
                 input.device_id, // TODO check for validity
@@ -398,7 +398,7 @@ pub(crate) async fn post(
                     ip_address: activity_tracker.ip(),
                     user_agent: user_agent.clone(),
                 },
-                site_config.session_limit.as_ref(),
+                &site_config,
                 &token,
                 input.device_id,
                 input.initial_device_display_name,
@@ -536,7 +536,7 @@ async fn process_violations_for_compat_login(
     rng: &mut (dyn RngCore + Send),
     clock: &dyn Clock,
     repo: &mut BoxRepository,
-    session_limit_config: Option<&SessionLimitConfig>,
+    session_limit_config: Option<&SessionLimitRules>,
     user: &User,
     res: mas_policy::EvaluationResult,
 ) -> Result<(), RouteError> {
@@ -777,7 +777,7 @@ async fn token_login(
     repo: &mut BoxRepository,
     policy: &mut Policy,
     requester: Requester,
-    session_limit_config: Option<&SessionLimitConfig>,
+    site_config: &SiteConfig,
     token: &str,
     requested_device_id: Option<String>,
     initial_device_display_name: Option<String>,
@@ -868,7 +868,8 @@ async fn token_login(
         .finish_sessions_to_replace_device(clock, &browser_session.user, &device)
         .await?;
 
-    let session_counts = count_user_sessions_for_limiting(repo, &browser_session.user).await?;
+    let (resolved, session_counts) =
+        resolve_session_limit_for_login(repo, site_config, &browser_session.user, None).await?;
 
     let res = policy
         .evaluate_compat_login(mas_policy::CompatLoginInput {
@@ -876,7 +877,7 @@ async fn token_login(
             login: CompatLogin::Token,
             session_replaced,
             session_counts,
-            session_limit: None,
+            session_limit: resolved.map(ResolvedSessionLimit::as_policy_input),
             requester,
         })
         .await?;
@@ -884,7 +885,7 @@ async fn token_login(
         rng,
         clock,
         repo,
-        session_limit_config,
+        resolved.as_ref().map(|r| &r.rules),
         &browser_session.user,
         res,
     )
@@ -922,7 +923,7 @@ async fn user_password_login(
     repo: &mut BoxRepository,
     policy: &mut Policy,
     policy_requester: Requester,
-    session_limit_config: Option<&SessionLimitConfig>,
+    site_config: &SiteConfig,
     username: &str,
     password: String,
     requested_device_id: Option<String>,
@@ -997,7 +998,8 @@ async fn user_password_login(
         .finish_sessions_to_replace_device(clock, &user, &device)
         .await?;
 
-    let session_counts = count_user_sessions_for_limiting(repo, &user).await?;
+    let (resolved, session_counts) =
+        resolve_session_limit_for_login(repo, site_config, &user, None).await?;
 
     let res = policy
         .evaluate_compat_login(mas_policy::CompatLoginInput {
@@ -1005,11 +1007,19 @@ async fn user_password_login(
             login: CompatLogin::Password,
             session_replaced,
             session_counts,
-            session_limit: None,
+            session_limit: resolved.map(ResolvedSessionLimit::as_policy_input),
             requester: policy_requester,
         })
         .await?;
-    process_violations_for_compat_login(rng, clock, repo, session_limit_config, &user, res).await?;
+    process_violations_for_compat_login(
+        rng,
+        clock,
+        repo,
+        resolved.as_ref().map(|r| &r.rules),
+        &user,
+        res,
+    )
+    .await?;
 
     let session = repo
         .compat_session()
@@ -1037,13 +1047,17 @@ mod tests {
 
     use assert_matches::assert_matches;
     use hyper::Request;
+    use mas_data_model::SessionLimitConfig;
     use mas_matrix::{HomeserverConnection, ProvisionRequest};
     use rand::distributions::{Alphanumeric, DistString};
     use sqlx::PgPool;
 
     use super::*;
-    use crate::test_utils::{
-        CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup, test_site_config,
+    use crate::{
+        session::count_user_sessions_for_limiting,
+        test_utils::{
+            CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup, test_site_config,
+        },
     };
 
     /// Test that the server advertises the right login flows.
@@ -2212,6 +2226,65 @@ mod tests {
 
         // One more interactive SSO login will tip us over the `soft_limit`. The
         // consent page should return 403 forbidden (device limit reached).
+        assert_matches!(
+            matrix_compat_sso_login(&state, "alice", "password").await,
+            Err(MatrixCompatSsoLoginError::ConsentForbidden {
+                page_type: ConsentForbiddenPageType::DeviceLimitReached,
+                ..
+            })
+        );
+    }
+
+    /// A per-user global override raises the interactive soft limit.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_session_soft_limit_user_override_interactive_login(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                session_limit: Some(SessionLimitConfig {
+                    soft_limit: NonZeroU64::new(1).unwrap(),
+                    hard_limit: NonZeroU64::new(5).unwrap(),
+                    max_session_threshold: None,
+                    dangerous_hard_limit_eviction: false,
+                }),
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let user = user_with_password(&state, "alice", "password", false).await;
+
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+        repo.user_session_limit_override()
+            .add(
+                &mut rng,
+                &state.clock,
+                &user,
+                None,
+                NonZeroU64::new(2).unwrap(),
+                NonZeroU64::new(5).unwrap(),
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        // Two interactive logins are allowed under the override (soft_limit = 2).
+        for _ in 0..2 {
+            let login_token = matrix_compat_sso_login(&state, "alice", "password")
+                .await
+                .expect("Override should allow login under the raised soft_limit");
+
+            let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+                "type": "m.login.token",
+                "token": login_token,
+            }));
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::OK);
+        }
+
         assert_matches!(
             matrix_compat_sso_login(&state, "alice", "password").await,
             Err(MatrixCompatSsoLoginError::ConsentForbidden {
