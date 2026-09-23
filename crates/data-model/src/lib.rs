@@ -61,6 +61,7 @@ pub use self::{
         Authentication, AuthenticationMethod, BrowserSession, MatrixUser, Password, User,
         UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode, UserRecoverySession,
         UserRecoveryTicket, UserRegistration, UserRegistrationPassword, UserRegistrationToken,
+        UserSessionLimitOverride,
     },
     utils::{BoxClock, BoxRng, UlidExt},
     version::AppVersion,
