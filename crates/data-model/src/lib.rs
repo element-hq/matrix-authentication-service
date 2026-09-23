@@ -41,7 +41,8 @@ pub use self::{
     },
     policy_data::PolicyData,
     site_config::{
-        CaptchaConfig, CaptchaService, SessionExpirationConfig, SessionLimitConfig, SiteConfig,
+        CaptchaConfig, CaptchaService, SessionExpirationConfig, SessionLimitConfig,
+        SessionLimitRules, SiteConfig,
     },
     tokens::{
         AccessToken, AccessTokenState, RefreshToken, RefreshTokenState, TokenFormatError, TokenType,
