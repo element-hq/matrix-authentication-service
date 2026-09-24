@@ -7,15 +7,18 @@
 //! Utilities for showing proposer HTML fallbacks when the user is logged out,
 //! locked or deactivated
 
+use std::collections::HashMap;
+
 use axum::response::{Html, IntoResponse as _, Response};
+use chrono::Duration;
 use mas_axum_utils::{RecordAsRequester, SessionInfoExt, cookies::CookieJar, csrf::CsrfExt};
-use mas_data_model::{BrowserSession, Clock, User};
+use mas_data_model::{BrowserSession, Client, Clock, Session, SessionLimitConfig, User};
 use mas_i18n::DataLocale;
 use mas_policy::model::SessionCounts;
 use mas_router::PostAuthAction;
 use mas_storage::{
-    BoxRepository, RepositoryError, compat::CompatSessionFilter, oauth2::OAuth2SessionFilter,
-    personal::PersonalSessionFilter,
+    BoxRepository, Pagination, RepositoryError, compat::CompatSessionFilter,
+    oauth2::OAuth2SessionFilter, personal::PersonalSessionFilter,
 };
 use mas_templates::{AccountInactiveContext, TemplateContext, Templates};
 use rand::RngCore;
@@ -203,5 +206,418 @@ pub(crate) async fn count_user_sessions_for_limiting(
         oauth2,
         compat,
         personal,
+        against_limit: Some(oauth2 + compat + personal),
     })
+}
+
+/// Resolved session limits for a login attempt.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct ResolvedSessionLimit {
+    pub rules: mas_data_model::SessionLimitRules,
+    /// When true, counts and eviction apply only to this OAuth 2.0 client.
+    pub per_client: bool,
+}
+
+impl ResolvedSessionLimit {
+    pub(crate) fn as_policy_input(self) -> mas_policy::SessionLimitInput {
+        self.rules.into()
+    }
+}
+
+/// Resolve effective session limits for a user, optionally scoped to an OAuth
+/// 2.0 client, and count sessions for enforcement.
+pub(crate) async fn resolve_session_limit_for_login(
+    repo: &mut BoxRepository,
+    site_config: &mas_data_model::SiteConfig,
+    user: &User,
+    client: Option<&mas_data_model::Client>,
+) -> Result<(Option<ResolvedSessionLimit>, SessionCounts), RepositoryError> {
+    let mut counts = count_user_sessions_for_limiting(repo, user).await?;
+
+    let client_id = client.map(|c| c.id);
+    let client_override = if let Some(client_id) = client_id {
+        repo.user_session_limit_override()
+            .find(user, Some(client_id))
+            .await?
+    } else {
+        None
+    };
+    let global_override = repo.user_session_limit_override().find(user, None).await?;
+
+    let per_client_config =
+        client_id.and_then(|id| site_config.session_limit_per_client.get(&id).copied());
+    let global_config = site_config
+        .session_limit
+        .as_ref()
+        .map(SessionLimitConfig::rules);
+
+    let (rules, per_client) = if let Some(ov) = client_override {
+        let base =
+            per_client_config
+                .or(global_config)
+                .unwrap_or(mas_data_model::SessionLimitRules {
+                    soft_limit: ov.soft_limit,
+                    hard_limit: ov.hard_limit,
+                    max_session_threshold: None,
+                    dangerous_hard_limit_eviction: false,
+                });
+        (
+            mas_data_model::SessionLimitRules {
+                soft_limit: ov.soft_limit,
+                hard_limit: ov.hard_limit,
+                max_session_threshold: base.max_session_threshold,
+                dangerous_hard_limit_eviction: base.dangerous_hard_limit_eviction,
+            },
+            true,
+        )
+    } else if let Some(rules) = per_client_config {
+        (rules, true)
+    } else if let Some(ov) = global_override {
+        let base = global_config.unwrap_or(mas_data_model::SessionLimitRules {
+            soft_limit: ov.soft_limit,
+            hard_limit: ov.hard_limit,
+            max_session_threshold: None,
+            dangerous_hard_limit_eviction: false,
+        });
+        (
+            mas_data_model::SessionLimitRules {
+                soft_limit: ov.soft_limit,
+                hard_limit: ov.hard_limit,
+                max_session_threshold: base.max_session_threshold,
+                dangerous_hard_limit_eviction: base.dangerous_hard_limit_eviction,
+            },
+            false,
+        )
+    } else if let Some(rules) = global_config {
+        (rules, false)
+    } else {
+        return Ok((None, counts));
+    };
+
+    if per_client && let Some(client) = client {
+        let oauth2_for_client = repo
+            .oauth2_session()
+            .count(
+                OAuth2SessionFilter::new()
+                    .active_only()
+                    .for_user(user)
+                    .for_client(client),
+            )
+            .await? as u64;
+        counts.against_limit = Some(oauth2_for_client);
+    }
+
+    Ok((Some(ResolvedSessionLimit { rules, per_client }), counts))
+}
+
+/// Whether a policy result is solely a session-limit violation that should be
+/// resolved by LRU eviction instead of refusing the login.
+pub(crate) fn session_limit_allows_hard_eviction(
+    res: &mas_policy::EvaluationResult,
+    resolved: Option<&ResolvedSessionLimit>,
+    against_limit: u64,
+) -> Option<(ResolvedSessionLimit, u32)> {
+    let resolved = *resolved?;
+    let [
+        mas_policy::Violation {
+            variant: Some(mas_policy::ViolationVariant::TooManySessions { need_to_remove }),
+            ..
+        },
+    ] = &res.violations[..]
+    else {
+        return None;
+    };
+    if res.valid() {
+        return None;
+    }
+    if !resolved.rules.dangerous_hard_limit_eviction {
+        return None;
+    }
+    if against_limit < resolved.rules.hard_limit.get() {
+        return None;
+    }
+    Some((resolved, *need_to_remove))
+}
+
+const INACTIVE_SESSION_THRESHOLD: chrono::TimeDelta = Duration::days(90);
+const MINIMUM_SESSIONS_TO_FETCH: usize = 2160;
+
+/// Find LRU active OAuth 2.0 sessions for a user and client.
+pub(crate) async fn find_lru_oauth2_sessions_for_client(
+    clock: &dyn Clock,
+    repo: &mut BoxRepository,
+    user: &User,
+    client: &Client,
+    num_requested: usize,
+) -> Result<Vec<Session>, RepositoryError> {
+    let mut edges_to_consider = Vec::new();
+    let inactive_threshold_date = clock.now() - INACTIVE_SESSION_THRESHOLD;
+
+    let inactive_page = repo
+        .oauth2_session()
+        .list(
+            OAuth2SessionFilter::new()
+                .for_user(user)
+                .for_client(client)
+                .active_only()
+                .with_last_active_before(inactive_threshold_date),
+            Pagination::first(std::cmp::max(num_requested, MINIMUM_SESSIONS_TO_FETCH)),
+        )
+        .await?;
+    edges_to_consider.extend(inactive_page.edges);
+
+    if edges_to_consider.len() < num_requested {
+        let active_page = repo
+            .oauth2_session()
+            .list(
+                OAuth2SessionFilter::new()
+                    .for_user(user)
+                    .for_client(client)
+                    .active_only(),
+                Pagination::first(std::cmp::max(num_requested, MINIMUM_SESSIONS_TO_FETCH)),
+            )
+            .await?;
+        edges_to_consider.extend(active_page.edges);
+    }
+
+    let mut session_map = HashMap::new();
+    for edge in edges_to_consider {
+        session_map.insert(edge.node.id, edge.node);
+    }
+
+    let mut sessions: Vec<Session> = session_map.into_values().collect();
+    sessions.sort_by_key(|session| (session.last_active_at, session.created_at, session.id));
+    Ok(sessions)
+}
+
+/// Finish the least recently used OAuth 2.0 sessions for a user+client.
+///
+/// Returns `true` if enough sessions were finished.
+pub(crate) async fn evict_lru_oauth2_sessions_for_client(
+    rng: &mut (dyn RngCore + Send),
+    clock: &dyn Clock,
+    repo: &mut BoxRepository,
+    user: &User,
+    client: &Client,
+    need_to_remove: usize,
+) -> Result<bool, RepositoryError> {
+    use mas_storage::queue::{QueueJobRepositoryExt as _, SyncDevicesJob};
+
+    let sessions =
+        find_lru_oauth2_sessions_for_client(clock, repo, user, client, need_to_remove).await?;
+    if sessions.len() < need_to_remove {
+        return Ok(false);
+    }
+
+    for session in &sessions[0..need_to_remove] {
+        tracing::info!(
+            user_id = %user.id,
+            username = user.username,
+            oauth2_session_id = %session.id,
+            oauth2_client_id = %client.id,
+            "Automatically removing OAuth 2.0 session (`dangerous_hard_limit_eviction`)"
+        );
+        repo.oauth2_session().finish(clock, session.clone()).await?;
+    }
+
+    repo.queue_job()
+        .schedule_job(rng, clock, SyncDevicesJob::new_for_id(user.id))
+        .await?;
+
+    Ok(true)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{collections::HashMap, num::NonZeroU64};
+
+    use mas_data_model::{SessionLimitConfig, SessionLimitRules, SiteConfig};
+    use oauth2_types::{requests::GrantType, scope::OPENID};
+    use sqlx::PgPool;
+
+    use super::*;
+    use crate::test_utils::{TestState, setup, test_site_config};
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_resolve_session_limit_global_and_override(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                session_limit: Some(SessionLimitConfig {
+                    soft_limit: NonZeroU64::new(2).unwrap(),
+                    hard_limit: NonZeroU64::new(4).unwrap(),
+                    max_session_threshold: None,
+                    dangerous_hard_limit_eviction: false,
+                }),
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+        let user = repo
+            .user()
+            .add(&mut rng, &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+
+        let (resolved, counts) =
+            resolve_session_limit_for_login(&mut repo, &state.site_config, &user, None)
+                .await
+                .unwrap();
+        let resolved = resolved.expect("global session_limit should apply");
+        assert!(!resolved.per_client);
+        assert_eq!(resolved.rules.soft_limit.get(), 2);
+        assert_eq!(resolved.rules.hard_limit.get(), 4);
+        assert_eq!(counts.against_limit, Some(0));
+
+        repo.user_session_limit_override()
+            .add(
+                &mut rng,
+                &state.clock,
+                &user,
+                None,
+                NonZeroU64::new(9).unwrap(),
+                NonZeroU64::new(11).unwrap(),
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let mut repo = state.repository().await.unwrap();
+        let user = repo.user().lookup(user.id).await.unwrap().unwrap();
+        let (resolved, _) =
+            resolve_session_limit_for_login(&mut repo, &state.site_config, &user, None)
+                .await
+                .unwrap();
+        let resolved = resolved.expect("user override should apply");
+        assert!(!resolved.per_client);
+        assert_eq!(resolved.rules.soft_limit.get(), 9);
+        assert_eq!(resolved.rules.hard_limit.get(), 11);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_resolve_session_limit_per_client(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+        let user = repo
+            .user()
+            .add(&mut rng, &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+        let client = repo
+            .oauth2_client()
+            .add(
+                &mut rng,
+                &state.clock,
+                vec!["https://example.com/redirect".parse().unwrap()],
+                None,
+                None,
+                None,
+                vec![GrantType::AuthorizationCode],
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+        let browser_session = repo
+            .browser_session()
+            .add(&mut rng, &state.clock, &user, None)
+            .await
+            .unwrap();
+        repo.oauth2_session()
+            .add_from_browser_session(
+                &mut rng,
+                &state.clock,
+                &client,
+                &browser_session,
+                [OPENID].into_iter().collect(),
+            )
+            .await
+            .unwrap();
+        let client_id = client.id;
+        let user_id = user.id;
+        repo.save().await.unwrap();
+
+        state.site_config.session_limit = Some(SessionLimitConfig {
+            soft_limit: NonZeroU64::new(32).unwrap(),
+            hard_limit: NonZeroU64::new(64).unwrap(),
+            max_session_threshold: None,
+            dangerous_hard_limit_eviction: false,
+        });
+        state.site_config.session_limit_per_client = HashMap::from([(
+            client_id,
+            SessionLimitRules {
+                soft_limit: NonZeroU64::new(1).unwrap(),
+                hard_limit: NonZeroU64::new(2).unwrap(),
+                max_session_threshold: None,
+                dangerous_hard_limit_eviction: false,
+            },
+        )]);
+
+        let mut repo = state.repository().await.unwrap();
+        let user = repo.user().lookup(user_id).await.unwrap().unwrap();
+        let client = repo
+            .oauth2_client()
+            .lookup(client_id)
+            .await
+            .unwrap()
+            .unwrap();
+
+        let (resolved, counts) =
+            resolve_session_limit_for_login(&mut repo, &state.site_config, &user, Some(&client))
+                .await
+                .unwrap();
+        let resolved = resolved.expect("per-client session_limit should apply");
+        assert!(resolved.per_client);
+        assert_eq!(resolved.rules.soft_limit.get(), 1);
+        assert_eq!(resolved.rules.hard_limit.get(), 2);
+        assert_eq!(counts.against_limit, Some(1));
+        assert!(counts.total >= 1);
+
+        repo.user_session_limit_override()
+            .add(
+                &mut rng,
+                &state.clock,
+                &user,
+                Some(client.id),
+                NonZeroU64::new(7).unwrap(),
+                NonZeroU64::new(8).unwrap(),
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let mut repo = state.repository().await.unwrap();
+        let user = repo.user().lookup(user_id).await.unwrap().unwrap();
+        let client = repo
+            .oauth2_client()
+            .lookup(client_id)
+            .await
+            .unwrap()
+            .unwrap();
+        let (resolved, _) =
+            resolve_session_limit_for_login(&mut repo, &state.site_config, &user, Some(&client))
+                .await
+                .unwrap();
+        let resolved = resolved.expect("per-client user override should apply");
+        assert!(resolved.per_client);
+        assert_eq!(resolved.rules.soft_limit.get(), 7);
+        assert_eq!(resolved.rules.hard_limit.get(), 8);
+    }
 }

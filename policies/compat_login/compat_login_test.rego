@@ -298,3 +298,31 @@ test_no_session_limiting_past_max_session_threshold if {
 	result.allow
 	result.need_to_remove_sessions == 0
 }
+
+test_session_limiting_input_overrides_data if {
+	result := {
+		"allow": compat_login.allow,
+		"need_to_remove_sessions": need_to_remove_sessions(compat_login.violation),
+	} with input.user as user
+		with input.session_counts as {"total": 32}
+		with input.login as {"type": "m.login.sso"}
+		with input.session_replaced as false
+		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
+		with input.session_limit as {"soft_limit": 64, "hard_limit": 128}
+	result.allow
+	result.need_to_remove_sessions == 0
+}
+
+test_session_limiting_against_limit if {
+	result := {
+		"allow": compat_login.allow,
+		"need_to_remove_sessions": need_to_remove_sessions(compat_login.violation),
+	} with input.user as user
+		with input.session_counts as {"total": 100, "against_limit": 1}
+		with input.login as {"type": "m.login.sso"}
+		with input.session_replaced as false
+		with data.session_limit as {"soft_limit": 1, "hard_limit": 1}
+		with input.session_limit as {"soft_limit": 32, "hard_limit": 64}
+	result.allow
+	result.need_to_remove_sessions == 0
+}

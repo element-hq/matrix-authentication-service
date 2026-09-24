@@ -14,7 +14,9 @@ use mas_config::{
     PasswordsConfig, PolicyConfig, TemplatesConfig,
 };
 use mas_context::LogContext;
-use mas_data_model::{SessionExpirationConfig, SessionLimitConfig, SiteConfig};
+use mas_data_model::{
+    SessionExpirationConfig, SessionLimitConfig, SessionLimitRules, SiteConfig, Ulid,
+};
 use mas_email::{MailTransport, Mailer};
 use mas_handlers::passwords::PasswordManager;
 use mas_matrix::{HomeserverConnection, ReadOnlyHomeserverConnection};
@@ -155,26 +157,54 @@ pub async fn policy_factory_from_config(
         email: config.email_entrypoint.clone(),
     };
 
-    let session_limit_config =
-        experimental_config
-            .session_limit
-            .as_ref()
-            .map(|c| SessionLimitConfig {
-                soft_limit: c.soft_limit,
-                hard_limit: c.hard_limit,
-                max_session_threshold: c.max_session_threshold,
-                dangerous_hard_limit_eviction: c.dangerous_hard_limit_eviction,
-            });
+    let (session_limit, _session_limit_per_client) = experimental_config
+        .session_limit
+        .as_ref()
+        .map(session_limits_from_experimental)
+        .unwrap_or_default();
 
     let data = mas_policy::Data::new(mas_policy::BaseData {
         server_name: matrix_config.homeserver.clone(),
-        session_limit: session_limit_config,
+        session_limit,
     })
     .with_rest(config.data.clone());
 
     PolicyFactory::load(policy_file, data, entrypoints)
         .await
         .context("failed to load the policy")
+}
+
+fn session_limits_from_experimental(
+    c: &mas_config::ExperimentalSessionLimitConfig,
+) -> (
+    Option<SessionLimitConfig>,
+    std::collections::HashMap<Ulid, SessionLimitRules>,
+) {
+    let global = match (c.soft_limit, c.hard_limit) {
+        (Some(soft_limit), Some(hard_limit)) => Some(SessionLimitConfig {
+            soft_limit,
+            hard_limit,
+            max_session_threshold: c.max_session_threshold,
+            dangerous_hard_limit_eviction: c.dangerous_hard_limit_eviction,
+        }),
+        _ => None,
+    };
+    let per_client = c
+        .per_client
+        .iter()
+        .map(|(id, rules)| {
+            (
+                *id,
+                SessionLimitRules {
+                    soft_limit: rules.soft_limit,
+                    hard_limit: rules.hard_limit,
+                    max_session_threshold: rules.max_session_threshold,
+                    dangerous_hard_limit_eviction: rules.dangerous_hard_limit_eviction,
+                },
+            )
+        })
+        .collect();
+    (global, per_client)
 }
 
 pub fn captcha_config_from_config(
@@ -232,6 +262,12 @@ pub fn site_config_from_config(
         );
     }
 
+    let (session_limit, session_limit_per_client) = experimental_config
+        .session_limit
+        .as_ref()
+        .map(session_limits_from_experimental)
+        .unwrap_or_default();
+
     Ok(SiteConfig {
         access_token_ttl: experimental_config.access_token_ttl,
         compat_token_ttl: experimental_config.compat_token_ttl,
@@ -257,15 +293,8 @@ pub fn site_config_from_config(
         session_expiration,
         login_with_email_allowed: account_config.login_with_email_allowed,
         plan_management_iframe_uri: experimental_config.plan_management_iframe_uri.clone(),
-        session_limit: experimental_config
-            .session_limit
-            .as_ref()
-            .map(|c| SessionLimitConfig {
-                soft_limit: c.soft_limit,
-                hard_limit: c.hard_limit,
-                max_session_threshold: c.max_session_threshold,
-                dangerous_hard_limit_eviction: c.dangerous_hard_limit_eviction,
-            }),
+        session_limit,
+        session_limit_per_client,
         device_code_grant_enabled: oauth_config.device_code_grant_enabled,
         device_code_user_code_auto_fill_enabled: oauth_config
             .device_code_user_code_auto_fill_enabled,

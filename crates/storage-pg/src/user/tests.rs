@@ -5,6 +5,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+use std::num::NonZeroU64;
+
 use chrono::Duration;
 use mas_data_model::{Clock, Device, clock::MockClock};
 use mas_iana::jose::JsonWebSignatureAlg;
@@ -15,7 +17,8 @@ use mas_storage::{
     upstream_oauth2::{UpstreamOAuthProviderParams, UpstreamOAuthSessionFilter},
     user::{
         BrowserSessionFilter, BrowserSessionRepository, UserEmailFilter, UserEmailRepository,
-        UserFilter, UserPasswordRepository, UserRepository,
+        UserFilter, UserPasswordRepository, UserRepository, UserSessionLimitOverrideFilter,
+        UserSessionLimitOverrideRepository,
     },
 };
 use oauth2_types::{
@@ -1286,4 +1289,155 @@ async fn test_list_browser_sessions_by_created_at(pool: PgPool) {
     assert_eq!(list.edges.len(), 1);
     assert_eq!(list.edges[0].node, session3);
     assert_eq!(repo.browser_session().count(filter).await.unwrap(), 1);
+}
+
+#[sqlx::test(migrator = "crate::MIGRATOR")]
+async fn test_user_session_limit_override_repo(pool: PgPool) {
+    let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+    let mut rng = ChaChaRng::seed_from_u64(42);
+    let clock = MockClock::default();
+
+    let user = repo
+        .user()
+        .add(&mut rng, &clock, "alice".to_owned())
+        .await
+        .unwrap();
+    let client = repo
+        .oauth2_client()
+        .add(
+            &mut rng,
+            &clock,
+            vec!["https://example.com/redirect".parse().unwrap()],
+            None,
+            None,
+            None,
+            vec![GrantType::AuthorizationCode],
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+
+    assert!(
+        repo.user_session_limit_override()
+            .find(&user, None)
+            .await
+            .unwrap()
+            .is_none()
+    );
+
+    let global = repo
+        .user_session_limit_override()
+        .add(
+            &mut rng,
+            &clock,
+            &user,
+            None,
+            NonZeroU64::new(3).unwrap(),
+            NonZeroU64::new(5).unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(global.user_id, user.id);
+    assert_eq!(global.oauth2_client_id, None);
+    assert_eq!(global.soft_limit.get(), 3);
+    assert_eq!(global.hard_limit.get(), 5);
+
+    let found = repo
+        .user_session_limit_override()
+        .find(&user, None)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(found.id, global.id);
+
+    let lookup = repo
+        .user_session_limit_override()
+        .lookup(global.id)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(lookup.id, global.id);
+
+    let per_client = repo
+        .user_session_limit_override()
+        .add(
+            &mut rng,
+            &clock,
+            &user,
+            Some(client.id),
+            NonZeroU64::new(2).unwrap(),
+            NonZeroU64::new(4).unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(per_client.oauth2_client_id, Some(client.id));
+
+    let pagination = Pagination::first(10);
+    assert_eq!(
+        repo.user_session_limit_override()
+            .count(UserSessionLimitOverrideFilter::new().for_user(&user))
+            .await
+            .unwrap(),
+        2
+    );
+    assert_eq!(
+        repo.user_session_limit_override()
+            .count(UserSessionLimitOverrideFilter::new().global_only())
+            .await
+            .unwrap(),
+        1
+    );
+    assert_eq!(
+        repo.user_session_limit_override()
+            .count(UserSessionLimitOverrideFilter::new().for_client(&client))
+            .await
+            .unwrap(),
+        1
+    );
+
+    let list = repo
+        .user_session_limit_override()
+        .list(
+            UserSessionLimitOverrideFilter::new().for_user(&user),
+            pagination,
+        )
+        .await
+        .unwrap();
+    assert_eq!(list.edges.len(), 2);
+
+    let updated = repo
+        .user_session_limit_override()
+        .set_limits(
+            &clock,
+            global,
+            NonZeroU64::new(8).unwrap(),
+            NonZeroU64::new(10).unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(updated.soft_limit.get(), 8);
+    assert_eq!(updated.hard_limit.get(), 10);
+
+    repo.user_session_limit_override()
+        .remove(per_client)
+        .await
+        .unwrap();
+    assert!(
+        repo.user_session_limit_override()
+            .find(&user, Some(client.id))
+            .await
+            .unwrap()
+            .is_none()
+    );
 }
