@@ -80,6 +80,8 @@ pub(crate) struct Params {
     #[serde(flatten)]
     auth: AuthorizationRequest,
 
+    upstream_idp: Option<String>,
+
     #[serde(flatten)]
     pkce: Option<pkce::AuthorizationRequest>,
 }
@@ -287,10 +289,12 @@ pub(crate) async fn get(
 
                     let mut url = mas_router::Login::and_then(continue_grant);
 
-                    url = if let Some(login_hint) = grant.login_hint {
-                        url.with_login_hint(login_hint)
-                    } else {
-                        url
+                    if let Some(login_hint) = grant.login_hint {
+                        url = url.with_login_hint(login_hint)
+                    };
+
+                    if let Some(upstream_idp) = params.upstream_idp {
+                        url = url.with_upstream_idp(upstream_idp)
                     };
 
                     url_builder.redirect(&url).into_response()
@@ -304,7 +308,7 @@ pub(crate) async fn get(
                         .record_browser_session(&clock, &user_session)
                         .await;
                     url_builder
-                        .redirect(&mas_router::Consent(grant.id))
+                        .redirect(&mas_router::Consent::new(grant.id))
                         .into_response()
                 }
             };

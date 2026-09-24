@@ -61,7 +61,7 @@ impl PostAuthAction {
 
     pub fn go_next(&self, url_builder: &UrlBuilder) -> axum::response::Redirect {
         match self {
-            Self::ContinueAuthorizationGrant { id } => url_builder.redirect(&Consent(*id)),
+            Self::ContinueAuthorizationGrant { id } => url_builder.redirect(&Consent::new(*id)),
             Self::ContinueDeviceCodeGrant { id } => {
                 url_builder.redirect(&DeviceCodeConsent::new(*id))
             }
@@ -179,6 +179,8 @@ pub struct Login {
     post_auth_action: Option<PostAuthAction>,
 
     login_hint: Option<String>,
+
+    upstream_idp: Option<String>,
 }
 
 impl Route for Login {
@@ -199,6 +201,7 @@ impl Login {
         Self {
             post_auth_action: Some(action),
             login_hint: None,
+            upstream_idp: None,
         }
     }
 
@@ -207,6 +210,7 @@ impl Login {
         Self {
             post_auth_action: Some(PostAuthAction::continue_grant(id)),
             login_hint: None,
+            upstream_idp: None,
         }
     }
 
@@ -215,6 +219,7 @@ impl Login {
         Self {
             post_auth_action: Some(PostAuthAction::continue_device_code_grant(id)),
             login_hint: None,
+            upstream_idp: None,
         }
     }
 
@@ -223,6 +228,7 @@ impl Login {
         Self {
             post_auth_action: Some(PostAuthAction::continue_compat_sso_login(id)),
             login_hint: None,
+            upstream_idp: None,
         }
     }
 
@@ -231,12 +237,19 @@ impl Login {
         Self {
             post_auth_action: Some(PostAuthAction::link_upstream(id)),
             login_hint: None,
+            upstream_idp: None,
         }
     }
 
     #[must_use]
     pub fn with_login_hint(mut self, login_hint: String) -> Self {
         self.login_hint = Some(login_hint);
+        self
+    }
+
+    #[must_use]
+    pub fn with_upstream_idp(mut self, upstream_idp: String) -> Self {
+        self.upstream_idp = Some(upstream_idp);
         self
     }
 
@@ -259,6 +272,7 @@ impl From<Option<PostAuthAction>> for Login {
         Self {
             post_auth_action,
             login_hint: None,
+            upstream_idp: None,
         }
     }
 }
@@ -575,17 +589,35 @@ impl SimpleRoute for AccountPasswordChange {
 }
 
 /// `GET /consent/{grant_id}`
-#[derive(Debug, Clone)]
-pub struct Consent(pub Ulid);
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub struct Consent {
+    pub id: Ulid,
+
+    pub upstream_idp: Option<String>,
+}
+
+impl Consent {
+    pub fn new(id: Ulid) -> Self {
+        Consent {
+            id,
+            upstream_idp: None,
+        }
+    }
+}
 
 impl Route for Consent {
-    type Query = ();
+    type Query = Self;
+
     fn route() -> &'static str {
         "/consent/{grant_id}"
     }
 
     fn path(&self) -> std::borrow::Cow<'static, str> {
-        format!("/consent/{}", self.0).into()
+        format!("/consent/{}", self.id).into()
+    }
+
+    fn query(&self) -> Option<&Self::Query> {
+        Some(self)
     }
 }
 
