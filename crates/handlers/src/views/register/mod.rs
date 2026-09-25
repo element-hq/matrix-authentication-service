@@ -161,13 +161,13 @@ pub(crate) async fn post(
     let post_auth_action = query.post_auth_action;
 
     let Ok(form) = cookie_jar.verify_form(&clock, form) else {
-        // The CSRF token expires after an hour, which a registration page left
-        // open in a tab will outlive.
+        // An invalid token most likely comes from a page left open past the CSRF token lifetime
         tracing::debug!("Invalid CSRF token on the registration form, redirecting to a fresh one");
         let destination = Register::from(post_auth_action);
         return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
     };
 
+    // The username is carried in a cookie, so its size has to be bounded
     let username = form.username.trim();
     let username = if username.len() <= MAX_USERNAME_LENGTH {
         username
