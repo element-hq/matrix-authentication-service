@@ -460,10 +460,8 @@ pub(crate) async fn get(
 
             let forced_or_required = provider.claims_imports.localpart.is_forced_or_required();
 
-            // What the user typed on the registration page beats the claim rendered
-            // from the upstream response, even when that claim is ignored. A provider
-            // which forces or requires the localpart never lets the user pick one.
             let carried_username = if forced_or_required {
+                // The provider picks the localpart, not the user
                 None
             } else {
                 carried_username

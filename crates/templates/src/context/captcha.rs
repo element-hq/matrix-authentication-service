@@ -68,9 +68,24 @@ impl<T: TemplateContext> TemplateContext for WithCaptcha<T> {
     where
         Self: Sized,
     {
-        T::sample(now, rng, locales)
+        let config = mas_data_model::CaptchaConfig {
+            service: mas_data_model::CaptchaService::RecaptchaV2,
+            site_key: "site-key".to_owned(),
+            secret_key: "secret-key".to_owned(),
+        };
+
+        [("none", None), ("some", Some(config))]
             .into_iter()
-            .map(|(k, inner)| (k, Self::new(None, inner)))
+            .flat_map(|(label, config)| {
+                T::sample(now, rng, locales)
+                    .into_iter()
+                    .map(move |(k, inner)| {
+                        (
+                            k.with_appended("captcha", label.to_owned()),
+                            Self::new(config.clone(), inner),
+                        )
+                    })
+            })
             .collect()
     }
 }
