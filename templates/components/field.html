@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 
@@ -53,6 +54,8 @@ Please see LICENSE files in the repository root for full details.
       {% endif %}
     {% elif error.kind == "password_mismatch" %}
       {{ _("mas.errors.password_mismatch") }}
+    {% elif error.kind == "invalid" %}
+      {{ _("mas.errors.field_invalid") }}
     {% else %}
       {{ error.kind }}
     {% endif %}
