@@ -400,7 +400,7 @@ where
             mas_router::Register::route(),
             get(self::views::register::get).post(self::views::register::post),
         )
-        // XXX: hard-coded redirect from /register/password to /register
+        // Keeps links to the former password registration page working
         .route(
             "/register/password",
             redirect_to(mas_router::Register::route()),
