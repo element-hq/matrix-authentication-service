@@ -621,7 +621,7 @@ mod tests {
             .expect("the upstream sessions cookie should be set");
         assert!(sessions[0].get("username").is_none());
 
-        // The password path sees it whole, and the policy rejects it
+        // Password registration keeps the overlong username, and the policy rejects it
         let request = cookies.with_cookies(Request::post("/register").form(serde_json::json!({
             "csrf": csrf_token,
             "username": username,
