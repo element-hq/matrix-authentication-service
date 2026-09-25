@@ -260,9 +260,9 @@ mod tests {
     use hyper::{Request, StatusCode, header::LOCATION};
     use mas_axum_utils::csrf::CsrfExt as _;
     use mas_data_model::{
-        Clock, UlidExt, UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
-        UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderPkceMode,
-        UpstreamOAuthProviderTokenAuthMethod,
+        CaptchaConfig, CaptchaService, Clock, UlidExt, UpstreamOAuthProviderClaimsImports,
+        UpstreamOAuthProviderDiscoveryMode, UpstreamOAuthProviderOnBackchannelLogout,
+        UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderTokenAuthMethod,
     };
     use mas_iana::jose::JsonWebSignatureAlg;
     use mas_storage::{
@@ -382,6 +382,32 @@ mod tests {
         assert!(body.contains(r#"name="username""#));
         assert!(body.contains(r#"name="password""#));
         assert!(body.contains(r#"name="password_confirm""#));
+    }
+
+    /// The page renders with a CAPTCHA configured
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_get_with_captcha(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                captcha: Some(CaptchaConfig {
+                    service: CaptchaService::HCaptcha,
+                    site_key: "site-key".to_owned(),
+                    secret_key: "secret-key".to_owned(),
+                }),
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        let cookies = CookieHelper::new();
+
+        let (_csrf_token, body) = render_page(&state, &cookies).await;
+        assert!(
+            body.contains(r#"data-captcha-site-key="site-key""#),
+            "response body: {body}"
+        );
     }
 
     /// Without password registration, the page is just the provider buttons
