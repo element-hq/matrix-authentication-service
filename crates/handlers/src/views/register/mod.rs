@@ -1,27 +1,63 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
 use axum::{
+    Form,
     extract::State,
-    response::{Html, IntoResponse, Response},
+    response::{Html, IntoResponse, Redirect, Response},
 };
 use axum_extra::extract::Query;
-use mas_axum_utils::{InternalError, SessionInfoExt, cookies::CookieJar, csrf::CsrfExt as _};
-use mas_data_model::{BoxClock, BoxRng, SiteConfig};
-use mas_router::{PasswordRegister, UpstreamOAuth2Authorize, UrlBuilder};
-use mas_storage::BoxRepository;
+use hyper::StatusCode;
+use mas_axum_utils::{
+    GenericError, InternalError, SessionInfoExt,
+    cookies::CookieJar,
+    csrf::{CsrfExt as _, ProtectedForm},
+};
+use mas_data_model::{BoxClock, BoxRng, SiteConfig, UpstreamOAuthProvider};
+use mas_router::{PasswordRegister, Register, UpstreamOAuth2Authorize, UrlBuilder};
+use mas_storage::{BoxRepository, upstream_oauth2::UpstreamOAuthProviderRepository};
 use mas_templates::{RegisterContext, TemplateContext, Templates};
+use serde::{Deserialize, Serialize};
+use thiserror::Error;
+use ulid::Ulid;
 
 use super::shared::OptionalPostAuthAction;
-use crate::{BoundActivityTracker, PreferredLanguage};
+use crate::{
+    BoundActivityTracker, MetadataCache, PreferredLanguage, impl_from_error_for_route,
+    upstream_oauth2::authorize::start_authorization,
+};
 
 mod cookie;
 pub(crate) mod password;
 pub(crate) mod steps;
 
 pub use self::cookie::UserRegistrationSessions as UserRegistrationSessionsCookie;
+
+#[derive(Debug, Error)]
+pub(crate) enum RouteError {
+    #[error("Provider not found")]
+    ProviderNotFound,
+
+    #[error(transparent)]
+    Internal(Box<dyn std::error::Error>),
+}
+
+impl_from_error_for_route!(mas_storage::RepositoryError);
+impl_from_error_for_route!(crate::upstream_oauth2::authorize::StartAuthorizationError);
+
+impl IntoResponse for RouteError {
+    fn into_response(self) -> Response {
+        match self {
+            e @ Self::ProviderNotFound => {
+                GenericError::new(StatusCode::NOT_FOUND, e).into_response()
+            }
+            Self::Internal(e) => InternalError::new(e).into_response(),
+        }
+    }
+}
 
 #[tracing::instrument(name = "handlers.views.register.get", skip_all)]
 pub(crate) async fn get(
@@ -92,4 +128,396 @@ pub(crate) async fn get(
     let content = templates.render_register(&ctx)?;
 
     Ok((cookie_jar, Html(content)).into_response())
+}
+
+/// A localpart longer than this can never become an MXID (`@` + localpart +
+/// `:` + server name is capped at 255 bytes), so there is no point carrying it
+/// any further. The real limit is enforced by the register policy.
+const MAX_USERNAME_LENGTH: usize = 255;
+
+#[derive(Debug, Deserialize, Serialize)]
+pub(crate) struct RegisterForm {
+    #[serde(default)]
+    username: String,
+
+    /// Which upstream provider the user chose, if any: each provider has its
+    /// own submit button
+    #[serde(default)]
+    provider: Option<String>,
+}
+
+#[tracing::instrument(name = "handlers.views.register.post", skip_all)]
+pub(crate) async fn post(
+    mut rng: BoxRng,
+    clock: BoxClock,
+    State(metadata_cache): State<MetadataCache>,
+    State(url_builder): State<UrlBuilder>,
+    State(http_client): State<reqwest::Client>,
+    mut repo: BoxRepository,
+    Query(query): Query<OptionalPostAuthAction>,
+    cookie_jar: CookieJar,
+    Form(form): Form<ProtectedForm<RegisterForm>>,
+) -> Result<Response, RouteError> {
+    let post_auth_action = query.post_auth_action;
+
+    let Ok(form) = cookie_jar.verify_form(&clock, form) else {
+        // An invalid token most likely comes from a page left open past the CSRF token lifetime
+        tracing::debug!("Invalid CSRF token on the registration form, redirecting to a fresh one");
+        let destination = Register::from(post_auth_action);
+        return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
+    };
+
+    // The username is carried in a cookie, so its size has to be bounded
+    let username = form.username.trim();
+    let username = if username.len() <= MAX_USERNAME_LENGTH {
+        username
+    } else {
+        ""
+    };
+
+    // Carry the username along so we can prefill it if the user gets to pick
+    // one when they come back
+    if let Some(provider_id) = form.provider {
+        let provider_id: Ulid = provider_id
+            .parse()
+            .map_err(|_| RouteError::ProviderNotFound)?;
+
+        let provider = repo
+            .upstream_oauth_provider()
+            .lookup(provider_id)
+            .await?
+            .filter(UpstreamOAuthProvider::enabled)
+            .ok_or(RouteError::ProviderNotFound)?;
+
+        let carried_username = (!username.is_empty()).then(|| username.to_owned());
+
+        let (cookie_jar, url) = start_authorization(
+            &mut rng,
+            &clock,
+            &metadata_cache,
+            &http_client,
+            &url_builder,
+            &mut repo,
+            cookie_jar,
+            &provider,
+            post_auth_action,
+            carried_username,
+        )
+        .await?;
+
+        repo.save().await?;
+
+        return Ok((cookie_jar, Redirect::to(url.as_str())).into_response());
+    }
+
+    // The query string, rather than a cookie, so the page can be reloaded or
+    // bookmarked
+    let mut destination = PasswordRegister::from(post_auth_action);
+    if !username.is_empty() {
+        destination = destination.with_username(username.to_owned());
+    }
+
+    Ok((cookie_jar, url_builder.redirect(&destination)).into_response())
+}
+
+#[cfg(test)]
+mod tests {
+    use hyper::{Request, StatusCode, header::LOCATION};
+    use mas_data_model::{
+        Clock, UlidExt, UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
+        UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderPkceMode,
+        UpstreamOAuthProviderTokenAuthMethod,
+    };
+    use mas_iana::jose::JsonWebSignatureAlg;
+    use mas_storage::{
+        RepositoryAccess,
+        upstream_oauth2::{UpstreamOAuthProviderParams, UpstreamOAuthSessionRepository},
+    };
+    use oauth2_types::scope::{OPENID, Scope};
+    use sqlx::PgPool;
+    use ulid::Ulid;
+
+    use super::MAX_USERNAME_LENGTH;
+    use crate::test_utils::{CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup};
+
+    /// Provision an upstream provider which needs no network access to start an
+    /// authorization flow: discovery is disabled and the authorization endpoint
+    /// is set explicitly
+    async fn provider(state: &TestState) -> Ulid {
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+        let provider = repo
+            .upstream_oauth_provider()
+            .add(
+                &mut rng,
+                &state.clock,
+                UpstreamOAuthProviderParams {
+                    issuer: Some("https://upstream.example.com/".to_owned()),
+                    human_name: Some("Upstream Ltd.".to_owned()),
+                    brand_name: None,
+                    scope: Scope::from_iter([OPENID]),
+                    token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
+                    token_endpoint_signing_alg: None,
+                    id_token_signed_response_alg: JsonWebSignatureAlg::Rs256,
+                    client_id: "client".to_owned(),
+                    encrypted_client_secret: None,
+                    claims_imports: UpstreamOAuthProviderClaimsImports::default(),
+                    authorization_endpoint_override: Some(
+                        "https://upstream.example.com/authorize".parse().unwrap(),
+                    ),
+                    token_endpoint_override: None,
+                    userinfo_endpoint_override: None,
+                    fetch_userinfo: false,
+                    userinfo_signed_response_alg: None,
+                    jwks_uri_override: None,
+                    discovery_mode: UpstreamOAuthProviderDiscoveryMode::Disabled,
+                    pkce_mode: UpstreamOAuthProviderPkceMode::Disabled,
+                    response_mode: None,
+                    additional_authorization_parameters: Vec::new(),
+                    forward_login_hint: false,
+                    ui_order: 0,
+                    on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    registration_token_required: false,
+                },
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+        provider.id
+    }
+
+    /// Render the registration page, saving its cookies and returning its CSRF
+    /// token and body
+    async fn render_page(state: &TestState, cookies: &CookieHelper) -> (String, String) {
+        let request = cookies.with_cookies(Request::get("/register").empty());
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+
+        let csrf_token = response
+            .body()
+            .split("name=\"csrf\" value=\"")
+            .nth(1)
+            .expect("the page should have a CSRF token")
+            .split('\"')
+            .next()
+            .unwrap()
+            .to_owned();
+
+        (csrf_token, response.body().clone())
+    }
+
+    /// Decode the upstream sessions cookie set by the given response, if any
+    fn upstream_sessions(
+        state: &TestState,
+        response: &hyper::Response<String>,
+    ) -> Option<serde_json::Value> {
+        let cookies = CookieHelper::new();
+        cookies.save_cookies(response);
+        let request = cookies.with_cookies(Request::get("/").empty());
+        state
+            .cookie_manager
+            .cookie_jar_from_headers(request.headers())
+            .load("upstream-oauth2-sessions")
+            .expect("the upstream sessions cookie should decode")
+    }
+
+    /// Submitting the form with a provider starts an upstream authorization
+    /// flow, carrying the username and the post-auth action along in the cookie
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_with_provider(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let provider_id = provider(&state).await;
+        let (csrf_token, body) = render_page(&state, &cookies).await;
+
+        // The provider is rendered as a submit button of the form
+        assert!(body.contains(&format!(r#"name="provider" value="{provider_id}""#)));
+
+        let grant = Ulid::from_datetime_with_rng(state.clock.now(), &mut state.rng());
+        let request = cookies.with_cookies(
+            Request::post(format!(
+                "/register?kind=continue_authorization_grant&id={grant}"
+            ))
+            .form(serde_json::json!({
+                "csrf": csrf_token,
+                "username": "alice",
+                "provider": provider_id.to_string(),
+            })),
+        );
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        let location = response.headers().get(LOCATION).unwrap().to_str().unwrap();
+        assert!(
+            location.starts_with("https://upstream.example.com/authorize?"),
+            "unexpected location: {location}"
+        );
+
+        let sessions = upstream_sessions(&state, &response)
+            .expect("the upstream sessions cookie should be set");
+        assert_eq!(sessions[0]["username"], "alice");
+        assert_eq!(
+            sessions[0]["post_auth_action"],
+            serde_json::json!({
+                "kind": "continue_authorization_grant",
+                "id": grant.to_string(),
+            })
+        );
+
+        // And we recorded the session it points to
+        let session_id: Ulid = sessions[0]["session"].as_str().unwrap().parse().unwrap();
+        let mut repo = state.repository().await.unwrap();
+        let session = repo
+            .upstream_oauth_session()
+            .lookup(session_id)
+            .await
+            .unwrap()
+            .expect("the upstream authorization session should exist");
+        assert_eq!(session.provider_id, provider_id);
+    }
+
+    /// Submitting the form without a provider redirects to the password
+    /// registration page, keeping the username and the post-auth action
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_without_provider(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        provider(&state).await;
+        let (csrf_token, _body) = render_page(&state, &cookies).await;
+
+        let request = cookies.with_cookies(Request::post("/register").form(serde_json::json!({
+            "csrf": csrf_token,
+            "username": "alice",
+        })));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/register/password?username=alice");
+
+        // The post-auth action travels in the page's own query string
+        let request = cookies.with_cookies(Request::post("/register?kind=change_password").form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "username": "alice",
+            }),
+        ));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(
+            LOCATION,
+            "/register/password?username=alice&kind=change_password",
+        );
+
+        // Including the actions which carry an ID
+        let grant = Ulid::from_datetime_with_rng(state.clock.now(), &mut state.rng());
+        let request = cookies.with_cookies(
+            Request::post(format!(
+                "/register?kind=continue_authorization_grant&id={grant}"
+            ))
+            .form(serde_json::json!({
+                "csrf": csrf_token,
+                "username": "alice",
+            })),
+        );
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(
+            LOCATION,
+            &format!(
+                "/register/password?username=alice&kind=continue_authorization_grant&id={grant}"
+            ),
+        );
+
+        // An empty username is not carried over
+        let request = cookies.with_cookies(Request::post("/register").form(serde_json::json!({
+            "csrf": csrf_token,
+            "username": "  ",
+        })));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/register/password");
+    }
+
+    /// A form submitted with an invalid CSRF token starts nothing and sends the
+    /// user back to a freshly rendered page
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_invalid_csrf(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let provider_id = provider(&state).await;
+        let (csrf_token, _body) = render_page(&state, &cookies).await;
+
+        let request = cookies.with_cookies(Request::post("/register").form(serde_json::json!({
+            "csrf": format!("{csrf_token}invalid"),
+            "username": "alice",
+            "provider": provider_id.to_string(),
+        })));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/register");
+        assert!(upstream_sessions(&state, &response).is_none());
+    }
+
+    /// A username too long to ever become an MXID is dropped instead of being
+    /// carried in the cookie
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_with_overlong_username(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let provider_id = provider(&state).await;
+        let (csrf_token, _body) = render_page(&state, &cookies).await;
+
+        let username = "a".repeat(MAX_USERNAME_LENGTH + 1);
+        let request = cookies.with_cookies(Request::post("/register").form(serde_json::json!({
+            "csrf": csrf_token,
+            "username": username,
+            "provider": provider_id.to_string(),
+        })));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        let sessions = upstream_sessions(&state, &response)
+            .expect("the upstream sessions cookie should be set");
+        assert!(sessions[0].get("username").is_none());
+
+        // And it isn't put in the redirect to the password registration page either
+        let request = cookies.with_cookies(Request::post("/register").form(serde_json::json!({
+            "csrf": csrf_token,
+            "username": username,
+        })));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/register/password");
+    }
+
+    /// Submitting a provider which doesn't exist gives a 404
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_with_unknown_provider(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        provider(&state).await;
+        let (csrf_token, _body) = render_page(&state, &cookies).await;
+
+        let unknown = Ulid::from_datetime_with_rng(state.clock.now(), &mut state.rng());
+        for provider in [unknown.to_string(), "not-a-ulid".to_owned()] {
+            let request =
+                cookies.with_cookies(Request::post("/register").form(serde_json::json!({
+                    "csrf": csrf_token,
+                    "username": "alice",
+                    "provider": provider,
+                })));
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::NOT_FOUND);
+        }
+    }
 }
