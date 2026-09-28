@@ -34,7 +34,6 @@ tokio.workspace = true
 tracing-opentelemetry.workspace = true
 tracing.workspace = true
 ulid.workspace = true
-url.workspace = true
 
 mas-context.workspace = true
 mas-data-model.workspace = true

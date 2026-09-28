@@ -25,8 +25,9 @@ use mas_storage::{
     oauth2::OAuth2SessionFilter,
     queue::{
         DeactivateUserJob, ProvisionUserJob, QueueJobRepositoryExt as _, ReactivateUserJob,
-        SendRoomInviteEmailsJob, SyncDevicesJob,
+        SyncDevicesJob,
     },
+    room_invite::{RoomInvite, schedule_room_invites},
     user::{
         BrowserSessionFilter, UserEmailRepository, UserFilter, UserPasswordRepository,
         UserRepository,
@@ -592,12 +593,18 @@ impl Options {
                 let txn = conn.begin().await?;
                 let mut repo = PgRepository::from_conn(txn);
 
-                let job = SendRoomInviteEmailsJob::new(room_id, emails);
-                repo.queue_job().schedule_job(&mut rng, &clock, job).await?;
+                let invites = emails.into_iter().map(|email| RoomInvite {
+                    email,
+                    username: None,
+                });
+                let scheduled =
+                    schedule_room_invites(&mut repo, &mut rng, &clock, &room_id, invites).await?;
 
                 repo.into_inner().commit().await?;
 
-                info!("Scheduled the room invite emails. A worker must be running to send them.");
+                info!(
+                    "Scheduled {scheduled} room invite emails. A worker must be running to send them."
+                );
 
                 Ok(ExitCode::SUCCESS)
             }

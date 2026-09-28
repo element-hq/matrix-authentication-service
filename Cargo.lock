@@ -3745,6 +3745,7 @@ dependencies = [
  "mas-jose",
  "oauth2-types",
  "opentelemetry",
+ "rand 0.8.5",
  "rand_core 0.6.4",
  "serde",
  "serde_json",
@@ -3817,7 +3818,6 @@ dependencies = [
  "tracing",
  "tracing-opentelemetry",
  "ulid",
- "url",
 ]
 
 [[package]]

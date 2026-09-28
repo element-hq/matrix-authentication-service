@@ -652,55 +652,15 @@ impl InsertableJob for CleanupInactiveUserSessionIpsJob {
     const QUEUE_NAME: &'static str = "cleanup-inactive-user-session-ips";
 }
 
-/// Send room invite emails to a list of email addresses.
+/// Send a room invite email for a registration token.
 ///
-/// This job only fans out: it schedules one [`SendRoomInviteEmailJob`] per
-/// unique address, so that each email is retried independently rather than
-/// re-sending the whole batch. The fan-out commits as a single transaction, so
-/// either every recipient got a job or none did.
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SendRoomInviteEmailsJob {
-    room_id: String,
-    emails: Vec<String>,
-}
-
-impl SendRoomInviteEmailsJob {
-    /// Create a new job to send room invite emails
-    ///
-    /// # Parameters
-    ///
-    /// * `room_id` - The room to invite the recipients to
-    /// * `emails` - The addresses to invite
-    #[must_use]
-    pub fn new(room_id: impl Into<String>, emails: Vec<String>) -> Self {
-        Self {
-            room_id: room_id.into(),
-            emails,
-        }
-    }
-
-    /// The room the recipients are invited to
-    #[must_use]
-    pub fn room_id(&self) -> &str {
-        &self.room_id
-    }
-
-    /// The addresses to invite
-    #[must_use]
-    pub fn emails(&self) -> &[String] {
-        &self.emails
-    }
-}
-
-impl InsertableJob for SendRoomInviteEmailsJob {
-    const QUEUE_NAME: &'static str = "send-room-invite-emails";
-}
-
-/// Send a room invite email to a single address
+/// The recipient's address and the invite link both come from the token, so
+/// that the link in the email can't be sent to anyone but the address the
+/// token is pinned to.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SendRoomInviteEmailJob {
     room_id: String,
-    email: String,
+    registration_token_id: Ulid,
 }
 
 impl SendRoomInviteEmailJob {
@@ -709,12 +669,13 @@ impl SendRoomInviteEmailJob {
     /// # Parameters
     ///
     /// * `room_id` - The room to invite the recipient to
-    /// * `email` - The address to invite
+    /// * `registration_token_id` - The registration token minted for the
+    ///   recipient
     #[must_use]
-    pub fn new(room_id: impl Into<String>, email: impl Into<String>) -> Self {
+    pub fn new(room_id: impl Into<String>, registration_token_id: Ulid) -> Self {
         Self {
             room_id: room_id.into(),
-            email: email.into(),
+            registration_token_id,
         }
     }
 
@@ -724,10 +685,10 @@ impl SendRoomInviteEmailJob {
         &self.room_id
     }
 
-    /// The address to invite
+    /// The registration token minted for the recipient
     #[must_use]
-    pub fn email(&self) -> &str {
-        &self.email
+    pub fn registration_token_id(&self) -> Ulid {
+        self.registration_token_id
     }
 }
 

@@ -25,6 +25,7 @@ mod oauth2_clients;
 mod oauth2_sessions;
 mod personal_sessions;
 mod policy_data;
+mod room_invites;
 mod site_config;
 mod upstream_oauth_links;
 mod upstream_oauth_providers;
@@ -139,6 +140,10 @@ where
         .api_route(
             "/policy-data/{id}",
             get_with(self::policy_data::get, self::policy_data::get_doc),
+        )
+        .api_route(
+            "/room-invites",
+            post_with(self::room_invites::handler, self::room_invites::doc),
         )
         .api_route(
             "/users",

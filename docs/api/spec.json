@@ -2005,6 +2005,65 @@
         }
       }
     },
+    "/api/admin/v1/room-invites": {
+      "post": {
+        "tags": [
+          "room-invite"
+        ],
+        "summary": "Invite a list of email addresses to a room",
+        "description": "Mints a single-use, passwordless registration token for each recipient and emails them a link to register with it. The links are only ever sent to the recipients, so they are not in the response.",
+        "operationId": "addRoomInvites",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddRoomInvitesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "The invite emails were scheduled"
+          },
+          "400": {
+            "description": "The request has an invalid email or a repeated username",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Invalid email address \"not-an-email\""
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A username is already taken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Username \"alice\" is already taken"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/users": {
       "get": {
         "tags": [
@@ -6492,6 +6551,50 @@
         "required": [
           "created_at",
           "data"
+        ]
+      },
+      "AddRoomInvitesRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/room-invites` endpoint",
+        "type": "object",
+        "properties": {
+          "room_id": {
+            "description": "The room the recipients are invited to",
+            "type": "string",
+            "example": "!room:example.com"
+          },
+          "invites": {
+            "description": "The people to invite. An address given more than once is invited once.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoomInvite"
+            }
+          }
+        },
+        "required": [
+          "room_id",
+          "invites"
+        ]
+      },
+      "RoomInvite": {
+        "title": "A person to invite to the room",
+        "type": "object",
+        "properties": {
+          "email": {
+            "description": "The address to send the invite to. The recipient can only register with\nthis address.",
+            "type": "string",
+            "example": "alice@example.com"
+          },
+          "username": {
+            "description": "A username to impose on the recipient. If not set, they choose their\nown.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "guest-abcdef"
+          }
+        },
+        "required": [
+          "email"
         ]
       },
       "UserFilter": {

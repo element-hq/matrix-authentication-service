@@ -154,8 +154,9 @@ $ mas-cli manage register-user --yes <username>
 
 ## `manage send-room-invites`
 
-Send a room invite email to a list of addresses. This schedules the job; a
-worker must be running to actually send the emails.
+Send a room invite email to a list of addresses. Each address gets a single-use,
+passwordless registration token pinned to it, and a link to register with it.
+This schedules the emails; a worker must be running to actually send them.
 
 Arguments:
 - `<room_id>`: The room to invite the recipients to.
