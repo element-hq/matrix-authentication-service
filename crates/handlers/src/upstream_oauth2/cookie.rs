@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -27,6 +28,11 @@ pub struct Payload {
     state: String,
     link: Option<Ulid>,
     post_auth_action: Option<PostAuthAction>,
+
+    /// The username typed on the registration page, when the flow started
+    /// there with the field filled in
+    #[serde(skip_serializing_if = "Option::is_none")]
+    username: Option<String>,
 }
 
 impl Payload {
@@ -87,6 +93,7 @@ impl UpstreamSessions {
         provider: Ulid,
         state: String,
         post_auth_action: Option<PostAuthAction>,
+        username: Option<String>,
     ) -> Self {
         self.0.push(Payload {
             session,
@@ -94,6 +101,7 @@ impl UpstreamSessions {
             state,
             link: None,
             post_auth_action,
+            username,
         });
         self
     }
@@ -131,13 +139,19 @@ impl UpstreamSessions {
     pub fn lookup_link(
         &self,
         link_id: Ulid,
-    ) -> Result<(Ulid, Option<&PostAuthAction>), UpstreamSessionNotFound> {
+    ) -> Result<(Ulid, Option<&PostAuthAction>, Option<&str>), UpstreamSessionNotFound> {
         self.0
             .iter()
             .filter(|p| p.link == Some(link_id))
             // Find the session with the highest ID, aka. the most recent one
             .reduce(|a, b| if a.session > b.session { a } else { b })
-            .map(|p| (p.session, p.post_auth_action.as_ref()))
+            .map(|p| {
+                (
+                    p.session,
+                    p.post_auth_action.as_ref(),
+                    p.username.as_deref(),
+                )
+            })
             .ok_or(UpstreamSessionNotFound)
     }
 
@@ -178,13 +192,19 @@ mod tests {
 
         let first_session = Ulid::from_datetime_with_rng(now, &mut rng);
         let first_state = "first-state";
-        let sessions = sessions.add(first_session, provider_a, first_state.into(), None);
+        let sessions = sessions.add(first_session, provider_a, first_state.into(), None, None);
 
         let now = now + Duration::microseconds(5 * 60 * 1000 * 1000);
 
         let second_session = Ulid::from_datetime_with_rng(now, &mut rng);
         let second_state = "second-state";
-        let sessions = sessions.add(second_session, provider_b, second_state.into(), None);
+        let sessions = sessions.add(
+            second_session,
+            provider_b,
+            second_state.into(),
+            None,
+            Some("john".to_owned()),
+        );
 
         let sessions = sessions.expire(now);
         assert_eq!(
@@ -216,11 +236,32 @@ mod tests {
         // Now the session can't be found with its state
         assert!(sessions.find_session(provider_b, second_state).is_err());
 
-        // But it can be looked up by its link
-        assert_eq!(sessions.lookup_link(second_link).unwrap().0, second_session);
+        // But it can be looked up by its link, along with the username it carries
+        let (session, _post_auth_action, username) = sessions.lookup_link(second_link).unwrap();
+        assert_eq!(session, second_session);
+        assert_eq!(username, Some("john"));
+
         // And it can be consumed
         let sessions = sessions.consume_link(second_link).unwrap();
         // But only once
         assert!(sessions.consume_link(second_link).is_err());
+    }
+
+    /// A cookie payload written before the username field existed still
+    /// deserializes, and carries no username
+    #[test]
+    fn test_payload_without_username() {
+        let sessions: UpstreamSessions = serde_json::from_value(serde_json::json!([{
+            "session": "01FSHN9AG0AJ6AC5HQ9X6H4RP4",
+            "provider": "01FSHN9AG0MZAA6S4AF7CTV32E",
+            "state": "state",
+            "link": "01FSHN9AG09NMZYX8MFVH74RP4",
+            "post_auth_action": null,
+        }]))
+        .expect("payload without a username should deserialize");
+
+        let link = "01FSHN9AG09NMZYX8MFVH74RP4".parse().unwrap();
+        let (_session, _post_auth_action, username) = sessions.lookup_link(link).unwrap();
+        assert_eq!(username, None);
     }
 }
