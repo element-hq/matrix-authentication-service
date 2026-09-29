@@ -3,7 +3,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-import { Form } from "@vector-im/compound-web";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+} from "@tanstack/react-query";
+import { Form, InlineSpinner } from "@vector-im/compound-web";
 import { Suspense, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import * as v from "valibot";
@@ -14,16 +19,33 @@ import {
 } from "../components/Captcha";
 import PasswordComplexityFeedback from "../components/PasswordComplexityFeedback";
 import ProviderLogo, { hasProviderLogo } from "../components/ProviderLogo";
+import { graphql } from "../gql";
+import { graphqlRequest, setGraphqlEndpoint } from "../graphql";
 import { mountIsland } from "../utils/mountIsland";
 import {
   fieldErrorMessage,
   formErrorMessage,
+  isUsernameCheckable,
   normalizeUsername,
+  policyCodeMessage,
   type ServerError,
   serverErrorSchema,
   VALID_LOCALPART_RE,
 } from "../utils/registration";
+import { useDebouncedValue } from "../utils/useDebouncedValue";
 import "./shared.css";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // A username check is cheap to redo and pointless to retry: a failure
+      // just falls back to the neutral "couldn't check" message.
+      retry: false,
+      refetchOnWindowFocus: false,
+      staleTime: 60_000,
+    },
+  },
+});
 
 const fieldStateSchema = v.object({
   value: v.optional(v.nullable(v.string())),
@@ -45,6 +67,7 @@ type Provider = v.InferOutput<typeof providerSchema>;
 // JSON-encoded by the template.
 const schema = v.object({
   csrfToken: v.string(),
+  graphqlEndpoint: v.string(),
   captchaConfig: v.optional(
     v.pipe(
       v.string(),
@@ -91,6 +114,88 @@ const schema = v.object({
 
 type Data = v.InferOutput<typeof schema>;
 
+const USERNAME_AVAILABLE_QUERY = graphql(`
+  query UsernameAvailable($username: String!) {
+    usernameAvailable(username: $username) {
+      available
+      reason
+      violationCodes
+    }
+  }
+`);
+
+/**
+ * The settled result of the live availability check. Rendered inside an
+ * `aria-live` region, so it must only ever hold states the user has stopped
+ * typing into.
+ */
+const UsernameVerdict: React.FC<{
+  checking: boolean;
+  checkFailed: boolean;
+  availability?: {
+    available: boolean;
+    reason?: string | null;
+    violationCodes?: readonly string[] | null;
+  };
+}> = ({ checking, checkFailed, availability }) => {
+  const { t } = useTranslation();
+
+  if (checking) {
+    const label = t("frontend.register.username_checking");
+    return (
+      <Form.HelpMessage>
+        {/* The spinner carries the accessible name, so the live region doesn't
+            announce the same text twice */}
+        <InlineSpinner role="img" aria-label={label} />
+        <span aria-hidden="true">{label}</span>
+      </Form.HelpMessage>
+    );
+  }
+
+  if (checkFailed) {
+    return (
+      <Form.HelpMessage>
+        {t("frontend.register.username_check_failed")}
+      </Form.HelpMessage>
+    );
+  }
+
+  if (!availability) return null;
+
+  if (availability.available) {
+    return (
+      <Form.SuccessMessage match="valid" forceMatch>
+        {t("frontend.register.username_available")}
+      </Form.SuccessMessage>
+    );
+  }
+
+  if (availability.reason === "INVALID") {
+    const messages = (availability.violationCodes ?? [])
+      .map((code) => policyCodeMessage(t, code))
+      .filter((message): message is string => message !== undefined);
+
+    return (
+      <>
+        {(messages.length > 0
+          ? messages
+          : [t("frontend.errors.username_invalid")]
+        ).map((message) => (
+          <Form.ErrorMessage key={message} match="badInput" forceMatch>
+            {message}
+          </Form.ErrorMessage>
+        ))}
+      </>
+    );
+  }
+
+  return (
+    <Form.ErrorMessage match="badInput" forceMatch>
+      {t("frontend.errors.username_taken")}
+    </Form.ErrorMessage>
+  );
+};
+
 const UsernameField: React.FC<{
   serverName: string;
   defaultValue: string;
@@ -102,10 +207,32 @@ const UsernameField: React.FC<{
   const [dirty, setDirty] = useState(false);
 
   const normalized = normalizeUsername(username);
+  const debounced = useDebouncedValue(normalized, 500);
+  const isDebouncePending = normalized !== debounced;
+
+  const { data, isFetching, isError } = useQuery({
+    queryKey: ["usernameAvailable", debounced],
+    queryFn: ({ signal }) =>
+      graphqlRequest({
+        query: USERNAME_AVAILABLE_QUERY,
+        variables: { username: debounced },
+        signal,
+      }),
+    enabled: dirty && isUsernameCheckable(debounced),
+  });
+
+  const settled = dirty && !isDebouncePending;
+  const checking =
+    dirty &&
+    isUsernameCheckable(normalized) &&
+    (isFetching || isDebouncePending);
+  const availability = settled ? data?.usernameAvailable : undefined;
 
   return (
     <Form.Field
       name="username"
+      // Only actual POST-returned errors make the control invalid: flipping
+      // this from the live check would steal the focus while typing
       serverInvalid={!dirty && serverErrors.length > 0}
     >
       <Form.Label>{t("common.username")}</Form.Label>
@@ -123,7 +250,16 @@ const UsernameField: React.FC<{
         onBlur={() => setUsername(normalizeUsername(username))}
       />
 
+      {/* Outside the live region: it changes on every keystroke */}
       <Form.HelpMessage>{`@${normalized || "—"}:${serverName}`}</Form.HelpMessage>
+
+      <div aria-live="polite" aria-busy={checking}>
+        <UsernameVerdict
+          checking={checking}
+          checkFailed={settled && isError}
+          availability={availability}
+        />
+      </div>
 
       <Form.ErrorMessage match="valueMissing">
         {t("frontend.errors.field_required")}
@@ -469,5 +605,13 @@ const RegisterPage: React.FC<{ data: Data }> = ({ data }) => {
 void mountIsland({
   id: "register-form",
   schema,
-  render: (data) => <RegisterPage data={data} />,
+  render: (data) => {
+    setGraphqlEndpoint(data.graphqlEndpoint);
+
+    return (
+      <QueryClientProvider client={queryClient}>
+        <RegisterPage data={data} />
+      </QueryClientProvider>
+    );
+  },
 });
