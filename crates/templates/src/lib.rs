@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -42,11 +42,10 @@ pub use self::{
         CompatSsoContext, ConsentContext, DeviceConsentContext, DeviceLinkContext,
         DeviceLinkFormField, DeviceNameContext, EmailRecoveryContext, EmailVerificationContext,
         EmptyContext, ErrorContext, FormPostContext, IndexContext, LoginContext, LoginFormField,
-        NotFoundContext, PasswordRegisterContext, PolicyViolationContext, PostAuthContext,
-        PostAuthContextInner, RecoveryExpiredContext, RecoveryFinishContext,
-        RecoveryFinishFormField, RecoveryProgressContext, RecoveryStartContext,
-        RecoveryStartFormField, RegisterContext, RegisterFormField,
-        RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
+        NotFoundContext, PolicyViolationContext, PostAuthContext, PostAuthContextInner,
+        RecoveryExpiredContext, RecoveryFinishContext, RecoveryFinishFormField,
+        RecoveryProgressContext, RecoveryStartContext, RecoveryStartFormField, RegisterContext,
+        RegisterFormField, RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
         RegisterStepsEmailInUseContext, RegisterStepsRegistrationTokenContext,
         RegisterStepsRegistrationTokenFormField, RegisterStepsVerifyEmailContext,
         RegisterStepsVerifyEmailFormField, SiteBranding, SiteConfigExt, SiteFeatures,
@@ -372,10 +371,7 @@ register_templates! {
     pub fn render_login(WithLanguage<WithCsrf<LoginContext>>) { "pages/login.html" }
 
     /// Render the registration page
-    pub fn render_register(WithLanguage<WithCsrf<RegisterContext>>) { "pages/register/index.html" }
-
-    /// Render the password registration page
-    pub fn render_password_register(WithLanguage<WithCsrf<WithCaptcha<PasswordRegisterContext>>>) { "pages/register/password.html" }
+    pub fn render_register(WithLanguage<WithCsrf<WithCaptcha<RegisterContext>>>) { "pages/register/index.html" }
 
     /// Render the email verification page
     pub fn render_register_steps_verify_email(WithLanguage<WithCsrf<RegisterStepsVerifyEmailContext>>) { "pages/register/steps/verify_email.html" }
