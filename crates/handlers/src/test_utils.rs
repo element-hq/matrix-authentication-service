@@ -7,6 +7,7 @@
 
 use std::{
     convert::Infallible,
+    future::ready,
     net::IpAddr,
     sync::{Arc, Mutex, RwLock},
     task::{Context, Poll},
@@ -655,35 +656,37 @@ impl FromRef<TestState> for AppVersion {
 impl FromRequestParts<TestState> for ActivityTracker {
     type Rejection = Infallible;
 
-    async fn from_request_parts(
+    fn from_request_parts(
         _parts: &mut axum::http::request::Parts,
         state: &TestState,
-    ) -> Result<Self, Self::Rejection> {
-        Ok(state.activity_tracker.clone())
+    ) -> impl Future<Output = Result<Self, Self::Rejection>> + Send {
+        ready(Ok(state.activity_tracker.clone()))
     }
 }
 
 impl FromRequestParts<TestState> for BoxClock {
     type Rejection = Infallible;
 
-    async fn from_request_parts(
+    fn from_request_parts(
         _parts: &mut axum::http::request::Parts,
         state: &TestState,
-    ) -> Result<Self, Self::Rejection> {
-        Ok(Box::new(state.clock.clone()))
+    ) -> impl Future<Output = Result<Self, Self::Rejection>> + Send {
+        let clock: Self = Box::new(state.clock.clone());
+        ready(Ok(clock))
     }
 }
 
 impl FromRequestParts<TestState> for BoxRng {
     type Rejection = Infallible;
 
-    async fn from_request_parts(
+    fn from_request_parts(
         _parts: &mut axum::http::request::Parts,
         state: &TestState,
-    ) -> Result<Self, Self::Rejection> {
+    ) -> impl Future<Output = Result<Self, Self::Rejection>> + Send {
         let mut parent_rng = state.rng.lock().expect("Failed to lock RNG");
         let rng = ChaChaRng::from_rng(&mut *parent_rng).expect("Failed to seed RNG");
-        Ok(Box::new(rng))
+        let rng: Self = Box::new(rng);
+        ready(Ok(rng))
     }
 }
 

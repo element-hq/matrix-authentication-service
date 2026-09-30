@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -29,11 +30,11 @@ macro_rules! impl_from_request_parts {
         impl axum::extract::FromRequestParts<DummyState> for $type {
             type Rejection = std::convert::Infallible;
 
-            async fn from_request_parts(
+            fn from_request_parts(
                 _parts: &mut axum::http::request::Parts,
                 _state: &DummyState,
-            ) -> Result<Self, Self::Rejection> {
-                unimplemented!("This is a dummy state, it should never be used")
+            ) -> impl Future<Output = Result<Self, Self::Rejection>> + Send {
+                async { unimplemented!("This is a dummy state, it should never be used") }
             }
         }
     };

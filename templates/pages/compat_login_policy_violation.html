@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2025 New Vector Ltd.
 
 SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -7,8 +8,8 @@ Please see LICENSE files in the repository root for full details.
 
 {% extends "base.html" %}
 
-{% set is_too_many_sessions = violations | length == 1 and violations[0].code | default("") == "too-many-sessions" %}
-{% set num_sessions_need_to_remove = violations[0].need_to_remove if is_too_many_sessions else none %}
+{% set violation = violations | selectattr("code", "defined") | first | default({}) %}
+{% set code = violation.code | default("") %}
 
 {% block content %}
   <header class="page-heading">
@@ -16,15 +17,20 @@ Please see LICENSE files in the repository root for full details.
       {{ icon.error_solid() }}
     </div>
 
-    {% if is_too_many_sessions %}
+    {% if code == "too-many-sessions" %}
       <div class="header" data-testid="device-limit-reached">
         <h1 class="title">{{ _("mas.policy_violation.too_many_sessions.heading") }}</h1>
-        <p class="text">{{ _("mas.policy_violation.too_many_sessions.description", num_devices_to_remove=num_sessions_need_to_remove) }}</p>
+        <p class="text">{{ _("mas.policy_violation.too_many_sessions.description", num_devices_to_remove=violation.need_to_remove) }}</p>
       </div>
     {% else %}
       <div class="header" data-testid="generic-policy-violation">
-        <h1 class="title">{{ _("mas.policy_violation.heading") }}</h1>
-        <p class="text">{{ _("mas.policy_violation.description") }}</p>
+        {% if code == "client-not-allowed" %}
+          <h1 class="title">{{ _("mas.policy_violation.client_not_allowed.heading") }}</h1>
+          <p class="text">{{ _("mas.policy_violation.client_not_allowed.description") }}</p>
+        {% else %}
+          <h1 class="title">{{ _("mas.policy_violation.heading") }}</h1>
+          <p class="text">{{ _("mas.policy_violation.description") }}</p>
+        {% endif %}
       </div>
     {% endif %}
   </header>
@@ -38,7 +44,7 @@ Please see LICENSE files in the repository root for full details.
       {{ logout.button(text=_("action.sign_out"), csrf_token=csrf_token, post_logout_action=action, as_link=True) }}
     </div>
 
-    {% if is_too_many_sessions %}
+    {% if code == "too-many-sessions" %}
       {{ button.link(text=_("mas.policy_violation.too_many_sessions.manage_devices"), href="/account/sessions") }}
     {% endif %}
   </main>

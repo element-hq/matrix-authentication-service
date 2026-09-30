@@ -1,10 +1,11 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::{convert::Infallible, sync::Arc};
+use std::{convert::Infallible, future::ready, sync::Arc};
 
 use axum::{
     extract::{FromRef, FromRequestParts},
@@ -23,7 +24,10 @@ where
 {
     type Rejection = Infallible;
 
-    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+    fn from_request_parts(
+        parts: &mut Parts,
+        state: &S,
+    ) -> impl Future<Output = Result<Self, Self::Rejection>> + Send {
         let translator: Arc<Translator> = FromRef::from_ref(state);
         let accept_language = parts.headers.typed_get::<AcceptLanguage>();
 
@@ -45,6 +49,6 @@ where
 
         let locale = translator.choose_locale(iter);
 
-        Ok(PreferredLanguage(locale))
+        ready(Ok(PreferredLanguage(locale)))
     }
 }

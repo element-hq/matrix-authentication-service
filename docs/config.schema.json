@@ -2021,6 +2021,18 @@
               "$ref": "#/definitions/EmailauthenticationRateLimitingConfig"
             }
           ]
+        },
+        "device_code_link": {
+          "description": "Controls how many user code verification attempts are permitted\nbased on source IP address, when linking a device through the\nDevice Authorization Grant.\nThis can protect against brute-forcing the user code.",
+          "default": {
+            "burst": 10,
+            "per_second": 0.016666666666666666
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/RateLimiterConfiguration"
+            }
+          ]
         }
       }
     },

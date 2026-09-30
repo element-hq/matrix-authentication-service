@@ -91,6 +91,9 @@ mas-tower.workspace = true
 
 syn2mas.workspace = true
 
+[dev-dependencies]
+tempfile = "3"
+
 [build-dependencies]
 anyhow.workspace = true
 vergen-gitcl.workspace = true

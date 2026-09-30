@@ -145,14 +145,14 @@
       "current_password_label": "Nykyinen salasana",
       "failure": {
         "description": {
-          "account_locked": "Tilisi on lukittu eikä sitä voi palauttaa tällä hetkellä. Jos et odottanut tätä, ota yhteyttä palvelimen ylläpitäjään.",
+          "account_locked": "Tilisi on lukittu eikä sitä voi palauttaa tällä hetkellä. Jos et odottanut tätä, ota yhteyttä palveluntarjoajaasi.",
           "expired_recovery_ticket": "Palautuslinkki on vanhentunut. Aloita tilin palautusprosessi uudelleen alusta.",
           "invalid_new_password": "Valitsemasi uusi salasana on virheellinen; se ei ehkä vastaa määritettyä suojauskäytäntöä.",
           "no_current_password": "Sinulla ei ole nykyistä salasanaa.",
           "no_such_recovery_ticket": "Palautuslinkki on virheellinen. Jos kopioit linkin palautussähköpostista, tarkista, että kopioit koko linkin.",
           "password_changes_disabled": "Salasanan vaihtaminen on poistettu käytöstä.",
           "recovery_ticket_already_used": "Palautuslinkki on jo käytetty. Sitä ei voi käyttää uudelleen.",
-          "unspecified": "Tämä saattaa olla väliaikainen ongelma, joten yritä myöhemmin uudelleen. Jos ongelma jatkuu, ota yhteyttä palvelimen ylläpitäjään.",
+          "unspecified": "Tämä saattaa olla väliaikainen ongelma, joten yritä myöhemmin uudelleen. Jos ongelma jatkuu, ota yhteyttä palveluntarjoajaasi.",
           "wrong_password": "Nykyiseksi salasanaksi antamasi salasana on virheellinen. Yritä uudelleen."
         },
         "title": "Salasanan vaihtaminen epäonnistui"
@@ -239,7 +239,7 @@
         "positive_1": "Tilitietosi, yhteystiedot, asetukset ja keskustelulista säilytetään"
       },
       "failure": {
-        "description": "Tämä saattaa olla väliaikainen ongelma, joten yritä myöhemmin uudelleen. Jos ongelma jatkuu, ota yhteyttä palvelimen ylläpitäjään.",
+        "description": "Tämä saattaa olla väliaikainen ongelma, joten yritä myöhemmin uudelleen. Jos ongelma jatkuu, ota yhteyttä palveluntarjoajaasi.",
         "heading": "Digitaalisen identiteetin nollauksen salliminen epäonnistui"
       },
       "finish_reset": "Viimeistele nollaus",

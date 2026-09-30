@@ -39,11 +39,11 @@
   "mas": {
     "account": {
       "deactivated": {
-        "description": "Tämä tili (<em>%(mxid)s</em>) on poistettu. Jos tämä on virhe, ota yhteyttä palvelimen ylläpitäjään.",
+        "description": "Tämä tili (<em>%(mxid)s</em>) on poistettu. Jos et odottanut tätä, ota yhteyttä palveluntarjoajaasi.",
         "heading": "Tili poistettu"
       },
       "locked": {
-        "description": "Tämä tili (<em>%(mxid)s</em>) on lukittu. Jos tämä on virhe, ota yhteyttä palvelimen ylläpitäjään.",
+        "description": "Tämä tili (<em>%(mxid)s</em>) on lukittu. Jos et odottanut tätä, ota yhteyttä palveluntarjoajaasi.",
         "heading": "Tili lukittu"
       },
       "logged_out": {
@@ -113,7 +113,7 @@
     "emails": {
       "greeting": "Hei %(username)s,",
       "recovery": {
-        "click_button": "Luo uusi salasana napsauttamalla alla olevaa painiketta:",
+        "click_button": "Luo uusi salasana valitsemalla alla oleva painike:",
         "copy_link": "Luo uusi salasana kopioimalla seuraava linkki ja liittämällä se selaimeen:",
         "create_new_password": "Luo uusi salasana",
         "fallback": "Eikö painike toimi sinulle?",
@@ -226,7 +226,7 @@
       "terms_of_service": "Hyväksyn <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Käyttöehdot</a>"
     },
     "registration_token": {
-      "description": "Anna kotipalvelimen ylläpitäjän antama rekisteröitymispoletti.",
+      "description": "Anna palveluntarjoajasi antama rekisteröitymispoletti.",
       "field": "Rekisteröitymispoletti",
       "headline": "Rekisteröitymispoletti"
     },

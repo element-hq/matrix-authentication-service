@@ -14,7 +14,7 @@ use mas_axum_utils::{
     client_authorization::{ClientAuthorization, CredentialsVerificationError},
     record_error,
 };
-use mas_data_model::{BoxClock, BoxRng};
+use mas_data_model::{BoxClock, BoxRng, generate_user_code};
 use mas_keystore::Encrypter;
 use mas_router::UrlBuilder;
 use mas_storage::{BoxRepository, oauth2::OAuth2DeviceCodeGrantParams};
@@ -160,7 +160,7 @@ pub(crate) async fn post(
     let ip_address = activity_tracker.ip();
 
     let device_code = Alphanumeric.sample_string(&mut rng, 32);
-    let user_code = Alphanumeric.sample_string(&mut rng, 6).to_uppercase();
+    let user_code = generate_user_code(&mut rng);
 
     let device_code = repo
         .oauth2_device_code_grant()
@@ -216,6 +216,23 @@ mod tests {
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup, test_site_config};
 
+    /// The user code is drawn from the Crockford Base32 alphabet, which
+    /// excludes the characters which get read as `0` and `1` (and the `U`
+    /// which Crockford drops to avoid obscenities).
+    fn assert_user_code_is_well_formed(user_code: &str) {
+        assert_eq!(user_code.len(), 6);
+        for c in user_code.chars() {
+            assert!(
+                c.is_ascii_digit() || c.is_ascii_uppercase(),
+                "user code {user_code:?} has {c:?}, which is not an uppercase alphanumeric"
+            );
+            assert!(
+                !matches!(c, 'I' | 'L' | 'O' | 'U'),
+                "user code {user_code:?} has an excluded character {c:?}"
+            );
+        }
+    }
+
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_device_code_request(pool: PgPool) {
         setup();
@@ -248,7 +265,7 @@ mod tests {
 
         let response: DeviceAuthorizationResponse = response.json();
         assert_eq!(response.device_code.len(), 32);
-        assert_eq!(response.user_code.len(), 6);
+        assert_user_code_is_well_formed(&response.user_code);
         assert!(response.verification_uri_complete.is_some());
     }
 
@@ -292,7 +309,7 @@ mod tests {
 
         let response: DeviceAuthorizationResponse = response.json();
         assert_eq!(response.device_code.len(), 32);
-        assert_eq!(response.user_code.len(), 6);
+        assert_user_code_is_well_formed(&response.user_code);
         assert!(response.verification_uri_complete.is_none());
     }
 
