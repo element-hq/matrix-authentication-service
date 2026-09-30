@@ -148,6 +148,11 @@ impl QueryLoginHint {
     }
 }
 
+#[derive(Debug, Deserialize)]
+pub(crate) struct QueryIdp {
+    pub upstream_idp: Option<String>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
