@@ -5,6 +5,7 @@
 // Please see LICENSE files in the repository root for full details.
 
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 use mas_data_model::{Clock, Password, User};
 use rand_core::RngCore;
 
@@ -55,6 +56,26 @@ pub trait UserPasswordRepository: Send + Sync {
         hashed_password: String,
         upgraded_from: Option<&Password>,
     ) -> Result<Password, Self::Error>;
+
+    /// Delete the passwords of users deactivated before `deactivated_before`,
+    /// up to `limit` rows.
+    ///
+    /// Returns the number of passwords deleted.
+    ///
+    /// # Parameters
+    ///
+    /// * `deactivated_before`: Only delete passwords of users deactivated
+    ///   strictly before this time
+    /// * `limit`: The maximum number of passwords to delete in this batch
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if underlying repository fails
+    async fn cleanup_deactivated(
+        &mut self,
+        deactivated_before: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<usize, Self::Error>;
 }
 
 repository_impl!(UserPasswordRepository:
@@ -68,4 +89,9 @@ repository_impl!(UserPasswordRepository:
         hashed_password: String,
         upgraded_from: Option<&Password>,
     ) -> Result<Password, Self::Error>;
+    async fn cleanup_deactivated(
+        &mut self,
+        deactivated_before: DateTime<Utc>,
+        limit: usize,
+    ) -> Result<usize, Self::Error>;
 );
