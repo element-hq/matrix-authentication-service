@@ -1092,4 +1092,19 @@ experimental:
      # recovered from another verified device or a recovery key. When enabled,
      # `hard_limit` must be at least 2.
      #dangerous_hard_limit_eviction: false
+
+     # Optional per-OAuth-client session limits. When a user logs into a
+     # client listed here, these values replace the top-level limits for
+     # that attempt, and only that client's OAuth 2.0 sessions are counted.
+     # Optional fields do not inherit from the top-level config.
+     #
+     # `soft_limit` and `hard_limit` above may be omitted when this map is
+     # set. In that case there is no global limit: only the listed clients
+     # are limited.
+     #per_client:
+     #  01FSHN9A2Q9FXBM5T1WDB4P6S0:
+     #    soft_limit: 3
+     #    hard_limit: 5
+     #    max_session_threshold: 20
+     #    dangerous_hard_limit_eviction: false
 ```

@@ -20,6 +20,7 @@ mod recovery;
 mod registration;
 mod registration_token;
 mod session;
+mod session_limit_override;
 mod terms;
 
 pub use self::{
@@ -29,6 +30,7 @@ pub use self::{
     registration::UserRegistrationRepository,
     registration_token::{UserRegistrationTokenFilter, UserRegistrationTokenRepository},
     session::{BrowserSessionFilter, BrowserSessionRepository},
+    session_limit_override::{UserSessionLimitOverrideFilter, UserSessionLimitOverrideRepository},
     terms::UserTermsRepository,
 };
 

@@ -155,6 +155,7 @@ pub fn test_site_config() -> SiteConfig {
         login_with_email_allowed: true,
         plan_management_iframe_uri: None,
         session_limit: None,
+        session_limit_per_client: std::collections::HashMap::new(),
         device_code_grant_enabled: true,
         device_code_user_code_auto_fill_enabled: true,
     }
