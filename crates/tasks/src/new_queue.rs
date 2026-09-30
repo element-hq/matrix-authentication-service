@@ -558,7 +558,7 @@ impl QueueWorker {
         // Compute how many jobs we should fetch at most
         let max_jobs_to_fetch = MAX_CONCURRENT_JOBS
             .saturating_sub(self.tracker.running_jobs())
-            .max(MAX_JOBS_TO_FETCH);
+            .min(MAX_JOBS_TO_FETCH);
 
         if max_jobs_to_fetch == 0 {
             tracing::warn!("Internal job queue is full, not fetching any new jobs");
