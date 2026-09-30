@@ -48,7 +48,3 @@
 - [Database](./development/database.md)
 - [Cleanup jobs](./development/cleanup-jobs.md)
 - [Internal GraphQL API](./development/graphql.md)
-
----
-
-[Application Services login](./as-login.md)
