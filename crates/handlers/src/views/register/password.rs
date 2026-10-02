@@ -22,7 +22,6 @@ use mas_router::UrlBuilder;
 use mas_storage::{
     BoxRepository, RepositoryAccess,
     queue::{QueueJobRepositoryExt as _, SendEmailAuthenticationCodeJob},
-    upstream_oauth2::UpstreamOAuthProviderRepository as _,
     user::{UserEmailRepository, UserRegistrationRepository as _, UserRepository},
 };
 use mas_templates::{
@@ -272,10 +271,6 @@ pub(super) async fn register(
     if !state.is_valid() {
         // Re-render with what the invite code resolved to, so the form keeps
         // the shape the user submitted it in
-        let invite = registration_token
-            .as_ref()
-            .map(|token| InviteContext::new(Some(token)));
-
         let content = render(
             locale,
             state,
@@ -285,7 +280,9 @@ pub(super) async fn register(
             templates,
             url_builder,
             site_config.captcha.clone(),
-            invite,
+            registration_token
+                .as_ref()
+                .map_or(InviteCode::Missing, InviteCode::Valid),
         )
         .await?;
 
@@ -376,6 +373,13 @@ pub(super) async fn register(
         .into_response())
 }
 
+/// The invite code the registration form was submitted with
+pub(super) enum InviteCode<'a> {
+    Missing,
+    Invalid,
+    Valid(&'a UserRegistrationToken),
+}
+
 /// Render the registration page again, with the errors the form collected
 #[expect(clippy::too_many_arguments)]
 pub(super) async fn render(
@@ -387,14 +391,18 @@ pub(super) async fn render(
     templates: &Templates,
     url_builder: &UrlBuilder,
     captcha_config: Option<CaptchaConfig>,
-    invite: Option<InviteContext>,
+    invite: InviteCode<'_>,
 ) -> Result<String, InternalError> {
-    let providers = repo.upstream_oauth_provider().all_enabled().await?;
+    let registration_token = match invite {
+        InviteCode::Valid(registration_token) => Some(registration_token),
+        InviteCode::Missing | InviteCode::Invalid => None,
+    };
+    let providers = super::offered_providers(repo, registration_token).await?;
     let mut ctx = RegisterContext::new(url_builder, providers, action.post_auth_action.as_ref())
         .with_form_state(form_state);
 
-    if let Some(invite) = invite {
-        ctx = ctx.with_invite(invite);
+    if !matches!(invite, InviteCode::Missing) {
+        ctx = ctx.with_invite(InviteContext::new(registration_token));
     }
 
     let ctx = ctx
