@@ -251,8 +251,13 @@ pub(super) async fn register(
         }
 
         if state.is_valid() {
-            // Check the rate limit if we are about to process the form
-            if let Err(e) = limiter.check_registration(requester) {
+            // Check the rate limit if we are about to process the form. Invites
+            // skip the registration limit, so that people behind one address
+            // can accept theirs together.
+            let is_invite = registration_token
+                .as_ref()
+                .is_some_and(UserRegistrationToken::is_invite);
+            if !is_invite && let Err(e) = limiter.check_registration(requester) {
                 tracing::warn!(error = &e as &dyn std::error::Error);
                 state.add_error_on_form(FormError::RateLimitExceeded);
             }
@@ -416,10 +421,13 @@ pub(super) async fn render(
 
 #[cfg(test)]
 mod tests {
+    use std::net::IpAddr;
+
     use hyper::{
         Request, Response, StatusCode,
         header::{CONTENT_TYPE, LOCATION},
     };
+    use mas_config::RateLimitingConfig;
     use mas_router::Route;
     use mas_storage::{RepositoryAccess, user::UserRegistrationTokenRepository};
     use sqlx::PgPool;
@@ -1245,5 +1253,114 @@ mod tests {
         let request = cookies.with_cookies(request);
         let response = state.request(request).await;
         response.assert_status(StatusCode::METHOD_NOT_ALLOWED);
+    }
+
+    /// Post the registration form from the given IP address
+    async fn register_from(
+        state: &TestState,
+        ip: IpAddr,
+        mut form: serde_json::Value,
+    ) -> Response<String> {
+        let cookies = CookieHelper::new();
+        form["csrf"] = mint_csrf_token(state, &cookies).into();
+        form["accept_terms"] = "on".into();
+        let request = Request::post(&*mas_router::Register::default().path_and_query())
+            .client_ip(ip)
+            .form(form);
+        state.request(cookies.with_cookies(request)).await
+    }
+
+    /// Invites skip the registration rate limit, so people behind one address
+    /// can accept theirs together
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_invites_skip_rate_limit(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let ip = IpAddr::from([192, 0, 2, 1]);
+
+        // Past the registration limit, and within the email one
+        let limits = RateLimitingConfig::default();
+        let burst = limits.registration.burst.get();
+        assert!(burst < limits.email_authentication.per_ip.burst.get());
+
+        for i in 0..=burst {
+            let token = format!("invite_{i}");
+            add_registration_token(
+                &state,
+                &token,
+                Some(&format!("guest{i}")),
+                Some(&format!("guest{i}@example.com")),
+                true,
+            )
+            .await;
+
+            let response = register_from(&state, ip, serde_json::json!({ "token": token })).await;
+            response.assert_status(StatusCode::SEE_OTHER);
+        }
+    }
+
+    /// A code which isn't an invite is still subject to the registration rate
+    /// limit
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_token_rate_limited(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let password = "correcthorsebatterystaple";
+
+        for (ip, token, username, email, passwordless) in [
+            ([192, 0, 2, 1], "username_only", Some("bob"), None, true),
+            (
+                [192, 0, 2, 2],
+                "email_only",
+                None,
+                Some("carol@example.com"),
+                true,
+            ),
+            (
+                [192, 0, 2, 3],
+                "not_passwordless",
+                Some("dave"),
+                Some("dave@example.com"),
+                false,
+            ),
+        ] {
+            add_registration_token(&state, token, username, email, passwordless).await;
+            let ip = IpAddr::from(ip);
+
+            // Spend the limit
+            for i in 0..RateLimitingConfig::default().registration.burst.get() {
+                let response = register_from(
+                    &state,
+                    ip,
+                    serde_json::json!({
+                        "username": format!("user{i}"),
+                        "email": format!("user{i}+{token}@example.com"),
+                        "password": password,
+                        "password_confirm": password,
+                    }),
+                )
+                .await;
+                response.assert_status(StatusCode::SEE_OTHER);
+            }
+
+            let response = register_from(
+                &state,
+                ip,
+                serde_json::json!({
+                    "token": token,
+                    "username": username.unwrap_or("erin"),
+                    "email": email.unwrap_or("erin@example.com"),
+                    "password": password,
+                    "password_confirm": password,
+                }),
+            )
+            .await;
+            response.assert_status(StatusCode::OK);
+            assert_eq!(
+                form_state(response.body())["errors"],
+                serde_json::json!([{"kind": "rate_limit_exceeded"}]),
+                "with {token}"
+            );
+        }
     }
 }
