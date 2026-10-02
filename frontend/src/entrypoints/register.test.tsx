@@ -119,4 +119,64 @@ describe("register island", () => {
       ).toBeTruthy();
     });
   });
+
+  describe("with an invite pinning the username and email", () => {
+    const invite = {
+      valid: true,
+      username: "alice",
+      email: "alice@example.com",
+      passwordless: true,
+    };
+
+    it("explains an error on the username above the form", async () => {
+      await mountRegister({
+        invite,
+        form: {
+          errors: [],
+          fields: { username: { value: "", errors: [{ kind: "exists" }] } },
+        },
+      });
+
+      const alert = screen.getByRole("alert");
+      expect(alert).toHaveTextContent(
+        "The account this invite is for can't be created.",
+      );
+      expect(
+        alert.compareDocumentPosition(
+          screen.getByRole("button", { name: "Send code" }),
+        ) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    it("explains an error on the email address above the form", async () => {
+      await mountRegister({
+        invite,
+        form: {
+          errors: [],
+          fields: {
+            email: {
+              value: "alice@example.com",
+              errors: [
+                {
+                  kind: "policy",
+                  code: "email-domain-banned",
+                  message: "Email domain is banned",
+                },
+              ],
+            },
+          },
+        },
+      });
+
+      const alert = screen.getByRole("alert");
+      expect(alert).toHaveTextContent(
+        "This invite's email address can't be used to create an account.",
+      );
+      expect(
+        alert.compareDocumentPosition(
+          screen.getByRole("button", { name: "Send code" }),
+        ) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+  });
 });

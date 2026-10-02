@@ -381,6 +381,15 @@ const PasswordRegisterForm: React.FC<{ data: Data }> = ({ data }) => {
         <ErrorAlert>{t("frontend.register.invite_invalid")}</ErrorAlert>
       )}
 
+      {/* The user never chose a pinned value, so its errors get their own words */}
+      {pinnedUsername && !!fields.username?.errors.length && (
+        <ErrorAlert>{t("frontend.register.pinned_username_error")}</ErrorAlert>
+      )}
+
+      {pinnedEmail && !!fields.email?.errors.length && (
+        <ErrorAlert>{t("frontend.register.pinned_email_error")}</ErrorAlert>
+      )}
+
       {formErrors.map((error, index) => (
         <div
           // biome-ignore lint/suspicious/noArrayIndexKey: the server error list is static

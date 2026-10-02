@@ -256,6 +256,8 @@
       "password_confirm_label": "Confirm password",
       "password_label": "Password",
       "passwordless_notice": "This account doesn't need a password. We'll send a verification code to your email address instead.",
+      "pinned_email_error": "This invite's email address can't be used to create an account. Let whoever invited you know.",
+      "pinned_username_error": "The account this invite is for can't be created. Let whoever invited you know.",
       "send_code": "Send code",
       "terms_of_service": "I agree to the <a>Terms and Conditions</a>"
     },
