@@ -106,6 +106,7 @@ const RegisterPage: React.FC<{ data: Data }> = ({ data }) =>
       csrfToken={data.csrfToken}
       providers={data.providers}
       loginLink={data.loginLink}
+      inviteInvalid={data.invite?.valid === false}
     />
   );
 

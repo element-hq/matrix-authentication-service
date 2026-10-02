@@ -58,6 +58,12 @@ const ProviderButtons: React.FC<{ providers: Provider[] }> = ({
   );
 };
 
+const ErrorAlert: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div role="alert" className="text-critical font-medium">
+    {children}
+  </div>
+);
+
 const LoginLink: React.FC<{ href: string }> = ({ href }) => {
   const { t } = useTranslation();
   return (
@@ -202,9 +208,7 @@ export const PasswordRegisterForm: React.FC<{
       )}
 
       {inviteInvalid && (
-        <div role="alert" className="text-critical font-medium">
-          {t("frontend.register.invite_invalid")}
-        </div>
+        <ErrorAlert>{t("frontend.register.invite_invalid")}</ErrorAlert>
       )}
 
       {formErrors.map((error, index) => (
@@ -371,10 +375,17 @@ export const ProvidersOnlyForm: React.FC<{
   csrfToken: string;
   providers: Provider[];
   loginLink: string;
-}> = ({ csrfToken, providers, loginLink }) => (
-  <Form.Root method="POST">
-    <input type="hidden" name="csrf" value={csrfToken} />
-    <ProviderButtons providers={providers} />
-    <LoginLink href={loginLink} />
-  </Form.Root>
-);
+  inviteInvalid: boolean;
+}> = ({ csrfToken, providers, loginLink, inviteInvalid }) => {
+  const { t } = useTranslation();
+  return (
+    <Form.Root method="POST">
+      <input type="hidden" name="csrf" value={csrfToken} />
+      {inviteInvalid && (
+        <ErrorAlert>{t("frontend.register.invite_invalid")}</ErrorAlert>
+      )}
+      <ProviderButtons providers={providers} />
+      <LoginLink href={loginLink} />
+    </Form.Root>
+  );
+};
