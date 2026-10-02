@@ -435,6 +435,173 @@ mod tests {
         csrf_token.form_value().clone()
     }
 
+    pub(super) async fn add_registration_token(
+        state: &TestState,
+        token: &str,
+        username: Option<&str>,
+        email: Option<&str>,
+        passwordless: bool,
+    ) -> mas_data_model::UserRegistrationToken {
+        let mut repo = state.repository().await.unwrap();
+        let token = repo
+            .user_registration_token()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                token.to_owned(),
+                None,
+                None,
+                username.map(ToOwned::to_owned),
+                email.map(ToOwned::to_owned),
+                passwordless,
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+        token
+    }
+
+    /// Start a registration in this browser, as `POST /register` and the
+    /// email verification step leave it
+    pub(super) async fn add_registration(
+        state: &TestState,
+        cookies: &CookieHelper,
+        username: &str,
+        verified_email: Option<&str>,
+        with_password: bool,
+        token: Option<&mas_data_model::UserRegistrationToken>,
+    ) -> mas_data_model::UserRegistration {
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+
+        let mut registration = repo
+            .user_registration()
+            .add(
+                &mut rng,
+                &state.clock,
+                username.to_owned(),
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        if let Some(email) = verified_email {
+            let authentication = repo
+                .user_email()
+                .add_authentication_for_registration(
+                    &mut rng,
+                    &state.clock,
+                    email.to_owned(),
+                    &registration,
+                )
+                .await
+                .unwrap();
+            let code = repo
+                .user_email()
+                .add_authentication_code(
+                    &mut rng,
+                    &state.clock,
+                    chrono::Duration::minutes(5),
+                    &authentication,
+                    "123456".to_owned(),
+                )
+                .await
+                .unwrap();
+            let authentication = repo
+                .user_email()
+                .complete_authentication_with_code(&state.clock, authentication, &code)
+                .await
+                .unwrap();
+            registration = repo
+                .user_registration()
+                .set_email_authentication(registration, &authentication)
+                .await
+                .unwrap();
+        }
+
+        if with_password {
+            registration = repo
+                .user_registration()
+                .set_password(registration, "hashed".to_owned(), 1)
+                .await
+                .unwrap();
+        }
+
+        if let Some(token) = token {
+            registration = repo
+                .user_registration()
+                .set_registration_token(registration, token)
+                .await
+                .unwrap();
+        }
+
+        repo.save().await.unwrap();
+
+        cookies.import(
+            super::UserRegistrationSessionsCookie::default()
+                .add(&registration)
+                .save(state.cookie_jar(), &state.clock),
+        );
+
+        registration
+    }
+
+    /// Link a registration to an upstream identity, as registering through an
+    /// upstream provider does
+    pub(super) async fn link_upstream(
+        state: &TestState,
+        registration: mas_data_model::UserRegistration,
+    ) -> mas_data_model::UserRegistration {
+        let provider_id = provider(state).await;
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+
+        let provider = repo
+            .upstream_oauth_provider()
+            .lookup(provider_id)
+            .await
+            .unwrap()
+            .unwrap();
+        let session = repo
+            .upstream_oauth_session()
+            .add(
+                &mut rng,
+                &state.clock,
+                &provider,
+                registration.username.clone(),
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+        let link = repo
+            .upstream_oauth_link()
+            .add(
+                &mut rng,
+                &state.clock,
+                &provider,
+                registration.username.clone(),
+                None,
+            )
+            .await
+            .unwrap();
+        let session = repo
+            .upstream_oauth_session()
+            .complete_with_link(&state.clock, session, &link, None, None, None, None)
+            .await
+            .unwrap();
+        let registration = repo
+            .user_registration()
+            .set_upstream_oauth_authorization_session(registration, &session)
+            .await
+            .unwrap();
+
+        repo.save().await.unwrap();
+        registration
+    }
+
     /// Decode the upstream sessions cookie set by the given response, if any
     fn upstream_sessions(
         state: &TestState,

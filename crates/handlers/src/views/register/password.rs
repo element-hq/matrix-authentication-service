@@ -423,7 +423,7 @@ mod tests {
     use sqlx::PgPool;
     use ulid::Ulid;
 
-    use super::super::tests::{csrf_token, mint_csrf_token};
+    use super::super::tests::{add_registration_token, csrf_token, mint_csrf_token};
     use crate::{
         SiteConfig,
         test_utils::{
@@ -1134,6 +1134,44 @@ mod tests {
         // No registration was created
         let mut repo = state.repository().await.unwrap();
         assert!(!repo.user().exists("mallory").await.unwrap());
+    }
+
+    /// An invite code which pins an email address can't be used to register
+    /// another
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_token_email_mismatch(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        add_registration_token(
+            &state,
+            "invite_alice",
+            None,
+            Some("alice@example.com"),
+            false,
+        )
+        .await;
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "username": "mallory",
+                "email": "mallory@example.com",
+                "password": "correcthorsebatterystaple",
+                "password_confirm": "correcthorsebatterystaple",
+                "token": "invite_alice",
+                "accept_terms": "on",
+            }),
+        );
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            form_state(response.body())["fields"]["email"]["errors"],
+            serde_json::json!([{"kind": "invalid"}])
+        );
     }
 
     /// A passwordless invite code is a way to register on its own: it works
