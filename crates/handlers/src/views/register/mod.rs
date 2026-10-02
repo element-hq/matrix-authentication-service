@@ -26,8 +26,8 @@ use mas_storage::{
     user::UserRegistrationTokenRepository,
 };
 use mas_templates::{
-    FormState, InviteContext, RegisterContext, RegisterFormField, TemplateContext, Templates,
-    ToFormState,
+    FieldError, FormState, InviteContext, RegisterContext, RegisterFormField, TemplateContext,
+    Templates, ToFormState,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -89,8 +89,13 @@ pub(crate) async fn get(
     }
 
     // Resolve the invite code the link carried, so that the form can show what
-    // it was issued for
-    let registration_token = match &query.token {
+    // it was issued for. A blank code is no code.
+    let token = query
+        .token
+        .as_deref()
+        .map(str::trim)
+        .filter(|token| !token.is_empty());
+    let registration_token = match token {
         Some(token) => repo
             .user_registration_token()
             .find_by_token(token)
@@ -101,13 +106,15 @@ pub(crate) async fn get(
     let passwordless_invite = registration_token
         .as_ref()
         .is_some_and(|token| token.passwordless);
+    let token_invalid = token.is_some() && registration_token.is_none();
 
     let providers = repo.upstream_oauth_provider().all_enabled().await?;
 
     // Without a password form there is nothing to show beyond the provider
     // buttons, which isn't worth a page for one provider or none. A
-    // passwordless invite is a way to register on its own, so it keeps the page
-    if !site_config.password_registration_enabled && !passwordless_invite {
+    // passwordless invite is a way to register on its own, so it keeps the
+    // page. The page also reports an invalid invite.
+    if !site_config.password_registration_enabled && !passwordless_invite && !token_invalid {
         if providers.len() == 1 {
             let provider = providers.into_iter().next().unwrap();
 
@@ -132,11 +139,12 @@ pub(crate) async fn get(
         query.action.post_auth_action.as_ref(),
     );
 
-    // The code travels back on submission through a hidden field, whether it
-    // resolved or not
-    if let Some(token) = query.token {
+    // A code which resolved travels back on submission through a hidden field
+    if let Some(token) = token {
         let mut form = FormState::default();
-        form.set_value(RegisterFormField::Token, Some(token));
+        if registration_token.is_some() {
+            form.set_value(RegisterFormField::Token, Some(token.to_owned()));
+        }
         ctx = ctx
             .with_form_state(form)
             .with_invite(InviteContext::new(registration_token.as_ref()));
@@ -276,15 +284,43 @@ pub(crate) async fn post(
 
     // Resolve the invite code now: it decides whether a password is needed at
     // all, and a passwordless one is a way to register on its own
-    let registration_token = if form.token.is_empty() {
+    let token = form.token.trim();
+    let registration_token = if token.is_empty() {
         None
     } else {
         repo.user_registration_token()
-            .find_by_token(&form.token)
+            .find_by_token(token)
             .await?
             .filter(|token| token.is_valid(clock.now()))
     };
-    let token_invalid = !form.token.is_empty() && registration_token.is_none();
+
+    // Only the code's error is reported: checking the rest of the form would
+    // tell whether a username exists, even with registration closed. The code
+    // isn't submitted again, so the next submission is an ordinary
+    // registration.
+    if !token.is_empty() && registration_token.is_none() {
+        let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
+        let mut form_state = form
+            .to_form_state()
+            .with_error_on_field(RegisterFormField::Token, FieldError::Invalid);
+        form_state.set_value(RegisterFormField::Token, None);
+
+        let content = self::password::render(
+            locale,
+            form_state,
+            &query.action,
+            csrf_token,
+            &mut repo,
+            &templates,
+            &url_builder,
+            site_config.captcha.clone(),
+            Some(InviteContext::new(None)),
+        )
+        .await?;
+
+        return Ok((cookie_jar, Html(content)).into_response());
+    }
+
     let passwordless_invite = registration_token
         .as_ref()
         .is_some_and(|token| token.passwordless);
@@ -313,7 +349,6 @@ pub(crate) async fn post(
         cookie_jar,
         form,
         registration_token,
-        token_invalid,
     )
     .await
 }
@@ -710,13 +745,17 @@ mod tests {
             serde_json::json!("invite_alice")
         );
 
-        // A code the server doesn't know only says so
+        // A code the server doesn't know only says so, and isn't submitted
         let request = Request::get("/register?token=nope").empty();
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
         assert_eq!(
             json_attribute(response.body(), "data-invite"),
             serde_json::json!({ "valid": false })
+        );
+        assert_eq!(
+            json_attribute(response.body(), "data-form")["fields"]["token"]["value"],
+            serde_json::Value::Null
         );
     }
 
@@ -762,6 +801,203 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::SEE_OTHER);
         response.assert_header_value(LOCATION, "/login");
+    }
+
+    /// With password registration disabled, an invalid invite link keeps the
+    /// page to say so, whatever the providers. A valid code which isn't
+    /// passwordless can't register there, so it doesn't.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_get_with_invalid_invite_without_password_registration(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_login_enabled: false,
+                password_registration_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        let revoked = add_registration_token(&state, "revoked", None, None, true).await;
+        let expired = add_registration_token(&state, "expired", None, None, true).await;
+        let used = add_registration_token(&state, "used", None, None, true).await;
+        add_registration_token(&state, "not_passwordless", None, None, false).await;
+
+        let mut repo = state.repository().await.unwrap();
+        repo.user_registration_token()
+            .revoke(&state.clock, revoked)
+            .await
+            .unwrap();
+        repo.user_registration_token()
+            .set_expiry(expired, Some(state.clock.now()))
+            .await
+            .unwrap();
+        let used = repo
+            .user_registration_token()
+            .set_usage_limit(used, Some(1))
+            .await
+            .unwrap();
+        repo.user_registration_token()
+            .use_token(&state.clock, used)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        for providers in 0..=2 {
+            if providers > 0 {
+                provider(&state).await;
+            }
+
+            for token in ["unknown", "revoked", "expired", "used"] {
+                let request = Request::get(format!("/register?token={token}")).empty();
+                let response = state.request(request).await;
+                response.assert_status(StatusCode::OK);
+                assert_eq!(
+                    json_attribute(response.body(), "data-invite"),
+                    serde_json::json!({ "valid": false })
+                );
+            }
+
+            let request = Request::get("/register?token=not_passwordless").empty();
+            let response = state.request(request).await;
+            match providers {
+                0 => {
+                    response.assert_status(StatusCode::SEE_OTHER);
+                    response.assert_header_value(LOCATION, "/login");
+                }
+                1 => response.assert_status(StatusCode::SEE_OTHER),
+                _ => response.assert_status(StatusCode::OK),
+            }
+        }
+    }
+
+    /// A blank invite code is no code, and spaces around one are ignored
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_blank_and_padded_tokens(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_login_enabled: false,
+                password_registration_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        let cookies = CookieHelper::new();
+
+        add_registration_token(
+            &state,
+            "invite_alice",
+            Some("alice"),
+            Some("alice@example.com"),
+            true,
+        )
+        .await;
+
+        for token in ["", "%20%20"] {
+            let request = Request::get(format!("/register?token={token}")).empty();
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::SEE_OTHER);
+            response.assert_header_value(LOCATION, "/login");
+        }
+
+        let request = Request::get("/register?token=%20invite_alice%20").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-invite")["valid"],
+            serde_json::json!(true)
+        );
+        assert_eq!(
+            json_attribute(response.body(), "data-form")["fields"]["token"]["value"],
+            serde_json::json!("invite_alice")
+        );
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        for (token, status) in [
+            ("  ", StatusCode::METHOD_NOT_ALLOWED),
+            (" invite_alice ", StatusCode::SEE_OTHER),
+        ] {
+            let request =
+                cookies.with_cookies(Request::post("/register").form(serde_json::json!({
+                    "csrf": csrf_token,
+                    "token": token,
+                    "accept_terms": "on",
+                })));
+            let response = state.request(request).await;
+            response.assert_status(status);
+        }
+    }
+
+    /// Posting an invite code which has become invalid reports only the code,
+    /// so the form can't tell whether a username exists, even with password
+    /// registration disabled
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_with_used_invite(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool.clone()).await.unwrap();
+
+        let used = add_registration_token(&state, "used", None, None, true).await;
+        let mut repo = state.repository().await.unwrap();
+        repo.user()
+            .add(&mut state.rng(), &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+        let used = repo
+            .user_registration_token()
+            .set_usage_limit(used, Some(1))
+            .await
+            .unwrap();
+        repo.user_registration_token()
+            .use_token(&state.clock, used)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        for password_registration_enabled in [true, false] {
+            let state = TestState::from_pool_with_site_config(
+                pool.clone(),
+                SiteConfig {
+                    password_registration_enabled,
+                    ..test_site_config()
+                },
+            )
+            .await
+            .unwrap();
+            let cookies = CookieHelper::new();
+
+            let csrf_token = mint_csrf_token(&state, &cookies);
+            let request =
+                cookies.with_cookies(Request::post("/register").form(serde_json::json!({
+                    "csrf": csrf_token,
+                    "username": "alice",
+                    "email": "alice@example.com",
+                    "password": "hunter2",
+                    "password_confirm": "hunter2",
+                    "token": "used",
+                })));
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::OK);
+            assert_eq!(
+                json_attribute(response.body(), "data-invite"),
+                serde_json::json!({ "valid": false })
+            );
+
+            let form = json_attribute(response.body(), "data-form");
+            assert_eq!(form["errors"], serde_json::json!([]));
+            for (field, state) in form["fields"].as_object().unwrap() {
+                let errors = if field == "token" {
+                    serde_json::json!([{"kind": "invalid"}])
+                } else {
+                    serde_json::json!([])
+                };
+                assert_eq!(state["errors"], errors, "errors on {field}");
+            }
+            assert_eq!(form["fields"]["token"]["value"], serde_json::Value::Null);
+        }
     }
 
     /// Without password registration, the page is just the provider buttons

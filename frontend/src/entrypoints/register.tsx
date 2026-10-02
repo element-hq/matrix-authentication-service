@@ -295,6 +295,12 @@ const ProviderButtons: React.FC<{ providers: Provider[] }> = ({
   );
 };
 
+const ErrorAlert: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div role="alert" className="text-critical font-medium">
+    {children}
+  </div>
+);
+
 const LoginLink: React.FC<{ href: string }> = ({ href }) => {
   const { t } = useTranslation();
   return (
@@ -372,9 +378,7 @@ const PasswordRegisterForm: React.FC<{ data: Data }> = ({ data }) => {
       )}
 
       {inviteInvalid && (
-        <div role="alert" className="text-critical font-medium">
-          {t("frontend.register.invite_invalid")}
-        </div>
+        <ErrorAlert>{t("frontend.register.invite_invalid")}</ErrorAlert>
       )}
 
       {formErrors.map((error, index) => (
@@ -514,6 +518,7 @@ const PasswordRegisterForm: React.FC<{ data: Data }> = ({ data }) => {
 };
 
 const RegisterPage: React.FC<{ data: Data }> = ({ data }) => {
+  const { t } = useTranslation();
   // A passwordless invite is a way to register on its own, whatever the server
   // allows otherwise
   const passwordlessInvite =
@@ -526,6 +531,9 @@ const RegisterPage: React.FC<{ data: Data }> = ({ data }) => {
     return (
       <form method="POST" className="cpd-form-root">
         <input type="hidden" name="csrf" value={data.csrfToken} />
+        {data.invite?.valid === false && (
+          <ErrorAlert>{t("frontend.register.invite_invalid")}</ErrorAlert>
+        )}
         <ProviderButtons providers={data.providers} />
         <LoginLink href={data.loginLink} />
       </form>

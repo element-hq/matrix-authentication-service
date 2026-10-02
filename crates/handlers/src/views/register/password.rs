@@ -62,7 +62,6 @@ pub(super) async fn register(
     cookie_jar: CookieJar,
     form: RegisterForm,
     registration_token: Option<UserRegistrationToken>,
-    token_invalid: bool,
 ) -> Result<Response, InternalError> {
     let ip_address = activity_tracker.ip();
 
@@ -122,10 +121,6 @@ pub(super) async fn register(
             state.add_error_on_form(FormError::Captcha);
         }
 
-        if token_invalid {
-            state.add_error_on_field(RegisterFormField::Token, FieldError::Invalid);
-        }
-
         // An invite code may only be used to register the identity it was
         // issued for
         if pinned_username.is_some_and(|pinned| pinned != username) {
@@ -169,10 +164,8 @@ pub(super) async fn register(
             }
         }
 
-        // A passwordless invite code waives the password entirely. If we
-        // couldn't resolve the code we don't know whether one is needed, so
-        // don't pile up password errors on top of the code error either
-        if !passwordless && !token_invalid {
+        // A passwordless invite code waives the password entirely
+        if !passwordless {
             if form.password.is_empty() {
                 state.add_error_on_field(RegisterFormField::Password, FieldError::Required);
             }
@@ -279,8 +272,9 @@ pub(super) async fn register(
     if !state.is_valid() {
         // Re-render with what the invite code resolved to, so the form keeps
         // the shape the user submitted it in
-        let invite =
-            (!form.token.is_empty()).then(|| InviteContext::new(registration_token.as_ref()));
+        let invite = registration_token
+            .as_ref()
+            .map(|token| InviteContext::new(Some(token)));
 
         let content = render(
             locale,
@@ -384,7 +378,7 @@ pub(super) async fn register(
 
 /// Render the registration page again, with the errors the form collected
 #[expect(clippy::too_many_arguments)]
-async fn render(
+pub(super) async fn render(
     locale: DataLocale,
     form_state: FormState<RegisterFormField>,
     action: &OptionalPostAuthAction,
