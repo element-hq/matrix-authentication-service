@@ -31,6 +31,9 @@ pub enum PostAuthAction {
         #[serde(flatten)]
         action: Option<AccountAction>,
     },
+    OpenRoom {
+        room_id: String,
+    },
 }
 
 impl PostAuthAction {
@@ -72,6 +75,9 @@ impl PostAuthAction {
             Self::LinkUpstream { id } => url_builder.redirect(&UpstreamOAuth2Link::new(*id)),
             Self::ManageAccount { action } => url_builder.redirect(&Account {
                 action: action.clone(),
+            }),
+            Self::OpenRoom { room_id } => url_builder.redirect(&OpenRoom {
+                room_id: room_id.clone(),
             }),
         }
     }
@@ -350,6 +356,24 @@ impl From<Option<PostAuthAction>> for Register {
                 post_auth_action,
             },
         }
+    }
+}
+
+/// `GET /open-room`
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OpenRoom {
+    pub room_id: String,
+}
+
+impl Route for OpenRoom {
+    type Query = Self;
+
+    fn route() -> &'static str {
+        "/open-room"
+    }
+
+    fn query(&self) -> Option<&Self::Query> {
+        Some(self)
     }
 }
 
