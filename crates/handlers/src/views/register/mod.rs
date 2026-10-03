@@ -1310,6 +1310,38 @@ mod tests {
         assert!(upstream_sessions(&state, &response).is_none());
     }
 
+    /// A signed-in browser opening a guest invite link goes straight to the room
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_get_with_open_room(pool: PgPool) {
+        use mas_axum_utils::SessionInfoExt as _;
+
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let mut rng = state.rng();
+
+        let mut repo = state.repository().await.unwrap();
+        let bob = repo
+            .user()
+            .add(&mut rng, &state.clock, "bob".to_owned())
+            .await
+            .unwrap();
+        let session = repo
+            .browser_session()
+            .add(&mut rng, &state.clock, &bob, None)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let cookies = CookieHelper::new();
+        cookies.import(state.cookie_jar().set_session(&session));
+        let request = cookies.with_cookies(
+            Request::get("/register?kind=open_room&room_id=%21abc%3Aexample.com").empty(),
+        );
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/open-room?room_id=%21abc%3Aexample.com");
+    }
+
     /// A username too long to ever become an MXID is dropped instead of being
     /// carried in the cookie
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
