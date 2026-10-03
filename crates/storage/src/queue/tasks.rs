@@ -651,3 +651,80 @@ pub struct CleanupInactiveUserSessionIpsJob;
 impl InsertableJob for CleanupInactiveUserSessionIpsJob {
     const QUEUE_NAME: &'static str = "cleanup-inactive-user-session-ips";
 }
+
+/// Send a guest invite email for a registration token.
+///
+/// The recipient's address and the invite link both come from the token, so
+/// that the link in the email can't be sent to anyone but the address the
+/// token is pinned to.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SendGuestInviteEmailJob {
+    registration_token_id: Ulid,
+    room_id: String,
+    room_name: Option<String>,
+    inviter: Option<String>,
+    inviter_name: Option<String>,
+}
+
+impl SendGuestInviteEmailJob {
+    /// Create a new job to send a guest invite email
+    ///
+    /// # Parameters
+    ///
+    /// * `registration_token_id` - The registration token minted for the
+    ///   recipient
+    /// * `room_id` - The room to invite the recipient to
+    /// * `room_name` - The name of the room
+    /// * `inviter` - The Matrix ID of the user who sent the invite
+    /// * `inviter_name` - The display name of the user who sent the invite
+    #[must_use]
+    pub fn new(
+        registration_token_id: Ulid,
+        room_id: String,
+        room_name: Option<String>,
+        inviter: Option<String>,
+        inviter_name: Option<String>,
+    ) -> Self {
+        Self {
+            registration_token_id,
+            room_id,
+            room_name,
+            inviter,
+            inviter_name,
+        }
+    }
+
+    /// The registration token minted for the recipient
+    #[must_use]
+    pub fn registration_token_id(&self) -> Ulid {
+        self.registration_token_id
+    }
+
+    /// The room the recipient is invited to
+    #[must_use]
+    pub fn room_id(&self) -> &str {
+        &self.room_id
+    }
+
+    /// The name of the room
+    #[must_use]
+    pub fn room_name(&self) -> Option<&str> {
+        self.room_name.as_deref()
+    }
+
+    /// The Matrix ID of the user who sent the invite
+    #[must_use]
+    pub fn inviter(&self) -> Option<&str> {
+        self.inviter.as_deref()
+    }
+
+    /// The display name of the user who sent the invite
+    #[must_use]
+    pub fn inviter_name(&self) -> Option<&str> {
+        self.inviter_name.as_deref()
+    }
+}
+
+impl InsertableJob for SendGuestInviteEmailJob {
+    const QUEUE_NAME: &'static str = "send-guest-invite-email";
+}

@@ -40,10 +40,10 @@ pub use self::{
     context::{
         AccountInactiveContext, ApiDocContext, AppContext, CompatLoginPolicyViolationContext,
         CompatSsoContext, ConsentContext, DeviceConsentContext, DeviceLinkContext,
-        DeviceLinkFormField, DeviceNameContext, EmailRecoveryContext, EmailVerificationContext,
-        EmptyContext, ErrorContext, FormPostContext, IndexContext, InviteContext, LoginContext,
-        LoginFormField, NotFoundContext, PolicyViolationContext, PostAuthContext,
-        PostAuthContextInner, RecoveryExpiredContext, RecoveryFinishContext,
+        DeviceLinkFormField, DeviceNameContext, EmailGuestInviteContext, EmailRecoveryContext,
+        EmailVerificationContext, EmptyContext, ErrorContext, FormPostContext, IndexContext,
+        InviteContext, LoginContext, LoginFormField, NotFoundContext, PolicyViolationContext,
+        PostAuthContext, PostAuthContextInner, RecoveryExpiredContext, RecoveryFinishContext,
         RecoveryFinishFormField, RecoveryProgressContext, RecoveryStartContext,
         RecoveryStartFormField, RegisterContext, RegisterFormField,
         RegisterStepsDisplayNameContext, RegisterStepsDisplayNameFormField,
@@ -425,6 +425,15 @@ register_templates! {
     /// Render the HTML error page
     pub fn render_error(ErrorContext) { "pages/error.html" }
 
+    /// Render the guest invite email (plain text variant)
+    pub fn render_email_guest_invite_txt(WithLanguage<EmailGuestInviteContext>) { "emails/guest_invite.txt" }
+
+    /// Render the guest invite email (HTML variant)
+    pub fn render_email_guest_invite_html(WithLanguage<EmailGuestInviteContext>) { "emails/guest_invite.html" }
+
+    /// Render the guest invite email subject
+    pub fn render_email_guest_invite_subject(WithLanguage<EmailGuestInviteContext>) { "emails/guest_invite.subject" }
+
     /// Render the email recovery email (plain text variant)
     pub fn render_email_recovery_txt(WithLanguage<EmailRecoveryContext>) { "emails/recovery.txt" }
 
@@ -499,15 +508,14 @@ mod tests {
 
     use super::*;
 
-    #[tokio::test]
-    async fn check_builtin_templates() {
-        #[expect(clippy::disallowed_methods)]
-        let now = chrono::Utc::now();
-        let rng = rand_chacha::ChaCha8Rng::from_seed([42; 32]);
+    fn test_url_builder() -> UrlBuilder {
+        UrlBuilder::new("https://example.com/".parse().unwrap(), None, None)
+    }
 
+    /// Load the built-in templates in strict mode, against either the real
+    /// vite manifest or the 'dummy' one used for reproducible renders
+    async fn load_templates(use_real_vite_manifest: bool) -> Templates {
         let path = Utf8Path::new(env!("CARGO_MANIFEST_DIR")).join("../../templates/");
-        let url_builder = UrlBuilder::new("https://example.com/".parse().unwrap(), None, None);
-        let branding = SiteBranding::new("example.com");
         let features = SiteFeatures {
             password_login: true,
             password_registration: true,
@@ -521,21 +529,27 @@ mod tests {
         let translations_path =
             Utf8Path::new(env!("CARGO_MANIFEST_DIR")).join("../../translations");
 
+        Templates::load(
+            path,
+            test_url_builder(),
+            use_real_vite_manifest.then_some(vite_manifest_path),
+            translations_path,
+            SiteBranding::new("example.com"),
+            features,
+            true,
+        )
+        .await
+        .unwrap()
+    }
+
+    #[tokio::test]
+    async fn check_builtin_templates() {
+        #[expect(clippy::disallowed_methods)]
+        let now = chrono::Utc::now();
+        let rng = rand_chacha::ChaCha8Rng::from_seed([42; 32]);
+
         for use_real_vite_manifest in [true, false] {
-            let templates = Templates::load(
-                path.clone(),
-                url_builder.clone(),
-                // Check both renders against the real vite manifest and the 'dummy' vite manifest
-                // used for reproducible renders.
-                use_real_vite_manifest.then_some(vite_manifest_path.clone()),
-                translations_path.clone(),
-                branding.clone(),
-                features,
-                // Use strict mode in tests
-                true,
-            )
-            .await
-            .unwrap();
+            let templates = load_templates(use_real_vite_manifest).await;
 
             // Check the renders are deterministic, when given the same rng
             let render1 = templates.check_render(now, &rng).unwrap();
@@ -543,5 +557,46 @@ mod tests {
 
             assert_eq!(render1, render2);
         }
+    }
+
+    /// The headline escapes the room and the inviter once in HTML, and the
+    /// subject names neither
+    #[tokio::test]
+    async fn guest_invite_email() {
+        let templates = load_templates(false).await;
+
+        let context = EmailGuestInviteContext::new(
+            Some("Q&A <team>".to_owned()),
+            Some("@alice:example.com".to_owned()),
+            Some("Alice O'Brien & Co".to_owned()),
+            test_url_builder().guest_invite_link("!abc:example.com".to_owned(), "token".to_owned()),
+        )
+        .with_language(mas_i18n::locale!("en").into());
+
+        let html = templates.render_email_guest_invite_html(&context).unwrap();
+        assert!(
+            html.contains(
+                "Alice O&#x27;Brien &amp; Co (@alice:example.com) invited you to ask to join \
+                 Q&amp;A &lt;team&gt; on example.com."
+            ),
+            "{html}"
+        );
+
+        let txt = templates.render_email_guest_invite_txt(&context).unwrap();
+        assert!(
+            txt.contains(
+                "Alice O'Brien & Co (@alice:example.com) invited you to ask to join Q&A <team> \
+                 on example.com."
+            ),
+            "{txt}"
+        );
+
+        let subject = templates
+            .render_email_guest_invite_subject(&context)
+            .unwrap();
+        assert_eq!(
+            subject.trim(),
+            "You have been invited to a room on example.com"
+        );
     }
 }

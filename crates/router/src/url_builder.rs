@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -236,6 +237,18 @@ impl UrlBuilder {
     #[must_use]
     pub fn account_recovery_link(&self, ticket: String) -> Url {
         self.absolute_url_for(&crate::endpoints::AccountRecoveryFinish::new(ticket))
+    }
+
+    /// Guest invite link, which registers with the token and then opens the
+    /// room
+    #[must_use]
+    pub fn guest_invite_link(&self, room_id: String, token: String) -> Url {
+        self.absolute_url_for(
+            &crate::endpoints::Register::and_then(crate::endpoints::PostAuthAction::OpenRoom {
+                room_id,
+            })
+            .with_token(token),
+        )
     }
 }
 
