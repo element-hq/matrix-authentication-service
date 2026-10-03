@@ -18,6 +18,7 @@ mod clients;
 mod database;
 mod email;
 mod experimental;
+mod guest_invites;
 mod http;
 mod matrix;
 mod oauth;
@@ -37,6 +38,7 @@ pub use self::{
     database::{DatabaseConfig, PgSslMode},
     email::{EmailConfig, EmailSmtpMode, EmailTransportKind},
     experimental::{ExperimentalConfig, SessionLimitConfig as ExperimentalSessionLimitConfig},
+    guest_invites::GuestInvitesConfig,
     http::{
         BindConfig as HttpBindConfig, HttpConfig, ListenerConfig as HttpListenerConfig,
         Resource as HttpResource, TlsConfig as HttpTlsConfig, UnixOrTcp,
@@ -133,6 +135,10 @@ pub struct RootConfig {
     #[serde(default, skip_serializing_if = "OAuthConfig::is_default")]
     pub oauth: OAuthConfig,
 
+    /// Configuration section for inviting guests to rooms by email
+    #[serde(default, skip_serializing_if = "GuestInvitesConfig::is_default")]
+    pub guest_invites: GuestInvitesConfig,
+
     /// Experimental configuration options
     #[serde(default, skip_serializing_if = "ExperimentalConfig::is_default")]
     pub experimental: ExperimentalConfig,
@@ -159,6 +165,7 @@ impl ConfigurationSection for RootConfig {
         self.captcha.validate(figment)?;
         self.account.validate(figment)?;
         self.oauth.validate(figment)?;
+        self.guest_invites.validate(figment)?;
         self.experimental.validate(figment)?;
 
         Ok(())
@@ -192,6 +199,7 @@ impl RootConfig {
             captcha: CaptchaConfig::default(),
             account: AccountConfig::default(),
             oauth: OAuthConfig::default(),
+            guest_invites: GuestInvitesConfig::default(),
             experimental: ExperimentalConfig::default(),
         })
     }
@@ -216,6 +224,7 @@ impl RootConfig {
             captcha: CaptchaConfig::default(),
             account: AccountConfig::default(),
             oauth: OAuthConfig::default(),
+            guest_invites: GuestInvitesConfig::default(),
             experimental: ExperimentalConfig::default(),
         }
     }
@@ -263,6 +272,9 @@ pub struct AppConfig {
     pub oauth: OAuthConfig,
 
     #[serde(default)]
+    pub guest_invites: GuestInvitesConfig,
+
+    #[serde(default)]
     pub experimental: ExperimentalConfig,
 }
 
@@ -284,6 +296,7 @@ impl ConfigurationSection for AppConfig {
         self.captcha.validate(figment)?;
         self.account.validate(figment)?;
         self.oauth.validate(figment)?;
+        self.guest_invites.validate(figment)?;
         self.experimental.validate(figment)?;
 
         Ok(())
