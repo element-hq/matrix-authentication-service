@@ -213,6 +213,14 @@
         }
       ]
     },
+    "guest_invites": {
+      "description": "Configuration section for inviting guests to rooms by email",
+      "allOf": [
+        {
+          "$ref": "#/definitions/GuestInvitesConfig"
+        }
+      ]
+    },
     "experimental": {
       "description": "Experimental configuration options",
       "allOf": [
@@ -2881,6 +2889,19 @@
         "device_code_user_code_auto_fill_enabled": {
           "description": "Whether the device authorization endpoint advertises a\n`verification_uri_complete` that auto-fills the user code on the\n`/link` page. Defaults to `false`.\n\nWhen disabled, the device authorization response will omit\n`verification_uri_complete`, and the `/link` route will ignore any\n`code` query parameter, forcing users to type their user code\nmanually.",
           "type": "boolean"
+        }
+      }
+    },
+    "GuestInvitesConfig": {
+      "description": "Configuration section for inviting guests to rooms by email",
+      "type": "object",
+      "properties": {
+        "client_room_url": {
+          "description": "The client URL to send invitees to once they are signed in, with\n`{room_id}` standing for the room ID, e.g.\n`https://app.element.io/#/room/{room_id}`.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },

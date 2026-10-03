@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -127,4 +128,8 @@ pub struct SiteConfig {
     /// `verification_uri_complete` and whether `/link` accepts a `code`
     /// query parameter to auto-fill the user code.
     pub device_code_user_code_auto_fill_enabled: bool,
+
+    /// The client URL to send invitees to, with `{room_id}` standing for the
+    /// room ID.
+    pub guest_invites_client_room_url: Option<String>,
 }

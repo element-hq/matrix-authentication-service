@@ -157,6 +157,7 @@ pub fn test_site_config() -> SiteConfig {
         session_limit: None,
         device_code_grant_enabled: true,
         device_code_user_code_auto_fill_enabled: true,
+        guest_invites_client_room_url: Some("https://app.example.com/#/room/{room_id}".to_owned()),
     }
 }
 

@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -13,7 +14,8 @@ use clap::Parser;
 use figment::Figment;
 use mas_config::{
     AccountConfig, BrandingConfig, CaptchaConfig, ConfigurationSection, ConfigurationSectionExt,
-    ExperimentalConfig, MatrixConfig, OAuthConfig, PasswordsConfig, TemplatesConfig,
+    ExperimentalConfig, GuestInvitesConfig, MatrixConfig, OAuthConfig, PasswordsConfig,
+    TemplatesConfig,
 };
 use mas_data_model::{Clock, SystemClock};
 use rand::SeedableRng;
@@ -67,6 +69,8 @@ impl Options {
                     .map_err(anyhow::Error::from_boxed)?;
                 let oauth_config =
                     OAuthConfig::extract_or_default(figment).map_err(anyhow::Error::from_boxed)?;
+                let guest_invites_config = GuestInvitesConfig::extract_or_default(figment)
+                    .map_err(anyhow::Error::from_boxed)?;
 
                 let now = if stabilise {
                     DateTime::from_timestamp_secs(1_446_823_992).unwrap()
@@ -89,6 +93,7 @@ impl Options {
                     &account_config,
                     &captcha_config,
                     &oauth_config,
+                    &guest_invites_config,
                 )?;
                 let templates = templates_from_config(
                     &template_config,
