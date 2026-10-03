@@ -14,13 +14,14 @@ use aide::axum::{
 use axum::extract::{FromRef, FromRequestParts};
 use mas_data_model::{AppVersion, BoxRng, SiteConfig};
 use mas_matrix::HomeserverConnection;
-use mas_policy::PolicyFactory;
+use mas_policy::{Policy, PolicyFactory};
 use mas_router::UrlBuilder;
 
 use super::call_context::CallContext;
 use crate::passwords::PasswordManager;
 
 mod compat_sessions;
+mod guest_invites;
 mod oauth2_clients;
 mod oauth2_sessions;
 mod personal_sessions;
@@ -45,6 +46,7 @@ where
     UrlBuilder: FromRef<S>,
     BoxRng: FromRequestParts<S>,
     CallContext: FromRequestParts<S>,
+    Policy: FromRequestParts<S>,
 {
     ApiRouter::<S>::new()
         .api_route(
@@ -139,6 +141,10 @@ where
         .api_route(
             "/policy-data/{id}",
             get_with(self::policy_data::get, self::policy_data::get_doc),
+        )
+        .api_route(
+            "/invite-guests",
+            post_with(self::guest_invites::handler, self::guest_invites::doc),
         )
         .api_route(
             "/users",

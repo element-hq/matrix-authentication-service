@@ -1042,16 +1042,28 @@ oauth:
 
 ## `room_invites`
 
-Configuration section for inviting email addresses to rooms.
+Configuration section for inviting email addresses to rooms, through the `POST /api/admin/v1/invite-guests` admin API endpoint.
 
 ```yaml
 room_invites:
+  # Whether the `POST /api/admin/v1/invite-guests` endpoint is enabled.
+  #
+  # Defaults to `false`.
+  enabled: false
+
   # The client URL to send invitees to once they are signed in, with
   # `{room_id}` standing for the percent-encoded room ID.
   #
-  # MAS refuses to start if it isn't an absolute HTTP or HTTPS URL or doesn't
-  # contain `{room_id}`.
+  # Required when `enabled` is `true`. When set, it is used for invite links
+  # already sent, even with `enabled` set to `false`. MAS refuses to start if
+  # it isn't an absolute HTTP or HTTPS URL or doesn't contain `{room_id}`.
   #client_room_url: "https://app.element.io/#/room/{room_id}"
+
+  # How long an invite link stays valid, in seconds. Must be positive.
+  #
+  # Defaults to 604800, 7 days: a starting point; shorten it where unused
+  # invite links are a concern.
+  invite_lifetime: 604800
 ```
 
 ## `experimental`

@@ -1,0 +1,33 @@
+{#
+Copyright 2026 Element Creations Ltd.
+
+SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE files in the repository root for full details.
+-#}
+
+{%- set _ = translator(lang) -%}
+{%- if inviter_name and inviter -%}
+  {%- if room_name -%}
+    {%- set headline = _("mas.emails.guest_invite.headline_from_name_and_mxid", name=inviter_name, mxid=inviter, room=room_name, server_name=branding.server_name) -%}
+  {%- else -%}
+    {%- set headline = _("mas.emails.guest_invite.headline_from_name_and_mxid_unnamed_room", name=inviter_name, mxid=inviter, server_name=branding.server_name) -%}
+  {%- endif -%}
+{%- elif inviter_name or inviter -%}
+  {%- if room_name -%}
+    {%- set headline = _("mas.emails.guest_invite.headline_from", inviter=inviter_name or inviter, room=room_name, server_name=branding.server_name) -%}
+  {%- else -%}
+    {%- set headline = _("mas.emails.guest_invite.headline_from_unnamed_room", inviter=inviter_name or inviter, server_name=branding.server_name) -%}
+  {%- endif -%}
+{%- elif room_name -%}
+  {%- set headline = _("mas.emails.guest_invite.headline", room=room_name, server_name=branding.server_name) -%}
+{%- else -%}
+  {%- set headline = _("mas.emails.guest_invite.headline_unnamed_room", server_name=branding.server_name) -%}
+{%- endif -%}
+
+{{ headline }} {{ _("mas.emails.guest_invite.approval") }}
+
+{{ _("mas.emails.guest_invite.copy_link") }}
+
+    {{ invite_link }}
+
+{{ _("mas.emails.guest_invite.you_can_ignore") }}
