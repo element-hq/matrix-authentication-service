@@ -271,7 +271,11 @@ pub fn site_config_from_config(
         device_code_grant_enabled: oauth_config.device_code_grant_enabled,
         device_code_user_code_auto_fill_enabled: oauth_config
             .device_code_user_code_auto_fill_enabled,
+        guest_invites_enabled: guest_invites_config.enabled,
         guest_invites_client_room_url: guest_invites_config.client_room_url.clone(),
+        guest_invite_lifetime: chrono::Duration::seconds(
+            guest_invites_config.invite_lifetime.get().into(),
+        ),
     })
 }
 
