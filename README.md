@@ -8,6 +8,8 @@ See the [Documentation](https://element-hq.github.io/matrix-authentication-servi
 
 You can learn more about Matrix and next-generation auth at [areweoidcyet.com](https://areweoidcyet.com/).
 
+TEXT TO PROVIDE CHANGES FOR A PR
+
 ## 🚀 Getting started
 
 This component is developed and maintained by [Element](https://element.io). It gets shipped as part of the **Element Server Suite (ESS)** which provides the official means of deployment.
