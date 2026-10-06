@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -262,6 +263,10 @@ version = "0.4.1"
 # Hex encoding and decoding
 [workspace.dependencies.hex]
 version = "0.4.3"
+
+# HTML tokenizer used by i18n checks
+[workspace.dependencies.html5gum]
+version = "0.8.4"
 
 # HTTP request/response
 [workspace.dependencies.http]
