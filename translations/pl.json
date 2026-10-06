@@ -175,8 +175,16 @@
     "not_you": "Nie %(username)s?",
     "or_separator": "Lub",
     "policy_violation": {
-      "description": "Przyczyną może być klient, który zainicjował to żądanie, aktualnie zalogowany użytkownik lub samo żądanie.",
-      "heading": "Żądanie autoryzacji zostało odrzucone przez politykę egzekwowaną przez tę usługę",
+      "admin_scope_not_allowed": {
+        "description": "Ta aplikacja wymaga uprawnień administratora. Zaloguj się na konto administratora, aby kontynuować.",
+        "heading": "Wymagany dostęp administratora"
+      },
+      "client_not_allowed": {
+        "description": "Ta aplikacja nie ma uprawnień do zalogowania się do tej usługi.",
+        "heading": "Aplikacja niedozwolona"
+      },
+      "description": "Twoje żądanie zostało odrzucone zgodnie z polityką usługi. Przyczyną może być aplikacja, Twoje konto lub samo żądanie.",
+      "heading": "Żądanie odrzucone",
       "logged_as": "Zalogowany jako <span class=\"font-semibold\">%(username)s</span>",
       "too_many_sessions": {
         "description": "Twoje konto jest już zalogowane na maksymalnej liczbie urządzeń. Aby kontynuować, <span class=\"font-semibold\">usuń %(num_devices_to_remove)s urządzeń</span> i zaloguj się ponownie.",

@@ -145,7 +145,7 @@
       "current_password_label": "Mot de passe actuel",
       "failure": {
         "description": {
-          "account_locked": "Votre compte est bloqué et ne peut pas être récupéré pour le moment. Si cela n'est pas normal, contactez l'administrateur de votre serveur.",
+          "account_locked": "Votre compte est bloqué et ne peut pas être réactivé pour le moment. Si cette situation est inattendue, veuillez contacter l'administrateur de votre compte.",
           "expired_recovery_ticket": "Le lien de récupération a expiré. Veuillez recommencer le processus de récupération de compte depuis le début.",
           "invalid_new_password": "Le mot de passe choisi n'est pas valide ; il ne correspond peut-être pas à la politique de sécurité configurée.",
           "no_current_password": "Vous n'avez pas de mot de passe actuel.",
