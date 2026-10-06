@@ -11,7 +11,7 @@ use axum::{
     extract::{Form, Path, State},
     response::{Html, IntoResponse, Response},
 };
-use axum_extra::TypedHeader;
+use axum_extra::{extract::Query, typed_header::TypedHeader};
 use hyper::StatusCode;
 use mas_axum_utils::{
     GenericError, InternalError,
@@ -38,6 +38,7 @@ use crate::{
     oauth2::generate_id_token,
     session::{SessionOrFallback, count_user_sessions_for_limiting, load_session_or_fallback},
 };
+use crate::views::shared::QueryIdp;
 
 #[derive(Debug, Error)]
 pub enum RouteError {
@@ -98,6 +99,7 @@ pub(crate) async fn get(
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     cookie_jar: CookieJar,
     Path(grant_id): Path<Ulid>,
+    Query(query_idp): Query<QueryIdp>,
 ) -> Result<Response, RouteError> {
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
         cookie_jar,
@@ -137,8 +139,13 @@ pub(crate) async fn get(
     }
 
     let Some(session) = maybe_session else {
-        let login = mas_router::Login::and_continue_grant(grant_id);
-        return Ok((cookie_jar, url_builder.redirect(&login)).into_response());
+        let mut url = mas_router::Login::and_continue_grant(grant_id);
+
+        if let Some(upstream_idp) = query_idp.upstream_idp {
+            url = url.with_upstream_idp(upstream_idp)
+        };
+
+        return Ok((cookie_jar, url_builder.redirect(&url)).into_response());
     };
 
     activity_tracker
@@ -234,6 +241,7 @@ pub(crate) async fn post(
     cookie_jar: CookieJar,
     State(url_builder): State<UrlBuilder>,
     Path(grant_id): Path<Ulid>,
+    Query(query_idp): Query<QueryIdp>,
     Form(form): Form<ProtectedForm<()>>,
 ) -> Result<Response, RouteError> {
     cookie_jar.verify_form(&clock, form)?;
@@ -270,8 +278,13 @@ pub(crate) async fn post(
 
     let Some(browser_session) = maybe_session else {
         let next = PostAuthAction::continue_grant(grant_id);
-        let login = mas_router::Login::and_then(next);
-        return Ok((cookie_jar, url_builder.redirect(&login)).into_response());
+        let mut url = mas_router::Login::and_then(next);
+
+        if let Some(upstream_idp) = query_idp.upstream_idp {
+            url = url.with_upstream_idp(upstream_idp)
+        };
+
+        return Ok((cookie_jar, url_builder.redirect(&url)).into_response());
     };
 
     activity_tracker
