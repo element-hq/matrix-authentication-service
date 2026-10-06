@@ -39,11 +39,11 @@
   "mas": {
     "account": {
       "deactivated": {
-        "description": "Ce compte (<em>%(mxid)s</em>) a été supprimé. Si vous ne vous attendez pas à cela, contactez l'administrateur de votre serveur.",
+        "description": "Ce compte (<em>%(mxid)s</em>) a été supprimé. Si cela ne vous semble pas normal, veuillez contacter l'administrateur de votre compte.",
         "heading": "Compte supprimé"
       },
       "locked": {
-        "description": "Ce compte (<em>%(mxid)s</em>) a été verrouillé. Si vous ne vous attendez pas à cela, contactez l'administrateur de votre serveur.",
+        "description": "Ce compte (<em>%(mxid)s</em>) a été verrouillé. Si cette situation est inattendue, veuillez contacter l'administrateur de votre serveur.",
         "heading": "Compte bloqué"
       },
       "logged_out": {
@@ -149,6 +149,7 @@
     "legacy_consent": {
       "this_will_setup": "Continuer connectera <span>%(client_name)s</span> avec votre compte <span>%(server_name)s</span>."
     },
+    "loading_failed": "Une erreur s'est produite lors du chargement de la page. Veuillez réactualiser la page.",
     "login": {
       "call_to_register": "Vous n’avez pas encore de compte ?",
       "continue_with_provider": "Poursuivre avec %(provider)s",
@@ -174,8 +175,16 @@
     "not_you": "Vous n'êtes pas %(username)s ?",
     "or_separator": "Ou",
     "policy_violation": {
-      "description": "Cela peut être dû à l'application auteur de la demande, à l'utilisateur actuellement connecté ou à la demande elle-même.",
-      "heading": "La demande d'autorisation a été refusée, conformément à la politique appliquée par ce service.",
+      "admin_scope_not_allowed": {
+        "description": "Cette application nécessite des droits d'administrateur. Connectez-vous avec un compte administrateur pour continuer.",
+        "heading": "Accès administrateur requis"
+      },
+      "client_not_allowed": {
+        "description": "Cette application n'est pas autorisée à se connecter à ce service.",
+        "heading": "Demande non autorisée"
+      },
+      "description": "Votre demande a été refusée en raison de la politique de ce service. Cela peut être dû à l'application, à votre compte ou à la demande elle-même.",
+      "heading": "Demande refusée",
       "logged_as": "Connecté en tant que <span class=\"font-semibold\">%(username)s</span>",
       "too_many_sessions": {
         "description": "Vous avez déjà connecté votre compte au nombre maximum d'appareils. Pour continuer, <span class=\"font-semibold\">supprimez %(num_devices_to_remove)s de vos appareils existants</span> et reconnectez-vous.",
