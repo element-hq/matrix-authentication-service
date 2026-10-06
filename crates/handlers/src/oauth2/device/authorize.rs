@@ -148,9 +148,10 @@ pub(crate) async fn post(
         return Err(RouteError::ClientNotAllowed(client.id));
     }
 
-    let scope = client_authorization
-        .form
-        .and_then(|f| f.scope)
+    let form = client_authorization.form.unwrap_or_default();
+
+    let scope = form
+        .scope
         // XXX: Is this really how we do empty scopes?
         .unwrap_or(std::iter::empty::<ScopeToken>().collect());
 
@@ -175,6 +176,7 @@ pub(crate) async fn post(
                 expires_in,
                 user_agent,
                 ip_address,
+                login_hint: form.login_hint,
             },
         )
         .await?;
