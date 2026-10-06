@@ -2969,16 +2969,24 @@
       "type": "object",
       "properties": {
         "soft_limit": {
-          "description": "Upon login in interactive contexts (like OAuth 2.0 sessions, or\n`m.login.sso` compatibility login flow), if the soft limit is reached,\nit will display a policy violation screen (web UI) to remove\nsessions before creating the new session.\n\nThis is not enforced in non-interactive contexts (like\n`m.login.password` login with the compatibility API) as there is no\nopportunity for us to show some UI for people remove some sessions.\nSee [`hard_limit`] for enforcement on that side.\n\nThis is the limit that is displayed in the UI\n\n[`hard_limit`]: Self::hard_limit",
-          "type": "integer",
+          "description": "Upon login in interactive contexts (like OAuth 2.0 sessions, or\n`m.login.sso` compatibility login flow), if the soft limit is reached,\nit will display a policy violation screen (web UI) to remove\nsessions before creating the new session.\n\nThis is not enforced in non-interactive contexts (like\n`m.login.password` login with the compatibility API) as there is no\nopportunity for us to show some UI for people remove some sessions.\nSee [`hard_limit`] for enforcement on that side.\n\nThis is the limit that is displayed in the UI\n\n[`hard_limit`]: Self::hard_limit\n\nMay be omitted when [`per_client`] is set. In that case there is no\nglobal limit: only the listed OAuth 2.0 clients are limited.\n\n[`per_client`]: Self::per_client",
+          "type": [
+            "integer",
+            "null"
+          ],
           "format": "uint64",
-          "minimum": 1
+          "minimum": 1,
+          "default": null
         },
         "hard_limit": {
-          "description": "Upon login, when `dangerous_hard_limit_eviction: false`, will refuse the\nnew login (policy violation error), otherwise, see\n[`dangerous_hard_limit_eviction`].\n\nThe hard limit is enforced in all contexts\n(interactive/non-interactive).\n\n[`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction",
-          "type": "integer",
+          "description": "Upon login, when `dangerous_hard_limit_eviction: false`, will refuse the\nnew login (policy violation error), otherwise, see\n[`dangerous_hard_limit_eviction`].\n\nThe hard limit is enforced in all contexts\n(interactive/non-interactive).\n\nMay be omitted together with [`soft_limit`] when [`per_client`] is set.\n\n[`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction\n[`soft_limit`]: Self::soft_limit\n[`per_client`]: Self::per_client",
+          "type": [
+            "integer",
+            "null"
+          ],
           "format": "uint64",
-          "minimum": 1
+          "minimum": 1,
+          "default": null
         },
         "max_session_threshold": {
           "description": "When set, only accounts with <= `max_session_threshold` sessions have\nthe session limits applied.\n\nThis is most applicable in scenarios where your homeserver has many\nlegacy bots/scripts that login over and over (which ideally should\nbe using [personal access\ntokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))\nand you want to avoid breaking their operation while maintaining some\nlevel of sanity with the number of devices that people can have.\nThis will prevent anyone else from crossing the limit.",
@@ -2991,6 +2999,45 @@
         },
         "dangerous_hard_limit_eviction": {
           "description": "Whether we should automatically choose the least recently used devices\nto remove when the [`Self::hard_limit`] is reached; in order to\nallow the new login to continue.\n\nDisabled by default\n\nWARNING: Removing sessions is a potentially damaging operation. Any\nend-to-end encrypted history on the device will be lost and can only\nbe recovered if you have another verified active device or have a\nrecovery key setup.\n\nWhen using [`dangerous_hard_limit_eviction`], the [`hard_limit`] must be\nat least 2 to avoid catastrophically losing encrypted history and\ndigital identity in pathological cases. Keep in mind this is a bare\nminimum restriction and you can still run into trouble.\n\nThis is most applicable in scenarios where your homeserver has many\nlegacy bots/scripts that login over and over (which ideally should\nbe using [personal access\ntokens](https://github.com/element-hq/matrix-authentication-service/issues/4492))\nand you want to avoid breaking their operation while maintaining some\nlevel of sanity with the number of devices that people can have.\n\nRemoving devices is a non-trivial task for some homeservers to tackle\nand can cause lots of device list changes, `/sync`, federation, and\nreplication traffic. Consider using [`max_session_threshold`] to\nlimit the size of accounts that are acted upon.\n\n[`hard_limit`]: Self::hard_limit\n[`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction\n[`max_session_threshold`]: Self::max_session_threshold",
+          "type": "boolean",
+          "default": false
+        },
+        "per_client": {
+          "description": "Optional session limits that apply when logging into a specific OAuth\n2.0 client, replacing the top-level limits for that client.\n\nKeys are OAuth 2.0 client IDs (ULIDs). Values use the same fields as\nthis section. Optional fields do not inherit from the top-level\nconfig: omitted `max_session_threshold` means limits always apply,\nand `dangerous_hard_limit_eviction` defaults to `false`.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/SessionLimitRules"
+          }
+        }
+      }
+    },
+    "SessionLimitRules": {
+      "description": "Session limit numbers applied either globally or to one OAuth 2.0 client.\n\nThis is the value type of [`SessionLimitConfig::per_client`].",
+      "type": "object",
+      "properties": {
+        "soft_limit": {
+          "description": "See [`SessionLimitConfig::soft_limit`]",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 1
+        },
+        "hard_limit": {
+          "description": "See [`SessionLimitConfig::hard_limit`]",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 1
+        },
+        "max_session_threshold": {
+          "description": "See [`SessionLimitConfig::max_session_threshold`]",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 1
+        },
+        "dangerous_hard_limit_eviction": {
+          "description": "See [`SessionLimitConfig::dangerous_hard_limit_eviction`]",
           "type": "boolean",
           "default": false
         }

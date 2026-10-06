@@ -195,6 +195,11 @@ pub struct AuthorizationGrantInput<'a> {
     /// Not populated if it's not a user logging in.
     pub session_counts: Option<SessionCounts>,
 
+    /// Effective session limits for this evaluation, if any.
+    /// Falls back to `data.session_limit` in bundled policies when omitted.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub session_limit: Option<SessionLimitInput>,
+
     #[schemars(with = "std::collections::HashMap<String, serde_json::Value>")]
     pub client: &'a Client,
 
@@ -215,6 +220,11 @@ pub struct CompatLoginInput<'a> {
 
     /// How many sessions the user has.
     pub session_counts: SessionCounts,
+
+    /// Effective session limits for this evaluation, if any.
+    /// Falls back to `data.session_limit` in bundled policies when omitted.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub session_limit: Option<SessionLimitInput>,
 
     /// Whether a session will be replaced by this login
     pub session_replaced: bool,
@@ -243,13 +253,39 @@ pub enum CompatLogin {
 }
 
 /// Information about how many sessions the user has
-#[derive(Serialize, Debug, JsonSchema)]
+#[derive(Serialize, Debug, Clone, JsonSchema)]
 pub struct SessionCounts {
     pub total: u64,
 
     pub oauth2: u64,
     pub compat: u64,
     pub personal: u64,
+
+    /// Count compared against soft/hard limits for this evaluation.
+    /// Global path: same as `total`. Per-client path: that client's OAuth 2.0
+    /// sessions. Omitted in older inputs; policies fall back to `total`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub against_limit: Option<u64>,
+}
+
+/// Effective session limits passed into a policy evaluation.
+#[derive(Serialize, Debug, Clone, Copy, JsonSchema)]
+pub struct SessionLimitInput {
+    pub soft_limit: u64,
+    pub hard_limit: u64,
+    pub max_session_threshold: Option<u64>,
+    pub dangerous_hard_limit_eviction: bool,
+}
+
+impl From<mas_data_model::SessionLimitRules> for SessionLimitInput {
+    fn from(value: mas_data_model::SessionLimitRules) -> Self {
+        Self {
+            soft_limit: value.soft_limit.get(),
+            hard_limit: value.hard_limit.get(),
+            max_session_threshold: value.max_session_threshold.map(std::num::NonZeroU64::get),
+            dangerous_hard_limit_eviction: value.dangerous_hard_limit_eviction,
+        }
+    }
 }
 
 /// Input for the email add policy.

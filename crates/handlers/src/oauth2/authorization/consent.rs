@@ -18,7 +18,7 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::{AuthorizationGrantStage, BoxClock, BoxRng, MatrixUser};
+use mas_data_model::{AuthorizationGrantStage, BoxClock, BoxRng, MatrixUser, SiteConfig};
 use mas_keystore::Keystore;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
@@ -36,7 +36,11 @@ use super::callback::CallbackDestination;
 use crate::{
     BoundActivityTracker, PreferredLanguage, impl_from_error_for_route,
     oauth2::generate_id_token,
-    session::{SessionOrFallback, count_user_sessions_for_limiting, load_session_or_fallback},
+    session::{
+        ResolvedSessionLimit, SessionOrFallback, evict_lru_oauth2_sessions_for_client,
+        load_session_or_fallback, resolve_session_limit_for_login,
+        session_limit_allows_hard_eviction,
+    },
 };
 
 #[derive(Debug, Error)]
@@ -92,6 +96,7 @@ pub(crate) async fn get(
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
+    State(site_config): State<SiteConfig>,
     mut policy: Policy,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
@@ -147,7 +152,10 @@ pub(crate) async fn get(
 
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
 
-    let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
+    let (resolved, session_counts) =
+        resolve_session_limit_for_login(&mut repo, &site_config, &session.user, Some(&client))
+            .await?;
+    let against_limit = session_counts.against_limit.unwrap_or(session_counts.total);
 
     // We can close the repository early, we don't need it at this point
     repo.save().await?;
@@ -157,6 +165,7 @@ pub(crate) async fn get(
             user: Some(&session.user),
             client: &client,
             session_counts: Some(session_counts),
+            session_limit: resolved.map(ResolvedSessionLimit::as_policy_input),
             scope: &grant.scope,
             grant_type: mas_policy::GrantType::AuthorizationCode,
             requester: mas_policy::Requester {
@@ -165,7 +174,10 @@ pub(crate) async fn get(
             },
         })
         .await?;
-    if !res.valid() {
+    if !res.valid()
+        && !session_limit_allows_hard_eviction(&res, resolved.as_ref(), against_limit)
+            .is_some_and(|(limit, _)| limit.per_client)
+    {
         let ctx = PolicyViolationContext::for_authorization_grant(grant, client, res.violations)
             .with_session(session)
             .with_csrf(csrf_token.form_value())
@@ -227,6 +239,7 @@ pub(crate) async fn post(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(key_store): State<Keystore>,
+    State(site_config): State<SiteConfig>,
     mut policy: Policy,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
@@ -288,13 +301,21 @@ pub(crate) async fn post(
         return Err(RouteError::GrantNotPending(grant.id));
     }
 
-    let session_counts = count_user_sessions_for_limiting(&mut repo, &browser_session.user).await?;
+    let (resolved, session_counts) = resolve_session_limit_for_login(
+        &mut repo,
+        &site_config,
+        &browser_session.user,
+        Some(&client),
+    )
+    .await?;
+    let against_limit = session_counts.against_limit.unwrap_or(session_counts.total);
 
     let res = policy
         .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
             user: Some(&browser_session.user),
             client: &client,
             session_counts: Some(session_counts),
+            session_limit: resolved.map(ResolvedSessionLimit::as_policy_input),
             scope: &grant.scope,
             grant_type: mas_policy::GrantType::AuthorizationCode,
             requester: mas_policy::Requester {
@@ -305,14 +326,54 @@ pub(crate) async fn post(
         .await?;
 
     if !res.valid() {
-        let ctx = PolicyViolationContext::for_authorization_grant(grant, client, res.violations)
-            .with_session(browser_session)
-            .with_csrf(csrf_token.form_value())
-            .with_language(locale);
+        if let Some((resolved, _)) =
+            session_limit_allows_hard_eviction(&res, resolved.as_ref(), against_limit)
+        {
+            let need_to_remove =
+                usize::try_from(against_limit.saturating_sub(resolved.rules.hard_limit.get()) + 1)
+                    .unwrap_or(1);
+            if resolved.per_client {
+                let evicted = evict_lru_oauth2_sessions_for_client(
+                    &mut rng,
+                    &clock,
+                    &mut repo,
+                    &browser_session.user,
+                    &client,
+                    need_to_remove,
+                )
+                .await?;
+                if !evicted {
+                    let ctx = PolicyViolationContext::for_authorization_grant(
+                        grant,
+                        client,
+                        res.violations,
+                    )
+                    .with_session(browser_session)
+                    .with_csrf(csrf_token.form_value())
+                    .with_language(locale);
+                    let content = templates.render_policy_violation(&ctx)?;
+                    return Ok((cookie_jar, Html(content)).into_response());
+                }
+            } else {
+                let ctx =
+                    PolicyViolationContext::for_authorization_grant(grant, client, res.violations)
+                        .with_session(browser_session)
+                        .with_csrf(csrf_token.form_value())
+                        .with_language(locale);
+                let content = templates.render_policy_violation(&ctx)?;
+                return Ok((cookie_jar, Html(content)).into_response());
+            }
+        } else {
+            let ctx =
+                PolicyViolationContext::for_authorization_grant(grant, client, res.violations)
+                    .with_session(browser_session)
+                    .with_csrf(csrf_token.form_value())
+                    .with_language(locale);
 
-        let content = templates.render_policy_violation(&ctx)?;
+            let content = templates.render_policy_violation(&ctx)?;
 
-        return Ok((cookie_jar, Html(content)).into_response());
+            return Ok((cookie_jar, Html(content)).into_response());
+        }
     }
 
     // All good, let's fulfill the grant with the browser session.
