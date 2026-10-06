@@ -2399,6 +2399,86 @@
         }
       }
     },
+    "/api/admin/v1/users/{id}/displayname": {
+      "put": {
+        "tags": [
+          "user"
+        ],
+        "summary": "Set a user’s displayname",
+        "operationId": "setUserDisplayname",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetUserDisplaynameRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "User displayname was updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_User"
+                },
+                "example": {
+                  "data": {
+                    "type": "user",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "username": "alice",
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "locked_at": null,
+                      "deactivated_at": null,
+                      "admin": false,
+                      "legacy_guest": false
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/users/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/users/{id}/set-password": {
       "post": {
         "tags": [
@@ -6713,6 +6793,19 @@
         "required": [
           "data",
           "links"
+        ]
+      },
+      "SetUserDisplaynameRequest": {
+        "title": "JSON payload for the `PUT /api/admin/v1/users/displayname` endpoint",
+        "type": "object",
+        "properties": {
+          "displayname": {
+            "description": "The displayname of the user.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "displayname"
         ]
       },
       "SetUserPasswordRequest": {
