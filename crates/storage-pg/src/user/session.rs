@@ -204,7 +204,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
                      , s.finished_at           AS "user_session_finished_at"
                      , s.user_agent            AS "user_session_user_agent"
                      , s.last_active_at        AS "user_session_last_active_at"
-                     , s.last_active_ip        AS "user_session_last_active_ip: IpAddr"
+                     , s.last_active_ip        AS "user_session_last_active_ip"
                      , u.user_id
                      , u.username              AS "user_username"
                      , u.created_at            AS "user_created_at"
@@ -332,7 +332,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             .apply_filter(filter)
             .build_sqlx(PostgresQueryBuilder);
 
-        let res = sqlx::query_with(&sql, arguments)
+        let res = sqlx::query_with(sqlx::AssertSqlSafe(sql), arguments)
             .traced()
             .execute(&mut *self.conn)
             .await?;
@@ -419,7 +419,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             )
             .build_sqlx(PostgresQueryBuilder);
 
-        let edges: Vec<SessionLookup> = sqlx::query_as_with(&sql, arguments)
+        let edges: Vec<SessionLookup> = sqlx::query_as_with(sqlx::AssertSqlSafe(sql), arguments)
             .traced()
             .fetch_all(&mut *self.conn)
             .await?;
@@ -446,7 +446,7 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             .apply_filter(filter)
             .build_sqlx(PostgresQueryBuilder);
 
-        let count: i64 = sqlx::query_scalar_with(&sql, arguments)
+        let count: i64 = sqlx::query_scalar_with(sqlx::AssertSqlSafe(sql), arguments)
             .traced()
             .fetch_one(&mut *self.conn)
             .await?;

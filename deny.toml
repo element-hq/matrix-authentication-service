@@ -67,12 +67,11 @@ skip = [
     { name = "v_htmlescape", version = "0.15.8" },   # minijinja depends on this old version
     # a few crates depend on old versions of hashbrown
     { name = "hashbrown", version = "0.14.5" },
-    { name = "hashbrown", version = "0.15.5" },
     { name = "hashbrown", version = "0.16.1" },
     # a few dependencies depend on the 1.x version of thiserror
     { name = "thiserror", version = "1.0.69" },
     { name = "thiserror-impl", version = "1.0.69" },
-    # axum-macros, sqlx-macros and sea-query-attr use an old version
+    # sea-query-derive uses an old version
     { name = "heck", version = "0.4.1" },
     # pad depends on an old version
     { name = "unicode-width", version = "0.1.14" },
@@ -83,10 +82,12 @@ skip = [
     { name = "serde_html_form", version = "0.2.8" },  # axum-extra
     { name = "toml_datetime", version = "0.6.11" },   # proc-macro-crate -> toml_edit
     { name = "winnow", version = "0.7.13" },          # cron, toml_edit
+    # sqlx-core's `sqlx-toml` feature is still on toml 0.8
+    { name = "toml", version = "0.8.23" },
+    { name = "serde_spanned", version = "0.6.9" },
     # hyper-util -> system-configuration depends on this old version
     { name = "core-foundation", version = "0.9.4" },
     # wasmtime pulls in older versions of these
-    { name = "foldhash", version = "0.1.5" },
     { name = "gimli", version = "0.32.3" },
     { name = "object", version = "0.37.3" },
     # async-graphql, zxcvbn's derive_builder and sea-query still use an old
@@ -117,11 +118,14 @@ skip = [
     { name = "crypto-common", version = "0.1.6" },
     { name = "digest", version = "0.10.7" },
     { name = "hmac", version = "0.12.1" },
-    { name = "md-5", version = "0.10.6" },
     { name = "sha1", version = "0.10.6" },
     { name = "sha2", version = "0.10.9" },
     # zerovec-derive (via icu) moved to syn 3, everything else is on syn 2
     { name = "syn", version = "2.0.106" },
+
+    # cookie and the elliptic-curve 0.13 stack (mas-jose) depend on this old
+    # version, sqlx-postgres is on 0.13
+    { name = "hkdf", version = "0.12.4" },
 ]
 
 skip-tree = []

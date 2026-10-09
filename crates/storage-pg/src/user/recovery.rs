@@ -101,7 +101,7 @@ impl UserRecoveryRepository for PgUserRecoveryRepository<'_> {
                       user_recovery_session_id
                     , email
                     , user_agent
-                    , ip_address as "ip_address: IpAddr"
+                    , ip_address
                     , locale
                     , created_at
                     , consumed_at

@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -37,6 +38,8 @@ tokio.workspace = true
 ulid.workspace = true
 url.workspace = true
 uuid.workspace = true
+# Only to enable its `std` feature, see the workspace manifest
+whoami.workspace = true
 
 oauth2-types.workspace = true
 mas-context.workspace = true
@@ -44,3 +47,6 @@ mas-storage.workspace = true
 mas-data-model.workspace = true
 mas-iana.workspace = true
 mas-jose.workspace = true
+
+[dev-dependencies]
+tracing-subscriber.workspace = true

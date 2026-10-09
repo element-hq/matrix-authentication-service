@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -340,7 +341,7 @@ features = ["yaml", "json"]
 
 # IP network address types
 [workspace.dependencies.ipnetwork]
-version = "0.20.0"
+version = "0.21.1"
 features = ["serde"]
 
 # Iterator utilities
@@ -559,7 +560,7 @@ features = ["derive", "attr", "with-uuid", "with-chrono", "postgres-array"]
 
 # Query builder integration with SQLx
 [workspace.dependencies.sea-query-sqlx]
-version = "0.8.1"
+version = "0.9.1"
 features = [
     "sqlx-postgres",
     "with-uuid",
@@ -625,7 +626,7 @@ features = ["std"]
 
 # SQL database support
 [workspace.dependencies.sqlx]
-version = "0.8.6"
+version = "0.9.0"
 features = [
     "runtime-tokio",
     "tls-rustls-aws-lc-rs",
@@ -635,6 +636,7 @@ features = [
     "json",
     "uuid",
     "ipnetwork",
+    "sqlx-toml",
 ]
 
 # Custom error types
@@ -722,6 +724,15 @@ features = ["rustc"]
 # Directory traversal
 [workspace.dependencies.walkdir]
 version = "2.5.0"
+
+# Current user lookup
+# sqlx-postgres 0.9.0 depends on whoami without its `std` feature, which makes
+# it report "anonymous" as the default database user. Remove once a sqlx
+# release includes https://github.com/transact-rs/sqlx/pull/4303
+[workspace.dependencies.whoami]
+version = "2.1.3"
+default-features = false
+features = ["std"]
 
 # HTTP mock server
 [workspace.dependencies.wiremock]
