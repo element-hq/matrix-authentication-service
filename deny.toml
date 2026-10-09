@@ -120,6 +120,10 @@ skip = [
     { name = "md-5", version = "0.10.6" },
     { name = "sha1", version = "0.10.6" },
     { name = "sha2", version = "0.10.9" },
+    # bcrypt 0.19 (via blowfish) is on cipher 0.5, the rest of the tree is
+    # still on 0.4
+    { name = "cipher", version = "0.4.4" },
+    { name = "inout", version = "0.1.4" },
     # zerovec-derive (via icu) moved to syn 3, everything else is on syn 2
     { name = "syn", version = "2.0.106" },
 ]
