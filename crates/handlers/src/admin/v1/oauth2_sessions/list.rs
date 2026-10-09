@@ -548,9 +548,9 @@ mod tests {
         let mut rng = state.rng();
 
         let mut repo = state.repository().await.unwrap();
-        let client = repo
+        let (client, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &state.clock,
                 vec!["https://example.com/redirect".parse().unwrap()],
@@ -622,9 +622,9 @@ mod tests {
         let mut rng = state.rng();
 
         let mut repo = state.repository().await.unwrap();
-        let client = repo
+        let (client, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &state.clock,
                 vec!["https://example.com/redirect".parse().unwrap()],
@@ -708,9 +708,9 @@ mod tests {
         // Provision two clients and a session for each, both using the
         // client_credentials flow so that they don't depend on a user.
         let mut repo = state.repository().await.unwrap();
-        let client_a = repo
+        let (client_a, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &state.clock,
                 vec!["https://a.example.com/redirect".parse().unwrap()],
@@ -733,9 +733,9 @@ mod tests {
             )
             .await
             .unwrap();
-        let client_b = repo
+        let (client_b, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &state.clock,
                 vec!["https://b.example.com/redirect".parse().unwrap()],

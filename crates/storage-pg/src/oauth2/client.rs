@@ -373,57 +373,6 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
     }
 
     #[tracing::instrument(
-        name = "db.oauth2_client.find_by_metadata_digest",
-        skip_all,
-        fields(
-            db.query.text,
-        ),
-        err,
-    )]
-    async fn find_by_metadata_digest(
-        &mut self,
-        digest: &str,
-    ) -> Result<Option<Client>, Self::Error> {
-        let res = sqlx::query_as!(
-            OAuth2ClientLookup,
-            r#"
-                SELECT oauth2_client_id
-                    , metadata_digest
-                    , encrypted_client_secret
-                    , application_type
-                    , redirect_uris
-                    , grant_type_authorization_code
-                    , grant_type_refresh_token
-                    , grant_type_client_credentials
-                    , grant_type_device_code
-                    , client_name
-                    , logo_uri
-                    , client_uri
-                    , policy_uri
-                    , tos_uri
-                    , jwks_uri
-                    , jwks
-                    , id_token_signed_response_alg
-                    , userinfo_signed_response_alg
-                    , token_endpoint_auth_method
-                    , token_endpoint_auth_signing_alg
-                    , initiate_login_uri
-                    , is_static
-                FROM oauth2_clients
-                WHERE metadata_digest = $1
-            "#,
-            digest,
-        )
-        .traced()
-        .fetch_optional(&mut *self.conn)
-        .await?;
-
-        let Some(res) = res else { return Ok(None) };
-
-        Ok(Some(res.try_into()?))
-    }
-
-    #[tracing::instrument(
         name = "db.oauth2_client.load_batch",
         skip_all,
         fields(
@@ -481,7 +430,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
     }
 
     #[tracing::instrument(
-        name = "db.oauth2_client.add",
+        name = "db.oauth2_client.add_or_reuse",
         skip_all,
         fields(
             db.query.text,
@@ -490,7 +439,7 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
         ),
         err,
     )]
-    async fn add(
+    async fn add_or_reuse(
         &mut self,
         rng: &mut (dyn RngCore + Send),
         clock: &dyn Clock,
@@ -511,10 +460,13 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
         token_endpoint_auth_method: Option<OAuthClientAuthenticationMethod>,
         token_endpoint_auth_signing_alg: Option<JsonWebSignatureAlg>,
         initiate_login_uri: Option<Url>,
-    ) -> Result<Client, Self::Error> {
+    ) -> Result<(Client, bool), Self::Error> {
         let now = clock.now();
         let id = Ulid::from_datetime_with_rng(now, rng);
-        tracing::Span::current().record("client.id", tracing::field::display(id));
+
+        if jwks.is_some() && jwks_uri.is_some() {
+            return Err(DatabaseError::invalid_operation());
+        }
 
         let jwks_json = jwks
             .as_ref()
@@ -524,7 +476,8 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
 
         let redirect_uris_array = redirect_uris.iter().map(Url::to_string).collect::<Vec<_>>();
 
-        sqlx::query!(
+        let res = sqlx::query_as!(
+            OAuth2ClientLookup,
             r#"
                 INSERT INTO oauth2_clients
                     ( oauth2_client_id
@@ -553,6 +506,33 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
                 VALUES
                     ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
                     $14, $15, $16, $17, $18, $19, $20, $21, FALSE)
+                -- RETURNING yields nothing for rows skipped by DO NOTHING, so this
+                -- no-op update is what makes it return the existing client, including
+                -- one committed while this insert was waiting on it
+                ON CONFLICT (metadata_digest) DO UPDATE
+                    SET metadata_digest = EXCLUDED.metadata_digest
+                RETURNING oauth2_client_id
+                        , metadata_digest
+                        , encrypted_client_secret
+                        , application_type
+                        , redirect_uris
+                        , grant_type_authorization_code
+                        , grant_type_refresh_token
+                        , grant_type_client_credentials
+                        , grant_type_device_code
+                        , client_name
+                        , logo_uri
+                        , client_uri
+                        , policy_uri
+                        , tos_uri
+                        , jwks_uri
+                        , jwks
+                        , id_token_signed_response_alg
+                        , userinfo_signed_response_alg
+                        , token_endpoint_auth_method
+                        , token_endpoint_auth_signing_alg
+                        , initiate_login_uri
+                        , is_static
             "#,
             Uuid::from(id),
             metadata_digest,
@@ -583,37 +563,14 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
             initiate_login_uri.as_ref().map(Url::as_str),
         )
         .traced()
-        .execute(&mut *self.conn)
+        .fetch_one(&mut *self.conn)
         .await?;
 
-        let jwks = match (jwks, jwks_uri) {
-            (None, None) => None,
-            (Some(jwks), None) => Some(JwksOrJwksUri::Jwks(jwks)),
-            (None, Some(jwks_uri)) => Some(JwksOrJwksUri::JwksUri(jwks_uri)),
-            _ => return Err(DatabaseError::invalid_operation()),
-        };
+        let client: Client = res.try_into()?;
+        tracing::Span::current().record("client.id", tracing::field::display(client.id));
+        let inserted = client.id == id;
 
-        Ok(Client {
-            id,
-            client_id: id.to_string(),
-            metadata_digest: None,
-            encrypted_client_secret,
-            application_type,
-            redirect_uris,
-            grant_types,
-            client_name,
-            logo_uri,
-            client_uri,
-            policy_uri,
-            tos_uri,
-            jwks,
-            id_token_signed_response_alg,
-            userinfo_signed_response_alg,
-            token_endpoint_auth_method,
-            token_endpoint_auth_signing_alg,
-            initiate_login_uri,
-            is_static: false,
-        })
+        Ok((client, inserted))
     }
 
     #[tracing::instrument(
