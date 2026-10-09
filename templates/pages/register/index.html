@@ -9,7 +9,11 @@ Please see LICENSE files in the repository root for full details.
 
 {% extends "base.html" %}
 
-{% from "components/idp_brand.html" import logo %}
+{% block head %}
+  {{ include_asset('src/entrypoints/register.tsx') | indent(4) | safe }}
+  {# Pre-load the locale data for the current language #}
+  {{ include_asset('locales/' ~ lang ~ '.json') | indent(4) | safe }}
+{% endblock head %}
 
 {% block content %}
   <header class="page-heading">
@@ -22,81 +26,33 @@ Please see LICENSE files in the repository root for full details.
     </div>
   </header>
 
-  <form method="POST" class="cpd-form-root">
-    {% for error in form.errors %}
-      {# Special case for the captcha error, as we want to put it at the bottom #}
-      {% if error.kind != "captcha" %}
-        <div class="text-critical font-medium">
-          {{ errors.form_error_message(error=error) }}
-        </div>
-      {% endif %}
-    {% endfor %}
+  <div id="register-form"
+       data-csrf-token="{{ csrf_token }}"
+       {%- if captcha_config %} data-captcha-config='{{ captcha_config | tojson }}'{% endif %}
+       data-branding='{{ branding | tojson }}'
+       data-features='{{ features | tojson }}'
+       data-form='{{ form | tojson }}'
+       data-providers='{{ providers | tojson }}'
+       data-login-link="{{ login_link }}">
+    <p class="sr-only">{{ _("mas.loading") }}</p>
 
-    <input type="hidden" name="csrf" value="{{ csrf_token }}" />
+    {# Rough outline of the form, to keep the page from jumping once it mounts #}
+    <div class="register-skeleton" aria-hidden="true">
+      <div class="field"><span class="label"></span><span class="control"></span></div>
+      <div class="field"><span class="label"></span><span class="control"></span></div>
+      <div class="field"><span class="label"></span><span class="control"></span></div>
+      <span class="submit"></span>
+    </div>
+  </div>
 
-    {% if features.password_registration %}
-      {% call(f) field.field(label=_("common.username"), name="username", form_state=form) %}
-        <input {{ field.attributes(f) }} class="cpd-text-control" type="text" autocomplete="username" autocorrect="off" autocapitalize="none" required data-choose-username />
-        {{ field.error(error={"kind": "policy", "code": "username-invalid-chars"}, hidden=true) }}
-        <div class="cpd-form-message cpd-form-help-message" id="{{ f.id }}-help">
-          @username:{{ branding.server_name }}
-        </div>
-      {% endcall %}
+  <div id="register-form-error" class="critical-notice" hidden>
+    {{ _("mas.loading_failed") }}
+  </div>
 
-      {% if features.password_registration_email_required %}
-        {% call(f) field.field(label=_("common.email_address"), name="email", form_state=form) %}
-          <input {{ field.attributes(f) }} class="cpd-text-control" type="email" autocomplete="email" required />
-        {% endcall %}
-      {% endif %}
+  <noscript>
+    {# The skeleton would otherwise sit above this message forever #}
+    <style>#register-form { display: none; }</style>
 
-      {% call(f) field.field(label=_("common.password"), name="password", form_state=form) %}
-        <input {{ field.attributes(f) }} class="cpd-text-control" type="password" autocomplete="new-password" required />
-      {% endcall %}
-
-      {% call(f) field.field(label=_("common.password_confirm"), name="password_confirm", form_state=form) %}
-        <input {{ field.attributes(f) }} class="cpd-text-control" type="password" autocomplete="new-password" required />
-      {% endcall %}
-
-      {% if branding.tos_uri is not none %}
-        {% call(f) field.field(label=_("mas.register.terms_of_service", tos_uri=branding.tos_uri), name="accept_terms", form_state=form, inline=true, class="my-4") %}
-          <div class="cpd-form-inline-field-control">
-            <div class="cpd-checkbox-container">
-              <input {{ field.attributes(f) }} class="cpd-checkbox-input" type="checkbox" required />
-              <div class="cpd-checkbox-ui">
-                {{ icon.check() }}
-              </div>
-            </div>
-          </div>
-        {% endcall %}
-      {% endif %}
-
-      {{ captcha.form(class="mb-4 self-center") }}
-
-      {% for error in form.errors %}
-        {% if error.kind == "captcha" %}
-          <div class="text-critical font-medium text-center -mt-4 mb-4">
-            {{ errors.form_error_message(error=error) }}
-          </div>
-        {% endif %}
-      {% endfor %}
-
-      {{ button.button(text=_("action.continue")) }}
-
-      {% if providers %}
-        {{ field.separator() }}
-      {% endif %}
-    {% endif %}
-
-    {% for provider in providers %}
-      {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
-      {# The provider buttons submit the same form, so they must skip the validation of the password fields #}
-      <button type="submit" name="provider" value="{{ provider.id }}" formnovalidate class="cpd-button {%- if provider.brand_name %} has-icon {%- endif %}" data-kind="secondary" data-size="lg">
-        {{ logo(provider.brand_name) }}
-        {{ _("mas.login.continue_with_provider", provider=name) }}
-      </button>
-    {% endfor %}
-
-    {% set params = next["params"] | default({}) | to_params(prefix="?") %}
-    {{ button.link_tertiary(text=_("mas.register.call_to_login"), href="/login" ~ params) }}
-  </form>
+    <p class="critical-notice">{{ _("mas.register.javascript_required") }}</p>
+  </noscript>
 {% endblock content %}
