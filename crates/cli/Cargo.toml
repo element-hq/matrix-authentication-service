@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -59,7 +60,6 @@ opentelemetry.workspace = true
 opentelemetry-http.workspace = true
 opentelemetry-instrumentation-process.workspace = true
 opentelemetry-instrumentation-tokio.workspace = true
-opentelemetry-jaeger-propagator.workspace = true
 opentelemetry-otlp.workspace = true
 opentelemetry-prometheus-text-exporter.workspace = true
 opentelemetry-resource-detectors.workspace = true

@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -410,8 +411,6 @@ features = ["reqwest"]
 version = "0.2.0"
 [workspace.dependencies.opentelemetry-instrumentation-tokio]
 version = "0.2.0"
-[workspace.dependencies.opentelemetry-jaeger-propagator]
-version = "0.32.0"
 [workspace.dependencies.opentelemetry-otlp]
 version = "0.32.0"
 default-features = false

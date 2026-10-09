@@ -3395,7 +3395,6 @@ dependencies = [
  "opentelemetry-http",
  "opentelemetry-instrumentation-process",
  "opentelemetry-instrumentation-tokio",
- "opentelemetry-jaeger-propagator",
  "opentelemetry-otlp",
  "opentelemetry-prometheus-text-exporter",
  "opentelemetry-resource-detectors",
@@ -4381,15 +4380,6 @@ checksum = "aac2efa77dc2389d53fc00e53074a8117f53b1bd5ab92b0cd8bf7625156dc49f"
 dependencies = [
  "opentelemetry",
  "tokio",
-]
-
-[[package]]
-name = "opentelemetry-jaeger-propagator"
-version = "0.32.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92c2cebef9a57a493394ba0901b692a6915cc4a1314e93f905db1344392b4aa4"
-dependencies = [
- "opentelemetry",
 ]
 
 [[package]]
