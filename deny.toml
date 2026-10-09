@@ -20,9 +20,6 @@ ignore = [
     # RSA key extraction "Marvin Attack". This is only relevant when using
     # PKCS#1 v1.5 encryption, which we don't
     "RUSTSEC-2023-0071",
-    # Rand 0.8.5 unsoundness with custom logger + thread_rng reseeding.
-    # Only triggers when the `log` feature is enabled, which we don't use.
-    "RUSTSEC-2026-0097",
     # A bug in wasmtime, but we are not affected, as we only have a single
     # Engine/Store, and as the advisory says explicitly:
     # > This bug is not triggerable by guest WebAssembly programs.
@@ -99,10 +96,32 @@ skip = [
     { name = "darling_macro", version = "0.20.11" },
 
     # We are still mainly using rand 0.8
-    { name = "rand", version = "0.8.5" },
+    { name = "rand", version = "0.8.6" },
     { name = "rand_chacha", version = "0.3.1" },
     { name = "rand_core", version = "0.6.4" },
     { name = "getrandom", version = "0.2.16" },
+    # opa-wasm 0.3 is on rand 0.10, opentelemetry_sdk, sentry and ulid are
+    # still on rand 0.9
+    { name = "rand", version = "0.9.4" },
+    { name = "rand_core", version = "0.9.3" },
+    { name = "getrandom", version = "0.3.3" },
+    # opa-wasm 0.3 is on base64 0.23, the rest of the tree is still on 0.22
+    { name = "base64", version = "0.22.1" },
+    # opa-wasm 0.3 is on the digest 0.11 generation of the RustCrypto crates,
+    # the rest of the tree (mas-jose, argon2, rsa, sqlx, …) is still on the
+    # digest 0.10 one
+    { name = "block-buffer", version = "0.10.4" },
+    { name = "chacha20", version = "0.9.1" },
+    { name = "const-oid", version = "0.9.6" },
+    { name = "cpufeatures", version = "0.2.17" },
+    { name = "crypto-common", version = "0.1.6" },
+    { name = "digest", version = "0.10.7" },
+    { name = "hmac", version = "0.12.1" },
+    { name = "md-5", version = "0.10.6" },
+    { name = "sha1", version = "0.10.6" },
+    { name = "sha2", version = "0.10.9" },
+    # zerovec-derive (via icu) moved to syn 3, everything else is on syn 2
+    { name = "syn", version = "2.0.106" },
 ]
 
 skip-tree = []
