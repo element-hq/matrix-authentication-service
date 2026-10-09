@@ -124,6 +124,10 @@ skip = [
     # still on 0.4
     { name = "cipher", version = "0.4.4" },
     { name = "inout", version = "0.1.4" },
+    # chacha20poly1305 0.11 is on aead 0.6, cookie (via aes-gcm) is still on
+    # aead 0.5
+    { name = "aead", version = "0.5.2" },
+    { name = "universal-hash", version = "0.5.1" },
     # zerovec-derive (via icu) moved to syn 3, everything else is on syn 2
     { name = "syn", version = "2.0.106" },
 ]

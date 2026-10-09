@@ -117,8 +117,8 @@ version = "0.5.1"
 
 # AEAD (Authenticated Encryption with Associated Data)
 [workspace.dependencies.aead]
-version = "0.5.2"
-features = ["std"]
+version = "0.6.1"
+features = ["alloc", "getrandom"]
 
 # Argon2 password hashing
 [workspace.dependencies.argon2]
@@ -150,8 +150,8 @@ features = ["serde1"]
 
 # ChaCha20Poly1305 AEAD
 [workspace.dependencies.chacha20poly1305]
-version = "0.10.1"
-features = ["std"]
+version = "0.11.0"
+features = ["alloc", "getrandom"]
 
 # Memory optimisation for short strings
 [workspace.dependencies.compact_str]
