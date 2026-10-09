@@ -891,7 +891,7 @@ async fn test_user_filter_active_oauth2_session_for_any_of_clients(pool: PgPool)
                              clock: &MockClock,
                              host: &str| {
         repo.oauth2_client()
-            .add(
+            .add_or_reuse(
                 rng,
                 clock,
                 vec![format!("https://{host}/redirect").parse().unwrap()],
@@ -914,6 +914,7 @@ async fn test_user_filter_active_oauth2_session_for_any_of_clients(pool: PgPool)
             )
             .await
             .unwrap()
+            .0
     };
 
     let client_x = make_client(&mut repo, &mut rng, &clock, "x.example.com").await;
@@ -1101,9 +1102,9 @@ async fn test_user_filter_active_oauth2_session(pool: PgPool) {
         .await
         .unwrap();
 
-    let client = repo
+    let (client, _) = repo
         .oauth2_client()
-        .add(
+        .add_or_reuse(
             &mut rng,
             &clock,
             vec!["https://example.com/redirect".parse().unwrap()],

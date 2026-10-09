@@ -655,9 +655,9 @@ mod tests {
         );
 
         // Start an OAuth2 session
-        let client = repo
+        let (client, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &clock,
                 vec!["https://example.com/redirect".parse().unwrap()],
@@ -824,9 +824,9 @@ mod tests {
         clock.advance(Duration::try_minutes(1).unwrap());
 
         // Create an OAuth2 session for the same user
-        let client = repo
+        let (client, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &clock,
                 vec!["https://example.com/redirect".parse().unwrap()],

@@ -131,9 +131,9 @@ async fn create_session_hierarchy(
     // Create OAuth2 session if requested
     let oauth2_session = if with_oauth2 {
         // First create an OAuth2 client
-        let client = repo
+        let (client, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &state.clock,
                 vec!["https://example.com/callback".parse().unwrap()],

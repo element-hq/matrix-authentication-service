@@ -95,9 +95,9 @@ mod tests {
 
         // Add a client we know the ID of
         let mut repo = state.repository().await.unwrap();
-        let client = repo
+        let (client, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut state.rng(),
                 &state.clock,
                 vec!["https://example.com/redirect".parse().unwrap()],

@@ -25,10 +25,10 @@ pub use self::{
 #[cfg(test)]
 mod tests {
     use chrono::Duration;
-    use mas_data_model::{AuthorizationCode, Clock, UlidExt as _, clock::MockClock};
+    use mas_data_model::{AuthorizationCode, Client, Clock, UlidExt as _, clock::MockClock};
     use mas_iana::oauth::OAuthClientAuthenticationMethod;
     use mas_storage::{
-        Pagination,
+        BoxRepository, Pagination,
         oauth2::{
             OAuth2ClientFilter, OAuth2DeviceCodeGrantParams, OAuth2SessionFilter,
             OAuth2SessionRepository,
@@ -64,9 +64,9 @@ mod tests {
         assert_eq!(client, None);
 
         // Create a client
-        let client = repo
+        let (client, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &clock,
                 vec!["https://example.com/redirect".parse().unwrap()],
@@ -414,9 +414,9 @@ mod tests {
             .unwrap();
 
         // Create two clients
-        let client1 = repo
+        let (client1, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &clock,
                 vec!["https://first.example.com/redirect".parse().unwrap()],
@@ -439,9 +439,9 @@ mod tests {
             )
             .await
             .unwrap();
-        let client2 = repo
+        let (client2, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &clock,
                 vec!["https://second.example.com/redirect".parse().unwrap()],
@@ -748,9 +748,9 @@ mod tests {
             .add(&mut rng, &clock, &user, None)
             .await
             .unwrap();
-        let client = repo
+        let (client, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &clock,
                 vec!["https://example.com/redirect".parse().unwrap()],
@@ -849,9 +849,9 @@ mod tests {
         // Provision three clients
         let mut clients = Vec::new();
         for label in ["first", "second", "third"] {
-            let client = repo
+            let (client, _) = repo
                 .oauth2_client()
-                .add(
+                .add_or_reuse(
                     &mut rng,
                     &clock,
                     vec![
@@ -969,9 +969,9 @@ mod tests {
         let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
 
         // Provision a client
-        let client = repo
+        let (client, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &clock,
                 vec!["https://example.com/redirect".parse().unwrap()],
@@ -1211,9 +1211,9 @@ mod tests {
         assert!(!page.has_next_page);
 
         // Add a couple of clients
-        let client1 = repo
+        let (client1, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &clock,
                 vec!["https://first.example.com/redirect".parse().unwrap()],
@@ -1238,9 +1238,9 @@ mod tests {
             .unwrap();
         clock.advance(Duration::try_minutes(1).unwrap());
 
-        let client2 = repo
+        let (client2, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &clock,
                 vec!["https://second.example.com/redirect".parse().unwrap()],
@@ -1363,9 +1363,9 @@ mod tests {
         let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
 
         // A client supporting authorization_code (+ refresh_token)
-        let auth_code_client = repo
+        let (auth_code_client, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &clock,
                 vec!["https://code.example.com/redirect".parse().unwrap()],
@@ -1390,9 +1390,9 @@ mod tests {
             .unwrap();
 
         // A client supporting only client_credentials
-        let client_credentials_client = repo
+        let (client_credentials_client, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &clock,
                 vec![],
@@ -1459,9 +1459,9 @@ mod tests {
         let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
 
         // A client that will have an active session
-        let with_session = repo
+        let (with_session, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &clock,
                 vec![],
@@ -1486,9 +1486,9 @@ mod tests {
             .unwrap();
 
         // A client without any session
-        let without_session = repo
+        let (without_session, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &clock,
                 vec![],
@@ -1552,5 +1552,73 @@ mod tests {
         assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 0);
         let filter = OAuth2ClientFilter::new().with_active_sessions(false);
         assert_eq!(repo.oauth2_client().count(filter).await.unwrap(), 2);
+    }
+
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_add_client_with_concurrent_metadata_digest(pool: PgPool) {
+        async fn add(
+            repo: &mut BoxRepository,
+            rng: &mut ChaChaRng,
+            clock: &MockClock,
+        ) -> (Client, bool) {
+            repo.oauth2_client()
+                .add_or_reuse(
+                    rng,
+                    clock,
+                    vec!["https://example.com/redirect".parse().unwrap()],
+                    Some("digest".to_owned()),
+                    None,
+                    None,
+                    vec![GrantType::AuthorizationCode],
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                )
+                .await
+                .unwrap()
+        }
+
+        let clock = MockClock::default();
+        let mut repo1 = PgRepository::from_pool(&pool).await.unwrap().boxed();
+        let mut repo2 = PgRepository::from_pool(&pool).await.unwrap().boxed();
+
+        let (client1, created) = add(&mut repo1, &mut ChaChaRng::seed_from_u64(1), &clock).await;
+        assert!(created);
+        assert_eq!(client1.metadata_digest.as_deref(), Some("digest"));
+
+        // The second insert either waits for the first transaction or sees its
+        // committed row
+        let second = tokio::spawn(async move {
+            let client = add(
+                &mut repo2,
+                &mut ChaChaRng::seed_from_u64(2),
+                &MockClock::default(),
+            )
+            .await;
+            repo2.save().await.unwrap();
+            client
+        });
+        repo1.save().await.unwrap();
+        let (client2, created) = second.await.unwrap();
+
+        assert!(!created);
+        assert_eq!(client1.id, client2.id);
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+        assert_eq!(
+            repo.oauth2_client()
+                .count(OAuth2ClientFilter::new())
+                .await
+                .unwrap(),
+            1
+        );
     }
 }
