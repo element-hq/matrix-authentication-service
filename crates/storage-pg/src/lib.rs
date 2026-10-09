@@ -22,7 +22,7 @@
 //! ```rust
 //! # use async_trait::async_trait;
 //! # use ulid::Ulid;
-//! # use rand::RngCore;
+//! # use rand::Rng;
 //! # use mas_data_model::Clock;
 //! # use mas_data_model::UlidExt;
 //! # use mas_storage_pg::{DatabaseError, ExecuteExt};
@@ -42,7 +42,7 @@
 //! #     async fn lookup(&mut self, id: Ulid) -> Result<Option<FakeData>, Self::Error>;
 //! #     async fn add(
 //! #         &mut self,
-//! #         rng: &mut (dyn RngCore + Send),
+//! #         rng: &mut (dyn Rng + Send),
 //! #         clock: &dyn Clock,
 //! #     ) -> Result<FakeData, Self::Error>;
 //! # }
@@ -116,7 +116,7 @@
 //!     )]
 //!     async fn add(
 //!         &mut self,
-//!         rng: &mut (dyn RngCore + Send),
+//!         rng: &mut (dyn Rng + Send),
 //!         clock: &dyn Clock,
 //!     ) -> Result<FakeData, Self::Error> {
 //!         let created_at = clock.now();

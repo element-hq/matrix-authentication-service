@@ -22,7 +22,7 @@ use mas_storage::{
 };
 use oauth2_types::scope::Scope;
 use opentelemetry_semantic_conventions::trace::DB_QUERY_TEXT;
-use rand::RngCore;
+use rand::Rng;
 use sea_query::{
     Cond, Condition, Expr, ExprTrait, PgFunc, PostgresQueryBuilder, Query, SimpleExpr, enum_def,
     extension::postgres::PgExpr as _,
@@ -243,7 +243,7 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
     )]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         owner: PersonalSessionOwner,
         actor_user: &User,

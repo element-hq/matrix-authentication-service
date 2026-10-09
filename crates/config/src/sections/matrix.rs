@@ -8,8 +8,8 @@
 use anyhow::bail;
 use camino::Utf8PathBuf;
 use rand::{
-    Rng,
-    distributions::{Alphanumeric, DistString},
+    RngExt,
+    distr::{Alphanumeric, SampleString},
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -143,7 +143,7 @@ impl MatrixConfig {
 
     pub(crate) fn generate<R>(mut rng: R) -> Self
     where
-        R: Rng + Send,
+        R: RngExt + Send,
     {
         Self {
             kind: HomeserverKind::default(),

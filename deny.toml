@@ -95,31 +95,40 @@ skip = [
     { name = "darling_core", version = "0.20.11" },
     { name = "darling_macro", version = "0.20.11" },
 
-    # We are still mainly using rand 0.8
+    # We moved to rand 0.10, but cookie and sqlx still pull the 0.8 generation
     { name = "rand", version = "0.8.6" },
     { name = "rand_chacha", version = "0.3.1" },
     { name = "rand_core", version = "0.6.4" },
     { name = "getrandom", version = "0.2.16" },
-    # opa-wasm 0.3 is on rand 0.10, opentelemetry_sdk, sentry and ulid are
-    # still on rand 0.9
+    # ...and opentelemetry_sdk, sentry and ulid pull the 0.9 generation
     { name = "rand", version = "0.9.4" },
+    { name = "rand_chacha", version = "0.9.0" },
     { name = "rand_core", version = "0.9.3" },
     { name = "getrandom", version = "0.3.3" },
-    # opa-wasm 0.3 is on base64 0.23, the rest of the tree is still on 0.22
+
+    # We moved to the new (digest 0.11-based) generation of the RustCrypto
+    # crates, but cookie (via axum-extra's private cookies), sqlx, headers,
+    # wasmtime and pest still pull the previous generation
+    { name = "aead", version = "0.5.2" },           # aes-gcm 0.10 <- cookie
+    { name = "aes", version = "0.8.4" },            # aes-gcm 0.10 <- cookie
+    { name = "aes-gcm", version = "0.10.3" },       # cookie
+    { name = "block-buffer", version = "0.10.4" },  # digest 0.10
+    { name = "cipher", version = "0.4.4" },         # aes, aes-gcm, ctr
+    { name = "cpufeatures", version = "0.2.17" },   # aes, polyval, sha1, sha2 0.10
+    { name = "crypto-common", version = "0.1.6" },  # aead, cipher, digest 0.10
+    { name = "ctr", version = "0.9.2" },            # aes-gcm 0.10 <- cookie
+    { name = "digest", version = "0.10.7" },        # hmac, md-5, sha1, sha2 0.10
+    { name = "ghash", version = "0.5.1" },          # aes-gcm 0.10 <- cookie
+    { name = "hmac", version = "0.12.1" },          # hkdf 0.12 <- cookie, sqlx
+    { name = "inout", version = "0.1.4" },          # cipher 0.4
+    { name = "md-5", version = "0.10.6" },          # sqlx
+    { name = "polyval", version = "0.6.2" },        # ghash 0.5
+    { name = "sha1", version = "0.10.6" },          # headers
+    { name = "sha2", version = "0.10.9" },          # cookie, sqlx, wasmtime, pest
+    { name = "universal-hash", version = "0.5.1" }, # ghash, polyval
+
+    # bcrypt and opa-wasm moved to base64 0.23, the rest of the tree is on 0.22
     { name = "base64", version = "0.22.1" },
-    # opa-wasm 0.3 is on the digest 0.11 generation of the RustCrypto crates,
-    # the rest of the tree (mas-jose, argon2, rsa, sqlx, …) is still on the
-    # digest 0.10 one
-    { name = "block-buffer", version = "0.10.4" },
-    { name = "chacha20", version = "0.9.1" },
-    { name = "const-oid", version = "0.9.6" },
-    { name = "cpufeatures", version = "0.2.17" },
-    { name = "crypto-common", version = "0.1.6" },
-    { name = "digest", version = "0.10.7" },
-    { name = "hmac", version = "0.12.1" },
-    { name = "md-5", version = "0.10.6" },
-    { name = "sha1", version = "0.10.6" },
-    { name = "sha2", version = "0.10.9" },
     # zerovec-derive (via icu) moved to syn 3, everything else is on syn 2
     { name = "syn", version = "2.0.106" },
 ]

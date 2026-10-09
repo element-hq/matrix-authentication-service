@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -6,7 +7,7 @@
 doc-valid-idents = ["OpenID", "OAuth", "UserInfo", "..", "PostgreSQL", "SQLite"]
 
 disallowed-methods = [
-    { path = "rand::thread_rng", reason = "do not create rngs on the fly, pass them as parameters" },
+    { path = "rand::rng", reason = "do not create rngs on the fly, pass them as parameters" },
     { path = "chrono::Utc::now", reason = "source the current time from the clock instead" },
     # ulid's own constructors/accessors below either use ulid's (separate) `rand`
     # or its `std`-only SystemTime API. Use `mas_data_model::UlidExt` instead so our

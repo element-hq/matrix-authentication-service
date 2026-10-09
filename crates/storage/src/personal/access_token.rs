@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -9,7 +10,7 @@ use mas_data_model::{
     Clock,
     personal::{PersonalAccessToken, session::PersonalSession},
 };
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 
 use crate::repository_impl;
@@ -84,7 +85,7 @@ pub trait PersonalAccessTokenRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         session: &PersonalSession,
         access_token: &str,
@@ -125,7 +126,7 @@ repository_impl!(PersonalAccessTokenRepository:
 
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         session: &PersonalSession,
         access_token: &str,

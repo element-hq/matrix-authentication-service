@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -11,7 +12,7 @@ use mas_data_model::{
     UlidExt as _,
 };
 use mas_storage::compat::CompatRefreshTokenRepository;
-use rand::RngCore;
+use rand::Rng;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
@@ -148,7 +149,7 @@ impl CompatRefreshTokenRepository for PgCompatRefreshTokenRepository<'_> {
     )]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         compat_session: &CompatSession,
         compat_access_token: &CompatAccessToken,

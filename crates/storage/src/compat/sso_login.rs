@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -6,7 +7,7 @@
 
 use async_trait::async_trait;
 use mas_data_model::{BrowserSession, Clock, CompatSession, CompatSsoLogin, User};
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 use url::Url;
 
@@ -162,7 +163,7 @@ pub trait CompatSsoLoginRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         login_token: String,
         redirect_uri: Url,
@@ -255,7 +256,7 @@ repository_impl!(CompatSsoLoginRepository:
 
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         login_token: String,
         redirect_uri: Url,

@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -7,7 +8,7 @@
 use digest::Digest;
 use mas_iana::jose::{JsonWebKeyEcEllipticCurve, JsonWebSignatureAlg};
 use sha2::{Sha256, Sha384, Sha512};
-use signature::rand_core::CryptoRngCore;
+use signature::rand_core::TryCryptoRng;
 use thiserror::Error;
 
 use super::signature::Signature;
@@ -231,9 +232,9 @@ impl From<super::Es256KSigningKey> for AsymmetricSigningKey {
 }
 
 impl signature::RandomizedSigner<Signature> for AsymmetricSigningKey {
-    fn try_sign_with_rng(
+    fn try_sign_with_rng<R: TryCryptoRng + ?Sized>(
         &self,
-        rng: &mut impl CryptoRngCore,
+        rng: &mut R,
         msg: &[u8],
     ) -> Result<Signature, signature::Error> {
         match self {

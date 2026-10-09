@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -8,7 +9,7 @@ use base64ct::{Base64UrlUnpadded, Encoding};
 use chrono::{DateTime, Utc};
 use crc::{CRC_32_ISO_HDLC, Crc};
 use mas_iana::oauth::OAuthTokenTypeHint;
-use rand::{Rng, RngCore, distributions::Alphanumeric};
+use rand::{Rng, RngExt, distr::Alphanumeric};
 use thiserror::Error;
 use ulid::Ulid;
 
@@ -280,7 +281,7 @@ impl TokenType {
     }
 
     /// Generate a token for the given type
-    pub fn generate(self, rng: &mut (impl RngCore + ?Sized)) -> String {
+    pub fn generate(self, rng: &mut (impl Rng + ?Sized)) -> String {
         let random_part: String = rng
             .sample_iter(&Alphanumeric)
             .take(30)
@@ -409,7 +410,7 @@ pub enum TokenFormatError {
 mod tests {
     use std::collections::HashSet;
 
-    use rand::thread_rng;
+    use rand::rng;
 
     use super::*;
 
@@ -469,7 +470,7 @@ mod tests {
         const COUNT: usize = 500; // Generate 500 of each token type
 
         #[expect(clippy::disallowed_methods)]
-        let mut rng = thread_rng();
+        let mut rng = rng();
 
         for t in [
             TokenType::CompatAccessToken,

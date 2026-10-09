@@ -31,7 +31,7 @@ use mas_storage::{
     user::{UserPasswordRepository, UserRepository},
 };
 use opentelemetry::{Key, KeyValue, metrics::Counter};
-use rand::{CryptoRng, RngCore};
+use rand::{CryptoRng, Rng};
 use serde::{Deserialize, Serialize};
 use serde_with::{DurationMilliSeconds, serde_as, skip_serializing_none};
 use thiserror::Error;
@@ -533,7 +533,7 @@ pub(crate) async fn post(
 /// [`Policy::evaluate_compat_login`], return the appropriate `RouteError`
 /// response.
 async fn process_violations_for_compat_login(
-    rng: &mut (dyn RngCore + Send),
+    rng: &mut (dyn Rng + Send),
     clock: &dyn Clock,
     repo: &mut BoxRepository,
     session_limit_config: Option<&SessionLimitConfig>,
@@ -772,7 +772,7 @@ async fn find_lru_compat_sessions_flawed(
 }
 
 async fn token_login(
-    rng: &mut (dyn RngCore + Send),
+    rng: &mut (dyn Rng + Send),
     clock: &dyn Clock,
     repo: &mut BoxRepository,
     policy: &mut Policy,
@@ -913,7 +913,7 @@ async fn token_login(
 }
 
 async fn user_password_login(
-    mut rng: &mut (impl RngCore + CryptoRng + Send),
+    mut rng: &mut (impl CryptoRng + Send),
     clock: &impl Clock,
     password_manager: &PasswordManager,
     limiter: &Limiter,
@@ -1036,7 +1036,7 @@ mod tests {
     use assert_matches::assert_matches;
     use hyper::Request;
     use mas_matrix::{HomeserverConnection, ProvisionRequest};
-    use rand::distributions::{Alphanumeric, DistString};
+    use rand::distr::{Alphanumeric, SampleString};
     use sqlx::PgPool;
 
     use super::*;

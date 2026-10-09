@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -14,8 +15,8 @@ use oauth2_types::{
     scope::{OPENID, PROFILE, Scope},
 };
 use rand::{
-    RngCore,
-    distributions::{Alphanumeric, DistString},
+    Rng,
+    distr::{Alphanumeric, SampleString},
 };
 use serde::Serialize;
 use ulid::Ulid;
@@ -224,7 +225,7 @@ impl AuthorizationGrant {
     }
 
     #[doc(hidden)]
-    pub fn sample(now: DateTime<Utc>, rng: &mut impl RngCore) -> Self {
+    pub fn sample(now: DateTime<Utc>, rng: &mut impl Rng) -> Self {
         Self {
             id: Ulid::from_datetime_with_rng(now, rng),
             stage: AuthorizationGrantStage::Pending,

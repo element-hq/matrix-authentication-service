@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -11,7 +12,7 @@ use camino::Utf8PathBuf;
 use chrono::{DateTime, Utc};
 use figment::providers::{Format, Yaml};
 use mas_config::{PasswordAlgorithm, PasswordHashingScheme};
-use rand::Rng;
+use rand::RngExt;
 use serde::Deserialize;
 use sqlx::postgres::PgConnectOptions;
 use tracing::warn;
@@ -150,7 +151,7 @@ impl Config {
     pub fn adjust_mas_config(
         self,
         mut mas_config: mas_config::RootConfig,
-        rng: &mut impl Rng,
+        rng: &mut impl RngExt,
         now: DateTime<Utc>,
     ) -> mas_config::RootConfig {
         let providers = self.all_oidc_providers();

@@ -13,7 +13,7 @@ use mas_data_model::{
     UserRegistration, UserRegistrationPassword, UserRegistrationToken,
 };
 use mas_storage::user::UserRegistrationRepository;
-use rand::RngCore;
+use rand::Rng;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use url::Url;
@@ -167,7 +167,7 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
     )]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         username: String,
         ip_address: Option<IpAddr>,

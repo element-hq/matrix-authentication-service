@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -15,7 +16,7 @@ use mas_data_model::{
     },
 };
 use oauth2_types::scope::Scope;
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 
 use crate::{Page, Pagination, repository_impl};
@@ -61,7 +62,7 @@ pub trait PersonalSessionRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         owner: PersonalSessionOwner,
         actor_user: &User,
@@ -154,7 +155,7 @@ repository_impl!(PersonalSessionRepository:
 
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         owner: PersonalSessionOwner,
         actor_user: &User,

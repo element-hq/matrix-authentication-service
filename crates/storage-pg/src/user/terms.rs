@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -7,7 +8,7 @@
 use async_trait::async_trait;
 use mas_data_model::{Clock, UlidExt as _, User};
 use mas_storage::user::UserTermsRepository;
-use rand::RngCore;
+use rand::Rng;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use url::Url;
@@ -45,7 +46,7 @@ impl UserTermsRepository for PgUserTermsRepository<'_> {
     )]
     async fn accept_terms(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user: &User,
         terms_url: Url,

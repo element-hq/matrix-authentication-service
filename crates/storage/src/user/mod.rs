@@ -9,7 +9,7 @@
 
 use async_trait::async_trait;
 use mas_data_model::{Clock, User};
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 
 use crate::{Page, Pagination, repository_impl};
@@ -278,7 +278,7 @@ pub trait UserRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         username: String,
     ) -> Result<User, Self::Error>;
@@ -431,7 +431,7 @@ repository_impl!(UserRepository:
     async fn find_by_username(&mut self, username: &str) -> Result<Option<User>, Self::Error>;
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         username: String,
     ) -> Result<User, Self::Error>;

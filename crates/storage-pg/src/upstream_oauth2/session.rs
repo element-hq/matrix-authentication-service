@@ -16,7 +16,7 @@ use mas_storage::{
     pagination::Node,
     upstream_oauth2::{UpstreamOAuthSessionFilter, UpstreamOAuthSessionRepository},
 };
-use rand::RngCore;
+use rand::Rng;
 use sea_query::{
     Expr, ExprTrait, PostgresQueryBuilder, Query, enum_def, extension::postgres::PgExpr,
 };
@@ -253,7 +253,7 @@ impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
     )]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         upstream_oauth_provider: &UpstreamOAuthProvider,
         state_str: String,

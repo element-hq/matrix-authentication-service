@@ -32,7 +32,7 @@ use mas_templates::{
     ToFormState,
 };
 use opentelemetry::{Key, KeyValue, metrics::Counter};
-use rand::Rng;
+use rand::RngExt;
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroizing;
 
@@ -430,7 +430,7 @@ async fn render(
     action: OptionalPostAuthAction,
     repo: &mut impl RepositoryAccess,
     clock: &impl Clock,
-    rng: impl Rng,
+    rng: impl RngExt,
     templates: &Templates,
     homeserver: &dyn HomeserverConnection,
     site_config: &SiteConfig,

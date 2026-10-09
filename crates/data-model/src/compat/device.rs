@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -6,8 +7,8 @@
 
 use oauth2_types::scope::ScopeToken;
 use rand::{
-    RngCore,
-    distributions::{Alphanumeric, DistString},
+    Rng,
+    distr::{Alphanumeric, SampleString},
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -58,7 +59,7 @@ impl Device {
     }
 
     /// Generate a random device ID
-    pub fn generate<R: RngCore + ?Sized>(rng: &mut R) -> Self {
+    pub fn generate<R: Rng + ?Sized>(rng: &mut R) -> Self {
         let id: String = Alphanumeric.sample_string(rng, GENERATED_DEVICE_ID_LENGTH);
         Self { id }
     }

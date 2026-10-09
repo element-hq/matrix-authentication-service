@@ -11,7 +11,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{BrowserSession, Client, Clock, Device, Session, User};
 use oauth2_types::scope::Scope;
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 
 use crate::{Pagination, pagination::Page, repository_impl, user::BrowserSessionFilter};
@@ -348,7 +348,7 @@ pub trait OAuth2SessionRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         client: &Client,
         user: Option<&User>,
@@ -374,7 +374,7 @@ pub trait OAuth2SessionRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add_from_browser_session(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         client: &Client,
         user_session: &BrowserSession,
@@ -408,7 +408,7 @@ pub trait OAuth2SessionRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add_from_client_credentials(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         client: &Client,
         scope: Scope,
@@ -568,7 +568,7 @@ repository_impl!(OAuth2SessionRepository:
 
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         client: &Client,
         user: Option<&User>,
@@ -578,7 +578,7 @@ repository_impl!(OAuth2SessionRepository:
 
     async fn add_from_browser_session(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         client: &Client,
         user_session: &BrowserSession,
@@ -587,7 +587,7 @@ repository_impl!(OAuth2SessionRepository:
 
     async fn add_from_client_credentials(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         client: &Client,
         scope: Scope,

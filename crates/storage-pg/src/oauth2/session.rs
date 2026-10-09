@@ -16,7 +16,7 @@ use mas_storage::{
     pagination::Node,
 };
 use oauth2_types::scope::{Scope, ScopeToken};
-use rand::RngCore;
+use rand::Rng;
 use sea_query::{
     Condition, Expr, ExprTrait, PgFunc, PostgresQueryBuilder, Query, SimpleExpr, enum_def,
     extension::postgres::PgExpr,
@@ -272,7 +272,7 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
     )]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         client: &Client,
         user: Option<&User>,

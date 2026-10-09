@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -58,7 +59,7 @@
 //!     /// Returns [`Self::Error`] if the underlying repository fails
 //!     async fn add(
 //!         &mut self,
-//!         rng: &mut (dyn RngCore + Send),
+//!         rng: &mut (dyn Rng + Send),
 //!         clock: &dyn Clock,
 //!     ) -> Result<FakeData, Self::Error>;
 //! }
@@ -67,7 +68,7 @@
 //!     async fn lookup(&mut self, id: Ulid) -> Result<Option<FakeData>, Self::Error>;
 //!     async fn add(
 //!         &mut self,
-//!         rng: &mut (dyn RngCore + Send),
+//!         rng: &mut (dyn Rng + Send),
 //!         clock: &dyn Clock,
 //!     ) -> Result<FakeData, Self::Error>;
 //! );
