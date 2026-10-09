@@ -22,6 +22,10 @@ export const VALID_LOCALPART_RE = /^[a-z0-9._=/+-]+$/;
 export const normalizeUsername = (value: string): string =>
   value.trim().toLocaleLowerCase();
 
+/** Whether a normalized username is worth sending to the availability check. */
+export const isUsernameCheckable = (normalized: string): boolean =>
+  normalized.length > 0 && VALID_LOCALPART_RE.test(normalized);
+
 /**
  * Well-known policy violation codes, mapped to the key of their translated
  * message. Codes we don't know about fall back to the server's own message.
