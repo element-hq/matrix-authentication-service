@@ -652,6 +652,7 @@ impl FormField for RegisterFormField {
 #[derive(Serialize, Default)]
 pub struct RegisterContext {
     providers: Vec<UpstreamOAuthProvider>,
+    form: FormState<RegisterFormField>,
     next: Option<PostAuthContext>,
 }
 
@@ -664,8 +665,10 @@ impl TemplateContext for RegisterContext {
     where
         Self: Sized,
     {
+        // TODO: samples with errors
         sample_list(vec![RegisterContext {
             providers: Vec::new(),
+            form: FormState::default(),
             next: None,
         }])
     }
@@ -677,46 +680,11 @@ impl RegisterContext {
     pub fn new(providers: Vec<UpstreamOAuthProvider>) -> Self {
         Self {
             providers,
-            next: None,
+            ..Self::default()
         }
     }
 
-    /// Add a post authentication action to the context
-    #[must_use]
-    pub fn with_post_action(self, next: PostAuthContext) -> Self {
-        Self {
-            next: Some(next),
-            ..self
-        }
-    }
-}
-
-/// Context used by the `password_register.html` template
-#[derive(Serialize, Default)]
-pub struct PasswordRegisterContext {
-    form: FormState<RegisterFormField>,
-    next: Option<PostAuthContext>,
-}
-
-impl TemplateContext for PasswordRegisterContext {
-    fn sample<R: Rng>(
-        _now: chrono::DateTime<Utc>,
-        _rng: &mut R,
-        _locales: &[DataLocale],
-    ) -> BTreeMap<SampleIdentifier, Self>
-    where
-        Self: Sized,
-    {
-        // TODO: samples with errors
-        sample_list(vec![PasswordRegisterContext {
-            form: FormState::default(),
-            next: None,
-        }])
-    }
-}
-
-impl PasswordRegisterContext {
-    /// Add an error on the registration form
+    /// Add the state of the registration form to the context
     #[must_use]
     pub fn with_form_state(self, form: FormState<RegisterFormField>) -> Self {
         Self { form, ..self }
