@@ -100,8 +100,8 @@ skip = [
     { name = "rand_chacha", version = "0.3.1" },
     { name = "rand_core", version = "0.6.4" },
     { name = "getrandom", version = "0.2.16" },
-    # opa-wasm 0.3 is on rand 0.10, opentelemetry_sdk, sentry and ulid are
-    # still on rand 0.9
+    # opa-wasm 0.3 and sentry are on rand 0.10, opentelemetry_sdk and ulid
+    # are still on rand 0.9
     { name = "rand", version = "0.9.4" },
     { name = "rand_core", version = "0.9.3" },
     { name = "getrandom", version = "0.3.3" },
