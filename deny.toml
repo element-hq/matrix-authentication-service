@@ -100,7 +100,7 @@ skip = [
     { name = "rand_chacha", version = "0.3.1" },
     { name = "rand_core", version = "0.6.4" },
     { name = "getrandom", version = "0.2.16" },
-    # ...and opentelemetry_sdk, sentry and ulid pull the 0.9 generation
+    # ...and opentelemetry_sdk and sentry pull the 0.9 generation
     { name = "rand", version = "0.9.4" },
     { name = "rand_chacha", version = "0.9.0" },
     { name = "rand_core", version = "0.9.3" },
