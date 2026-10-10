@@ -26,7 +26,7 @@ use mas_data_model::{
     UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
     UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderPkceMode,
     UpstreamOAuthProviderTokenAuthMethod, User, UserEmailAuthentication,
-    UserEmailAuthenticationCode, UserRecoverySession, UserRegistration,
+    UserEmailAuthenticationCode, UserRecoverySession, UserRegistration, UserRegistrationToken,
 };
 use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
@@ -637,12 +637,15 @@ pub enum RegisterFormField {
 
     /// The terms of service agreement field
     AcceptTerms,
+
+    /// The registration token (a.k.a. invite code) field
+    Token,
 }
 
 impl FormField for RegisterFormField {
     fn keep(&self) -> bool {
         match self {
-            Self::Username | Self::Email | Self::AcceptTerms => true,
+            Self::Username | Self::Email | Self::AcceptTerms | Self::Token => true,
             Self::Password | Self::PasswordConfirm => false,
         }
     }
@@ -678,12 +681,46 @@ impl RegisterPageProvider {
     }
 }
 
+/// The identity an invite code was issued for
+#[derive(Serialize)]
+struct InvitePinnedIdentity {
+    username: Option<String>,
+    email: Option<String>,
+    passwordless: bool,
+}
+
+/// The invite code the registration page was opened with, as the island sees it
+#[derive(Serialize)]
+pub struct InviteContext {
+    valid: bool,
+
+    #[serde(flatten)]
+    pinned: Option<InvitePinnedIdentity>,
+}
+
+impl InviteContext {
+    /// Describe the invite code a link carried, `None` standing for a code
+    /// which is unknown, expired, revoked or exhausted
+    #[must_use]
+    pub fn new(token: Option<&UserRegistrationToken>) -> Self {
+        Self {
+            valid: token.is_some(),
+            pinned: token.map(|token| InvitePinnedIdentity {
+                username: token.username.clone(),
+                email: token.email.clone(),
+                passwordless: token.passwordless,
+            }),
+        }
+    }
+}
+
 /// Context used by the `register/index.html` template
 #[derive(Serialize)]
 pub struct RegisterContext {
     providers: Vec<RegisterPageProvider>,
     login_link: String,
     form: FormState<RegisterFormField>,
+    invite: Option<InviteContext>,
 }
 
 impl TemplateContext for RegisterContext {
@@ -717,6 +754,7 @@ impl RegisterContext {
                 .collect(),
             login_link: url_builder.relative_url_for(&Login::from(post_auth_action.cloned())),
             form: FormState::default(),
+            invite: None,
         }
     }
 
@@ -724,6 +762,15 @@ impl RegisterContext {
     #[must_use]
     pub fn with_form_state(self, form: FormState<RegisterFormField>) -> Self {
         Self { form, ..self }
+    }
+
+    /// Set the invite code the page was opened with
+    #[must_use]
+    pub fn with_invite(self, invite: InviteContext) -> Self {
+        Self {
+            invite: Some(invite),
+            ..self
+        }
     }
 }
 

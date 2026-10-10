@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 
@@ -27,6 +28,8 @@ Please see LICENSE files in the repository root for full details.
       {{ _("mas.errors.field_required") }}
     {% elif error.kind == "exists" and field_name == "username" %}
       {{ _("mas.errors.username_taken") }}
+    {% elif error.kind == "mismatch" and field_name == "token" %}
+      {{ _("mas.errors.registration_token_mismatch") }}
     {% elif error.kind == "policy" %}
       {% if error.code == "username-too-short" %}
         {{ _("mas.errors.username_too_short") }}
@@ -53,6 +56,8 @@ Please see LICENSE files in the repository root for full details.
       {% endif %}
     {% elif error.kind == "password_mismatch" %}
       {{ _("mas.errors.password_mismatch") }}
+    {% elif error.kind == "invalid" %}
+      {{ _("mas.errors.field_invalid") }}
     {% else %}
       {{ error.kind }}
     {% endif %}
