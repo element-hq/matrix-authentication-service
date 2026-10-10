@@ -26,7 +26,7 @@ fn token_fits(
         && token
             .email
             .as_deref()
-            .is_none_or(|pinned| Some(pinned) == email)
+            .is_none_or(|pinned| email.is_some_and(|email| pinned.eq_ignore_ascii_case(email)))
         && (token.passwordless
             || registration.password.is_some()
             || registration

@@ -325,6 +325,39 @@ mod tests {
         );
     }
 
+    /// A token's pinned email address matches whatever its case
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_accepts_token_pinning_the_email_in_another_case(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        add_registration_token(
+            &state,
+            "invite_alice",
+            None,
+            Some("Alice@Example.com"),
+            false,
+        )
+        .await;
+        let registration = add_registration(
+            &state,
+            &cookies,
+            "alice",
+            Some("alice@example.com"),
+            true,
+            None,
+        )
+        .await;
+
+        let response = submit_token(&state, &cookies, &registration, "invite_alice").await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(
+            LOCATION,
+            &mas_router::RegisterFinish::new(registration.id).path_and_query(),
+        );
+    }
+
     /// A registration linked upstream needs no password, so any token fits it
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_accepts_token_not_passwordless_upstream(pool: PgPool) {
