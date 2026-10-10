@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -50,6 +51,7 @@ impl Options {
             &config.account,
             &config.captcha,
             &config.oauth,
+            &config.guest_invites,
         )?;
 
         // Load and compile the templates

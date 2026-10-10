@@ -1032,6 +1032,20 @@ oauth:
   device_code_user_code_auto_fill_enabled: false
 ```
 
+## `guest_invites`
+
+Configuration section for inviting guests to rooms by email.
+
+```yaml
+guest_invites:
+  # The client URL to send invitees to once they are signed in, with
+  # `{room_id}` standing for the percent-encoded room ID.
+  #
+  # MAS refuses to start if it isn't an absolute HTTP or HTTPS URL or doesn't
+  # contain `{room_id}`.
+  #client_room_url: "https://app.element.io/#/room/{room_id}"
+```
+
 ## `experimental`
 
 Settings that may change or be removed in future versions.
