@@ -17,12 +17,12 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt as _, ProtectedForm},
 };
-use mas_data_model::{BoxClock, BoxRng, SiteConfig, UpstreamOAuthProvider};
+use mas_data_model::{BoxClock, BoxRng, SiteConfig, UpstreamOAuthProvider, UserRegistrationToken};
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::{Register, UpstreamOAuth2Authorize, UrlBuilder};
 use mas_storage::{
-    BoxRepository, upstream_oauth2::UpstreamOAuthProviderRepository,
+    BoxRepository, RepositoryError, upstream_oauth2::UpstreamOAuthProviderRepository,
     user::UserRegistrationTokenRepository,
 };
 use mas_templates::{
@@ -108,7 +108,7 @@ pub(crate) async fn get(
         .is_some_and(|token| token.passwordless);
     let token_invalid = token.is_some() && registration_token.is_none();
 
-    let providers = repo.upstream_oauth_provider().all_enabled().await?;
+    let providers = offered_providers(&mut repo, registration_token.as_ref()).await?;
 
     // Without a password form there is nothing to show beyond the provider
     // buttons, which isn't worth a page for one provider or none. A
@@ -158,6 +158,19 @@ pub(crate) async fn get(
     let content = templates.render_register(&ctx)?;
 
     Ok((cookie_jar, Html(content)).into_response())
+}
+
+/// The upstream providers the registration page offers: none to an invite,
+/// which already decides who registers
+async fn offered_providers(
+    repo: &mut BoxRepository,
+    registration_token: Option<&UserRegistrationToken>,
+) -> Result<Vec<UpstreamOAuthProvider>, RepositoryError> {
+    if registration_token.is_some_and(UserRegistrationToken::is_invite) {
+        return Ok(Vec::new());
+    }
+
+    repo.upstream_oauth_provider().all_enabled().await
 }
 
 /// A localpart longer than this can never become an MXID (`@` + localpart +
@@ -314,7 +327,7 @@ pub(crate) async fn post(
             &templates,
             &url_builder,
             site_config.captcha.clone(),
-            Some(InviteContext::new(None)),
+            self::password::InviteCode::Invalid,
         )
         .await?;
 
@@ -363,11 +376,13 @@ mod tests {
         UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderTokenAuthMethod,
     };
     use mas_iana::jose::JsonWebSignatureAlg;
+    use mas_router::{Route as _, UpstreamOAuth2Authorize};
     use mas_storage::{
         RepositoryAccess,
         upstream_oauth2::{UpstreamOAuthProviderParams, UpstreamOAuthSessionRepository},
         user::UserRegistrationTokenRepository as _,
     };
+    use mas_templates::escape_html;
     use oauth2_types::scope::{OPENID, Scope};
     use sqlx::PgPool;
     use ulid::Ulid;
@@ -997,6 +1012,82 @@ mod tests {
                 assert_eq!(state["errors"], errors, "errors on {field}");
             }
             assert_eq!(form["fields"]["token"]["value"], serde_json::Value::Null);
+        }
+    }
+
+    /// An invite registration's form offers no upstream provider, also when it
+    /// comes back with an error, while the sign-in page keeps them. A code
+    /// which isn't an invite still offers them.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_invite_hides_providers(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let provider_id = provider(&state).await;
+        let providers = serde_json::json!([{
+            "name": "Upstream Ltd.",
+            "brand": null,
+            "id": provider_id.to_string(),
+        }]);
+
+        for (token, username, email, passwordless) in [
+            ("invite", Some("alice"), Some("alice@example.com"), true),
+            ("username_only", Some("bob"), None, true),
+            ("email_only", None, Some("carol@example.com"), true),
+            (
+                "not_passwordless",
+                Some("dave"),
+                Some("dave@example.com"),
+                false,
+            ),
+        ] {
+            add_registration_token(&state, token, username, email, passwordless).await;
+        }
+        // The invite's username is taken, so its form comes back with an error
+        let mut repo = state.repository().await.unwrap();
+        repo.user()
+            .add(&mut state.rng(), &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let request = cookies.with_cookies(Request::get("/register?token=invite").empty());
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-providers"),
+            serde_json::json!([])
+        );
+
+        let request = cookies.with_cookies(Request::post("/register").form(serde_json::json!({
+            "csrf": csrf_token(response.body()),
+            "token": "invite",
+            "accept_terms": "on",
+        })));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-providers"),
+            serde_json::json!([])
+        );
+
+        let response = state.request(Request::get("/login").empty()).await;
+        response.assert_status(StatusCode::OK);
+        assert!(response.body().contains(&escape_html(
+            &UpstreamOAuth2Authorize::new(provider_id).path_and_query()
+        )));
+
+        for token in ["username_only", "email_only", "not_passwordless"] {
+            let request = Request::get(format!("/register?token={token}")).empty();
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::OK);
+            assert_eq!(
+                json_attribute(response.body(), "data-providers"),
+                providers,
+                "providers with {token}"
+            );
         }
     }
 
