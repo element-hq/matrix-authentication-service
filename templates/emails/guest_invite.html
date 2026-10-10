@@ -1,0 +1,69 @@
+{#
+Copyright 2026 Element Creations Ltd.
+
+SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE files in the repository root for full details.
+-#}
+
+{%- set _ = translator(lang) -%}
+{%- if inviter_name and inviter -%}
+  {%- if room_name -%}
+    {%- set headline = _("mas.emails.guest_invite.headline_from_name_and_mxid", name=inviter_name, mxid=inviter, room=room_name, server_name=branding.server_name) -%}
+  {%- else -%}
+    {%- set headline = _("mas.emails.guest_invite.headline_from_name_and_mxid_unnamed_room", name=inviter_name, mxid=inviter, server_name=branding.server_name) -%}
+  {%- endif -%}
+{%- elif inviter_name or inviter -%}
+  {%- if room_name -%}
+    {%- set headline = _("mas.emails.guest_invite.headline_from", inviter=inviter_name or inviter, room=room_name, server_name=branding.server_name) -%}
+  {%- else -%}
+    {%- set headline = _("mas.emails.guest_invite.headline_from_unnamed_room", inviter=inviter_name or inviter, server_name=branding.server_name) -%}
+  {%- endif -%}
+{%- elif room_name -%}
+  {%- set headline = _("mas.emails.guest_invite.headline", room=room_name, server_name=branding.server_name) -%}
+{%- else -%}
+  {%- set headline = _("mas.emails.guest_invite.headline_unnamed_room", server_name=branding.server_name) -%}
+{%- endif -%}
+
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="{{ lang }}">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <style type="text/css">
+        a#button:hover { background-color: #3C4045!important; }
+        a#button:active { background-color: #4C5158!important; }
+    </style>
+</head>
+
+<body style="
+    color: black;
+    background-color: white;
+    font-family: Inter, system-ui, ui-sans-serif, sans-serif;
+">
+    {{ headline }}
+    {{ _("mas.emails.guest_invite.approval") }}<br />
+    <br />
+    {{ _("mas.emails.guest_invite.click_button") }}<br />
+    <br />
+    <a id="button" href="{{ invite_link }}" target="_blank" style="
+        display: inline-block;
+        transition: background-color 0.1s ease;
+        font-size: 18px;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #FFF;
+        background-color: #1B1D22;
+        padding: 16px 32px;
+        padding: 1rem 2rem;
+        border-radius: 32px;
+        border-radius: 2rem;
+        text-decoration: none;
+    ">{{ _("mas.emails.guest_invite.accept") }}</a><br />
+    <p style="font-size: 14px; font-size: 0.875rem;">
+      {{ _("mas.emails.guest_invite.fallback") }} {{ _("mas.emails.guest_invite.copy_link") }}
+    </p>
+    <p style="font-size: 14px; font-size: 0.875rem;">
+      <a href="{{ invite_link }}" target="_blank">{{ invite_link }}</a>
+    </p>
+    {{ _("mas.emails.guest_invite.you_can_ignore") }}
+</body>
+</html>

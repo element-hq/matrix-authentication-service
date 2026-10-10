@@ -2005,6 +2005,92 @@
         }
       }
     },
+    "/api/admin/v1/invite-guests": {
+      "post": {
+        "tags": [
+          "guest-invite"
+        ],
+        "summary": "Invite a list of email addresses to a room as guests",
+        "description": "Mints a single-use, passwordless registration token for each guest, pinned to their address and username, and emails them a link to register with it and open the room. The links are only ever sent to the guests, so they are not in the response.",
+        "operationId": "inviteGuests",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteGuestsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "The invite emails were scheduled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteGuestsResponse"
+                },
+                "example": {
+                  "scheduled": 2
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has an invalid room ID, email or username, no invites, a repeated username, or an invite the registration policy refuses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Invite for \"alice@example.com\" with username \"guest-abcdef\" is not allowed: email: email domain is banned"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Guest invites are disabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Guest invites are disabled"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A username is already taken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Username \"alice\" is already taken"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/users": {
       "get": {
         "tags": [
@@ -6494,6 +6580,88 @@
           "data"
         ]
       },
+      "InviteGuestsRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/invite-guests` endpoint",
+        "type": "object",
+        "properties": {
+          "room_id": {
+            "description": "The room the guests are invited to",
+            "type": "string",
+            "example": "!room:example.com"
+          },
+          "room_name": {
+            "description": "The name of the room, shown in the invite email",
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Project X"
+          },
+          "inviter": {
+            "description": "The Matrix ID of the user sending the invites, shown in the invite\nemail. It is left out if it isn't a valid Matrix ID.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "@bob:example.com"
+          },
+          "inviter_name": {
+            "description": "The display name of the user sending the invites, shown in the invite\nemail",
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Bob"
+          },
+          "invites": {
+            "description": "The guests to invite. An address given more than once, ignoring case,\nis invited once.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GuestInvite"
+            }
+          }
+        },
+        "required": [
+          "room_id",
+          "invites"
+        ]
+      },
+      "GuestInvite": {
+        "title": "A guest to invite to the room",
+        "type": "object",
+        "properties": {
+          "email": {
+            "description": "The address to send the invite to. The guest can only register with\nthis address.",
+            "type": "string",
+            "format": "email",
+            "example": "alice@example.com"
+          },
+          "username": {
+            "description": "The username the guest registers with",
+            "type": "string",
+            "example": "guest-abcdef"
+          }
+        },
+        "required": [
+          "email",
+          "username"
+        ]
+      },
+      "InviteGuestsResponse": {
+        "title": "Response to the `POST /api/admin/v1/invite-guests` endpoint",
+        "type": "object",
+        "properties": {
+          "scheduled": {
+            "description": "How many guests were scheduled an invite email, after dropping repeated\naddresses",
+            "type": "integer",
+            "format": "uint",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "scheduled"
+        ]
+      },
       "UserFilter": {
         "type": "object",
         "properties": {
@@ -7920,6 +8088,10 @@
     {
       "name": "compat-session",
       "description": "Manage compatibility sessions from legacy clients"
+    },
+    {
+      "name": "guest-invite",
+      "description": "Invite guests to rooms by email"
     },
     {
       "name": "policy-data",

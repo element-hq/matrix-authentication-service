@@ -2896,12 +2896,22 @@
       "description": "Configuration section for inviting guests to rooms by email",
       "type": "object",
       "properties": {
+        "enabled": {
+          "description": "Whether the `POST /api/admin/v1/invite-guests` endpoint is enabled.\nDefaults to `false`.",
+          "type": "boolean"
+        },
         "client_room_url": {
-          "description": "The client URL to send invitees to once they are signed in, with\n`{room_id}` standing for the room ID, e.g.\n`https://app.element.io/#/room/{room_id}`.",
+          "description": "The client URL to send invitees to once they are signed in, with\n`{room_id}` standing for the room ID, e.g.\n`https://app.element.io/#/room/{room_id}`. Required when `enabled` is\nset.",
           "type": [
             "string",
             "null"
           ]
+        },
+        "invite_lifetime": {
+          "description": "How long an invite link stays valid, in seconds. Defaults to 7 days.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 1
         }
       }
     },

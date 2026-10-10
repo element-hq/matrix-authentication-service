@@ -129,7 +129,13 @@ pub struct SiteConfig {
     /// query parameter to auto-fill the user code.
     pub device_code_user_code_auto_fill_enabled: bool,
 
+    /// Whether the guest invites admin endpoint is enabled.
+    pub guest_invites_enabled: bool,
+
     /// The client URL to send invitees to, with `{room_id}` standing for the
     /// room ID.
     pub guest_invites_client_room_url: Option<String>,
+
+    /// How long a guest invite link stays valid.
+    pub guest_invite_lifetime: Duration,
 }
