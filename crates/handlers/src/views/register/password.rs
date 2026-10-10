@@ -127,7 +127,11 @@ pub(super) async fn register(
             state.add_error_on_field(RegisterFormField::Username, FieldError::Invalid);
         }
 
-        if pinned_email.is_some_and(|pinned| Some(pinned) != email.as_deref()) {
+        if pinned_email.is_some_and(|pinned| {
+            !email
+                .as_deref()
+                .is_some_and(|email| pinned.eq_ignore_ascii_case(email))
+        }) {
             state.add_error_on_field(RegisterFormField::Email, FieldError::Invalid);
         }
 
@@ -1128,6 +1132,39 @@ mod tests {
         // No registration was created
         let mut repo = state.repository().await.unwrap();
         assert!(!repo.user().exists("mallory").await.unwrap());
+    }
+
+    /// An invite code's pinned email address matches whatever its case
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_token_email_in_another_case(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        add_registration_token(
+            &state,
+            "invite_alice",
+            None,
+            Some("alice@example.com"),
+            false,
+        )
+        .await;
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "username": "alice",
+                "email": "Alice@Example.com",
+                "password": "correcthorsebatterystaple",
+                "password_confirm": "correcthorsebatterystaple",
+                "token": "invite_alice",
+                "accept_terms": "on",
+            }),
+        );
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
     }
 
     /// An invite code which pins an email address can't be used to register
