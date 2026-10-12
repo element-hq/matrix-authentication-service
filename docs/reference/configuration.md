@@ -704,7 +704,9 @@ telemetry:
     # Sample rate for event submissions, between 0.0 and 1.0. Defaults to 1.0.
     #sample_rate: 1.0
 
-    # Sample rate for tracing transactions, between 0.0 and 1.0. Defaults to 0.0.
+    # Sample rate for tracing transactions, between 0.0 and 1.0. Tracing is
+    # disabled if not set. A rate of 0.0 still records the transactions of
+    # requests with a sampled `sentry-trace` header.
     #traces_sample_rate: 0.0
 ```
 

@@ -1490,7 +1490,7 @@
           "maximum": 1.0
         },
         "traces_sample_rate": {
-          "description": "Sample rate for tracing transactions\n\nDefaults to `0.0` if not set.",
+          "description": "Sample rate for tracing transactions\n\nTracing is disabled if not set. A rate of `0.0` still records the\ntransactions of requests with a sampled `sentry-trace` header.",
           "type": [
             "number",
             "null"
