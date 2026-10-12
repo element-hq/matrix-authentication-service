@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -7,7 +8,7 @@
 use async_trait::async_trait;
 use chrono::Duration;
 use mas_data_model::{Clock, CompatAccessToken, CompatSession};
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 
 use crate::repository_impl;
@@ -66,7 +67,7 @@ pub trait CompatAccessTokenRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         compat_session: &CompatSession,
         token: String,
@@ -98,7 +99,7 @@ repository_impl!(CompatAccessTokenRepository:
 
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         compat_session: &CompatSession,
         token: String,

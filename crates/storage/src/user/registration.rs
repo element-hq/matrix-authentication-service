@@ -11,7 +11,7 @@ use mas_data_model::{
     Clock, UpstreamOAuthAuthorizationSession, UserEmailAuthentication, UserRegistration,
     UserRegistrationToken,
 };
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 use url::Url;
 
@@ -56,7 +56,7 @@ pub trait UserRegistrationRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         username: String,
         ip_address: Option<IpAddr>,
@@ -227,7 +227,7 @@ repository_impl!(UserRegistrationRepository:
     async fn lookup(&mut self, id: Ulid) -> Result<Option<UserRegistration>, Self::Error>;
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         username: String,
         ip_address: Option<IpAddr>,

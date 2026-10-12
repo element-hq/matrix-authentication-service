@@ -11,7 +11,7 @@
 use async_trait::async_trait;
 use mas_data_model::{Clock, UlidExt as _, User};
 use mas_storage::user::{UserFilter, UserRepository};
-use rand::RngCore;
+use rand::Rng;
 use sea_query::{
     Expr, ExprTrait, PostgresQueryBuilder, Query, SimpleExpr, extension::postgres::PgExpr as _,
 };
@@ -295,7 +295,7 @@ impl UserRepository for PgUserRepository<'_> {
     )]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         username: String,
     ) -> Result<User, Self::Error> {
