@@ -81,7 +81,7 @@ const EndBrowserSessionButton: React.FC<Props> = ({ session, size }) => {
       }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["sessionsOverview"] });
-      queryClient.invalidateQueries({ queryKey: ["appSessionList"] });
+      queryClient.invalidateQueries({ queryKey: ["browserSessionList"] });
       queryClient.invalidateQueries({
         queryKey: ["sessionDetail", data.endBrowserSession.browserSession?.id],
       });
