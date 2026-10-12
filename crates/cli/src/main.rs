@@ -118,13 +118,13 @@ async fn try_main() -> anyhow::Result<ExitCode> {
         .context("Failed to load telemetry config")?;
 
     // Setup Sentry
-    // Unlike leaving it unset, a traces sample rate of 0.0 still follows the
-    // sampling decision of an incoming `sentry-trace` header.
     let mut sentry_options = sentry::ClientOptions::new()
         .transport(SentryTransportFactory::new())
         .release(VERSION)
-        .sample_rate(telemetry_config.sentry.sample_rate.unwrap_or(1.0))
-        .traces_sample_rate(telemetry_config.sentry.traces_sample_rate.unwrap_or(0.0));
+        .sample_rate(telemetry_config.sentry.sample_rate.unwrap_or(1.0));
+    if let Some(traces_sample_rate) = telemetry_config.sentry.traces_sample_rate {
+        sentry_options = sentry_options.traces_sample_rate(traces_sample_rate);
+    }
     if let Some(environment) = telemetry_config.sentry.environment.clone() {
         sentry_options = sentry_options.environment(environment);
     }
