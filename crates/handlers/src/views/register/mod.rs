@@ -177,12 +177,16 @@ pub(crate) async fn post(
 ) -> Result<Response, InternalError> {
     let user_agent = user_agent.map(|ua| ua.as_str().to_owned());
 
-    let Ok(form) = cookie_jar.verify_form(&clock, form) else {
+    let Ok(mut form) = cookie_jar.verify_form(&clock, form) else {
         // An invalid token most likely comes from a page left open past the CSRF token lifetime
         tracing::debug!("Invalid CSRF token on the registration form, redirecting to a fresh one");
         let destination = Register::from(query.post_auth_action);
         return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
     };
+
+    // Matrix localparts are lowercase, so a stray capital or surrounding space
+    // isn't worth an error
+    form.username = form.username.trim().to_lowercase();
 
     // Carry the username along so we can prefill it if the user gets to pick
     // one when they come back
@@ -201,9 +205,8 @@ pub(crate) async fn post(
         };
 
         // The username is carried in a cookie, so its size has to be bounded
-        let username = form.username.trim();
-        let username = if username.len() <= MAX_USERNAME_LENGTH {
-            username
+        let username = if form.username.len() <= MAX_USERNAME_LENGTH {
+            form.username.as_str()
         } else {
             ""
         };

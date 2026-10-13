@@ -364,6 +364,55 @@ mod tests {
         },
     };
 
+    /// The username is trimmed and lowercased before anything checks it
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_normalizes_username(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let request = Request::get(&*mas_router::Register::default().path_and_query()).empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        let csrf_token = response
+            .body()
+            .split("name=\"csrf\" value=\"")
+            .nth(1)
+            .unwrap()
+            .split('\"')
+            .next()
+            .unwrap();
+
+        let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "username": " John ",
+                "email": "john@example.com",
+                "password": "correcthorsebatterystaple",
+                "password_confirm": "correcthorsebatterystaple",
+                "accept_terms": "on",
+            }),
+        );
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        let location = response.headers().get(LOCATION).unwrap();
+        let id = location
+            .to_str()
+            .unwrap()
+            .rsplit('/')
+            .nth(1)
+            .unwrap()
+            .parse()
+            .unwrap();
+
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
+        assert_eq!(registration.username, "john");
+    }
+
     /// Test the registration happy path
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register(pool: PgPool) {
