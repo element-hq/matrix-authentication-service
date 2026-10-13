@@ -11,7 +11,7 @@ use chrono::Duration;
 use hyper::StatusCode;
 use lettre::Address;
 use mas_axum_utils::record_error;
-use mas_data_model::{BoxRng, SiteConfig};
+use mas_data_model::{BoxRng, SiteConfig, USERNAME_TEMPLATE_PLACEHOLDER, username_template_sample};
 use mas_policy::Policy;
 use mas_storage::queue::{QueueJobRepositoryExt as _, SendRoomInviteEmailJob};
 use rand::distr::{Alphanumeric, SampleString};
@@ -54,6 +54,9 @@ pub enum RouteError {
         source: lettre::address::AddressError,
     },
 
+    #[error("Username {0:?} has more than one {{random}}")]
+    InvalidUsernameTemplate(String),
+
     #[error("Username {0:?} is given twice")]
     DuplicateUsername(String),
 
@@ -86,6 +89,7 @@ impl IntoResponse for RouteError {
             Self::InvalidRoomId(_)
             | Self::NoInvites
             | Self::EmailNotValid { .. }
+            | Self::InvalidUsernameTemplate(_)
             | Self::DuplicateUsername(_)
             | Self::NotAllowed { .. } => StatusCode::BAD_REQUEST,
             Self::UsernameTaken(_) => StatusCode::CONFLICT,
@@ -104,8 +108,10 @@ pub struct Invite {
     #[schemars(email, example = &"alice@example.com")]
     email: String,
 
-    /// The username the invitee registers with
-    #[schemars(example = &"user-abcdef")]
+    /// The username the invitee registers with, or a template for it: a value
+    /// with one `{random}`, which registering fills in with random lowercase
+    /// letters and digits
+    #[schemars(example = &"user-{random}")]
     username: String,
 }
 
@@ -151,9 +157,9 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         .summary("Invite a list of email addresses to a room")
         .description(
             "Mints a single-use, passwordless registration token for each invite, pinned to its \
-             address and username, and emails the address a link to register with the token and \
-             open the room. The links are only ever sent to the addresses, so they are not in \
-             the response.",
+             address and its username, or username template, and emails the address a link to \
+             register with the token and open the room. The links are only ever sent to the \
+             addresses, so they are not in the response.",
         )
         .tag("room-invite")
         .response_with::<202, Json<Response>, _>(|t| {
@@ -163,12 +169,12 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         .response_with::<400, RouteError, _>(|t| {
             let response = ErrorResponse::from_error(&RouteError::NotAllowed {
                 email: "alice@example.com".to_owned(),
-                username: "user-abcdef".to_owned(),
+                username: "user-{random}".to_owned(),
                 violations: vec!["email: email domain is banned".to_owned()],
             });
             t.description(
-                "The request has an invalid room ID, email or username, no invites, a repeated \
-                 username, or an invite the registration policy refuses",
+                "The request has an invalid room ID, email, username or username template, no \
+                 invites, a repeated username, or an invite the registration policy refuses",
             )
             .example(response)
         })
@@ -237,7 +243,19 @@ pub async fn handler(
             continue;
         }
 
-        if !usernames.insert(invite.username.clone()) {
+        // A template is checked by a sample of what it fills in to. Every invite
+        // may carry the same one, and the name it fills in to is only known when
+        // registering, which checks it again.
+        let template_sample = if invite.username.contains(USERNAME_TEMPLATE_PLACEHOLDER) {
+            let Some(sample) = username_template_sample(&invite.username) else {
+                return Err(RouteError::InvalidUsernameTemplate(invite.username));
+            };
+            Some(sample)
+        } else {
+            None
+        };
+
+        if template_sample.is_none() && !usernames.insert(invite.username.clone()) {
             return Err(RouteError::DuplicateUsername(invite.username));
         }
 
@@ -246,7 +264,7 @@ pub async fn handler(
         let result = policy
             .evaluate_register(mas_policy::RegisterInput {
                 registration_method: mas_policy::RegistrationMethod::Password,
-                username: &invite.username,
+                username: template_sample.as_deref().unwrap_or(&invite.username),
                 email: Some(&invite.email),
                 // The request comes from the inviter's homeserver, not the invitee
                 requester: mas_policy::Requester::default(),
@@ -269,9 +287,9 @@ pub async fn handler(
             });
         }
 
-        // A token pins the username, so the recipient of a token pinned to a
-        // name someone else already has can never finish registering
-        if repo.user().exists(&invite.username).await? {
+        // The recipient of a token pinned to a name someone else already has
+        // can never finish registering
+        if template_sample.is_none() && repo.user().exists(&invite.username).await? {
             return Err(RouteError::UsernameTaken(invite.username));
         }
 
@@ -522,6 +540,40 @@ mod tests {
         assert_eq!(tokens[0].email.as_deref(), Some("Alice@Example.com"));
     }
 
+    /// Every invite may carry the same username template, which the minted
+    /// tokens store as is. A template is never taken.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_invite_username_template(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+
+        let mut repo = state.repository().await.unwrap();
+        repo.user()
+            .add(&mut state.rng(), &state.clock, "user-{random}".to_owned())
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let (status, _) = invite(
+            &mut state,
+            serde_json::json!({
+                "room_id": "!room:example.com",
+                "invites": [
+                    { "email": "alice@example.com", "username": "user-{random}" },
+                    { "email": "bob@example.com", "username": "user-{random}" },
+                ],
+            }),
+        )
+        .await;
+        assert_eq!(status, StatusCode::ACCEPTED);
+
+        let tokens = tokens(&state).await;
+        assert_eq!(tokens.len(), 2);
+        for token in &tokens {
+            assert_eq!(token.username.as_deref(), Some("user-{random}"));
+        }
+    }
+
     /// A token pinned to a username nobody can register with is refused, rather
     /// than emailed out as a dead link
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -565,7 +617,9 @@ mod tests {
             .json(serde_json::json!({
                 "data": {
                     "banned_domains": ["banned.example"],
-                    "registration": { "banned_usernames": { "literals": ["user-banned"] } },
+                    "registration": {
+                        "banned_usernames": { "literals": ["user-banned"], "prefixes": ["banned-"] },
+                    },
                 },
             }));
         state
@@ -585,6 +639,14 @@ mod tests {
             (
                 serde_json::json!({ "email": "bob@banned.example", "username": "user-banned" }),
                 r#"Invite for "bob@banned.example" with username "user-banned" is not allowed: email: email domain is banned; username: username is banned"#,
+            ),
+            (
+                serde_json::json!({ "email": "bob@example.com", "username": "banned-{random}" }),
+                r#"Invite for "bob@example.com" with username "banned-{random}" is not allowed: username: username is banned"#,
+            ),
+            (
+                serde_json::json!({ "email": "bob@example.com", "username": "User-{random}" }),
+                r#"Invite for "bob@example.com" with username "User-{random}" is not allowed: username: username contains invalid characters"#,
             ),
         ] {
             let (status, title) = invite_one(&mut state, invite).await;
@@ -647,6 +709,13 @@ mod tests {
                     ],
                 }),
                 r#"Username "user-a" is given twice"#,
+            ),
+            (
+                serde_json::json!({
+                    "room_id": "!room:example.com",
+                    "invites": [{ "email": "alice@example.com", "username": "user-{random}-{random}" }],
+                }),
+                r#"Username "user-{random}-{random}" has more than one {random}"#,
             ),
         ] {
             let (status, title) = invite(&mut state, body).await;

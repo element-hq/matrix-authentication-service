@@ -2011,7 +2011,7 @@
           "room-invite"
         ],
         "summary": "Invite a list of email addresses to a room",
-        "description": "Mints a single-use, passwordless registration token for each invite, pinned to its address and username, and emails the address a link to register with the token and open the room. The links are only ever sent to the addresses, so they are not in the response.",
+        "description": "Mints a single-use, passwordless registration token for each invite, pinned to its address and its username, or username template, and emails the address a link to register with the token and open the room. The links are only ever sent to the addresses, so they are not in the response.",
         "operationId": "createRoomInvites",
         "requestBody": {
           "content": {
@@ -2038,7 +2038,7 @@
             }
           },
           "400": {
-            "description": "The request has an invalid room ID, email or username, no invites, a repeated username, or an invite the registration policy refuses",
+            "description": "The request has an invalid room ID, email, username or username template, no invites, a repeated username, or an invite the registration policy refuses",
             "content": {
               "application/json": {
                 "schema": {
@@ -2047,7 +2047,7 @@
                 "example": {
                   "errors": [
                     {
-                      "title": "Invite for \"alice@example.com\" with username \"user-abcdef\" is not allowed: email: email domain is banned"
+                      "title": "Invite for \"alice@example.com\" with username \"user-{random}\" is not allowed: email: email domain is banned"
                     }
                   ]
                 }
@@ -6637,9 +6637,9 @@
             "example": "alice@example.com"
           },
           "username": {
-            "description": "The username the invitee registers with",
+            "description": "The username the invitee registers with, or a template for it: a value\nwith one `{random}`, which registering fills in with random lowercase\nletters and digits",
             "type": "string",
-            "example": "user-abcdef"
+            "example": "user-{random}"
           }
         },
         "required": [
