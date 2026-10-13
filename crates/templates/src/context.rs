@@ -527,8 +527,8 @@ pub enum PostAuthContextInner {
     /// Go to the account management page
     ManageAccount,
 
-    /// Open a room in the client
-    OpenRoom,
+    /// Continue a room invite, by opening its room in the client
+    ContinueRoomInvite,
 }
 
 /// Context used in login screen, for the post-auth action to do

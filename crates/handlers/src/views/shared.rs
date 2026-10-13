@@ -104,7 +104,7 @@ impl OptionalPostAuthAction {
 
             PostAuthAction::ManageAccount { .. } => PostAuthContextInner::ManageAccount,
 
-            PostAuthAction::OpenRoom { .. } => PostAuthContextInner::OpenRoom,
+            PostAuthAction::ContinueRoomInvite { .. } => PostAuthContextInner::ContinueRoomInvite,
         };
 
         Ok(Some(PostAuthContext {

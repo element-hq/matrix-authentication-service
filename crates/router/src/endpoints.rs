@@ -31,8 +31,8 @@ pub enum PostAuthAction {
         #[serde(flatten)]
         action: Option<AccountAction>,
     },
-    OpenRoom {
-        room_id: String,
+    ContinueRoomInvite {
+        id: Ulid,
     },
 }
 
@@ -76,9 +76,7 @@ impl PostAuthAction {
             Self::ManageAccount { action } => url_builder.redirect(&Account {
                 action: action.clone(),
             }),
-            Self::OpenRoom { room_id } => url_builder.redirect(&OpenRoom {
-                room_id: room_id.clone(),
-            }),
+            Self::ContinueRoomInvite { id } => url_builder.redirect(&OpenInviteRoom(*id)),
         }
     }
 }
@@ -359,21 +357,19 @@ impl From<Option<PostAuthAction>> for Register {
     }
 }
 
-/// `GET /open-room`
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OpenRoom {
-    pub room_id: String,
-}
+/// `GET /open-room/{id}`
+#[derive(Debug, Clone)]
+pub struct OpenInviteRoom(pub Ulid);
 
-impl Route for OpenRoom {
-    type Query = Self;
+impl Route for OpenInviteRoom {
+    type Query = ();
 
     fn route() -> &'static str {
-        "/open-room"
+        "/open-room/{id}"
     }
 
-    fn query(&self) -> Option<&Self::Query> {
-        Some(self)
+    fn path(&self) -> std::borrow::Cow<'static, str> {
+        format!("/open-room/{}", self.0).into()
     }
 }
 

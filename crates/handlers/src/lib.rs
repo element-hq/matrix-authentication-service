@@ -72,7 +72,6 @@ mod cleanup_tests;
 mod client_ip;
 mod preferred_language;
 mod rate_limit;
-mod room_id;
 mod session;
 #[cfg(test)]
 mod test_utils;
@@ -398,7 +397,7 @@ where
         )
         .route(mas_router::Logout::route(), post(self::views::logout::post))
         .route(
-            mas_router::OpenRoom::route(),
+            mas_router::OpenInviteRoom::route(),
             get(self::views::open_room::get),
         )
         .route(

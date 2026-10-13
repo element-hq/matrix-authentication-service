@@ -767,6 +767,42 @@ mod test {
         assert!(response.body().contains("john"));
     }
 
+    /// Signing in from a room invite continues to the invite's room
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_password_login_continue_room_invite(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+        user_with_password(&state, "john", "hunter2").await;
+
+        let request = cookies.with_cookies(
+            Request::get("/login?kind=continue_room_invite&id=00000000000000000000000000").empty(),
+        );
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        let csrf_token = response
+            .body()
+            .split("name=\"csrf\" value=\"")
+            .nth(1)
+            .unwrap()
+            .split('\"')
+            .next()
+            .unwrap();
+
+        let request = Request::post(
+            "/login?kind=continue_room_invite&id=00000000000000000000000000",
+        )
+        .form(serde_json::json!({
+            "csrf": csrf_token,
+            "username": "john",
+            "password": "hunter2",
+        }));
+        let response = state.request(cookies.with_cookies(request)).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/open-room/00000000000000000000000000");
+    }
+
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_password_login_with_mxid(pool: PgPool) {
         setup();

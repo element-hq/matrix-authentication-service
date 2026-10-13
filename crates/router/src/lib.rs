@@ -32,11 +32,13 @@ mod tests {
             Cow::Borrowed("/login?kind=continue_authorization_grant&id=00000000000000000000000000")
         );
         assert_eq!(
-            Register::and_then(PostAuthAction::OpenRoom {
-                room_id: "!abc:example.com".to_owned()
-            })
-            .path_and_query(),
-            Cow::Borrowed("/register?kind=open_room&room_id=%21abc%3Aexample.com")
+            Register::and_then(PostAuthAction::ContinueRoomInvite { id: Ulid::nil() })
+                .path_and_query(),
+            Cow::Borrowed("/register?kind=continue_room_invite&id=00000000000000000000000000")
+        );
+        assert_eq!(
+            OpenInviteRoom(Ulid::nil()).path_and_query(),
+            Cow::Borrowed("/open-room/00000000000000000000000000")
         );
     }
 

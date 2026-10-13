@@ -1341,11 +1341,11 @@ mod tests {
         let cookies = CookieHelper::new();
         cookies.import(state.cookie_jar().set_session(&session));
         let request = cookies.with_cookies(
-            Request::get("/register?kind=open_room&room_id=%21abc%3Aexample.com").empty(),
+            Request::get("/register?kind=open_invite_room&id=00000000000000000000000000").empty(),
         );
         let response = state.request(request).await;
         response.assert_status(StatusCode::SEE_OTHER);
-        response.assert_header_value(LOCATION, "/open-room?room_id=%21abc%3Aexample.com");
+        response.assert_header_value(LOCATION, "/open-room/00000000000000000000000000");
     }
 
     /// A username too long to ever become an MXID is dropped instead of being
