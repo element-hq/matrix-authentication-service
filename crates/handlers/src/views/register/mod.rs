@@ -1313,7 +1313,7 @@ mod tests {
         assert!(upstream_sessions(&state, &response).is_none());
     }
 
-    /// A signed-in browser opening a guest invite link goes straight to the room
+    /// A signed-in browser opening a room invite link goes straight to the room
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_get_with_open_room(pool: PgPool) {
         use mas_axum_utils::SessionInfoExt as _;

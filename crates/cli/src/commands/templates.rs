@@ -14,7 +14,7 @@ use clap::Parser;
 use figment::Figment;
 use mas_config::{
     AccountConfig, BrandingConfig, CaptchaConfig, ConfigurationSection, ConfigurationSectionExt,
-    ExperimentalConfig, GuestInvitesConfig, MatrixConfig, OAuthConfig, PasswordsConfig,
+    ExperimentalConfig, MatrixConfig, OAuthConfig, PasswordsConfig, RoomInvitesConfig,
     TemplatesConfig,
 };
 use mas_data_model::{Clock, SystemClock};
@@ -69,7 +69,7 @@ impl Options {
                     .map_err(anyhow::Error::from_boxed)?;
                 let oauth_config =
                     OAuthConfig::extract_or_default(figment).map_err(anyhow::Error::from_boxed)?;
-                let guest_invites_config = GuestInvitesConfig::extract_or_default(figment)
+                let room_invites_config = RoomInvitesConfig::extract_or_default(figment)
                     .map_err(anyhow::Error::from_boxed)?;
 
                 let now = if stabilise {
@@ -95,7 +95,7 @@ impl Options {
                     &account_config,
                     &captcha_config,
                     &oauth_config,
-                    &guest_invites_config,
+                    &room_invites_config,
                 )?;
                 let templates = templates_from_config(
                     &template_config,

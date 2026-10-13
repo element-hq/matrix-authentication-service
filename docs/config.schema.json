@@ -213,11 +213,11 @@
         }
       ]
     },
-    "guest_invites": {
-      "description": "Configuration section for inviting guests to rooms by email",
+    "room_invites": {
+      "description": "Configuration section for inviting email addresses to rooms",
       "allOf": [
         {
-          "$ref": "#/definitions/GuestInvitesConfig"
+          "$ref": "#/definitions/RoomInvitesConfig"
         }
       ]
     },
@@ -2904,8 +2904,8 @@
         }
       }
     },
-    "GuestInvitesConfig": {
-      "description": "Configuration section for inviting guests to rooms by email",
+    "RoomInvitesConfig": {
+      "description": "Configuration section for inviting email addresses to rooms",
       "type": "object",
       "properties": {
         "client_room_url": {

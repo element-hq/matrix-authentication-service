@@ -51,7 +51,7 @@ impl Options {
             &config.account,
             &config.captcha,
             &config.oauth,
-            &config.guest_invites,
+            &config.room_invites,
         )?;
 
         // Load and compile the templates

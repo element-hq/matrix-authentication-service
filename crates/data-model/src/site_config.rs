@@ -131,5 +131,5 @@ pub struct SiteConfig {
 
     /// The client URL to send invitees to, with `{room_id}` standing for the
     /// room ID.
-    pub guest_invites_client_room_url: Option<String>,
+    pub room_invites_client_room_url: Option<String>,
 }

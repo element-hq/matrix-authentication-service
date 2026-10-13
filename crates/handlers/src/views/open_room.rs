@@ -28,7 +28,7 @@ pub(crate) async fn get(
         .map(|Query(query)| query.room_id)
         .filter(|room_id| is_valid_room_id(room_id));
 
-    match (site_config.guest_invites_client_room_url, room_id) {
+    match (site_config.room_invites_client_room_url, room_id) {
         (Some(client_room_url), Some(room_id)) => {
             tracing::Span::current().record("room.id", room_id.as_str());
             Redirect::to(&client_room_url.replace("{room_id}", &urlencoding::encode(&room_id)))
@@ -111,7 +111,7 @@ mod tests {
         let state = TestState::from_pool_with_site_config(
             pool,
             SiteConfig {
-                guest_invites_client_room_url: None,
+                room_invites_client_room_url: None,
                 ..test_site_config()
             },
         )

@@ -1040,12 +1040,12 @@ oauth:
   device_code_user_code_auto_fill_enabled: false
 ```
 
-## `guest_invites`
+## `room_invites`
 
-Configuration section for inviting guests to rooms by email.
+Configuration section for inviting email addresses to rooms.
 
 ```yaml
-guest_invites:
+room_invites:
   # The client URL to send invitees to once they are signed in, with
   # `{room_id}` standing for the percent-encoded room ID.
   #

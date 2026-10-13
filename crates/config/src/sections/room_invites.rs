@@ -9,9 +9,9 @@ use url::Url;
 
 use crate::ConfigurationSection;
 
-/// Configuration section for inviting guests to rooms by email
+/// Configuration section for inviting email addresses to rooms
 #[derive(Clone, Debug, Default, Deserialize, JsonSchema, Serialize)]
-pub struct GuestInvitesConfig {
+pub struct RoomInvitesConfig {
     /// The client URL to send invitees to once they are signed in, with
     /// `{room_id}` standing for the room ID, e.g.
     /// `https://app.element.io/#/room/{room_id}`.
@@ -19,15 +19,15 @@ pub struct GuestInvitesConfig {
     pub client_room_url: Option<String>,
 }
 
-impl GuestInvitesConfig {
+impl RoomInvitesConfig {
     /// Returns true if the configuration is the default one
     pub(crate) fn is_default(&self) -> bool {
         self.client_room_url.is_none()
     }
 }
 
-impl ConfigurationSection for GuestInvitesConfig {
-    const PATH: Option<&'static str> = Some("guest_invites");
+impl ConfigurationSection for RoomInvitesConfig {
+    const PATH: Option<&'static str> = Some("room_invites");
 
     fn validate(
         &self,
@@ -74,17 +74,17 @@ mod tests {
 
     use super::*;
 
-    fn load(jail: &mut Jail, yaml: &str) -> Result<GuestInvitesConfig, String> {
+    fn load(jail: &mut Jail, yaml: &str) -> Result<RoomInvitesConfig, String> {
         jail.create_file("config.yaml", yaml)
             .map_err(|e| e.to_string())?;
         let figment = Figment::new().merge(Yaml::file("config.yaml"));
-        GuestInvitesConfig::extract(&figment).map_err(|e| e.to_string())
+        RoomInvitesConfig::extract(&figment).map_err(|e| e.to_string())
     }
 
     #[test]
     fn defaults() {
         Jail::expect_with(|jail| {
-            let config = load(jail, "guest_invites: {}").unwrap();
+            let config = load(jail, "room_invites: {}").unwrap();
             assert_eq!(config.client_room_url, None);
             assert!(config.is_default());
             Ok(())
@@ -96,7 +96,7 @@ mod tests {
         Jail::expect_with(|jail| {
             let error = load(
                 jail,
-                "guest_invites: { client_room_url: 'https://app.example.com/' }",
+                "room_invites: { client_room_url: 'https://app.example.com/' }",
             )
             .unwrap_err();
             assert!(error.contains("{room_id}"), "{error}");
@@ -115,7 +115,7 @@ mod tests {
             ] {
                 let error = load(
                     jail,
-                    &format!("guest_invites: {{ client_room_url: '{url}' }}"),
+                    &format!("room_invites: {{ client_room_url: '{url}' }}"),
                 )
                 .unwrap_err();
                 assert!(
