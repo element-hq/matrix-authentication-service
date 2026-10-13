@@ -7339,7 +7339,7 @@
             "type": "boolean"
           },
           "username": {
-            "description": "A username imposed on the registering user. If null, the user can\nchoose their own username.",
+            "description": "A username imposed on the registering user. If null, the user can\nchoose their own username. A value with `{random}` is a template,\nfilled in when registering through the token's link.",
             "type": [
               "string",
               "null"
@@ -7444,7 +7444,7 @@
             "format": "date-time"
           },
           "username": {
-            "description": "A username to impose on the registering user. If set, the user cannot\nchoose their own username.",
+            "description": "A username to impose on the registering user. If set, the user cannot\nchoose their own username. A value with exactly one `{random}` is a\ntemplate: registering through the token's `/register?token=…` link\nfills `{random}` in with 32 random lowercase letters and digits,\nwithout showing the user the name.",
             "type": [
               "string",
               "null"

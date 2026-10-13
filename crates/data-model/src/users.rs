@@ -230,6 +230,8 @@ pub struct UserRegistrationPassword {
 pub struct UserRegistrationToken {
     pub id: Ulid,
     pub token: String,
+    /// A localpart to impose, or a template for one: a value with exactly one
+    /// `{random}`
     pub username: Option<String>,
     pub email: Option<String>,
     pub passwordless: bool,
@@ -269,7 +271,8 @@ impl UserRegistrationToken {
     }
 
     /// Returns `true` if the token is an invite: it registers without a
-    /// password, as the username and the email address it pins
+    /// password, as the username (or username template) and the email
+    /// address it pins
     #[must_use]
     pub fn is_invite(&self) -> bool {
         self.passwordless && self.username.is_some() && self.email.is_some()
@@ -281,7 +284,66 @@ impl UserRegistrationToken {
     pub fn can_be_used(&self, now: DateTime<Utc>) -> bool {
         self.is_valid(now)
     }
+
+    /// The literal parts before and after the `{random}` of the username, if
+    /// it is a template
+    fn username_template(&self) -> Option<(&str, &str)> {
+        let (prefix, suffix) = self
+            .username
+            .as_deref()?
+            .split_once(USERNAME_TEMPLATE_PLACEHOLDER)?;
+        (!suffix.contains(USERNAME_TEMPLATE_PLACEHOLDER)).then_some((prefix, suffix))
+    }
+
+    /// Returns `true` if the token allows registering `username`: it imposes
+    /// none, it imposes this one, or its template fills in to it
+    #[must_use]
+    pub fn username_fits(&self, username: &str) -> bool {
+        let Some(imposed) = &self.username else {
+            return true;
+        };
+
+        match self.username_template() {
+            Some((prefix, suffix)) => username
+                .strip_prefix(prefix)
+                .and_then(|rest| rest.strip_suffix(suffix))
+                .is_some_and(|random| {
+                    random.len() == USERNAME_TEMPLATE_RANDOM_LENGTH
+                        && random
+                            .bytes()
+                            .all(|c| USERNAME_TEMPLATE_CHARSET.contains(&c))
+                }),
+            // Multiple placeholders aren't resolved in a template, and braces
+            // aren't allowed in a localpart, so nothing fits
+            None => !imposed.contains(USERNAME_TEMPLATE_PLACEHOLDER) && imposed == username,
+        }
+    }
+
+    /// The token's username template with its `{random}` filled in, if its
+    /// username is one
+    #[must_use]
+    pub fn fill_username(&self, rng: &mut (impl RngExt + ?Sized)) -> Option<String> {
+        let (prefix, suffix) = self.username_template()?;
+
+        let random: String = (0..USERNAME_TEMPLATE_RANDOM_LENGTH)
+            .map(|_| {
+                char::from(
+                    USERNAME_TEMPLATE_CHARSET[rng.random_range(0..USERNAME_TEMPLATE_CHARSET.len())],
+                )
+            })
+            .collect();
+        Some(format!("{prefix}{random}{suffix}"))
+    }
 }
+
+/// Stands for the random part of a [`UserRegistrationToken`]'s username
+/// template. The registration policy refuses `{` and `}` in a localpart, so a
+/// pin that can register never contains it.
+const USERNAME_TEMPLATE_PLACEHOLDER: &str = "{random}";
+/// 36^32 is about 2^165 names, so two filled-in templates never collide
+const USERNAME_TEMPLATE_RANDOM_LENGTH: usize = 32;
+/// The lowercase letters and digits of the localpart grammar
+const USERNAME_TEMPLATE_CHARSET: &[u8] = b"abcdefghijklmnopqrstuvwxyz0123456789";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UserRegistration {
@@ -298,4 +360,92 @@ pub struct UserRegistration {
     pub user_agent: Option<String>,
     pub created_at: DateTime<Utc>,
     pub completed_at: Option<DateTime<Utc>>,
+}
+
+#[cfg(test)]
+mod tests {
+    use rand::SeedableRng as _;
+    use rand_chacha::ChaChaRng;
+
+    use super::*;
+
+    fn with_username(username: Option<&str>) -> UserRegistrationToken {
+        UserRegistrationToken {
+            id: Ulid::nil(),
+            token: "token".to_owned(),
+            username: username.map(ToOwned::to_owned),
+            email: None,
+            passwordless: true,
+            room_id: None,
+            usage_limit: None,
+            times_used: 0,
+            created_at: DateTime::UNIX_EPOCH,
+            last_used_at: None,
+            expires_at: None,
+            revoked_at: None,
+        }
+    }
+
+    #[test]
+    fn test_username_pin() {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+
+        let token = with_username(None);
+        assert!(token.username_fits("alice"));
+        assert_eq!(token.fill_username(&mut rng), None);
+
+        let token = with_username(Some("alice"));
+        assert!(token.username_fits("alice"));
+        assert!(!token.username_fits("bob"));
+        assert_eq!(token.fill_username(&mut rng), None);
+    }
+
+    #[test]
+    fn test_username_template() {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let random = "a1".repeat(16);
+
+        for (template, prefix, suffix) in [
+            ("user-{random}", "user-", ""),
+            ("{random}-user", "", "-user"),
+            ("user-{random}-x", "user-", "-x"),
+            ("{random}", "", ""),
+        ] {
+            let token = with_username(Some(template));
+
+            let filled = token.fill_username(&mut rng).unwrap();
+            let random_part = filled
+                .strip_prefix(prefix)
+                .and_then(|rest| rest.strip_suffix(suffix))
+                .unwrap();
+            assert_eq!(random_part.len(), 32, "{filled}");
+            assert!(
+                random_part
+                    .bytes()
+                    .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit()),
+                "{filled}"
+            );
+            assert!(token.username_fits(&filled), "{filled}");
+            assert_ne!(token.fill_username(&mut rng).unwrap(), filled);
+
+            assert!(token.username_fits(&format!("{prefix}{random}{suffix}")));
+            assert!(!token.username_fits(template));
+            // Too short, too long, not lowercase, or with other literal parts
+            assert!(!token.username_fits(&format!("{prefix}{}{suffix}", &random[1..])));
+            assert!(!token.username_fits(&format!("{prefix}{random}a{suffix}")));
+            assert!(!token.username_fits(&format!("{prefix}{}{suffix}", random.to_uppercase())));
+            assert!(!token.username_fits(&format!("x{prefix}{random}{suffix}")));
+        }
+    }
+
+    #[test]
+    fn test_username_two_placeholders() {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let random = "a".repeat(32);
+
+        let token = with_username(Some("user-{random}-{random}"));
+        assert!(!token.username_fits("user-{random}-{random}"));
+        assert!(!token.username_fits(&format!("user-{random}-{random}")));
+        assert_eq!(token.fill_username(&mut rng), None);
+    }
 }
