@@ -559,8 +559,8 @@ mod tests {
         }
     }
 
-    /// The headline escapes the room and the inviter once in HTML, and the
-    /// subject names neither
+    /// The headline escapes the room and the inviter once in HTML, the subject
+    /// names neither, and the link is the token's invite link
     #[tokio::test]
     async fn room_invite_email() {
         let templates = load_templates(false).await;
@@ -569,7 +569,8 @@ mod tests {
             Some("Q&A <team>".to_owned()),
             Some("@alice:example.com".to_owned()),
             Some("Alice O'Brien & Co".to_owned()),
-            test_url_builder().guest_invite_link("!abc:example.com".to_owned(), "token".to_owned()),
+            test_url_builder()
+                .absolute_url_for(&mas_router::Register::default().with_token("token".to_owned())),
         )
         .with_language(mas_i18n::locale!("en").into());
 
@@ -588,6 +589,10 @@ mod tests {
                 "Alice O'Brien & Co (@alice:example.com) invited you to ask to join Q&A <team> \
                  on example.com."
             ),
+            "{txt}"
+        );
+        assert!(
+            txt.contains("https://example.com/register?token=token\n"),
             "{txt}"
         );
 

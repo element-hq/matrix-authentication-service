@@ -303,7 +303,7 @@ pub async fn handler(
                 Some(invite.username),
                 Some(invite.email),
                 true,
-                None,
+                Some(params.room_id.clone()),
             )
             .await?;
 
@@ -313,7 +313,6 @@ pub async fn handler(
                 &clock,
                 SendRoomInviteEmailJob::new(
                     token.id,
-                    params.room_id.clone(),
                     room_name.clone(),
                     inviter.clone(),
                     inviter_name.clone(),
@@ -371,11 +370,12 @@ mod tests {
         .unwrap()
     }
 
+    /// The invite email jobs' statuses, ordered by their tokens' IDs
     async fn job_statuses(pool: &PgPool) -> Vec<String> {
         sqlx::query_scalar(
             "SELECT status::TEXT FROM queue_jobs
              WHERE queue_name = 'send-room-invite-email'
-             ORDER BY payload->>'room_id'",
+             ORDER BY payload->>'registration_token_id'",
         )
         .fetch_all(pool)
         .await
@@ -444,12 +444,13 @@ mod tests {
             assert!(token.passwordless);
             assert_eq!(token.usage_limit, Some(1));
             assert_eq!(token.expires_at, Some(expires_at));
+            assert_eq!(token.room_id.as_deref(), Some("!room:example.com"));
         }
 
         let payloads = job_payloads(&pool).await;
         assert_eq!(payloads.len(), 2);
         for payload in &payloads {
-            assert_eq!(payload["room_id"], "!room:example.com");
+            assert_eq!(payload.get("room_id"), None);
             assert_eq!(payload["room_name"], "Project X");
             assert_eq!(payload["inviter"], "@bob:example.com");
             assert_eq!(payload["inviter_name"], "Bob");
@@ -480,12 +481,14 @@ mod tests {
         .await;
         assert_eq!(status, StatusCode::ACCEPTED);
 
-        let payloads = job_payloads(&pool).await;
         assert_eq!(
-            payloads[0]["room_id"],
-            "!31hneApxJ_1o-63DmFrpeqnkFfWppnzWso1JvH3ogLM"
+            tokens(&state).await[0].room_id.as_deref(),
+            Some("!31hneApxJ_1o-63DmFrpeqnkFfWppnzWso1JvH3ogLM")
         );
-        assert_eq!(payloads[0]["room_name"], serde_json::Value::Null);
+        assert_eq!(
+            job_payloads(&pool).await[0]["room_name"],
+            serde_json::Value::Null
+        );
     }
 
     /// An address given twice, in any case, is invited once, with the username
@@ -651,6 +654,19 @@ mod tests {
             assert_eq!(title, error);
         }
 
+        // A room ID with a bidirectional control in it, which ruma accepts
+        let room_id = "!room\u{202E}:example.com";
+        let (status, title) = invite(
+            &mut state,
+            serde_json::json!({
+                "room_id": room_id,
+                "invites": [{ "email": "alice@example.com", "username": "user-alice" }],
+            }),
+        )
+        .await;
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        assert_eq!(title, format!("Invalid room ID {room_id:?}"));
+
         // A body which doesn't parse, including an invite without a username
         for body in [
             serde_json::json!({
@@ -725,10 +741,15 @@ mod tests {
             .await;
             assert_eq!(status, StatusCode::ACCEPTED);
 
+            let token = tokens(&state)
+                .await
+                .into_iter()
+                .find(|token| token.room_id.as_deref() == Some(&*room_id))
+                .unwrap();
             let payloads = job_payloads(&pool).await;
             let payload = payloads
                 .iter()
-                .find(|payload| payload["room_id"] == room_id)
+                .find(|payload| payload["registration_token_id"] == token.id.to_string())
                 .unwrap();
             assert_eq!(payload["room_name"], format!("Project X{}", "x".repeat(91)));
             assert_eq!(payload["inviter"], expected, "{inviter:?}");
@@ -745,13 +766,14 @@ mod tests {
         let mut rng = state.rng();
 
         let mut repo = state.repository().await.unwrap();
-        for (room_id, revoke) in [("!a:example.com", true), ("!b:example.com", false)] {
+        let mut expected = Vec::new();
+        for revoke in [true, false] {
             let token = repo
                 .user_registration_token()
                 .add(
                     &mut rng,
                     &state.clock,
-                    room_id.to_owned(),
+                    format!("token-{revoke}"),
                     Some(1),
                     None,
                     Some("user-alice".to_owned()),
@@ -771,14 +793,17 @@ mod tests {
                 .schedule_job(
                     &mut rng,
                     &state.clock,
-                    SendRoomInviteEmailJob::new(token.id, room_id.to_owned(), None, None, None),
+                    SendRoomInviteEmailJob::new(token.id, None, None, None),
                 )
                 .await
                 .unwrap();
+            expected.push((token.id, if revoke { "completed" } else { "failed" }));
         }
         repo.save().await.unwrap();
 
         state.run_jobs_in_queue().await;
-        assert_eq!(job_statuses(&pool).await, ["completed", "failed"]);
+        expected.sort_unstable();
+        let expected: Vec<_> = expected.into_iter().map(|(_, status)| status).collect();
+        assert_eq!(job_statuses(&pool).await, expected);
     }
 }

@@ -22,7 +22,7 @@ impl RunnableJob for SendRoomInviteEmailJob {
     #[tracing::instrument(
         name = "job.send_room_invite_email",
         fields(
-            room.id = self.room_id(),
+            room.id = tracing::field::Empty,
             user_registration_token.id = %self.registration_token_id(),
         ),
         skip_all,
@@ -39,6 +39,7 @@ impl RunnableJob for SendRoomInviteEmailJob {
             .map_err(JobError::retry)?
             .ok_or_else(|| JobError::fail(anyhow::anyhow!("Registration token not found")))?;
         repo.cancel().await.map_err(JobError::retry)?;
+        tracing::Span::current().record("room.id", token.room_id.as_deref());
 
         if !token.is_valid(state.clock().now()) {
             info!("Registration token is no longer valid, not sending the invite");
@@ -60,7 +61,7 @@ impl RunnableJob for SendRoomInviteEmailJob {
             self.room_name().map(ToOwned::to_owned),
             self.inviter().map(ToOwned::to_owned),
             self.inviter_name().map(ToOwned::to_owned),
-            url_builder.guest_invite_link(self.room_id().to_owned(), token.token),
+            url_builder.absolute_url_for(&mas_router::Register::default().with_token(token.token)),
         )
         .with_language(locale!("en").into());
 

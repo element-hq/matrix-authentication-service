@@ -1300,8 +1300,9 @@ impl TemplateContext for EmailRoomInviteContext {
         Self: Sized,
     {
         let url_builder = UrlBuilder::new("https://example.com/".parse().unwrap(), None, None);
-        let invite_link =
-            url_builder.guest_invite_link("!abc:example.com".to_owned(), "abcdefghijkl".to_owned());
+        let invite_link = url_builder.absolute_url_for(
+            &mas_router::Register::default().with_token("abcdefghijkl".to_owned()),
+        );
 
         sample_list(vec![
             Self::new(

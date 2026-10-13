@@ -660,7 +660,6 @@ impl InsertableJob for CleanupInactiveUserSessionIpsJob {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SendRoomInviteEmailJob {
     registration_token_id: Ulid,
-    room_id: String,
     room_name: Option<String>,
     inviter: Option<String>,
     inviter_name: Option<String>,
@@ -673,21 +672,18 @@ impl SendRoomInviteEmailJob {
     ///
     /// * `registration_token_id` - The registration token minted for the
     ///   recipient
-    /// * `room_id` - The room to invite the recipient to
     /// * `room_name` - The name of the room
     /// * `inviter` - The Matrix ID of the user who sent the invite
     /// * `inviter_name` - The display name of the user who sent the invite
     #[must_use]
     pub fn new(
         registration_token_id: Ulid,
-        room_id: String,
         room_name: Option<String>,
         inviter: Option<String>,
         inviter_name: Option<String>,
     ) -> Self {
         Self {
             registration_token_id,
-            room_id,
             room_name,
             inviter,
             inviter_name,
@@ -698,12 +694,6 @@ impl SendRoomInviteEmailJob {
     #[must_use]
     pub fn registration_token_id(&self) -> Ulid {
         self.registration_token_id
-    }
-
-    /// The room the recipient is invited to
-    #[must_use]
-    pub fn room_id(&self) -> &str {
-        &self.room_id
     }
 
     /// The name of the room
