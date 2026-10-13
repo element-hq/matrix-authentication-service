@@ -1,0 +1,25 @@
+/* Copyright 2026 Element Creations Ltd.
+ *
+ * SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+ * Please see LICENSE files in the repository root for full details.
+ */
+
+/* Also used by the SSR `field.separator()` macro, through templates.css */
+.or-separator {
+  display: flex;
+  align-items: center;
+
+  & hr {
+    flex: 1;
+    border: none;
+    border-top: 1px solid var(--cpd-color-bg-subtle-primary);
+  }
+
+  & p {
+    margin-inline: var(--cpd-space-4x);
+    text-transform: uppercase;
+    font: var(--cpd-font-body-md-regular);
+    letter-spacing: var(--cpd-font-letter-spacing-body-md);
+    color: var(--cpd-color-text-primary);
+  }
+}

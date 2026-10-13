@@ -1,4 +1,5 @@
-/* Copyright 2024, 2025 New Vector Ltd.
+/* Copyright 2025, 2026 Element Creations Ltd.
+ * Copyright 2024, 2025 New Vector Ltd.
  * Copyright 2022-2024 The Matrix.org Foundation C.I.C.
  *
  * SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -18,6 +19,7 @@
 @import "../components/Layout/Layout.module.css";
 @import "../components/Footer/Footer.module.css";
 @import "../components/PageHeading/PageHeading.module.css";
+@import "../components/OrSeparator/OrSeparator.module.css";
 
 .cpd-text-body-lg-regular {
   font: var(--cpd-font-body-lg-regular);
@@ -159,25 +161,6 @@
         }
       }
     }
-  }
-}
-
-.separator {
-  display: flex;
-  align-items: center;
-
-  & hr {
-    flex: 1;
-    border: none;
-    border-top: 1px solid var(--cpd-color-bg-subtle-primary);
-  }
-
-  & p {
-    margin-inline: var(--cpd-space-4x);
-    text-transform: uppercase;
-    font: var(--cpd-font-body-md-regular);
-    letter-spacing: var(--cpd-font-letter-spacing-body-md);
-    color: var(--cpd-color-text-primary);
   }
 }
 
