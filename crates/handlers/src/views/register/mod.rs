@@ -507,6 +507,7 @@ mod tests {
                 username.map(ToOwned::to_owned),
                 email.map(ToOwned::to_owned),
                 passwordless,
+                None,
             )
             .await
             .unwrap();
@@ -741,6 +742,7 @@ mod tests {
                 Some("alice".to_owned()),
                 Some("alice@example.com".to_owned()),
                 true,
+                None,
             )
             .await
             .unwrap();
@@ -805,6 +807,7 @@ mod tests {
                 Some("alice".to_owned()),
                 Some("alice@example.com".to_owned()),
                 true,
+                None,
             )
             .await
             .unwrap();

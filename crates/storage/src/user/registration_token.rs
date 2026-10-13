@@ -154,6 +154,7 @@ pub trait UserRegistrationTokenRepository: Send + Sync {
     /// * `email`: Optional email to impose on the registering user
     /// * `passwordless`: Whether registrations using this token skip the
     ///   password step
+    /// * `room_id`: Optional room the token invites the registering user to
     ///
     /// # Errors
     ///
@@ -169,6 +170,7 @@ pub trait UserRegistrationTokenRepository: Send + Sync {
         username: Option<String>,
         email: Option<String>,
         passwordless: bool,
+        room_id: Option<String>,
     ) -> Result<UserRegistrationToken, Self::Error>;
 
     /// Increment the usage count of a [`UserRegistrationToken`]
@@ -329,6 +331,7 @@ repository_impl!(UserRegistrationTokenRepository:
         username: Option<String>,
         email: Option<String>,
         passwordless: bool,
+        room_id: Option<String>,
     ) -> Result<UserRegistrationToken, Self::Error>;
     async fn use_token(
         &mut self,
