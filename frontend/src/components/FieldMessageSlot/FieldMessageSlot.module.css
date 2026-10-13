@@ -1,0 +1,17 @@
+/* Copyright 2026 Element Creations Ltd.
+ *
+ * SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+ * Please see LICENSE files in the repository root for full details.
+ */
+
+/* The height of one compound-web form message: its top margin and a line of
+ * body-sm text */
+.slot {
+  display: flex;
+  flex-direction: column;
+  min-block-size: calc(
+    var(--cpd-space-1x) +
+    var(--cpd-font-size-body-sm) *
+    var(--cpd-font-line-height-regular)
+  );
+}

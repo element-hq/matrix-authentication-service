@@ -9,6 +9,7 @@ import { Form } from "@vector-im/compound-web";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import FieldMessageSlot from "./FieldMessageSlot";
 import PasswordComplexityFeedback from "./PasswordComplexityFeedback";
 
 export default function PasswordCreationDoubleInput({
@@ -73,17 +74,21 @@ export default function PasswordCreationDoubleInput({
           autoComplete="new-password"
         />
 
-        <Form.ErrorMessage match="valueMissing">
-          {t("frontend.errors.field_required")}
-        </Form.ErrorMessage>
+        <FieldMessageSlot>
+          <Form.ErrorMessage match="valueMissing">
+            {t("frontend.errors.field_required")}
+          </Form.ErrorMessage>
 
-        <Form.ErrorMessage match={(v, form) => v !== form.get("new_password")}>
-          {t("frontend.password_change.passwords_no_match")}
-        </Form.ErrorMessage>
+          <Form.ErrorMessage
+            match={(v, form) => v !== form.get("new_password")}
+          >
+            {t("frontend.password_change.passwords_no_match")}
+          </Form.ErrorMessage>
 
-        <Form.SuccessMessage match="valid">
-          {t("frontend.password_change.passwords_match")}
-        </Form.SuccessMessage>
+          <Form.SuccessMessage match="valid">
+            {t("frontend.password_change.passwords_match")}
+          </Form.SuccessMessage>
+        </FieldMessageSlot>
       </Form.Field>
     </>
   );
