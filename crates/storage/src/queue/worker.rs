@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -8,7 +9,7 @@
 use async_trait::async_trait;
 use chrono::Duration;
 use mas_data_model::Clock;
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 
 use crate::repository_impl;
@@ -35,7 +36,7 @@ pub trait QueueWorkerRepository: Send + Sync {
     /// Returns an error if the underlying repository fails.
     async fn register(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
     ) -> Result<Worker, Self::Error>;
 
@@ -93,7 +94,7 @@ pub trait QueueWorkerRepository: Send + Sync {
 repository_impl!(QueueWorkerRepository:
     async fn register(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
     ) -> Result<Worker, Self::Error>;
 

@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 Kévin Commaille.
 //
@@ -19,7 +20,7 @@ use mas_keystore::{JsonWebKey, JsonWebKeySet, Keystore, PrivateKey};
 use mas_oidc_client::types::{IdToken, client_credentials::ClientCredentials};
 use rand::{
     SeedableRng,
-    distributions::{Alphanumeric, DistString},
+    distr::{Alphanumeric, SampleString},
 };
 use url::Url;
 use wiremock::MockServer;

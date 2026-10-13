@@ -243,9 +243,9 @@ impl FromRequestParts<AppState> for BoxRng {
     ) -> impl Future<Output = Result<Self, Self::Rejection>> + Send {
         // This rng is used to source the local rng
         #[expect(clippy::disallowed_methods)]
-        let rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
-        let rng = rand_chacha::ChaChaRng::from_rng(rng).expect("Failed to seed RNG");
+        let rng = rand_chacha::ChaChaRng::from_rng(&mut rng);
         let rng: Self = Box::new(rng);
         ready(Ok(rng))
     }

@@ -11,7 +11,7 @@ use async_trait::async_trait;
 use chrono::Duration;
 use mas_data_model::{BrowserSession, Client, Clock, DeviceCodeGrant, Session};
 use oauth2_types::scope::Scope;
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 
 use crate::repository_impl;
@@ -63,7 +63,7 @@ pub trait OAuth2DeviceCodeGrantRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         params: OAuth2DeviceCodeGrantParams<'_>,
     ) -> Result<DeviceCodeGrant, Self::Error>;
@@ -216,7 +216,7 @@ pub trait OAuth2DeviceCodeGrantRepository: Send + Sync {
 repository_impl!(OAuth2DeviceCodeGrantRepository:
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         params: OAuth2DeviceCodeGrantParams<'_>,
     ) -> Result<DeviceCodeGrant, Self::Error>;

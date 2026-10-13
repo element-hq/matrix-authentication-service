@@ -14,7 +14,7 @@ use mas_data_model::{
 };
 use mas_storage::oauth2::{OAuth2DeviceCodeGrantParams, OAuth2DeviceCodeGrantRepository};
 use oauth2_types::scope::Scope;
-use rand::RngCore;
+use rand::Rng;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
@@ -157,7 +157,7 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
     )]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         params: OAuth2DeviceCodeGrantParams<'_>,
     ) -> Result<DeviceCodeGrant, Self::Error> {

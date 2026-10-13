@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -6,12 +7,12 @@
 doc-valid-idents = ["OpenID", "OAuth", "UserInfo", "..", "PostgreSQL", "SQLite"]
 
 disallowed-methods = [
-    { path = "rand::thread_rng", reason = "do not create rngs on the fly, pass them as parameters" },
+    { path = "rand::rng", reason = "do not create rngs on the fly, pass them as parameters" },
     { path = "chrono::Utc::now", reason = "source the current time from the clock instead" },
-    # ulid's own constructors/accessors below either use ulid's (separate) `rand`
-    # or its `std`-only SystemTime API. Use `mas_data_model::UlidExt` instead so our
-    # ULID generation stays on the workspace `rand` and `chrono`.
-    { path = "ulid::Ulid::new", reason = "use mas_data_model::UlidExt::from_datetime_with_rng instead" },
+    # ulid's own constructors/accessors below either create their own RNG or use
+    # `SystemTime`. Use `mas_data_model::UlidExt` instead so ULID generation takes an
+    # injected RNG and `chrono` timestamps.
+    { path = "ulid::Ulid::generate", reason = "use mas_data_model::UlidExt::from_datetime_with_rng instead" },
     { path = "ulid::Ulid::with_source", reason = "use mas_data_model::UlidExt::from_datetime_with_rng instead" },
     { path = "ulid::Ulid::from_datetime", reason = "use mas_data_model::UlidExt::from_datetime_with_rng instead" },
     { path = "ulid::Ulid::from_datetime_with_source", reason = "use mas_data_model::UlidExt::from_datetime_with_rng instead" },
