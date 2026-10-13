@@ -2909,7 +2909,7 @@
       "type": "object",
       "properties": {
         "enabled": {
-          "description": "Whether the `POST /api/admin/v1/invite-guests` endpoint is enabled.\nDefaults to `false`.",
+          "description": "Whether the `POST /api/admin/v1/room-invites` endpoint is enabled.\nDefaults to `false`.",
           "type": "boolean"
         },
         "client_room_url": {

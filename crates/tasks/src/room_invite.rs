@@ -3,13 +3,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-//! Sending guest invite emails
+//! Sending room invite emails
 
 use async_trait::async_trait;
 use mas_email::{Address, Mailbox};
 use mas_i18n::locale;
-use mas_storage::queue::SendGuestInviteEmailJob;
-use mas_templates::{EmailGuestInviteContext, TemplateContext as _};
+use mas_storage::queue::SendRoomInviteEmailJob;
+use mas_templates::{EmailRoomInviteContext, TemplateContext as _};
 use tracing::info;
 
 use crate::{
@@ -18,9 +18,9 @@ use crate::{
 };
 
 #[async_trait]
-impl RunnableJob for SendGuestInviteEmailJob {
+impl RunnableJob for SendRoomInviteEmailJob {
     #[tracing::instrument(
-        name = "job.send_guest_invite_email",
+        name = "job.send_room_invite_email",
         fields(
             room.id = self.room_id(),
             user_registration_token.id = %self.registration_token_id(),
@@ -56,7 +56,7 @@ impl RunnableJob for SendGuestInviteEmailJob {
         let mailbox = Mailbox::new(None, address);
 
         // Recipients have no account, so no language preference to look up
-        let context = EmailGuestInviteContext::new(
+        let context = EmailRoomInviteContext::new(
             self.room_name().map(ToOwned::to_owned),
             self.inviter().map(ToOwned::to_owned),
             self.inviter_name().map(ToOwned::to_owned),
@@ -64,9 +64,9 @@ impl RunnableJob for SendGuestInviteEmailJob {
         )
         .with_language(locale!("en").into());
 
-        info!("Sending guest invite email to {}", mailbox);
+        info!("Sending room invite email to {}", mailbox);
         mailer
-            .send_guest_invite_email(mailbox, &context)
+            .send_room_invite_email(mailbox, &context)
             .await
             .map_err(JobError::retry)?;
 

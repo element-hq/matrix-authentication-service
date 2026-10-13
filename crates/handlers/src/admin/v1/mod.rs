@@ -21,11 +21,11 @@ use super::call_context::CallContext;
 use crate::passwords::PasswordManager;
 
 mod compat_sessions;
-mod guest_invites;
 mod oauth2_clients;
 mod oauth2_sessions;
 mod personal_sessions;
 mod policy_data;
+mod room_invites;
 mod site_config;
 mod upstream_oauth_links;
 mod upstream_oauth_providers;
@@ -143,8 +143,8 @@ where
             get_with(self::policy_data::get, self::policy_data::get_doc),
         )
         .api_route(
-            "/invite-guests",
-            post_with(self::guest_invites::handler, self::guest_invites::doc),
+            "/room-invites",
+            post_with(self::room_invites::handler, self::room_invites::doc),
         )
         .api_route(
             "/users",

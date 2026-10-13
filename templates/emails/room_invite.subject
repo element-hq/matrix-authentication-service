@@ -7,4 +7,4 @@ Please see LICENSE files in the repository root for full details.
 
 {%- set _ = translator(lang) -%}
 
-{{ _("mas.emails.guest_invite.subject", server_name=branding.server_name) }}
+{{ _("mas.emails.room_invite.subject", server_name=branding.server_name) }}

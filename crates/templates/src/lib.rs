@@ -40,7 +40,7 @@ pub use self::{
     context::{
         AccountInactiveContext, ApiDocContext, AppContext, CompatLoginPolicyViolationContext,
         CompatSsoContext, ConsentContext, DeviceConsentContext, DeviceLinkContext,
-        DeviceLinkFormField, DeviceNameContext, EmailGuestInviteContext, EmailRecoveryContext,
+        DeviceLinkFormField, DeviceNameContext, EmailRecoveryContext, EmailRoomInviteContext,
         EmailVerificationContext, EmptyContext, ErrorContext, FormPostContext, IndexContext,
         InviteContext, LoginContext, LoginFormField, NotFoundContext, PolicyViolationContext,
         PostAuthContext, PostAuthContextInner, RecoveryExpiredContext, RecoveryFinishContext,
@@ -425,14 +425,14 @@ register_templates! {
     /// Render the HTML error page
     pub fn render_error(ErrorContext) { "pages/error.html" }
 
-    /// Render the guest invite email (plain text variant)
-    pub fn render_email_guest_invite_txt(WithLanguage<EmailGuestInviteContext>) { "emails/guest_invite.txt" }
+    /// Render the room invite email (plain text variant)
+    pub fn render_email_room_invite_txt(WithLanguage<EmailRoomInviteContext>) { "emails/room_invite.txt" }
 
-    /// Render the guest invite email (HTML variant)
-    pub fn render_email_guest_invite_html(WithLanguage<EmailGuestInviteContext>) { "emails/guest_invite.html" }
+    /// Render the room invite email (HTML variant)
+    pub fn render_email_room_invite_html(WithLanguage<EmailRoomInviteContext>) { "emails/room_invite.html" }
 
-    /// Render the guest invite email subject
-    pub fn render_email_guest_invite_subject(WithLanguage<EmailGuestInviteContext>) { "emails/guest_invite.subject" }
+    /// Render the room invite email subject
+    pub fn render_email_room_invite_subject(WithLanguage<EmailRoomInviteContext>) { "emails/room_invite.subject" }
 
     /// Render the email recovery email (plain text variant)
     pub fn render_email_recovery_txt(WithLanguage<EmailRecoveryContext>) { "emails/recovery.txt" }
@@ -562,10 +562,10 @@ mod tests {
     /// The headline escapes the room and the inviter once in HTML, and the
     /// subject names neither
     #[tokio::test]
-    async fn guest_invite_email() {
+    async fn room_invite_email() {
         let templates = load_templates(false).await;
 
-        let context = EmailGuestInviteContext::new(
+        let context = EmailRoomInviteContext::new(
             Some("Q&A <team>".to_owned()),
             Some("@alice:example.com".to_owned()),
             Some("Alice O'Brien & Co".to_owned()),
@@ -573,7 +573,7 @@ mod tests {
         )
         .with_language(mas_i18n::locale!("en").into());
 
-        let html = templates.render_email_guest_invite_html(&context).unwrap();
+        let html = templates.render_email_room_invite_html(&context).unwrap();
         assert!(
             html.contains(
                 "Alice O&#x27;Brien &amp; Co (@alice:example.com) invited you to ask to join \
@@ -582,7 +582,7 @@ mod tests {
             "{html}"
         );
 
-        let txt = templates.render_email_guest_invite_txt(&context).unwrap();
+        let txt = templates.render_email_room_invite_txt(&context).unwrap();
         assert!(
             txt.contains(
                 "Alice O'Brien & Co (@alice:example.com) invited you to ask to join Q&A <team> \
@@ -592,7 +592,7 @@ mod tests {
         );
 
         let subject = templates
-            .render_email_guest_invite_subject(&context)
+            .render_email_room_invite_subject(&context)
             .unwrap();
         assert_eq!(
             subject.trim(),

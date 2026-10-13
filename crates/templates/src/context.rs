@@ -1263,17 +1263,17 @@ impl TemplateContext for EmailVerificationContext {
     }
 }
 
-/// Context used by the `emails/guest_invite.{txt,html,subject}` templates
+/// Context used by the `emails/room_invite.{txt,html,subject}` templates
 #[derive(Serialize)]
-pub struct EmailGuestInviteContext {
+pub struct EmailRoomInviteContext {
     room_name: Option<String>,
     inviter: Option<String>,
     inviter_name: Option<String>,
     invite_link: Url,
 }
 
-impl EmailGuestInviteContext {
-    /// Constructs a context for the guest invite email
+impl EmailRoomInviteContext {
+    /// Constructs a context for the room invite email
     #[must_use]
     pub fn new(
         room_name: Option<String>,
@@ -1290,7 +1290,7 @@ impl EmailGuestInviteContext {
     }
 }
 
-impl TemplateContext for EmailGuestInviteContext {
+impl TemplateContext for EmailRoomInviteContext {
     fn sample<R: RngExt>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,

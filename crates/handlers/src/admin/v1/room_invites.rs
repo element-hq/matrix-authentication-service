@@ -13,7 +13,7 @@ use lettre::Address;
 use mas_axum_utils::record_error;
 use mas_data_model::{BoxRng, SiteConfig};
 use mas_policy::Policy;
-use mas_storage::queue::{QueueJobRepositoryExt as _, SendGuestInviteEmailJob};
+use mas_storage::queue::{QueueJobRepositoryExt as _, SendRoomInviteEmailJob};
 use rand::distr::{Alphanumeric, SampleString};
 use ruma_common::UserId;
 use schemars::JsonSchema;
@@ -37,7 +37,7 @@ const SEND_INTERVAL: Duration = Duration::milliseconds(100);
 #[derive(Debug, thiserror::Error, OperationIo)]
 #[aide(output_with = "Json<ErrorResponse>")]
 pub enum RouteError {
-    #[error("Guest invites are disabled")]
+    #[error("Room invites are disabled")]
     Disabled,
 
     #[error("Invalid room ID {0:?}")]
@@ -95,25 +95,25 @@ impl IntoResponse for RouteError {
     }
 }
 
-/// # A guest to invite to the room
+/// # An email address to invite to the room
 #[derive(Deserialize, JsonSchema)]
-#[serde(rename = "GuestInvite")]
+#[serde(rename = "RoomInvite")]
 pub struct Invite {
-    /// The address to send the invite to. The guest can only register with
+    /// The address to send the invite to. The invitee can only register with
     /// this address.
     #[schemars(email, example = &"alice@example.com")]
     email: String,
 
-    /// The username the guest registers with
-    #[schemars(example = &"guest-abcdef")]
+    /// The username the invitee registers with
+    #[schemars(example = &"user-abcdef")]
     username: String,
 }
 
-/// # JSON payload for the `POST /api/admin/v1/invite-guests` endpoint
+/// # JSON payload for the `POST /api/admin/v1/room-invites` endpoint
 #[derive(Deserialize, JsonSchema)]
-#[serde(rename = "InviteGuestsRequest")]
+#[serde(rename = "RoomInvitesRequest")]
 pub struct Request {
-    /// The room the guests are invited to
+    /// The room the addresses are invited to
     #[schemars(example = &"!room:example.com")]
     room_id: String,
 
@@ -131,30 +131,31 @@ pub struct Request {
     #[schemars(example = &"Bob")]
     inviter_name: Option<String>,
 
-    /// The guests to invite. An address given more than once, ignoring case,
+    /// The addresses to invite. An address given more than once, ignoring case,
     /// is invited once.
     invites: Vec<Invite>,
 }
 
-/// # Response to the `POST /api/admin/v1/invite-guests` endpoint
+/// # Response to the `POST /api/admin/v1/room-invites` endpoint
 #[derive(Serialize, JsonSchema)]
-#[serde(rename = "InviteGuestsResponse")]
+#[serde(rename = "RoomInvitesResponse")]
 pub struct Response {
-    /// How many guests were scheduled an invite email, after dropping repeated
-    /// addresses
+    /// How many addresses were scheduled an invite email, after dropping
+    /// repeated ones
     scheduled: usize,
 }
 
 pub fn doc(operation: TransformOperation) -> TransformOperation {
     operation
-        .id("inviteGuests")
-        .summary("Invite a list of email addresses to a room as guests")
+        .id("createRoomInvites")
+        .summary("Invite a list of email addresses to a room")
         .description(
-            "Mints a single-use, passwordless registration token for each guest, pinned to their \
-             address and username, and emails them a link to register with it and open the room. \
-             The links are only ever sent to the guests, so they are not in the response.",
+            "Mints a single-use, passwordless registration token for each invite, pinned to its \
+             address and username, and emails the address a link to register with the token and \
+             open the room. The links are only ever sent to the addresses, so they are not in \
+             the response.",
         )
-        .tag("guest-invite")
+        .tag("room-invite")
         .response_with::<202, Json<Response>, _>(|t| {
             t.description("The invite emails were scheduled")
                 .example(Response { scheduled: 2 })
@@ -162,7 +163,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         .response_with::<400, RouteError, _>(|t| {
             let response = ErrorResponse::from_error(&RouteError::NotAllowed {
                 email: "alice@example.com".to_owned(),
-                username: "guest-abcdef".to_owned(),
+                username: "user-abcdef".to_owned(),
                 violations: vec!["email: email domain is banned".to_owned()],
             });
             t.description(
@@ -173,8 +174,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         })
         .response_with::<404, RouteError, _>(|t| {
             let response = ErrorResponse::from_error(&RouteError::Disabled);
-            t.description("Guest invites are disabled")
-                .example(response)
+            t.description("Room invites are disabled").example(response)
         })
         .response_with::<409, RouteError, _>(|t| {
             let response =
@@ -194,7 +194,7 @@ fn sanitize(text: &str) -> String {
 }
 
 #[tracing::instrument(
-    name = "handler.admin.v1.guest_invites.post",
+    name = "handler.admin.v1.room_invites.post",
     fields(room.id = tracing::field::Empty, recipients.total = params.invites.len()),
     skip_all,
 )]
@@ -207,7 +207,7 @@ pub async fn handler(
     State(site_config): State<SiteConfig>,
     Json(params): Json<Request>,
 ) -> Result<(StatusCode, Json<Response>), RouteError> {
-    if !site_config.guest_invites_enabled {
+    if !site_config.room_invites_enabled {
         return Err(RouteError::Disabled);
     }
 
@@ -248,7 +248,7 @@ pub async fn handler(
                 registration_method: mas_policy::RegistrationMethod::Password,
                 username: &invite.username,
                 email: Some(&invite.email),
-                // The request comes from the inviter's homeserver, not the guest
+                // The request comes from the inviter's homeserver, not the invitee
                 requester: mas_policy::Requester::default(),
             })
             .await?;
@@ -287,7 +287,7 @@ pub async fn handler(
     });
     let inviter_name = params.inviter_name.as_deref().map(sanitize);
     let now = clock.now();
-    let expires_at = now + site_config.guest_invite_lifetime;
+    let expires_at = now + site_config.room_invite_lifetime;
     let scheduled = valid_invites.len();
 
     for (i, invite) in (0..).zip(valid_invites) {
@@ -311,7 +311,7 @@ pub async fn handler(
             .schedule_job_later(
                 &mut rng,
                 &clock,
-                SendGuestInviteEmailJob::new(
+                SendRoomInviteEmailJob::new(
                     token.id,
                     params.room_id.clone(),
                     room_name.clone(),
@@ -325,7 +325,7 @@ pub async fn handler(
 
     repo.save().await?;
 
-    tracing::info!("Scheduled {scheduled} guest invite emails");
+    tracing::info!("Scheduled {scheduled} room invite emails");
 
     Ok((StatusCode::ACCEPTED, Json(Response { scheduled })))
 }
@@ -337,7 +337,7 @@ mod tests {
     use mas_data_model::{Clock as _, UserRegistrationToken};
     use mas_storage::{
         Pagination,
-        queue::{QueueJobRepositoryExt as _, SendGuestInviteEmailJob},
+        queue::{QueueJobRepositoryExt as _, SendRoomInviteEmailJob},
         user::UserRegistrationTokenFilter,
     };
     use sqlx::PgPool;
@@ -364,7 +364,7 @@ mod tests {
 
     async fn job_payloads(pool: &PgPool) -> Vec<serde_json::Value> {
         sqlx::query_scalar(
-            "SELECT payload FROM queue_jobs WHERE queue_name = 'send-guest-invite-email'",
+            "SELECT payload FROM queue_jobs WHERE queue_name = 'send-room-invite-email'",
         )
         .fetch_all(pool)
         .await
@@ -374,7 +374,7 @@ mod tests {
     async fn job_statuses(pool: &PgPool) -> Vec<String> {
         sqlx::query_scalar(
             "SELECT status::TEXT FROM queue_jobs
-             WHERE queue_name = 'send-guest-invite-email'
+             WHERE queue_name = 'send-room-invite-email'
              ORDER BY payload->>'room_id'",
         )
         .fetch_all(pool)
@@ -385,7 +385,7 @@ mod tests {
     /// Post `body` and return the response's status and first error title
     async fn invite(state: &mut TestState, body: serde_json::Value) -> (StatusCode, String) {
         let token = state.token_with_scope("urn:mas:admin").await;
-        let request = Request::post("/api/admin/v1/invite-guests")
+        let request = Request::post("/api/admin/v1/room-invites")
             .bearer(&token)
             .json(body);
         let response = state.request(request).await;
@@ -396,7 +396,7 @@ mod tests {
         (response.status(), title)
     }
 
-    /// Every guest gets a single-use token pinned to their address and
+    /// Every invitee gets a single-use token pinned to their address and
     /// username, expiring after the configured lifetime, and an email job of
     /// their own
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -405,7 +405,7 @@ mod tests {
         let mut state = TestState::from_pool_with_site_config(
             pool.clone(),
             SiteConfig {
-                guest_invite_lifetime: Duration::hours(1),
+                room_invite_lifetime: Duration::hours(1),
                 ..test_site_config()
             },
         )
@@ -413,7 +413,7 @@ mod tests {
         .unwrap();
         let token = state.token_with_scope("urn:mas:admin").await;
 
-        let request = Request::post("/api/admin/v1/invite-guests")
+        let request = Request::post("/api/admin/v1/room-invites")
             .bearer(&token)
             .json(serde_json::json!({
                 "room_id": "!room:example.com",
@@ -421,8 +421,8 @@ mod tests {
                 "inviter": "@bob:example.com",
                 "inviter_name": "Bob",
                 "invites": [
-                    { "email": "alice@example.com", "username": "guest-alice" },
-                    { "email": "carol@example.com", "username": "guest-carol" },
+                    { "email": "alice@example.com", "username": "user-alice" },
+                    { "email": "carol@example.com", "username": "user-carol" },
                 ],
             }));
         let response = state.request(request).await;
@@ -436,7 +436,7 @@ mod tests {
         let expires_at = state.clock.now() + Duration::hours(1);
         assert_eq!(tokens.len(), 2);
         for (token, name) in tokens.iter().zip(["alice", "carol"]) {
-            assert_eq!(token.username.as_deref(), Some(&*format!("guest-{name}")));
+            assert_eq!(token.username.as_deref(), Some(&*format!("user-{name}")));
             assert_eq!(
                 token.email.as_deref(),
                 Some(&*format!("{name}@example.com"))
@@ -474,7 +474,7 @@ mod tests {
             &mut state,
             serde_json::json!({
                 "room_id": "!31hneApxJ_1o-63DmFrpeqnkFfWppnzWso1JvH3ogLM",
-                "invites": [{ "email": "alice@example.com", "username": "guest-alice" }],
+                "invites": [{ "email": "alice@example.com", "username": "user-alice" }],
             }),
         )
         .await;
@@ -496,14 +496,14 @@ mod tests {
         let mut state = TestState::from_pool(pool).await.unwrap();
         let token = state.token_with_scope("urn:mas:admin").await;
 
-        let request = Request::post("/api/admin/v1/invite-guests")
+        let request = Request::post("/api/admin/v1/room-invites")
             .bearer(&token)
             .json(serde_json::json!({
                 "room_id": "!room:example.com",
                 "invites": [
-                    { "email": "Alice@Example.com", "username": "guest-a" },
-                    { "email": "alice@example.com", "username": "guest-b" },
-                    { "email": "ALICE@EXAMPLE.COM", "username": "guest-a" },
+                    { "email": "Alice@Example.com", "username": "user-a" },
+                    { "email": "alice@example.com", "username": "user-b" },
+                    { "email": "ALICE@EXAMPLE.COM", "username": "user-a" },
                 ],
             }));
         let response = state.request(request).await;
@@ -515,7 +515,7 @@ mod tests {
 
         let tokens = tokens(&state).await;
         assert_eq!(tokens.len(), 1);
-        assert_eq!(tokens[0].username.as_deref(), Some("guest-a"));
+        assert_eq!(tokens[0].username.as_deref(), Some("user-a"));
         assert_eq!(tokens[0].email.as_deref(), Some("Alice@Example.com"));
     }
 
@@ -528,7 +528,7 @@ mod tests {
 
         let mut repo = state.repository().await.unwrap();
         repo.user()
-            .add(&mut state.rng(), &state.clock, "guest-alice".to_owned())
+            .add(&mut state.rng(), &state.clock, "user-alice".to_owned())
             .await
             .unwrap();
         repo.save().await.unwrap();
@@ -538,14 +538,14 @@ mod tests {
             serde_json::json!({
                 "room_id": "!room:example.com",
                 "invites": [
-                    { "email": "bob@example.com", "username": "guest-bob" },
-                    { "email": "alice@example.com", "username": "guest-alice" },
+                    { "email": "bob@example.com", "username": "user-bob" },
+                    { "email": "alice@example.com", "username": "user-alice" },
                 ],
             }),
         )
         .await;
         assert_eq!(status, StatusCode::CONFLICT);
-        assert_eq!(title, r#"Username "guest-alice" is already taken"#);
+        assert_eq!(title, r#"Username "user-alice" is already taken"#);
         assert!(tokens(&state).await.is_empty());
     }
 
@@ -562,7 +562,7 @@ mod tests {
             .json(serde_json::json!({
                 "data": {
                     "banned_domains": ["banned.example"],
-                    "registration": { "banned_usernames": { "literals": ["guest-banned"] } },
+                    "registration": { "banned_usernames": { "literals": ["user-banned"] } },
                 },
             }));
         state
@@ -572,16 +572,16 @@ mod tests {
 
         for (invite, error) in [
             (
-                serde_json::json!({ "email": "bob@banned.example", "username": "guest-bob" }),
-                r#"Invite for "bob@banned.example" with username "guest-bob" is not allowed: email: email domain is banned"#,
+                serde_json::json!({ "email": "bob@banned.example", "username": "user-bob" }),
+                r#"Invite for "bob@banned.example" with username "user-bob" is not allowed: email: email domain is banned"#,
             ),
             (
-                serde_json::json!({ "email": "bob@example.com", "username": "guest-banned" }),
-                r#"Invite for "bob@example.com" with username "guest-banned" is not allowed: username: username is banned"#,
+                serde_json::json!({ "email": "bob@example.com", "username": "user-banned" }),
+                r#"Invite for "bob@example.com" with username "user-banned" is not allowed: username: username is banned"#,
             ),
             (
-                serde_json::json!({ "email": "bob@banned.example", "username": "guest-banned" }),
-                r#"Invite for "bob@banned.example" with username "guest-banned" is not allowed: email: email domain is banned; username: username is banned"#,
+                serde_json::json!({ "email": "bob@banned.example", "username": "user-banned" }),
+                r#"Invite for "bob@banned.example" with username "user-banned" is not allowed: email: email domain is banned; username: username is banned"#,
             ),
         ] {
             let (status, title) = invite_one(&mut state, invite).await;
@@ -599,7 +599,7 @@ mod tests {
             serde_json::json!({
                 "room_id": "!room:example.com",
                 "invites": [
-                    { "email": "alice@example.com", "username": "guest-alice" },
+                    { "email": "alice@example.com", "username": "user-alice" },
                     invite,
                 ],
             }),
@@ -618,8 +618,8 @@ mod tests {
                 serde_json::json!({
                     "room_id": "!room:example.com",
                     "invites": [
-                        { "email": "alice@example.com", "username": "guest-alice" },
-                        { "email": "not-an-email", "username": "guest-bob" },
+                        { "email": "alice@example.com", "username": "user-alice" },
+                        { "email": "not-an-email", "username": "user-bob" },
                     ],
                 }),
                 r#"Email "not-an-email" is not valid"#,
@@ -627,7 +627,7 @@ mod tests {
             (
                 serde_json::json!({
                     "room_id": "#room:example.com",
-                    "invites": [{ "email": "alice@example.com", "username": "guest-alice" }],
+                    "invites": [{ "email": "alice@example.com", "username": "user-alice" }],
                 }),
                 r##"Invalid room ID "#room:example.com""##,
             ),
@@ -639,11 +639,11 @@ mod tests {
                 serde_json::json!({
                     "room_id": "!room:example.com",
                     "invites": [
-                        { "email": "alice@example.com", "username": "guest-a" },
-                        { "email": "bob@example.com", "username": "guest-a" },
+                        { "email": "alice@example.com", "username": "user-a" },
+                        { "email": "bob@example.com", "username": "user-a" },
                     ],
                 }),
-                r#"Username "guest-a" is given twice"#,
+                r#"Username "user-a" is given twice"#,
             ),
         ] {
             let (status, title) = invite(&mut state, body).await;
@@ -667,14 +667,14 @@ mod tests {
         assert!(job_payloads(&pool).await.is_empty());
     }
 
-    /// With guest invites disabled, the endpoint answers as if it didn't exist
+    /// With room invites disabled, the endpoint answers as if it didn't exist
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_invite_disabled(pool: PgPool) {
         setup();
         let mut state = TestState::from_pool_with_site_config(
             pool,
             SiteConfig {
-                guest_invites_enabled: false,
+                room_invites_enabled: false,
                 ..test_site_config()
             },
         )
@@ -685,12 +685,12 @@ mod tests {
             &mut state,
             serde_json::json!({
                 "room_id": "!room:example.com",
-                "invites": [{ "email": "alice@example.com", "username": "guest-alice" }],
+                "invites": [{ "email": "alice@example.com", "username": "user-alice" }],
             }),
         )
         .await;
         assert_eq!(status, StatusCode::NOT_FOUND);
-        assert_eq!(title, "Guest invites are disabled");
+        assert_eq!(title, "Room invites are disabled");
     }
 
     /// The room name and the inviter's name are stripped of control characters
@@ -719,7 +719,7 @@ mod tests {
                     "room_name": format!("{controls}Project{controls} X{}", "x".repeat(64 * 1024)),
                     "inviter": inviter,
                     "inviter_name": format!("B\u{202E}ob{}", "é".repeat(200)),
-                    "invites": [{ "email": "alice@example.com", "username": "guest-alice" }],
+                    "invites": [{ "email": "alice@example.com", "username": "user-alice" }],
                 }),
             )
             .await;
@@ -754,7 +754,7 @@ mod tests {
                     room_id.to_owned(),
                     Some(1),
                     None,
-                    Some("guest-alice".to_owned()),
+                    Some("user-alice".to_owned()),
                     Some("not-an-email".to_owned()),
                     true,
                     None,
@@ -771,7 +771,7 @@ mod tests {
                 .schedule_job(
                     &mut rng,
                     &state.clock,
-                    SendGuestInviteEmailJob::new(token.id, room_id.to_owned(), None, None, None),
+                    SendRoomInviteEmailJob::new(token.id, room_id.to_owned(), None, None, None),
                 )
                 .await
                 .unwrap();

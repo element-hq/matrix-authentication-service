@@ -23,10 +23,10 @@ pub use crate::new_queue::QueueWorker;
 
 mod cleanup;
 mod email;
-mod guest_invite;
 mod matrix;
 mod new_queue;
 mod recovery;
+mod room_invite;
 mod sessions;
 mod user;
 
@@ -152,7 +152,7 @@ pub async fn init(
         .register_handler::<mas_storage::queue::ReactivateUserJob>()
         .register_handler::<mas_storage::queue::SendAccountRecoveryEmailsJob>()
         .register_handler::<mas_storage::queue::SendEmailAuthenticationCodeJob>()
-        .register_handler::<mas_storage::queue::SendGuestInviteEmailJob>()
+        .register_handler::<mas_storage::queue::SendRoomInviteEmailJob>()
         .register_handler::<mas_storage::queue::SyncDevicesJob>()
         .register_handler::<mas_storage::queue::VerifyEmailJob>()
         .register_handler::<mas_storage::queue::ExpireInactiveSessionsJob>()

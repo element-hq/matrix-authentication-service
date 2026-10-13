@@ -91,14 +91,14 @@ mod tests {
 
     /// The room ID is percent-encoded into the client URL, with a space
     /// encoded as `%20` and not `+`, which the client wouldn't decode. The
-    /// client URL is used whether or not guest invites are enabled.
+    /// client URL is used whether or not room invites are enabled.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_open_room(pool: PgPool) {
         setup();
         let state = TestState::from_pool_with_site_config(
             pool,
             SiteConfig {
-                guest_invites_enabled: false,
+                room_invites_enabled: false,
                 ..test_site_config()
             },
         )

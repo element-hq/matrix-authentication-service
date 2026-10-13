@@ -56,8 +56,8 @@ fn finish(t: TransformOpenApi) -> TransformOpenApi {
             ..Tag::default()
         })
         .tag(Tag {
-            name: "guest-invite".to_owned(),
-            description: Some("Invite guests to rooms by email".to_owned()),
+            name: "room-invite".to_owned(),
+            description: Some("Invite email addresses to rooms".to_owned()),
             ..Tag::default()
         })
         .tag(Tag {

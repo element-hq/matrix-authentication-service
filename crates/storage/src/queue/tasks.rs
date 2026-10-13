@@ -652,13 +652,13 @@ impl InsertableJob for CleanupInactiveUserSessionIpsJob {
     const QUEUE_NAME: &'static str = "cleanup-inactive-user-session-ips";
 }
 
-/// Send a guest invite email for a registration token.
+/// Send a room invite email for a registration token.
 ///
 /// The recipient's address and the invite link both come from the token, so
 /// that the link in the email can't be sent to anyone but the address the
 /// token is pinned to.
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SendGuestInviteEmailJob {
+pub struct SendRoomInviteEmailJob {
     registration_token_id: Ulid,
     room_id: String,
     room_name: Option<String>,
@@ -666,8 +666,8 @@ pub struct SendGuestInviteEmailJob {
     inviter_name: Option<String>,
 }
 
-impl SendGuestInviteEmailJob {
-    /// Create a new job to send a guest invite email
+impl SendRoomInviteEmailJob {
+    /// Create a new job to send a room invite email
     ///
     /// # Parameters
     ///
@@ -725,6 +725,6 @@ impl SendGuestInviteEmailJob {
     }
 }
 
-impl InsertableJob for SendGuestInviteEmailJob {
-    const QUEUE_NAME: &'static str = "send-guest-invite-email";
+impl InsertableJob for SendRoomInviteEmailJob {
+    const QUEUE_NAME: &'static str = "send-room-invite-email";
 }

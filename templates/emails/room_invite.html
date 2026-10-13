@@ -8,20 +8,20 @@ Please see LICENSE files in the repository root for full details.
 {%- set _ = translator(lang) -%}
 {%- if inviter_name and inviter -%}
   {%- if room_name -%}
-    {%- set headline = _("mas.emails.guest_invite.headline_from_name_and_mxid", name=inviter_name, mxid=inviter, room=room_name, server_name=branding.server_name) -%}
+    {%- set headline = _("mas.emails.room_invite.headline_from_name_and_mxid", name=inviter_name, mxid=inviter, room=room_name, server_name=branding.server_name) -%}
   {%- else -%}
-    {%- set headline = _("mas.emails.guest_invite.headline_from_name_and_mxid_unnamed_room", name=inviter_name, mxid=inviter, server_name=branding.server_name) -%}
+    {%- set headline = _("mas.emails.room_invite.headline_from_name_and_mxid_unnamed_room", name=inviter_name, mxid=inviter, server_name=branding.server_name) -%}
   {%- endif -%}
 {%- elif inviter_name or inviter -%}
   {%- if room_name -%}
-    {%- set headline = _("mas.emails.guest_invite.headline_from", inviter=inviter_name or inviter, room=room_name, server_name=branding.server_name) -%}
+    {%- set headline = _("mas.emails.room_invite.headline_from", inviter=inviter_name or inviter, room=room_name, server_name=branding.server_name) -%}
   {%- else -%}
-    {%- set headline = _("mas.emails.guest_invite.headline_from_unnamed_room", inviter=inviter_name or inviter, server_name=branding.server_name) -%}
+    {%- set headline = _("mas.emails.room_invite.headline_from_unnamed_room", inviter=inviter_name or inviter, server_name=branding.server_name) -%}
   {%- endif -%}
 {%- elif room_name -%}
-  {%- set headline = _("mas.emails.guest_invite.headline", room=room_name, server_name=branding.server_name) -%}
+  {%- set headline = _("mas.emails.room_invite.headline", room=room_name, server_name=branding.server_name) -%}
 {%- else -%}
-  {%- set headline = _("mas.emails.guest_invite.headline_unnamed_room", server_name=branding.server_name) -%}
+  {%- set headline = _("mas.emails.room_invite.headline_unnamed_room", server_name=branding.server_name) -%}
 {%- endif -%}
 
 <!doctype html>
@@ -40,9 +40,9 @@ Please see LICENSE files in the repository root for full details.
     font-family: Inter, system-ui, ui-sans-serif, sans-serif;
 ">
     {{ headline }}
-    {{ _("mas.emails.guest_invite.approval") }}<br />
+    {{ _("mas.emails.room_invite.approval") }}<br />
     <br />
-    {{ _("mas.emails.guest_invite.click_button") }}<br />
+    {{ _("mas.emails.room_invite.click_button") }}<br />
     <br />
     <a id="button" href="{{ invite_link }}" target="_blank" style="
         display: inline-block;
@@ -57,13 +57,13 @@ Please see LICENSE files in the repository root for full details.
         border-radius: 32px;
         border-radius: 2rem;
         text-decoration: none;
-    ">{{ _("mas.emails.guest_invite.accept") }}</a><br />
+    ">{{ _("mas.emails.room_invite.accept") }}</a><br />
     <p style="font-size: 14px; font-size: 0.875rem;">
-      {{ _("mas.emails.guest_invite.fallback") }} {{ _("mas.emails.guest_invite.copy_link") }}
+      {{ _("mas.emails.room_invite.fallback") }} {{ _("mas.emails.room_invite.copy_link") }}
     </p>
     <p style="font-size: 14px; font-size: 0.875rem;">
       <a href="{{ invite_link }}" target="_blank">{{ invite_link }}</a>
     </p>
-    {{ _("mas.emails.guest_invite.you_can_ignore") }}
+    {{ _("mas.emails.room_invite.you_can_ignore") }}
 </body>
 </html>

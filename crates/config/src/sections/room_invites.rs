@@ -34,7 +34,7 @@ fn is_default_invite_lifetime(value: &NonZeroU32) -> bool {
 /// Configuration section for inviting email addresses to rooms
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
 pub struct RoomInvitesConfig {
-    /// Whether the `POST /api/admin/v1/invite-guests` endpoint is enabled.
+    /// Whether the `POST /api/admin/v1/room-invites` endpoint is enabled.
     /// Defaults to `false`.
     #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
     pub enabled: bool,

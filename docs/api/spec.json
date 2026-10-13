@@ -2005,19 +2005,19 @@
         }
       }
     },
-    "/api/admin/v1/invite-guests": {
+    "/api/admin/v1/room-invites": {
       "post": {
         "tags": [
-          "guest-invite"
+          "room-invite"
         ],
-        "summary": "Invite a list of email addresses to a room as guests",
-        "description": "Mints a single-use, passwordless registration token for each guest, pinned to their address and username, and emails them a link to register with it and open the room. The links are only ever sent to the guests, so they are not in the response.",
-        "operationId": "inviteGuests",
+        "summary": "Invite a list of email addresses to a room",
+        "description": "Mints a single-use, passwordless registration token for each invite, pinned to its address and username, and emails the address a link to register with the token and open the room. The links are only ever sent to the addresses, so they are not in the response.",
+        "operationId": "createRoomInvites",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/InviteGuestsRequest"
+                "$ref": "#/components/schemas/RoomInvitesRequest"
               }
             }
           },
@@ -2029,7 +2029,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InviteGuestsResponse"
+                  "$ref": "#/components/schemas/RoomInvitesResponse"
                 },
                 "example": {
                   "scheduled": 2
@@ -2047,7 +2047,7 @@
                 "example": {
                   "errors": [
                     {
-                      "title": "Invite for \"alice@example.com\" with username \"guest-abcdef\" is not allowed: email: email domain is banned"
+                      "title": "Invite for \"alice@example.com\" with username \"user-abcdef\" is not allowed: email: email domain is banned"
                     }
                   ]
                 }
@@ -2055,7 +2055,7 @@
             }
           },
           "404": {
-            "description": "Guest invites are disabled",
+            "description": "Room invites are disabled",
             "content": {
               "application/json": {
                 "schema": {
@@ -2064,7 +2064,7 @@
                 "example": {
                   "errors": [
                     {
-                      "title": "Guest invites are disabled"
+                      "title": "Room invites are disabled"
                     }
                   ]
                 }
@@ -6580,12 +6580,12 @@
           "data"
         ]
       },
-      "InviteGuestsRequest": {
-        "title": "JSON payload for the `POST /api/admin/v1/invite-guests` endpoint",
+      "RoomInvitesRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/room-invites` endpoint",
         "type": "object",
         "properties": {
           "room_id": {
-            "description": "The room the guests are invited to",
+            "description": "The room the addresses are invited to",
             "type": "string",
             "example": "!room:example.com"
           },
@@ -6614,10 +6614,10 @@
             "example": "Bob"
           },
           "invites": {
-            "description": "The guests to invite. An address given more than once, ignoring case,\nis invited once.",
+            "description": "The addresses to invite. An address given more than once, ignoring case,\nis invited once.",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/GuestInvite"
+              "$ref": "#/components/schemas/RoomInvite"
             }
           }
         },
@@ -6626,20 +6626,20 @@
           "invites"
         ]
       },
-      "GuestInvite": {
-        "title": "A guest to invite to the room",
+      "RoomInvite": {
+        "title": "An email address to invite to the room",
         "type": "object",
         "properties": {
           "email": {
-            "description": "The address to send the invite to. The guest can only register with\nthis address.",
+            "description": "The address to send the invite to. The invitee can only register with\nthis address.",
             "type": "string",
             "format": "email",
             "example": "alice@example.com"
           },
           "username": {
-            "description": "The username the guest registers with",
+            "description": "The username the invitee registers with",
             "type": "string",
-            "example": "guest-abcdef"
+            "example": "user-abcdef"
           }
         },
         "required": [
@@ -6647,12 +6647,12 @@
           "username"
         ]
       },
-      "InviteGuestsResponse": {
-        "title": "Response to the `POST /api/admin/v1/invite-guests` endpoint",
+      "RoomInvitesResponse": {
+        "title": "Response to the `POST /api/admin/v1/room-invites` endpoint",
         "type": "object",
         "properties": {
           "scheduled": {
-            "description": "How many guests were scheduled an invite email, after dropping repeated\naddresses",
+            "description": "How many addresses were scheduled an invite email, after dropping\nrepeated ones",
             "type": "integer",
             "format": "uint",
             "minimum": 0
@@ -8090,8 +8090,8 @@
       "description": "Manage compatibility sessions from legacy clients"
     },
     {
-      "name": "guest-invite",
-      "description": "Invite guests to rooms by email"
+      "name": "room-invite",
+      "description": "Invite email addresses to rooms"
     },
     {
       "name": "policy-data",

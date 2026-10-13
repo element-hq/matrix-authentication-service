@@ -12,8 +12,7 @@ use lettre::{
     message::{Mailbox, MessageBuilder, MultiPart},
 };
 use mas_templates::{
-    EmailGuestInviteContext, EmailRecoveryContext, EmailVerificationContext, Templates,
-    WithLanguage,
+    EmailRecoveryContext, EmailRoomInviteContext, EmailVerificationContext, Templates, WithLanguage,
 };
 use thiserror::Error;
 
@@ -106,18 +105,18 @@ impl Mailer {
         Ok(message)
     }
 
-    fn prepare_guest_invite_email(
+    fn prepare_room_invite_email(
         &self,
         to: Mailbox,
-        context: &WithLanguage<EmailGuestInviteContext>,
+        context: &WithLanguage<EmailRoomInviteContext>,
     ) -> Result<Message, Error> {
-        let plain = self.templates.render_email_guest_invite_txt(context)?;
+        let plain = self.templates.render_email_room_invite_txt(context)?;
 
-        let html = self.templates.render_email_guest_invite_html(context)?;
+        let html = self.templates.render_email_room_invite_html(context)?;
 
         let multipart = MultiPart::alternative_plain_html(plain, html);
 
-        let subject = self.templates.render_email_guest_invite_subject(context)?;
+        let subject = self.templates.render_email_room_invite_subject(context)?;
 
         let message = self
             .base_message()
@@ -176,25 +175,25 @@ impl Mailer {
         Ok(())
     }
 
-    /// Send a guest invite email
+    /// Send a room invite email
     ///
     /// # Errors
     ///
     /// Will return `Err` if the email failed rendering or failed sending
     #[tracing::instrument(
-        name = "email.guest_invite.send",
+        name = "email.room_invite.send",
         skip_all,
         fields(
             email.to = %to,
             email.language = %context.language(),
         ),
     )]
-    pub async fn send_guest_invite_email(
+    pub async fn send_room_invite_email(
         &self,
         to: Mailbox,
-        context: &WithLanguage<EmailGuestInviteContext>,
+        context: &WithLanguage<EmailRoomInviteContext>,
     ) -> Result<(), Error> {
-        let message = self.prepare_guest_invite_email(to, context)?;
+        let message = self.prepare_room_invite_email(to, context)?;
         self.transport.send(message).await?;
         Ok(())
     }

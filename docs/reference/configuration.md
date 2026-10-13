@@ -1042,11 +1042,11 @@ oauth:
 
 ## `room_invites`
 
-Configuration section for inviting email addresses to rooms, through the `POST /api/admin/v1/invite-guests` admin API endpoint.
+Configuration section for inviting email addresses to rooms, through the `POST /api/admin/v1/room-invites` admin API endpoint.
 
 ```yaml
 room_invites:
-  # Whether the `POST /api/admin/v1/invite-guests` endpoint is enabled.
+  # Whether the `POST /api/admin/v1/room-invites` endpoint is enabled.
   #
   # Defaults to `false`.
   enabled: false
