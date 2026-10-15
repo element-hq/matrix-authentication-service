@@ -144,11 +144,10 @@ pub(super) async fn register(
         }
 
         if !password_manager.is_password_complex_enough(&form.password)? {
-            // TODO localise this error
             state.add_error_on_field(
                 RegisterFormField::Password,
                 FieldError::Policy {
-                    code: None,
+                    code: Some("password-too-weak"),
                     message: "Password is too weak".to_owned(),
                 },
             );
