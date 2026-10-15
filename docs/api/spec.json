@@ -3886,6 +3886,7 @@
                         "username": null,
                         "email": null,
                         "passwordless": false,
+                        "room_id": null,
                         "usage_limit": 10,
                         "times_used": 5,
                         "created_at": "1970-01-01T00:00:00Z",
@@ -3912,6 +3913,7 @@
                         "username": null,
                         "email": null,
                         "passwordless": false,
+                        "room_id": null,
                         "usage_limit": null,
                         "times_used": 0,
                         "created_at": "1970-01-01T00:00:00Z",
@@ -3976,6 +3978,7 @@
                       "username": null,
                       "email": null,
                       "passwordless": false,
+                      "room_id": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -3991,6 +3994,23 @@
                   "links": {
                     "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The room ID is not valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Invalid room ID \"#room:example.com\""
+                    }
+                  ]
                 }
               }
             }
@@ -4035,6 +4055,7 @@
                       "username": null,
                       "email": null,
                       "passwordless": false,
+                      "room_id": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -4120,6 +4141,7 @@
                       "username": null,
                       "email": null,
                       "passwordless": false,
+                      "room_id": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -4197,6 +4219,7 @@
                       "username": null,
                       "email": null,
                       "passwordless": false,
+                      "room_id": null,
                       "usage_limit": null,
                       "times_used": 0,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -4291,6 +4314,7 @@
                       "username": null,
                       "email": null,
                       "passwordless": false,
+                      "room_id": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -7524,6 +7548,13 @@
             "description": "Whether registering with this token skips the password step. The user's\nidentity is then established by verifying their email address.",
             "type": "boolean"
           },
+          "room_id": {
+            "description": "A room opened once the user has registered or signed in through the\ntoken's link. If null, the link opens no room.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "usage_limit": {
             "description": "Maximum number of times this token can be used",
             "type": [
@@ -7629,6 +7660,14 @@
             "description": "Whether registering with this token skips the password step. The user's\nidentity is then established by verifying their email address.",
             "type": "boolean",
             "default": false
+          },
+          "room_id": {
+            "description": "A room to open once the user has registered or signed in through the\ntoken's link, in the client set by `room_invites.client_room_url`.\nWithout that setting, the link opens no room.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "!room:example.com"
           }
         }
       },

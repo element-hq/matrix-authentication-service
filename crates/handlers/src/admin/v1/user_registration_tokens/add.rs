@@ -23,6 +23,7 @@ use crate::{
         response::{ErrorResponse, SingleResponse},
     },
     impl_from_error_for_route,
+    room_id::is_valid_room_id,
 };
 
 #[derive(Debug, thiserror::Error, OperationIo)]
@@ -30,6 +31,9 @@ use crate::{
 pub enum RouteError {
     #[error("A registration token with the same token already exists")]
     Conflict(Box<mas_data_model::UserRegistrationToken>),
+
+    #[error("Invalid room ID {0:?}")]
+    InvalidRoomId(String),
 
     #[error(transparent)]
     Internal(Box<dyn std::error::Error + Send + Sync + 'static>),
@@ -43,6 +47,7 @@ impl IntoResponse for RouteError {
         let sentry_event_id = record_error!(self, Self::Internal(_));
         let status = match self {
             Self::Conflict(_) => StatusCode::CONFLICT,
+            Self::InvalidRoomId(_) => StatusCode::BAD_REQUEST,
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
         (status, sentry_event_id, Json(error)).into_response()
@@ -78,6 +83,12 @@ pub struct Request {
     /// identity is then established by verifying their email address.
     #[serde(default)]
     passwordless: bool,
+
+    /// A room to open once the user has registered or signed in through the
+    /// token's link, in the client set by `room_invites.client_room_url`.
+    /// Without that setting, the link opens no room.
+    #[schemars(example = &"!room:example.com")]
+    room_id: Option<String>,
 }
 
 pub fn doc(operation: TransformOperation) -> TransformOperation {
@@ -91,6 +102,12 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             t.description("A new user registration token was created")
                 .example(response)
         })
+        .response_with::<400, RouteError, _>(|t| {
+            let response = ErrorResponse::from_error(&RouteError::InvalidRoomId(
+                "#room:example.com".to_owned(),
+            ));
+            t.description("The room ID is not valid").example(response)
+        })
 }
 
 #[tracing::instrument(name = "handler.admin.v1.user_registration_tokens.post", skip_all)]
@@ -102,6 +119,12 @@ pub async fn handler(
     NoApi(mut rng): NoApi<BoxRng>,
     Json(params): Json<Request>,
 ) -> Result<(StatusCode, Json<SingleResponse<UserRegistrationToken>>), RouteError> {
+    if let Some(room_id) = params.room_id.as_deref()
+        && !is_valid_room_id(room_id)
+    {
+        return Err(RouteError::InvalidRoomId(room_id.to_owned()));
+    }
+
     // Generate a random token if none was provided
     let token = params
         .token
@@ -124,7 +147,7 @@ pub async fn handler(
             params.username,
             params.email,
             params.passwordless,
-            None,
+            params.room_id,
         )
         .await?;
 
@@ -175,6 +198,7 @@ mod tests {
               "username": null,
               "email": null,
               "passwordless": false,
+              "room_id": null,
               "usage_limit": 5,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -242,6 +266,7 @@ mod tests {
               "username": null,
               "email": null,
               "passwordless": false,
+              "room_id": null,
               "usage_limit": 1,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -290,6 +315,7 @@ mod tests {
               "username": "alice",
               "email": "alice@example.com",
               "passwordless": true,
+              "room_id": null,
               "usage_limit": null,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -307,6 +333,82 @@ mod tests {
           }
         }
         "#);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_create_room(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+
+        let mut ids = Vec::new();
+        for (name, room_id) in [("with_room", Some("!room:example.com")), ("no_room", None)] {
+            let request = Request::post("/api/admin/v1/user-registration-tokens")
+                .bearer(&token)
+                .json(serde_json::json!({ "token": name, "room_id": room_id }));
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::CREATED);
+            let body: serde_json::Value = response.json();
+            assert_eq!(
+                body["data"]["attributes"]["room_id"],
+                serde_json::json!(room_id)
+            );
+            let id = body["data"]["id"].as_str().unwrap().to_owned();
+
+            let request = Request::get(format!("/api/admin/v1/user-registration-tokens/{id}"))
+                .bearer(&token)
+                .empty();
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::OK);
+            let body: serde_json::Value = response.json();
+            assert_eq!(
+                body["data"]["attributes"]["room_id"],
+                serde_json::json!(room_id)
+            );
+
+            ids.push((id, room_id));
+        }
+
+        let request = Request::get("/api/admin/v1/user-registration-tokens")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        for (id, room_id) in ids {
+            let listed = body["data"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|token| token["id"] == id)
+                .unwrap();
+            assert_eq!(listed["attributes"]["room_id"], serde_json::json!(room_id));
+        }
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_create_invalid_room(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+
+        for room_id in [
+            "#room:example.com",
+            "room",
+            "!room\u{7}:example.com",
+            "!room\u{202E}:example.com",
+        ] {
+            let request = Request::post("/api/admin/v1/user-registration-tokens")
+                .bearer(&token)
+                .json(serde_json::json!({ "room_id": room_id }));
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::BAD_REQUEST);
+            let body: serde_json::Value = response.json();
+            assert_eq!(
+                body["errors"][0]["title"],
+                format!("Invalid room ID {room_id:?}")
+            );
+        }
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -337,6 +439,7 @@ mod tests {
               "username": null,
               "email": null,
               "passwordless": false,
+              "room_id": null,
               "usage_limit": 5,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
