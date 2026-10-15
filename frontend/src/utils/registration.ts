@@ -37,7 +37,7 @@ export const VALID_LOCALPART_RE = /^[a-z0-9._=/+-]+$/;
 
 /** Normalize a username: trim and lowercase. */
 export const normalizeUsername = (value: string): string =>
-  value.trim().toLocaleLowerCase();
+  value.trim().toLowerCase();
 
 /**
  * Well-known policy violation codes, mapped to the key of their translated

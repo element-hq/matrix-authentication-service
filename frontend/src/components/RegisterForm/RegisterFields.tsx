@@ -36,7 +36,7 @@ export const UsernameField: React.FC<{
         value={username}
         onChange={(e) => {
           // Lowercase as the user types, so what is shown is what gets sent
-          setUsername(e.target.value.toLocaleLowerCase());
+          setUsername(e.target.value.toLowerCase());
         }}
         onBlur={() => setUsername(normalizeUsername(username))}
       />
