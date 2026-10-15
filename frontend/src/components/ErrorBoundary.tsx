@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -7,7 +8,6 @@
 import { type ErrorInfo, PureComponent, type ReactNode } from "react";
 
 import GenericError from "./GenericError";
-import Layout from "./Layout";
 
 interface Props {
   children: ReactNode;
@@ -45,11 +45,7 @@ export default class ErrorBoundary extends PureComponent<Props, IState> {
   public render(): ReactNode {
     if (this.state.error) {
       // We ask the child components not to suspend, as this error boundary won't be in a Suspense boundary.
-      return (
-        <Layout>
-          <GenericError dontSuspend error={this.state.error} />
-        </Layout>
-      );
+      return <GenericError dontSuspend error={this.state.error} />;
     }
 
     return this.props.children;
