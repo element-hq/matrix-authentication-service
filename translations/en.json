@@ -412,7 +412,7 @@
         "context": "components/field.html:41:11-42",
         "description": "Error message shown on registration, when the username matches a pattern that is banned by the server policy."
       },
-      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, dashes and underscores only.",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, and the characters . _ - + / =",
       "@username_invalid_chars": {
         "context": "components/field.html:37:11-49"
       },

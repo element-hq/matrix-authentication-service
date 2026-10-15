@@ -129,7 +129,7 @@
       "username_all_numeric": "Username cannot consist solely of numbers",
       "username_banned": "Username is banned by the server policy",
       "username_invalid": "Username can only contain lowercase letters, numbers, and the characters . _ - + / =",
-      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, dashes and underscores only.",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, and the characters . _ - + / =",
       "username_not_allowed": "Username is not allowed by the server policy",
       "username_taken": "This username is already taken",
       "username_too_long": "Username is too long",
