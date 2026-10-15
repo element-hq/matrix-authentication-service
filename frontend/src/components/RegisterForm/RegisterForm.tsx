@@ -279,6 +279,17 @@ export const PasswordRegisterForm: React.FC<{
           {/* The form's first submit button, so that Enter in any of the fields
           registers rather than picking a provider */}
           <Form.Submit>{t("action.continue")}</Form.Submit>
+
+          {providers.length > 0 && (
+            <Button
+              type="button"
+              kind="secondary"
+              size="lg"
+              onClick={() => setStep("username")}
+            >
+              {t("action.back")}
+            </Button>
+          )}
         </>
       )}
 
