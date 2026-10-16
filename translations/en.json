@@ -10,7 +10,7 @@
     },
     "continue": "Continue",
     "@continue": {
-      "context": "form_post.html:26:28-48, pages/consent.html:71:28-48, pages/device_link.html:54:28-48, pages/login.html:68:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/password.html:78:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:52:28-48"
+      "context": "form_post.html:26:28-48, pages/consent.html:71:28-48, pages/device_link.html:54:28-48, pages/login.html:68:30-50, pages/reauth.html:32:28-48, pages/recovery/start.html:38:26-46, pages/register/steps/display_name.html:43:28-48, pages/register/steps/registration_token.html:41:28-48, pages/register/steps/verify_email.html:51:26-46, pages/sso.html:52:28-48"
     },
     "create_account": "Create Account",
     "@create_account": {
@@ -41,7 +41,7 @@
     },
     "name": "matrix-authentication-service",
     "@name": {
-      "context": "app.html:18:14-27, base.html:25:31-44",
+      "context": "app.html:18:14-27, base.html:24:31-44",
       "description": "Name of the application"
     },
     "technical_description": "OpenID Connect discovery document: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>",
@@ -79,7 +79,7 @@
     },
     "email_address": "Email address",
     "@email_address": {
-      "context": "pages/recovery/start.html:34:33-58, pages/register/password.html:41:35-60, pages/upstream_oauth2/do_register.html:115:37-62"
+      "context": "pages/recovery/start.html:34:33-58, pages/upstream_oauth2/do_register.html:115:37-62"
     },
     "loading": "Loading…",
     "@loading": {
@@ -91,15 +91,11 @@
     },
     "password": "Password",
     "@password": {
-      "context": "pages/login.html:56:37-57, pages/reauth.html:28:35-55, pages/register/password.html:46:33-53"
-    },
-    "password_confirm": "Confirm password",
-    "@password_confirm": {
-      "context": "pages/register/password.html:50:33-61"
+      "context": "pages/login.html:56:37-57, pages/reauth.html:28:35-55"
     },
     "username": "Username",
     "@username": {
-      "context": "pages/login.html:51:39-59, pages/register/index.html:31:35-55, pages/register/password.html:35:33-53, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:107:39-59"
+      "context": "pages/login.html:51:39-59, pages/upstream_oauth2/do_register.html:101:35-55, pages/upstream_oauth2/do_register.html:107:39-59"
     }
   },
   "error": {
@@ -145,12 +141,6 @@
     "back_to_homepage": "Go back to the homepage",
     "@back_to_homepage": {
       "context": "pages/404.html:16:29-54"
-    },
-    "captcha": {
-      "noscript": "This form is protected by a CAPTCHA and requires JavaScript to be enabled to submit it. Please enable JavaScript in your browser and reload this page.",
-      "@noscript": {
-        "context": "components/captcha.html:14:11-36"
-      }
     },
     "change_password": {
       "change": "Change password",
@@ -379,27 +369,27 @@
       },
       "denied_policy": "Denied by policy: %(policy)s",
       "@denied_policy": {
-        "context": "components/errors.html:17:7-58, components/field.html:52:11-62"
+        "context": "components/errors.html:17:7-58, components/field.html:53:11-62"
       },
       "email_banned": "Email is banned by the server policy",
       "@email_banned": {
-        "context": "components/field.html:50:11-39"
+        "context": "components/field.html:51:11-39"
       },
       "email_domain_banned": "Email domain is banned by the server policy",
       "@email_domain_banned": {
-        "context": "components/field.html:46:11-46"
+        "context": "components/field.html:47:11-46"
       },
       "email_domain_not_allowed": "Email domain is not allowed by the server policy",
       "@email_domain_not_allowed": {
-        "context": "components/field.html:44:11-51"
+        "context": "components/field.html:45:11-51"
       },
       "email_not_allowed": "Email is not allowed by the server policy",
       "@email_not_allowed": {
-        "context": "components/field.html:48:11-44"
+        "context": "components/field.html:49:11-44"
       },
       "field_required": "This field is required",
       "@field_required": {
-        "context": "components/field.html:27:9-39"
+        "context": "components/field.html:28:9-39"
       },
       "invalid_credentials": "Invalid credentials",
       "@invalid_credentials": {
@@ -407,7 +397,7 @@
       },
       "password_mismatch": "Password fields don't match",
       "@password_mismatch": {
-        "context": "components/errors.html:13:7-40, components/field.html:55:9-42"
+        "context": "components/errors.html:13:7-40, components/field.html:56:9-42"
       },
       "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again.",
       "@rate_limit_exceeded": {
@@ -415,33 +405,33 @@
       },
       "username_all_numeric": "Username cannot consist solely of numbers",
       "@username_all_numeric": {
-        "context": "components/field.html:38:11-47"
+        "context": "components/field.html:39:11-47"
       },
       "username_banned": "Username is banned by the server policy",
       "@username_banned": {
-        "context": "components/field.html:40:11-42",
+        "context": "components/field.html:41:11-42",
         "description": "Error message shown on registration, when the username matches a pattern that is banned by the server policy."
       },
-      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, dashes and underscores only.",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, and the characters . _ - + / =",
       "@username_invalid_chars": {
-        "context": "components/field.html:36:11-49"
+        "context": "components/field.html:37:11-49"
       },
       "username_not_allowed": "Username is not allowed by the server policy",
       "@username_not_allowed": {
-        "context": "components/field.html:42:11-47",
+        "context": "components/field.html:43:11-47",
         "description": "Error message shown on registration, when the username *does not match* any of the patterns that are allowed by the server policy."
       },
       "username_taken": "This username is already taken",
       "@username_taken": {
-        "context": "components/field.html:29:9-39"
+        "context": "components/field.html:30:9-39"
       },
       "username_too_long": "Username is too long",
       "@username_too_long": {
-        "context": "components/field.html:34:11-44"
+        "context": "components/field.html:35:11-44"
       },
       "username_too_short": "Username is too short",
       "@username_too_short": {
-        "context": "components/field.html:32:11-45"
+        "context": "components/field.html:33:11-45"
       }
     },
     "legacy_consent": {
@@ -450,9 +440,13 @@
         "context": "pages/sso.html:28:11-109"
       }
     },
+    "loading": "Loading…",
+    "@loading": {
+      "context": "pages/register/index.html:37:26-42"
+    },
     "loading_failed": "Something went wrong while loading the page. Try reloading it.",
     "@loading_failed": {
-      "context": "app.html:28:9-32"
+      "context": "app.html:28:9-32, pages/register/index.html:49:7-30"
     },
     "login": {
       "call_to_register": "Don't have an account yet?",
@@ -461,7 +455,7 @@
       },
       "continue_with_provider": "Continue with %(provider)s",
       "@continue_with_provider": {
-        "context": "pages/login.html:81:15-67, pages/register/index.html:55:15-67",
+        "context": "pages/login.html:81:15-67",
         "description": "Button to log in with an upstream provider"
       },
       "description": "Please sign in to continue:",
@@ -527,7 +521,7 @@
     },
     "or_separator": "Or",
     "@or_separator": {
-      "context": "components/field.html:113:10-31",
+      "context": "components/field.html:114:10-31",
       "description": "Separator between the login methods"
     },
     "policy_violation": {
@@ -686,32 +680,19 @@
       }
     },
     "register": {
-      "call_to_login": "Already have an account?",
-      "@call_to_login": {
-        "context": "pages/register/index.html:61:35-66, pages/register/password.html:81:33-64",
-        "description": "Displayed on the registration page to suggest to log in instead"
-      },
-      "continue_with_email": "Continue with email address",
-      "@continue_with_email": {
-        "context": "pages/register/index.html:44:32-69"
-      },
-      "continue_with_password": "Continue with password",
-      "@continue_with_password": {
-        "context": "pages/register/index.html:46:32-72"
-      },
       "create_account": {
-        "description": "Choose a username to continue.",
-        "@description": {
-          "context": "pages/register/index.html:25:29-73"
-        },
         "heading": "Create an account",
         "@heading": {
-          "context": "pages/register/index.html:22:29-69, pages/register/password.html:19:27-67"
+          "context": "pages/register/index.html:25:27-67"
         }
+      },
+      "javascript_required": "JavaScript is required to create an account. Please enable JavaScript in your browser and reload this page.",
+      "@javascript_required": {
+        "context": "pages/register/index.html:56:34-71"
       },
       "terms_of_service": "I agree to the <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Terms and Conditions</a>",
       "@terms_of_service": {
-        "context": "pages/register/password.html:55:35-95, pages/upstream_oauth2/do_register.html:180:35-95"
+        "context": "pages/upstream_oauth2/do_register.html:180:35-95"
       }
     },
     "registration_token": {

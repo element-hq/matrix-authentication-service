@@ -27,7 +27,7 @@ use axum::{
     extract::{FromRef, FromRequestParts, OriginalUri, RawQuery, State},
     http::Method,
     response::{Html, IntoResponse},
-    routing::{get, post},
+    routing::{MethodRouter, get, post},
 };
 use headers::HeaderName;
 use hyper::{
@@ -330,6 +330,26 @@ where
     Router::new().merge(human_router).merge(api_router)
 }
 
+/// A `GET` route which redirects to another route, keeping the query string
+fn redirect_to<S>(route: &'static str) -> MethodRouter<S>
+where
+    S: Clone + Send + Sync + 'static,
+    UrlBuilder: FromRef<S>,
+{
+    get(
+        async move |State(url_builder): State<UrlBuilder>, RawQuery(query): RawQuery| {
+            let prefix = url_builder.prefix().unwrap_or_default();
+            let destination = if let Some(query) = query {
+                format!("{prefix}{route}?{query}")
+            } else {
+                format!("{prefix}{route}")
+            };
+
+            axum::response::Redirect::to(&destination)
+        },
+    )
+}
+
 pub fn human_router<S>(templates: Templates) -> Router<S>
 where
     S: Clone + Send + Sync + 'static,
@@ -354,22 +374,7 @@ where
 {
     Router::new()
         // XXX: hard-coded redirect from /account to /account/
-        .route(
-            "/account",
-            get(
-                async |State(url_builder): State<UrlBuilder>, RawQuery(query): RawQuery| {
-                    let prefix = url_builder.prefix().unwrap_or_default();
-                    let route = mas_router::Account::route();
-                    let destination = if let Some(query) = query {
-                        format!("{prefix}{route}?{query}")
-                    } else {
-                        format!("{prefix}{route}")
-                    };
-
-                    axum::response::Redirect::to(&destination)
-                },
-            ),
-        )
+        .route("/account", redirect_to(mas_router::Account::route()))
         .route(mas_router::Account::route(), get(self::views::app::get))
         .route(
             mas_router::AccountWildcard::route(),
@@ -395,9 +400,10 @@ where
             mas_router::Register::route(),
             get(self::views::register::get).post(self::views::register::post),
         )
+        // Keeps links to the former password registration page working
         .route(
-            mas_router::PasswordRegister::route(),
-            get(self::views::register::password::get).post(self::views::register::password::post),
+            "/register/password",
+            redirect_to(mas_router::Register::route()),
         )
         .route(
             mas_router::RegisterVerifyEmail::route(),
