@@ -26,12 +26,14 @@
   },
   "common": {
     "e2ee": "Сквозное шифрование",
+    "email_address": "Электронная почта",
     "loading": "Загрузка…",
     "next": "Далее",
     "password": "Пароль",
     "previous": "Предыдущий",
     "saved": "Сохранено",
-    "saving": "Сохранение…"
+    "saving": "Сохранение…",
+    "username": "Псевдоним"
   },
   "frontend": {
     "account": {
@@ -114,8 +116,25 @@
       "title": "Что-то пошло не так"
     },
     "errors": {
+      "captcha": "Проверка CAPTCHA не удалась, попробуйте еще раз",
+      "email_banned": "Электронная почта запрещена политикой сервера",
+      "email_domain_banned": "Домен электронной почты запрещен политикой сервера",
+      "email_domain_not_allowed": "Домен электронной почты не разрешен политикой сервера",
+      "email_not_allowed": "Электронная почта не разрешена политикой сервера",
+      "field_invalid": "This field is invalid",
       "field_required": "Это поле обязательно для заполнения",
-      "rate_limit_exceeded": "Вы делаете запросы слишком часто. Пожалуйста, подождите несколько минут и повторите попытку."
+      "invalid_email": "Please enter a valid email address",
+      "password_mismatch": "Поля пароля не совпадают",
+      "rate_limit_exceeded": "Вы делаете запросы слишком часто. Пожалуйста, подождите несколько минут и повторите попытку.",
+      "unspecified": "Something went wrong. Please try again.",
+      "username_all_numeric": "Имя пользователя не может состоять только из цифр",
+      "username_banned": "Имя пользователя запрещено политикой сервера",
+      "username_invalid": "Username can only contain lowercase letters, numbers, and the characters . _ - + / =",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, and the characters . _ - + / =",
+      "username_not_allowed": "Имя пользователя не разрешено политикой сервера",
+      "username_taken": "Это имя пользователя уже занято",
+      "username_too_long": "Имя пользователя слишком длинное",
+      "username_too_short": "Имя пользователя слишком короткое"
     },
     "last_active": {
       "active_date": "Активен {{relativeDate}}",
@@ -226,6 +245,21 @@
         "user_inputs": "Не должно быть никаких личных данных или данных, связанных со страницами.",
         "word_by_itself": "Отдельные слова легко угадать."
       }
+    },
+    "register": {
+      "call_to_login": "Уже есть аккаунт?",
+      "captcha_incomplete": "Please complete the CAPTCHA challenge before continuing",
+      "captcha_loading": "The CAPTCHA is still loading, please wait a moment",
+      "continue_with_email": "Продолжить с адресом электронной почты",
+      "continue_with_password": "Продолжить с паролем",
+      "continue_with_provider": "Continue with {{provider}}",
+      "or_separator": "Или",
+      "password_confirm_label": "Подтверждение пароля",
+      "password_label": "Пароль",
+      "terms_of_service": "I agree to the <a>Terms and Conditions</a>",
+      "username_available": "This username is available",
+      "username_check_failed": "We couldn't check if this username is available",
+      "username_checking": "Checking availability…"
     },
     "reset_cross_signing": {
       "cancelled": {

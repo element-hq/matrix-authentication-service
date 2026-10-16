@@ -26,12 +26,14 @@
   },
   "common": {
     "e2ee": "Uçtan uca şifreleme",
+    "email_address": "E-posta Adresi",
     "loading": "Yükleniyor…",
     "next": "Sonraki",
     "password": "Şifre",
     "previous": "Önceki",
     "saved": "Kaydedildi",
-    "saving": "Kaydediliyor…"
+    "saving": "Kaydediliyor…",
+    "username": "Kullanıcı Adı"
   },
   "frontend": {
     "account": {
@@ -113,8 +115,25 @@
       "title": "Bir şeyler ters gitti."
     },
     "errors": {
+      "captcha": "CAPTCHA doğrulaması başarısız oldu, lütfen tekrar deneyin",
+      "email_banned": "Sunucu politikası gereği e-posta kullanımı yasaktır.",
+      "email_domain_banned": "E-posta etki alanı, sunucu politikası tarafından yasaklandı",
+      "email_domain_not_allowed": "E-posta alan adı sunucu politikası tarafından izin verilmiyor",
+      "email_not_allowed": "Sunucu politikası gereği e-posta gönderimine izin verilmiyor",
+      "field_invalid": "This field is invalid",
       "field_required": "Bu alan zorunludur",
-      "rate_limit_exceeded": "Kısa süre içinde çok fazla istekte bulundunuz. Lütfen birkaç dakika bekleyin ve tekrar deneyin."
+      "invalid_email": "Please enter a valid email address",
+      "password_mismatch": "Parola alanları birbiriyle uyuşmuyor",
+      "rate_limit_exceeded": "Kısa süre içinde çok fazla istekte bulundunuz. Lütfen birkaç dakika bekleyin ve tekrar deneyin.",
+      "unspecified": "Something went wrong. Please try again.",
+      "username_all_numeric": "Kullanıcı adı yalnızca rakamlardan oluşamaz",
+      "username_banned": "Kullanıcı adı sunucu politikası gereği yasaklanmıştır",
+      "username_invalid": "Username can only contain lowercase letters, numbers, and the characters . _ - + / =",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, and the characters . _ - + / =",
+      "username_not_allowed": "Kullanıcı adı sunucu politikası gereği izin verilmiyor",
+      "username_taken": "Bu kullanıcı adı zaten alınmış",
+      "username_too_long": "Kullanıcı adı çok uzun",
+      "username_too_short": "Kullanıcı adı çok kısa"
     },
     "last_active": {
       "active_date": "Aktif {{relativeDate}}",
@@ -152,7 +171,7 @@
           "no_such_recovery_ticket": "Kurtarma bağlantısı geçersiz. Kurtarma e-postasındaki bağlantıyı kopyaladıysanız, lütfen bağlantının tamamının kopyalandığından emin olun.",
           "password_changes_disabled": "Parola değiştirme özelliği devre dışı bırakılmıştır.",
           "recovery_ticket_already_used": "Kurtarma bağlantısı daha önce kullanıldı. Tekrar kullanılamaz.",
-          "unspecified": "Bu geçici bir sorun olabilir, lütfen daha sonra tekrar deneyin. Sorun devam ederse, lütfen sunucu yöneticinizle iletişime geçin.",
+          "unspecified": "Bu geçici bir sorun olabilir, lütfen daha sonra tekrar deneyin. Sorun devam ederse, lütfen hesap sağlayıcınızla iletişime geçin.",
           "wrong_password": "Girdiğiniz geçerli parola yanlış. Lütfen tekrar deneyin."
         },
         "title": "Parola güncelleme başarısız oldu."
@@ -226,6 +245,21 @@
         "word_by_itself": "Tek kelimeleri tahmin etmek kolaydır."
       }
     },
+    "register": {
+      "call_to_login": "Zaten hesabınız var mı?",
+      "captcha_incomplete": "Please complete the CAPTCHA challenge before continuing",
+      "captcha_loading": "The CAPTCHA is still loading, please wait a moment",
+      "continue_with_email": "E-posta adresiyle devam edin",
+      "continue_with_password": "Parolayla devam et",
+      "continue_with_provider": "Continue with {{provider}}",
+      "or_separator": "Or",
+      "password_confirm_label": "Şifreyi onayla",
+      "password_label": "Şifre",
+      "terms_of_service": "I agree to the <a>Terms and Conditions</a>",
+      "username_available": "This username is available",
+      "username_check_failed": "We couldn't check if this username is available",
+      "username_checking": "Checking availability…"
+    },
     "reset_cross_signing": {
       "cancelled": {
         "description_1": "Bu pencereyi kapatıp uygulamaya geri dönerek devam edebilirsiniz.",
@@ -239,7 +273,7 @@
         "positive_1": "Hesap bilgileriniz, kişileriniz, tercihleriniz ve sohbet listeniz saklanacaktır"
       },
       "failure": {
-        "description": "Bu geçici bir sorun olabilir, lütfen daha sonra tekrar deneyin. Sorun devam ederse, lütfen sunucu yöneticinizle iletişime geçin.",
+        "description": "Bu geçici bir sorun olabilir, lütfen daha sonra tekrar deneyin. Sorun devam ederse, lütfen hesap sağlayıcınızla iletişime geçin.",
         "heading": "Dijital kimlik sıfırlama işlemi başarısız oldu"
       },
       "finish_reset": "Sıfırlamayı tamamla",

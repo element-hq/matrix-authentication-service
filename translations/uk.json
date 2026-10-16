@@ -30,7 +30,6 @@
     "loading": "Завантаження…",
     "mxid": "Matrix ID",
     "password": "Пароль",
-    "password_confirm": "Підтвердити пароль",
     "username": "Ім'я користувача"
   },
   "error": {
@@ -52,9 +51,6 @@
       }
     },
     "back_to_homepage": "Повернутися на головну сторінку",
-    "captcha": {
-      "noscript": "Ця форма захищена CAPTCHA і вимагає ввімкнення JavaScript для її надсилання. Будь ласка, увімкніть JavaScript у своєму браузері та перезавантажте цю сторінку."
-    },
     "change_password": {
       "change": "Змінити пароль",
       "confirm": "Підтвердити пароль",
@@ -149,6 +145,7 @@
     "legacy_consent": {
       "this_will_setup": "Це налаштує <span>%(client_name)s</span> з вашим обліковим записом <span>%(server_name)s</span>."
     },
+    "loading": "Завантаження…",
     "loading_failed": "Під час завантаження сторінки сталася помилка. Спробуйте перезавантажити її.",
     "login": {
       "call_to_register": "У вас ще немає облікового запису?",
@@ -225,11 +222,7 @@
       }
     },
     "register": {
-      "call_to_login": "Вже маєте обліковий запис?",
-      "continue_with_email": "Продовжити за допомогою е-пошти",
-      "continue_with_password": "Продовжити з паролем",
       "create_account": {
-        "description": "Виберіть ім'я користувача, щоб продовжити.",
         "heading": "Створити обліковий запис"
       },
       "terms_of_service": "Я погоджуюся з <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Умовами та положеннями</a>"

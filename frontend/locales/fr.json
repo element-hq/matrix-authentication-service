@@ -26,12 +26,14 @@
   },
   "common": {
     "e2ee": "Chiffrement de bout en bout",
+    "email_address": "Adresse e-mail",
     "loading": "Chargement…",
     "next": "Suivant",
     "password": "Mot de passe",
     "previous": "Précédent",
     "saved": "Sauvegardé",
-    "saving": "Enregistrement..."
+    "saving": "Enregistrement...",
+    "username": "Nom d’utilisateur"
   },
   "frontend": {
     "account": {
@@ -113,8 +115,25 @@
       "title": "Un problème est survenu"
     },
     "errors": {
+      "captcha": "La vérification du CAPTCHA a échoué, veuillez réessayer",
+      "email_banned": "Cette adresse e-mail est interdite par la politique du serveur",
+      "email_domain_banned": "Le domaine de l'adresse e-mail est interdit par la politique du serveur.",
+      "email_domain_not_allowed": "Le domaine de l'adresse e-mail n'est pas autorisée par la politique du serveur.",
+      "email_not_allowed": "Cette adresse e-mail n'est pas autorisée par la politique du serveur",
+      "field_invalid": "Ce champ est invalide.",
       "field_required": "Ce champ est requis",
-      "rate_limit_exceeded": "Vous avez effectué trop de requêtes sur une courte période. Veuillez patienter quelques minutes et réessayer."
+      "invalid_email": "Veuillez saisir une adresse e-mail valide",
+      "password_mismatch": "Les champs du mot de passe ne correspondent pas.",
+      "rate_limit_exceeded": "Vous avez effectué trop de requêtes sur une courte période. Veuillez patienter quelques minutes et réessayer.",
+      "unspecified": "Une erreur s'est produite. Veuillez réessayer.",
+      "username_all_numeric": "Le nom d'utilisateur ne peut pas être composé uniquement de chiffres",
+      "username_banned": "Ce nom d'utilisateur est interdit par la politique du serveur",
+      "username_invalid": "Le nom d'utilisateur ne peut contenir que des lettres minuscules, des chiffres et les caractères . _ - + / =",
+      "username_invalid_chars": "Le nom d'utilisateur contient des caractères non valides. Utilisez uniquement des lettres minuscules, des chiffres, et les caractères . _ - + / =",
+      "username_not_allowed": "Ce nom d'utilisateur n'est pas autorisé par la politique du serveur",
+      "username_taken": "Ce nom d'utilisateur est déjà utilisé",
+      "username_too_long": "Le nom d'utilisateur est trop long",
+      "username_too_short": "Le nom d'utilisateur est trop court"
     },
     "last_active": {
       "active_date": "Actif {{relativeDate}}",
@@ -225,6 +244,21 @@
         "user_inputs": "Votre mot de passe ne dois pas contenir de données personnelles ou relatives à la page.",
         "word_by_itself": "Les mots seuls sont faciles à deviner."
       }
+    },
+    "register": {
+      "call_to_login": "Vous avez déjà un compte ?",
+      "captcha_incomplete": "Veuillez répondre au test CAPTCHA avant de continuer",
+      "captcha_loading": "Le CAPTCHA est en cours de chargement, veuillez patienter un instant",
+      "continue_with_email": "Continuer avec une adresse e-mail",
+      "continue_with_password": "Continuer avec un mot de passe",
+      "continue_with_provider": "Continuez avec {{provider}}",
+      "or_separator": "Ou",
+      "password_confirm_label": "Confirmer le mot de passe",
+      "password_label": "Mot de passe",
+      "terms_of_service": "J'accepte les <a>Conditions d'utilisation</a>",
+      "username_available": "Ce nom d'utilisateur est disponible",
+      "username_check_failed": "Nous n'avons pas pu vérifier si ce nom d'utilisateur est disponible.",
+      "username_checking": "Vérification de la disponibilité…"
     },
     "reset_cross_signing": {
       "cancelled": {

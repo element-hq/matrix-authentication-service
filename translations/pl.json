@@ -30,7 +30,6 @@
     "loading": "Wczytywanie…",
     "mxid": "Matrix ID",
     "password": "Hasło",
-    "password_confirm": "Potwierdź hasło",
     "username": "Nazwa użytkownika"
   },
   "error": {
@@ -52,9 +51,6 @@
       }
     },
     "back_to_homepage": "Wróć do strony głównej",
-    "captcha": {
-      "noscript": "Ten formularz jest zabezpieczony kodem CAPTCHA i do jego wysłania wymagana jest włączona obsługa JavaScript. Włącz obsługę JavaScript w przeglądarce i odśwież tę stronę."
-    },
     "change_password": {
       "change": "Zmień hasło",
       "confirm": "Potwierdź hasło",
@@ -149,6 +145,7 @@
     "legacy_consent": {
       "this_will_setup": "Spowoduje to skonfigurowanie <span>%(client_name)s</span> z kontem <span>%(server_name)s</span>."
     },
+    "loading": "Wczytywanie…",
     "loading_failed": "Coś poszło nie tak podczas ładowania strony. Spróbuj ją odświeżyć.",
     "login": {
       "call_to_register": "Nie masz jeszcze konta?",
@@ -225,11 +222,7 @@
       }
     },
     "register": {
-      "call_to_login": "Masz już konto?",
-      "continue_with_email": "Kontynuuj z adresem e-mail",
-      "continue_with_password": "Kontynuuj z hasłem",
       "create_account": {
-        "description": "Wybierz nazwę użytkownika, aby kontynuować.",
         "heading": "Utwórz konto"
       },
       "terms_of_service": "Wyrażam zgodę na <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">warunki korzystania z serwisu</a>"

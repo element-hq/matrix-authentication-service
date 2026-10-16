@@ -30,7 +30,6 @@
     "loading": "Laster inn...",
     "mxid": "Matrix ID",
     "password": "Passord",
-    "password_confirm": "Bekreft passord",
     "username": "Brukernavn"
   },
   "error": {
@@ -52,9 +51,6 @@
       }
     },
     "back_to_homepage": "Gå tilbake til hjemmesiden",
-    "captcha": {
-      "noscript": "Dette skjemaet er beskyttet av en CAPTCHA og krever at JavaScript er aktivert for å kunne sendes inn. Aktiver JavaScript i nettleseren din og last inn denne siden på nytt."
-    },
     "change_password": {
       "change": "Endre passord",
       "confirm": "Bekreft passord",
@@ -139,6 +135,7 @@
     "legacy_consent": {
       "this_will_setup": "Dette vil konfigurere <span>%(client_name)s</span> med din <span>%(server_name)s</span> konto."
     },
+    "loading": "Laster inn...",
     "login": {
       "call_to_register": "Har du ikke en konto ennå?",
       "continue_with_provider": "Fortsett med %(provider)s",
@@ -201,11 +198,7 @@
       }
     },
     "register": {
-      "call_to_login": "Har du allerede en konto?",
-      "continue_with_email": "Fortsett med e-postadresse",
-      "continue_with_password": "Fortsett med passord",
       "create_account": {
-        "description": "Velg et brukernavn for å fortsette.",
         "heading": "Opprett en konto"
       },
       "terms_of_service": "Jeg godtar <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">vilkårene og betingelsene</a>"

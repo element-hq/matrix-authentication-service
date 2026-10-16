@@ -26,12 +26,14 @@
   },
   "common": {
     "e2ee": "Läbiv krüptimine",
+    "email_address": "E-posti aadress",
     "loading": "Laadime…",
     "next": "Edasi",
     "password": "Salasõna",
     "previous": "Tagasi",
     "saved": "Salvestatud",
-    "saving": "Salvestame…"
+    "saving": "Salvestame…",
+    "username": "Kasutajanimi"
   },
   "frontend": {
     "account": {
@@ -113,8 +115,25 @@
       "title": "Midagi läks viltu"
     },
     "errors": {
+      "captcha": "Robotilõksu tehtud kontroll ei luba jätkata. Palun proovi uuesti.",
+      "email_banned": "E-posti aadress on serveri reeglite alusel keelatud",
+      "email_domain_banned": "E-posti aadressi domeen on serverireeglite alusel keelatud",
+      "email_domain_not_allowed": "E-posti aadressi domeen pole serverireeglite alusel lubatud",
+      "email_not_allowed": "E-posti aadress pole serveri reeglite alusel lubatud",
+      "field_invalid": "This field is invalid",
       "field_required": "Selle välja täitmine on kohustuslik",
-      "rate_limit_exceeded": "Sa oled lühikese aja jooksul teinud liiga palju päringuid. Palun oota paar minutit ja proovi uuesti."
+      "invalid_email": "Please enter a valid email address",
+      "password_mismatch": "Salasõnad ei klapi omavahel",
+      "rate_limit_exceeded": "Sa oled lühikese aja jooksul teinud liiga palju päringuid. Palun oota paar minutit ja proovi uuesti.",
+      "unspecified": "Something went wrong. Please try again.",
+      "username_all_numeric": "Kasutajanimi ei tohi koosneda vaid numbritest",
+      "username_banned": "Kasutajanimi on serverireeglite alusel keelatud",
+      "username_invalid": "Username can only contain lowercase letters, numbers, and the characters . _ - + / =",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, and the characters . _ - + / =",
+      "username_not_allowed": "Kasutajanimi pole serveri reeglite alusel lubatud",
+      "username_taken": "Selline kasutajanimi on juba olemas",
+      "username_too_long": "Kasutajanimi on liiga pikk",
+      "username_too_short": "Kasutajanimi on liiga lühike"
     },
     "last_active": {
       "active_date": "Viimati kasutusel {{relativeDate}}",
@@ -225,6 +244,21 @@
         "user_inputs": "Salasõnas ei peaks olema isiklikku ega selle veebilehega seotud andmeid.",
         "word_by_itself": "Üksikute sõnade äraarvamine on lihtne."
       }
+    },
+    "register": {
+      "call_to_login": "Sul on kasutajakonto juba olemas?",
+      "captcha_incomplete": "Please complete the CAPTCHA challenge before continuing",
+      "captcha_loading": "The CAPTCHA is still loading, please wait a moment",
+      "continue_with_email": "Jätka e-posti aadressiga",
+      "continue_with_password": "Jätka salasõnaga",
+      "continue_with_provider": "Continue with {{provider}}",
+      "or_separator": "või",
+      "password_confirm_label": "Korda salasõna",
+      "password_label": "Salasõna",
+      "terms_of_service": "I agree to the <a>Terms and Conditions</a>",
+      "username_available": "This username is available",
+      "username_check_failed": "We couldn't check if this username is available",
+      "username_checking": "Checking availability…"
     },
     "reset_cross_signing": {
       "cancelled": {

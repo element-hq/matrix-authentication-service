@@ -17,7 +17,6 @@
     "email_address": "Emailová adresa",
     "loading": "Načítavanie…",
     "password": "Heslo",
-    "password_confirm": "Potvrdiť heslo",
     "username": "Meno používateľa"
   },
   "error": {
@@ -47,6 +46,7 @@
       "password_mismatch": "Heslá sa nezhodujú.",
       "username_taken": "Toto používateľské meno je už obsadené"
     },
+    "loading": "Načítavanie…",
     "login": {
       "call_to_register": "Ešte nemáte účet?",
       "continue_with_provider": "Pokračovať s %(provider)s",
@@ -79,9 +79,7 @@
       }
     },
     "register": {
-      "call_to_login": "Už máte účet?",
       "create_account": {
-        "description": "Pre pokračovanie vyberte používateľské meno.",
         "heading": "Vytvoriť účet"
       }
     },

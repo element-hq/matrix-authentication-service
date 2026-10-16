@@ -29,7 +29,6 @@
     "loading": "Yükleniyor…",
     "mxid": "Matrix Kimliği",
     "password": "Şifre",
-    "password_confirm": "Şifreyi onayla",
     "username": "Kullanıcı Adı"
   },
   "error": {
@@ -38,11 +37,11 @@
   "mas": {
     "account": {
       "deactivated": {
-        "description": "Bu hesap (<em>%(mxid)s</em>) silindi. Beklenmedik bir durumsa, sunucu yöneticinizle iletişime geçin.",
+        "description": "Bu hesap (<em>%(mxid)s</em>) silindi. Beklenmedik bir durumsa, hesap sağlayıcınızla iletişime geçin.",
         "heading": "Hesap silindi"
       },
       "locked": {
-        "description": "Bu hesap (<em>%(mxid)s</em>) kilitlendi. Bu beklenmedik bir durumsa, sunucu yöneticinizle iletişime geçin.",
+        "description": "Bu hesap (<em>%(mxid)s</em>) kilitlendi. Bu beklenmedik bir durumsa, hesap sağlayıcınızla iletişime geçin.",
         "heading": "Hesap kilitlendi"
       },
       "logged_out": {
@@ -51,9 +50,6 @@
       }
     },
     "back_to_homepage": "Ana sayfaya geri dön",
-    "captcha": {
-      "noscript": "Bu form bir CAPTCHA ile korunmaktadır ve gönderilebilmesi için JavaScript'in etkinleştirilmesi gerekmektedir. Lütfen tarayıcınızda JavaScript'i etkinleştirin ve bu sayfayı yeniden yükleyin."
-    },
     "change_password": {
       "change": "Parola değiştir",
       "confirm": "Şifreyi onayla",
@@ -148,6 +144,8 @@
     "legacy_consent": {
       "this_will_setup": "Bu işlem, <span>%(client_name)s</span> cihazını <span>%(server_name)s</span> hesabınızla eşleştirecektir."
     },
+    "loading": "Yükleniyor…",
+    "loading_failed": "Sayfa yüklenirken bir sorun oluştu. Lütfen sayfayı yeniden yüklemeyi deneyin.",
     "login": {
       "call_to_register": "Henüz hesabınız yok mu?",
       "continue_with_provider": "%(provider)s ile devam edin",
@@ -172,8 +170,16 @@
     },
     "not_you": "%(username)s değil mi?",
     "policy_violation": {
-      "description": "Bu durum, isteği oluşturan istemci, şu anda oturum açmış olan kullanıcı veya isteğin kendisinden kaynaklanıyor olabilir.",
-      "heading": "Yetkilendirme isteği, bu hizmet tarafından uygulanan politika nedeniyle reddedildi",
+      "admin_scope_not_allowed": {
+        "description": "Bu uygulama yönetici ayrıcalıkları gerektirir. Devam etmek için yönetici hesabıyla oturum açın.",
+        "heading": "Yönetici erişimi gereklidir"
+      },
+      "client_not_allowed": {
+        "description": "Bu uygulamanın bu hizmete giriş yapmasına izin verilmiyor.",
+        "heading": "Başvuruya izin verilmiyor"
+      },
+      "description": "İsteğiniz, bu hizmetin politikası gereği reddedilmiştir. Bunun nedeni uygulama, hesabınız veya isteğin kendisi olabilir.",
+      "heading": "Talep reddedildi",
       "logged_as": "<span class=\"font-semibold\">%(username)s</span> olarak kaydedildi.",
       "too_many_sessions": {
         "description": "Hesabınız maksimum sayıda cihazda oturum açmış durumda. Devam etmek için, <span class=\"font-semibold\"> mevcut cihazlarınızdan %(num_devices_to_remove)s kaldırın </span> ve tekrar oturum açın.",
@@ -212,17 +218,13 @@
       }
     },
     "register": {
-      "call_to_login": "Zaten hesabınız var mı?",
-      "continue_with_email": "E-posta adresiyle devam edin",
-      "continue_with_password": "Parolayla devam et",
       "create_account": {
-        "description": "Devam etmek için bir kullanıcı adı seçin.",
         "heading": "Hesap oluştur"
       },
       "terms_of_service": "<a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\"> Şartları ve Koşulları </a> kabul ediyorum"
     },
     "registration_token": {
-      "description": "Ana sunucu yöneticisi tarafından sağlanan bir kayıt belirteci girin.",
+      "description": "Hesap sağlayıcınız tarafından verilen kayıt belirtecini girin.",
       "field": "Kayıt anahtarı",
       "headline": "Kayıt anahtarı"
     },

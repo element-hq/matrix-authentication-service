@@ -26,12 +26,14 @@
   },
   "common": {
     "e2ee": "Наскрізне шифрування",
+    "email_address": "Адреса е-пошти",
     "loading": "Завантаження…",
     "next": "Далі",
     "password": "Пароль",
     "previous": "Назад",
     "saved": "Збережено",
-    "saving": "Збереження..."
+    "saving": "Збереження...",
+    "username": "Ім&#39;я користувача"
   },
   "frontend": {
     "account": {
@@ -114,8 +116,25 @@
       "title": "Щось пішло не так"
     },
     "errors": {
+      "captcha": "Помилка перевірки CAPTCHA, повторіть спробу",
+      "email_banned": "Електронна пошта заборонена політикою сервера",
+      "email_domain_banned": "Домен електронної пошти заборонений політикою сервера",
+      "email_domain_not_allowed": "Домен електронної пошти заборонено політикою сервера",
+      "email_not_allowed": "Електронна пошта не дозволена політикою сервера",
+      "field_invalid": "This field is invalid",
       "field_required": "Це поле обов'язкове.",
-      "rate_limit_exceeded": "Ви зробили забагато запитів за короткий проміжок часу. Зачекайте кілька хвилин і повторіть спробу."
+      "invalid_email": "Please enter a valid email address",
+      "password_mismatch": "Поля пароля не збігаються",
+      "rate_limit_exceeded": "Ви зробили забагато запитів за короткий проміжок часу. Зачекайте кілька хвилин і повторіть спробу.",
+      "unspecified": "Something went wrong. Please try again.",
+      "username_all_numeric": "Ім'я користувача не може складатися тільки з цифр",
+      "username_banned": "Ім'я користувача заборонено політикою сервера",
+      "username_invalid": "Username can only contain lowercase letters, numbers, and the characters . _ - + / =",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, and the characters . _ - + / =",
+      "username_not_allowed": "Ім'я користувача не дозволено політикою сервера",
+      "username_taken": "Це ім'я користувача вже зайнято",
+      "username_too_long": "Ім'я користувача задовге",
+      "username_too_short": "Ім'я користувача закоротке"
     },
     "last_active": {
       "active_date": "Активний {{relativeDate}}",
@@ -226,6 +245,21 @@
         "user_inputs": "Не повинно бути жодних особистих даних або даних, пов'язаних зі сторінкою.",
         "word_by_itself": "Окремі слова легко вгадати."
       }
+    },
+    "register": {
+      "call_to_login": "Вже маєте обліковий запис?",
+      "captcha_incomplete": "Please complete the CAPTCHA challenge before continuing",
+      "captcha_loading": "The CAPTCHA is still loading, please wait a moment",
+      "continue_with_email": "Продовжити за допомогою е-пошти",
+      "continue_with_password": "Продовжити з паролем",
+      "continue_with_provider": "Continue with {{provider}}",
+      "or_separator": "або",
+      "password_confirm_label": "Підтвердити пароль",
+      "password_label": "Пароль",
+      "terms_of_service": "I agree to the <a>Terms and Conditions</a>",
+      "username_available": "This username is available",
+      "username_check_failed": "We couldn't check if this username is available",
+      "username_checking": "Checking availability…"
     },
     "reset_cross_signing": {
       "cancelled": {

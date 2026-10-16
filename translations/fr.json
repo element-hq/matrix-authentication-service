@@ -30,7 +30,6 @@
     "loading": "Chargement…",
     "mxid": "Matrix ID",
     "password": "Mot de passe",
-    "password_confirm": "Confirmer le mot de passe",
     "username": "Nom d’utilisateur"
   },
   "error": {
@@ -52,9 +51,6 @@
       }
     },
     "back_to_homepage": "Retourner sur la page d'accueil",
-    "captcha": {
-      "noscript": "Ce formulaire est protégé par un CAPTCHA et nécessite l'activation de JavaScript pour le soumettre. Veuillez activer JavaScript dans votre navigateur et recharger cette page."
-    },
     "change_password": {
       "change": "Changer de mot de passe",
       "confirm": "Confirmer le mot de passe",
@@ -140,7 +136,7 @@
       "rate_limit_exceeded": "Vous avez effectué trop de requêtes sur une courte période. Veuillez patienter quelques minutes et réessayer.",
       "username_all_numeric": "Le nom d'utilisateur ne peut pas être composé uniquement de chiffres",
       "username_banned": "Ce nom d'utilisateur est interdit par la politique du serveur",
-      "username_invalid_chars": "Le nom d'utilisateur contient des caractères non valides. Utilisez uniquement des lettres minuscules, des chiffres, des tirets et des traits de soulignement.",
+      "username_invalid_chars": "Le nom d'utilisateur contient des caractères non valides. Utilisez uniquement des lettres minuscules, des chiffres, et les caractères . _ - + / =",
       "username_not_allowed": "Ce nom d'utilisateur n'est pas autorisé par la politique du serveur",
       "username_taken": "Ce nom d'utilisateur est déjà utilisé",
       "username_too_long": "Le nom d'utilisateur est trop long",
@@ -149,6 +145,7 @@
     "legacy_consent": {
       "this_will_setup": "Continuer connectera <span>%(client_name)s</span> avec votre compte <span>%(server_name)s</span>."
     },
+    "loading": "Chargement…",
     "loading_failed": "Une erreur s'est produite lors du chargement de la page. Veuillez réactualiser la page.",
     "login": {
       "call_to_register": "Vous n’avez pas encore de compte ?",
@@ -225,13 +222,10 @@
       }
     },
     "register": {
-      "call_to_login": "Vous avez déjà un compte ?",
-      "continue_with_email": "Continuer avec une adresse e-mail",
-      "continue_with_password": "Continuer avec un mot de passe",
       "create_account": {
-        "description": "Choisissez un nom d'utilisateur pour continuer.",
         "heading": "Créer un compte"
       },
+      "javascript_required": "JavaScript est nécessaire pour créer un compte. Veuillez activer JavaScript dans votre navigateur et recharger cette page.",
       "terms_of_service": "J'accepte les <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Conditions d'utilisation</a>"
     },
     "registration_token": {

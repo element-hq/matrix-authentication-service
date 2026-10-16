@@ -30,7 +30,6 @@
     "loading": "Загрузка…",
     "mxid": "Matrix ID",
     "password": "Пароль",
-    "password_confirm": "Подтверждение пароля",
     "username": "Псевдоним"
   },
   "error": {
@@ -52,9 +51,6 @@
       }
     },
     "back_to_homepage": "Вернуться на главную страницу",
-    "captcha": {
-      "noscript": "Эта форма защищена CAPTCHA и требует включения JavaScript для ее отправки. Пожалуйста, включите JavaScript в вашем браузере и перезагрузите эту страницу."
-    },
     "change_password": {
       "change": "Изменить пароль",
       "confirm": "Подтверждение пароля",
@@ -139,6 +135,7 @@
     "legacy_consent": {
       "this_will_setup": "Это свяжет <span>%(client_name)s</span> с вашей учётной записью на <span>%(server_name)s</span>"
     },
+    "loading": "Загрузка…",
     "login": {
       "call_to_register": "Ещё нет аккаунта?",
       "continue_with_provider": "Продолжить с %(provider)s",
@@ -201,11 +198,7 @@
       }
     },
     "register": {
-      "call_to_login": "Уже есть аккаунт?",
-      "continue_with_email": "Продолжить с адресом электронной почты",
-      "continue_with_password": "Продолжить с паролем",
       "create_account": {
-        "description": "Выберите имя пользователя, чтобы продолжить.",
         "heading": "Создать учётную запись"
       },
       "terms_of_service": "Я соглашаюсь с <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Правилами и положениями</a>"

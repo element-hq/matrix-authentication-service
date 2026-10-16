@@ -30,7 +30,6 @@
     "loading": "Laddar …",
     "mxid": "Matrix ID",
     "password": "Lösenord",
-    "password_confirm": "Bekräfta lösenordet",
     "username": "Användarnamn"
   },
   "error": {
@@ -38,9 +37,6 @@
   },
   "mas": {
     "back_to_homepage": "Gå tillbaka till startsidan",
-    "captcha": {
-      "noscript": "Detta formulär är skyddat av en CAPTCHA och kräver att JavaScript aktiveras för att kunna skickas. Aktivera JavaScript i din webbläsare och ladda om den här sidan."
-    },
     "change_password": {
       "change": "Ändra lösenord",
       "confirm": "Bekräfta lösenordet",
@@ -109,6 +105,7 @@
       "username_too_long": "Användarnamnet är för långt",
       "username_too_short": "Användarnamnet är för kort"
     },
+    "loading": "Laddar …",
     "login": {
       "call_to_register": "Har du inget konto ännu?",
       "continue_with_provider": "Fortsätt med %(provider)s",
@@ -170,10 +167,7 @@
       }
     },
     "register": {
-      "call_to_login": "Har redan ett konto",
-      "continue_with_email": "Fortsätt med e-postadress",
       "create_account": {
-        "description": "Välj ett användarnamn för att fortsätta.",
         "heading": "Skapa ett konto"
       },
       "terms_of_service": "Jag samtycker till <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Villkor och bestämmelser</a>"

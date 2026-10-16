@@ -28,7 +28,6 @@
     "loading": "Laden...",
     "mxid": "Matrix ID",
     "password": "Wachtwoord",
-    "password_confirm": "Bevestig wachtwoord",
     "username": "Gebruikersnaam"
   },
   "error": {
@@ -38,14 +37,17 @@
     "change_password": {
       "change": "Wachtwoord wijzigen",
       "confirm": "Bevestig wachtwoord",
-      "current": "Huidig wachtwoord"
+      "current": "Huidig wachtwoord",
+      "new": "Nieuw wachtwoord"
     },
     "device_display_name": {
       "unknown_device": "Onbekend apparaat"
     },
     "errors": {
+      "field_required": "Dit veld is verplicht",
       "invalid_credentials": "Ongeldige gegevens"
     },
+    "loading": "Laden...",
     "login": {
       "continue_with_provider": "Doorgaan met %(provider)s",
       "headline": "Inloggen"
@@ -54,6 +56,13 @@
       "my_account": "Mijn account"
     },
     "or_separator": "Of",
+    "recovery": {
+      "finish": {
+        "confirm": "Voer het nieuwe wachtwoord opnieuw in",
+        "new": "Nieuw wachtwoord",
+        "save_and_continue": "Opslaan en doorgaan"
+      }
+    },
     "upstream_oauth2": {
       "register": {
         "choose_username": {
