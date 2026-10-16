@@ -3999,7 +3999,7 @@
             }
           },
           "400": {
-            "description": "The room ID is not valid",
+            "description": "The room ID, email or username template is not valid, or the registration policy refuses the email or username",
             "content": {
               "application/json": {
                 "schema": {
@@ -4009,6 +4009,23 @@
                   "errors": [
                     {
                       "title": "Invalid room ID \"#room:example.com\""
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A token with the same token already exists, or the username is taken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Username \"alice\" is already taken"
                     }
                   ]
                 }
@@ -7643,14 +7660,14 @@
             "format": "date-time"
           },
           "username": {
-            "description": "A username to impose on the registering user. If set, the user cannot\nchoose their own username. A value with exactly one `{random}` is a\ntemplate: registering through the token's `/register?token=…` link\nfills `{random}` in with 32 random lowercase letters and digits,\nwithout showing the user the name.",
+            "description": "A username to impose on the registering user. If set, the user cannot\nchoose their own username. A value with exactly one `{random}` is a\ntemplate: registering through the token's `/register?token=…` link\nfills `{random}` in with 32 random lowercase letters and digits,\nwithout showing the user the name. It must pass the registration\npolicy, and a username which isn't a template must not be taken.",
             "type": [
               "string",
               "null"
             ]
           },
           "email": {
-            "description": "An email address to impose on the registering user. If set, the user\ncannot choose their own email.",
+            "description": "An email address to impose on the registering user. If set, the user\ncannot choose their own email. It must pass the registration policy.",
             "type": [
               "string",
               "null"
