@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -75,16 +76,18 @@ pub struct Entrypoints {
     pub authorization_grant: String,
     pub compat_login: String,
     pub email: String,
+    pub skip_consent: String,
 }
 
 impl Entrypoints {
-    fn all(&self) -> [&str; 5] {
+    fn all(&self) -> [&str; 6] {
         [
             self.register.as_str(),
             self.client_registration.as_str(),
             self.authorization_grant.as_str(),
             self.compat_login.as_str(),
             self.email.as_str(),
+            self.skip_consent.as_str(),
         ]
     }
 }
@@ -465,6 +468,33 @@ impl Policy {
         Ok(res)
     }
 
+    /// Evaluate the `skip_consent` entrypoint, which decides whether an
+    /// authorization grant is approved without asking the user.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the policy engine fails to evaluate the entrypoint.
+    #[tracing::instrument(
+        name = "policy.evaluate.skip_consent",
+        skip_all,
+        fields(
+            %input.scope,
+            %input.client.id,
+        ),
+    )]
+    pub async fn evaluate_skip_consent(
+        &mut self,
+        input: AuthorizationGrantInput<'_>,
+    ) -> Result<bool, EvaluationError> {
+        let res: Vec<model::BooleanResult> = self
+            .instance
+            .evaluate(&mut self.store, &self.entrypoints.skip_consent, &input)
+            .await?;
+
+        // The result set is empty if the policy leaves the rule undefined
+        Ok(res.first().is_some_and(|res| res.result))
+    }
+
     /// Evaluate the `compat_login` entrypoint.
     ///
     /// # Errors
@@ -504,6 +534,7 @@ mod tests {
             authorization_grant: "authorization_grant/violation".to_owned(),
             compat_login: "compat_login/violation".to_owned(),
             email: "email/violation".to_owned(),
+            skip_consent: "authorization_grant/skip_consent".to_owned(),
         }
     }
 

@@ -65,6 +65,9 @@ The default policy shipped with the service does gate access to this scope based
 It does make reasoning about admin access more complicated compared to a simple boolean flag on the user like what Synapse does, but it also allows for more complex authorization logic.
 This is especially important as in the future it will make it possible to implement a more granular role-based access control system to fit more complex use cases.
 
+For the authorization code grant, the policy also decides whether the user is asked for consent.
+The default policy only skips it for the clients listed in [`policy.data.skip_consent`](../reference/configuration.md#policy), on the first sign-in of a newly created account.
+
 To understand the authorization process and how sessions are created, refer to the [authorization and sessions](./authorization.md) section.
 
 

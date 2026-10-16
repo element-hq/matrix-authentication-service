@@ -133,8 +133,14 @@ impl EvaluationResult {
     }
 }
 
+/// The result of evaluating an entrypoint which returns a boolean.
+#[derive(Deserialize, Debug)]
+pub(crate) struct BooleanResult {
+    pub result: bool,
+}
+
 /// Identity of the requester
-#[derive(Serialize, Debug, Default, JsonSchema)]
+#[derive(Serialize, Debug, Default, Clone, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct Requester {
     /// IP address of the entity making the request
@@ -176,7 +182,7 @@ pub struct ClientRegistrationInput<'a> {
     pub requester: Requester,
 }
 
-#[derive(Serialize, Debug, JsonSchema)]
+#[derive(Serialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum GrantType {
     AuthorizationCode,
@@ -186,7 +192,7 @@ pub enum GrantType {
 }
 
 /// Input for the authorization grant policy.
-#[derive(Serialize, Debug, JsonSchema)]
+#[derive(Serialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct AuthorizationGrantInput<'a> {
     #[schemars(with = "Option<std::collections::HashMap<String, serde_json::Value>>")]
@@ -246,7 +252,7 @@ pub enum CompatLogin {
 }
 
 /// Information about how many sessions the user has
-#[derive(Serialize, Debug, JsonSchema)]
+#[derive(Serialize, Debug, Clone, JsonSchema)]
 pub struct SessionCounts {
     pub total: u64,
 
