@@ -183,6 +183,19 @@ export type UserRecoveryTicketStatus =
   /** The ticket is valid */
   | 'VALID';
 
+/** Why a username is not available for registration. */
+export type UsernameUnavailableReason =
+  /**
+   * The username does not pass the registration policy. See
+   * `violationCodes` for the specific reasons.
+   */
+  | 'INVALID'
+  /**
+   * The username is already in use, either by an existing MAS user or
+   * reserved by the homeserver.
+   */
+  | 'TAKEN';
+
 export type AccountDeleteButton_UserFragment = { username: string, hasPassword: boolean, matrix: { mxid: string, displayName: string | null } } & { ' $fragmentName'?: 'AccountDeleteButton_UserFragment' };
 
 export type AccountDeleteButton_SiteConfigFragment = { passwordLoginEnabled: boolean } & { ' $fragmentName'?: 'AccountDeleteButton_SiteConfigFragment' };
@@ -223,6 +236,13 @@ export type OAuth2Session_SessionFragment = (
   { id: string, scope: string, createdAt: string, finishedAt: string | null, lastActiveIp: string | null, lastActiveAt: string | null, humanName: string | null, userAgent: { name: string | null, model: string | null, os: string | null, deviceType: DeviceType } | null, client: { id: string, clientId: string, clientName: string | null, applicationType: Oauth2ApplicationType | null, logoUri: string | null } }
   & { ' $fragmentRefs'?: { 'EndOAuth2SessionButton_SessionFragment': EndOAuth2SessionButton_SessionFragment } }
 ) & { ' $fragmentName'?: 'OAuth2Session_SessionFragment' };
+
+export type UsernameAvailableQueryVariables = Exact<{
+  username: string;
+}>;
+
+
+export type UsernameAvailableQuery = { usernameAvailable: { available: boolean, reason: UsernameUnavailableReason | null, violationCodes: Array<string> | null } };
 
 export type EndBrowserSessionButton_SessionFragment = { id: string, userAgent: { name: string | null, os: string | null, model: string | null, deviceType: DeviceType } | null } & { ' $fragmentName'?: 'EndBrowserSessionButton_SessionFragment' };
 
@@ -937,6 +957,15 @@ export const FooterDocument = new TypedDocumentString(`
   tosUri
   policyUri
 }`) as unknown as TypedDocumentString<FooterQuery, FooterQueryVariables>;
+export const UsernameAvailableDocument = new TypedDocumentString(`
+    query UsernameAvailable($username: String!) {
+  usernameAvailable(username: $username) {
+    available
+    reason
+    violationCodes
+  }
+}
+    `) as unknown as TypedDocumentString<UsernameAvailableQuery, UsernameAvailableQueryVariables>;
 export const EndBrowserSessionDocument = new TypedDocumentString(`
     mutation EndBrowserSession($id: ID!) {
   endBrowserSession(input: {browserSessionId: $id}) {
@@ -1592,6 +1621,28 @@ export const mockDeactivateUserMutation = (resolver: GraphQLResponseResolver<Dea
 export const mockFooterQuery = (resolver: GraphQLResponseResolver<FooterQuery, FooterQueryVariables>, options?: RequestHandlerOptions) =>
   graphql.query<FooterQuery, FooterQueryVariables>(
     'Footer',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockUsernameAvailableQuery(
+ *   ({ query, variables }) => {
+ *     const { username } = variables;
+ *     return HttpResponse.json({
+ *       data: { usernameAvailable }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockUsernameAvailableQuery = (resolver: GraphQLResponseResolver<UsernameAvailableQuery, UsernameAvailableQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<UsernameAvailableQuery, UsernameAvailableQueryVariables>(
+    'UsernameAvailable',
     resolver,
     options
   )

@@ -648,6 +648,14 @@ rate_limiting:
   device_code_link:
     burst: 10
     per_second: 0.016666
+
+  # Limits how often the registration form can check whether a username is
+  # available, based on source address.
+  # The form checks the username as it is typed. This limit makes it harder to
+  # use those checks to find out which usernames exist.
+  username_availability:
+    burst: 5
+    per_second: 1.0
 ```
 
 ## `telemetry`
