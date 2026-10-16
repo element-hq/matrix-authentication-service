@@ -28,9 +28,9 @@ async fn create_test_client(state: &TestState) -> Client {
     let mut repo = state.repository().await.unwrap();
     let mut rng = state.rng();
 
-    let client = repo
+    let (client, _) = repo
         .oauth2_client()
-        .add(
+        .add_or_reuse(
             &mut rng,
             &state.clock,
             vec![],
