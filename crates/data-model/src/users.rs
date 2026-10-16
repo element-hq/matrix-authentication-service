@@ -285,16 +285,6 @@ impl UserRegistrationToken {
         self.is_valid(now)
     }
 
-    /// The literal parts before and after the `{random}` of the username, if
-    /// it is a template
-    fn username_template(&self) -> Option<(&str, &str)> {
-        let (prefix, suffix) = self
-            .username
-            .as_deref()?
-            .split_once(USERNAME_TEMPLATE_PLACEHOLDER)?;
-        (!suffix.contains(USERNAME_TEMPLATE_PLACEHOLDER)).then_some((prefix, suffix))
-    }
-
     /// Returns `true` if the token allows registering `username`: it imposes
     /// none, it imposes this one, or its template fills in to it
     #[must_use]
@@ -303,7 +293,7 @@ impl UserRegistrationToken {
             return true;
         };
 
-        match self.username_template() {
+        match split_username_template(imposed) {
             Some((prefix, suffix)) => username
                 .strip_prefix(prefix)
                 .and_then(|rest| rest.strip_suffix(suffix))
@@ -323,7 +313,7 @@ impl UserRegistrationToken {
     /// username is one
     #[must_use]
     pub fn fill_username(&self, rng: &mut (impl RngExt + ?Sized)) -> Option<String> {
-        let (prefix, suffix) = self.username_template()?;
+        let (prefix, suffix) = split_username_template(self.username.as_deref()?)?;
 
         let random: String = (0..USERNAME_TEMPLATE_RANDOM_LENGTH)
             .map(|_| {
@@ -336,10 +326,39 @@ impl UserRegistrationToken {
     }
 }
 
+/// The literal parts before and after the `{random}` of `username`, if it is
+/// a username template
+fn split_username_template(username: &str) -> Option<(&str, &str)> {
+    let (prefix, suffix) = username.split_once(USERNAME_TEMPLATE_PLACEHOLDER)?;
+    (!suffix.contains(USERNAME_TEMPLATE_PLACEHOLDER)).then_some((prefix, suffix))
+}
+
+/// `username` with its `{random}` filled in with letters and digits in turn,
+/// if it is a username template. A policy that refuses letters or digits
+/// refuses the sample too, but one that refuses only long runs of either does
+/// not.
+#[must_use]
+pub fn username_template_sample(username: &str) -> Option<String> {
+    let (prefix, suffix) = split_username_template(username)?;
+
+    let (letters, digits): (Vec<u8>, Vec<u8>) = USERNAME_TEMPLATE_CHARSET
+        .iter()
+        .partition(|c| c.is_ascii_lowercase());
+    let random: String = letters
+        .iter()
+        .cycle()
+        .zip(digits.iter().cycle())
+        .flat_map(|(&letter, &digit)| [letter, digit])
+        .take(USERNAME_TEMPLATE_RANDOM_LENGTH)
+        .map(char::from)
+        .collect();
+    Some(format!("{prefix}{random}{suffix}"))
+}
+
 /// Stands for the random part of a [`UserRegistrationToken`]'s username
 /// template. The registration policy refuses `{` and `}` in a localpart, so a
 /// pin that can register never contains it.
-const USERNAME_TEMPLATE_PLACEHOLDER: &str = "{random}";
+pub const USERNAME_TEMPLATE_PLACEHOLDER: &str = "{random}";
 /// 36^32 is about 2^165 names, so two filled-in templates never collide
 const USERNAME_TEMPLATE_RANDOM_LENGTH: usize = 32;
 /// The lowercase letters and digits of the localpart grammar
@@ -447,5 +466,15 @@ mod tests {
         assert!(!token.username_fits("user-{random}-{random}"));
         assert!(!token.username_fits(&format!("user-{random}-{random}")));
         assert_eq!(token.fill_username(&mut rng), None);
+        assert_eq!(username_template_sample("user-{random}-{random}"), None);
+    }
+
+    #[test]
+    fn test_username_template_sample() {
+        let sample = username_template_sample("user-{random}-x").unwrap();
+        assert_eq!(sample, "user-a0b1c2d3e4f5g6h7i8j9k0l1m2n3o4p5-x");
+        assert!(with_username(Some("user-{random}-x")).username_fits(&sample));
+
+        assert_eq!(username_template_sample("alice"), None);
     }
 }

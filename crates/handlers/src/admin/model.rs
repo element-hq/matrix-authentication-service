@@ -645,6 +645,10 @@ pub struct UserRegistrationToken {
     /// identity is then established by verifying their email address.
     passwordless: bool,
 
+    /// A room opened once the user has registered or signed in through the
+    /// token's link. If null, the link opens no room.
+    room_id: Option<String>,
+
     /// Maximum number of times this token can be used
     usage_limit: Option<u32>,
 
@@ -682,6 +686,7 @@ impl UserRegistrationToken {
             username: token.username,
             email: token.email,
             passwordless: token.passwordless,
+            room_id: token.room_id,
             usage_limit: token.usage_limit,
             times_used: token.times_used,
             created_at: token.created_at,
@@ -713,6 +718,7 @@ impl UserRegistrationToken {
                 username: None,
                 email: None,
                 passwordless: false,
+                room_id: None,
                 usage_limit: Some(10),
                 times_used: 5,
                 created_at: DateTime::default(),
@@ -728,6 +734,7 @@ impl UserRegistrationToken {
                 username: None,
                 email: None,
                 passwordless: false,
+                room_id: None,
                 usage_limit: None,
                 times_used: 0,
                 created_at: DateTime::default(),
