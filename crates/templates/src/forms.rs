@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -33,6 +34,9 @@ pub enum FieldError {
 
     /// That value already exists
     Exists,
+
+    /// The value doesn't fit what the rest of the flow already holds
+    Mismatch,
 
     /// Denied by the policy
     Policy {
