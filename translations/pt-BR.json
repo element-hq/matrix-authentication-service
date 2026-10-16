@@ -12,7 +12,6 @@
     "email_address": "Endereço de e-mail",
     "loading": "Carregando…",
     "password": "Senha",
-    "password_confirm": "Confirme a nova senha",
     "username": "Nome de usuário"
   },
   "error": {
@@ -42,6 +41,7 @@
       "password_mismatch": "As senhas digitadas não são iguais",
       "username_taken": "Este nome de usuário já está em uso"
     },
+    "loading": "Carregando…",
     "login": {
       "call_to_register": "Ainda não tem uma conta?",
       "continue_with_provider": "Continuar com %(provider)s",
@@ -66,9 +66,7 @@
       }
     },
     "register": {
-      "call_to_login": "Já tem uma conta?",
       "create_account": {
-        "description": "Escolha um nome de usuário para continuar.",
         "heading": "Criar uma conta"
       }
     },

@@ -30,7 +30,6 @@
     "loading": "Laadime…",
     "mxid": "Matrixi kasutajatunnus",
     "password": "Salasõna",
-    "password_confirm": "Korda salasõna",
     "username": "Kasutajanimi"
   },
   "error": {
@@ -52,9 +51,6 @@
       }
     },
     "back_to_homepage": "Tagasi avalehele",
-    "captcha": {
-      "noscript": "Sellel vormil kasutame turvameetmena robotilõksu ning vormi kasutamiseks peab JavaScript toimima. Palun võta oma brauseris siin lehel JavaScript kasutusele ja laadi leht uuesti."
-    },
     "change_password": {
       "change": "Muuda salasõna",
       "confirm": "Korda salasõna",
@@ -149,6 +145,8 @@
     "legacy_consent": {
       "this_will_setup": "Sellega seadistad <span>%(client_name)s</span> kliendi kasutama oma <span>%(server_name)s</span> kontot."
     },
+    "loading": "Laadime…",
+    "loading_failed": "Lehe laadimisel tekkis viga. Proovi lehte uuesti laadida.",
     "login": {
       "call_to_register": "Sul veel pole kasutajakontot?",
       "continue_with_provider": "Jätka teenusepakkujaga %(provider)s",
@@ -216,11 +214,7 @@
       }
     },
     "register": {
-      "call_to_login": "Sul on kasutajakonto juba olemas?",
-      "continue_with_email": "Jätka e-posti aadressiga",
-      "continue_with_password": "Jätka salasõnaga",
       "create_account": {
-        "description": "Jätkamiseks vali kasutajanimi.",
         "heading": "Loo kasutajakonto"
       },
       "terms_of_service": "Ma nõustun <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">teenuse kasutustingimustega</a>"
