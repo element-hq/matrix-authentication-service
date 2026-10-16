@@ -121,6 +121,7 @@ pub async fn handler(
             params.username,
             params.email,
             params.passwordless,
+            None,
         )
         .await?;
 
