@@ -1263,25 +1263,28 @@ impl TemplateContext for EmailVerificationContext {
     }
 }
 
-/// Context used by the `emails/room_invite.{txt,html,subject}` templates
+/// Context used by the `emails/invite.{txt,html,subject}` templates
 #[derive(Serialize)]
-pub struct EmailRoomInviteContext {
+pub struct EmailInviteContext {
+    opens_room: bool,
     room_name: Option<String>,
     inviter: Option<String>,
     inviter_name: Option<String>,
     invite_link: Url,
 }
 
-impl EmailRoomInviteContext {
-    /// Constructs a context for the room invite email
+impl EmailInviteContext {
+    /// Constructs a context for the invite email
     #[must_use]
     pub fn new(
+        opens_room: bool,
         room_name: Option<String>,
         inviter: Option<String>,
         inviter_name: Option<String>,
         invite_link: Url,
     ) -> Self {
         Self {
+            opens_room,
             room_name,
             inviter,
             inviter_name,
@@ -1290,7 +1293,7 @@ impl EmailRoomInviteContext {
     }
 }
 
-impl TemplateContext for EmailRoomInviteContext {
+impl TemplateContext for EmailInviteContext {
     fn sample<R: RngExt>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
@@ -1306,36 +1309,56 @@ impl TemplateContext for EmailRoomInviteContext {
 
         sample_list(vec![
             Self::new(
+                true,
                 Some("Project X".to_owned()),
                 Some("@alice:example.com".to_owned()),
                 Some("Alice O'Brien & Co".to_owned()),
                 invite_link.clone(),
             ),
             Self::new(
+                true,
                 None,
                 Some("@alice:example.com".to_owned()),
                 Some("Alice O'Brien & Co".to_owned()),
                 invite_link.clone(),
             ),
             Self::new(
+                true,
                 Some("Project X".to_owned()),
                 None,
                 Some("Alice O'Brien & Co".to_owned()),
                 invite_link.clone(),
             ),
             Self::new(
+                true,
                 None,
                 Some("@alice:example.com".to_owned()),
                 None,
                 invite_link.clone(),
             ),
             Self::new(
+                true,
                 Some("Project X".to_owned()),
                 None,
                 None,
                 invite_link.clone(),
             ),
-            Self::new(None, None, None, invite_link),
+            Self::new(true, None, None, None, invite_link.clone()),
+            Self::new(
+                false,
+                None,
+                Some("@alice:example.com".to_owned()),
+                Some("Alice O'Brien & Co".to_owned()),
+                invite_link.clone(),
+            ),
+            Self::new(
+                false,
+                None,
+                Some("@alice:example.com".to_owned()),
+                None,
+                invite_link.clone(),
+            ),
+            Self::new(false, None, None, None, invite_link),
         ])
     }
 }

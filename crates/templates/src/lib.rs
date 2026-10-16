@@ -40,7 +40,7 @@ pub use self::{
     context::{
         AccountInactiveContext, ApiDocContext, AppContext, CompatLoginPolicyViolationContext,
         CompatSsoContext, ConsentContext, DeviceConsentContext, DeviceLinkContext,
-        DeviceLinkFormField, DeviceNameContext, EmailRecoveryContext, EmailRoomInviteContext,
+        DeviceLinkFormField, DeviceNameContext, EmailInviteContext, EmailRecoveryContext,
         EmailVerificationContext, EmptyContext, ErrorContext, FormPostContext, IndexContext,
         InviteContext, LoginContext, LoginFormField, NotFoundContext, PolicyViolationContext,
         PostAuthContext, PostAuthContextInner, RecoveryExpiredContext, RecoveryFinishContext,
@@ -425,14 +425,14 @@ register_templates! {
     /// Render the HTML error page
     pub fn render_error(ErrorContext) { "pages/error.html" }
 
-    /// Render the room invite email (plain text variant)
-    pub fn render_email_room_invite_txt(WithLanguage<EmailRoomInviteContext>) { "emails/room_invite.txt" }
+    /// Render the invite email (plain text variant)
+    pub fn render_email_invite_txt(WithLanguage<EmailInviteContext>) { "emails/invite.txt" }
 
-    /// Render the room invite email (HTML variant)
-    pub fn render_email_room_invite_html(WithLanguage<EmailRoomInviteContext>) { "emails/room_invite.html" }
+    /// Render the invite email (HTML variant)
+    pub fn render_email_invite_html(WithLanguage<EmailInviteContext>) { "emails/invite.html" }
 
-    /// Render the room invite email subject
-    pub fn render_email_room_invite_subject(WithLanguage<EmailRoomInviteContext>) { "emails/room_invite.subject" }
+    /// Render the invite email subject
+    pub fn render_email_invite_subject(WithLanguage<EmailInviteContext>) { "emails/invite.subject" }
 
     /// Render the email recovery email (plain text variant)
     pub fn render_email_recovery_txt(WithLanguage<EmailRecoveryContext>) { "emails/recovery.txt" }
@@ -562,10 +562,11 @@ mod tests {
     /// The headline escapes the room and the inviter once in HTML, the subject
     /// names neither, and the link is the token's invite link
     #[tokio::test]
-    async fn room_invite_email() {
+    async fn invite_email() {
         let templates = load_templates(false).await;
 
-        let context = EmailRoomInviteContext::new(
+        let context = EmailInviteContext::new(
+            true,
             Some("Q&A <team>".to_owned()),
             Some("@alice:example.com".to_owned()),
             Some("Alice O'Brien & Co".to_owned()),
@@ -574,7 +575,7 @@ mod tests {
         )
         .with_language(mas_i18n::locale!("en").into());
 
-        let html = templates.render_email_room_invite_html(&context).unwrap();
+        let html = templates.render_email_invite_html(&context).unwrap();
         assert!(
             html.contains(
                 "Alice O&#x27;Brien &amp; Co (@alice:example.com) invited you to ask to join \
@@ -583,7 +584,7 @@ mod tests {
             "{html}"
         );
 
-        let txt = templates.render_email_room_invite_txt(&context).unwrap();
+        let txt = templates.render_email_invite_txt(&context).unwrap();
         assert!(
             txt.contains(
                 "Alice O'Brien & Co (@alice:example.com) invited you to ask to join Q&A <team> \
@@ -596,12 +597,38 @@ mod tests {
             "{txt}"
         );
 
-        let subject = templates
-            .render_email_room_invite_subject(&context)
-            .unwrap();
+        let subject = templates.render_email_invite_subject(&context).unwrap();
         assert_eq!(
             subject.trim(),
             "You have been invited to a room on example.com"
         );
+    }
+
+    /// An invite which opens no room names none and asks for no approval
+    #[tokio::test]
+    async fn invite_email_no_room() {
+        let templates = load_templates(false).await;
+
+        let context = EmailInviteContext::new(
+            false,
+            None,
+            Some("@alice:example.com".to_owned()),
+            None,
+            test_url_builder()
+                .absolute_url_for(&mas_router::Register::default().with_token("token".to_owned())),
+        )
+        .with_language(mas_i18n::locale!("en").into());
+
+        let txt = templates.render_email_invite_txt(&context).unwrap();
+        assert!(
+            txt.starts_with("@alice:example.com invited you to join example.com.\n"),
+            "{txt}"
+        );
+
+        let html = templates.render_email_invite_html(&context).unwrap();
+        assert!(!html.contains("approve"), "{html}");
+
+        let subject = templates.render_email_invite_subject(&context).unwrap();
+        assert_eq!(subject.trim(), "You have been invited to example.com");
     }
 }

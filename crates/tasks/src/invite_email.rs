@@ -9,7 +9,7 @@ use async_trait::async_trait;
 use mas_email::{Address, Mailbox};
 use mas_i18n::locale;
 use mas_storage::queue::SendInviteEmailJob;
-use mas_templates::{EmailRoomInviteContext, TemplateContext as _};
+use mas_templates::{EmailInviteContext, TemplateContext as _};
 use tracing::info;
 
 use crate::{
@@ -51,7 +51,8 @@ impl RunnableJob for SendInviteEmailJob {
         let mailbox = Mailbox::new(None, address);
 
         // Recipients have no account, so no language preference to look up
-        let context = EmailRoomInviteContext::new(
+        let context = EmailInviteContext::new(
+            token.room_id.is_some(),
             self.room_name().map(ToOwned::to_owned),
             self.inviter().map(ToOwned::to_owned),
             self.inviter_name().map(ToOwned::to_owned),
@@ -61,7 +62,7 @@ impl RunnableJob for SendInviteEmailJob {
 
         info!("Sending invite email to {}", mailbox);
         mailer
-            .send_room_invite_email(mailbox, &context)
+            .send_invite_email(mailbox, &context)
             .await
             .map_err(JobError::retry)?;
 

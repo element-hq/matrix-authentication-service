@@ -7,4 +7,8 @@ Please see LICENSE files in the repository root for full details.
 
 {%- set _ = translator(lang) -%}
 
-{{ _("mas.emails.room_invite.subject", server_name=branding.server_name) }}
+{%- if opens_room -%}
+  {{ _("mas.emails.invite.subject", server_name=branding.server_name) }}
+{%- else -%}
+  {{ _("mas.emails.invite.subject_no_room", server_name=branding.server_name) }}
+{%- endif %}
