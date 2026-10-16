@@ -217,3 +217,18 @@ pub enum UserRegistrationTokens {
     ExpiresAt,
     RevokedAt,
 }
+
+#[derive(sea_query::Iden)]
+#[iden = "user_session_limit_overrides"]
+pub enum UserSessionLimitOverrides {
+    Table,
+    #[iden = "user_session_limit_override_id"]
+    UserSessionLimitOverrideId,
+    UserId,
+    #[iden = "oauth2_client_id"]
+    OAuth2ClientId,
+    SoftLimit,
+    HardLimit,
+    CreatedAt,
+    UpdatedAt,
+}

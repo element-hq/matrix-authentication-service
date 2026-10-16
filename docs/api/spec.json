@@ -3675,6 +3675,492 @@
         }
       }
     },
+    "/api/admin/v1/user-session-limit-overrides": {
+      "get": {
+        "tags": [
+          "user-session-limit-override"
+        ],
+        "summary": "List user session limit overrides",
+        "description": "Retrieve a list of per-user session limit overrides.",
+        "operationId": "listUserSessionLimitOverrides",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page[before]",
+            "description": "Retrieve the items before the given ID",
+            "schema": {
+              "description": "Retrieve the items before the given ID",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[after]",
+            "description": "Retrieve the items after the given ID",
+            "schema": {
+              "description": "Retrieve the items after the given ID",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[first]",
+            "description": "Retrieve the first N items",
+            "schema": {
+              "description": "Retrieve the first N items",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 1
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "page[last]",
+            "description": "Retrieve the last N items",
+            "schema": {
+              "description": "Retrieve the last N items",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 1
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "count",
+            "description": "Include the total number of items. Defaults to `true`.",
+            "schema": {
+              "description": "Include the total number of items. Defaults to `true`.",
+              "$ref": "#/components/schemas/IncludeCount"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[user]",
+            "description": "Retrieve the items for the given user",
+            "schema": {
+              "description": "Retrieve the items for the given user",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[client]",
+            "description": "Retrieve the items for the given OAuth 2.0 client",
+            "schema": {
+              "description": "Retrieve the items for the given OAuth 2.0 client",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "filter[global]",
+            "description": "When `true`, retrieve only global overrides (`client_id` is null)",
+            "schema": {
+              "description": "When `true`, retrieve only global overrides (`client_id` is null)",
+              "type": "boolean"
+            },
+            "style": "form"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated response of user session limit overrides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_for_UserSessionLimitOverride"
+                },
+                "example": {
+                  "meta": {
+                    "count": 42
+                  },
+                  "data": [
+                    {
+                      "type": "user-session-limit-override",
+                      "id": "01040G2081040G2081040G2081",
+                      "attributes": {
+                        "created_at": "1970-01-01T00:00:00Z",
+                        "updated_at": "1970-01-01T00:00:00Z",
+                        "user_id": "02081040G2081040G2081040G2",
+                        "client_id": null,
+                        "soft_limit": 3,
+                        "hard_limit": 5
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/user-session-limit-overrides/01040G2081040G2081040G2081"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "01040G2081040G2081040G2081"
+                        }
+                      }
+                    },
+                    {
+                      "type": "user-session-limit-override",
+                      "id": "030C1G60R30C1G60R30C1G60R3",
+                      "attributes": {
+                        "created_at": "1970-01-01T00:00:00Z",
+                        "updated_at": "1970-01-01T00:00:00Z",
+                        "user_id": "02081040G2081040G2081040G2",
+                        "client_id": "040G2081040G2081040G208104",
+                        "soft_limit": 2,
+                        "hard_limit": 4
+                      },
+                      "links": {
+                        "self": "/api/admin/v1/user-session-limit-overrides/030C1G60R30C1G60R30C1G60R3"
+                      },
+                      "meta": {
+                        "page": {
+                          "cursor": "030C1G60R30C1G60R30C1G60R3"
+                        }
+                      }
+                    }
+                  ],
+                  "links": {
+                    "self": "/api/admin/v1/user-session-limit-overrides?page[first]=2",
+                    "first": "/api/admin/v1/user-session-limit-overrides?page[first]=2",
+                    "last": "/api/admin/v1/user-session-limit-overrides?page[last]=2",
+                    "next": "/api/admin/v1/user-session-limit-overrides?page[after]=030C1G60R30C1G60R30C1G60R3&page[first]=2"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User or OAuth 2.0 client was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "user-session-limit-override"
+        ],
+        "summary": "Create a user session limit override",
+        "description": "Create a per-user override of session limit soft/hard numbers. `client_id` may be omitted for a global override. `max_session_threshold` and `dangerous_hard_limit_eviction` are not overridable here; they continue to come from the YAML configuration.",
+        "operationId": "addUserSessionLimitOverride",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddUserSessionLimitOverrideRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "User session limit override was created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_UserSessionLimitOverride"
+                },
+                "example": {
+                  "data": {
+                    "type": "user-session-limit-override",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "updated_at": "1970-01-01T00:00:00Z",
+                      "user_id": "02081040G2081040G2081040G2",
+                      "client_id": null,
+                      "soft_limit": 3,
+                      "hard_limit": 5
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/user-session-limit-overrides/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/user-session-limit-overrides/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Limits are invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "hard_limit must be greater than or equal to soft_limit"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User or OAuth 2.0 client was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "An override already exists for this user and client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "A session limit override already exists for this user and client"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/user-session-limit-overrides/{id}": {
+      "get": {
+        "tags": [
+          "user-session-limit-override"
+        ],
+        "summary": "Get a user session limit override",
+        "operationId": "getUserSessionLimitOverride",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User session limit override was found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_UserSessionLimitOverride"
+                },
+                "example": {
+                  "data": {
+                    "type": "user-session-limit-override",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "updated_at": "1970-01-01T00:00:00Z",
+                      "user_id": "02081040G2081040G2081040G2",
+                      "client_id": null,
+                      "soft_limit": 3,
+                      "hard_limit": 5
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/user-session-limit-overrides/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/user-session-limit-overrides/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User session limit override was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User session limit override ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "user-session-limit-override"
+        ],
+        "summary": "Update a user session limit override",
+        "description": "Update the soft and hard limits of a per-user session limit override. `max_session_threshold` and `dangerous_hard_limit_eviction` remain determined by the YAML configuration.",
+        "operationId": "updateUserSessionLimitOverride",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserSessionLimitOverrideRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "User session limit override was updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleResponse_for_UserSessionLimitOverride"
+                },
+                "example": {
+                  "data": {
+                    "type": "user-session-limit-override",
+                    "id": "01040G2081040G2081040G2081",
+                    "attributes": {
+                      "created_at": "1970-01-01T00:00:00Z",
+                      "updated_at": "1970-01-01T00:00:00Z",
+                      "user_id": "02081040G2081040G2081040G2",
+                      "client_id": null,
+                      "soft_limit": 3,
+                      "hard_limit": 5
+                    },
+                    "links": {
+                      "self": "/api/admin/v1/user-session-limit-overrides/01040G2081040G2081040G2081"
+                    }
+                  },
+                  "links": {
+                    "self": "/api/admin/v1/user-session-limit-overrides/01040G2081040G2081040G2081"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Limits are invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "hard_limit must be greater than or equal to soft_limit"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User session limit override was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User session limit override ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "user-session-limit-override"
+        ],
+        "summary": "Delete a user session limit override",
+        "operationId": "deleteUserSessionLimitOverride",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "The ID of the resource",
+              "$ref": "#/components/schemas/ULID"
+            },
+            "style": "simple"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User session limit override was deleted"
+          },
+          "404": {
+            "description": "User session limit override was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "User session limit override ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/user-registration-tokens": {
       "get": {
         "tags": [
@@ -7176,6 +7662,264 @@
           "links"
         ]
       },
+      "UserSessionLimitOverrideFilter": {
+        "type": "object",
+        "properties": {
+          "filter[user]": {
+            "description": "Retrieve the items for the given user",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "filter[client]": {
+            "description": "Retrieve the items for the given OAuth 2.0 client",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "filter[global]": {
+            "description": "When `true`, retrieve only global overrides (`client_id` is null)",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      },
+      "PaginatedResponse_for_UserSessionLimitOverride": {
+        "description": "A top-level response with a page of resources",
+        "type": "object",
+        "properties": {
+          "meta": {
+            "description": "Response metadata",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMeta"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "data": {
+            "description": "The list of resources",
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/SingleResource_for_UserSessionLimitOverride"
+            }
+          },
+          "links": {
+            "description": "Related links",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationLinks"
+              }
+            ]
+          }
+        },
+        "required": [
+          "links"
+        ]
+      },
+      "SingleResource_for_UserSessionLimitOverride": {
+        "description": "A single resource, with its type, ID, attributes and related links",
+        "type": "object",
+        "properties": {
+          "type": {
+            "description": "The type of the resource",
+            "type": "string"
+          },
+          "id": {
+            "description": "The ID of the resource",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
+          },
+          "attributes": {
+            "description": "The attributes of the resource",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserSessionLimitOverride"
+              }
+            ]
+          },
+          "links": {
+            "description": "Related links",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SelfLinks"
+              }
+            ]
+          },
+          "meta": {
+            "description": "Metadata about the resource",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SingleResourceMeta"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "attributes",
+          "links"
+        ]
+      },
+      "UserSessionLimitOverride": {
+        "description": "A per-user override of session limit soft/hard numbers",
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "description": "When the override was created",
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "description": "When the override was last updated",
+            "type": "string",
+            "format": "date-time"
+          },
+          "user_id": {
+            "description": "The ID of the user this override applies to",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
+          },
+          "client_id": {
+            "description": "The OAuth 2.0 client this override applies to.\n`null` means this is a global override for the user.",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "soft_limit": {
+            "description": "Soft session limit",
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0
+          },
+          "hard_limit": {
+            "description": "Hard session limit",
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "created_at",
+          "updated_at",
+          "user_id",
+          "soft_limit",
+          "hard_limit"
+        ]
+      },
+      "AddUserSessionLimitOverrideRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/user-session-limit-overrides`",
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "description": "The ID of the user this override applies to",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
+          },
+          "client_id": {
+            "description": "The OAuth 2.0 client this override applies to.\nOmit or set to `null` for a global override.",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "soft_limit": {
+            "description": "Soft session limit",
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "hard_limit": {
+            "description": "Hard session limit",
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "user_id",
+          "soft_limit",
+          "hard_limit"
+        ]
+      },
+      "SingleResponse_for_UserSessionLimitOverride": {
+        "description": "A top-level response with a single resource",
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SingleResource_for_UserSessionLimitOverride"
+          },
+          "links": {
+            "$ref": "#/components/schemas/SelfLinks"
+          }
+        },
+        "required": [
+          "data",
+          "links"
+        ]
+      },
+      "UpdateUserSessionLimitOverrideRequest": {
+        "title": "JSON payload for the `PUT /api/admin/v1/user-session-limit-overrides/{id}`",
+        "type": "object",
+        "properties": {
+          "soft_limit": {
+            "description": "Soft session limit",
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "hard_limit": {
+            "description": "Hard session limit",
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "soft_limit",
+          "hard_limit"
+        ]
+      },
       "RegistrationTokenFilter": {
         "type": "object",
         "properties": {
@@ -7876,6 +8620,10 @@
     {
       "name": "user-registration-token",
       "description": "Manage user registration tokens"
+    },
+    {
+      "name": "user-session-limit-override",
+      "description": "Manage per-user overrides of session limit soft/hard numbers"
     },
     {
       "name": "upstream-oauth-link",
