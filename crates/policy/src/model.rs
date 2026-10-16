@@ -12,6 +12,7 @@
 
 use std::net::IpAddr;
 
+use chrono::{DateTime, Utc};
 use mas_data_model::{Client, User};
 use oauth2_types::{registration::VerifiedClientMetadata, scope::Scope};
 use schemars::JsonSchema;
@@ -204,6 +205,8 @@ pub struct AuthorizationGrantInput<'a> {
     pub grant_type: GrantType,
 
     pub requester: Requester,
+
+    pub now: DateTime<Utc>,
 }
 
 /// Input for the compatibility login policy.

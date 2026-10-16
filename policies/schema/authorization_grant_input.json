@@ -34,13 +34,18 @@
     },
     "requester": {
       "$ref": "#/definitions/Requester"
+    },
+    "now": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [
     "client",
     "scope",
     "grant_type",
-    "requester"
+    "requester",
+    "now"
   ],
   "definitions": {
     "SessionCounts": {
