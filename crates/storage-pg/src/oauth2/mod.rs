@@ -1027,6 +1027,7 @@ mod tests {
                     expires_in: Duration::try_minutes(5).unwrap(),
                     ip_address: None,
                     user_agent: None,
+                    login_hint: None,
                 },
             )
             .await
@@ -1136,6 +1137,7 @@ mod tests {
                     expires_in: Duration::try_minutes(5).unwrap(),
                     ip_address: None,
                     user_agent: None,
+                    login_hint: None,
                 },
             )
             .await
