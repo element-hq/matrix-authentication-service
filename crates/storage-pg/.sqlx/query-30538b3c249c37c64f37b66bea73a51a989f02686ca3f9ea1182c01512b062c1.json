@@ -1,0 +1,148 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT oauth2_session_id\n                     , user_id\n                     , user_session_id\n                     , oauth2_client_id\n                     , scope_list\n                     , created_at\n                     , finished_at\n                     , user_agent\n                     , last_active_at\n                     , last_active_ip\n                     , human_name\n                FROM oauth2_sessions\n\n                WHERE oauth2_session_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "oauth2_session_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "oauth2_sessions",
+            "name": "oauth2_session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "oauth2_sessions",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "user_session_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "oauth2_sessions",
+            "name": "user_session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "oauth2_client_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "oauth2_sessions",
+            "name": "oauth2_client_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "scope_list",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "oauth2_sessions",
+            "name": "scope_list"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "oauth2_sessions",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "finished_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "oauth2_sessions",
+            "name": "finished_at"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "user_agent",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth2_sessions",
+            "name": "user_agent"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "last_active_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "oauth2_sessions",
+            "name": "last_active_at"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "last_active_ip",
+        "type_info": "Inet",
+        "origin": {
+          "Table": {
+            "table": "oauth2_sessions",
+            "name": "last_active_ip"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "human_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth2_sessions",
+            "name": "human_name"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "30538b3c249c37c64f37b66bea73a51a989f02686ca3f9ea1182c01512b062c1"
+}

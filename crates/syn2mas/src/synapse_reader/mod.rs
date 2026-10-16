@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -12,7 +13,7 @@ use std::fmt::Display;
 
 use chrono::{DateTime, Utc};
 use futures_util::{Stream, TryStreamExt};
-use sqlx::{Acquire, FromRow, PgConnection, Postgres, Transaction, Type, query};
+use sqlx::{Acquire, AssertSqlSafe, FromRow, PgConnection, Postgres, Transaction, Type, query};
 use thiserror::Error;
 use thiserror_ext::ContextInto;
 
@@ -309,10 +310,12 @@ impl<'conn> SynapseReader<'conn> {
             "EXCLUSIVE"
         };
         for table in TABLES_TO_LOCK {
-            query(&format!("LOCK TABLE {table} IN {lock_type} MODE NOWAIT;"))
-                .execute(&mut *txn)
-                .await
-                .into_database_with(|| format!("locking Synapse table `{table}`"))?;
+            query(AssertSqlSafe(format!(
+                "LOCK TABLE {table} IN {lock_type} MODE NOWAIT;"
+            )))
+            .execute(&mut *txn)
+            .await
+            .into_database_with(|| format!("locking Synapse table `{table}`"))?;
         }
 
         Ok(Self { txn })

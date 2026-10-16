@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -65,7 +66,7 @@ pub async fn mas_pre_migration_checks(mas_connection: &mut LockedMasDatabase) ->
     for &table in MAS_TABLES_AFFECTED_BY_MIGRATION {
         let query = format!("SELECT 1 AS dummy FROM {table} LIMIT 1");
         let span = tracing::info_span!("db.query", db.query.text = query);
-        let row_present = sqlx::query(&query)
+        let row_present = sqlx::query(sqlx::AssertSqlSafe(query))
             .fetch_optional(mas_connection.as_mut())
             .instrument(span)
             .await
