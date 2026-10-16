@@ -66,7 +66,7 @@ It does make reasoning about admin access more complicated compared to a simple 
 This is especially important as in the future it will make it possible to implement a more granular role-based access control system to fit more complex use cases.
 
 For the authorization code grant, the policy also decides whether the user is asked for consent.
-The default policy only skips it for the clients listed in [`policy.data.skip_consent`](../reference/configuration.md#policy), on the first sign-in of a newly created account.
+The default policy only skips it when [`policy.data.skip_consent`](../reference/configuration.md#policy) is set, on the first sign-in of a newly created account.
 
 To understand the authorization process and how sessions are created, refer to the [authorization and sessions](./authorization.md) section.
 

@@ -220,6 +220,10 @@ first_party_scope(scope) if startswith(scope, "urn:matrix:client:device:")
 
 first_party_scope(scope) if startswith(scope, "urn:matrix:org.matrix.msc2967.client:device:")
 
+skip_consent_client if not data.skip_consent.client_ids
+
+skip_consent_client if input.client.id in data.skip_consent.client_ids
+
 # METADATA
 # entrypoint: true
 default skip_consent := false
@@ -230,8 +234,7 @@ skip_consent if {
 	# Not the device code grant, where someone else may hold the device
 	input.grant_type == "authorization_code"
 
-	# The operator's own clients, whose redirect URIs it sets
-	input.client.id in data.skip_consent.client_ids
+	skip_consent_client
 
 	# The first sign-in right after registering
 	input.session_counts.total == 0

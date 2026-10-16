@@ -388,6 +388,11 @@ test_skip_consent_other_client if {
 		with data.skip_consent as skip_consent_data
 }
 
+test_skip_consent_any_client if {
+	authorization_grant.skip_consent with input as object.union(fresh_account_input, {"client": {"id": "01ANYCLIENT"}})
+		with data.skip_consent as {"max_account_age_seconds": 600}
+}
+
 test_skip_consent_old_account if {
 	not authorization_grant.skip_consent with input as object.union(fresh_account_input, {"now": "2026-10-15T10:10:01Z"})
 		with data.skip_consent as skip_consent_data

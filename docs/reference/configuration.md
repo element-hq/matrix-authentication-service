@@ -478,12 +478,13 @@ policy:
       - 01H8PKNWKKRPCBW4YGH1RWV279
       - 01HWQCPA5KF10FNCETY9402WGF
 
-    # Skip the consent screen on the first sign-in of a new account to one of
-    # these clients, if the account has no active sessions and the client only
-    # asks for the `openid` and Matrix client-server API scopes.
-    # Only list clients defined in the `clients` section. Their redirect URIs
-    # are fixed there, so the code can only reach that client.
+    # Skip the consent screen on the first sign-in of a new account, if the
+    # account has no active sessions and the client only asks for the `openid`
+    # and Matrix client-server API scopes.
     skip_consent:
+      # Only skip it for these clients. Without this, any client qualifies,
+      # including dynamically registered ones, which choose their own redirect
+      # URIs. Only list clients defined in the `clients` section.
       client_ids:
         - 000000000000000000000FIRST
       # How long after the account is created it counts as new
