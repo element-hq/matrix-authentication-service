@@ -163,6 +163,7 @@ pub(crate) async fn get(
                 ip_address: activity_tracker.ip(),
                 user_agent,
             },
+            now: clock.now(),
         })
         .await?;
     if !res.valid() {
@@ -301,6 +302,7 @@ pub(crate) async fn post(
                 ip_address: activity_tracker.ip(),
                 user_agent,
             },
+            now: clock.now(),
         })
         .await?;
 
