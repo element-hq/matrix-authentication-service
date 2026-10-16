@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -32,6 +33,8 @@ use opentelemetry_sdk::{
     },
 };
 use opentelemetry_semantic_conventions as semcov;
+
+mod jaeger;
 
 static SCOPE: LazyLock<InstrumentationScope> = LazyLock::new(|| {
     InstrumentationScope::builder(env!("CARGO_PKG_NAME"))
@@ -83,13 +86,7 @@ fn match_propagator(propagator: Propagator) -> Box<dyn TextMapPropagator + Send 
     match propagator {
         P::TraceContext => Box::new(TraceContextPropagator::new()),
         P::Baggage => Box::new(BaggagePropagator::new()),
-        // opentelemetry-jaeger-propagator is deprecated upstream but still
-        // published; we keep supporting the Jaeger format until it's removed.
-        #[expect(
-            deprecated,
-            reason = "the Jaeger propagator is deprecated upstream but we still expose it as an option"
-        )]
-        P::Jaeger => Box::new(opentelemetry_jaeger_propagator::Propagator::new()),
+        P::Jaeger => Box::new(jaeger::JaegerPropagator::new()),
     }
 }
 
