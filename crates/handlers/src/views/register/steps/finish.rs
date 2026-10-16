@@ -545,6 +545,52 @@ mod tests {
         assert_refused(&response, "fit the registration");
     }
 
+    /// A registration needs a username that fits its token's template
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_finish_with_username_template(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let token = add_registration_token(
+            &state,
+            "invite_template",
+            Some("user-{random}"),
+            None,
+            false,
+        )
+        .await;
+
+        let registration = add_registration(
+            &state,
+            &cookies,
+            "mallory",
+            Some("mallory@example.com"),
+            true,
+            Some(&token),
+        )
+        .await;
+        let response = finish(&state, &cookies, &registration).await;
+        assert_refused(&response, "fit the registration");
+
+        let username = format!("user-{}", "a1".repeat(16));
+        let registration = add_registration(
+            &state,
+            &cookies,
+            &username,
+            Some("invitee@example.com"),
+            true,
+            Some(&token),
+        )
+        .await;
+        let response = finish(&state, &cookies, &registration).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(
+            LOCATION,
+            &mas_router::RegisterDisplayName::new(registration.id).path_and_query(),
+        );
+    }
+
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_finish_refuses_token_pinning_another_email(pool: PgPool) {
         setup();

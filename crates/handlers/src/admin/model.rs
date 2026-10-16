@@ -633,7 +633,8 @@ pub struct UserRegistrationToken {
     valid: bool,
 
     /// A username imposed on the registering user. If null, the user can
-    /// choose their own username.
+    /// choose their own username. A value with `{random}` is a template,
+    /// filled in when registering through the token's link.
     username: Option<String>,
 
     /// An email address imposed on the registering user. If null, the user

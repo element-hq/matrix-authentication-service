@@ -134,7 +134,9 @@ enum Subcommand {
         #[arg(long)]
         expires_in: Option<u32>,
 
-        /// Only allow registering with this username
+        /// Only allow registering with this username. A value with exactly one
+        /// `{random}` is a template, filled in when registering through
+        /// `/register?token=<token>`.
         #[arg(long)]
         username: Option<String>,
 

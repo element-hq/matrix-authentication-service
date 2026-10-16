@@ -407,6 +407,34 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_refuses_token_with_another_username_template(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        add_registration_token(
+            &state,
+            "invite_template",
+            Some("user-{random}"),
+            None,
+            false,
+        )
+        .await;
+        let registration = add_registration(
+            &state,
+            &cookies,
+            "mallory",
+            Some("mallory@example.com"),
+            true,
+            None,
+        )
+        .await;
+
+        let response = submit_token(&state, &cookies, &registration, "invite_template").await;
+        assert_refused(&state, &response, &registration).await;
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_refuses_token_pinning_another_email(pool: PgPool) {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();

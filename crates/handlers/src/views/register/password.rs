@@ -90,11 +90,15 @@ pub(super) async fn register(
         None => (None, None, false),
     };
 
-    // An empty field means the user accepted whatever the invite code pins
-    let username = match pinned_username {
-        Some(pinned) if form.username.is_empty() => pinned.to_owned(),
-        _ => form.username.clone(),
-    };
+    // A template is filled in whatever the form says. Otherwise an empty field
+    // means the user accepted whatever the invite code pins.
+    let username = registration_token
+        .as_ref()
+        .and_then(|token| token.fill_username(&mut *rng))
+        .unwrap_or_else(|| match pinned_username {
+            Some(pinned) if form.username.is_empty() => pinned.to_owned(),
+            _ => form.username.clone(),
+        });
 
     // The email field is only shown if the server requires it, but a
     // passwordless registration always needs one, as verifying it is what
@@ -122,7 +126,10 @@ pub(super) async fn register(
 
         // An invite code may only be used to register the identity it was
         // issued for
-        if pinned_username.is_some_and(|pinned| pinned != username) {
+        if registration_token
+            .as_ref()
+            .is_some_and(|token| !token.username_fits(&username))
+        {
             state.add_error_on_field(RegisterFormField::Username, FieldError::Invalid);
         }
 
@@ -1075,6 +1082,80 @@ mod tests {
             .unwrap()
             .unwrap();
         assert_eq!(email_authentication.email, "alice@example.com");
+    }
+
+    /// An invite code with a username template registers a name filled in from
+    /// it, whatever the form says
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_username_template(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let token = add_registration_token(
+            &state,
+            "invite_template",
+            Some("user-{random}"),
+            Some("invitee@example.com"),
+            true,
+        )
+        .await;
+
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({ "username": "mallory", "token": "invite_template" }),
+        )
+        .await;
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo
+            .user_registration()
+            .lookup(registration_id(&response))
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(registration.username.starts_with("user-"));
+        assert!(token.username_fits(&registration.username));
+        assert_eq!(registration.user_registration_token_id, Some(token.id));
+    }
+
+    /// The policy judges the name filled in from a username template
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_banned_username_template(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config_and_policy_data(
+            pool,
+            test_site_config(),
+            serde_json::json!({
+                "registration": {
+                    "banned_usernames": { "prefixes": ["user-"] },
+                },
+            }),
+        )
+        .await
+        .unwrap();
+
+        add_registration_token(
+            &state,
+            "invite_template",
+            Some("user-{random}"),
+            Some("invitee@example.com"),
+            true,
+        )
+        .await;
+
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({ "username": "mallory", "token": "invite_template" }),
+        )
+        .await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            form_state(response.body())["fields"]["username"]["errors"][0]["code"],
+            serde_json::json!("username-banned")
+        );
     }
 
     /// Registering with an invite code which is no longer valid is refused
