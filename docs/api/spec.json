@@ -2005,92 +2005,6 @@
         }
       }
     },
-    "/api/admin/v1/room-invites": {
-      "post": {
-        "tags": [
-          "room-invite"
-        ],
-        "summary": "Invite a list of email addresses to a room",
-        "description": "Mints a single-use, passwordless registration token for each invite, pinned to its address and its username, or username template, and emails the address a link to register with the token and open the room. The links are only ever sent to the addresses, so they are not in the response.",
-        "operationId": "createRoomInvites",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RoomInvitesRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "202": {
-            "description": "The invite emails were scheduled",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RoomInvitesResponse"
-                },
-                "example": {
-                  "scheduled": 2
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The request has an invalid room ID, email, username or username template, no invites, a repeated username, or an invite the registration policy refuses",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "errors": [
-                    {
-                      "title": "Invite for \"alice@example.com\" with username \"user-{random}\" is not allowed: email: email domain is banned"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Room invites are disabled",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "errors": [
-                    {
-                      "title": "Room invites are disabled"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "A username is already taken",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "errors": [
-                    {
-                      "title": "Username \"alice\" is already taken"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/admin/v1/users": {
       "get": {
         "tags": [
@@ -4026,6 +3940,75 @@
                   "errors": [
                     {
                       "title": "Username \"alice\" is already taken"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/user-registration-tokens/invite-emails": {
+      "post": {
+        "tags": [
+          "user-registration-token"
+        ],
+        "summary": "Email invite links for user registration tokens",
+        "description": "Emails each address a link to register with its token, which also opens the token's room, if it has one. The email is sent only if the token is still valid by then.",
+        "operationId": "sendUserRegistrationTokenInviteEmails",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteEmailsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "The emails were scheduled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteEmailsResponse"
+                },
+                "example": {
+                  "scheduled": 2
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has no invites, an invalid token, or an address which is missing, invalid or not the token's, or names a room for a token without one",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Registration token 00000000000000000000000000 has no email address, so the invite needs one"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "A registration token was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Registration token ID 00000000000000000000000000 not found"
                     }
                   ]
                 }
@@ -6621,88 +6604,6 @@
           "data"
         ]
       },
-      "RoomInvitesRequest": {
-        "title": "JSON payload for the `POST /api/admin/v1/room-invites` endpoint",
-        "type": "object",
-        "properties": {
-          "room_id": {
-            "description": "The room the addresses are invited to",
-            "type": "string",
-            "example": "!room:example.com"
-          },
-          "room_name": {
-            "description": "The name of the room, shown in the invite email",
-            "type": [
-              "string",
-              "null"
-            ],
-            "example": "Project X"
-          },
-          "inviter": {
-            "description": "The Matrix ID of the user sending the invites, shown in the invite\nemail. It is left out if it isn't a valid Matrix ID.",
-            "type": [
-              "string",
-              "null"
-            ],
-            "example": "@bob:example.com"
-          },
-          "inviter_name": {
-            "description": "The display name of the user sending the invites, shown in the invite\nemail",
-            "type": [
-              "string",
-              "null"
-            ],
-            "example": "Bob"
-          },
-          "invites": {
-            "description": "The addresses to invite. An address given more than once, ignoring case,\nis invited once.",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RoomInvite"
-            }
-          }
-        },
-        "required": [
-          "room_id",
-          "invites"
-        ]
-      },
-      "RoomInvite": {
-        "title": "An email address to invite to the room",
-        "type": "object",
-        "properties": {
-          "email": {
-            "description": "The address to send the invite to. The invitee can only register with\nthis address.",
-            "type": "string",
-            "format": "email",
-            "example": "alice@example.com"
-          },
-          "username": {
-            "description": "The username the invitee registers with, or a template for it: a value\nwith one `{random}`, which registering fills in with random lowercase\nletters and digits",
-            "type": "string",
-            "example": "user-{random}"
-          }
-        },
-        "required": [
-          "email",
-          "username"
-        ]
-      },
-      "RoomInvitesResponse": {
-        "title": "Response to the `POST /api/admin/v1/room-invites` endpoint",
-        "type": "object",
-        "properties": {
-          "scheduled": {
-            "description": "How many addresses were scheduled an invite email, after dropping\nrepeated ones",
-            "type": "integer",
-            "format": "uint",
-            "minimum": 0
-          }
-        },
-        "required": [
-          "scheduled"
-        ]
-      },
       "UserFilter": {
         "type": "object",
         "properties": {
@@ -7704,6 +7605,87 @@
           "links"
         ]
       },
+      "InviteEmailsRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/user-registration-tokens/invite-emails` endpoint",
+        "type": "object",
+        "properties": {
+          "invites": {
+            "description": "The tokens to email a link for. A token and address given more than\nonce, ignoring case, are emailed once.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InviteEmail"
+            }
+          },
+          "room_name": {
+            "description": "The name of the room the tokens open, shown in the email. Only allowed\nif every token opens a room.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Project X"
+          },
+          "inviter": {
+            "description": "The Matrix ID of the user sending the invites, shown in the email. It is\nleft out if it isn't a valid Matrix ID.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "@bob:example.com"
+          },
+          "inviter_name": {
+            "description": "The display name of the user sending the invites, shown in the email",
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Bob"
+          }
+        },
+        "required": [
+          "invites"
+        ]
+      },
+      "InviteEmail": {
+        "title": "A registration token to email a link for",
+        "type": "object",
+        "properties": {
+          "registration_token_id": {
+            "description": "The ID of the registration token",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
+          },
+          "email": {
+            "description": "The address to send the link to. Required if the token has no email\naddress, and otherwise the token's address, ignoring case.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email",
+            "example": "alice@example.com"
+          }
+        },
+        "required": [
+          "registration_token_id"
+        ]
+      },
+      "InviteEmailsResponse": {
+        "title": "Response to the `POST /api/admin/v1/user-registration-tokens/invite-emails` endpoint",
+        "type": "object",
+        "properties": {
+          "scheduled": {
+            "description": "How many emails were scheduled, after dropping repeated invites",
+            "type": "integer",
+            "format": "uint",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "scheduled"
+        ]
+      },
       "EditUserRegistrationTokenRequest": {
         "title": "JSON payload for the `PUT /api/admin/v1/user-registration-tokens/{id}` endpoint",
         "type": "object",
@@ -8144,10 +8126,6 @@
     {
       "name": "compat-session",
       "description": "Manage compatibility sessions from legacy clients"
-    },
-    {
-      "name": "room-invite",
-      "description": "Invite email addresses to rooms"
     },
     {
       "name": "policy-data",

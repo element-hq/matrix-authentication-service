@@ -3,73 +3,26 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::num::NonZeroU32;
-
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize, de::Error};
 use url::Url;
 
 use crate::ConfigurationSection;
 
-const fn default_false() -> bool {
-    false
-}
-
-#[expect(clippy::trivially_copy_pass_by_ref)]
-const fn is_default_false(value: &bool) -> bool {
-    *value == default_false()
-}
-
-/// Seven days: a starting point; shorten it where unused invite links are a
-/// concern
-fn default_invite_lifetime() -> NonZeroU32 {
-    NonZeroU32::new(7 * 24 * 60 * 60).unwrap()
-}
-
-#[expect(clippy::trivially_copy_pass_by_ref)]
-fn is_default_invite_lifetime(value: &NonZeroU32) -> bool {
-    *value == default_invite_lifetime()
-}
-
 /// Configuration section for inviting email addresses to rooms
-#[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, JsonSchema, Serialize)]
 pub struct RoomInvitesConfig {
-    /// Whether the `POST /api/admin/v1/room-invites` endpoint is enabled.
-    /// Defaults to `false`.
-    #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
-    pub enabled: bool,
-
     /// The client URL to send invitees to once they are signed in, with
     /// `{room_id}` standing for the room ID, e.g.
-    /// `https://app.element.io/#/room/{room_id}`. Required when `enabled` is
-    /// set.
+    /// `https://app.element.io/#/room/{room_id}`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub client_room_url: Option<String>,
-
-    /// How long an invite link stays valid, in seconds. Defaults to 7 days.
-    #[serde(
-        default = "default_invite_lifetime",
-        skip_serializing_if = "is_default_invite_lifetime"
-    )]
-    pub invite_lifetime: NonZeroU32,
-}
-
-impl Default for RoomInvitesConfig {
-    fn default() -> Self {
-        Self {
-            enabled: default_false(),
-            client_room_url: None,
-            invite_lifetime: default_invite_lifetime(),
-        }
-    }
 }
 
 impl RoomInvitesConfig {
     /// Returns true if the configuration is the default one
     pub(crate) fn is_default(&self) -> bool {
-        is_default_false(&self.enabled)
-            && self.client_room_url.is_none()
-            && is_default_invite_lifetime(&self.invite_lifetime)
+        self.client_room_url.is_none()
     }
 }
 
@@ -91,7 +44,6 @@ impl ConfigurationSection for RoomInvitesConfig {
         };
 
         match &self.client_room_url {
-            None if self.enabled => return Err(error("missing field `client_room_url`")),
             Some(url) if !url.contains("{room_id}") => {
                 return Err(error("must contain `{room_id}`"));
             }
@@ -133,47 +85,8 @@ mod tests {
     fn defaults() {
         Jail::expect_with(|jail| {
             let config = load(jail, "room_invites: {}").unwrap();
-            assert!(!config.enabled);
             assert_eq!(config.client_room_url, None);
-            assert_eq!(config.invite_lifetime.get(), 604_800);
             assert!(config.is_default());
-            Ok(())
-        });
-    }
-
-    #[test]
-    fn enabled_requires_client_room_url() {
-        Jail::expect_with(|jail| {
-            let error = load(jail, "room_invites: { enabled: true }").unwrap_err();
-            assert!(error.contains("client_room_url"), "{error}");
-
-            let config = load(
-                jail,
-                r"
-                    room_invites:
-                      enabled: true
-                      client_room_url: https://app.example.com/#/room/{room_id}
-                      invite_lifetime: 3600
-                ",
-            )
-            .unwrap();
-            assert!(config.enabled);
-            assert_eq!(config.invite_lifetime.get(), 3600);
-            Ok(())
-        });
-    }
-
-    #[test]
-    fn invite_lifetime_must_be_positive() {
-        Jail::expect_with(|jail| {
-            for lifetime in ["0", "-1", "4294967296"] {
-                let error = load(
-                    jail,
-                    &format!("room_invites: {{ invite_lifetime: {lifetime} }}"),
-                )
-                .unwrap_err();
-                assert!(error.contains("invite_lifetime"), "{error}");
-            }
             Ok(())
         });
     }
@@ -181,16 +94,12 @@ mod tests {
     #[test]
     fn client_room_url_requires_room_id() {
         Jail::expect_with(|jail| {
-            for enabled in [true, false] {
-                let error = load(
-                    jail,
-                    &format!(
-                        "room_invites: {{ enabled: {enabled}, client_room_url: 'https://app.example.com/' }}"
-                    ),
-                )
-                .unwrap_err();
-                assert!(error.contains("{room_id}"), "{error}");
-            }
+            let error = load(
+                jail,
+                "room_invites: { client_room_url: 'https://app.example.com/' }",
+            )
+            .unwrap_err();
+            assert!(error.contains("{room_id}"), "{error}");
             Ok(())
         });
     }

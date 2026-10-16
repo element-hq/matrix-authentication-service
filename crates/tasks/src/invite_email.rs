@@ -3,12 +3,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-//! Sending room invite emails
+//! Sending invite emails
 
 use async_trait::async_trait;
 use mas_email::{Address, Mailbox};
 use mas_i18n::locale;
-use mas_storage::queue::SendRoomInviteEmailJob;
+use mas_storage::queue::SendInviteEmailJob;
 use mas_templates::{EmailRoomInviteContext, TemplateContext as _};
 use tracing::info;
 
@@ -18,9 +18,9 @@ use crate::{
 };
 
 #[async_trait]
-impl RunnableJob for SendRoomInviteEmailJob {
+impl RunnableJob for SendInviteEmailJob {
     #[tracing::instrument(
-        name = "job.send_room_invite_email",
+        name = "job.send_invite_email",
         fields(
             room.id = tracing::field::Empty,
             user_registration_token.id = %self.registration_token_id(),
@@ -46,14 +46,8 @@ impl RunnableJob for SendRoomInviteEmailJob {
             return Ok(());
         }
 
-        let email = token.email.ok_or_else(|| {
-            JobError::fail(anyhow::anyhow!(
-                "Registration token has no email address pinned to it"
-            ))
-        })?;
-
         // A malformed address will never parse, however many times we retry
-        let address: Address = email.parse().map_err(JobError::fail)?;
+        let address: Address = self.email().parse().map_err(JobError::fail)?;
         let mailbox = Mailbox::new(None, address);
 
         // Recipients have no account, so no language preference to look up
@@ -65,7 +59,7 @@ impl RunnableJob for SendRoomInviteEmailJob {
         )
         .with_language(locale!("en").into());
 
-        info!("Sending room invite email to {}", mailbox);
+        info!("Sending invite email to {}", mailbox);
         mailer
             .send_room_invite_email(mailbox, &context)
             .await

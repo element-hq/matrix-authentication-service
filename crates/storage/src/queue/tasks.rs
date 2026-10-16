@@ -652,51 +652,56 @@ impl InsertableJob for CleanupInactiveUserSessionIpsJob {
     const QUEUE_NAME: &'static str = "cleanup-inactive-user-session-ips";
 }
 
-/// Send a room invite email for a registration token.
-///
-/// The recipient's address and the invite link both come from the token, so
-/// that the link in the email can't be sent to anyone but the address the
-/// token is pinned to.
+/// Send an invite email with a registration token's link
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SendRoomInviteEmailJob {
+pub struct SendInviteEmailJob {
     registration_token_id: Ulid,
+    email: String,
     room_name: Option<String>,
     inviter: Option<String>,
     inviter_name: Option<String>,
 }
 
-impl SendRoomInviteEmailJob {
-    /// Create a new job to send a room invite email
+impl SendInviteEmailJob {
+    /// Create a new job to send an invite email
     ///
     /// # Parameters
     ///
-    /// * `registration_token_id` - The registration token minted for the
-    ///   recipient
-    /// * `room_name` - The name of the room
+    /// * `registration_token_id` - The registration token whose link is sent
+    /// * `email` - The address to send the email to
+    /// * `room_name` - The name of the room the token opens
     /// * `inviter` - The Matrix ID of the user who sent the invite
     /// * `inviter_name` - The display name of the user who sent the invite
     #[must_use]
     pub fn new(
         registration_token_id: Ulid,
+        email: String,
         room_name: Option<String>,
         inviter: Option<String>,
         inviter_name: Option<String>,
     ) -> Self {
         Self {
             registration_token_id,
+            email,
             room_name,
             inviter,
             inviter_name,
         }
     }
 
-    /// The registration token minted for the recipient
+    /// The registration token whose link is sent
     #[must_use]
     pub fn registration_token_id(&self) -> Ulid {
         self.registration_token_id
     }
 
-    /// The name of the room
+    /// The address to send the email to
+    #[must_use]
+    pub fn email(&self) -> &str {
+        &self.email
+    }
+
+    /// The name of the room the token opens
     #[must_use]
     pub fn room_name(&self) -> Option<&str> {
         self.room_name.as_deref()
@@ -715,6 +720,6 @@ impl SendRoomInviteEmailJob {
     }
 }
 
-impl InsertableJob for SendRoomInviteEmailJob {
-    const QUEUE_NAME: &'static str = "send-room-invite-email";
+impl InsertableJob for SendInviteEmailJob {
+    const QUEUE_NAME: &'static str = "send-invite-email";
 }

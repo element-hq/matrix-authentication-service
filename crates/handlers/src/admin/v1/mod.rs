@@ -25,7 +25,6 @@ mod oauth2_clients;
 mod oauth2_sessions;
 mod personal_sessions;
 mod policy_data;
-mod room_invites;
 mod site_config;
 mod upstream_oauth_links;
 mod upstream_oauth_providers;
@@ -143,10 +142,6 @@ where
             get_with(self::policy_data::get, self::policy_data::get_doc),
         )
         .api_route(
-            "/room-invites",
-            post_with(self::room_invites::handler, self::room_invites::doc),
-        )
-        .api_route(
             "/users",
             get_with(self::users::list, self::users::list_doc)
                 .post_with(self::users::add, self::users::add_doc),
@@ -214,6 +209,13 @@ where
             .post_with(
                 self::user_registration_tokens::add,
                 self::user_registration_tokens::add_doc,
+            ),
+        )
+        .api_route(
+            "/user-registration-tokens/invite-emails",
+            post_with(
+                self::user_registration_tokens::invite_emails,
+                self::user_registration_tokens::invite_emails_doc,
             ),
         )
         .api_route(
