@@ -271,11 +271,24 @@ impl UserRegistrationToken {
     }
 
     /// Returns `true` if the token is an invite: it registers without a
-    /// password, as the username (or username template) and the email
-    /// address it pins
+    /// password, as the username (or username template) it pins
     #[must_use]
     pub fn is_invite(&self) -> bool {
-        self.passwordless && self.username.is_some() && self.email.is_some()
+        self.passwordless && self.username.is_some()
+    }
+
+    /// Returns `true` if the token is an invite link: an invite with a
+    /// username template and no email address, registering a guest with no
+    /// credential beyond the link itself
+    #[must_use]
+    pub fn is_invite_link(&self) -> bool {
+        self.passwordless
+            && self.email.is_none()
+            && self
+                .username
+                .as_deref()
+                .and_then(split_username_template)
+                .is_some()
     }
 
     /// Returns `true` if the token can still be used (not expired and under

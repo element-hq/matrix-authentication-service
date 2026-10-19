@@ -209,6 +209,10 @@ pub(crate) struct RegisterForm {
     #[serde(default)]
     accept_terms: String,
 
+    /// Only asked for by invite links, which skip the display name step
+    #[serde(default)]
+    display_name: String,
+
     /// The invite code, carried by a hidden field when the page was opened
     /// from an invite link
     #[serde(default)]
@@ -786,6 +790,7 @@ mod tests {
                     "username": username,
                     "email": "alice@example.com",
                     "passwordless": true,
+                    "link_invite": false,
                 })
             );
             assert_eq!(
@@ -1052,7 +1057,8 @@ mod tests {
 
     /// An invite registration's form offers no upstream provider, also when it
     /// comes back with an error, while the sign-in page keeps them. A code
-    /// which isn't an invite still offers them.
+    /// which isn't an invite still offers them. A code pinning a username but
+    /// no email is an invite too.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_invite_hides_providers(pool: PgPool) {
         setup();
@@ -1114,7 +1120,15 @@ mod tests {
             &UpstreamOAuth2Authorize::new(provider_id).path_and_query()
         )));
 
-        for token in ["username_only", "email_only", "not_passwordless"] {
+        let request = Request::get("/register?token=username_only").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-providers"),
+            serde_json::json!([])
+        );
+
+        for token in ["email_only", "not_passwordless"] {
             let request = Request::get(format!("/register?token={token}")).empty();
             let response = state.request(request).await;
             response.assert_status(StatusCode::OK);
