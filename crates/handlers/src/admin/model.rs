@@ -633,8 +633,10 @@ pub struct UserRegistrationToken {
     valid: bool,
 
     /// A username imposed on the registering user. If null, the user can
-    /// choose their own username. A value with `{random}` is a template,
-    /// filled in when registering through the token's link.
+    /// choose their own username. A value with `{` is a minijinja template,
+    /// rendered with `random` when registering through the token's link. A
+    /// template token works only through that link: the registration token
+    /// step refuses it.
     username: Option<String>,
 
     /// An email address imposed on the registering user. If null, the user

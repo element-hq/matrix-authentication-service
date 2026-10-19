@@ -64,10 +64,11 @@ pub struct Request {
     expires_at: Option<DateTime<Utc>>,
 
     /// A username to impose on the registering user. If set, the user cannot
-    /// choose their own username. A value with exactly one `{random}` is a
-    /// template: registering through the token's `/register?token=…` link
-    /// fills `{random}` in with 32 random lowercase letters and digits,
-    /// without showing the user the name.
+    /// choose their own username. A value with `{` is a minijinja template:
+    /// registering through the token's `/register?token=…` link renders it
+    /// with `random`, 32 random lowercase letters and digits, without showing
+    /// the user the name. A template token works only through that link: the
+    /// registration token step refuses it.
     username: Option<String>,
 
     /// An email address to impose on the registering user. If set, the user
