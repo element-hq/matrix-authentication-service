@@ -247,11 +247,13 @@
     },
     "register": {
       "call_to_login": "Already have an account?",
+      "call_to_login_guest": "Sign in with an existing account",
       "captcha_incomplete": "Please complete the CAPTCHA challenge before continuing",
       "captcha_loading": "The CAPTCHA is still loading, please wait a moment",
       "continue_with_email": "Continue with email address",
       "continue_with_password": "Continue with password",
       "continue_with_provider": "Continue with {{provider}}",
+      "display_name_label": "Display name",
       "email_verification_notice": "We will send a verification code to {{email}}",
       "invite_invalid": "This invite link is invalid or has expired",
       "or_separator": "Or",

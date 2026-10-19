@@ -100,12 +100,17 @@ pub(super) async fn register(
             _ => form.username.clone(),
         });
 
-    // The email field is only shown if the server requires it, but a
-    // passwordless registration always needs one, as verifying it is what
-    // establishes the user's identity. An invite code pinning an address also
-    // forces it.
-    let email = if site_config.password_registration_email_required
-        || passwordless
+    // An invite link registers a guest with a display name and no email
+    // address, whatever the server requires of other registrations
+    let link_invite = registration_token
+        .as_ref()
+        .is_some_and(UserRegistrationToken::is_invite_link);
+
+    // The email field is only shown if the server requires it. Any other
+    // passwordless registration needs one, as verifying it is what establishes
+    // the user's identity, and an invite code pinning an address forces it.
+    let email = if ((site_config.password_registration_email_required || passwordless)
+        && !link_invite)
         || pinned_email.is_some()
     {
         Some(match pinned_email {
@@ -171,6 +176,15 @@ pub(super) async fn register(
                 state.add_error_on_field(RegisterFormField::Email, FieldError::Required);
             } else if Address::from_str(email).is_err() {
                 state.add_error_on_field(RegisterFormField::Email, FieldError::Invalid);
+            }
+        }
+
+        if link_invite {
+            let display_name = form.display_name.trim();
+            if display_name.is_empty() {
+                state.add_error_on_field(RegisterFormField::DisplayName, FieldError::Required);
+            } else if display_name.len() > 255 {
+                state.add_error_on_field(RegisterFormField::DisplayName, FieldError::Invalid);
             }
         }
 
@@ -261,9 +275,9 @@ pub(super) async fn register(
         }
 
         if state.is_valid() {
-            // Check the rate limit if we are about to process the form. Invites
-            // skip the registration limit, so that people behind one address
-            // can accept theirs together.
+            // Check the rate limit if we are about to process the form. Invites,
+            // passwordless codes pinning a username, skip the registration
+            // limit so that people behind one address can accept theirs together.
             let is_invite = registration_token
                 .as_ref()
                 .is_some_and(UserRegistrationToken::is_invite);
@@ -336,6 +350,14 @@ pub(super) async fn register(
         registration
     };
 
+    let registration = if link_invite {
+        repo.user_registration()
+            .set_display_name(registration, form.display_name.trim().to_owned())
+            .await?
+    } else {
+        registration
+    };
+
     let registration = if let Some(email) = email {
         // Create a new user email authentication session
         let user_email_authentication = repo
@@ -359,8 +381,8 @@ pub(super) async fn register(
         registration
     };
 
-    // A passwordless registration doesn't get a password at all: verifying the
-    // email address is what establishes the user's identity
+    // A passwordless registration doesn't get a password at all: the verified
+    // email address, or for an invite link the link itself, is its credential
     let registration = if passwordless {
         registration
     } else {
@@ -1084,6 +1106,60 @@ mod tests {
         assert_eq!(email_authentication.email, "alice@example.com");
     }
 
+    /// An invite link registers with the display name typed on the form,
+    /// without any email address, even where registrations otherwise need one
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_invite_link(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_registration_email_required: true,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        add_registration_token(&state, "invite_link", Some("guest-{random}"), None, true).await;
+
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({ "token": "invite_link", "display_name": " " }),
+        )
+        .await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            form_state(response.body())["fields"]["display_name"]["errors"],
+            serde_json::json!([{"kind": "required"}])
+        );
+
+        let cookies = CookieHelper::new();
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "token": "invite_link",
+                "display_name": " Alice ",
+                "accept_terms": "on",
+            }),
+        );
+        let response = state.request(cookies.with_cookies(request)).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+        let id = registration_id(&response);
+
+        let request = Request::get(&*mas_router::RegisterFinish::new(id).path_and_query()).empty();
+        let response = state.request(cookies.with_cookies(request)).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
+        assert!(registration.completed_at.is_some());
+        assert!(registration.email_authentication_id.is_none());
+        assert_eq!(registration.display_name.as_deref(), Some("Alice"));
+    }
+
     /// An invite code with a username template registers a name filled in from
     /// it, whatever the form says
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -1446,18 +1522,25 @@ mod tests {
         let burst = limits.registration.burst.get();
         assert!(burst < limits.email_authentication.per_ip.burst.get());
 
+        // Every other invite pins no email, which the user then types in
         for i in 0..=burst {
             let token = format!("invite_{i}");
+            let email = format!("guest{i}@example.com");
             add_registration_token(
                 &state,
                 &token,
                 Some(&format!("guest{i}")),
-                Some(&format!("guest{i}@example.com")),
+                (i % 2 == 0).then_some(email.as_str()),
                 true,
             )
             .await;
 
-            let response = register_from(&state, ip, serde_json::json!({ "token": token })).await;
+            let response = register_from(
+                &state,
+                ip,
+                serde_json::json!({ "token": token, "email": format!("guest{i}@example.com") }),
+            )
+            .await;
             response.assert_status(StatusCode::SEE_OTHER);
         }
     }
@@ -1471,7 +1554,6 @@ mod tests {
         let password = "correcthorsebatterystaple";
 
         for (ip, token, username, email, passwordless) in [
-            ([192, 0, 2, 1], "username_only", Some("bob"), None, true),
             (
                 [192, 0, 2, 2],
                 "email_only",

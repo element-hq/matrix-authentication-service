@@ -7463,7 +7463,7 @@
             ]
           },
           "passwordless": {
-            "description": "Whether registering with this token skips the password step. The user's\nidentity is then established by verifying their email address.",
+            "description": "Whether registering with this token skips the password step. The user's\nidentity is then established by verifying their email address, unless\nthe token has a username template and no email: such an invite link\nregisters a guest with only a display name.",
             "type": "boolean"
           },
           "room_id": {
@@ -7575,7 +7575,7 @@
             ]
           },
           "passwordless": {
-            "description": "Whether registering with this token skips the password step. The user's\nidentity is then established by verifying their email address.",
+            "description": "Whether registering with this token skips the password step. The user's\nidentity is then established by verifying their email address, unless\nthe token has a username template and no email: such an invite link\nregisters a guest with only a display name.",
             "type": "boolean",
             "default": false
           },
