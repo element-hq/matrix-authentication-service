@@ -136,7 +136,7 @@
       "rate_limit_exceeded": "W krótkim czasie wysłałeś zbyt wiele żądań. Poczekaj kilka minut i spróbuj ponownie.",
       "username_all_numeric": "Nazwa użytkownika nie może składać się wyłącznie z cyfr",
       "username_banned": "Nazwa użytkownika jest zablokowana przez politykę serwera",
-      "username_invalid_chars": "Nazwa użytkownika zawiera nieprawidłowe znaki. Używaj tylko małych liter, cyfr, myślników i podkreśleń.",
+      "username_invalid_chars": "Nazwa użytkownika zawiera nieprawidłowe znaki. Używaj tylko małych liter, cyfr i znaków . _ - + / =",
       "username_not_allowed": "Nazwa użytkownika nie jest dozwolona przez politykę serwera",
       "username_taken": "Ta nazwa użytkownika jest już zajęta",
       "username_too_long": "Nazwa użytkownika jest za długa",
@@ -225,6 +225,7 @@
       "create_account": {
         "heading": "Utwórz konto"
       },
+      "javascript_required": "Do utworzenia konta wymagana jest obsługa języka JavaScript. Włącz jej obsługę w przeglądarce, a następnie odśwież stronę.",
       "terms_of_service": "Wyrażam zgodę na <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">warunki korzystania z serwisu</a>"
     },
     "registration_token": {
