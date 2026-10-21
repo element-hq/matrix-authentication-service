@@ -31,7 +31,11 @@ use ulid::Ulid;
 
 use crate::{
     BoundActivityTracker, PreferredLanguage, SiteConfig,
-    session::{SessionOrFallback, count_user_sessions_for_limiting, load_session_or_fallback},
+    session::{
+        ResolvedSessionLimit, SessionOrFallback, evict_lru_oauth2_sessions_for_client,
+        load_session_or_fallback, resolve_session_limit_for_login,
+        session_limit_allows_hard_eviction,
+    },
 };
 
 #[derive(Deserialize, Debug)]
@@ -124,7 +128,10 @@ pub(crate) async fn get(
         .context("Client not found")
         .map_err(InternalError::from_anyhow)?;
 
-    let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
+    let (resolved, session_counts) =
+        resolve_session_limit_for_login(&mut repo, &site_config, &session.user, Some(&client))
+            .await?;
+    let against_limit = session_counts.against_limit.unwrap_or(session_counts.total);
 
     // We can close the repository early, we don't need it at this point
     repo.save().await?;
@@ -135,6 +142,7 @@ pub(crate) async fn get(
             grant_type: mas_policy::GrantType::DeviceCode,
             client: &client,
             session_counts: Some(session_counts),
+            session_limit: resolved.map(ResolvedSessionLimit::as_policy_input),
             scope: &grant.scope,
             user: Some(&session.user),
             requester: mas_policy::Requester {
@@ -143,7 +151,10 @@ pub(crate) async fn get(
             },
         })
         .await?;
-    if !res.valid() {
+    if !res.valid()
+        && !session_limit_allows_hard_eviction(&res, resolved.as_ref(), against_limit)
+            .is_some_and(|(limit, _)| limit.per_client)
+    {
         warn!(violation = ?res, "Device code grant for client {} denied by policy", client.id);
 
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
@@ -275,7 +286,10 @@ pub(crate) async fn post(
         .context("Client not found")
         .map_err(InternalError::from_anyhow)?;
 
-    let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
+    let (resolved, session_counts) =
+        resolve_session_limit_for_login(&mut repo, &site_config, &session.user, Some(&client))
+            .await?;
+    let against_limit = session_counts.against_limit.unwrap_or(session_counts.total);
 
     // Evaluate the policy
     let res = policy
@@ -283,6 +297,7 @@ pub(crate) async fn post(
             grant_type: mas_policy::GrantType::DeviceCode,
             client: &client,
             session_counts: Some(session_counts),
+            session_limit: resolved.map(ResolvedSessionLimit::as_policy_input),
             scope: &grant.scope,
             user: Some(&session.user),
             requester: mas_policy::Requester {
@@ -292,17 +307,60 @@ pub(crate) async fn post(
         })
         .await?;
     if !res.valid() {
-        warn!(violation = ?res, "Device code grant for client {} denied by policy", client.id);
+        if let Some((resolved, _)) =
+            session_limit_allows_hard_eviction(&res, resolved.as_ref(), against_limit)
+        {
+            let need_to_remove =
+                usize::try_from(against_limit.saturating_sub(resolved.rules.hard_limit.get()) + 1)
+                    .unwrap_or(1);
+            if resolved.per_client {
+                let evicted = evict_lru_oauth2_sessions_for_client(
+                    &mut rng,
+                    &clock,
+                    &mut repo,
+                    &session.user,
+                    &client,
+                    need_to_remove,
+                )
+                .await?;
+                if !evicted {
+                    warn!(violation = ?res, "Device code grant for client {} denied by policy", client.id);
+                    let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
+                    let ctx = PolicyViolationContext::for_device_code_grant(
+                        grant,
+                        client,
+                        res.violations,
+                    )
+                    .with_session(session)
+                    .with_csrf(csrf_token.form_value())
+                    .with_language(locale);
+                    let content = templates.render_policy_violation(&ctx)?;
+                    return Ok((cookie_jar, Html(content)).into_response());
+                }
+            } else {
+                warn!(violation = ?res, "Device code grant for client {} denied by policy", client.id);
+                let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
+                let ctx =
+                    PolicyViolationContext::for_device_code_grant(grant, client, res.violations)
+                        .with_session(session)
+                        .with_csrf(csrf_token.form_value())
+                        .with_language(locale);
+                let content = templates.render_policy_violation(&ctx)?;
+                return Ok((cookie_jar, Html(content)).into_response());
+            }
+        } else {
+            warn!(violation = ?res, "Device code grant for client {} denied by policy", client.id);
 
-        let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
-        let ctx = PolicyViolationContext::for_device_code_grant(grant, client, res.violations)
-            .with_session(session)
-            .with_csrf(csrf_token.form_value())
-            .with_language(locale);
+            let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
+            let ctx = PolicyViolationContext::for_device_code_grant(grant, client, res.violations)
+                .with_session(session)
+                .with_csrf(csrf_token.form_value())
+                .with_language(locale);
 
-        let content = templates.render_policy_violation(&ctx)?;
+            let content = templates.render_policy_violation(&ctx)?;
 
-        return Ok((cookie_jar, Html(content)).into_response());
+            return Ok((cookie_jar, Html(content)).into_response());
+        }
     }
 
     let grant = if grant.is_pending() {

@@ -29,6 +29,7 @@ mod upstream_oauth_links;
 mod upstream_oauth_providers;
 mod user_emails;
 mod user_registration_tokens;
+mod user_session_limit_overrides;
 mod user_sessions;
 mod users;
 mod version;
@@ -196,6 +197,32 @@ where
         .api_route(
             "/user-sessions/{id}/finish",
             post_with(self::user_sessions::finish, self::user_sessions::finish_doc),
+        )
+        .api_route(
+            "/user-session-limit-overrides",
+            get_with(
+                self::user_session_limit_overrides::list,
+                self::user_session_limit_overrides::list_doc,
+            )
+            .post_with(
+                self::user_session_limit_overrides::add,
+                self::user_session_limit_overrides::add_doc,
+            ),
+        )
+        .api_route(
+            "/user-session-limit-overrides/{id}",
+            get_with(
+                self::user_session_limit_overrides::get,
+                self::user_session_limit_overrides::get_doc,
+            )
+            .put_with(
+                self::user_session_limit_overrides::update,
+                self::user_session_limit_overrides::update_doc,
+            )
+            .delete_with(
+                self::user_session_limit_overrides::delete,
+                self::user_session_limit_overrides::delete_doc,
+            ),
         )
         .api_route(
             "/user-registration-tokens",

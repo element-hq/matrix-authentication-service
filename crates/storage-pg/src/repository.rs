@@ -30,7 +30,7 @@ use mas_storage::{
     user::{
         BrowserSessionRepository, UserEmailRepository, UserPasswordRepository,
         UserRecoveryRepository, UserRegistrationRepository, UserRegistrationTokenRepository,
-        UserRepository, UserTermsRepository,
+        UserRepository, UserSessionLimitOverrideRepository, UserTermsRepository,
     },
 };
 use sqlx::{PgConnection, PgPool, Postgres, Transaction};
@@ -62,7 +62,7 @@ use crate::{
     user::{
         PgBrowserSessionRepository, PgUserEmailRepository, PgUserPasswordRepository,
         PgUserRecoveryRepository, PgUserRegistrationRepository, PgUserRegistrationTokenRepository,
-        PgUserRepository, PgUserTermsRepository,
+        PgUserRepository, PgUserSessionLimitOverrideRepository, PgUserTermsRepository,
     },
 };
 
@@ -256,6 +256,14 @@ where
         &'c mut self,
     ) -> Box<dyn UserRegistrationTokenRepository<Error = Self::Error> + 'c> {
         Box::new(PgUserRegistrationTokenRepository::new(self.conn.as_mut()))
+    }
+
+    fn user_session_limit_override<'c>(
+        &'c mut self,
+    ) -> Box<dyn UserSessionLimitOverrideRepository<Error = Self::Error> + 'c> {
+        Box::new(PgUserSessionLimitOverrideRepository::new(
+            self.conn.as_mut(),
+        ))
     }
 
     fn browser_session<'c>(
