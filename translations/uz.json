@@ -30,7 +30,6 @@
     "loading": "Yuklanmoqda…",
     "mxid": "Matrix ID",
     "password": "Parol",
-    "password_confirm": "Parolni tasdiqlash",
     "username": "Foydalanuvchi nomi"
   },
   "error": {
@@ -52,9 +51,6 @@
       }
     },
     "back_to_homepage": "Bosh sahifaga qaytish",
-    "captcha": {
-      "noscript": "Bu shakl CAPTCHA bilan himoyalangan va uni yuborish uchun JavaScript yoqilishi kerak. Brauzeringizda JavaScript’ni yoqing va bu sahifani qayta yuklang."
-    },
     "change_password": {
       "change": "Parolni o‘zgartirish",
       "confirm": "Parolni tasdiqlash",
@@ -149,6 +145,7 @@
     "legacy_consent": {
       "this_will_setup": "Bu sizning <span>%(server_name)s</span> hisobingiz bilan <span>%(client_name)s</span> ni oʻrnatadi."
     },
+    "loading": "Yuklanmoqda…",
     "login": {
       "call_to_register": "Hali hisobingiz yo‘qmi?",
       "continue_with_provider": "%(provider)s bilan davom etish",
@@ -216,11 +213,7 @@
       }
     },
     "register": {
-      "call_to_login": "Hisobingiz allaqachon bormi?",
-      "continue_with_email": "Elektron pochta manzili bilan davom eting",
-      "continue_with_password": "Parol bilan davom eting",
       "create_account": {
-        "description": "Davom etish uchun foydalanuvchi nomini tanlang.",
         "heading": "Hisob yaratish"
       },
       "terms_of_service": "Men roziman <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Foydalanish shartlari</a>"

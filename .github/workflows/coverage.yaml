@@ -41,7 +41,7 @@ jobs:
         run: make coverage
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: policies/coverage.json
@@ -69,7 +69,7 @@ jobs:
         run: pnpm --filter mas-frontend run coverage
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: frontend/coverage/
@@ -115,7 +115,7 @@ jobs:
           rustup component add llvm-tools-preview
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
+        uses: mozilla-actions/sccache-action@fc920bf0ec8de6ee65d409111f7ec508035751ba # v0.0.11
 
       - name: Install grcov
         uses: taiki-e/install-action@b6ff580856c41316412a0b9b60540fbc6f8c82cc # v2
@@ -140,7 +140,7 @@ jobs:
           grcov . --binary-path ./target/debug/deps/ -s . -t lcov --branch --ignore-not-existing --ignore '../*' --ignore "/*" -o target/coverage/tests.lcov
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: target/coverage/*.lcov

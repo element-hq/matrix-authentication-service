@@ -26,12 +26,14 @@
   },
   "common": {
     "e2ee": "Ende-zu-Ende-Verschlüsselung",
+    "email_address": "E-Mail-Adresse",
     "loading": "Wird geladen …",
     "next": "Weiter",
     "password": "Passwort",
     "previous": "Zurück",
     "saved": "Gespeichert",
-    "saving": "Wird gespeichert …"
+    "saving": "Wird gespeichert …",
+    "username": "Benutzername"
   },
   "frontend": {
     "account": {
@@ -113,8 +115,25 @@
       "title": "Etwas ist schief gelaufen"
     },
     "errors": {
+      "captcha": "Die CAPTCHA-Überprüfung ist fehlgeschlagen, bitte versuche es erneut",
+      "email_banned": "E-Mail ist durch die Serverrichtlinie gesperrt",
+      "email_domain_banned": "Die E-Mail-Domain ist durch die Serverrichtlinie gesperrt",
+      "email_domain_not_allowed": "Diese E-Mail-Domain ist gemäß der Serverrichtlinie nicht zulässig",
+      "email_not_allowed": "E-Mail ist gemäß der Serverrichtlinie nicht zulässig",
+      "field_invalid": "This field is invalid",
       "field_required": "Dieses Feld ist ein Pflichtfeld",
-      "rate_limit_exceeded": "Du hast in kurzer Zeit zu viele Anfragen gestellt. Bitte warte ein paar Minuten und versuche es erneut."
+      "invalid_email": "Please enter a valid email address",
+      "password_mismatch": "Die Passwortfelder stimmen nicht überein",
+      "rate_limit_exceeded": "Du hast in kurzer Zeit zu viele Anfragen gestellt. Bitte warte ein paar Minuten und versuche es erneut.",
+      "unspecified": "Something went wrong. Please try again.",
+      "username_all_numeric": "Der Nutzername darf nicht nur aus Zahlen bestehen",
+      "username_banned": "Der Nutzername ist durch die Serverrichtlinie gesperrt",
+      "username_invalid": "Username can only contain lowercase letters, numbers, and the characters . _ - + / =",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, and the characters . _ - + / =",
+      "username_not_allowed": "Der Nutzername ist gemäß der Serverrichtlinie nicht zulässig",
+      "username_taken": "Dieser Nutzername ist bereits vergeben",
+      "username_too_long": "Der Nutzername ist zu lang",
+      "username_too_short": "Der Nutzername ist zu kurz"
     },
     "last_active": {
       "active_date": "Aktiv {{relativeDate}}",
@@ -225,6 +244,21 @@
         "user_inputs": "Es sollten keine persönlichen oder seitenbezogenen Daten vorhanden sein.",
         "word_by_itself": "Einzelne Wörter sind leicht zu erraten."
       }
+    },
+    "register": {
+      "call_to_login": "Du hast bereits ein Konto?",
+      "captcha_incomplete": "Please complete the CAPTCHA challenge before continuing",
+      "captcha_loading": "The CAPTCHA is still loading, please wait a moment",
+      "continue_with_email": "Mit E-Mail-Adresse fortfahren",
+      "continue_with_password": "Weiter mit Passwort",
+      "continue_with_provider": "Continue with {{provider}}",
+      "or_separator": "Oder",
+      "password_confirm_label": "Passwort wiederholen",
+      "password_label": "Passwort",
+      "terms_of_service": "I agree to the <a>Terms and Conditions</a>",
+      "username_available": "This username is available",
+      "username_check_failed": "We couldn't check if this username is available",
+      "username_checking": "Checking availability…"
     },
     "reset_cross_signing": {
       "cancelled": {

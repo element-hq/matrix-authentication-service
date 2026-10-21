@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -73,11 +74,13 @@ impl Options {
                 } else {
                     SystemClock::default().now()
                 };
+                // `rand::rng()` is normally disallowed (we inject RNGs), but this
+                // is a top-level entry point.
+                #[expect(clippy::disallowed_methods)]
                 let rng = if stabilise {
                     rand_chacha::ChaChaRng::from_seed([42; 32])
                 } else {
-                    // XXX: we should disallow SeedableRng::from_entropy
-                    rand_chacha::ChaChaRng::from_entropy()
+                    rand_chacha::ChaChaRng::from_rng(&mut rand::rng())
                 };
                 let url_builder =
                     mas_router::UrlBuilder::new("https://example.com/".parse()?, None, None);

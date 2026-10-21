@@ -12,7 +12,7 @@ use mas_data_model::{Client, Clock};
 use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
 use mas_jose::jwk::PublicJsonWebKeySet;
 use oauth2_types::{oidc::ApplicationType, requests::GrantType};
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 use url::Url;
 
@@ -161,23 +161,6 @@ pub trait OAuth2ClientRepository: Send + Sync {
         self.lookup(id).await
     }
 
-    /// Find an OAuth client by its metadata digest
-    ///
-    /// Returns `None` if the client does not exist
-    ///
-    /// # Parameters
-    ///
-    /// * `digest`: The metadata digest (SHA-256 hash encoded in hex) of the
-    ///   client to find
-    ///
-    /// # Errors
-    ///
-    /// Returns [`Self::Error`] if the underlying repository fails
-    async fn find_by_metadata_digest(
-        &mut self,
-        digest: &str,
-    ) -> Result<Option<Client>, Self::Error>;
-
     /// Load a batch of OAuth clients by their IDs
     ///
     /// Returns a map of client IDs to clients. If a client does not exist, it
@@ -195,9 +178,12 @@ pub trait OAuth2ClientRepository: Send + Sync {
         ids: BTreeSet<Ulid>,
     ) -> Result<BTreeMap<Ulid, Client>, Self::Error>;
 
-    /// Add a new OAuth client
+    /// Add a new OAuth client, or reuse the existing one with the same metadata
+    /// digest
     ///
-    /// Returns the client that was added
+    /// Returns the client and whether it was inserted. If `metadata_digest` is
+    /// set and a client with the same digest already exists, that client is
+    /// returned unchanged instead.
     ///
     /// # Parameters
     ///
@@ -230,9 +216,9 @@ pub trait OAuth2ClientRepository: Send + Sync {
     ///
     /// Returns [`Self::Error`] if the underlying repository fails
     #[expect(clippy::too_many_arguments)]
-    async fn add(
+    async fn add_or_reuse(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         redirect_uris: Vec<Url>,
         metadata_digest: Option<String>,
@@ -251,7 +237,7 @@ pub trait OAuth2ClientRepository: Send + Sync {
         token_endpoint_auth_method: Option<OAuthClientAuthenticationMethod>,
         token_endpoint_auth_signing_alg: Option<JsonWebSignatureAlg>,
         initiate_login_uri: Option<Url>,
-    ) -> Result<Client, Self::Error>;
+    ) -> Result<(Client, bool), Self::Error>;
 
     /// Add or replace a static client
     ///
@@ -348,19 +334,14 @@ pub trait OAuth2ClientRepository: Send + Sync {
 repository_impl!(OAuth2ClientRepository:
     async fn lookup(&mut self, id: Ulid) -> Result<Option<Client>, Self::Error>;
 
-    async fn find_by_metadata_digest(
-        &mut self,
-        digest: &str,
-    ) -> Result<Option<Client>, Self::Error>;
-
     async fn load_batch(
         &mut self,
         ids: BTreeSet<Ulid>,
     ) -> Result<BTreeMap<Ulid, Client>, Self::Error>;
 
-    async fn add(
+    async fn add_or_reuse(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         redirect_uris: Vec<Url>,
         metadata_digest: Option<String>,
@@ -379,7 +360,7 @@ repository_impl!(OAuth2ClientRepository:
         token_endpoint_auth_method: Option<OAuthClientAuthenticationMethod>,
         token_endpoint_auth_signing_alg: Option<JsonWebSignatureAlg>,
         initiate_login_uri: Option<Url>,
-    ) -> Result<Client, Self::Error>;
+    ) -> Result<(Client, bool), Self::Error>;
 
     async fn upsert_static(
         &mut self,

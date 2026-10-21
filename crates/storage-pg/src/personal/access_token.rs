@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -10,7 +11,7 @@ use mas_data_model::{
     personal::{PersonalAccessToken, session::PersonalSession},
 };
 use mas_storage::personal::PersonalAccessTokenRepository;
-use rand::RngCore;
+use rand::Rng;
 use sha2::{Digest, Sha256};
 use sqlx::PgConnection;
 use ulid::Ulid;
@@ -177,7 +178,7 @@ impl PersonalAccessTokenRepository for PgPersonalAccessTokenRepository<'_> {
     )]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         session: &PersonalSession,
         access_token: &str,

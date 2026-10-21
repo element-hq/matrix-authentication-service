@@ -26,12 +26,14 @@
   },
   "common": {
     "e2ee": "Abonent shifrlash ( E2EE )",
+    "email_address": "Email manzili",
     "loading": "Yuklanmoqda…",
     "next": "Keyingisi",
     "password": "Parol",
     "previous": "Oldingi",
     "saved": "Saqlandi",
-    "saving": "Saqlanmoqda…"
+    "saving": "Saqlanmoqda…",
+    "username": "Foydalanuvchi nomi"
   },
   "frontend": {
     "account": {
@@ -113,8 +115,25 @@
       "title": "Nimadir xato ketdi"
     },
     "errors": {
+      "captcha": "CAPTCHA tekshiruvi amalga oshmadi, qayta urining",
+      "email_banned": "Elektron pochta server siyosati tomonidan taqiqlangan",
+      "email_domain_banned": "Elektron pochta domeni server siyosati tomonidan taqiqlangan",
+      "email_domain_not_allowed": "Elektron pochta domeni server siyosati tomonidan ruxsat etilmagan",
+      "email_not_allowed": "Server siyosati elektron pochtaga ruxsat bermagan",
+      "field_invalid": "This field is invalid",
       "field_required": "Ushbu qator toʻldirilishi shart",
-      "rate_limit_exceeded": "Qisqa vaqt ichida juda koʻp soʻrov yubordingiz. Iltimos, bir necha daqiqa kuting va qayta urinib koʻring."
+      "invalid_email": "Please enter a valid email address",
+      "password_mismatch": "Parol maydonlari mos kelmayapti",
+      "rate_limit_exceeded": "Qisqa vaqt ichida juda koʻp soʻrov yubordingiz. Iltimos, bir necha daqiqa kuting va qayta urinib koʻring.",
+      "unspecified": "Something went wrong. Please try again.",
+      "username_all_numeric": "Foydalanuvchi nomi faqat raqamlardan iborat boʻlmasligi kerak",
+      "username_banned": "Foydalanuvchi nomi server siyosati tomonidan taqiqlangan",
+      "username_invalid": "Username can only contain lowercase letters, numbers, and the characters . _ - + / =",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, and the characters . _ - + / =",
+      "username_not_allowed": "Foydalanuvchi nomi server siyosati tomonidan ruxsat etilmagan",
+      "username_taken": "Bu foydalanuvchi nomi allaqachon band",
+      "username_too_long": "Foydalanuvchi nomi juda uzun",
+      "username_too_short": "Foydalanuvchi nomi juda qisqa"
     },
     "last_active": {
       "active_date": "Faol {{relativeDate}}",
@@ -225,6 +244,21 @@
         "user_inputs": "Shaxsiy yoki sahifa bilan bogʻliq maʻlumotlar boʻlmasligi kerak.",
         "word_by_itself": "Alohida soʻzlarni taxmin qilish oson."
       }
+    },
+    "register": {
+      "call_to_login": "Hisobingiz allaqachon bormi?",
+      "captcha_incomplete": "Please complete the CAPTCHA challenge before continuing",
+      "captcha_loading": "The CAPTCHA is still loading, please wait a moment",
+      "continue_with_email": "Elektron pochta manzili bilan davom eting",
+      "continue_with_password": "Parol bilan davom eting",
+      "continue_with_provider": "Continue with {{provider}}",
+      "or_separator": "Yoki",
+      "password_confirm_label": "Parolni tasdiqlash",
+      "password_label": "Parol",
+      "terms_of_service": "I agree to the <a>Terms and Conditions</a>",
+      "username_available": "This username is available",
+      "username_check_failed": "We couldn't check if this username is available",
+      "username_checking": "Checking availability…"
     },
     "reset_cross_signing": {
       "cancelled": {

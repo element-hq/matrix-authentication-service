@@ -129,7 +129,7 @@ jobs:
           rustup target add ${{ matrix.target }}
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
+        uses: mozilla-actions/sccache-action@fc920bf0ec8de6ee65d409111f7ec508035751ba # v0.0.11
 
       - name: Install zig
         uses: goto-bus-stop/setup-zig@abea47f85e598557f500fa1fd2ab7464fcb39406 # v2
@@ -349,7 +349,7 @@ jobs:
       # PR-labelled builds (`Z-Build-Workflow`) skip this and push only to ghcr.
       - name: Tailscale
         if: github.event_name == 'push'
-        uses: tailscale/github-action@306e68a486fd2350f2bfc3b19fcd143891a4a2d8 # v4.1.2
+        uses: tailscale/github-action@d1b6cd204f8dceda5b3eaad7f1f767be390056cd # v4.2.0
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           audience: ${{ secrets.TS_AUDIENCE }}
@@ -391,7 +391,7 @@ jobs:
 
       - name: Build and push by digest
         id: bake
-        uses: docker/bake-action@6614cfa25eff9a0b2b2697efb0b6159e7680d584 # v7.2.0
+        uses: docker/bake-action@018cb6412ab401ebaa809aa5f85966b74628600f # v7.4.0
         env:
           # By default, docker bake will add provenance information to the
           # metadata output. This makes the output larger and may exceed the
@@ -484,7 +484,7 @@ jobs:
       # `push` events.
       - name: Tailscale
         if: github.event_name == 'push'
-        uses: tailscale/github-action@306e68a486fd2350f2bfc3b19fcd143891a4a2d8 # v4.1.2
+        uses: tailscale/github-action@d1b6cd204f8dceda5b3eaad7f1f767be390056cd # v4.2.0
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           audience: ${{ secrets.TS_AUDIENCE }}

@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -8,7 +9,7 @@ use std::net::IpAddr;
 
 use chrono::{DateTime, Utc};
 use oauth2_types::scope::Scope;
-use rand::{Rng, RngCore};
+use rand::{Rng, RngExt};
 use serde::Serialize;
 use ulid::Ulid;
 
@@ -30,9 +31,9 @@ const USER_CODE_ALPHABET: &[u8; 32] = b"0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 const USER_CODE_LENGTH: usize = 6;
 
 /// Generate a random user code for a device code grant.
-pub fn generate_user_code<R: RngCore + ?Sized>(rng: &mut R) -> String {
+pub fn generate_user_code<R: Rng + ?Sized>(rng: &mut R) -> String {
     (0..USER_CODE_LENGTH)
-        .map(|_| char::from(USER_CODE_ALPHABET[rng.gen_range(0..USER_CODE_ALPHABET.len())]))
+        .map(|_| char::from(USER_CODE_ALPHABET[rng.random_range(0..USER_CODE_ALPHABET.len())]))
         .collect()
 }
 

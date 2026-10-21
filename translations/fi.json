@@ -30,7 +30,6 @@
     "loading": "Ladataan…",
     "mxid": "Matrix tunnus",
     "password": "Salasana",
-    "password_confirm": "Vahvista salasana",
     "username": "Käyttäjänimi"
   },
   "error": {
@@ -52,9 +51,6 @@
       }
     },
     "back_to_homepage": "Palaa etusivulle",
-    "captcha": {
-      "noscript": "Tämä lomake on suojattu CAPTCHA:lla, ja sen lähettäminen edellyttää JavaScriptin käyttöönottoa. Ota JavaScript käyttöön selaimessasi ja lataa tämä sivu uudelleen."
-    },
     "change_password": {
       "change": "Vaihda salasana",
       "confirm": "Vahvista salasana",
@@ -149,6 +145,7 @@
     "legacy_consent": {
       "this_will_setup": "Tämä yhdistää <span>%(client_name)s</span> -sovelluksen <span>%(server_name)s</span> tiliisi."
     },
+    "loading": "Ladataan…",
     "login": {
       "call_to_register": "Eikö sinulla ole vielä tiliä?",
       "continue_with_provider": "Jatka %(provider)s -tilillä",
@@ -216,11 +213,7 @@
       }
     },
     "register": {
-      "call_to_login": "Onko sinulla jo tili?",
-      "continue_with_email": "Jatka sähköpostiosoitteella",
-      "continue_with_password": "Jatka salasanalla",
       "create_account": {
-        "description": "Valitse käyttäjänimi jatkaaksesi.",
         "heading": "Luo tili"
       },
       "terms_of_service": "Hyväksyn <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Käyttöehdot</a>"

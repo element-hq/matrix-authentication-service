@@ -12,7 +12,7 @@ use mas_storage::{
     pagination::Node,
     user::{UserRegistrationTokenFilter, UserRegistrationTokenRepository},
 };
-use rand::RngCore;
+use rand::Rng;
 use sea_query::{Condition, Expr, ExprTrait, PostgresQueryBuilder, Query, enum_def};
 use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
@@ -435,7 +435,7 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
     )]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn mas_data_model::Clock,
         token: String,
         usage_limit: Option<u32>,

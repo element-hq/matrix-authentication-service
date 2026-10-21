@@ -12,7 +12,7 @@ use chrono::{DateTime, Duration, Utc};
 use mas_data_model::{Clock, UlidExt as _};
 use mas_storage::queue::{Job, QueueJobRepository, Worker};
 use opentelemetry_semantic_conventions::trace::DB_QUERY_TEXT;
-use rand::RngCore;
+use rand::Rng;
 use sqlx::PgConnection;
 use tracing::Instrument;
 use ulid::Ulid;
@@ -90,7 +90,7 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
     )]
     async fn schedule(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         queue_name: &str,
         payload: serde_json::Value,
@@ -132,7 +132,7 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
     )]
     async fn schedule_later(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         queue_name: &str,
         payload: serde_json::Value,
@@ -335,7 +335,7 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
     )]
     async fn retry(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         id: Ulid,
         delay: Duration,

@@ -30,7 +30,6 @@
     "loading": "加载中...",
     "mxid": "Matrix ID",
     "password": "密码",
-    "password_confirm": "确认密码",
     "username": "用户名"
   },
   "error": {
@@ -39,11 +38,11 @@
   "mas": {
     "account": {
       "deactivated": {
-        "description": "此账户（<em>%(mxid)s</em>）已被删除。如果这并非预期，请联系服务器管理员。",
+        "description": "此账户（<em>%(mxid)s</em>）已被删除。如果这并非预期，请联系账户提供者。",
         "heading": "账户已删除"
       },
       "locked": {
-        "description": "此账户（<em>%(mxid)s</em>）已被锁定。如果这并非预期，请联系服务器管理员。",
+        "description": "此账户（<em>%(mxid)s</em>）已被锁定。如果这并非预期，请联系账户提供者。",
         "heading": "账户已锁定"
       },
       "logged_out": {
@@ -52,9 +51,6 @@
       }
     },
     "back_to_homepage": "返回主页",
-    "captcha": {
-      "noscript": "此表格受验证码保护，需要启用 JavaScript 才能提交。请在浏览器中启用 JavaScript 并重新加载此页面。"
-    },
     "change_password": {
       "change": "更改密码",
       "confirm": "确认密码",
@@ -113,7 +109,7 @@
     "emails": {
       "greeting": "%(username)s 你好，",
       "recovery": {
-        "click_button": "点击下面的按钮创建新密码：",
+        "click_button": "点选下面的按钮创建新密码：",
         "copy_link": "复制以下链接并粘贴到浏览器中以创建新密码：",
         "create_new_password": "创建新密码",
         "fallback": "此按钮对你无效？",
@@ -128,7 +124,7 @@
       }
     },
     "errors": {
-      "captcha": "验证码验证失败，请重试",
+      "captcha": "人机验证失败，请重试",
       "denied_policy": "被该策略拒绝：%(policy)s",
       "email_banned": "由于服务器策略，邮件已被禁止",
       "email_domain_banned": "由于服务器策略，邮件所属的域已被禁止",
@@ -140,7 +136,7 @@
       "rate_limit_exceeded": "你在短时间内发出了过多请求。请于几分钟后重试。",
       "username_all_numeric": "用户名不能仅由数字组成",
       "username_banned": "由于服务器策略，用户名已被禁止",
-      "username_invalid_chars": "用户名包含无效字符。仅能使用小写字母、数字、短横线或下划线。",
+      "username_invalid_chars": "用户名包含无效字符。请使用小写字母、数字及 .、_、-、+、/、=。",
       "username_not_allowed": "由于服务器策略，用户名不被允许",
       "username_taken": "此用户名已被使用",
       "username_too_long": "用户名太长",
@@ -149,6 +145,8 @@
     "legacy_consent": {
       "this_will_setup": "这将使用你位于 <span>%(server_name)s</span> 上的账户设置 <span>%(client_name)s</span>。"
     },
+    "loading": "加载中...",
+    "loading_failed": "页面加载时出错，请尝试重新加载。",
     "login": {
       "call_to_register": "还没有账户？",
       "continue_with_provider": "以 %(provider)s 继续",
@@ -174,8 +172,16 @@
     "not_you": "不是 %(username)s？",
     "or_separator": "或",
     "policy_violation": {
-      "description": "这可能是由于创建请求的客户端、当前登录的用户或请求本身造成的。",
-      "heading": "授权请求被该服务执行的策略拒绝",
+      "admin_scope_not_allowed": {
+        "description": "此应用程序需要管理员权限。请使用管理员账户登录以继续。",
+        "heading": "需要管理员权限"
+      },
+      "client_not_allowed": {
+        "description": "此应用程序无权登录此服务。",
+        "heading": "应用程序不被允许"
+      },
+      "description": "你的请求已被此服务器策略拒绝。这可能是由于应用程序、你账户或请求本身导致的。",
+      "heading": "请求被拒绝",
       "logged_as": "登录为 <span class=\"font-semibold\">%(username)s</span>",
       "too_many_sessions": {
         "description": "你的账户已登录到设备的数量上限。若要继续，<span class=\"font-semibold\">请从现有设备中移除 %(num_devices_to_remove)s 个</span>，然后重新登录。",
@@ -216,17 +222,14 @@
       }
     },
     "register": {
-      "call_to_login": "已有账户？",
-      "continue_with_email": "使用邮件地址继续",
-      "continue_with_password": "使用密码继续",
       "create_account": {
-        "description": "选择一个用户名以继续。",
         "heading": "创建账户"
       },
+      "javascript_required": "创建账户需要 JavaScript。请在浏览器中启用 JavaScript 并重新加载此页面。",
       "terms_of_service": "我同意<a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">条款与条件 </a>"
     },
     "registration_token": {
-      "description": "输入由服务器管理员提供的注册 Token。",
+      "description": "输入由账户提供者提供的注册 Token。",
       "field": "注册 Token",
       "headline": "注册 Token"
     },

@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -6,7 +7,7 @@
 
 use async_trait::async_trait;
 use mas_data_model::{Clock, CompatAccessToken, CompatRefreshToken, CompatSession};
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 
 use crate::repository_impl;
@@ -62,7 +63,7 @@ pub trait CompatRefreshTokenRepository: Send + Sync {
     /// * `token`: The token of the refresh token
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         compat_session: &CompatSession,
         compat_access_token: &CompatAccessToken,
@@ -114,7 +115,7 @@ repository_impl!(CompatRefreshTokenRepository:
 
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         compat_session: &CompatSession,
         compat_access_token: &CompatAccessToken,

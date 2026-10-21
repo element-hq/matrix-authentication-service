@@ -1,4 +1,5 @@
-/* Copyright 2025 New Vector Ltd.
+/* Copyright 2025, 2026 Element Creations Ltd.
+ * Copyright 2025 New Vector Ltd.
  *
  * SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
  * Please see LICENSE files in the repository root for full details.
@@ -66,7 +67,7 @@ function patchUsernameInput(inputElement: HTMLInputElement) {
 
   inputElement.addEventListener("input", () => {
     // Simply lowercase things automatically, as this is not too disruptive
-    inputElement.value = inputElement.value.toLocaleLowerCase();
+    inputElement.value = inputElement.value.toLowerCase();
 
     const match = inputElement.value.match(VALID_USERNAME_RE);
     if (!inputElement.value.trim() || match !== null) {

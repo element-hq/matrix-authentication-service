@@ -30,7 +30,6 @@
     "loading": "Wczytywanie…",
     "mxid": "Matrix ID",
     "password": "Hasło",
-    "password_confirm": "Potwierdź hasło",
     "username": "Nazwa użytkownika"
   },
   "error": {
@@ -52,9 +51,6 @@
       }
     },
     "back_to_homepage": "Wróć do strony głównej",
-    "captcha": {
-      "noscript": "Ten formularz jest zabezpieczony kodem CAPTCHA i do jego wysłania wymagana jest włączona obsługa JavaScript. Włącz obsługę JavaScript w przeglądarce i odśwież tę stronę."
-    },
     "change_password": {
       "change": "Zmień hasło",
       "confirm": "Potwierdź hasło",
@@ -140,7 +136,7 @@
       "rate_limit_exceeded": "W krótkim czasie wysłałeś zbyt wiele żądań. Poczekaj kilka minut i spróbuj ponownie.",
       "username_all_numeric": "Nazwa użytkownika nie może składać się wyłącznie z cyfr",
       "username_banned": "Nazwa użytkownika jest zablokowana przez politykę serwera",
-      "username_invalid_chars": "Nazwa użytkownika zawiera nieprawidłowe znaki. Używaj tylko małych liter, cyfr, myślników i podkreśleń.",
+      "username_invalid_chars": "Nazwa użytkownika zawiera nieprawidłowe znaki. Używaj tylko małych liter, cyfr i znaków . _ - + / =",
       "username_not_allowed": "Nazwa użytkownika nie jest dozwolona przez politykę serwera",
       "username_taken": "Ta nazwa użytkownika jest już zajęta",
       "username_too_long": "Nazwa użytkownika jest za długa",
@@ -149,6 +145,7 @@
     "legacy_consent": {
       "this_will_setup": "Spowoduje to skonfigurowanie <span>%(client_name)s</span> z kontem <span>%(server_name)s</span>."
     },
+    "loading": "Wczytywanie…",
     "loading_failed": "Coś poszło nie tak podczas ładowania strony. Spróbuj ją odświeżyć.",
     "login": {
       "call_to_register": "Nie masz jeszcze konta?",
@@ -175,8 +172,16 @@
     "not_you": "Nie %(username)s?",
     "or_separator": "Lub",
     "policy_violation": {
-      "description": "Przyczyną może być klient, który zainicjował to żądanie, aktualnie zalogowany użytkownik lub samo żądanie.",
-      "heading": "Żądanie autoryzacji zostało odrzucone przez politykę egzekwowaną przez tę usługę",
+      "admin_scope_not_allowed": {
+        "description": "Ta aplikacja wymaga uprawnień administratora. Zaloguj się na konto administratora, aby kontynuować.",
+        "heading": "Wymagany dostęp administratora"
+      },
+      "client_not_allowed": {
+        "description": "Ta aplikacja nie ma uprawnień do zalogowania się do tej usługi.",
+        "heading": "Aplikacja niedozwolona"
+      },
+      "description": "Twoje żądanie zostało odrzucone zgodnie z polityką usługi. Przyczyną może być aplikacja, Twoje konto lub samo żądanie.",
+      "heading": "Żądanie odrzucone",
       "logged_as": "Zalogowany jako <span class=\"font-semibold\">%(username)s</span>",
       "too_many_sessions": {
         "description": "Twoje konto jest już zalogowane na maksymalnej liczbie urządzeń. Aby kontynuować, <span class=\"font-semibold\">usuń %(num_devices_to_remove)s urządzeń</span> i zaloguj się ponownie.",
@@ -217,13 +222,10 @@
       }
     },
     "register": {
-      "call_to_login": "Masz już konto?",
-      "continue_with_email": "Kontynuuj z adresem e-mail",
-      "continue_with_password": "Kontynuuj z hasłem",
       "create_account": {
-        "description": "Wybierz nazwę użytkownika, aby kontynuować.",
         "heading": "Utwórz konto"
       },
+      "javascript_required": "Do utworzenia konta wymagana jest obsługa języka JavaScript. Włącz jej obsługę w przeglądarce, a następnie odśwież stronę.",
       "terms_of_service": "Wyrażam zgodę na <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">warunki korzystania z serwisu</a>"
     },
     "registration_token": {

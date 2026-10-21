@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -23,7 +24,7 @@ use oauth2_types::{
     requests::{DeviceAuthorizationRequest, DeviceAuthorizationResponse, GrantType},
     scope::ScopeToken,
 };
-use rand::distributions::{Alphanumeric, DistString};
+use rand::distr::{Alphanumeric, SampleString};
 use thiserror::Error;
 use ulid::Ulid;
 

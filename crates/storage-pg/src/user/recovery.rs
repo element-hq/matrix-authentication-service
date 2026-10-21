@@ -11,7 +11,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
 use mas_data_model::{Clock, UlidExt as _, UserEmail, UserRecoverySession, UserRecoveryTicket};
 use mas_storage::user::UserRecoveryRepository;
-use rand::RngCore;
+use rand::Rng;
 use sqlx::PgConnection;
 use ulid::Ulid;
 use uuid::Uuid;
@@ -134,7 +134,7 @@ impl UserRecoveryRepository for PgUserRecoveryRepository<'_> {
     )]
     async fn add_session(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         email: String,
         user_agent: String,
@@ -232,7 +232,7 @@ impl UserRecoveryRepository for PgUserRecoveryRepository<'_> {
     )]
     async fn add_ticket(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user_recovery_session: &UserRecoverySession,
         user_email: &UserEmail,

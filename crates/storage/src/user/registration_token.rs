@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -6,7 +7,7 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use mas_data_model::{Clock, UserRegistrationToken};
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 
 use crate::repository_impl;
@@ -155,7 +156,7 @@ pub trait UserRegistrationTokenRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         token: String,
         usage_limit: Option<u32>,
@@ -280,7 +281,7 @@ repository_impl!(UserRegistrationTokenRepository:
     async fn find_by_token(&mut self, token: &str) -> Result<Option<UserRegistrationToken>, Self::Error>;
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         token: String,
         usage_limit: Option<u32>,

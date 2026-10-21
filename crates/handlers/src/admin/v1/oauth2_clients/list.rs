@@ -252,7 +252,7 @@ mod tests {
 
         // Add a dynamically-registered client
         repo.oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut state.rng(),
                 &state.clock,
                 vec!["https://first.example.com/redirect".parse().unwrap()],
@@ -278,7 +278,7 @@ mod tests {
 
         // Add another dynamically-registered client
         repo.oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut state.rng(),
                 &state.clock,
                 vec!["https://second.example.com/redirect".parse().unwrap()],
@@ -424,7 +424,7 @@ mod tests {
         // One authorization_code client and one client_credentials client
         let mut repo = state.repository().await.unwrap();
         repo.oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut state.rng(),
                 &state.clock,
                 vec!["https://code.example.com/redirect".parse().unwrap()],
@@ -448,7 +448,7 @@ mod tests {
             .await
             .unwrap();
         repo.oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut state.rng(),
                 &state.clock,
                 vec![],
@@ -510,9 +510,9 @@ mod tests {
 
         // A client with an active client-credentials session, and one without
         let mut repo = state.repository().await.unwrap();
-        let with_session = repo
+        let (with_session, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut state.rng(),
                 &state.clock,
                 vec![],
@@ -536,7 +536,7 @@ mod tests {
             .await
             .unwrap();
         repo.oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut state.rng(),
                 &state.clock,
                 vec![],

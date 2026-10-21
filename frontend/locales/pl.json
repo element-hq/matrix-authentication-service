@@ -26,12 +26,14 @@
   },
   "common": {
     "e2ee": "Szyfrowanie end-to-end",
+    "email_address": "Adres e-mail",
     "loading": "Wczytywanie…",
     "next": "Dalej",
     "password": "Hasło",
     "previous": "Poprzedni",
     "saved": "Zapisano",
-    "saving": "Zapisywanie…"
+    "saving": "Zapisywanie…",
+    "username": "Nazwa użytkownika"
   },
   "frontend": {
     "account": {
@@ -114,8 +116,25 @@
       "title": "Coś poszło nie tak"
     },
     "errors": {
+      "captcha": "Weryfikacja CAPTCHA nie powiodła się, spróbuj ponownie",
+      "email_banned": "E-mail jest zabroniony przez politykę serwera",
+      "email_domain_banned": "Domena e-mail jest zablokowana przez politykę serwera",
+      "email_domain_not_allowed": "Domena e-mail nie jest dozwolona przez politykę serwera",
+      "email_not_allowed": "Adres e-mail nie jest dozwolony przez politykę serwera",
+      "field_invalid": "To pole jest nieprawidłowe",
       "field_required": "To pole jest wymagane",
-      "rate_limit_exceeded": "W krótkim czasie wysłałeś zbyt wiele żądań. Poczekaj kilka minut i spróbuj ponownie."
+      "invalid_email": "Wprowadź prawidłowy adres e-mail",
+      "password_mismatch": "Pola hasła nie pasują do siebie",
+      "rate_limit_exceeded": "W krótkim czasie wysłałeś zbyt wiele żądań. Poczekaj kilka minut i spróbuj ponownie.",
+      "unspecified": "Coś poszło nie tak. Spróbuj ponownie.",
+      "username_all_numeric": "Nazwa użytkownika nie może składać się wyłącznie z cyfr",
+      "username_banned": "Nazwa użytkownika jest zablokowana przez politykę serwera",
+      "username_invalid": "Nazwa użytkownika może zawierać tylko małe litery, cyfry i znaki . _ - + / =",
+      "username_invalid_chars": "Nazwa użytkownika zawiera nieprawidłowe znaki. Używaj tylko małych liter, cyfr i znaków . _ - + / =",
+      "username_not_allowed": "Nazwa użytkownika nie jest dozwolona przez politykę serwera",
+      "username_taken": "Ta nazwa użytkownika jest już zajęta",
+      "username_too_long": "Nazwa użytkownika jest za długa",
+      "username_too_short": "Nazwa użytkownika jest za krótka"
     },
     "last_active": {
       "active_date": "Aktywne {{relativeDate}}",
@@ -226,6 +245,21 @@
         "user_inputs": "Nie powinno być żadnych danych osobowych ani związanych ze stroną.",
         "word_by_itself": "Pojedyncze słowa są łatwe do odgadnięcia."
       }
+    },
+    "register": {
+      "call_to_login": "Masz już konto?",
+      "captcha_incomplete": "Prosimy o wypełnienie testu CAPTCHA przed przejściem dalej",
+      "captcha_loading": "Test CAPTCHA nadal się ładuje, prosimy chwilę poczekać",
+      "continue_with_email": "Kontynuuj z adresem e-mail",
+      "continue_with_password": "Kontynuuj z hasłem",
+      "continue_with_provider": "Kontynuuj z {{provider}}",
+      "or_separator": "Lub",
+      "password_confirm_label": "Potwierdź hasło",
+      "password_label": "Hasło",
+      "terms_of_service": "Zgadzam się na <a>warunki korzystania z usługi</a>",
+      "username_available": "Nazwa użytkownika jest dostępna",
+      "username_check_failed": "Nie udało nam się sprawdzić, czy ta nazwa użytkownika jest dostępna",
+      "username_checking": "Sprawdzam dostępność…"
     },
     "reset_cross_signing": {
       "cancelled": {
