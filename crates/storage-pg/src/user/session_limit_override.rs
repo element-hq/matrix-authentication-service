@@ -13,7 +13,7 @@ use mas_storage::{
     pagination::Node,
     user::{UserSessionLimitOverrideFilter, UserSessionLimitOverrideRepository},
 };
-use rand::RngCore;
+use rand::Rng;
 use sea_query::{Expr, ExprTrait, PostgresQueryBuilder, Query, enum_def};
 use sea_query_sqlx::SqlxBinder;
 use sqlx::PgConnection;
@@ -314,7 +314,7 @@ impl UserSessionLimitOverrideRepository for PgUserSessionLimitOverrideRepository
     )]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user: &User,
         client_id: Option<Ulid>,

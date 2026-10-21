@@ -7,7 +7,7 @@ use std::num::NonZeroU64;
 
 use async_trait::async_trait;
 use mas_data_model::{Client, Clock, User, UserSessionLimitOverride};
-use rand_core::RngCore;
+use rand_core::Rng;
 use ulid::Ulid;
 
 use crate::{Page, Pagination, repository_impl};
@@ -104,7 +104,7 @@ pub trait UserSessionLimitOverrideRepository: Send + Sync {
     /// Create a new [`UserSessionLimitOverride`]
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user: &User,
         client_id: Option<Ulid>,
@@ -143,7 +143,7 @@ repository_impl!(UserSessionLimitOverrideRepository:
     ) -> Result<usize, Self::Error>;
     async fn add(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         user: &User,
         client_id: Option<Ulid>,

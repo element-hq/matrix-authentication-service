@@ -394,7 +394,7 @@ pub(crate) async fn find_lru_oauth2_sessions_for_client(
 ///
 /// Returns `true` if enough sessions were finished.
 pub(crate) async fn evict_lru_oauth2_sessions_for_client(
-    rng: &mut (dyn RngCore + Send),
+    rng: &mut (dyn Rng + Send),
     clock: &dyn Clock,
     repo: &mut BoxRepository,
     user: &User,
