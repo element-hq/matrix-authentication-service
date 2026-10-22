@@ -134,7 +134,8 @@ RUN --network=default \
   $(if [ "${BUILDPLATFORM}" != "linux/amd64" ]; then echo "g++-x86-64-linux-gnu"; fi) \
   libc6-dev-amd64-cross \
   libc6-dev-arm64-cross \
-  g++
+  g++ \
+  qemu-user
 
 # Setup the cross-compilation environment
 ENV \
@@ -172,6 +173,21 @@ RUN --network=default \
     --target "${RUST_TARGET}" \
   && mv "target/${RUST_TARGET}/release/mas-cli" /usr/local/bin/mas-cli
 
+COPY --from=policy /app/policies/policy.wasm /app/policies/policy.wasm
+
+# The precompiled policy only loads into the binary that produced it, so this
+# runs the target binary, under user-mode emulation when cross-compiling
+RUN --network=none \
+  case "${TARGETARCH}" in \
+    "${BUILDARCH}") EMULATOR="" ;; \
+    amd64) EMULATOR="qemu-x86_64 -L /usr/x86_64-linux-gnu" ;; \
+    arm64) EMULATOR="qemu-aarch64 -L /usr/aarch64-linux-gnu" ;; \
+    *) echo "unsupported architecture: ${TARGETARCH}" >&2; exit 1 ;; \
+  esac && \
+  ${EMULATOR} /usr/local/bin/mas-cli policy precompile \
+    /app/policies/policy.wasm \
+    /usr/local/share/policy.cwasm
+
 #######################################
 ## Prepare /usr/local/share/mas-cli/ ##
 #######################################
@@ -179,6 +195,8 @@ FROM --platform=${BUILDPLATFORM} scratch AS share
 
 COPY --from=frontend /share /share
 COPY --from=policy /app/policies/policy.wasm /share/policy.wasm
+COPY --from=builder /usr/local/share/policy.cwasm /share/policy.cwasm
+COPY --from=builder /usr/local/share/policy.cwasm.source.sha256 /share/policy.cwasm.source.sha256
 COPY ./templates/ /share/templates
 COPY ./translations/ /share/translations
 

@@ -447,6 +447,8 @@ Compiling it takes some time and around 10 MiB of memory, which can be avoided b
 A precompiled module only works with the exact version of MAS that produced it, on the same architecture and OS, on CPUs that have the baseline features of the architecture (`x86-64-v2` on `x86_64`).
 
 When `wasm_module` is left to its default, a `policy.cwasm` file next to the default `policy.wasm` is loaded instead, if the SHA-256 digest in the `policy.cwasm.source.sha256` written by `mas-cli policy precompile` matches `policy.wasm`.
+The Docker image and the pre-built binaries ship both.
+Container images derived from the MAS one which replace `policy.wasm` should also run `mas-cli policy precompile /usr/local/share/mas-cli/policy.wasm /usr/local/share/mas-cli/policy.cwasm`, or their policy gets compiled on every start.
 If it fails to load, for example because it was produced by another version of MAS, MAS logs a warning and compiles `policy.wasm` instead.
 A precompiled module set explicitly as `wasm_module` must load, or MAS fails to start.
 

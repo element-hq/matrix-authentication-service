@@ -108,7 +108,9 @@ jobs:
       matrix:
         include:
           - target: x86_64-unknown-linux-gnu
+            emulator: ""
           - target: aarch64-unknown-linux-gnu
+            emulator: qemu-aarch64 -L /usr/aarch64-linux-gnu
 
     env:
       VERGEN_GIT_DESCRIBE: ${{ needs.compute-version.outputs.describe }}
@@ -150,11 +152,30 @@ jobs:
             --features dist \
             -p mas-cli
 
+      - uses: ./.github/actions/build-policies
+
+      - name: Install the emulator
+        if: matrix.emulator != ''
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user libc6-arm64-cross libgcc-s1-arm64-cross
+
+      # The precompiled policy only loads into the binary that produced it
+      - name: Precompile the policy
+        run: |
+          ${{ matrix.emulator }} target/${{ matrix.target }}/release/mas-cli \
+            policy precompile \
+            policies/policy.wasm \
+            target/${{ matrix.target }}/release/policy.cwasm
+
       - name: Upload binary artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: binary-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/mas-cli
+          path: |
+            target/${{ matrix.target }}/release/mas-cli
+            target/${{ matrix.target }}/release/policy.cwasm
+            target/${{ matrix.target }}/release/policy.cwasm.source.sha256
 
   assemble-archives:
     name: Assemble release archives
@@ -194,6 +215,8 @@ jobs:
             cp -r assets-dist/share/* dist/${arch}/share/
             cp assets-dist/LICENSE dist/${arch}/LICENSE
             cp binary-$arch/mas-cli dist/${arch}/mas-cli
+            cp binary-$arch/policy.cwasm dist/${arch}/share/policy.cwasm
+            cp binary-$arch/policy.cwasm.source.sha256 dist/${arch}/share/policy.cwasm.source.sha256
             chmod -R u=rwX,go=rX dist/${arch}/
             chmod u=rwx,go=rx dist/${arch}/mas-cli
             tar -czvf mas-cli-${arch}-linux.tar.gz --owner=0 --group=0 -C dist/${arch}/ .
