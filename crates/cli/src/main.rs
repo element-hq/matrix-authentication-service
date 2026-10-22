@@ -7,12 +7,12 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use std::{process::ExitCode, sync::Arc};
+use std::{num::NonZeroUsize, process::ExitCode, sync::Arc};
 
 use anyhow::Context;
 use clap::Parser;
 use figment::Figment;
-use mas_config::{ConfigurationSectionExt, TelemetryConfig, TracingExporterKind};
+use mas_config::{ConfigurationSectionExt, RuntimeConfig, TelemetryConfig, TracingExporterKind};
 use sentry_tracing::EventFilter;
 use tracing_subscriber::{Layer as _, filter::LevelFilter};
 
@@ -73,8 +73,24 @@ fn main() -> anyhow::Result<ExitCode> {
         .map_err(anyhow::Error::from_boxed)
         .context("Failed to load telemetry config")?;
 
-    let mut builder = tokio::runtime::Builder::new_multi_thread();
+    let runtime_config = RuntimeConfig::extract_or_default(&figment)
+        .map_err(anyhow::Error::from_boxed)
+        .context("Failed to load runtime config")?;
+
+    let mut builder = match runtime_config.worker_threads.map(NonZeroUsize::get) {
+        Some(1) => tokio::runtime::Builder::new_current_thread(),
+        Some(worker_threads) => {
+            let mut builder = tokio::runtime::Builder::new_multi_thread();
+            builder.worker_threads(worker_threads);
+            builder
+        }
+        None => tokio::runtime::Builder::new_multi_thread(),
+    };
     builder.enable_all();
+
+    if let Some(max_blocking_threads) = runtime_config.max_blocking_threads {
+        builder.max_blocking_threads(max_blocking_threads.get());
+    }
 
     #[cfg(tokio_unstable)]
     builder
@@ -98,9 +114,15 @@ async fn async_main(
     // chance to shutdown the telemetry exporters regardless of if there was an
     // error or not
     let res = try_main(dotenv_path, opts, figment, telemetry_config).await;
-    if let Err(err) = self::telemetry::shutdown() {
-        eprintln!("Failed to shutdown telemetry exporters: {err}");
+
+    // Shutting down the exporters blocks until their background tasks have
+    // flushed, and those tasks need a free runtime thread to make progress.
+    match tokio::task::spawn_blocking(self::telemetry::shutdown).await {
+        Ok(Ok(())) => {}
+        Ok(Err(err)) => eprintln!("Failed to shutdown telemetry exporters: {err}"),
+        Err(err) => eprintln!("Failed to shutdown telemetry exporters: {err}"),
     }
+
     res
 }
 

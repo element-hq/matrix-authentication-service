@@ -739,6 +739,24 @@ telemetry:
     #traces_sample_rate: 0.0
 ```
 
+## `runtime`
+
+Settings related to the asynchronous runtime, which can be used to reduce the
+number of threads and the memory footprint of the service
+
+```yaml
+runtime:
+  # Number of worker threads running asynchronous tasks.
+  # Defaults to the number of CPU cores available.
+  # With `1`, all tasks run on the main thread.
+  worker_threads: 4
+
+  # Maximum number of threads used for blocking operations, like password
+  # hashing and template rendering. Those threads are spawned on demand, up to
+  # this limit. Defaults to 512.
+  max_blocking_threads: 512
+```
+
 ## `email`
 
 Settings related to sending emails

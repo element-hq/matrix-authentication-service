@@ -102,6 +102,14 @@
         }
       ]
     },
+    "runtime": {
+      "description": "Configuration related to the asynchronous runtime",
+      "allOf": [
+        {
+          "$ref": "#/definitions/RuntimeConfig"
+        }
+      ]
+    },
     "templates": {
       "description": "Configuration related to templates",
       "allOf": [
@@ -1603,6 +1611,30 @@
           ],
           "minimum": 0.0,
           "maximum": 1.0
+        }
+      }
+    },
+    "RuntimeConfig": {
+      "description": "Configuration related to the asynchronous runtime",
+      "type": "object",
+      "properties": {
+        "worker_threads": {
+          "description": "Number of worker threads running asynchronous tasks\n\nDefaults to the number of CPU cores available. With `1`, all tasks run\non the main thread.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 1
+        },
+        "max_blocking_threads": {
+          "description": "Maximum number of threads used for blocking operations, like password\nhashing and template rendering\n\nThreads are spawned on demand up to this limit. Defaults to 512.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 1
         }
       }
     },

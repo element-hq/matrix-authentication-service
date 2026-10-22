@@ -24,6 +24,7 @@ mod oauth;
 mod passwords;
 mod policy;
 mod rate_limiting;
+mod runtime;
 mod secrets;
 mod telemetry;
 mod templates;
@@ -48,6 +49,7 @@ pub use self::{
     },
     policy::PolicyConfig,
     rate_limiting::RateLimitingConfig,
+    runtime::RuntimeConfig,
     secrets::SecretsConfig,
     telemetry::{
         LogColor, LogFormat, LogOutput, LoggingConfig, MetricsConfig, MetricsExporterKind,
@@ -84,6 +86,10 @@ pub struct RootConfig {
     /// Configuration related to sending monitoring data
     #[serde(default, skip_serializing_if = "TelemetryConfig::is_default")]
     pub telemetry: TelemetryConfig,
+
+    /// Configuration related to the asynchronous runtime
+    #[serde(default, skip_serializing_if = "RuntimeConfig::is_default")]
+    pub runtime: RuntimeConfig,
 
     /// Configuration related to templates
     #[serde(default, skip_serializing_if = "TemplatesConfig::is_default")]
@@ -147,6 +153,7 @@ impl ConfigurationSection for RootConfig {
         self.http.validate(figment)?;
         self.database.validate(figment)?;
         self.telemetry.validate(figment)?;
+        self.runtime.validate(figment)?;
         self.templates.validate(figment)?;
         self.email.validate(figment)?;
         self.passwords.validate(figment)?;
@@ -180,6 +187,7 @@ impl RootConfig {
             http: HttpConfig::default(),
             database: DatabaseConfig::default(),
             telemetry: TelemetryConfig::default(),
+            runtime: RuntimeConfig::default(),
             templates: TemplatesConfig::default(),
             email: EmailConfig::default(),
             passwords: PasswordsConfig::default(),
@@ -204,6 +212,7 @@ impl RootConfig {
             http: HttpConfig::default(),
             database: DatabaseConfig::default(),
             telemetry: TelemetryConfig::default(),
+            runtime: RuntimeConfig::default(),
             templates: TemplatesConfig::default(),
             passwords: PasswordsConfig::default(),
             email: EmailConfig::default(),
