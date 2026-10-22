@@ -1,0 +1,148 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT compat_session_id\n                     , device_id\n                     , human_name\n                     , user_id\n                     , user_session_id\n                     , created_at\n                     , finished_at\n                     , is_synapse_admin\n                     , user_agent\n                     , last_active_at\n                     , last_active_ip\n                FROM compat_sessions\n                WHERE compat_session_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "compat_session_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "compat_sessions",
+            "name": "compat_session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "device_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "compat_sessions",
+            "name": "device_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "human_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "compat_sessions",
+            "name": "human_name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "user_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "compat_sessions",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "user_session_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "compat_sessions",
+            "name": "user_session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "compat_sessions",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "finished_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "compat_sessions",
+            "name": "finished_at"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "is_synapse_admin",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "compat_sessions",
+            "name": "is_synapse_admin"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "user_agent",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "compat_sessions",
+            "name": "user_agent"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "last_active_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "compat_sessions",
+            "name": "last_active_at"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "last_active_ip",
+        "type_info": "Inet",
+        "origin": {
+          "Table": {
+            "table": "compat_sessions",
+            "name": "last_active_ip"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "3d240e280f1f207fc652ab3d1977279de2bf12d2b35c568769b97cc7559d428a"
+}

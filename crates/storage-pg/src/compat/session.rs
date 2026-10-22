@@ -308,7 +308,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
                      , is_synapse_admin
                      , user_agent
                      , last_active_at
-                     , last_active_ip as "last_active_ip: IpAddr"
+                     , last_active_ip
                 FROM compat_sessions
                 WHERE compat_session_id = $1
             "#,
@@ -442,7 +442,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             .apply_filter(filter)
             .build_sqlx(PostgresQueryBuilder);
 
-        let res = sqlx::query_with(&sql, arguments)
+        let res = sqlx::query_with(sqlx::AssertSqlSafe(sql), arguments)
             .traced()
             .execute(&mut *self.conn)
             .await?;
@@ -545,10 +545,11 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             )
             .build_sqlx(PostgresQueryBuilder);
 
-        let edges: Vec<CompatSessionAndSsoLoginLookup> = sqlx::query_as_with(&sql, arguments)
-            .traced()
-            .fetch_all(&mut *self.conn)
-            .await?;
+        let edges: Vec<CompatSessionAndSsoLoginLookup> =
+            sqlx::query_as_with(sqlx::AssertSqlSafe(sql), arguments)
+                .traced()
+                .fetch_all(&mut *self.conn)
+                .await?;
 
         let page = pagination.process(edges).try_map(TryFrom::try_from)?;
 
@@ -570,7 +571,7 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             .apply_filter(filter)
             .build_sqlx(PostgresQueryBuilder);
 
-        let count: i64 = sqlx::query_scalar_with(&sql, arguments)
+        let count: i64 = sqlx::query_scalar_with(sqlx::AssertSqlSafe(sql), arguments)
             .traced()
             .fetch_one(&mut *self.conn)
             .await?;
