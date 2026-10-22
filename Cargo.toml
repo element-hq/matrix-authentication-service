@@ -395,6 +395,9 @@ version = "0.3.0"
 # Open Policy Agent support through WASM
 [workspace.dependencies.opa-wasm]
 version = "0.3.3"
+# Without `fast`, which enables wasmtime's parallel compilation
+default-features = false
+features = ["all-builtins"]
 
 [workspace.dependencies.target-lexicon]
 version = "0.13.5"

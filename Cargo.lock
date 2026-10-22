@@ -7745,7 +7745,6 @@ dependencies = [
  "once_cell",
  "postcard",
  "pulley-interpreter",
- "rayon",
  "rustix",
  "serde",
  "serde_derive",

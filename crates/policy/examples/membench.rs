@@ -6,7 +6,7 @@
 //! Measures the memory and time cost of loading and evaluating the policy.
 //!
 //! Usage:
-//!   membench jit|jit-serial|winch|winch-serial <policy.wasm>
+//!   membench jit|winch <policy.wasm>
 //!   membench precompile <policy.wasm> <out.cwasm>
 //!   membench cwasm-file <policy.cwasm>
 //!   membench cwasm-bytes <policy.cwasm>
@@ -164,18 +164,15 @@ async fn run(mode: &str, path: &str) -> anyhow::Result<()> {
 
     let t = Instant::now();
     let mut config = base_config();
-    if mode.starts_with("winch") {
+    if mode == "winch" {
         config.strategy(Strategy::Winch);
-    }
-    if mode.ends_with("-serial") {
-        config.parallel_compilation(false);
     }
     let engine = Engine::new(&config)?;
     report.point("after Engine::new", Some(t.elapsed()));
 
     let t = Instant::now();
     let module = match mode {
-        "jit" | "jit-serial" | "winch" | "winch-serial" => {
+        "jit" | "winch" => {
             let engine = engine.clone();
             tokio::task::spawn_blocking(move || Module::new(&engine, bytes)).await??
         }

@@ -57,6 +57,9 @@ deny = [
     { name = "openssl" },
     { name = "openssl-sys" },
     { name = "native-tls" },
+    # wasmtime's `parallel-compilation` compiles on rayon's global pool, whose
+    # threads live for the whole process; opa-wasm only pins its version
+    { name = "rayon", wrappers = ["opa-wasm"] },
 ]
 
 # We try to avoid duplicating crates and track exceptions here

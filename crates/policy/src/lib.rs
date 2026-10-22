@@ -49,7 +49,7 @@ pub fn source_digest(wasm: &[u8]) -> String {
 /// architecture (`x86-64-v2` on `x86_64`, matching `.cargo/config.toml`), so
 /// that it does not depend on the CPU of the machine that compiled it.
 ///
-/// This is CPU-bound and takes tens of milliseconds.
+/// This is CPU-bound and takes around a hundred milliseconds.
 ///
 /// # Errors
 ///
