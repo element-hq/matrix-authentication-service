@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -18,6 +19,7 @@ mod database;
 mod debug;
 mod doctor;
 mod manage;
+mod policy;
 mod server;
 mod syn2mas;
 mod templates;
@@ -42,6 +44,9 @@ enum Subcommand {
 
     /// Templates-related commands
     Templates(self::templates::Options),
+
+    /// Policy-related commands
+    Policy(self::policy::Options),
 
     /// Debug utilities
     #[clap(hide = true)]
@@ -79,6 +84,7 @@ impl Options {
             Some(S::Worker(c)) => Box::pin(c.run(figment)).await,
             Some(S::Manage(c)) => Box::pin(c.run(figment)).await,
             Some(S::Templates(c)) => Box::pin(c.run(figment)).await,
+            Some(S::Policy(c)) => Box::pin(c.run(figment)).await,
             Some(S::Debug(c)) => Box::pin(c.run(figment)).await,
             Some(S::Doctor(c)) => Box::pin(c.run(figment)).await,
             Some(S::Syn2Mas(c)) => Box::pin(c.run(figment)).await,

@@ -38,6 +38,7 @@
     - [`syn2mas`](./reference/cli/syn2mas.md)
     - [`worker`](./reference/cli/worker.md)
     - [`templates`](./reference/cli/templates.md)
+    - [`policy`](./reference/cli/policy.md)
     - [`doctor`](./reference/cli/doctor.md)
 
 # Development

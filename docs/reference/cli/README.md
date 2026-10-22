@@ -35,6 +35,7 @@ Commands:
   worker     Run the worker
   manage     Manage the instance
   templates  Templates-related commands
+  policy     Policy-related commands
   doctor     Run diagnostics on the deployment
   help       Print this message or the help of the given subcommand(s)
 

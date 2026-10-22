@@ -14,6 +14,7 @@ use arc_swap::ArcSwap;
 use mas_data_model::{SessionLimitConfig, Ulid};
 use opa_wasm::Runtime;
 use serde::Serialize;
+use sha2::{Digest, Sha256};
 use thiserror::Error;
 use tokio::io::{AsyncRead, AsyncReadExt};
 use wasmtime::{Engine, Module, Precompiled, Store};
@@ -29,6 +30,16 @@ pub use self::model::{
 #[must_use]
 pub fn is_precompiled(module: &[u8]) -> bool {
     Engine::detect_precompiled(module) == Some(Precompiled::Module)
+}
+
+/// Suffix added to the path of a precompiled module for the file holding the
+/// [`source_digest`] of the WASM module it was compiled from
+pub const SOURCE_DIGEST_SUFFIX: &str = ".source.sha256";
+
+/// Hex-encoded SHA-256 digest of a WASM module
+#[must_use]
+pub fn source_digest(wasm: &[u8]) -> String {
+    hex::encode(Sha256::digest(wasm))
 }
 
 /// Compiles a WASM policy module ahead of time, for [`PolicyFactory::load`].
