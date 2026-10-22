@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -24,8 +25,10 @@ schemars.workspace = true
 serde_json.workspace = true
 serde.workspace = true
 thiserror.workspace = true
+target-lexicon.workspace = true
 tokio.workspace = true
 tracing.workspace = true
+wasmtime.workspace = true
 
 mas-data-model.workspace = true
 oauth2-types.workspace = true
@@ -36,4 +39,4 @@ name = "schema"
 [dev-dependencies]
 libc = "0.2.190"
 # Only for the `membench` example, to compare against the Winch baseline compiler.
-wasmtime = { version = "49.0.3", default-features = false, features = ["winch"] }
+wasmtime = { workspace = true, features = ["winch"] }

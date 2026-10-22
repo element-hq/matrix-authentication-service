@@ -396,6 +396,15 @@ version = "0.3.0"
 [workspace.dependencies.opa-wasm]
 version = "0.3.3"
 
+[workspace.dependencies.target-lexicon]
+version = "0.13.5"
+
+# Shares types with `opa_wasm::wasmtime`, so it must resolve to the same version
+[workspace.dependencies.wasmtime]
+version = "49.0.3"
+default-features = false
+features = ["cranelift", "std"]
+
 # OpenTelemetry
 [workspace.dependencies.opentelemetry]
 version = "0.32.0"

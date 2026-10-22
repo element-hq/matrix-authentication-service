@@ -1,28 +1,64 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+mod engine_config;
 pub mod model;
 
 use std::sync::Arc;
 
 use arc_swap::ArcSwap;
 use mas_data_model::{SessionLimitConfig, Ulid};
-use opa_wasm::{
-    Runtime,
-    wasmtime::{Config, Engine, Module, OptLevel, Store},
-};
+use opa_wasm::Runtime;
 use serde::Serialize;
 use thiserror::Error;
 use tokio::io::{AsyncRead, AsyncReadExt};
+use wasmtime::{Engine, Module, Precompiled, Store};
 
 pub use self::model::{
     AuthorizationGrantInput, ClientRegistrationInput, CompatLoginInput, EmailInput,
     EvaluationResult, GrantType, RegisterInput, RegistrationMethod, Requester, Violation,
     ViolationVariant,
 };
+
+/// Whether `module` was produced by [`precompile`], as opposed to being a
+/// WASM module
+#[must_use]
+pub fn is_precompiled(module: &[u8]) -> bool {
+    Engine::detect_precompiled(module) == Some(Precompiled::Module)
+}
+
+/// Compiles a WASM policy module ahead of time, for [`PolicyFactory::load`].
+///
+/// The result only loads in a binary built with the same wasmtime version,
+/// on the same architecture and OS. It uses the baseline CPU features of the
+/// architecture (`x86-64-v2` on `x86_64`, matching `.cargo/config.toml`), so
+/// that it does not depend on the CPU of the machine that compiled it.
+///
+/// This is CPU-bound and takes tens of milliseconds.
+///
+/// # Errors
+///
+/// Returns an error if the module is invalid.
+pub fn precompile(wasm: &[u8]) -> Result<Vec<u8>, wasmtime::Error> {
+    let mut config = engine_config::config();
+    // Setting the target turns off the detection of the host CPU features
+    config.target(&target_lexicon::Triple::host().to_string())?;
+
+    if cfg!(target_arch = "x86_64") {
+        #[expect(unsafe_code)]
+        // SAFETY: wasmtime checks that the host CPU has these features when
+        // loading the module, and refuses to load it otherwise.
+        unsafe {
+            config.cranelift_flag_enable("x86-64-v2");
+        }
+    }
+
+    Engine::new(&config)?.precompile_module(wasm)
+}
 
 #[derive(Debug, Error)]
 pub enum LoadError {
@@ -37,6 +73,9 @@ pub enum LoadError {
 
     #[error("failed to compile WASM module")]
     Compilation(#[source] anyhow::Error),
+
+    #[error("failed to load precompiled WASM module")]
+    Deserialization(#[source] wasmtime::Error),
 
     #[error("invalid policy data")]
     InvalidData(#[source] anyhow::Error),
@@ -216,30 +255,54 @@ pub struct PolicyFactory {
 impl PolicyFactory {
     /// Load the policy from the given data source.
     ///
+    /// The source is either a WASM module, or a module precompiled with
+    /// [`precompile`].
+    ///
     /// # Errors
     ///
     /// Returns an error if the policy can't be loaded or instantiated.
-    #[tracing::instrument(name = "policy.load", skip(source))]
     pub async fn load(
         mut source: impl AsyncRead + std::marker::Unpin,
         data: Data,
         entrypoints: Entrypoints,
     ) -> Result<Self, LoadError> {
-        let mut config = Config::default();
-        config.cranelift_opt_level(OptLevel::SpeedAndSize);
-
-        let engine = Engine::new(&config).map_err(LoadError::Engine)?;
-
-        // Read and compile the module
         let mut buf = Vec::new();
         source.read_to_end(&mut buf).await?;
-        // Compilation is CPU-bound, so spawn that in a blocking task
-        let (engine, module) = tokio::task::spawn_blocking(move || {
-            let module = Module::new(&engine, buf)?;
-            anyhow::Ok((engine, module))
-        })
-        .await?
-        .map_err(LoadError::Compilation)?;
+        Self::load_bytes(buf, data, entrypoints).await
+    }
+
+    /// Load the policy from a WASM module or a module precompiled with
+    /// [`precompile`].
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the policy can't be loaded or instantiated.
+    #[tracing::instrument(
+        name = "policy.load",
+        skip_all,
+        fields(precompiled = is_precompiled(&module)),
+    )]
+    pub async fn load_bytes(
+        module: Vec<u8>,
+        data: Data,
+        entrypoints: Entrypoints,
+    ) -> Result<Self, LoadError> {
+        let engine = Engine::new(&engine_config::config()).map_err(LoadError::Engine)?;
+
+        let module = if is_precompiled(&module) {
+            #[expect(unsafe_code)]
+            // SAFETY: `Module::deserialize` runs the machine code in `module` without
+            // validating it. The policy file is configured by the operator and is
+            // trusted like the binary itself; artifacts from another wasmtime
+            // version or with incompatible settings are rejected with an error.
+            unsafe { Module::deserialize(&engine, &module) }.map_err(LoadError::Deserialization)?
+        } else {
+            // Compilation is CPU-bound, so spawn that in a blocking task
+            let engine = engine.clone();
+            tokio::task::spawn_blocking(move || Module::new(&engine, module))
+                .await?
+                .map_err(|e| LoadError::Compilation(e.into()))?
+        };
 
         let merged = data.to_value().map_err(LoadError::InvalidData)?;
         let dynamic_data = ArcSwap::new(Arc::new(DynamicData {
@@ -574,6 +637,45 @@ mod tests {
             .await
             .unwrap();
         assert!(!res.valid());
+    }
+
+    #[tokio::test]
+    async fn test_precompiled() {
+        let data = Data::new(BaseData {
+            server_name: "example.com".to_owned(),
+            session_limit: None,
+        });
+
+        #[expect(clippy::disallowed_types)]
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..")
+            .join("policies")
+            .join("policy.wasm");
+
+        let wasm = tokio::fs::read(path).await.unwrap();
+        assert!(!is_precompiled(&wasm));
+        let cwasm = precompile(&wasm).unwrap();
+        assert!(is_precompiled(&cwasm));
+
+        let factory = PolicyFactory::load_bytes(cwasm, data, make_entrypoints())
+            .await
+            .unwrap();
+
+        let mut policy = factory.instantiate().await.unwrap();
+        let res = policy
+            .evaluate_register(RegisterInput {
+                registration_method: RegistrationMethod::Password,
+                username: "hello",
+                email: Some("hello@example.com"),
+                requester: Requester {
+                    ip_address: None,
+                    user_agent: None,
+                },
+            })
+            .await
+            .unwrap();
+        assert!(res.valid());
     }
 
     #[tokio::test]
