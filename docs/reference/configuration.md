@@ -442,9 +442,18 @@ captcha:
 
 Policy settings
 
+The policy is a WASM module, compiled when MAS starts.
+Compiling it takes some time and around 10 MiB of memory, which can be avoided by loading a module precompiled with [`mas-cli policy precompile`](./cli/policy.md).
+A precompiled module only works with the exact version of MAS that produced it, on the same architecture and OS, on CPUs that have the baseline features of the architecture (`x86-64-v2` on `x86_64`).
+
+When `wasm_module` is left to its default, a `policy.cwasm` file next to the default `policy.wasm` is loaded instead, if the SHA-256 digest in the `policy.cwasm.source.sha256` written by `mas-cli policy precompile` matches `policy.wasm`.
+If it fails to load, for example because it was produced by another version of MAS, MAS logs a warning and compiles `policy.wasm` instead.
+A precompiled module set explicitly as `wasm_module` must load, or MAS fails to start.
+
 ```yaml
 policy:
-  # Path to the WASM module
+  # Path to the WASM module, or to a module precompiled with
+  # `mas-cli policy precompile`
   # Default in Docker distribution: `/usr/local/share/mas-cli/policy.wasm`
   # Default in pre-built binaries: `./share/policy.wasm`
   # Default in locally-built binaries: `./policies/policy.wasm`

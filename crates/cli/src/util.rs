@@ -8,6 +8,7 @@
 use std::{sync::Arc, time::Duration};
 
 use anyhow::Context;
+use camino::Utf8Path;
 use mas_config::{
     AccountConfig, BrandingConfig, CaptchaConfig, DatabaseConfig, EmailConfig, EmailSmtpMode,
     EmailTransportKind, ExperimentalConfig, HomeserverKind, MatrixConfig, OAuthConfig,
@@ -143,10 +144,6 @@ pub async fn policy_factory_from_config(
     matrix_config: &MatrixConfig,
     experimental_config: &ExperimentalConfig,
 ) -> Result<PolicyFactory, anyhow::Error> {
-    let policy_file = tokio::fs::File::open(&config.wasm_module)
-        .await
-        .context("failed to open OPA WASM policy file")?;
-
     let entrypoints = mas_policy::Entrypoints {
         register: config.register_entrypoint.clone(),
         client_registration: config.client_registration_entrypoint.clone(),
@@ -166,15 +163,92 @@ pub async fn policy_factory_from_config(
                 dangerous_hard_limit_eviction: c.dangerous_hard_limit_eviction,
             });
 
-    let data = mas_policy::Data::new(mas_policy::BaseData {
-        server_name: matrix_config.homeserver.clone(),
-        session_limit: session_limit_config,
-    })
-    .with_rest(config.data.clone());
+    let data = || {
+        mas_policy::Data::new(mas_policy::BaseData {
+            server_name: matrix_config.homeserver.clone(),
+            session_limit: session_limit_config.clone(),
+        })
+        .with_rest(config.data.clone())
+    };
 
-    PolicyFactory::load(policy_file, data, entrypoints)
+    if let Some(path) = config.default_precompiled_module()
+        && let Some(module) = read_default_precompiled(&path, &config.wasm_module).await
+    {
+        tracing::info!(%path, "Loading the precompiled policy module");
+        match PolicyFactory::load_bytes(module, data(), entrypoints.clone()).await {
+            Ok(factory) => return Ok(factory),
+            Err(error @ mas_policy::LoadError::Deserialization(_)) => {
+                tracing::warn!(
+                    %path,
+                    error = &error as &dyn std::error::Error,
+                    "Failed to load the precompiled policy module, falling back to {}",
+                    config.wasm_module,
+                );
+            }
+            Err(error) => return Err(error).context("failed to load the policy"),
+        }
+    }
+
+    let module = tokio::fs::read(&config.wasm_module)
+        .await
+        .context("failed to read OPA WASM policy file")?;
+
+    if mas_policy::is_precompiled(&module) {
+        tracing::info!(path = %config.wasm_module, "Loading the precompiled policy module");
+    } else {
+        tracing::info!(path = %config.wasm_module, "Loading and compiling the policy module");
+    }
+
+    PolicyFactory::load_bytes(module, data(), entrypoints)
         .await
         .context("failed to load the policy")
+}
+
+/// Reads the precompiled module at `path`, if it was compiled from the WASM
+/// module at `wasm_path`
+///
+/// The default `policy.wasm` may be replaced (for example in a derived
+/// container image) without replacing the `policy.cwasm` next to it, so this
+/// checks the source digest written by `mas-cli policy precompile`.
+async fn read_default_precompiled(path: &Utf8Path, wasm_path: &Utf8Path) -> Option<Vec<u8>> {
+    let module = match tokio::fs::read(path).await {
+        Ok(module) => module,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return None,
+        Err(error) => {
+            tracing::warn!(
+                %path,
+                error = &error as &dyn std::error::Error,
+                "Failed to read the precompiled policy module, falling back to {wasm_path}",
+            );
+            return None;
+        }
+    };
+
+    if !mas_policy::is_precompiled(&module) {
+        tracing::warn!(
+            %path,
+            "Not a precompiled policy module, falling back to {wasm_path}",
+        );
+        return None;
+    }
+
+    let digest_path = format!("{path}{}", mas_policy::SOURCE_DIGEST_SUFFIX);
+    let expected = tokio::fs::read_to_string(&digest_path).await.ok();
+    // A missing `wasm_path` is reported when loading it
+    let actual = tokio::fs::read(wasm_path)
+        .await
+        .ok()
+        .map(|wasm| mas_policy::source_digest(&wasm));
+
+    if actual.is_none() || expected.as_deref().map(str::trim) != actual.as_deref() {
+        tracing::info!(
+            %path,
+            "The precompiled policy module does not match {wasm_path}, compiling it instead",
+        );
+        return None;
+    }
+
+    Some(module)
 }
 
 pub fn captcha_config_from_config(
@@ -626,6 +700,52 @@ mod tests {
         .unwrap();
         let manager = password_manager_from_config(&config).await;
         assert!(manager.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_read_default_precompiled() {
+        let dir = tempfile::tempdir().unwrap();
+        let dir = camino::Utf8Path::from_path(dir.path()).unwrap();
+        let wasm_path = dir.join("policy.wasm");
+        let path = dir.join("policy.cwasm");
+        let digest_path = dir.join("policy.cwasm.source.sha256");
+
+        let wasm = std::fs::read(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../policies/policy.wasm"
+        ))
+        .unwrap();
+        let precompiled = mas_policy::precompile(&wasm).unwrap();
+        std::fs::write(&wasm_path, &wasm).unwrap();
+
+        // No precompiled module
+        assert!(read_default_precompiled(&path, &wasm_path).await.is_none());
+
+        // No source digest
+        std::fs::write(&path, &precompiled).unwrap();
+        assert!(read_default_precompiled(&path, &wasm_path).await.is_none());
+
+        // Matching source digest
+        std::fs::write(
+            &digest_path,
+            format!("{}\n", mas_policy::source_digest(&wasm)),
+        )
+        .unwrap();
+        assert_eq!(
+            read_default_precompiled(&path, &wasm_path).await,
+            Some(precompiled.clone())
+        );
+
+        // The WASM module was replaced
+        let mut other = wasm.clone();
+        other.extend_from_slice(b"\0\x05\x04test");
+        std::fs::write(&wasm_path, &other).unwrap();
+        assert!(read_default_precompiled(&path, &wasm_path).await.is_none());
+
+        // Not a precompiled module
+        std::fs::write(&wasm_path, &wasm).unwrap();
+        std::fs::write(&path, &wasm).unwrap();
+        assert!(read_default_precompiled(&path, &wasm_path).await.is_none());
     }
 
     /// RAII guard that removes an environment variable when dropped,

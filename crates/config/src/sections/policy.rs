@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -90,7 +91,14 @@ fn is_default_data(value: &serde_json::Value) -> bool {
 #[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct PolicyConfig {
-    /// Path to the WASM module
+    /// Path to the WASM module, or to a module precompiled with `mas-cli
+    /// policy precompile`
+    ///
+    /// When left to its default, a precompiled `policy.cwasm` next to the
+    /// default `policy.wasm` is loaded instead, if the digest in its
+    /// `policy.cwasm.source.sha256` matches `policy.wasm`. If it can't be
+    /// loaded, for example because it was produced by another version of MAS,
+    /// `policy.wasm` is used.
     #[serde(
         default = "default_policy_path",
         skip_serializing_if = "is_default_policy_path"
@@ -170,6 +178,15 @@ impl PolicyConfig {
             && is_default_password_entrypoint(&self.password_entrypoint)
             && is_default_email_entrypoint(&self.email_entrypoint)
             && is_default_data(&self.data)
+    }
+}
+
+impl PolicyConfig {
+    /// The precompiled module to try before [`Self::wasm_module`], if it is
+    /// the default path
+    #[must_use]
+    pub fn default_precompiled_module(&self) -> Option<Utf8PathBuf> {
+        is_default_policy_path(&self.wasm_module).then(|| self.wasm_module.with_extension("cwasm"))
     }
 }
 

@@ -14,7 +14,7 @@ use mas_config::{
     MatrixConfig, PolicyConfig,
 };
 use mas_storage_pg::PgRepositoryFactory;
-use tracing::{info, info_span};
+use tracing::info_span;
 
 use crate::util::{
     database_pool_from_config, load_policy_factory_dynamic_data, policy_factory_from_config,
@@ -49,7 +49,6 @@ impl Options {
                     MatrixConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
                 let experimental_config = ExperimentalConfig::extract_or_default(figment)
                     .map_err(anyhow::Error::from_boxed)?;
-                info!("Loading and compiling the policy module");
                 let policy_factory =
                     policy_factory_from_config(&config, &matrix_config, &experimental_config)
                         .await?;

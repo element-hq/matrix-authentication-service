@@ -1912,7 +1912,7 @@
       "type": "object",
       "properties": {
         "wasm_module": {
-          "description": "Path to the WASM module",
+          "description": "Path to the WASM module, or to a module precompiled with `mas-cli\npolicy precompile`\n\nWhen left to its default, a precompiled `policy.cwasm` next to the\ndefault `policy.wasm` is loaded instead, if the digest in its\n`policy.cwasm.source.sha256` matches `policy.wasm`. If it can't be\nloaded, for example because it was produced by another version of MAS,\n`policy.wasm` is used.",
           "type": "string"
         },
         "client_registration_entrypoint": {
