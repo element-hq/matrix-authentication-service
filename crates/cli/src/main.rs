@@ -159,7 +159,7 @@ async fn try_main(
         layers.push(Box::new(sentry_layer));
     }
 
-    let _guard = self::logging::init(&telemetry_config.logging, layers)?;
+    self::logging::init(&telemetry_config.logging, layers)?;
 
     // Log about the .env loading
     match dotenv_path {

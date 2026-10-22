@@ -689,8 +689,6 @@ version = "0.1.41"
 [workspace.dependencies.tracing-subscriber]
 version = "0.3.23"
 features = ["env-filter", "chrono"]
-[workspace.dependencies.tracing-appender]
-version = "0.2.5"
 
 # URL manipulation
 [workspace.dependencies.url]

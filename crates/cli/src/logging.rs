@@ -10,21 +10,13 @@ use std::io::IsTerminal as _;
 use anyhow::Context as _;
 use mas_config::{LogColor, LogFormat, LogOutput, LoggingConfig};
 use mas_context::{EventFormatter, JsonEventFormatter};
-use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::{
-    EnvFilter, Layer, Registry, filter::filter_fn, layer::SubscriberExt as _,
+    EnvFilter, Layer, Registry, filter::filter_fn, fmt::MakeWriter, layer::SubscriberExt as _,
     util::SubscriberInitExt as _,
 };
 
 /// A boxed [`Layer`] over the bare [`Registry`].
 pub type BoxLayer = Box<dyn Layer<Registry> + Send + Sync + 'static>;
-
-/// A guard which must be kept alive for the lifetime of the program, so that
-/// the non-blocking log writer flushes its buffer on shutdown.
-#[must_use = "the worker guard must be kept alive for logs to be flushed"]
-pub struct LoggingGuard {
-    _worker_guard: WorkerGuard,
-}
 
 /// Install the global subscriber, with the formatting layer and filter built
 /// from the given configuration, alongside the given extra layers.
@@ -33,40 +25,16 @@ pub struct LoggingGuard {
 ///
 /// Returns an error if the log filter could not be parsed, or if the global
 /// subscriber could not be installed.
-pub fn init(config: &LoggingConfig, extra_layers: Vec<BoxLayer>) -> anyhow::Result<LoggingGuard> {
-    let (writer, worker_guard, is_terminal) = match config.output {
+pub fn init(config: &LoggingConfig, extra_layers: Vec<BoxLayer>) -> anyhow::Result<()> {
+    let fmt_layer = match config.output {
         LogOutput::Stderr => {
-            let output = std::io::stderr();
-            let is_terminal = output.is_terminal();
-            let (writer, guard) = tracing_appender::non_blocking(output);
-            (writer, guard, is_terminal)
+            let is_terminal = std::io::stderr().is_terminal();
+            fmt_layer(config, std::io::stderr, is_terminal)
         }
         LogOutput::Stdout => {
-            let output = std::io::stdout();
-            let is_terminal = output.is_terminal();
-            let (writer, guard) = tracing_appender::non_blocking(output);
-            (writer, guard, is_terminal)
+            let is_terminal = std::io::stdout().is_terminal();
+            fmt_layer(config, std::io::stdout, is_terminal)
         }
-    };
-
-    let ansi = match config.color {
-        LogColor::Auto => is_terminal,
-        LogColor::Always => true,
-        LogColor::Never => false,
-    };
-
-    let fmt_layer: BoxLayer = match config.format {
-        LogFormat::Text => Box::new(
-            tracing_subscriber::fmt::layer()
-                .with_writer(writer)
-                .event_format(EventFormatter)
-                .with_ansi(ansi),
-        ),
-        LogFormat::Json => Box::new(
-            tracing_subscriber::fmt::layer()
-                .with_writer(writer)
-                .event_format(JsonEventFormatter),
-        ),
     };
 
     let filter_layer = build_env_filter(config)?;
@@ -85,9 +53,33 @@ pub fn init(config: &LoggingConfig, extra_layers: Vec<BoxLayer>) -> anyhow::Resu
         .try_init()
         .context("could not initialize logging")?;
 
-    Ok(LoggingGuard {
-        _worker_guard: worker_guard,
-    })
+    Ok(())
+}
+
+/// Build the formatting layer, writing synchronously to the given writer.
+fn fmt_layer<W>(config: &LoggingConfig, writer: W, is_terminal: bool) -> BoxLayer
+where
+    W: for<'writer> MakeWriter<'writer> + Send + Sync + 'static,
+{
+    let ansi = match config.color {
+        LogColor::Auto => is_terminal,
+        LogColor::Always => true,
+        LogColor::Never => false,
+    };
+
+    match config.format {
+        LogFormat::Text => Box::new(
+            tracing_subscriber::fmt::layer()
+                .with_writer(writer)
+                .event_format(EventFormatter)
+                .with_ansi(ansi),
+        ),
+        LogFormat::Json => Box::new(
+            tracing_subscriber::fmt::layer()
+                .with_writer(writer)
+                .event_format(JsonEventFormatter),
+        ),
+    }
 }
 
 /// Build the [`EnvFilter`] from the configuration.
