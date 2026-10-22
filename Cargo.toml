@@ -374,6 +374,10 @@ features = [
 [workspace.dependencies.listenfd]
 version = "1.0.2"
 
+# Raw bindings to the C library
+[workspace.dependencies.libc]
+version = "0.2.190"
+
 # MIME type support
 [workspace.dependencies.mime]
 version = "0.3.17"

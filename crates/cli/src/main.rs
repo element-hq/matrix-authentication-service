@@ -55,6 +55,17 @@ impl sentry::TransportFactory for SentryTransportFactory {
 }
 
 fn main() -> anyhow::Result<ExitCode> {
+    // A fixed mmap threshold turns off glibc's dynamic one, which otherwise
+    // rises to the size of a freed Argon2 block buffer (~19 MiB) and moves the
+    // next ones into thread arenas that are never returned to the OS.
+    #[cfg(all(target_os = "linux", target_env = "gnu"))]
+    // SAFETY: called before any other thread exists, and `mallopt` only
+    // changes allocator parameters.
+    #[expect(unsafe_code)]
+    unsafe {
+        libc::mallopt(libc::M_MMAP_THRESHOLD, 128 * 1024);
+    }
+
     // Load environment variables from .env files
     // We keep the path to log it afterwards
     let dotenv_path: Result<Option<_>, _> = dotenvy::dotenv()
