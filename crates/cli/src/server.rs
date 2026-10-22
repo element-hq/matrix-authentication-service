@@ -42,7 +42,7 @@ use sentry_tower::{NewSentryLayer, SentryHttpLayer};
 use tower::Layer;
 use tower_http::services::{ServeDir, fs::ServeFileSystemResponseBody};
 use tracing::Span;
-use tracing_opentelemetry::OpenTelemetrySpanExt;
+use tracing_opentelemetry::{OpenTelemetrySpanExt, SetParentError};
 
 use crate::app_state::{AppState, client_ip_middleware};
 
@@ -160,11 +160,15 @@ fn make_http_span<B>(req: &Request<B>) -> Span {
             propagator.extract_with_context(&context, &extractor)
         });
 
-        if let Err(err) = span.set_parent(parent_context) {
-            tracing::error!(
-                error = &err as &dyn std::error::Error,
-                "Failed to set parent context on span"
-            );
+        match span.set_parent(parent_context) {
+            // The OpenTelemetry layer is not installed when no trace exporter is configured
+            Ok(()) | Err(SetParentError::LayerNotFound) => {}
+            Err(err) => {
+                tracing::error!(
+                    error = &err as &dyn std::error::Error,
+                    "Failed to set parent context on span"
+                );
+            }
         }
     }
 

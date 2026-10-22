@@ -12,7 +12,7 @@ use std::{process::ExitCode, sync::Arc};
 use anyhow::Context;
 use clap::Parser;
 use figment::Figment;
-use mas_config::{ConfigurationSectionExt, TelemetryConfig};
+use mas_config::{ConfigurationSectionExt, TelemetryConfig, TracingExporterKind};
 use sentry_tracing::EventFilter;
 use tracing_subscriber::{Layer as _, filter::LevelFilter};
 
@@ -145,16 +145,21 @@ async fn try_main(
     // Setup OpenTelemetry tracing and metrics
     self::telemetry::setup(&telemetry_config).context("failed to setup OpenTelemetry")?;
 
-    let tracer = self::telemetry::TRACER
-        .get()
-        .context("TRACER was not set")?;
+    let mut layers: Vec<self::logging::BoxLayer> = Vec::new();
 
-    let telemetry_layer = tracing_opentelemetry::layer()
-        .with_tracer(tracer.clone())
-        .with_tracked_inactivity(false)
-        .with_filter(LevelFilter::INFO);
+    if !matches!(telemetry_config.tracing.exporter, TracingExporterKind::None) {
+        let tracer = self::telemetry::TRACER
+            .get()
+            .context("TRACER was not set")?;
 
-    let mut layers: Vec<self::logging::BoxLayer> = vec![Box::new(telemetry_layer)];
+        let telemetry_layer = tracing_opentelemetry::layer()
+            .with_tracer(tracer.clone())
+            .with_tracked_inactivity(false)
+            .with_filter(LevelFilter::INFO);
+
+        layers.push(Box::new(telemetry_layer));
+    }
+
     if let Some(sentry_layer) = sentry_layer {
         layers.push(Box::new(sentry_layer));
     }
