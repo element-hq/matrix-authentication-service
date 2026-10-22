@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -10,6 +11,7 @@ use std::{io::IsTerminal, process::ExitCode, sync::Arc};
 
 use anyhow::Context;
 use clap::Parser;
+use figment::Figment;
 use mas_config::{ConfigurationSectionExt, TelemetryConfig};
 use sentry_tracing::EventFilter;
 use tracing_subscriber::{
@@ -57,6 +59,24 @@ impl sentry::TransportFactory for SentryTransportFactory {
 }
 
 fn main() -> anyhow::Result<ExitCode> {
+    // Load environment variables from .env files
+    // We keep the path to log it afterwards
+    let dotenv_path: Result<Option<_>, _> = dotenvy::dotenv()
+        .map(Some)
+        // Display the error if it is something other than the .env file not existing
+        .or_else(|e| if e.not_found() { Ok(None) } else { Err(e) });
+
+    // Parse the CLI arguments
+    let opts = self::commands::Options::parse();
+
+    // Load the base configuration files. This reads environment variables, so it
+    // must happen after loading the .env file.
+    let figment = opts.figment();
+
+    let telemetry_config = TelemetryConfig::extract_or_default(&figment)
+        .map_err(anyhow::Error::from_boxed)
+        .context("Failed to load telemetry config")?;
+
     let mut builder = tokio::runtime::Builder::new_multi_thread();
     builder.enable_all();
 
@@ -69,28 +89,31 @@ fn main() -> anyhow::Result<ExitCode> {
 
     let runtime = builder.build()?;
 
-    runtime.block_on(async_main())
+    runtime.block_on(async_main(dotenv_path, opts, figment, telemetry_config))
 }
 
-async fn async_main() -> anyhow::Result<ExitCode> {
+async fn async_main(
+    dotenv_path: Result<Option<impl std::fmt::Debug>, dotenvy::Error>,
+    opts: self::commands::Options,
+    figment: Figment,
+    telemetry_config: TelemetryConfig,
+) -> anyhow::Result<ExitCode> {
     // We're splitting the "fallible" part of main in another function to have a
     // chance to shutdown the telemetry exporters regardless of if there was an
     // error or not
-    let res = try_main().await;
+    let res = try_main(dotenv_path, opts, figment, telemetry_config).await;
     if let Err(err) = self::telemetry::shutdown() {
         eprintln!("Failed to shutdown telemetry exporters: {err}");
     }
     res
 }
 
-async fn try_main() -> anyhow::Result<ExitCode> {
-    // Load environment variables from .env files
-    // We keep the path to log it afterwards
-    let dotenv_path: Result<Option<_>, _> = dotenvy::dotenv()
-        .map(Some)
-        // Display the error if it is something other than the .env file not existing
-        .or_else(|e| if e.not_found() { Ok(None) } else { Err(e) });
-
+async fn try_main(
+    dotenv_path: Result<Option<impl std::fmt::Debug>, dotenvy::Error>,
+    opts: self::commands::Options,
+    figment: Figment,
+    telemetry_config: TelemetryConfig,
+) -> anyhow::Result<ExitCode> {
     // Setup logging
     // This writes logs to stderr
     let output = std::io::stderr();
@@ -112,16 +135,6 @@ async fn try_main() -> anyhow::Result<ExitCode> {
     rustls::crypto::aws_lc_rs::default_provider()
         .install_default()
         .map_err(|_| anyhow::anyhow!("could not install the AWS LC crypto provider"))?;
-
-    // Parse the CLI arguments
-    let opts = self::commands::Options::parse();
-
-    // Load the base configuration files
-    let figment = opts.figment();
-
-    let telemetry_config = TelemetryConfig::extract_or_default(&figment)
-        .map_err(anyhow::Error::from_boxed)
-        .context("Failed to load telemetry config")?;
 
     // Setup Sentry
     let sentry = sentry::init((
