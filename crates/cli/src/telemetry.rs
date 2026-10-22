@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -24,7 +25,7 @@ use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
 use opentelemetry_prometheus_text_exporter::PrometheusExporter;
 use opentelemetry_sdk::{
     Resource,
-    metrics::{ManualReader, SdkMeterProvider, periodic_reader_with_async_runtime::PeriodicReader},
+    metrics::{SdkMeterProvider, periodic_reader_with_async_runtime::PeriodicReader},
     propagation::{BaggagePropagator, TraceContextPropagator},
     trace::{
         IdGenerator, Sampler, SdkTracerProvider, Tracer,
@@ -258,7 +259,9 @@ fn prometheus_metric_reader() -> anyhow::Result<PrometheusExporter> {
 fn init_meter(config: &MetricsConfig) -> anyhow::Result<()> {
     let meter_provider_builder = SdkMeterProvider::builder();
     let meter_provider_builder = match config.exporter {
-        MetricsExporterKind::None => meter_provider_builder.with_reader(ManualReader::default()),
+        // Any registered reader makes the SDK preallocate aggregators for every
+        // instrument, so without an exporter the global no-op provider stays.
+        MetricsExporterKind::None => return Ok(()),
         MetricsExporterKind::Stdout => meter_provider_builder.with_reader(stdout_metric_reader()),
         MetricsExporterKind::Otlp => {
             meter_provider_builder.with_reader(otlp_metric_reader(config.endpoint.as_ref())?)
