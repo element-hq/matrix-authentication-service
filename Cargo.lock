@@ -3926,6 +3926,7 @@ version = "1.28.0-rc.0"
 dependencies = [
  "anyhow",
  "arc-swap",
+ "libc",
  "mas-data-model",
  "oauth2-types",
  "opa-wasm",
@@ -3935,6 +3936,7 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "tracing",
+ "wasmtime",
 ]
 
 [[package]]
@@ -7756,6 +7758,7 @@ dependencies = [
  "wasmtime-internal-jit-icache-coherence",
  "wasmtime-internal-unwinder",
  "wasmtime-internal-versioned-export-macros",
+ "wasmtime-internal-winch",
  "windows-sys 0.61.2",
 ]
 
@@ -7908,6 +7911,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "wasmtime-internal-winch"
+version = "49.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e9af52e40494b4ccc9e28e79d74999814c6b62a413a8b4d01971dc01c32ccb65"
+dependencies = [
+ "cranelift-codegen",
+ "gimli 0.33.0",
+ "log",
+ "object 0.40.0",
+ "target-lexicon",
+ "wasmparser",
+ "wasmtime-environ",
+ "wasmtime-internal-cranelift",
+ "winch-codegen",
+]
+
+[[package]]
 name = "wasmtime-internal-wit-bindgen"
 version = "49.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8014,6 +8034,25 @@ name = "winapi-x86_64-pc-windows-gnu"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
+
+[[package]]
+name = "winch-codegen"
+version = "49.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96b51835167dc181074f20e833e7dbe89915b579c28f6788bd6263da3a28d44c"
+dependencies = [
+ "cranelift-assembler-x64",
+ "cranelift-codegen",
+ "gimli 0.33.0",
+ "regalloc2",
+ "smallvec",
+ "target-lexicon",
+ "thiserror 2.0.18",
+ "wasmparser",
+ "wasmtime-environ",
+ "wasmtime-internal-core",
+ "wasmtime-internal-cranelift",
+]
 
 [[package]]
 name = "windows-core"

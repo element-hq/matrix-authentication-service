@@ -32,3 +32,8 @@ oauth2-types.workspace = true
 
 [[bin]]
 name = "schema"
+
+[dev-dependencies]
+libc = "0.2.190"
+# Only for the `membench` example, to compare against the Winch baseline compiler.
+wasmtime = { version = "49.0.3", default-features = false, features = ["winch"] }
