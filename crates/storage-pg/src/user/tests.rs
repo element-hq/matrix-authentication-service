@@ -1288,3 +1288,61 @@ async fn test_list_browser_sessions_by_created_at(pool: PgPool) {
     assert_eq!(list.edges[0].node, session3);
     assert_eq!(repo.browser_session().count(filter).await.unwrap(), 1);
 }
+
+/// Test paging through browser sessions one at a time, in both directions.
+#[sqlx::test(migrator = "crate::MIGRATOR")]
+async fn test_list_browser_sessions_pagination(pool: PgPool) {
+    let mut rng = ChaChaRng::seed_from_u64(42);
+    let clock = MockClock::default();
+    let mut repo = PgRepository::from_pool(&pool).await.unwrap();
+    let user = repo
+        .user()
+        .add(&mut rng, &clock, "alice".to_owned())
+        .await
+        .unwrap();
+    clock.advance(Duration::try_minutes(1).unwrap());
+    let session1 = repo
+        .browser_session()
+        .add(&mut rng, &clock, &user, None)
+        .await
+        .unwrap();
+    clock.advance(Duration::try_minutes(1).unwrap());
+    let session2 = repo
+        .browser_session()
+        .add(&mut rng, &clock, &user, None)
+        .await
+        .unwrap();
+    let filter = BrowserSessionFilter::new().for_user(&user);
+    let page = repo
+        .browser_session()
+        .list(filter, Pagination::first(1))
+        .await
+        .unwrap();
+    assert!(page.has_next_page);
+    assert_eq!(page.edges.len(), 1);
+    assert_eq!(page.edges[0].node, session1);
+    let page = repo
+        .browser_session()
+        .list(filter, Pagination::first(1).after(page.edges[0].cursor))
+        .await
+        .unwrap();
+    assert!(!page.has_next_page);
+    assert_eq!(page.edges.len(), 1);
+    assert_eq!(page.edges[0].node, session2);
+    let page = repo
+        .browser_session()
+        .list(filter, Pagination::last(1))
+        .await
+        .unwrap();
+    assert!(page.has_previous_page);
+    assert_eq!(page.edges.len(), 1);
+    assert_eq!(page.edges[0].node, session2);
+    let page = repo
+        .browser_session()
+        .list(filter, Pagination::last(1).before(page.edges[0].cursor))
+        .await
+        .unwrap();
+    assert!(!page.has_previous_page);
+    assert_eq!(page.edges.len(), 1);
+    assert_eq!(page.edges[0].node, session1);
+}
