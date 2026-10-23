@@ -5,6 +5,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  type AnyRouter,
   createMemoryHistory,
   createRouter,
   RouterProvider,
@@ -29,7 +30,9 @@ afterAll(() => server.close());
 // Reset handlers after each test `important for test isolation`
 afterEach(() => server.resetHandlers());
 
-async function renderPage(route: string): Promise<RenderResult> {
+async function renderPage(
+  route: string,
+): Promise<RenderResult & { router: AnyRouter }> {
   // Create a new query client and a new router
   const queryClient = new QueryClient();
   const history = createMemoryHistory({ initialEntries: [route] });
@@ -49,7 +52,7 @@ async function renderPage(route: string): Promise<RenderResult> {
     ),
   );
 
-  return render(
+  const result = render(
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <I18nextProvider i18n={i18n}>
@@ -58,6 +61,8 @@ async function renderPage(route: string): Promise<RenderResult> {
       </TooltipProvider>
     </QueryClientProvider>,
   );
+
+  return { ...result, router };
 }
 
 export { renderPage };

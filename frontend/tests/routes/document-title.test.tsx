@@ -5,7 +5,7 @@
 
 // @vitest-environment happy-dom
 
-import { waitFor } from "@testing-library/react";
+import { act, waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import {
@@ -51,5 +51,24 @@ describe("Document title", () => {
     await waitFor(() =>
       expect(document.title).toBe("Something went wrong – example.com"),
     );
+  });
+
+  it("updates the title on navigation", async () => {
+    const { router } = await renderPage("/");
+    await waitFor(() =>
+      expect(document.title).toBe("Your account – example.com"),
+    );
+
+    await act(() => router.navigate({ to: "/reset-cross-signing" }));
+    await waitFor(() =>
+      expect(document.title).toBe("Reset identity – example.com"),
+    );
+    expect(document.head.querySelectorAll("title")).toHaveLength(1);
+
+    await act(() => router.history.back());
+    await waitFor(() =>
+      expect(document.title).toBe("Your account – example.com"),
+    );
+    expect(document.head.querySelectorAll("title")).toHaveLength(1);
   });
 });

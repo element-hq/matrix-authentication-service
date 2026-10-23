@@ -569,7 +569,12 @@ mod tests {
             );
             assert_eq!(
                 titles("pages/device_consent.html"),
-                ["Allow access – example.com".to_owned()].into()
+                [
+                    "Access denied – example.com".to_owned(),
+                    "Access granted – example.com".to_owned(),
+                    "Allow access – example.com".to_owned(),
+                ]
+                .into()
             );
             assert_eq!(titles("app.html"), ["example.com".to_owned()].into());
             assert!(
