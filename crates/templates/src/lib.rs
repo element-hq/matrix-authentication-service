@@ -546,9 +546,10 @@ mod tests {
 
             let page_renders = || {
                 render1.iter().filter(|((template, sample), _)| {
+                    let locale = sample.components.iter().find(|(kind, _)| *kind == "locale");
                     (template.starts_with("pages/")
                         || ["app.html", "form_post.html"].contains(template))
-                        && sample.components.contains(&("locale", "en".to_owned()))
+                        && locale.is_none_or(|(_, locale)| locale == "en")
                 })
             };
             let title_of = |template: &str, html: &str| -> String {
