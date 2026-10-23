@@ -33,6 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "base".to_owned(),
             ServerVariable {
                 default: "/".to_owned(),
+                description: Some("The base URL of the listener".to_owned()),
                 ..ServerVariable::default()
             },
         )]),
