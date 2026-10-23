@@ -10,7 +10,7 @@
     },
     "continue": "Continue",
     "@continue": {
-      "context": "form_post.html:26:28-48, pages/consent.html:73:28-48, pages/device_link.html:56:28-48, pages/login.html:70:30-50, pages/reauth.html:34:28-48, pages/recovery/start.html:40:26-46, pages/register/steps/display_name.html:45:28-48, pages/register/steps/registration_token.html:43:28-48, pages/register/steps/verify_email.html:53:26-46, pages/sso.html:54:28-48"
+      "context": "form_post.html:28:28-48, pages/consent.html:73:28-48, pages/device_link.html:56:28-48, pages/login.html:70:30-50, pages/reauth.html:34:28-48, pages/recovery/start.html:40:26-46, pages/register/steps/display_name.html:45:28-48, pages/register/steps/registration_token.html:43:28-48, pages/register/steps/verify_email.html:53:26-46, pages/sso.html:54:28-48"
     },
     "create_account": "Create Account",
     "@create_account": {
@@ -41,7 +41,7 @@
     },
     "page_title": "%(page)s – %(server)s",
     "@page_title": {
-      "context": "pages/404.html:11:20-101, pages/account/deactivated.html:11:20-111, pages/account/locked.html:11:20-106, pages/account/logged_out.html:11:20-110, pages/compat_login_policy_violation.html:11:20-108, pages/consent.html:13:20-108, pages/device_consent.html:15:7-95, pages/device_consent.html:17:7-100, pages/device_consent.html:19:7-101, pages/device_link.html:11:20-107, pages/error.html:14:20-96, pages/login.html:11:20-98, pages/policy_violation.html:12:20-108, pages/reauth.html:11:20-111, pages/recovery/consumed.html:11:20-107, pages/recovery/disabled.html:11:20-109, pages/recovery/expired.html:11:20-107, pages/recovery/finish.html:11:20-107, pages/recovery/progress.html:11:20-109, pages/recovery/start.html:11:20-107, pages/register/index.html:12:20-115, pages/register/steps/display_name.html:10:20-112, pages/register/steps/email_in_use.html:10:20-115, pages/register/steps/registration_token.html:10:20-111, pages/register/steps/verify_email.html:11:20-105, pages/sso.html:13:20-108, pages/upstream_oauth2/do_register.html:11:20-115, pages/upstream_oauth2/link_mismatch.html:11:20-118, pages/upstream_oauth2/suggest_link.html:11:20-120",
+      "context": "form_post.html:12:20-94, pages/404.html:11:20-101, pages/account/deactivated.html:11:20-111, pages/account/locked.html:11:20-106, pages/account/logged_out.html:11:20-110, pages/compat_login_policy_violation.html:11:20-108, pages/consent.html:13:20-108, pages/device_consent.html:15:7-95, pages/device_consent.html:17:7-100, pages/device_consent.html:19:7-101, pages/device_link.html:11:20-107, pages/error.html:14:20-96, pages/login.html:11:20-98, pages/policy_violation.html:12:20-108, pages/reauth.html:11:20-111, pages/recovery/consumed.html:11:20-107, pages/recovery/disabled.html:11:20-109, pages/recovery/expired.html:11:20-107, pages/recovery/finish.html:11:20-107, pages/recovery/progress.html:11:20-109, pages/recovery/start.html:11:20-107, pages/register/index.html:12:20-115, pages/register/steps/display_name.html:10:20-112, pages/register/steps/email_in_use.html:10:20-115, pages/register/steps/registration_token.html:10:20-111, pages/register/steps/verify_email.html:11:20-105, pages/sso.html:13:20-108, pages/upstream_oauth2/do_register.html:11:20-115, pages/upstream_oauth2/link_mismatch.html:11:20-118, pages/upstream_oauth2/suggest_link.html:11:20-120",
       "description": "Browser tab title for a page, combining the page name and the homeserver name"
     },
     "technical_description": "OpenID Connect discovery document: <a class=\"cpd-link\" data-kind=\"primary\" href=\"%(discovery_url)s\">%(discovery_url)s</a>",
@@ -83,7 +83,7 @@
     },
     "loading": "Loading…",
     "@loading": {
-      "context": "form_post.html:15:27-46"
+      "context": "form_post.html:12:45-64, form_post.html:17:27-46"
     },
     "mxid": "Matrix ID",
     "@mxid": {

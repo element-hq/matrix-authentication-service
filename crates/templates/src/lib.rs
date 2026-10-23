@@ -544,20 +544,40 @@ mod tests {
 
             assert_eq!(render1, render2);
 
+            let page_renders = || {
+                render1.iter().filter(|((template, sample), _)| {
+                    (template.starts_with("pages/")
+                        || ["app.html", "form_post.html"].contains(template))
+                        && sample.components.contains(&("locale", "en".to_owned()))
+                })
+            };
+            let title_of = |template: &str, html: &str| -> String {
+                let start = html
+                    .find("<title")
+                    .unwrap_or_else(|| panic!("{template} has no <title>"));
+                let start = html[start..].find('>').unwrap() + start + 1;
+                let end = html[start..].find("</title>").unwrap() + start;
+                html[start..end].to_owned()
+            };
             let titles = |name: &str| -> BTreeSet<String> {
-                render1
-                    .iter()
-                    .filter(|((template, _), html)| {
-                        *template == name && html.contains(r#"<html lang="en">"#)
-                    })
-                    .map(|(_, html)| {
-                        let start = html.find("<title").expect("missing <title>");
-                        let start = html[start..].find('>').unwrap() + start + 1;
-                        let end = html[start..].find("</title>").unwrap() + start;
-                        html[start..end].to_owned()
-                    })
+                page_renders()
+                    .filter(|((template, _), _)| *template == name)
+                    .map(|((template, _), html)| title_of(template, html))
                     .collect()
             };
+
+            // Every page needs its own title, apart from those that only show the
+            // server name on purpose
+            for ((template, sample), html) in page_renders() {
+                if ["pages/index.html", "app.html"].contains(template) {
+                    continue;
+                }
+                assert_ne!(
+                    title_of(template, html),
+                    "example.com",
+                    "{template} ({sample:?}) has no page title"
+                );
+            }
 
             assert_eq!(
                 titles("pages/index.html"),
