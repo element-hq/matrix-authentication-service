@@ -7,11 +7,13 @@
 import { queryOptions } from "@tanstack/react-query";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { Alert } from "@vector-im/compound-web";
+import i18n from "i18next";
 import { useTranslation } from "react-i18next";
 import Layout from "../components/Layout";
 import { Link } from "../components/Link";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
+import { documentTitle } from "../utils/documentTitle";
 
 const CURRENT_VIEWER_QUERY = graphql(/* GraphQL */ `
   query CurrentViewer {
@@ -76,6 +78,8 @@ export const Route = createFileRoute("/devices/$")({
     });
   },
 
+  head: ({ match }) =>
+    documentTitle(match, i18n.t("frontend.page_titles.session")),
   notFoundComponent: NotFound,
 });
 

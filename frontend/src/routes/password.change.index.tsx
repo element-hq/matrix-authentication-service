@@ -13,6 +13,7 @@ import {
 import { createFileRoute, notFound, useRouter } from "@tanstack/react-router";
 import IconLockSolid from "@vector-im/compound-design-tokens/assets/web/icons/lock-solid";
 import { Alert, Form } from "@vector-im/compound-web";
+import i18n from "i18next";
 import { type FormEvent, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { ButtonLink } from "../components/ButtonLink";
@@ -24,6 +25,7 @@ import Separator from "../components/Separator";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
 import { translateSetPasswordError } from "../i18n/password_changes";
+import { documentTitle } from "../utils/documentTitle";
 
 const CHANGE_PASSWORD_MUTATION = graphql(/* GraphQL */ `
   mutation ChangePassword(
@@ -65,6 +67,8 @@ const query = queryOptions({
 
 export const Route = createFileRoute("/password/change/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(query),
+  head: ({ match }) =>
+    documentTitle(match, i18n.t("frontend.password_change.title")),
   component: ChangePassword,
 });
 

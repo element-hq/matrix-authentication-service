@@ -10,10 +10,12 @@ import {
 } from "@tanstack/react-router";
 import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import { Button, Text } from "@vector-im/compound-web";
+import i18n from "i18next";
 import { useTranslation } from "react-i18next";
 import * as v from "valibot";
 import Layout from "../components/Layout";
 import PageHeading from "../components/PageHeading";
+import { documentTitle } from "../utils/documentTitle";
 
 const searchSchema = v.object({
   deepLink: v.optional(v.boolean()),
@@ -21,6 +23,8 @@ const searchSchema = v.object({
 
 export const Route = createFileRoute("/reset-cross-signing")({
   validateSearch: searchSchema,
+  head: ({ match }) =>
+    documentTitle(match, i18n.t("frontend.page_titles.reset_identity")),
   component: () => (
     <Layout>
       <Outlet />

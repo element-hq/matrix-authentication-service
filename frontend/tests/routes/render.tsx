@@ -35,7 +35,7 @@ async function renderPage(route: string): Promise<RenderResult> {
   const history = createMemoryHistory({ initialEntries: [route] });
   const router = createRouter({
     routeTree,
-    context: { queryClient },
+    context: { queryClient, serverName: "example.com" },
     history,
   });
   await router.load();

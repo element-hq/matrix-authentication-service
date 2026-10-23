@@ -494,6 +494,8 @@ impl Templates {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeSet;
+
     use rand::SeedableRng;
 
     use super::*;
@@ -541,6 +543,41 @@ mod tests {
             let render2 = templates.check_render(now, &rng).unwrap();
 
             assert_eq!(render1, render2);
+
+            let titles = |name: &str| -> BTreeSet<String> {
+                render1
+                    .iter()
+                    .filter(|((template, _), html)| {
+                        *template == name && html.contains(r#"<html lang="en">"#)
+                    })
+                    .map(|(_, html)| {
+                        let start = html.find("<title").expect("missing <title>");
+                        let start = html[start..].find('>').unwrap() + start + 1;
+                        let end = html[start..].find("</title>").unwrap() + start;
+                        html[start..end].to_owned()
+                    })
+                    .collect()
+            };
+
+            assert_eq!(
+                titles("pages/index.html"),
+                ["example.com".to_owned()].into()
+            );
+            assert_eq!(
+                titles("pages/login.html"),
+                ["Sign in – example.com".to_owned()].into()
+            );
+            assert_eq!(
+                titles("pages/device_consent.html"),
+                ["Allow access – example.com".to_owned()].into()
+            );
+            assert_eq!(titles("app.html"), ["example.com".to_owned()].into());
+            assert!(
+                render1
+                    .iter()
+                    .filter(|((template, _), _)| *template == "app.html")
+                    .all(|(_, html)| html.contains(r#"data-server-name="example.com""#))
+            );
         }
     }
 }
