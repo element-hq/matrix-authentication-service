@@ -104,8 +104,7 @@ export const Route = createFileRoute("/password/recovery/")({
     }
   },
 
-  head: ({ match }) =>
-    documentTitle(match, i18n.t("frontend.password_reset.title")),
+  head: (ctx) => documentTitle(ctx, i18n.t("frontend.password_reset.title")),
   component: RecoverPassword,
 });
 

@@ -23,8 +23,8 @@ const searchSchema = v.object({
 
 export const Route = createFileRoute("/reset-cross-signing")({
   validateSearch: searchSchema,
-  head: ({ match }) =>
-    documentTitle(match, i18n.t("frontend.page_titles.reset_identity")),
+  head: (ctx) =>
+    documentTitle(ctx, i18n.t("frontend.page_titles.reset_identity")),
   component: () => (
     <Layout>
       <Outlet />

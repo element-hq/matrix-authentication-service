@@ -67,8 +67,7 @@ const query = queryOptions({
 
 export const Route = createFileRoute("/password/change/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(query),
-  head: ({ match }) =>
-    documentTitle(match, i18n.t("frontend.password_change.title")),
+  head: (ctx) => documentTitle(ctx, i18n.t("frontend.password_change.title")),
   component: ChangePassword,
 });
 

@@ -21,10 +21,15 @@ import { documentTitle } from "../utils/documentTitle";
 
 const DocumentHead: React.FC = () => {
   // The server-rendered <title> stays until the router can set one, so that the
-  // page still has a title if the app fails to load. Leaving it in after that
-  // would shadow the <title> React hoists into <head>.
+  // page still has a title if the app fails to load. While the router is
+  // mounted it would shadow the <title> React hoists into <head>, so it's taken
+  // out and put back if an error boundary above the router takes over.
   useLayoutEffect(() => {
-    document.querySelector("title[data-static]")?.remove();
+    const title = document.querySelector("title[data-static]");
+    title?.remove();
+    return () => {
+      if (title) document.head.prepend(title);
+    };
   }, []);
 
   return <HeadContent />;
@@ -45,7 +50,7 @@ export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
   serverName: string;
 }>()({
-  head: ({ match }) => documentTitle(match),
+  head: (ctx) => documentTitle(ctx),
 
   component: () => (
     <>

@@ -47,8 +47,7 @@ export const Route = createFileRoute("/sessions/$id")({
   loader: ({ context, params }) =>
     context.queryClient.ensureQueryData(query(params.id)),
   notFoundComponent: NotFound,
-  head: ({ match }) =>
-    documentTitle(match, i18n.t("frontend.page_titles.session")),
+  head: (ctx) => documentTitle(ctx, i18n.t("frontend.page_titles.session")),
   component: SessionDetail,
 });
 

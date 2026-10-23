@@ -48,7 +48,7 @@ const query = queryOptions({
 
 export const Route = createFileRoute("/_account")({
   loader: ({ context }) => context.queryClient.ensureQueryData(query),
-  head: ({ match }) => documentTitle(match, i18n.t("frontend.account.title")),
+  head: (ctx) => documentTitle(ctx, i18n.t("frontend.account.title")),
   component: Account,
 });
 

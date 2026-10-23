@@ -106,8 +106,8 @@ export const Route = createFileRoute("/_account/sessions/browsers")({
   loader: ({ context, deps: { inactive, pagination } }) =>
     context.queryClient.ensureQueryData(query(pagination, inactive)),
 
-  head: ({ match }) =>
-    documentTitle(match, i18n.t("frontend.browser_sessions_overview.heading")),
+  head: (ctx) =>
+    documentTitle(ctx, i18n.t("frontend.browser_sessions_overview.heading")),
   component: BrowserSessions,
 });
 

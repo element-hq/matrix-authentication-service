@@ -78,8 +78,7 @@ export const Route = createFileRoute("/devices/$")({
     });
   },
 
-  head: ({ match }) =>
-    documentTitle(match, i18n.t("frontend.page_titles.session")),
+  head: (ctx) => documentTitle(ctx, i18n.t("frontend.page_titles.session")),
   notFoundComponent: NotFound,
 });
 

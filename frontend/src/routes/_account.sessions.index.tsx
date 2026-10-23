@@ -138,8 +138,7 @@ export const Route = createFileRoute("/_account/sessions/")({
       context.queryClient.ensureQueryData(listQuery(pagination, inactive)),
     ]),
 
-  head: ({ match }) =>
-    documentTitle(match, i18n.t("frontend.page_titles.sessions")),
+  head: (ctx) => documentTitle(ctx, i18n.t("frontend.page_titles.sessions")),
   component: Sessions,
 });
 

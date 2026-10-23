@@ -75,8 +75,7 @@ export const Route = createFileRoute("/emails/$id/verify")({
     }
   },
 
-  head: ({ match }) =>
-    documentTitle(match, i18n.t("frontend.verify_email.heading")),
+  head: (ctx) => documentTitle(ctx, i18n.t("frontend.verify_email.heading")),
   component: EmailVerify,
 });
 

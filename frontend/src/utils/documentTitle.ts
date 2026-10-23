@@ -6,9 +6,15 @@
 import i18n from "i18next";
 
 type HeadMatch = {
+  id: string;
   status: string;
   _notFound?: boolean;
   context: { serverName: string };
+};
+
+type HeadContext = {
+  match: HeadMatch;
+  matches: HeadMatch[];
 };
 
 /**
@@ -16,16 +22,20 @@ type HeadMatch = {
  * "<page> – <server name>", or just the server name if no page is given.
  *
  * Error and not-found states override the page title, so that a broken page
- * doesn't keep the title of the page the user was trying to reach.
+ * doesn't keep the title of the page the user was trying to reach. This looks
+ * at child matches too, since they may inherit this route's title.
  */
 export const documentTitle = (
-  match: HeadMatch,
+  { match, matches }: HeadContext,
   page?: string,
 ): { meta: { title: string }[] } => {
+  const index = matches.findIndex((m) => m.id === match.id);
+  const subtree = index === -1 ? [match] : matches.slice(index);
+
   let pageTitle = page;
-  if (match.status === "error") {
+  if (subtree.some((m) => m.status === "error")) {
     pageTitle = i18n.t("frontend.error.title");
-  } else if (match.status === "notFound" || match._notFound) {
+  } else if (subtree.some((m) => m.status === "notFound" || m._notFound)) {
     pageTitle = i18n.t("frontend.page_titles.not_found");
   }
 

@@ -29,8 +29,8 @@ export const Route = createFileRoute("/emails/$id/in-use")({
     }
   },
 
-  head: ({ match }) =>
-    documentTitle(match, i18n.t("frontend.page_titles.email_in_use")),
+  head: (ctx) =>
+    documentTitle(ctx, i18n.t("frontend.page_titles.email_in_use")),
   component: EmailInUse,
 });
 

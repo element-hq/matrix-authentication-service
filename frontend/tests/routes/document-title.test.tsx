@@ -8,7 +8,10 @@
 import { waitFor } from "@testing-library/react";
 import { HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
-import { mockCurrentUserGreetingQuery } from "../../src/gql/graphql";
+import {
+  mockCurrentUserGreetingQuery,
+  mockUserProfileQuery,
+} from "../../src/gql/graphql";
 import { renderPage, server } from "./render";
 
 describe("Document title", () => {
@@ -27,6 +30,19 @@ describe("Document title", () => {
   it("uses the error title when the route fails to load", async () => {
     server.use(
       mockCurrentUserGreetingQuery(() =>
+        HttpResponse.json({ errors: [{ message: "Boom" }] }),
+      ),
+    );
+
+    await renderPage("/");
+    await waitFor(() =>
+      expect(document.title).toBe("Something went wrong – example.com"),
+    );
+  });
+
+  it("uses the error title when a child of a titled route fails", async () => {
+    server.use(
+      mockUserProfileQuery(() =>
         HttpResponse.json({ errors: [{ message: "Boom" }] }),
       ),
     );

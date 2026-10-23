@@ -31,8 +31,7 @@ const query = (id: string) =>
 export const Route = createFileRoute("/clients/$id")({
   loader: ({ context, params }) =>
     context.queryClient.ensureQueryData(query(params.id)),
-  head: ({ match }) =>
-    documentTitle(match, i18n.t("frontend.page_titles.client")),
+  head: (ctx) => documentTitle(ctx, i18n.t("frontend.page_titles.client")),
   component: ClientDetail,
 });
 

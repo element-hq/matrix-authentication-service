@@ -14,8 +14,7 @@ import PageHeading from "../components/PageHeading";
 import { documentTitle } from "../utils/documentTitle";
 
 export const Route = createFileRoute("/password/change/success")({
-  head: ({ match }) =>
-    documentTitle(match, i18n.t("frontend.password_change.title")),
+  head: (ctx) => documentTitle(ctx, i18n.t("frontend.password_change.title")),
   component: ChangePasswordSuccess,
 });
 
