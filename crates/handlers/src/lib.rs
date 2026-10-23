@@ -24,7 +24,7 @@ use std::{
 
 use aide::axum::{
     ApiRouter,
-    routing::{ApiMethodRouter, get, post},
+    routing::{ApiMethodRouter, get, get_with, post},
 };
 use axum::{
     Extension,
@@ -186,7 +186,7 @@ where
         )
         .api_route(
             mas_router::Webfinger::route(),
-            get(Undocumented(self::oauth2::webfinger::get)),
+            get_with(self::oauth2::webfinger::get, self::oauth2::webfinger::doc),
         )
         .layer(
             CorsLayer::new()

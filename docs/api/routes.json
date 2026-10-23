@@ -35,7 +35,43 @@
       "get": {
         "tags": [
           "discovery"
-        ]
+        ],
+        "summary": "Discover the OpenID Connect issuer of an entity",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "resource",
+            "description": "The URI of the entity to describe",
+            "required": true,
+            "schema": {
+              "description": "The URI of the entity to describe",
+              "type": "string"
+            },
+            "style": "form"
+          },
+          {
+            "in": "query",
+            "name": "rel",
+            "description": "The relation type of the links to return. Only\n`http://openid.net/specs/connect/1.0/issuer` is supported, and no links\nare returned without it.",
+            "schema": {
+              "description": "The relation type of the links to return. Only\n`http://openid.net/specs/connect/1.0/issuer` is supported, and no links\nare returned without it.",
+              "type": "string"
+            },
+            "style": "form"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The response of the Webfinger endpoint.",
+            "content": {
+              "application/jrd+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebFingerResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/account": {
@@ -662,5 +698,72 @@
       }
     }
   },
-  "components": {}
+  "components": {
+    "schemas": {
+      "Params": {
+        "type": "object",
+        "properties": {
+          "resource": {
+            "description": "The URI of the entity to describe",
+            "type": "string"
+          },
+          "rel": {
+            "description": "The relation type of the links to return. Only\n`http://openid.net/specs/connect/1.0/issuer` is supported, and no links\nare returned without it.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "resource"
+        ]
+      },
+      "WebFingerResponse": {
+        "description": "The response of the Webfinger endpoint.",
+        "type": "object",
+        "properties": {
+          "subject": {
+            "description": "A URI that identifies the entity described by the response.",
+            "type": "string"
+          },
+          "links": {
+            "description": "Links that describe the subject.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WebFingerLink"
+            }
+          }
+        },
+        "required": [
+          "subject",
+          "links"
+        ]
+      },
+      "WebFingerLink": {
+        "description": "A link in a Webfinger response.",
+        "oneOf": [
+          {
+            "description": "An OpenID Connect issuer.",
+            "type": "object",
+            "properties": {
+              "href": {
+                "description": "The URL of the issuer.",
+                "type": "string",
+                "format": "uri"
+              },
+              "rel": {
+                "type": "string",
+                "const": "http://openid.net/specs/connect/1.0/issuer"
+              }
+            },
+            "required": [
+              "rel",
+              "href"
+            ]
+          }
+        ]
+      }
+    }
+  }
 }
