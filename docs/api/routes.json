@@ -1,0 +1,666 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Matrix Authentication Service",
+    "description": "Paths and methods served by each listener resource, tagged with the resource's `name` in the configuration. Request and response bodies are not documented. The admin API is described in `spec.json`.",
+    "version": ""
+  },
+  "servers": [
+    {
+      "url": "{base}",
+      "variables": {
+        "base": {
+          "default": "/",
+          "description": "The base URL of the listener"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/.well-known/openid-configuration": {
+      "get": {
+        "tags": [
+          "discovery"
+        ]
+      }
+    },
+    "/.well-known/webfinger": {
+      "get": {
+        "tags": [
+          "discovery"
+        ]
+      }
+    },
+    "/account": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      }
+    },
+    "/account/": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      }
+    },
+    "/account/{rest}": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "rest",
+          "description": "Any number of path segments",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/account/password/recovery": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      }
+    },
+    "/.well-known/change-password": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      }
+    },
+    "/login": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      },
+      "post": {
+        "tags": [
+          "human"
+        ]
+      }
+    },
+    "/logout": {
+      "post": {
+        "tags": [
+          "human"
+        ]
+      }
+    },
+    "/register": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      },
+      "post": {
+        "tags": [
+          "human"
+        ]
+      }
+    },
+    "/register/password": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      }
+    },
+    "/register/steps/{id}/verify-email": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      },
+      "post": {
+        "tags": [
+          "human"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/register/steps/{id}/token": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      },
+      "post": {
+        "tags": [
+          "human"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/register/steps/{id}/display-name": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      },
+      "post": {
+        "tags": [
+          "human"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/register/steps/{id}/finish": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/recover": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      },
+      "post": {
+        "tags": [
+          "human"
+        ]
+      }
+    },
+    "/recover/progress/{session_id}": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      },
+      "post": {
+        "tags": [
+          "human"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "session_id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/authorize": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      }
+    },
+    "/consent/{grant_id}": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      },
+      "post": {
+        "tags": [
+          "human"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "grant_id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/complete-compat-sso/{grant_id}": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      },
+      "post": {
+        "tags": [
+          "human"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "grant_id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/upstream/authorize/{provider_id}": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "provider_id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/upstream/callback/{provider_id}": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      },
+      "post": {
+        "tags": [
+          "human"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "provider_id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/upstream/link/{link_id}": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      },
+      "post": {
+        "tags": [
+          "human"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "link_id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/upstream/backchannel-logout/{provider_id}": {
+      "post": {
+        "tags": [
+          "human"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "provider_id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/link": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      },
+      "post": {
+        "tags": [
+          "human"
+        ]
+      }
+    },
+    "/device/{device_code_id}": {
+      "get": {
+        "tags": [
+          "human"
+        ]
+      },
+      "post": {
+        "tags": [
+          "human"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "device_code_id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/graphql": {
+      "get": {
+        "tags": [
+          "graphql"
+        ]
+      },
+      "post": {
+        "tags": [
+          "graphql"
+        ]
+      }
+    },
+    "/oauth2/keys.json": {
+      "get": {
+        "tags": [
+          "oauth"
+        ]
+      }
+    },
+    "/oauth2/userinfo": {
+      "get": {
+        "tags": [
+          "oauth"
+        ]
+      },
+      "post": {
+        "tags": [
+          "oauth"
+        ]
+      }
+    },
+    "/oauth2/introspect": {
+      "post": {
+        "tags": [
+          "oauth"
+        ]
+      }
+    },
+    "/oauth2/revoke": {
+      "post": {
+        "tags": [
+          "oauth"
+        ]
+      }
+    },
+    "/oauth2/token": {
+      "post": {
+        "tags": [
+          "oauth"
+        ]
+      }
+    },
+    "/oauth2/registration": {
+      "post": {
+        "tags": [
+          "oauth"
+        ]
+      }
+    },
+    "/oauth2/device": {
+      "post": {
+        "tags": [
+          "oauth"
+        ]
+      }
+    },
+    "/_matrix/client/{version}/login/sso/redirect": {
+      "get": {
+        "tags": [
+          "compat"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "version",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/_matrix/client/{version}/login/sso/redirect/{idp}": {
+      "get": {
+        "tags": [
+          "compat"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "version",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        },
+        {
+          "in": "path",
+          "name": "idp",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/_matrix/client/{version}/login/sso/redirect/": {
+      "get": {
+        "tags": [
+          "compat"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "version",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/_matrix/client/{version}/login": {
+      "get": {
+        "tags": [
+          "compat"
+        ]
+      },
+      "post": {
+        "tags": [
+          "compat"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "version",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/_matrix/client/{version}/logout": {
+      "post": {
+        "tags": [
+          "compat"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "version",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/_matrix/client/{version}/logout/all": {
+      "post": {
+        "tags": [
+          "compat"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "version",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/_matrix/client/{version}/refresh": {
+      "post": {
+        "tags": [
+          "compat"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "version",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/metrics": {
+      "get": {
+        "tags": [
+          "prometheus"
+        ]
+      }
+    },
+    "/assets/{path}": {
+      "get": {
+        "tags": [
+          "assets"
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "path",
+          "description": "Any number of path segments",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "style": "simple"
+        }
+      ]
+    },
+    "/connection-info": {
+      "get": {
+        "tags": [
+          "connection-info"
+        ]
+      }
+    }
+  },
+  "components": {}
+}
