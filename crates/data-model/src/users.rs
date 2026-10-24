@@ -267,6 +267,13 @@ impl UserRegistrationToken {
         true
     }
 
+    /// Returns `true` if the token is an invite: it registers without a
+    /// password, as the username and the email address it pins
+    #[must_use]
+    pub fn is_invite(&self) -> bool {
+        self.passwordless && self.username.is_some() && self.email.is_some()
+    }
+
     /// Returns `true` if the token can still be used (not expired and under
     /// usage limit)
     #[must_use]
