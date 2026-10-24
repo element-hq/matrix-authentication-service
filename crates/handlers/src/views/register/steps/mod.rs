@@ -12,17 +12,15 @@ pub(crate) mod registration_token;
 pub(crate) mod verify_email;
 
 /// Whether `token` can be used for `registration`, whose email address is
-/// `email`: it pins no other username or email address, and it is passwordless
-/// if the registration has neither a password nor an upstream link
+/// `email`: it allows the registration's username, it pins no other email
+/// address, and it is passwordless if the registration has neither a password
+/// nor an upstream link
 fn token_fits(
     token: &UserRegistrationToken,
     registration: &UserRegistration,
     email: Option<&str>,
 ) -> bool {
-    token
-        .username
-        .as_ref()
-        .is_none_or(|username| *username == registration.username)
+    token.username_fits(&registration.username)
         && token
             .email
             .as_deref()
