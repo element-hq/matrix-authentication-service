@@ -24,6 +24,7 @@ mod oauth;
 mod passwords;
 mod policy;
 mod rate_limiting;
+mod room_invites;
 mod secrets;
 mod telemetry;
 mod templates;
@@ -48,6 +49,7 @@ pub use self::{
     },
     policy::PolicyConfig,
     rate_limiting::RateLimitingConfig,
+    room_invites::RoomInvitesConfig,
     secrets::SecretsConfig,
     telemetry::{
         MetricsConfig, MetricsExporterKind, Propagator, TelemetryConfig, TracingConfig,
@@ -133,6 +135,10 @@ pub struct RootConfig {
     #[serde(default, skip_serializing_if = "OAuthConfig::is_default")]
     pub oauth: OAuthConfig,
 
+    /// Configuration section for inviting email addresses to rooms
+    #[serde(default, skip_serializing_if = "RoomInvitesConfig::is_default")]
+    pub room_invites: RoomInvitesConfig,
+
     /// Experimental configuration options
     #[serde(default, skip_serializing_if = "ExperimentalConfig::is_default")]
     pub experimental: ExperimentalConfig,
@@ -159,6 +165,7 @@ impl ConfigurationSection for RootConfig {
         self.captcha.validate(figment)?;
         self.account.validate(figment)?;
         self.oauth.validate(figment)?;
+        self.room_invites.validate(figment)?;
         self.experimental.validate(figment)?;
 
         Ok(())
@@ -192,6 +199,7 @@ impl RootConfig {
             captcha: CaptchaConfig::default(),
             account: AccountConfig::default(),
             oauth: OAuthConfig::default(),
+            room_invites: RoomInvitesConfig::default(),
             experimental: ExperimentalConfig::default(),
         })
     }
@@ -216,6 +224,7 @@ impl RootConfig {
             captcha: CaptchaConfig::default(),
             account: AccountConfig::default(),
             oauth: OAuthConfig::default(),
+            room_invites: RoomInvitesConfig::default(),
             experimental: ExperimentalConfig::default(),
         }
     }
@@ -263,6 +272,9 @@ pub struct AppConfig {
     pub oauth: OAuthConfig,
 
     #[serde(default)]
+    pub room_invites: RoomInvitesConfig,
+
+    #[serde(default)]
     pub experimental: ExperimentalConfig,
 }
 
@@ -284,6 +296,7 @@ impl ConfigurationSection for AppConfig {
         self.captcha.validate(figment)?;
         self.account.validate(figment)?;
         self.oauth.validate(figment)?;
+        self.room_invites.validate(figment)?;
         self.experimental.validate(figment)?;
 
         Ok(())

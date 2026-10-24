@@ -68,6 +68,7 @@ tower.workspace = true
 tracing.workspace = true
 ulid.workspace = true
 url.workspace = true
+urlencoding.workspace = true
 zeroize.workspace = true
 
 mas-axum-utils.workspace = true
