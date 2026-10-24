@@ -39,6 +39,15 @@ async function renderPage(route: string): Promise<RenderResult> {
     history,
   });
   await router.load();
+  // Since 1.170.19 only the failing route's errorComponent chunk is loaded. A
+  // parent's code-split errorComponent then suspends inside RTL's act(), where
+  // React never retries it, so load those chunks up front.
+  // https://github.com/TanStack/router/issues/8792
+  await Promise.all(
+    router.state.matches.map((match) =>
+      router.loadRouteChunk(router.routesById[match.routeId], "errorComponent"),
+    ),
+  );
 
   return render(
     <QueryClientProvider client={queryClient}>
