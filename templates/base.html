@@ -21,7 +21,7 @@ Please see LICENSE files in the repository root for full details.
 <html lang="{{ lang }}">
   <head>
     <meta charset="utf-8">
-    <title>{% block title %}{{ _("app.name") }}{% endblock title %}</title>
+    <title>{% block title %}{{ branding.server_name }}{% endblock title %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {{ include_asset('src/entrypoints/vendor.css') | indent(4) | safe }}
     {{ include_asset('src/entrypoints/shared.css') | indent(4) | safe }}

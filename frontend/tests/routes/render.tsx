@@ -5,6 +5,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  type AnyRouter,
   createMemoryHistory,
   createRouter,
   RouterProvider,
@@ -29,18 +30,29 @@ afterAll(() => server.close());
 // Reset handlers after each test `important for test isolation`
 afterEach(() => server.resetHandlers());
 
-async function renderPage(route: string): Promise<RenderResult> {
+async function renderPage(
+  route: string,
+): Promise<RenderResult & { router: AnyRouter }> {
   // Create a new query client and a new router
   const queryClient = new QueryClient();
   const history = createMemoryHistory({ initialEntries: [route] });
   const router = createRouter({
     routeTree,
-    context: { queryClient },
+    context: { queryClient, serverName: "example.com" },
     history,
   });
   await router.load();
+  // Since 1.170.19 only the failing route's errorComponent chunk is loaded. A
+  // parent's code-split errorComponent then suspends inside RTL's act(), where
+  // React never retries it, so load those chunks up front.
+  // https://github.com/TanStack/router/issues/8792
+  await Promise.all(
+    router.state.matches.map((match) =>
+      router.loadRouteChunk(router.routesById[match.routeId], "errorComponent"),
+    ),
+  );
 
-  return render(
+  const result = render(
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <I18nextProvider i18n={i18n}>
@@ -49,6 +61,8 @@ async function renderPage(route: string): Promise<RenderResult> {
       </TooltipProvider>
     </QueryClientProvider>,
   );
+
+  return { ...result, router };
 }
 
 export { renderPage };

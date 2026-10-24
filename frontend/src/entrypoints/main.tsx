@@ -19,6 +19,7 @@ import "./shared.css";
 const schema = v.object({
   root: v.optional(v.string(), "/"),
   graphqlEndpoint: v.optional(v.string(), "/graphql"),
+  serverName: v.string(),
 });
 
 const queryClient = new QueryClient({
@@ -39,7 +40,9 @@ void mountIsland({
       <QueryClientProvider client={queryClient}>
         {/* The router lazy-loads its routes, so it needs a boundary of its own */}
         <Suspense fallback={<LoadingScreen />}>
-          <RouterProvider router={makeRouter(config.root, queryClient)} />
+          <RouterProvider
+            router={makeRouter(config.root, queryClient, config.serverName)}
+          />
         </Suspense>
       </QueryClientProvider>
     );

@@ -19,6 +19,7 @@ import {
 import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import IconLockSolid from "@vector-im/compound-design-tokens/assets/web/icons/lock-solid";
 import { Alert, Button, Form } from "@vector-im/compound-web";
+import i18n from "i18next";
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import * as v from "valibot";
@@ -30,6 +31,7 @@ import PasswordCreationDoubleInput from "../components/PasswordCreationDoubleInp
 import { type FragmentType, graphql, useFragment } from "../gql";
 import { graphqlRequest } from "../graphql";
 import { translateSetPasswordError } from "../i18n/password_changes";
+import { documentTitle } from "../utils/documentTitle";
 
 const RECOVER_PASSWORD_MUTATION = graphql(/* GraphQL */ `
   mutation RecoverPassword($ticket: String!, $newPassword: String!) {
@@ -102,6 +104,7 @@ export const Route = createFileRoute("/password/recovery/")({
     }
   },
 
+  head: (ctx) => documentTitle(ctx, i18n.t("frontend.password_reset.title")),
   component: RecoverPassword,
 });
 

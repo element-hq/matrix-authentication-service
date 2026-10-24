@@ -6,10 +6,12 @@
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, notFound } from "@tanstack/react-router";
+import i18n from "i18next";
 import OAuth2ClientDetail from "../components/Client/OAuth2ClientDetail";
 import Layout from "../components/Layout";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
+import { documentTitle } from "../utils/documentTitle";
 
 const QUERY = graphql(/* GraphQL */ `
   query OAuth2Client($id: ID!) {
@@ -29,6 +31,7 @@ const query = (id: string) =>
 export const Route = createFileRoute("/clients/$id")({
   loader: ({ context, params }) =>
     context.queryClient.ensureQueryData(query(params.id)),
+  head: (ctx) => documentTitle(ctx, i18n.t("frontend.page_titles.client")),
   component: ClientDetail,
 });
 

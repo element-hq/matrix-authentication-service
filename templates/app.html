@@ -15,14 +15,14 @@ Please see LICENSE files in the repository root for full details.
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{{ _("app.name") }}</title>
+    <title data-static>{{ branding.server_name }}</title>
     {{ include_asset('src/entrypoints/main.tsx') | indent(4) | safe }}
     {# Pre-load the locale data for the current language #}
     {{ include_asset('locales/' ~ lang ~ '.json') | indent(4) | safe }}
   </head>
 
   <body>
-    <div id="root" data-root="{{ app_config.root }}" data-graphql-endpoint="{{ app_config.graphqlEndpoint }}"></div>
+    <div id="root" data-root="{{ app_config.root }}" data-graphql-endpoint="{{ app_config.graphqlEndpoint }}" data-server-name="{{ branding.server_name }}"></div>
 
     <div id="root-error" class="critical-notice" hidden>
       {{ _("mas.loading_failed") }}

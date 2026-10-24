@@ -21,7 +21,7 @@ export const App: React.FC<{ route: string }> = ({ route }) => {
 
   const router = createRouter({
     routeTree,
-    context: { queryClient },
+    context: { queryClient, serverName: "example.com" },
     history,
   });
 

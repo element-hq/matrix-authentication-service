@@ -10,6 +10,8 @@ Please see LICENSE files in the repository root for full details.
 
 {% extends "base.html" %}
 
+{% block title %}{{ _("app.page_title", page=_("mas.page_titles.allow_access"), server=branding.server_name) }}{% endblock title %}
+
 {% block content %}
   {% set client_name = login.redirect_uri | simplify_url %}
 

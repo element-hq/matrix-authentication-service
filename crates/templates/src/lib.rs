@@ -494,6 +494,8 @@ impl Templates {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeSet;
+
     use rand::SeedableRng;
 
     use super::*;
@@ -541,6 +543,67 @@ mod tests {
             let render2 = templates.check_render(now, &rng).unwrap();
 
             assert_eq!(render1, render2);
+
+            let page_renders = || {
+                render1.iter().filter(|((template, sample), _)| {
+                    let locale = sample.components.iter().find(|(kind, _)| *kind == "locale");
+                    (template.starts_with("pages/")
+                        || ["app.html", "form_post.html"].contains(template))
+                        && locale.is_none_or(|(_, locale)| locale == "en")
+                })
+            };
+            let title_of = |template: &str, html: &str| -> String {
+                let start = html
+                    .find("<title")
+                    .unwrap_or_else(|| panic!("{template} has no <title>"));
+                let start = html[start..].find('>').unwrap() + start + 1;
+                let end = html[start..].find("</title>").unwrap() + start;
+                html[start..end].to_owned()
+            };
+            let titles = |name: &str| -> BTreeSet<String> {
+                page_renders()
+                    .filter(|((template, _), _)| *template == name)
+                    .map(|((template, _), html)| title_of(template, html))
+                    .collect()
+            };
+
+            // Every page needs its own title, apart from those that only show the
+            // server name on purpose
+            for ((template, sample), html) in page_renders() {
+                if ["pages/index.html", "app.html"].contains(template) {
+                    continue;
+                }
+                assert_ne!(
+                    title_of(template, html),
+                    "example.com",
+                    "{template} ({sample:?}) has no page title"
+                );
+            }
+
+            assert_eq!(
+                titles("pages/index.html"),
+                ["example.com".to_owned()].into()
+            );
+            assert_eq!(
+                titles("pages/login.html"),
+                ["Sign in – example.com".to_owned()].into()
+            );
+            assert_eq!(
+                titles("pages/device_consent.html"),
+                [
+                    "Access denied – example.com".to_owned(),
+                    "Access granted – example.com".to_owned(),
+                    "Allow access – example.com".to_owned(),
+                ]
+                .into()
+            );
+            assert_eq!(titles("app.html"), ["example.com".to_owned()].into());
+            assert!(
+                render1
+                    .iter()
+                    .filter(|((template, _), _)| *template == "app.html")
+                    .all(|(_, html)| html.contains(r#"data-server-name="example.com""#))
+            );
         }
     }
 }
