@@ -88,6 +88,7 @@ pub(crate) async fn policy_factory(
         authorization_grant: "authorization_grant/violation".to_owned(),
         compat_login: "compat_login/violation".to_owned(),
         email: "email/violation".to_owned(),
+        skip_consent: "authorization_grant/skip_consent".to_owned(),
     };
 
     let data = mas_policy::Data::new(base_data).with_rest(data);
