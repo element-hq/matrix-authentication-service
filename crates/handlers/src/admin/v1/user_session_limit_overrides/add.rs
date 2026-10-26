@@ -238,7 +238,7 @@ mod tests {
             .unwrap();
         let client = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &state.clock,
                 vec!["https://example.com/redirect".parse().unwrap()],
@@ -260,7 +260,8 @@ mod tests {
                 None,
             )
             .await
-            .unwrap();
+            .unwrap()
+            .0;
         repo.save().await.unwrap();
 
         let request = Request::post("/api/admin/v1/user-session-limit-overrides")

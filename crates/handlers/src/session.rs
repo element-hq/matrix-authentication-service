@@ -512,7 +512,7 @@ mod tests {
             .unwrap();
         let client = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &state.clock,
                 vec!["https://example.com/redirect".parse().unwrap()],
@@ -534,7 +534,8 @@ mod tests {
                 None,
             )
             .await
-            .unwrap();
+            .unwrap()
+            .0;
         let browser_session = repo
             .browser_session()
             .add(&mut rng, &state.clock, &user, None)
