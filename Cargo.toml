@@ -639,7 +639,7 @@ features = [
 
 # Custom error types
 [workspace.dependencies.thiserror]
-version = "2.0.17"
+version = "2.0.21"
 
 [workspace.dependencies.thiserror-ext]
 version = "0.3.0"
