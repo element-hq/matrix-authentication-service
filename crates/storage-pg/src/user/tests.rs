@@ -373,7 +373,7 @@ async fn test_user_email_repo(pool: PgPool) {
         .await
         .unwrap();
     assert!(!emails.has_next_page);
-    assert!(emails.edges.is_empty());
+    assert_eq!(emails.edges, []);
 
     // Counting also works with the email filter
     assert_eq!(
@@ -685,7 +685,7 @@ async fn test_user_session(pool: PgPool) {
         .await
         .unwrap();
     assert!(!session_list.has_next_page);
-    assert!(session_list.edges.is_empty());
+    assert_eq!(session_list.edges, []);
 
     // Reload the session
     let session_lookup = repo

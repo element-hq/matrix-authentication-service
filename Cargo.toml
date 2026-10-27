@@ -93,7 +93,7 @@ version = "0.3.6"
 
 # Utility to write and implement async traits
 [workspace.dependencies.async-trait]
-version = "0.1.89"
+version = "0.1.92"
 
 # High-level error handling
 [workspace.dependencies.anyhow]
@@ -639,7 +639,7 @@ features = [
 
 # Custom error types
 [workspace.dependencies.thiserror]
-version = "2.0.17"
+version = "2.0.21"
 
 [workspace.dependencies.thiserror-ext]
 version = "0.3.0"

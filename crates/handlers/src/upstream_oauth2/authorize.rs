@@ -416,7 +416,7 @@ mod tests {
             false,
         )
         .collect::<Vec<_>>();
-        assert!(rendered.is_empty());
+        assert_eq!(rendered, []);
     }
 
     /// Create an upstream provider that forwards `prompt=login` only when the
