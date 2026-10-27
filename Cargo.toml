@@ -487,7 +487,7 @@ version = "2.1.162"
 
 # High-precision clock
 [workspace.dependencies.quanta]
-version = "0.12.6"
+version = "0.13.0"
 
 # Random values
 [workspace.dependencies.rand]
