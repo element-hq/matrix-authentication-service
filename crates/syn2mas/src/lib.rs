@@ -1,7 +1,13 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
+
+#![expect(
+    clippy::redundant_field_names,
+    reason = "`thiserror_ext::ContextInto` generates `source: source` in its constructors"
+)]
 
 mod mas_writer;
 mod synapse_reader;
