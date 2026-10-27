@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -199,28 +200,30 @@ mod tests {
         response.assert_status(StatusCode::OK);
         let body: serde_json::Value = response.json();
 
-        allow_duplicates!(assert_json_snapshot!(body, @r#"
-        {
-          "data": {
-            "type": "user",
-            "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
-            "attributes": {
-              "username": "alice",
-              "created_at": "2022-01-16T14:40:00Z",
-              "locked_at": null,
-              "deactivated_at": "2022-01-16T14:40:00Z",
-              "admin": false,
-              "legacy_guest": false
-            },
-            "links": {
-              "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
+        allow_duplicates! {
+            assert_json_snapshot!(body, @r#"
+            {
+              "data": {
+                "type": "user",
+                "id": "01FSHN9AG0MZAA6S4AF7CTV32E",
+                "attributes": {
+                  "username": "alice",
+                  "created_at": "2022-01-16T14:40:00Z",
+                  "locked_at": null,
+                  "deactivated_at": "2022-01-16T14:40:00Z",
+                  "admin": false,
+                  "legacy_guest": false
+                },
+                "links": {
+                  "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
+                }
+              },
+              "links": {
+                "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
+              }
             }
-          },
-          "links": {
-            "self": "/api/admin/v1/users/01FSHN9AG0MZAA6S4AF7CTV32E"
-          }
+            "#);
         }
-        "#));
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
