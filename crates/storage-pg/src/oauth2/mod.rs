@@ -957,7 +957,7 @@ mod tests {
             .list(filter, pagination)
             .await
             .unwrap();
-        assert!(list.edges.is_empty());
+        assert_eq!(list.edges, []);
         assert_eq!(repo.oauth2_session().count(filter).await.unwrap(), 0);
     }
 
@@ -1207,7 +1207,7 @@ mod tests {
             .list(filter, Pagination::first(10))
             .await
             .unwrap();
-        assert!(page.edges.is_empty());
+        assert_eq!(page.edges, []);
         assert!(!page.has_next_page);
 
         // Add a couple of clients

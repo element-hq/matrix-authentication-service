@@ -60,19 +60,19 @@ mod tests {
         assert_eq!(repo.compat_session().count(finished).await.unwrap(), 0);
 
         let full_list = repo.compat_session().list(all, pagination).await.unwrap();
-        assert!(full_list.edges.is_empty());
+        assert_eq!(full_list.edges, []);
         let active_list = repo
             .compat_session()
             .list(active, pagination)
             .await
             .unwrap();
-        assert!(active_list.edges.is_empty());
+        assert_eq!(active_list.edges, []);
         let finished_list = repo
             .compat_session()
             .list(finished, pagination)
             .await
             .unwrap();
-        assert!(finished_list.edges.is_empty());
+        assert_eq!(finished_list.edges, []);
 
         // Start a compat session for that user
         let device = Device::generate(&mut rng);
@@ -106,7 +106,7 @@ mod tests {
             .list(finished, pagination)
             .await
             .unwrap();
-        assert!(finished_list.edges.is_empty());
+        assert_eq!(finished_list.edges, []);
 
         // Lookup the session and check it didn't change
         let session_lookup = repo
@@ -175,7 +175,7 @@ mod tests {
             .list(active, pagination)
             .await
             .unwrap();
-        assert!(active_list.edges.is_empty());
+        assert_eq!(active_list.edges, []);
         let finished_list = repo
             .compat_session()
             .list(finished, pagination)
@@ -797,7 +797,7 @@ mod tests {
             .await
             .unwrap();
         assert!(!logins.has_next_page);
-        assert!(logins.edges.is_empty());
+        assert_eq!(logins.edges, []);
 
         // List only the fulfilled logins for the user
         let logins = repo
@@ -806,7 +806,7 @@ mod tests {
             .await
             .unwrap();
         assert!(!logins.has_next_page);
-        assert!(logins.edges.is_empty());
+        assert_eq!(logins.edges, []);
 
         // List only the exchanged logins for the user
         let logins = repo
