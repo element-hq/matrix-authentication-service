@@ -394,7 +394,7 @@ version = "0.3.0"
 
 # Open Policy Agent support through WASM
 [workspace.dependencies.opa-wasm]
-version = "0.3.3"
+version = "0.3.4"
 
 # OpenTelemetry
 [workspace.dependencies.opentelemetry]
@@ -646,7 +646,7 @@ version = "0.3.0"
 
 # Async runtime
 [workspace.dependencies.tokio]
-version = "1.48.0"
+version = "1.54.1"
 features = ["full"]
 
 [workspace.dependencies.tokio-stream]
