@@ -913,7 +913,7 @@ async fn token_login(
 }
 
 async fn user_password_login(
-    mut rng: &mut (impl CryptoRng + Send),
+    rng: &mut (impl CryptoRng + Send),
     clock: &impl Clock,
     password_manager: &PasswordManager,
     limiter: &Limiter,
@@ -954,7 +954,7 @@ async fn user_password_login(
 
     match password_manager
         .verify_and_upgrade(
-            &mut rng,
+            &mut *rng,
             user_password.version,
             password,
             user_password.hashed_password.clone(),
@@ -965,7 +965,7 @@ async fn user_password_login(
             // Save the upgraded password if needed
             repo.user_password()
                 .add(
-                    &mut rng,
+                    &mut *rng,
                     clock,
                     &user,
                     version,
@@ -988,7 +988,7 @@ async fn user_password_login(
     let device = if let Some(requested_device_id) = requested_device_id {
         Device::from(requested_device_id)
     } else {
-        Device::generate(&mut rng)
+        Device::generate(&mut *rng)
     };
 
     let session_replaced = repo
@@ -1012,7 +1012,7 @@ async fn user_password_login(
     let session = repo
         .compat_session()
         .add(
-            &mut rng,
+            &mut *rng,
             clock,
             &user,
             device,
