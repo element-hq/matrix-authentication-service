@@ -174,5 +174,13 @@ async fn try_main() -> anyhow::Result<ExitCode> {
 
     // And run the command
     tracing::trace!(?opts, "Running command");
-    opts.run(&figment).await
+    let res = opts.run(&figment).await;
+
+    // The error is printed once we return from `main`, at which point the
+    // Sentry client is already shut down
+    if let Err(err) = &res {
+        sentry::capture_error::<dyn std::error::Error>(err.as_ref());
+    }
+
+    res
 }
