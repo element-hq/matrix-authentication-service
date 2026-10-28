@@ -33,8 +33,7 @@ use futures_util::TryStreamExt;
 use headers::{Authorization, ContentType, HeaderValue, authorization::Bearer};
 use hyper::header::CACHE_CONTROL;
 use mas_axum_utils::{
-    InternalError, RecordAsRequester, SessionInfo, SessionInfoExt, cookies::CookieJar,
-    sentry::SentryEventID,
+    InternalError, RecordAsRequester, SessionInfo, SessionInfoExt, cookies::CookieJar, record_error,
 };
 use mas_data_model::{
     BoxClock, BoxRng, BrowserSession, Clock, Session, SiteConfig, SystemClock, User,
@@ -264,7 +263,7 @@ impl_from_error_for_route!(mas_storage::RepositoryError);
 
 impl IntoResponse for RouteError {
     fn into_response(self) -> Response {
-        let event_id = sentry::capture_error(&self);
+        let sentry_event_id = record_error!(self, Self::Internal(_) | Self::LoadFailed);
 
         let response = match self {
             e @ (Self::Internal(_) | Self::LoadFailed) => {
@@ -304,7 +303,7 @@ impl IntoResponse for RouteError {
             }
         };
 
-        (SentryEventID::from(event_id), response).into_response()
+        (sentry_event_id, response).into_response()
     }
 }
 

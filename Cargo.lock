@@ -3675,7 +3675,6 @@ dependencies = [
  "ruma-common",
  "rustls",
  "schemars 1.2.1",
- "sentry",
  "serde",
  "serde_json",
  "serde_urlencoded",

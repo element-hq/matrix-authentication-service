@@ -24,12 +24,6 @@ impl SentryEventID {
     }
 }
 
-impl From<Uuid> for SentryEventID {
-    fn from(uuid: Uuid) -> Self {
-        Self(uuid)
-    }
-}
-
 impl IntoResponseParts for SentryEventID {
     type Error = Infallible;
     fn into_response_parts(self, mut res: ResponseParts) -> Result<ResponseParts, Self::Error> {
