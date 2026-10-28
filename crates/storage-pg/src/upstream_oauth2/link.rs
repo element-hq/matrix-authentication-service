@@ -137,7 +137,6 @@ impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
             db.query.text,
             upstream_oauth_link.id = %id,
         ),
-        err,
     )]
     async fn lookup(&mut self, id: Ulid) -> Result<Option<UpstreamOAuthLink>, Self::Error> {
         let res = sqlx::query_as!(
@@ -173,7 +172,6 @@ impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
             upstream_oauth_provider.issuer = upstream_oauth_provider.issuer,
             %upstream_oauth_provider.client_id,
         ),
-        err,
     )]
     async fn find_by_subject(
         &mut self,
@@ -217,7 +215,6 @@ impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
             upstream_oauth_provider.issuer = upstream_oauth_provider.issuer,
             %upstream_oauth_provider.client_id,
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -272,7 +269,6 @@ impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
             %user.id,
             %user.username,
         ),
-        err,
     )]
     async fn associate_to_user(
         &mut self,
@@ -301,7 +297,6 @@ impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn list(
         &mut self,
@@ -369,7 +364,6 @@ impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn count(&mut self, filter: UpstreamOAuthLinkFilter<'_>) -> Result<usize, Self::Error> {
         let (sql, arguments) = Query::select()
@@ -403,7 +397,6 @@ impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
             upstream_oauth_link.provider_id,
             %upstream_oauth_link.subject,
         ),
-        err,
     )]
     async fn remove(
         &mut self,
@@ -462,7 +455,6 @@ impl UpstreamOAuthLinkRepository for PgUpstreamOAuthLinkRepository<'_> {
             until = %until,
             limit = limit,
         ),
-        err,
     )]
     async fn cleanup_orphaned(
         &mut self,

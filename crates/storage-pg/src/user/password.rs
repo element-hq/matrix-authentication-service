@@ -49,7 +49,6 @@ impl UserPasswordRepository for PgUserPasswordRepository<'_> {
             %user.id,
             %user.username,
         ),
-        err,
     )]
     async fn active(&mut self, user: &User) -> Result<Option<Password>, Self::Error> {
         let res = sqlx::query_as!(
@@ -105,7 +104,6 @@ impl UserPasswordRepository for PgUserPasswordRepository<'_> {
             user_password.id,
             user_password.version = version,
         ),
-        err,
     )]
     async fn add(
         &mut self,

@@ -95,7 +95,6 @@ impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn find_by_token(
         &mut self,
@@ -135,7 +134,6 @@ impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
             client.id = %session.client_id,
             access_token.id,
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -187,7 +185,6 @@ impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
             session.id = %access_token.session_id,
             %access_token.id,
         ),
-        err,
     )]
     async fn revoke(
         &mut self,
@@ -223,7 +220,6 @@ impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
             session.id = %access_token.session_id,
             %access_token.id,
         ),
-        err,
     )]
     async fn mark_used(
         &mut self,
@@ -259,7 +255,6 @@ impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
             until = %until,
             limit = limit,
         ),
-        err,
     )]
     async fn cleanup_revoked(
         &mut self,
@@ -316,7 +311,6 @@ impl OAuth2AccessTokenRepository for PgOAuth2AccessTokenRepository<'_> {
             until = %until,
             limit = limit,
         ),
-        err,
     )]
     async fn cleanup_expired(
         &mut self,

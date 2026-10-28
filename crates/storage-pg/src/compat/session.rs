@@ -292,7 +292,6 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             db.query.text,
             compat_session.id = %id,
         ),
-        err,
     )]
     async fn lookup(&mut self, id: Ulid) -> Result<Option<CompatSession>, Self::Error> {
         let res = sqlx::query_as!(
@@ -333,7 +332,6 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             %user.username,
             compat_session.device.id = device.as_str(),
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -393,7 +391,6 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             user.id = %compat_session.user_id,
             compat_session.device.id = compat_session.device.as_ref().map(mas_data_model::Device::as_str),
         ),
-        err,
     )]
     async fn finish(
         &mut self,
@@ -428,7 +425,6 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
         name = "db.compat_session.finish_bulk",
         skip_all,
         fields(db.query.text),
-        err,
     )]
     async fn finish_bulk(
         &mut self,
@@ -456,7 +452,6 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn list(
         &mut self,
@@ -561,7 +556,6 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn count(&mut self, filter: CompatSessionFilter<'_>) -> Result<usize, Self::Error> {
         let (sql, arguments) = sea_query::Query::select()
@@ -586,7 +580,6 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn record_batch_activity(
         &mut self,
@@ -637,7 +630,6 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             db.query.text,
             %compat_session.id,
         ),
-        err,
     )]
     async fn record_user_agent(
         &mut self,
@@ -671,7 +663,6 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             compat_session.id = %compat_session.id,
             compat_session.human_name = ?human_name,
         ),
-        err,
     )]
     async fn set_human_name(
         &mut self,
@@ -704,7 +695,6 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn cleanup_finished(
         &mut self,
@@ -780,7 +770,6 @@ impl CompatSessionRepository for PgCompatSessionRepository<'_> {
             threshold = %threshold,
             limit = limit,
         ),
-        err,
     )]
     async fn cleanup_inactive_ips(
         &mut self,
