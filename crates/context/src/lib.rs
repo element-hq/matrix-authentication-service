@@ -135,6 +135,12 @@ struct LogContextInner {
     /// The identified principal making the request, if it has been resolved.
     /// Set once per context, first writer wins.
     requester: OnceLock<Requester>,
+
+    /// The Sentry hub bound to the context, which starts with an empty scope
+    /// so that unrelated tasks don't share breadcrumbs or spans. Scope
+    /// changes made on the main hub are not inherited: global data goes on
+    /// the client options or in `before_send`.
+    hub: Arc<sentry::Hub>,
 }
 
 impl LogContext {
@@ -151,6 +157,10 @@ impl LogContext {
             db_rows_fetched: AtomicU64::new(0),
             db_time: AtomicU64::new(0),
             requester: OnceLock::new(),
+            hub: Arc::new(sentry::Hub::new(
+                sentry::Hub::main().client(),
+                Arc::default(),
+            )),
         };
 
         Self {
@@ -177,7 +187,9 @@ impl LogContext {
     /// time spent.
     pub fn run_sync<F: FnOnce() -> R, R>(&self, f: F) -> R {
         let start = Instant::now();
-        let result = CURRENT_LOG_CONTEXT.sync_scope(self.clone(), f);
+        let result = sentry::Hub::run(self.inner.hub.clone(), || {
+            CURRENT_LOG_CONTEXT.sync_scope(self.clone(), f)
+        });
         let elapsed = start.elapsed().as_nanos().try_into().unwrap_or(u64::MAX);
         self.inner.cpu_time.fetch_add(elapsed, Ordering::Relaxed);
         result

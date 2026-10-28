@@ -3571,6 +3571,7 @@ dependencies = [
  "opentelemetry",
  "pin-project-lite",
  "quanta",
+ "sentry",
  "tokio",
  "tower-layer",
  "tower-service",
