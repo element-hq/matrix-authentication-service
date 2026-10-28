@@ -6,8 +6,8 @@
 use std::{borrow::Cow, sync::Arc};
 
 use mas_config::TelemetryConfig;
-use mas_context::LogContext;
-use sentry::protocol::Event;
+use mas_context::{LogContext, Requester};
+use sentry::protocol::{Event, User};
 use sentry_tracing::EventFilter;
 use tracing::Subscriber;
 use tracing_subscriber::registry::LookupSpan;
@@ -53,6 +53,7 @@ pub fn init(config: &TelemetryConfig) -> sentry::ClientInitGuard {
         .in_app_include(["mas_", "oauth2_types", "syn2mas"])
         .before_send(|mut event| {
             set_fingerprint(&mut event);
+            add_requester(&mut event);
             Some(event)
         });
     // Without a sampler or a rate, Sentry doesn't start transactions at all.
@@ -95,6 +96,40 @@ fn set_fingerprint(event: &mut Event<'static>) {
     }
 
     event.fingerprint = Cow::Owned(fingerprint);
+}
+
+/// Record the requester of the current log context on the event.
+///
+/// This runs in the task which captured the event, so the log context of the
+/// request or job is available. Usernames are left out, as they are personal
+/// data.
+fn add_requester(event: &mut Event<'static>) {
+    let Some(requester) = LogContext::maybe_with(|ctx| ctx.requester().cloned()).flatten() else {
+        return;
+    };
+
+    match requester {
+        Requester::User { id, .. } => {
+            event.user.get_or_insert_with(|| User {
+                id: Some(id.to_string()),
+                ..User::default()
+            });
+            event.tags.insert("requester".to_owned(), "user".to_owned());
+        }
+        Requester::OAuth2Client { id } => {
+            event
+                .tags
+                .insert("requester".to_owned(), "oauth2-client".to_owned());
+            event
+                .tags
+                .insert("oauth2_client.id".to_owned(), id.to_string());
+        }
+        Requester::Homeserver => {
+            event
+                .tags
+                .insert("requester".to_owned(), "homeserver".to_owned());
+        }
+    }
 }
 
 /// Build the `tracing` layer which reports events and spans to Sentry
