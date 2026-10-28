@@ -278,7 +278,6 @@ upstream_oauth2:
           template: "{{ user.email }}"
 ```
 
-
 ### Authentik
 
 [Authentik](https://goauthentik.io/) is an open-source IdP solution.
@@ -314,6 +313,39 @@ upstream_oauth2:
           template: "{{ user.email }}"
 ```
 
+### Discord
+
+1. Create a new application in the Discord Developer Portal (see [documentation](https://discord.com/developers/applications))
+2. Add the following "Redirect URI" in the OAuth2 tab under settings: `https://<auth-service-domain>/upstream/callback/<id>`
+
+Authentication service configuration:
+
+```yaml
+upstream_oauth2:
+  providers:
+    - id: 01JQK7DK6VFH62NMW4HS9RKD3R
+      human_name: Discord
+      brand_name: "discord"
+      token_endpoint_auth_method: "client_secret_post"
+      issuer: "https://discord.com"
+      client_id: "<client-id>" # TO BE FILLED
+      client_secret: "<client-secret>" # TO BE FILLED
+      fetch_userinfo: true
+      userinfo_endpoint: "https://discord.com/api/users/@me"
+      scope: "openid identify email"
+      claims_imports:
+        localpart:
+          action: suggest
+          template: "{{ user.username }}"
+        displayname:
+          action: suggest
+          template: "{{ user.global_name }}"
+        email:
+          action: suggest
+          template: "{{ user.email }}"
+        account_name:
+          template: "{{ user.username }}"
+```
 
 ### Facebook
 
@@ -354,39 +386,6 @@ upstream_oauth2:
           template: "{{ user.email }}"
         account_name:
           template: "{{ user.name }}"
-```
-
-
-### GitLab
-
-1. Create a [new application](https://gitlab.com/profile/applications).
-2. Add the `openid` scope. Optionally add the `profile` and `email` scope if you want to import the user's name and email.
-3. Add this Callback URL: `https://<auth-service-domain>/upstream/callback/<id>`
-
-Authentication service configuration:
-
-```yaml
-upstream_oauth2:
-  providers:
-    - id: "01HFS67GJ145HCM9ZASYS9DC3J"
-      issuer: "https://gitlab.com"
-      human_name: "GitLab"
-      brand_name: "gitlab"
-      token_endpoint_auth_method: "client_secret_post"
-      client_id: "<client-id>" # TO BE FILLED
-      client_secret: "<client-secret>" # TO BE FILLED
-      scope: "openid profile email"
-      claims_imports:
-        displayname:
-          action: suggest
-          template: "{{ user.name }}"
-        localpart:
-          action: ignore
-        email:
-          action: suggest
-          template: "{{ user.email }}"
-        account_name:
-          template: "@{{ user.preferred_username }}"
 ```
 
 ### GitHub
@@ -432,6 +431,37 @@ upstream_oauth2:
           template: "@{{ userinfo_claims.login }}"
 ```
 
+### GitLab
+
+1. Create a [new application](https://gitlab.com/profile/applications).
+2. Add the `openid` scope. Optionally add the `profile` and `email` scope if you want to import the user's name and email.
+3. Add this Callback URL: `https://<auth-service-domain>/upstream/callback/<id>`
+
+Authentication service configuration:
+
+```yaml
+upstream_oauth2:
+  providers:
+    - id: "01HFS67GJ145HCM9ZASYS9DC3J"
+      issuer: "https://gitlab.com"
+      human_name: "GitLab"
+      brand_name: "gitlab"
+      token_endpoint_auth_method: "client_secret_post"
+      client_id: "<client-id>" # TO BE FILLED
+      client_secret: "<client-secret>" # TO BE FILLED
+      scope: "openid profile email"
+      claims_imports:
+        displayname:
+          action: suggest
+          template: "{{ user.name }}"
+        localpart:
+          action: ignore
+        email:
+          action: suggest
+          template: "{{ user.email }}"
+        account_name:
+          template: "@{{ user.preferred_username }}"
+```
 
 ### Google
 
@@ -464,7 +494,6 @@ upstream_oauth2:
         account_name:
           template: "{{ user.email }}"
 ```
-
 
 ### Kanidm
 
@@ -556,7 +585,6 @@ upstream_oauth2:
           template: "{{ user.email }}"
 ```
 
-
 ### Microsoft Azure Active Directory
 
 Azure AD can act as an OpenID Connect Provider.
@@ -593,41 +621,6 @@ upstream_oauth2:
         account_name:
           template: "{{ user.preferred_username }}"
 ```
-
-### Discord
-
-1. Create a new application in the Discord Developer Portal (see [documentation](https://discord.com/developers/applications))
-2. Add the following "Redirect URI" in the OAuth2 tab under settings: `https://<auth-service-domain>/upstream/callback/<id>`
-
-Authentication service configuration:
-
-```yaml
-upstream_oauth2:
-  providers:
-    - id: 01JQK7DK6VFH62NMW4HS9RKD3R
-      human_name: Discord
-      brand_name: "discord"
-      token_endpoint_auth_method: "client_secret_post"
-      issuer: "https://discord.com"
-      client_id: "<client-id>" # TO BE FILLED
-      client_secret: "<client-secret>" # TO BE FILLED
-      fetch_userinfo: true
-      userinfo_endpoint: "https://discord.com/api/users/@me"
-      scope: "openid identify email"
-      claims_imports:
-        localpart:
-          action: suggest
-          template: "{{ user.username }}"
-        displayname:
-          action: suggest
-          template: "{{ user.global_name }}"
-        email:
-          action: suggest
-          template: "{{ user.email }}"
-        account_name:
-          template: "{{ user.username }}"
-```
-
 
 ### Rauthy
 
@@ -691,7 +684,6 @@ To use a Rauthy-supported [Ephemeral Client](https://sebadob.github.io/rauthy/wo
   "id_token_signed_response_alg": "RS256"
 }
 ```
-
 
 ### Shibboleth
 
