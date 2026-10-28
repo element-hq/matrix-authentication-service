@@ -653,7 +653,7 @@ impl QueueWorker {
         let locked = match locked {
             Either::Left(locked) => locked,
             Either::Right(txn) => {
-                tracing::error!("Another worker has the leader lock, aborting");
+                tracing::warn!("Another worker has the leader lock, aborting");
                 txn.rollback()
                     .await
                     .map_err(QueueRunnerError::CommitTransaction)?;
