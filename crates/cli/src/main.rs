@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -13,10 +14,7 @@ use clap::Parser;
 use mas_config::{ConfigurationSectionExt, TelemetryConfig};
 use sentry_tracing::EventFilter;
 use tracing_subscriber::{
-    EnvFilter, Layer, Registry,
-    filter::{LevelFilter, filter_fn},
-    layer::SubscriberExt,
-    util::SubscriberInitExt,
+    EnvFilter, Layer, Registry, filter::LevelFilter, layer::SubscriberExt, util::SubscriberInitExt,
 };
 
 mod app_state;
@@ -104,10 +102,6 @@ async fn try_main() -> anyhow::Result<ExitCode> {
         .or_else(|_| EnvFilter::try_new("info"))
         .context("could not setup logging filter")?;
 
-    // Suppress the following warning from the Jaeger propagator:
-    //   Invalid jaeger header format header_value=""
-    let suppress_layer = filter_fn(|metadata| metadata.name() != "JaegerPropagator.InvalidHeader");
-
     // Setup the rustls crypto provider
     rustls::crypto::aws_lc_rs::default_provider()
         .install_default()
@@ -124,17 +118,17 @@ async fn try_main() -> anyhow::Result<ExitCode> {
         .context("Failed to load telemetry config")?;
 
     // Setup Sentry
-    let sentry = sentry::init((
-        telemetry_config.sentry.dsn.as_deref(),
-        sentry::ClientOptions {
-            transport: Some(Arc::new(SentryTransportFactory::new())),
-            environment: telemetry_config.sentry.environment.clone().map(Into::into),
-            release: Some(VERSION.into()),
-            sample_rate: telemetry_config.sentry.sample_rate.unwrap_or(1.0),
-            traces_sample_rate: telemetry_config.sentry.traces_sample_rate.unwrap_or(0.0),
-            ..Default::default()
-        },
-    ));
+    let mut sentry_options = sentry::ClientOptions::new()
+        .transport(SentryTransportFactory::new())
+        .release(VERSION)
+        .sample_rate(telemetry_config.sentry.sample_rate.unwrap_or(1.0));
+    if let Some(traces_sample_rate) = telemetry_config.sentry.traces_sample_rate {
+        sentry_options = sentry_options.traces_sample_rate(traces_sample_rate);
+    }
+    if let Some(environment) = telemetry_config.sentry.environment.clone() {
+        sentry_options = sentry_options.environment(environment);
+    }
+    let sentry = sentry::init((telemetry_config.sentry.dsn.as_deref(), sentry_options));
 
     let sentry_layer = sentry.is_enabled().then(|| {
         sentry_tracing::layer().event_filter(|md| {
@@ -163,7 +157,6 @@ async fn try_main() -> anyhow::Result<ExitCode> {
         .with_filter(LevelFilter::INFO);
 
     let subscriber = Registry::default()
-        .with(suppress_layer)
         .with(sentry_layer)
         .with(telemetry_layer)
         .with(filter_layer)
