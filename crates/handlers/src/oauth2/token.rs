@@ -414,7 +414,7 @@ pub(crate) async fn post(
 }
 
 async fn authorization_code_grant(
-    mut rng: &mut BoxRng,
+    rng: &mut BoxRng,
     clock: &impl Clock,
     activity_tracker: &BoundActivityTracker,
     grant: &AuthorizationCodeGrant,
@@ -530,7 +530,7 @@ async fn authorization_code_grant(
     let mut session = repo
         .oauth2_session()
         .add_from_browser_session(
-            &mut rng,
+            &mut *rng,
             clock,
             client,
             &browser_session,
@@ -552,11 +552,11 @@ async fn authorization_code_grant(
 
     let ttl = site_config.access_token_ttl;
     let (access_token, refresh_token) =
-        generate_token_pair(&mut rng, clock, &mut repo, &session, ttl).await?;
+        generate_token_pair(&mut *rng, clock, &mut repo, &session, ttl).await?;
 
     let id_token = if session.scope.contains(&scope::OPENID) {
         Some(generate_id_token(
-            &mut rng,
+            &mut *rng,
             clock,
             url_builder,
             key_store,

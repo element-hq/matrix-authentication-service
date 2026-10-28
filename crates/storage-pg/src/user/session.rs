@@ -69,7 +69,7 @@ struct SessionLookup {
 
 impl Node<Ulid> for SessionLookup {
     fn cursor(&self) -> Ulid {
-        self.user_id.into()
+        self.user_session_id.into()
     }
 }
 
