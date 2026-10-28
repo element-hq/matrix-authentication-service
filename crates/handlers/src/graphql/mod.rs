@@ -5,14 +5,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-#![allow(clippy::module_name_repetitions)]
+#![allow(
+    clippy::module_name_repetitions,
+    // async-graphql's `#[Object]` requires resolvers to be `async fn`, and its
+    // `Enum` derive emits async trait impls without awaits
+    clippy::unused_async_trait_impl,
+)]
 
 use std::{net::IpAddr, ops::Deref, sync::Arc};
 
 use async_graphql::{
     EmptySubscription, InputObject,
     extensions::Tracing,
-    http::{GraphQLPlaygroundConfig, MultipartOptions, playground_source},
+    http::MultipartOptions,
     parser::types::{DocumentOperations, OperationType},
 };
 use axum::{
@@ -20,7 +25,7 @@ use axum::{
     body::Body,
     extract::{RawQuery, State as AxumState},
     http::StatusCode,
-    response::{Html, IntoResponse, Response},
+    response::{IntoResponse, Response},
 };
 use axum_extra::typed_header::TypedHeader;
 use chrono::{DateTime, Utc};
@@ -41,7 +46,7 @@ use mas_storage::{BoxRepository, BoxRepositoryFactory, RepositoryError};
 use opentelemetry_semantic_conventions::trace::{
     GRAPHQL_DOCUMENT, GRAPHQL_OPERATION_NAME, GRAPHQL_OPERATION_TYPE,
 };
-use rand::{SeedableRng, thread_rng};
+use rand::{SeedableRng, rng};
 use rand_chacha::ChaChaRng;
 use state::has_session_ended;
 use tracing::{Instrument, info_span};
@@ -120,9 +125,9 @@ impl state::State for GraphQLState {
 
     fn rng(&self) -> BoxRng {
         #[expect(clippy::disallowed_methods)]
-        let rng = thread_rng();
+        let mut rng = rng();
 
-        let rng = ChaChaRng::from_rng(rng).expect("Failed to seed rng");
+        let rng = ChaChaRng::from_rng(&mut rng);
         Box::new(rng)
     }
 }
@@ -507,12 +512,6 @@ pub async fn get(
     ))
 }
 
-pub async fn playground() -> impl IntoResponse {
-    Html(playground_source(
-        GraphQLPlaygroundConfig::new("/graphql").with_setting("request.credentials", "include"),
-    ))
-}
-
 pub type Schema = async_graphql::Schema<Query, Mutation, EmptySubscription>;
 pub type SchemaBuilder = async_graphql::SchemaBuilder<Query, Mutation, EmptySubscription>;
 
@@ -668,10 +667,6 @@ impl RequestingEntity {
             }
             Self::BrowserSession(_) | Self::Anonymous => false,
         }
-    }
-
-    fn is_unauthenticated(&self) -> bool {
-        matches!(self, Self::Anonymous)
     }
 }
 

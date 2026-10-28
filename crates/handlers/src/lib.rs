@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -27,7 +27,7 @@ use axum::{
     extract::{FromRef, FromRequestParts, OriginalUri, RawQuery, State},
     http::Method,
     response::{Html, IntoResponse},
-    routing::{get, post},
+    routing::{MethodRouter, get, post},
 };
 use headers::HeaderName;
 use hyper::{
@@ -125,7 +125,7 @@ where
     Router::new().route(mas_router::Healthcheck::route(), get(self::health::get))
 }
 
-pub fn graphql_router<S>(playground: bool, undocumented_oauth2_access: bool) -> Router<S>
+pub fn graphql_router<S>(undocumented_oauth2_access: bool) -> Router<S>
 where
     S: Clone + Send + Sync + 'static,
     graphql::Schema: FromRef<S>,
@@ -137,7 +137,7 @@ where
     Limiter: FromRef<S>,
     RequesterFingerprint: FromRequestParts<S>,
 {
-    let mut router = Router::new()
+    Router::new()
         .route(
             mas_router::GraphQL::route(),
             get(self::graphql::get).post(self::graphql::post),
@@ -158,16 +158,7 @@ where
                     CONTENT_LANGUAGE,
                     CONTENT_TYPE,
                 ]),
-        );
-
-    if playground {
-        router = router.route(
-            mas_router::GraphQLPlayground::route(),
-            get(self::graphql::playground),
-        );
-    }
-
-    router
+        )
 }
 
 pub fn discovery_router<S>() -> Router<S>
@@ -339,6 +330,26 @@ where
     Router::new().merge(human_router).merge(api_router)
 }
 
+/// A `GET` route which redirects to another route, keeping the query string
+fn redirect_to<S>(route: &'static str) -> MethodRouter<S>
+where
+    S: Clone + Send + Sync + 'static,
+    UrlBuilder: FromRef<S>,
+{
+    get(
+        async move |State(url_builder): State<UrlBuilder>, RawQuery(query): RawQuery| {
+            let prefix = url_builder.prefix().unwrap_or_default();
+            let destination = if let Some(query) = query {
+                format!("{prefix}{route}?{query}")
+            } else {
+                format!("{prefix}{route}")
+            };
+
+            axum::response::Redirect::to(&destination)
+        },
+    )
+}
+
 pub fn human_router<S>(templates: Templates) -> Router<S>
 where
     S: Clone + Send + Sync + 'static,
@@ -363,22 +374,7 @@ where
 {
     Router::new()
         // XXX: hard-coded redirect from /account to /account/
-        .route(
-            "/account",
-            get(
-                async |State(url_builder): State<UrlBuilder>, RawQuery(query): RawQuery| {
-                    let prefix = url_builder.prefix().unwrap_or_default();
-                    let route = mas_router::Account::route();
-                    let destination = if let Some(query) = query {
-                        format!("{prefix}{route}?{query}")
-                    } else {
-                        format!("{prefix}{route}")
-                    };
-
-                    axum::response::Redirect::to(&destination)
-                },
-            ),
-        )
+        .route("/account", redirect_to(mas_router::Account::route()))
         .route(mas_router::Account::route(), get(self::views::app::get))
         .route(
             mas_router::AccountWildcard::route(),
@@ -402,11 +398,12 @@ where
         .route(mas_router::Logout::route(), post(self::views::logout::post))
         .route(
             mas_router::Register::route(),
-            get(self::views::register::get),
+            get(self::views::register::get).post(self::views::register::post),
         )
+        // Keeps links to the former password registration page working
         .route(
-            mas_router::PasswordRegister::route(),
-            get(self::views::register::password::get).post(self::views::register::password::post),
+            "/register/password",
+            redirect_to(mas_router::Register::route()),
         )
         .route(
             mas_router::RegisterVerifyEmail::route(),

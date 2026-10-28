@@ -847,10 +847,6 @@
           "description": "GraphQL endpoint",
           "type": "object",
           "properties": {
-            "playground": {
-              "description": "Enabled the GraphQL playground",
-              "type": "boolean"
-            },
             "undocumented_oauth2_access": {
               "description": "Allow access for OAuth 2.0 clients (undocumented)",
               "type": "boolean"
@@ -2023,6 +2019,30 @@
           "allOf": [
             {
               "$ref": "#/definitions/EmailauthenticationRateLimitingConfig"
+            }
+          ]
+        },
+        "device_code_link": {
+          "description": "Controls how many user code verification attempts are permitted\nbased on source IP address, when linking a device through the\nDevice Authorization Grant.\nThis can protect against brute-forcing the user code.",
+          "default": {
+            "burst": 10,
+            "per_second": 0.016666666666666666
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/RateLimiterConfiguration"
+            }
+          ]
+        },
+        "username_availability": {
+          "description": "Controls how often the registration form can check whether a username\nis available, based on source address.\n\nThe form checks the username as it is typed. This limit makes it\nharder to use those checks to find out which usernames exist.",
+          "default": {
+            "burst": 5,
+            "per_second": 1.0
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/RateLimiterConfiguration"
             }
           ]
         }

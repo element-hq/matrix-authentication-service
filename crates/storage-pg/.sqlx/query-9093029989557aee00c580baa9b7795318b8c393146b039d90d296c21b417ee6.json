@@ -1,0 +1,168 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO oauth2_clients\n                    ( oauth2_client_id\n                    , metadata_digest\n                    , encrypted_client_secret\n                    , application_type\n                    , redirect_uris\n                    , grant_type_authorization_code\n                    , grant_type_refresh_token\n                    , grant_type_client_credentials\n                    , grant_type_device_code\n                    , client_name\n                    , logo_uri\n                    , client_uri\n                    , policy_uri\n                    , tos_uri\n                    , jwks_uri\n                    , jwks\n                    , id_token_signed_response_alg\n                    , userinfo_signed_response_alg\n                    , token_endpoint_auth_method\n                    , token_endpoint_auth_signing_alg\n                    , initiate_login_uri\n                    , is_static\n                    )\n                VALUES\n                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,\n                    $14, $15, $16, $17, $18, $19, $20, $21, FALSE)\n                -- RETURNING yields nothing for rows skipped by DO NOTHING, so this\n                -- no-op update is what makes it return the existing client, including\n                -- one committed while this insert was waiting on it\n                ON CONFLICT (metadata_digest) DO UPDATE\n                    SET metadata_digest = EXCLUDED.metadata_digest\n                RETURNING oauth2_client_id\n                        , metadata_digest\n                        , encrypted_client_secret\n                        , application_type\n                        , redirect_uris\n                        , grant_type_authorization_code\n                        , grant_type_refresh_token\n                        , grant_type_client_credentials\n                        , grant_type_device_code\n                        , client_name\n                        , logo_uri\n                        , client_uri\n                        , policy_uri\n                        , tos_uri\n                        , jwks_uri\n                        , jwks\n                        , id_token_signed_response_alg\n                        , userinfo_signed_response_alg\n                        , token_endpoint_auth_method\n                        , token_endpoint_auth_signing_alg\n                        , initiate_login_uri\n                        , is_static\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "oauth2_client_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "metadata_digest",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "encrypted_client_secret",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "application_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "redirect_uris",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 5,
+        "name": "grant_type_authorization_code",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "grant_type_refresh_token",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "grant_type_client_credentials",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "grant_type_device_code",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "client_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "logo_uri",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "client_uri",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "policy_uri",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "tos_uri",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "jwks_uri",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
+        "name": "jwks",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 16,
+        "name": "id_token_signed_response_alg",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 17,
+        "name": "userinfo_signed_response_alg",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 18,
+        "name": "token_endpoint_auth_method",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 19,
+        "name": "token_endpoint_auth_signing_alg",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 20,
+        "name": "initiate_login_uri",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 21,
+        "name": "is_static",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "TextArray",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "9093029989557aee00c580baa9b7795318b8c393146b039d90d296c21b417ee6"
+}

@@ -553,7 +553,7 @@ mod tests {
                                  rng: &mut rand_chacha::ChaChaRng,
                                  host: &str| {
             repo.oauth2_client()
-                .add(
+                .add_or_reuse(
                     rng,
                     &state.clock,
                     vec![format!("https://{host}/redirect").parse().unwrap()],
@@ -576,6 +576,7 @@ mod tests {
                 )
                 .await
                 .unwrap()
+                .0
         };
 
         let client_x = make_client(&mut repo, &mut rng, "x.example.com").await;
@@ -724,9 +725,9 @@ mod tests {
 
         let mut repo = state.repository().await.unwrap();
 
-        let client = repo
+        let (client, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &state.clock,
                 vec!["https://example.com/redirect".parse().unwrap()],

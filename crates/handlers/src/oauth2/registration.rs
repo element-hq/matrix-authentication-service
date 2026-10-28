@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -25,7 +26,7 @@ use oauth2_types::{
 };
 use opentelemetry::{Key, KeyValue, metrics::Counter};
 use psl::Psl;
-use rand::distributions::{Alphanumeric, DistString};
+use rand::distr::{Alphanumeric, SampleString};
 use serde::Serialize;
 use sha2::Digest as _;
 use thiserror::Error;
@@ -319,60 +320,54 @@ pub(crate) async fn post(
     };
 
     // If the client doesn't have a secret, we may be able to deduplicate it. To
-    // do so, we hash the client metadata, and look for it in the database
-    let (digest_hash, existing_client) = if client_secret.is_none() {
+    // do so, we hash the client metadata, and reuse any client with the same hash
+    let digest_hash = client_secret.is_none().then(|| {
         // XXX: One interesting caveat is that we hash *before* saving to the database.
         // It means it takes into account fields that we don't care about *yet*.
         //
         // This means that if later we start supporting a particular field, we
         // will still serve the 'old' client_id, without updating the client in the
         // database
-        let hash = sha2::Sha256::digest(body_json);
-        let hash = hex::encode(hash);
-        let client = repo.oauth2_client().find_by_metadata_digest(&hash).await?;
-        (Some(hash), client)
-    } else {
-        (None, None)
-    };
+        hex::encode(sha2::Sha256::digest(body_json))
+    });
 
-    let client = if let Some(client) = existing_client {
-        tracing::info!(%client.id, "Reusing existing client");
-        REGISTRATION_COUNTER.add(1, &[KeyValue::new(RESULT, "reused")]);
-        client
-    } else {
-        let client = repo
-            .oauth2_client()
-            .add(
-                &mut rng,
-                &clock,
-                metadata.redirect_uris().to_vec(),
-                digest_hash,
-                encrypted_client_secret,
-                metadata.application_type.clone(),
-                //&metadata.response_types(),
-                metadata.grant_types().to_vec(),
-                metadata
-                    .client_name
-                    .clone()
-                    .map(Localized::to_non_localized),
-                metadata.logo_uri.clone().map(Localized::to_non_localized),
-                metadata.client_uri.clone().map(Localized::to_non_localized),
-                metadata.policy_uri.clone().map(Localized::to_non_localized),
-                metadata.tos_uri.clone().map(Localized::to_non_localized),
-                metadata.jwks_uri.clone(),
-                metadata.jwks.clone(),
-                // XXX: those might not be right, should be function calls
-                metadata.id_token_signed_response_alg.clone(),
-                metadata.userinfo_signed_response_alg.clone(),
-                metadata.token_endpoint_auth_method.clone(),
-                metadata.token_endpoint_auth_signing_alg.clone(),
-                metadata.initiate_login_uri.clone(),
-            )
-            .await?;
+    let (client, created) = repo
+        .oauth2_client()
+        .add_or_reuse(
+            &mut rng,
+            &clock,
+            metadata.redirect_uris().to_vec(),
+            digest_hash,
+            encrypted_client_secret,
+            metadata.application_type.clone(),
+            //&metadata.response_types(),
+            metadata.grant_types().to_vec(),
+            metadata
+                .client_name
+                .clone()
+                .map(Localized::to_non_localized),
+            metadata.logo_uri.clone().map(Localized::to_non_localized),
+            metadata.client_uri.clone().map(Localized::to_non_localized),
+            metadata.policy_uri.clone().map(Localized::to_non_localized),
+            metadata.tos_uri.clone().map(Localized::to_non_localized),
+            metadata.jwks_uri.clone(),
+            metadata.jwks.clone(),
+            // XXX: those might not be right, should be function calls
+            metadata.id_token_signed_response_alg.clone(),
+            metadata.userinfo_signed_response_alg.clone(),
+            metadata.token_endpoint_auth_method.clone(),
+            metadata.token_endpoint_auth_signing_alg.clone(),
+            metadata.initiate_login_uri.clone(),
+        )
+        .await?;
+
+    if created {
         tracing::info!(%client.id, "Registered new client");
         REGISTRATION_COUNTER.add(1, &[KeyValue::new(RESULT, "created")]);
-        client
-    };
+    } else {
+        tracing::info!(%client.id, "Reusing existing client");
+        REGISTRATION_COUNTER.add(1, &[KeyValue::new(RESULT, "reused")]);
+    }
 
     let response = ClientRegistrationResponse {
         client_id: client.client_id.clone(),

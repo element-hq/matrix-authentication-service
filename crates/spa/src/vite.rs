@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -30,7 +31,6 @@ pub struct ManifestEntry {
     #[expect(dead_code)]
     is_entry: Option<bool>,
 
-    #[expect(dead_code)]
     is_dynamic_entry: Option<bool>,
 
     imports: Option<Vec<Utf8PathBuf>>,
@@ -90,6 +90,7 @@ pub struct Asset<'a> {
     file_type: FileType,
     name: &'a Utf8Path,
     integrity: Option<&'a str>,
+    is_dynamic_entry: bool,
 }
 
 impl<'a> Asset<'a> {
@@ -101,6 +102,7 @@ impl<'a> Asset<'a> {
             file_type,
             name,
             integrity,
+            is_dynamic_entry: entry.is_dynamic_entry.unwrap_or(false),
         })
     }
 
@@ -114,6 +116,13 @@ impl<'a> Asset<'a> {
     #[must_use]
     pub fn file_type(&self) -> FileType {
         self.file_type
+    }
+
+    /// Whether this asset is a chunk which is only reachable through a dynamic
+    /// `import()`, and therefore must not be evaluated eagerly
+    #[must_use]
+    pub fn is_dynamic_entry(&self) -> bool {
+        self.is_dynamic_entry
     }
 
     /// Get the integrity HTML tag attribute, with a leading space, if any

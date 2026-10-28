@@ -595,11 +595,11 @@ mod tests {
         assert_eq!(repo.app_session().count(finished).await.unwrap(), 0);
 
         let full_list = repo.app_session().list(all, pagination).await.unwrap();
-        assert!(full_list.edges.is_empty());
+        assert_eq!(full_list.edges, []);
         let active_list = repo.app_session().list(active, pagination).await.unwrap();
-        assert!(active_list.edges.is_empty());
+        assert_eq!(active_list.edges, []);
         let finished_list = repo.app_session().list(finished, pagination).await.unwrap();
-        assert!(finished_list.edges.is_empty());
+        assert_eq!(finished_list.edges, []);
 
         // Start a compat session for that user
         let device = Device::generate(&mut rng);
@@ -626,7 +626,7 @@ mod tests {
             AppSession::Compat(Box::new(compat_session.clone()))
         );
         let finished_list = repo.app_session().list(finished, pagination).await.unwrap();
-        assert!(finished_list.edges.is_empty());
+        assert_eq!(finished_list.edges, []);
 
         // Finish the session
         let compat_session = repo
@@ -646,7 +646,7 @@ mod tests {
             AppSession::Compat(Box::new(compat_session.clone()))
         );
         let active_list = repo.app_session().list(active, pagination).await.unwrap();
-        assert!(active_list.edges.is_empty());
+        assert_eq!(active_list.edges, []);
         let finished_list = repo.app_session().list(finished, pagination).await.unwrap();
         assert_eq!(finished_list.edges.len(), 1);
         assert_eq!(
@@ -655,9 +655,9 @@ mod tests {
         );
 
         // Start an OAuth2 session
-        let client = repo
+        let (client, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &clock,
                 vec!["https://example.com/redirect".parse().unwrap()],
@@ -749,7 +749,7 @@ mod tests {
         );
 
         let active_list = repo.app_session().list(active, pagination).await.unwrap();
-        assert!(active_list.edges.is_empty());
+        assert_eq!(active_list.edges, []);
 
         let finished_list = repo.app_session().list(finished, pagination).await.unwrap();
         assert_eq!(finished_list.edges.len(), 2);
@@ -792,7 +792,7 @@ mod tests {
         let filter = AppSessionFilter::new().for_user(&user2);
         assert_eq!(repo.app_session().count(filter).await.unwrap(), 0);
         let list = repo.app_session().list(filter, pagination).await.unwrap();
-        assert!(list.edges.is_empty());
+        assert_eq!(list.edges, []);
     }
 
     /// Test the created-at filters on [`AppSessionFilter`]: they should apply
@@ -824,9 +824,9 @@ mod tests {
         clock.advance(Duration::try_minutes(1).unwrap());
 
         // Create an OAuth2 session for the same user
-        let client = repo
+        let (client, _) = repo
             .oauth2_client()
-            .add(
+            .add_or_reuse(
                 &mut rng,
                 &clock,
                 vec!["https://example.com/redirect".parse().unwrap()],

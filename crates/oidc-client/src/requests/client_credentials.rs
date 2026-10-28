@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 Kévin Commaille.
 //
@@ -13,7 +14,7 @@ use oauth2_types::{
     requests::{AccessTokenRequest, AccessTokenResponse, ClientCredentialsGrant},
     scope::Scope,
 };
-use rand::Rng;
+use rand::RngExt;
 use url::Url;
 
 use crate::{
@@ -51,7 +52,7 @@ pub async fn access_token_with_client_credentials(
     token_endpoint: &Url,
     scope: Option<Scope>,
     now: DateTime<Utc>,
-    rng: &mut impl Rng,
+    rng: &mut impl RngExt,
 ) -> Result<AccessTokenResponse, TokenRequestError> {
     tracing::debug!("Requesting access token with client credentials...");
 

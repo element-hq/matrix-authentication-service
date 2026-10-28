@@ -26,12 +26,14 @@
   },
   "common": {
     "e2ee": "Koncové šifrování",
+    "email_address": "E-mailová adresa",
     "loading": "Načítání…",
     "next": "Další",
     "password": "Heslo",
     "previous": "Předchozí",
     "saved": "Uloženo",
-    "saving": "Ukládání..."
+    "saving": "Ukládání...",
+    "username": "Uživatelské jméno"
   },
   "frontend": {
     "account": {
@@ -114,8 +116,25 @@
       "title": "Něco se pokazilo"
     },
     "errors": {
+      "captcha": "Ověření CAPTCHA se nezdařilo, zkuste to prosím znovu",
+      "email_banned": "E-mail je zakázán zásadami serveru",
+      "email_domain_banned": "E-mailová doména je zakázána zásadami serveru",
+      "email_domain_not_allowed": "E-mailová doména není zásadami serveru povolena",
+      "email_not_allowed": "E-main není povolen zásadami serveru",
+      "field_invalid": "This field is invalid",
       "field_required": "Toto pole je povinné",
-      "rate_limit_exceeded": "V krátké době jste podali příliš mnoho žádostí. Počkejte prosím několik minut a zkuste to znovu."
+      "invalid_email": "Please enter a valid email address",
+      "password_mismatch": "Pole hesla se neshodují",
+      "rate_limit_exceeded": "V krátké době jste podali příliš mnoho žádostí. Počkejte prosím několik minut a zkuste to znovu.",
+      "unspecified": "Something went wrong. Please try again.",
+      "username_all_numeric": "Uživatelské jméno se nemůže skládat pouze z čísel",
+      "username_banned": "Uživatelské jméno je zakázáno zásadami serveru",
+      "username_invalid": "Username can only contain lowercase letters, numbers, and the characters . _ - + / =",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, and the characters . _ - + / =",
+      "username_not_allowed": "Uživatelské jméno není povoleno zásadami serveru",
+      "username_taken": "Toto uživatelské jméno je již obsazeno",
+      "username_too_long": "Uživatelské jméno je příliš dlouhé",
+      "username_too_short": "Uživatelské jméno je příliš krátké"
     },
     "last_active": {
       "active_date": "Aktivní {{relativeDate}}",
@@ -226,6 +245,21 @@
         "user_inputs": "Neměly by existovat žádné osobní údaje ani údaje související se stránkami.",
         "word_by_itself": "Jednotlivá slova lze snadno uhodnout."
       }
+    },
+    "register": {
+      "call_to_login": "Máte již účet?",
+      "captcha_incomplete": "Please complete the CAPTCHA challenge before continuing",
+      "captcha_loading": "The CAPTCHA is still loading, please wait a moment",
+      "continue_with_email": "Pokračujte e-mailovou adresou",
+      "continue_with_password": "Pokračovat s heslem",
+      "continue_with_provider": "Continue with {{provider}}",
+      "or_separator": "Nebo",
+      "password_confirm_label": "Potvrdit heslo",
+      "password_label": "Heslo",
+      "terms_of_service": "I agree to the <a>Terms and Conditions</a>",
+      "username_available": "This username is available",
+      "username_check_failed": "We couldn't check if this username is available",
+      "username_checking": "Checking availability…"
     },
     "reset_cross_signing": {
       "cancelled": {

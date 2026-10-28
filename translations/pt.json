@@ -30,7 +30,6 @@
     "loading": "A carregar...",
     "mxid": "ID do Matrix",
     "password": "Palavra-passe",
-    "password_confirm": "Confirmar palavra-passe",
     "username": "Nome de utilizador"
   },
   "error": {
@@ -52,9 +51,6 @@
       }
     },
     "back_to_homepage": "Voltar à página inicial",
-    "captcha": {
-      "noscript": "Este formulário é protegido por um CAPTCHA e requer que o JavaScript esteja habilitado para enviá-lo. Por favor, habilite o JavaScript no seu navegador e recarregue esta página."
-    },
     "change_password": {
       "change": "Alterar palavra-passe",
       "confirm": "Confirmar palavra-passe",
@@ -130,6 +126,7 @@
       "username_too_long": "O nome de utilizador é demasiado longo",
       "username_too_short": "O nome de utilizador é demasiado curto"
     },
+    "loading": "A carregar...",
     "login": {
       "call_to_register": "Ainda não tem uma conta?",
       "continue_with_provider": "Continue com %(provider)s",
@@ -192,10 +189,7 @@
       }
     },
     "register": {
-      "call_to_login": "Já tem uma conta?",
-      "continue_with_email": "Continuar com endereço de e-mail",
       "create_account": {
-        "description": "Escolha um nome de utilizador para continuar.",
         "heading": "Criar uma conta"
       },
       "terms_of_service": "Concordo com o <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Termos e Condições</a>"

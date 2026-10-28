@@ -1,4 +1,5 @@
-/* Copyright 2024, 2025 New Vector Ltd.
+/* Copyright 2025, 2026 Element Creations Ltd.
+ * Copyright 2024, 2025 New Vector Ltd.
  * Copyright 2024 The Matrix.org Foundation C.I.C.
  *
  * SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -6,6 +7,9 @@
  */
 
 @import "tailwindcss";
+
+/* Both the SSR templates and the SPA shell need this one */
+@import "../styles/critical-notice.css";
 
 /* The SSR templates live outside the frontend root, so they aren't picked up by
  * Tailwind's automatic content detection. */

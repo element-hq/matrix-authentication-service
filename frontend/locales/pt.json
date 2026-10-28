@@ -26,12 +26,14 @@
   },
   "common": {
     "e2ee": "Encriptação de ponta a ponta",
+    "email_address": "Endereço de e-mail",
     "loading": "A carregar...",
     "next": "Seguinte",
     "password": "Palavra-passe",
     "previous": "Anterior",
     "saved": "Guardado",
-    "saving": "A guardar…"
+    "saving": "A guardar…",
+    "username": "Nome de utilizador"
   },
   "frontend": {
     "account": {
@@ -113,8 +115,25 @@
       "title": "Algo correu mal"
     },
     "errors": {
+      "captcha": "A verificação do CAPTCHA falhou, tente novamente",
+      "email_banned": "O correio eletrónico é proibido pela política do servidor",
+      "email_domain_banned": "O domínio de correio eletrónico é proibido pela política do servidor",
+      "email_domain_not_allowed": "O domínio de correio eletrónico não é permitido pela política do servidor",
+      "email_not_allowed": "O correio eletrónico não é permitido pela política do servidor",
+      "field_invalid": "This field is invalid",
       "field_required": "Este campo é obrigatório",
-      "rate_limit_exceeded": "Efetuou demasiadas solicitações num curto espaço de tempo. Aguarde alguns minutos e tente novamente."
+      "invalid_email": "Please enter a valid email address",
+      "password_mismatch": "Os campos de palavra-passe não correspondem",
+      "rate_limit_exceeded": "Efetuou demasiadas solicitações num curto espaço de tempo. Aguarde alguns minutos e tente novamente.",
+      "unspecified": "Something went wrong. Please try again.",
+      "username_all_numeric": "O nome de utilizador não pode ser constituído apenas por números",
+      "username_banned": "O nome de utilizador é proibido pela política do servidor",
+      "username_invalid": "Username can only contain lowercase letters, numbers, and the characters . _ - + / =",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, and the characters . _ - + / =",
+      "username_not_allowed": "O nome de utilizador não é permitido pela política do servidor",
+      "username_taken": "Este nome de utilizador já foi utilizado",
+      "username_too_long": "O nome de utilizador é demasiado longo",
+      "username_too_short": "O nome de utilizador é demasiado curto"
     },
     "last_active": {
       "active_date": "Ativo {{relativeDate}}",
@@ -225,6 +244,21 @@
         "user_inputs": "Não deve haver quaisquer dados pessoais ou relacionados com a página.",
         "word_by_itself": "Palavras isoladas são fáceis de adivinhar."
       }
+    },
+    "register": {
+      "call_to_login": "Já tem uma conta?",
+      "captcha_incomplete": "Please complete the CAPTCHA challenge before continuing",
+      "captcha_loading": "The CAPTCHA is still loading, please wait a moment",
+      "continue_with_email": "Continuar com endereço de e-mail",
+      "continue_with_password": "Continue with password",
+      "continue_with_provider": "Continue with {{provider}}",
+      "or_separator": "Ou",
+      "password_confirm_label": "Confirmar palavra-passe",
+      "password_label": "Palavra-passe",
+      "terms_of_service": "I agree to the <a>Terms and Conditions</a>",
+      "username_available": "This username is available",
+      "username_check_failed": "We couldn't check if this username is available",
+      "username_checking": "Checking availability…"
     },
     "reset_cross_signing": {
       "cancelled": {

@@ -26,12 +26,14 @@
   },
   "common": {
     "e2ee": "Päästä päähän -salaus",
+    "email_address": "Sähköpostiosoite",
     "loading": "Ladataan…",
     "next": "Seuraava",
     "password": "Salasana",
     "previous": "Edellinen",
     "saved": "Tallennettu",
-    "saving": "Tallennetaan…"
+    "saving": "Tallennetaan…",
+    "username": "Käyttäjänimi"
   },
   "frontend": {
     "account": {
@@ -113,8 +115,25 @@
       "title": "Jokin meni pieleen"
     },
     "errors": {
+      "captcha": "CAPTCHA-vahvistus epäonnistui, yritä uudelleen",
+      "email_banned": "Palvelinkäytäntö kieltää sähköpostin",
+      "email_domain_banned": "Sähköpostin verkkotunnus on kielletty palvelinkäytännössä",
+      "email_domain_not_allowed": "Palvelinkäytäntö ei salli sähköpostin verkkotunnusta",
+      "email_not_allowed": "Palvelinkäytäntö ei salli sähköpostia",
+      "field_invalid": "This field is invalid",
       "field_required": "Tämä kenttä on pakollinen",
-      "rate_limit_exceeded": "Olet tehnyt liian monta pyyntöä lyhyessä ajassa. Odota muutama minuutti ja yritä uudelleen."
+      "invalid_email": "Please enter a valid email address",
+      "password_mismatch": "Salasanakentät eivät täsmää",
+      "rate_limit_exceeded": "Olet tehnyt liian monta pyyntöä lyhyessä ajassa. Odota muutama minuutti ja yritä uudelleen.",
+      "unspecified": "Something went wrong. Please try again.",
+      "username_all_numeric": "Käyttäjänimi ei voi koostua pelkästään numeroista",
+      "username_banned": "Palvelinkäytäntö kieltää käyttäjänimen",
+      "username_invalid": "Username can only contain lowercase letters, numbers, and the characters . _ - + / =",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, and the characters . _ - + / =",
+      "username_not_allowed": "Palvelinkäytäntö ei salli käyttäjänimeä",
+      "username_taken": "Tämä käyttäjänimi on jo käytössä.",
+      "username_too_long": "Käyttäjänimi on liian pitkä",
+      "username_too_short": "Käyttäjänimi on liian lyhyt"
     },
     "last_active": {
       "active_date": "Aktiivinen {{relativeDate}}",
@@ -145,14 +164,14 @@
       "current_password_label": "Nykyinen salasana",
       "failure": {
         "description": {
-          "account_locked": "Tilisi on lukittu eikä sitä voi palauttaa tällä hetkellä. Jos et odottanut tätä, ota yhteyttä palvelimen ylläpitäjään.",
+          "account_locked": "Tilisi on lukittu eikä sitä voi palauttaa tällä hetkellä. Jos et odottanut tätä, ota yhteyttä palveluntarjoajaasi.",
           "expired_recovery_ticket": "Palautuslinkki on vanhentunut. Aloita tilin palautusprosessi uudelleen alusta.",
           "invalid_new_password": "Valitsemasi uusi salasana on virheellinen; se ei ehkä vastaa määritettyä suojauskäytäntöä.",
           "no_current_password": "Sinulla ei ole nykyistä salasanaa.",
           "no_such_recovery_ticket": "Palautuslinkki on virheellinen. Jos kopioit linkin palautussähköpostista, tarkista, että kopioit koko linkin.",
           "password_changes_disabled": "Salasanan vaihtaminen on poistettu käytöstä.",
           "recovery_ticket_already_used": "Palautuslinkki on jo käytetty. Sitä ei voi käyttää uudelleen.",
-          "unspecified": "Tämä saattaa olla väliaikainen ongelma, joten yritä myöhemmin uudelleen. Jos ongelma jatkuu, ota yhteyttä palvelimen ylläpitäjään.",
+          "unspecified": "Tämä saattaa olla väliaikainen ongelma, joten yritä myöhemmin uudelleen. Jos ongelma jatkuu, ota yhteyttä palveluntarjoajaasi.",
           "wrong_password": "Nykyiseksi salasanaksi antamasi salasana on virheellinen. Yritä uudelleen."
         },
         "title": "Salasanan vaihtaminen epäonnistui"
@@ -226,6 +245,21 @@
         "word_by_itself": "Yksittäiset sanat on helppo arvata."
       }
     },
+    "register": {
+      "call_to_login": "Onko sinulla jo tili?",
+      "captcha_incomplete": "Please complete the CAPTCHA challenge before continuing",
+      "captcha_loading": "The CAPTCHA is still loading, please wait a moment",
+      "continue_with_email": "Jatka sähköpostiosoitteella",
+      "continue_with_password": "Jatka salasanalla",
+      "continue_with_provider": "Continue with {{provider}}",
+      "or_separator": "Tai",
+      "password_confirm_label": "Vahvista salasana",
+      "password_label": "Salasana",
+      "terms_of_service": "I agree to the <a>Terms and Conditions</a>",
+      "username_available": "This username is available",
+      "username_check_failed": "We couldn't check if this username is available",
+      "username_checking": "Checking availability…"
+    },
     "reset_cross_signing": {
       "cancelled": {
         "description_1": "Voit sulkea tämän ikkunan ja palata sovellukseen jatkaaksesi.",
@@ -239,7 +273,7 @@
         "positive_1": "Tilitietosi, yhteystiedot, asetukset ja keskustelulista säilytetään"
       },
       "failure": {
-        "description": "Tämä saattaa olla väliaikainen ongelma, joten yritä myöhemmin uudelleen. Jos ongelma jatkuu, ota yhteyttä palvelimen ylläpitäjään.",
+        "description": "Tämä saattaa olla väliaikainen ongelma, joten yritä myöhemmin uudelleen. Jos ongelma jatkuu, ota yhteyttä palveluntarjoajaasi.",
         "heading": "Digitaalisen identiteetin nollauksen salliminen epäonnistui"
       },
       "finish_reset": "Viimeistele nollaus",

@@ -1,11 +1,11 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::{convert::Infallible, net::IpAddr, sync::Arc, time::Duration};
+use std::{convert::Infallible, future::ready, net::IpAddr, sync::Arc, time::Duration};
 
 use axum::extract::FromRequestParts;
 use governor::{RateLimiter, clock::QuantaClock, state::keyed::DashMapStateStore};
@@ -40,6 +40,12 @@ pub enum RegistrationLimitedError {
 }
 
 #[derive(Debug, Clone, thiserror::Error)]
+pub enum UsernameAvailabilityLimitedError {
+    #[error("Too many username availability checks for requester {0}")]
+    Requester(RequesterFingerprint),
+}
+
+#[derive(Debug, Clone, thiserror::Error)]
 pub enum EmailAuthenticationLimitedError {
     #[error("Too many email authentication requests for requester {0}")]
     Requester(RequesterFingerprint),
@@ -49,6 +55,12 @@ pub enum EmailAuthenticationLimitedError {
 
     #[error("Too many email authentication requests for email {0}")]
     Email(String),
+}
+
+#[derive(Debug, Clone, thiserror::Error)]
+pub enum DeviceCodeLinkLimitedError {
+    #[error("Too many device code link attempts for requester {0}")]
+    Requester(RequesterFingerprint),
 }
 
 /// Key used to rate limit requests per requester
@@ -82,22 +94,24 @@ impl RequesterFingerprint {
 impl<S: Send + Sync> FromRequestParts<S> for RequesterFingerprint {
     type Rejection = Infallible;
 
-    async fn from_request_parts(
+    fn from_request_parts(
         parts: &mut axum::http::request::Parts,
         _state: &S,
-    ) -> Result<Self, Self::Rejection> {
+    ) -> impl Future<Output = Result<Self, Self::Rejection>> + Send {
         let ip = parts.extensions.get::<ClientIp>().and_then(|ip| ip.0);
 
-        if let Some(ip) = ip {
-            Ok(Self::new(ip))
+        let fingerprint = if let Some(ip) = ip {
+            Self::new(ip)
         } else {
             // If we can't infer the IP address, we'll just use an empty fingerprint and
             // warn about it
             tracing::warn!(
                 "Could not infer client IP address for an operation which rate-limits based on IP addresses"
             );
-            Ok(Self::EMPTY)
-        }
+            Self::EMPTY
+        };
+
+        ready(Ok(fingerprint))
     }
 }
 
@@ -120,6 +134,8 @@ struct LimiterInner {
     email_authentication_per_email: KeyedRateLimiter<String>,
     email_authentication_emails_per_session: KeyedRateLimiter<Ulid>,
     email_authentication_attempt_per_session: KeyedRateLimiter<Ulid>,
+    device_code_link_per_requester: KeyedRateLimiter<RequesterFingerprint>,
+    username_availability_per_requester: KeyedRateLimiter<RequesterFingerprint>,
 }
 
 impl LimiterInner {
@@ -145,6 +161,10 @@ impl LimiterInner {
             ),
             email_authentication_attempt_per_session: RateLimiter::keyed(
                 config.email_authentication.attempt_per_session.to_quota()?,
+            ),
+            device_code_link_per_requester: RateLimiter::keyed(config.device_code_link.to_quota()?),
+            username_availability_per_requester: RateLimiter::keyed(
+                config.username_availability.to_quota()?,
             ),
         })
     }
@@ -190,6 +210,10 @@ impl Limiter {
                     .retain_recent();
                 this.inner
                     .email_authentication_attempt_per_session
+                    .retain_recent();
+                this.inner.device_code_link_per_requester.retain_recent();
+                this.inner
+                    .username_availability_per_requester
                     .retain_recent();
 
                 interval.tick().await;
@@ -264,6 +288,23 @@ impl Limiter {
         Ok(())
     }
 
+    /// Check if a username availability check can be performed
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation is rate limited.
+    pub fn check_username_availability(
+        &self,
+        requester: RequesterFingerprint,
+    ) -> Result<(), UsernameAvailabilityLimitedError> {
+        self.inner
+            .username_availability_per_requester
+            .check_key(&requester)
+            .map_err(|_| UsernameAvailabilityLimitedError::Requester(requester))?;
+
+        Ok(())
+    }
+
     /// Check if an email can be sent to the address for an email
     /// authentication session
     ///
@@ -322,6 +363,24 @@ impl Limiter {
             .email_authentication_emails_per_session
             .check_key(&authentication.id)
             .map_err(|_| EmailAuthenticationLimitedError::Authentication(authentication.id))
+    }
+
+    /// Check if a user code can be submitted on the device link page
+    ///
+    /// This protects against brute-forcing the user code of a device code
+    /// grant, as described in RFC 8628 section 5.1.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation is rate limited.
+    pub fn check_device_code_link(
+        &self,
+        requester: RequesterFingerprint,
+    ) -> Result<(), DeviceCodeLinkLimitedError> {
+        self.inner
+            .device_code_link_per_requester
+            .check_key(&requester)
+            .map_err(|_| DeviceCodeLinkLimitedError::Requester(requester))
     }
 }
 
@@ -398,5 +457,22 @@ mod tests {
 
         // The other account isn't rate-limited
         assert!(limiter.check_password(requesters[603], &bob).is_ok());
+    }
+
+    #[test]
+    fn test_device_code_link_limiter() {
+        let limiter = Limiter::new(&RateLimitingConfig::default()).unwrap();
+
+        let alice = RequesterFingerprint::new([1, 2, 3, 4].into());
+        let bob = RequesterFingerprint::new([4, 3, 2, 1].into());
+
+        // The default burst allowance is 10 attempts per requester
+        for _ in 0..10 {
+            assert!(limiter.check_device_code_link(alice).is_ok());
+        }
+        assert!(limiter.check_device_code_link(alice).is_err());
+
+        // Another requester is unaffected
+        assert!(limiter.check_device_code_link(bob).is_ok());
     }
 }

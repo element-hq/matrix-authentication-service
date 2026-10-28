@@ -26,12 +26,14 @@
   },
   "common": {
     "e2ee": "端到端加密",
+    "email_address": "邮箱地址",
     "loading": "加载中...",
     "next": "下一页",
     "password": "密码",
     "previous": "上一页",
     "saved": "已保存",
-    "saving": "正在保存..."
+    "saving": "正在保存...",
+    "username": "用户名"
   },
   "frontend": {
     "account": {
@@ -112,13 +114,30 @@
       "title": "出了点问题"
     },
     "errors": {
+      "captcha": "人机验证失败，请重试",
+      "email_banned": "由于服务器策略，邮件已被禁止",
+      "email_domain_banned": "由于服务器策略，邮件所属的域已被禁止",
+      "email_domain_not_allowed": "由于服务器策略，邮件域不被允许",
+      "email_not_allowed": "由于服务器策略，邮件不被允许",
+      "field_invalid": "此字段无效",
       "field_required": "此字段为必填项",
-      "rate_limit_exceeded": "你在短时间内发出了过多请求。请于几分钟后重试。"
+      "invalid_email": "请输入有效的电子邮件地址",
+      "password_mismatch": "密码字段不匹配",
+      "rate_limit_exceeded": "你在短时间内发出了过多请求。请于几分钟后重试。",
+      "unspecified": "出错了，请重试。",
+      "username_all_numeric": "用户名不能仅由数字组成",
+      "username_banned": "由于服务器策略，用户名已被禁止",
+      "username_invalid": "用户名只能包含小写字母、数字及 .、_、-、+、/、=。",
+      "username_invalid_chars": "用户名包含无效字符。请使用小写字母、数字及 .、_、-、+、/、=。",
+      "username_not_allowed": "由于服务器策略，用户名不被允许",
+      "username_taken": "此用户名已被使用",
+      "username_too_long": "用户名太长",
+      "username_too_short": "用户名太短"
     },
     "last_active": {
-      "active_date": "活跃 {{relativeDate}}",
+      "active_date": "活跃于 {{relativeDate}}",
       "active_now": "活跃",
-      "inactive_90_days": "已停用90天以上"
+      "inactive_90_days": "已停用 90 天以上"
     },
     "nav": {
       "device_limit_error": "已达到设备数量上限",
@@ -144,14 +163,14 @@
       "current_password_label": "当前密码",
       "failure": {
         "description": {
-          "account_locked": "你的账户已被锁定，暂时无法恢复。如果这并非预期，请联系服务器管理员。",
+          "account_locked": "你的账户已被锁定，暂时无法恢复。如果这并非预期，请联系账户提供者。",
           "expired_recovery_ticket": "恢复链接已过期。请从头重新开始账户恢复流程。",
           "invalid_new_password": "你指定的新密码无效；它可能不符合安全策略配置。",
           "no_current_password": "你当前没有密码。",
           "no_such_recovery_ticket": "恢复链接无效。如果链接是从恢复电子邮件中复制的，请检查复制的链接是否完整。",
           "password_changes_disabled": "密码更改已禁用。",
           "recovery_ticket_already_used": "恢复链接已被使用。无法再次使用。",
-          "unspecified": "这可能是暂时的问题，请稍后再试。如果问题仍然存在，请联系服务器管理员。",
+          "unspecified": "这可能是暂时的问题，请稍后再试。如果问题仍然存在，请联系账户提供者。",
           "wrong_password": "你当前提供的密码不正确。请重试。"
         },
         "title": "更新密码失败"
@@ -225,6 +244,21 @@
         "word_by_itself": "单个单词很容易被猜到。"
       }
     },
+    "register": {
+      "call_to_login": "已有账户？",
+      "captcha_incomplete": "请先完成人机验证再继续",
+      "captcha_loading": "人机验证仍在加载中，请稍候片刻。",
+      "continue_with_email": "使用邮件地址继续",
+      "continue_with_password": "使用密码继续",
+      "continue_with_provider": "使用 {{provider}} 继续",
+      "or_separator": "或",
+      "password_confirm_label": "确认密码",
+      "password_label": "密码",
+      "terms_of_service": "我同意<a>条款与条件</a>",
+      "username_available": "This username is available",
+      "username_check_failed": "We couldn't check if this username is available",
+      "username_checking": "Checking availability…"
+    },
     "reset_cross_signing": {
       "cancelled": {
         "description_1": "你可以关闭此窗口并返回到 App 以继续。",
@@ -238,7 +272,7 @@
         "positive_1": "你的账户的详细信息、联系人、偏好与聊天列表都将被保留"
       },
       "failure": {
-        "description": "这可能是暂时的问题，请稍后再试。如果问题仍然存在，请联系服务器管理员。",
+        "description": "这可能是暂时的问题，请稍后再试。如果问题仍然存在，请联系账户提供者。",
         "heading": "数字身份重置授权失败。"
       },
       "finish_reset": "完成重置",

@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -88,6 +89,10 @@ allowed_scope("urn:matrix:org.matrix.msc2967.client:api:*") if {
 	interactive_grant_type(input.grant_type)
 }
 
+admin_scope("urn:synapse:admin:*") := true
+
+admin_scope("urn:mas:admin") := true
+
 uses_unstable_scopes if {
 	scope_list := split(input.scope, " ")
 	count({scope | some scope in scope_list; startswith(scope, "urn:matrix:org.matrix.msc2967.client:")}) > 0
@@ -122,8 +127,16 @@ has_cs_api_scope if {
 # entrypoint: true
 violation contains {"msg": msg} if {
 	some scope in split(input.scope, " ")
+	not admin_scope(scope)
 	not allowed_scope(scope)
 	msg := sprintf("scope '%s' not allowed", [scope])
+}
+
+violation contains {"code": "admin-scope-not-allowed", "msg": msg} if {
+	some scope in split(input.scope, " ")
+	admin_scope(scope)
+	not allowed_scope(scope)
+	msg := sprintf("scope '%s' requires admin privileges", [scope])
 }
 
 violation contains {"msg": "only one device scope is allowed at a time"} if {

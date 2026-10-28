@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -45,7 +46,7 @@ pub(crate) enum IdTokenSignatureError {
 }
 
 pub(crate) fn generate_id_token(
-    rng: &mut (impl rand::RngCore + rand::CryptoRng),
+    rng: &mut impl rand::CryptoRng,
     clock: &impl Clock,
     url_builder: &UrlBuilder,
     key_store: &Keystore,
@@ -96,7 +97,7 @@ pub(crate) fn generate_id_token(
 }
 
 pub(crate) async fn generate_token_pair<R: RepositoryAccess>(
-    rng: &mut (impl rand::RngCore + Send),
+    rng: &mut (impl rand::Rng + Send),
     clock: &impl Clock,
     repo: &mut R,
     session: &Session,

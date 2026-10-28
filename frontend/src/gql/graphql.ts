@@ -183,6 +183,19 @@ export type UserRecoveryTicketStatus =
   /** The ticket is valid */
   | 'VALID';
 
+/** Why a username is not available for registration. */
+export type UsernameUnavailableReason =
+  /**
+   * The username does not pass the registration policy. See
+   * `violationCodes` for the specific reasons.
+   */
+  | 'INVALID'
+  /**
+   * The username is already in use, either by an existing MAS user or
+   * reserved by the homeserver.
+   */
+  | 'TAKEN';
+
 export type AccountDeleteButton_UserFragment = { username: string, hasPassword: boolean, matrix: { mxid: string, displayName: string | null } } & { ' $fragmentName'?: 'AccountDeleteButton_UserFragment' };
 
 export type AccountDeleteButton_SiteConfigFragment = { passwordLoginEnabled: boolean } & { ' $fragmentName'?: 'AccountDeleteButton_SiteConfigFragment' };
@@ -224,7 +237,12 @@ export type OAuth2Session_SessionFragment = (
   & { ' $fragmentRefs'?: { 'EndOAuth2SessionButton_SessionFragment': EndOAuth2SessionButton_SessionFragment } }
 ) & { ' $fragmentName'?: 'OAuth2Session_SessionFragment' };
 
-export type PasswordCreationDoubleInput_SiteConfigFragment = { id: string, minimumPasswordComplexity: number } & { ' $fragmentName'?: 'PasswordCreationDoubleInput_SiteConfigFragment' };
+export type UsernameAvailableQueryVariables = Exact<{
+  username: string;
+}>;
+
+
+export type UsernameAvailableQuery = { usernameAvailable: { available: boolean, reason: UsernameUnavailableReason | null, violationCodes: Array<string> | null } };
 
 export type EndBrowserSessionButton_SessionFragment = { id: string, userAgent: { name: string | null, os: string | null, model: string | null, deviceType: DeviceType } | null } & { ' $fragmentName'?: 'EndBrowserSessionButton_SessionFragment' };
 
@@ -488,7 +506,7 @@ export type PasswordChangeQueryVariables = Exact<{ [key: string]: never; }>;
 export type PasswordChangeQuery = { viewer:
     | { __typename: 'Anonymous', id: string }
     | { __typename: 'User', id: string }
-  , siteConfig: { ' $fragmentRefs'?: { 'PasswordCreationDoubleInput_SiteConfigFragment': PasswordCreationDoubleInput_SiteConfigFragment } } };
+  , siteConfig: { minimumPasswordComplexity: number } };
 
 export type RecoverPasswordMutationVariables = Exact<{
   ticket: string;
@@ -507,7 +525,7 @@ export type ResendRecoveryEmailMutation = { resendRecoveryEmail: { status: Resen
 
 export type RecoverPassword_UserRecoveryTicketFragment = { username: string, email: string } & { ' $fragmentName'?: 'RecoverPassword_UserRecoveryTicketFragment' };
 
-export type RecoverPassword_SiteConfigFragment = { ' $fragmentRefs'?: { 'PasswordCreationDoubleInput_SiteConfigFragment': PasswordCreationDoubleInput_SiteConfigFragment } } & { ' $fragmentName'?: 'RecoverPassword_SiteConfigFragment' };
+export type RecoverPassword_SiteConfigFragment = { minimumPasswordComplexity: number } & { ' $fragmentName'?: 'RecoverPassword_SiteConfigFragment' };
 
 export type PasswordRecoveryQueryVariables = Exact<{
   ticket: string;
@@ -914,20 +932,11 @@ export const RecoverPassword_UserRecoveryTicketFragmentDoc = new TypedDocumentSt
   email
 }
     `, {"fragmentName":"RecoverPassword_userRecoveryTicket"}) as unknown as TypedDocumentString<RecoverPassword_UserRecoveryTicketFragment, unknown>;
-export const PasswordCreationDoubleInput_SiteConfigFragmentDoc = new TypedDocumentString(`
-    fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {
-  id
-  minimumPasswordComplexity
-}
-    `, {"fragmentName":"PasswordCreationDoubleInput_siteConfig"}) as unknown as TypedDocumentString<PasswordCreationDoubleInput_SiteConfigFragment, unknown>;
 export const RecoverPassword_SiteConfigFragmentDoc = new TypedDocumentString(`
     fragment RecoverPassword_siteConfig on SiteConfig {
-  ...PasswordCreationDoubleInput_siteConfig
-}
-    fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {
-  id
   minimumPasswordComplexity
-}`, {"fragmentName":"RecoverPassword_siteConfig"}) as unknown as TypedDocumentString<RecoverPassword_SiteConfigFragment, unknown>;
+}
+    `, {"fragmentName":"RecoverPassword_siteConfig"}) as unknown as TypedDocumentString<RecoverPassword_SiteConfigFragment, unknown>;
 export const DeactivateUserDocument = new TypedDocumentString(`
     mutation DeactivateUser($hsErase: Boolean!, $password: String) {
   deactivateUser(input: {hsErase: $hsErase, password: $password}) {
@@ -948,6 +957,15 @@ export const FooterDocument = new TypedDocumentString(`
   tosUri
   policyUri
 }`) as unknown as TypedDocumentString<FooterQuery, FooterQueryVariables>;
+export const UsernameAvailableDocument = new TypedDocumentString(`
+    query UsernameAvailable($username: String!) {
+  usernameAvailable(username: $username) {
+    available
+    reason
+    violationCodes
+  }
+}
+    `) as unknown as TypedDocumentString<UsernameAvailableQuery, UsernameAvailableQueryVariables>;
 export const EndBrowserSessionDocument = new TypedDocumentString(`
     mutation EndBrowserSession($id: ID!) {
   endBrowserSession(input: {browserSessionId: $id}) {
@@ -1404,13 +1422,10 @@ export const PasswordChangeDocument = new TypedDocumentString(`
     }
   }
   siteConfig {
-    ...PasswordCreationDoubleInput_siteConfig
+    minimumPasswordComplexity
   }
 }
-    fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {
-  id
-  minimumPasswordComplexity
-}`) as unknown as TypedDocumentString<PasswordChangeQuery, PasswordChangeQueryVariables>;
+    `) as unknown as TypedDocumentString<PasswordChangeQuery, PasswordChangeQueryVariables>;
 export const RecoverPasswordDocument = new TypedDocumentString(`
     mutation RecoverPassword($ticket: String!, $newPassword: String!) {
   setPasswordByRecovery(input: {ticket: $ticket, newPassword: $newPassword}) {
@@ -1436,16 +1451,12 @@ export const PasswordRecoveryDocument = new TypedDocumentString(`
     ...RecoverPassword_userRecoveryTicket
   }
 }
-    fragment PasswordCreationDoubleInput_siteConfig on SiteConfig {
-  id
-  minimumPasswordComplexity
-}
-fragment RecoverPassword_userRecoveryTicket on UserRecoveryTicket {
+    fragment RecoverPassword_userRecoveryTicket on UserRecoveryTicket {
   username
   email
 }
 fragment RecoverPassword_siteConfig on SiteConfig {
-  ...PasswordCreationDoubleInput_siteConfig
+  minimumPasswordComplexity
 }`) as unknown as TypedDocumentString<PasswordRecoveryQuery, PasswordRecoveryQueryVariables>;
 export const AllowCrossSigningResetDocument = new TypedDocumentString(`
     mutation AllowCrossSigningReset($userId: ID!) {
@@ -1610,6 +1621,28 @@ export const mockDeactivateUserMutation = (resolver: GraphQLResponseResolver<Dea
 export const mockFooterQuery = (resolver: GraphQLResponseResolver<FooterQuery, FooterQueryVariables>, options?: RequestHandlerOptions) =>
   graphql.query<FooterQuery, FooterQueryVariables>(
     'Footer',
+    resolver,
+    options
+  )
+
+/**
+ * @param resolver A function that accepts [resolver arguments](https://mswjs.io/docs/api/graphql#resolver-argument) and must always return the instruction on what to do with the intercepted request. ([see more](https://mswjs.io/docs/concepts/response-resolver#resolver-instructions))
+ * @param options Options object to customize the behavior of the mock. ([see more](https://mswjs.io/docs/api/graphql#handler-options))
+ * @see https://mswjs.io/docs/basics/response-resolver
+ * @example
+ * mockUsernameAvailableQuery(
+ *   ({ query, variables }) => {
+ *     const { username } = variables;
+ *     return HttpResponse.json({
+ *       data: { usernameAvailable }
+ *     })
+ *   },
+ *   requestOptions
+ * )
+ */
+export const mockUsernameAvailableQuery = (resolver: GraphQLResponseResolver<UsernameAvailableQuery, UsernameAvailableQueryVariables>, options?: RequestHandlerOptions) =>
+  graphql.query<UsernameAvailableQuery, UsernameAvailableQueryVariables>(
+    'UsernameAvailable',
     resolver,
     options
   )

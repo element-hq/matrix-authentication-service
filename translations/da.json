@@ -30,7 +30,6 @@
     "loading": "Indlæser...",
     "mxid": "Matrix ID",
     "password": "Adgangskode",
-    "password_confirm": "Bekræft adgangskode",
     "username": "Brugernavn"
   },
   "error": {
@@ -52,9 +51,6 @@
       }
     },
     "back_to_homepage": "Gå tilbage til hjemmesiden",
-    "captcha": {
-      "noscript": "Denne formular er beskyttet af en CAPTCHA som kræver, at JavaScript er aktiveret for at kunne indsende den. Aktivér JavaScript i din browser, og indlæs denne side igen."
-    },
     "change_password": {
       "change": "Skift adgangskode",
       "confirm": "Bekræft adgangskode",
@@ -130,6 +126,7 @@
       "username_too_long": "Brugernavnet er for langt",
       "username_too_short": "Brugernavnet er for kort"
     },
+    "loading": "Indlæser...",
     "login": {
       "call_to_register": "Har du ikke en konto endnu?",
       "continue_with_provider": "Fortsæt med %(provider)s",
@@ -192,11 +189,7 @@
       }
     },
     "register": {
-      "call_to_login": "Har du allerede en konto?",
-      "continue_with_email": "Fortsæt med e-mailadresse",
-      "continue_with_password": "Fortsæt med adgangskode",
       "create_account": {
-        "description": "Vælg et brugernavn for at fortsætte.",
         "heading": "Opret en konto"
       },
       "terms_of_service": "Jeg accepterer <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Vilkår og betingelser</a>"

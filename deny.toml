@@ -20,14 +20,11 @@ ignore = [
     # RSA key extraction "Marvin Attack". This is only relevant when using
     # PKCS#1 v1.5 encryption, which we don't
     "RUSTSEC-2023-0071",
-    # Rand 0.8.5 unsoundness with custom logger + thread_rng reseeding.
-    # Only triggers when the `log` feature is enabled, which we don't use.
-    "RUSTSEC-2026-0097",
-    # A bug in wasmtime, but we are not affected, as we only have a single
-    # Engine/Store, and as the advisory says explicitly:
-    # > This bug is not triggerable by guest WebAssembly programs.
-    "RUSTSEC-2026-0222",
 ]
+
+# Only warn about unmaintained crates in direct dependencies of the workspace,
+# not transitive dependencies
+unmaintained = "workspace"
 
 [licenses]
 version = 2
@@ -91,11 +88,42 @@ skip = [
     { name = "darling_core", version = "0.20.11" },
     { name = "darling_macro", version = "0.20.11" },
 
-    # We are still mainly using rand 0.8
-    { name = "rand", version = "0.8.5" },
+    # We moved to rand 0.10, but cookie and sqlx still pull the 0.8 generation
+    { name = "rand", version = "0.8.6" },
     { name = "rand_chacha", version = "0.3.1" },
     { name = "rand_core", version = "0.6.4" },
     { name = "getrandom", version = "0.2.16" },
+    # ...and opentelemetry_sdk and sentry pull the 0.9 generation
+    { name = "rand", version = "0.9.4" },
+    { name = "rand_chacha", version = "0.9.0" },
+    { name = "rand_core", version = "0.9.3" },
+    { name = "getrandom", version = "0.3.3" },
+
+    # We moved to the new (digest 0.11-based) generation of the RustCrypto
+    # crates, but cookie (via axum-extra's private cookies), sqlx, headers,
+    # wasmtime and pest still pull the previous generation
+    { name = "aead", version = "0.5.2" },           # aes-gcm 0.10 <- cookie
+    { name = "aes", version = "0.8.4" },            # aes-gcm 0.10 <- cookie
+    { name = "aes-gcm", version = "0.10.3" },       # cookie
+    { name = "block-buffer", version = "0.10.4" },  # digest 0.10
+    { name = "cipher", version = "0.4.4" },         # aes, aes-gcm, ctr
+    { name = "cpufeatures", version = "0.2.17" },   # aes, polyval, sha1, sha2 0.10
+    { name = "crypto-common", version = "0.1.6" },  # aead, cipher, digest 0.10
+    { name = "ctr", version = "0.9.2" },            # aes-gcm 0.10 <- cookie
+    { name = "digest", version = "0.10.7" },        # hmac, md-5, sha1, sha2 0.10
+    { name = "ghash", version = "0.5.1" },          # aes-gcm 0.10 <- cookie
+    { name = "hmac", version = "0.12.1" },          # hkdf 0.12 <- cookie, sqlx
+    { name = "inout", version = "0.1.4" },          # cipher 0.4
+    { name = "md-5", version = "0.10.6" },          # sqlx
+    { name = "polyval", version = "0.6.2" },        # ghash 0.5
+    { name = "sha1", version = "0.10.6" },          # headers
+    { name = "sha2", version = "0.10.9" },          # cookie, sqlx, wasmtime, pest
+    { name = "universal-hash", version = "0.5.1" }, # ghash, polyval
+
+    # bcrypt and opa-wasm moved to base64 0.23, the rest of the tree is on 0.22
+    { name = "base64", version = "0.22.1" },
+    # zerovec-derive (via icu) moved to syn 3, everything else is on syn 2
+    { name = "syn", version = "2.0.106" },
 ]
 
 skip-tree = []

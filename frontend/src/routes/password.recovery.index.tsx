@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -58,7 +59,7 @@ const FRAGMENT = graphql(/* GraphQL */ `
 
 const SITE_CONFIG_FRAGMENT = graphql(/* GraphQL */ `
   fragment RecoverPassword_siteConfig on SiteConfig {
-    ...PasswordCreationDoubleInput_siteConfig
+    minimumPasswordComplexity
   }
 `);
 
@@ -292,7 +293,7 @@ const EmailRecovery: React.FC<{
           />
 
           <PasswordCreationDoubleInput
-            siteConfig={siteConfig}
+            minimumPasswordComplexity={siteConfig.minimumPasswordComplexity}
             forceShowNewPasswordInvalid={
               mutation.data?.status === "INVALID_NEW_PASSWORD" || false
             }

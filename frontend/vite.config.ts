@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -18,21 +19,6 @@ import { globSync } from "tinyglobby";
 import type { Manifest, PluginOption } from "vite";
 import codegen from "vite-plugin-graphql-codegen";
 import { defineConfig } from "vitest/config";
-
-function i18nHotReload(): PluginOption {
-  return {
-    name: "i18n-hot-reload",
-    handleHotUpdate({ file, server }): void {
-      if (file.includes("locales") && file.endsWith(".json")) {
-        console.log("Locale file updated");
-        server.hot.send({
-          type: "custom",
-          event: "locales-update",
-        });
-      }
-    },
-  };
-}
 
 // Pre-compress the assets, so that the server can serve them directly
 function compression(): PluginOption {
@@ -223,8 +209,6 @@ export default defineConfig((env) => ({
     augmentManifest(),
 
     compression(),
-
-    i18nHotReload(),
   ],
 
   server: {

@@ -26,12 +26,14 @@
   },
   "common": {
     "e2ee": "End-to-end encryption",
+    "email_address": "Endereço de e-mail",
     "loading": "Carregando…",
     "next": "Próximo",
     "password": "Senha",
     "previous": "Anterior",
     "saved": "Saved",
-    "saving": "Saving…"
+    "saving": "Saving…",
+    "username": "Nome de usuário"
   },
   "frontend": {
     "account": {
@@ -99,7 +101,7 @@
       "unknown": "Unknown device type"
     },
     "email_in_use": {
-      "heading": "The email address {{email}} is already in use."
+      "heading": "The email address {{email}} is already in use"
     },
     "end_session_button": {
       "confirmation_modal_body_text": "Make sure you always have access to another verified device or your recovery key to avoid losing your encrypted chat history.",
@@ -113,8 +115,25 @@
       "title": "Something went wrong"
     },
     "errors": {
+      "captcha": "CAPTCHA verification failed, please try again",
+      "email_banned": "Email is banned by the server policy",
+      "email_domain_banned": "Email domain is banned by the server policy",
+      "email_domain_not_allowed": "Email domain is not allowed by the server policy",
+      "email_not_allowed": "Email is not allowed by the server policy",
+      "field_invalid": "This field is invalid",
       "field_required": "Este campo é obrigatório",
-      "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again."
+      "invalid_email": "Please enter a valid email address",
+      "password_mismatch": "As senhas digitadas não são iguais",
+      "rate_limit_exceeded": "You've made too many requests in a short period. Please wait a few minutes and try again.",
+      "unspecified": "Something went wrong. Please try again.",
+      "username_all_numeric": "Username cannot consist solely of numbers",
+      "username_banned": "Username is banned by the server policy",
+      "username_invalid": "Username can only contain lowercase letters, numbers, and the characters . _ - + / =",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, and the characters . _ - + / =",
+      "username_not_allowed": "Username is not allowed by the server policy",
+      "username_taken": "Este nome de usuário já está em uso",
+      "username_too_long": "Username is too long",
+      "username_too_short": "Username is too short"
     },
     "last_active": {
       "active_date": "Active {{relativeDate}}",
@@ -145,14 +164,14 @@
       "current_password_label": "Senha atual",
       "failure": {
         "description": {
-          "account_locked": "Your account is locked and can not be recovered at this time. If this is not expected, please contact your server administrator.",
+          "account_locked": "Your account is locked and can not be recovered at this time. If this is not expected, please contact your account provider.",
           "expired_recovery_ticket": "The recovery link has expired. Please start the account recovery process again from the start.",
           "invalid_new_password": "The new password you chose is invalid; it may not meet the configured security policy.",
           "no_current_password": "You don't have a current password.",
           "no_such_recovery_ticket": "The recovery link is invalid. If you copied the link from the recovery e-mail, please check the full link was copied.",
           "password_changes_disabled": "Password changes are disabled.",
           "recovery_ticket_already_used": "The recovery link has already been used. It cannot be used again.",
-          "unspecified": "This might be a temporary problem, so please try again later. If the problem persists, please contact your server administrator.",
+          "unspecified": "This might be a temporary problem, so please try again later. If the problem persists, please contact your account provider.",
           "wrong_password": "The password you supplied as your current password is incorrect. Please try again."
         },
         "title": "Failed to update password"
@@ -226,11 +245,26 @@
         "word_by_itself": "Single words are easy to guess."
       }
     },
+    "register": {
+      "call_to_login": "Já tem uma conta?",
+      "captcha_incomplete": "Please complete the CAPTCHA challenge before continuing",
+      "captcha_loading": "The CAPTCHA is still loading, please wait a moment",
+      "continue_with_email": "Continue with email address",
+      "continue_with_password": "Continue with password",
+      "continue_with_provider": "Continue with {{provider}}",
+      "or_separator": "Ou",
+      "password_confirm_label": "Confirme a nova senha",
+      "password_label": "Senha",
+      "terms_of_service": "I agree to the <a>Terms and Conditions</a>",
+      "username_available": "This username is available",
+      "username_check_failed": "We couldn't check if this username is available",
+      "username_checking": "Checking availability…"
+    },
     "reset_cross_signing": {
       "cancelled": {
         "description_1": "You can close this window and go back to the app to continue.",
         "description_2": "If don’t have access to any other verified devices and you don’t have your recovery key, then you’ll need to reset your digital identity to continue using the app.",
-        "heading": "Digital identity reset cancelled."
+        "heading": "Digital identity reset cancelled"
       },
       "description": "If don’t have access to any other verified devices and you don’t have your recovery key, then you’ll need to reset your digital identity to continue using the app.",
       "effect_list": {
@@ -239,7 +273,7 @@
         "positive_1": "Your account details, contacts, preferences, and chat list will be kept"
       },
       "failure": {
-        "description": "This might be a temporary problem, so please try again later. If the problem persists, please contact your server administrator.",
+        "description": "This might be a temporary problem, so please try again later. If the problem persists, please contact your account provider.",
         "heading": "Failed to allow digital identity reset"
       },
       "finish_reset": "Finish reset",

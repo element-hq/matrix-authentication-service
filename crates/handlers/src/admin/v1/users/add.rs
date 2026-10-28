@@ -126,12 +126,8 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             t.description("Username is not valid").example(response)
         })
         .response_with::<409, RouteError, _>(|t| {
-            let response = ErrorResponse::from_error(&RouteError::UserAlreadyExists);
-            t.description("User already exists").example(response)
-        })
-        .response_with::<409, RouteError, _>(|t| {
             let response = ErrorResponse::from_error(&RouteError::UsernameReserved);
-            t.description("Username is reserved by the homeserver")
+            t.description("User already exists or the username is reserved by the homeserver")
                 .example(response)
         })
 }

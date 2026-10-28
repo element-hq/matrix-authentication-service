@@ -26,12 +26,14 @@
   },
   "common": {
     "e2ee": "Ende-til-ende-kryptering",
+    "email_address": "E-postadresse",
     "loading": "Laster inn...",
     "next": "Neste",
     "password": "Passord",
     "previous": "Forrige",
     "saved": "Lagret",
-    "saving": "Lagrer…"
+    "saving": "Lagrer…",
+    "username": "Brukernavn"
   },
   "frontend": {
     "account": {
@@ -113,8 +115,25 @@
       "title": "Noe gikk galt"
     },
     "errors": {
+      "captcha": "CAPTCHA-verifisering mislyktes. Prøv igjen",
+      "email_banned": "E-post er utestengt av serverpolicyen",
+      "email_domain_banned": "E-postdomenet er utestengt av serverpolicyen",
+      "email_domain_not_allowed": "E-postdomene er ikke tillatt av serverpolicyen",
+      "email_not_allowed": "E-post er ikke tillatt av serverpolicyen",
+      "field_invalid": "This field is invalid",
       "field_required": "Dette feltet er obligatorisk",
-      "rate_limit_exceeded": "Du har kommet med for mange forespørsler på kort tid. Vent noen minutter og prøv igjen."
+      "invalid_email": "Please enter a valid email address",
+      "password_mismatch": "Passordfeltene stemmer ikke overens",
+      "rate_limit_exceeded": "Du har kommet med for mange forespørsler på kort tid. Vent noen minutter og prøv igjen.",
+      "unspecified": "Something went wrong. Please try again.",
+      "username_all_numeric": "Brukernavn kan ikke bare bestå av tall",
+      "username_banned": "Brukernavn er utestengt av serverpolicyen",
+      "username_invalid": "Username can only contain lowercase letters, numbers, and the characters . _ - + / =",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, and the characters . _ - + / =",
+      "username_not_allowed": "Brukernavnet er ikke tillatt av serverpolicyen",
+      "username_taken": "Dette brukernavnet er allerede tatt",
+      "username_too_long": "Brukernavnet er for langt",
+      "username_too_short": "Brukernavnet er for kort"
     },
     "last_active": {
       "active_date": "Aktiv {{relativeDate}}",
@@ -225,6 +244,21 @@
         "user_inputs": "Det skal ikke være noen personlige eller siderelaterte data.",
         "word_by_itself": "Enkeltord er lette å gjette."
       }
+    },
+    "register": {
+      "call_to_login": "Har du allerede en konto?",
+      "captcha_incomplete": "Please complete the CAPTCHA challenge before continuing",
+      "captcha_loading": "The CAPTCHA is still loading, please wait a moment",
+      "continue_with_email": "Fortsett med e-postadresse",
+      "continue_with_password": "Fortsett med passord",
+      "continue_with_provider": "Continue with {{provider}}",
+      "or_separator": "Eller",
+      "password_confirm_label": "Bekreft passord",
+      "password_label": "Passord",
+      "terms_of_service": "I agree to the <a>Terms and Conditions</a>",
+      "username_available": "This username is available",
+      "username_check_failed": "We couldn't check if this username is available",
+      "username_checking": "Checking availability…"
     },
     "reset_cross_signing": {
       "cancelled": {

@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -51,6 +52,12 @@ pub enum ViolationVariant {
     /// The email address is banned.
     EmailBanned,
 
+    /// An admin scope was requested but is not allowed.
+    AdminScopeNotAllowed,
+
+    /// The client is not allowed by the policy.
+    ClientNotAllowed,
+
     /// The user has reached their session limit.
     TooManySessions {
         /// How many devices need to be removed to make room for the new session
@@ -73,6 +80,8 @@ impl ViolationVariant {
             Self::EmailDomainBanned => "email-domain-banned",
             Self::EmailNotAllowed => "email-not-allowed",
             Self::EmailBanned => "email-banned",
+            Self::AdminScopeNotAllowed => "admin-scope-not-allowed",
+            Self::ClientNotAllowed => "client-not-allowed",
             Self::TooManySessions { .. } => "too-many-sessions",
         }
     }

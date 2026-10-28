@@ -51,10 +51,8 @@ http:
         - name: oauth
         # Serves the Matrix C-S API compatibility endpoints
         - name: compat
-        # Serve the GraphQL API used by the frontend,
-        # and optionally the GraphQL playground
+        # Serve the GraphQL API used by the frontend
         - name: graphql
-          playground: true
         # Serve the given folder on the /assets/ path
         - name: assets
           path: ./share/assets/
@@ -642,6 +640,22 @@ rate_limiting:
     attempt_per_session:
       burst: 10
       per_second: 0.016666
+
+  # Limits how many user codes can be submitted on the device link page,
+  # based on source IP address.
+  # This protects against brute-forcing the user code of the
+  # Device Authorization Grant.
+  device_code_link:
+    burst: 10
+    per_second: 0.016666
+
+  # Limits how often the registration form can check whether a username is
+  # available, based on source address.
+  # The form checks the username as it is typed. This limit makes it harder to
+  # use those checks to find out which usernames exist.
+  username_availability:
+    burst: 5
+    per_second: 1.0
 ```
 
 ## `telemetry`

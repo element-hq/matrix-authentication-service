@@ -15,7 +15,7 @@ use mas_storage::{
     user::{UserEmailFilter, UserRecoveryRepository},
 };
 use mas_templates::{EmailRecoveryContext, TemplateContext};
-use rand::distributions::{Alphanumeric, DistString};
+use rand::distr::{Alphanumeric, SampleString};
 use tracing::{error, info};
 
 use crate::{

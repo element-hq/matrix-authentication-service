@@ -30,7 +30,6 @@
     "loading": "Chargement…",
     "mxid": "Matrix ID",
     "password": "Mot de passe",
-    "password_confirm": "Confirmer le mot de passe",
     "username": "Nom d’utilisateur"
   },
   "error": {
@@ -39,11 +38,11 @@
   "mas": {
     "account": {
       "deactivated": {
-        "description": "Ce compte (<em>%(mxid)s</em>) a été supprimé. Si vous ne vous attendez pas à cela, contactez l'administrateur de votre serveur.",
+        "description": "Ce compte (<em>%(mxid)s</em>) a été supprimé. Si cela ne vous semble pas normal, veuillez contacter l'administrateur de votre compte.",
         "heading": "Compte supprimé"
       },
       "locked": {
-        "description": "Ce compte (<em>%(mxid)s</em>) a été verrouillé. Si vous ne vous attendez pas à cela, contactez l'administrateur de votre serveur.",
+        "description": "Ce compte (<em>%(mxid)s</em>) a été verrouillé. Si cette situation est inattendue, veuillez contacter l'administrateur de votre serveur.",
         "heading": "Compte bloqué"
       },
       "logged_out": {
@@ -52,9 +51,6 @@
       }
     },
     "back_to_homepage": "Retourner sur la page d'accueil",
-    "captcha": {
-      "noscript": "Ce formulaire est protégé par un CAPTCHA et nécessite l'activation de JavaScript pour le soumettre. Veuillez activer JavaScript dans votre navigateur et recharger cette page."
-    },
     "change_password": {
       "change": "Changer de mot de passe",
       "confirm": "Confirmer le mot de passe",
@@ -79,8 +75,8 @@
       "security_code": "Code de sécurité"
     },
     "device_code_link": {
-      "description": "Associer un appareil",
-      "headline": "Entrez le code affiché sur votre appareil",
+      "description": "Saisissez le code de sécurité affiché sur votre autre appareil",
+      "headline": "Associer un nouvel appareil à votre compte",
       "verification_code": "Code de vérification"
     },
     "device_consent": {
@@ -140,7 +136,7 @@
       "rate_limit_exceeded": "Vous avez effectué trop de requêtes sur une courte période. Veuillez patienter quelques minutes et réessayer.",
       "username_all_numeric": "Le nom d'utilisateur ne peut pas être composé uniquement de chiffres",
       "username_banned": "Ce nom d'utilisateur est interdit par la politique du serveur",
-      "username_invalid_chars": "Le nom d'utilisateur contient des caractères non valides. Utilisez uniquement des lettres minuscules, des chiffres, des tirets et des traits de soulignement.",
+      "username_invalid_chars": "Le nom d'utilisateur contient des caractères non valides. Utilisez uniquement des lettres minuscules, des chiffres, et les caractères . _ - + / =",
       "username_not_allowed": "Ce nom d'utilisateur n'est pas autorisé par la politique du serveur",
       "username_taken": "Ce nom d'utilisateur est déjà utilisé",
       "username_too_long": "Le nom d'utilisateur est trop long",
@@ -149,6 +145,8 @@
     "legacy_consent": {
       "this_will_setup": "Continuer connectera <span>%(client_name)s</span> avec votre compte <span>%(server_name)s</span>."
     },
+    "loading": "Chargement…",
+    "loading_failed": "Une erreur s'est produite lors du chargement de la page. Veuillez réactualiser la page.",
     "login": {
       "call_to_register": "Vous n’avez pas encore de compte ?",
       "continue_with_provider": "Poursuivre avec %(provider)s",
@@ -174,8 +172,16 @@
     "not_you": "Vous n'êtes pas %(username)s ?",
     "or_separator": "Ou",
     "policy_violation": {
-      "description": "Cela peut être dû à l'application auteur de la demande, à l'utilisateur actuellement connecté ou à la demande elle-même.",
-      "heading": "La demande d'autorisation a été refusée, conformément à la politique appliquée par ce service.",
+      "admin_scope_not_allowed": {
+        "description": "Cette application nécessite des droits d'administrateur. Connectez-vous avec un compte administrateur pour continuer.",
+        "heading": "Accès administrateur requis"
+      },
+      "client_not_allowed": {
+        "description": "Cette application n'est pas autorisée à se connecter à ce service.",
+        "heading": "Demande non autorisée"
+      },
+      "description": "Votre demande a été refusée en raison de la politique de ce service. Cela peut être dû à l'application, à votre compte ou à la demande elle-même.",
+      "heading": "Demande refusée",
       "logged_as": "Connecté en tant que <span class=\"font-semibold\">%(username)s</span>",
       "too_many_sessions": {
         "description": "Vous avez déjà connecté votre compte au nombre maximum d'appareils. Pour continuer, <span class=\"font-semibold\">supprimez %(num_devices_to_remove)s de vos appareils existants</span> et reconnectez-vous.",
@@ -216,13 +222,10 @@
       }
     },
     "register": {
-      "call_to_login": "Vous avez déjà un compte ?",
-      "continue_with_email": "Continuer avec une adresse e-mail",
-      "continue_with_password": "Continuer avec un mot de passe",
       "create_account": {
-        "description": "Choisissez un nom d'utilisateur pour continuer.",
         "heading": "Créer un compte"
       },
+      "javascript_required": "JavaScript est nécessaire pour créer un compte. Veuillez activer JavaScript dans votre navigateur et recharger cette page.",
       "terms_of_service": "J'accepte les <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Conditions d'utilisation</a>"
     },
     "registration_token": {

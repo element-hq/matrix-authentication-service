@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -221,6 +222,32 @@ test_mas_scopes if {
 		with data.admin_users as []
 		with input.grant_type as "authorization_code"
 		with input.scope as "urn:mas:admin"
+}
+
+test_synapse_admin_scope_violation if {
+	violations := authorization_grant.violation with input.user as user
+		with input.client as client
+		with data.admin_users as []
+		with input.grant_type as "authorization_code"
+		with input.scope as "urn:synapse:admin:*"
+
+	violations == {{
+		"code": "admin-scope-not-allowed",
+		"msg": "scope 'urn:synapse:admin:*' requires admin privileges",
+	}}
+}
+
+test_mas_admin_scope_violation if {
+	violations := authorization_grant.violation with input.user as user
+		with input.client as client
+		with data.admin_users as []
+		with input.grant_type as "authorization_code"
+		with input.scope as "urn:mas:admin"
+
+	violations == {{
+		"code": "admin-scope-not-allowed",
+		"msg": "scope 'urn:mas:admin' requires admin privileges",
+	}}
 }
 
 # Helper utility to extract the number of sessions that they `need_to_remove`, returns 0

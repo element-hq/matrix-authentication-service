@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 Kévin Commaille.
 //
@@ -7,6 +8,7 @@
 use std::collections::HashMap;
 
 use chrono::{DateTime, Duration, Utc};
+use mas_data_model::{Clock, clock::MockClock};
 use mas_iana::{jose::JsonWebSignatureAlg, oauth::OAuthClientAuthenticationMethod};
 use mas_jose::{
     claims::{self, hash_token},
@@ -18,7 +20,7 @@ use mas_keystore::{JsonWebKey, JsonWebKeySet, Keystore, PrivateKey};
 use mas_oidc_client::types::{IdToken, client_credentials::ClientCredentials};
 use rand::{
     SeedableRng,
-    distributions::{Alphanumeric, DistString},
+    distr::{Alphanumeric, SampleString},
 };
 use url::Url;
 use wiremock::MockServer;
@@ -37,9 +39,13 @@ const REFRESH_TOKEN: &str = "RefreshToken1";
 const SUBJECT_IDENTIFIER: &str = "SubjectID";
 const ID_TOKEN_SIGNING_ALG: JsonWebSignatureAlg = JsonWebSignatureAlg::Rs256;
 
+/// The current time, as seen by every test in this crate.
+///
+/// Tests never read the system clock: they use a [`MockClock`] frozen at a
+/// fixed instant, so token timestamps and verification always agree no matter
+/// how long the setup in between takes.
 fn now() -> DateTime<Utc> {
-    #[expect(clippy::disallowed_methods)]
-    Utc::now()
+    MockClock::default().now()
 }
 
 async fn init_test() -> (reqwest::Client, MockServer, Url) {

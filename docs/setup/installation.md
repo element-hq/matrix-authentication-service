@@ -63,8 +63,8 @@ The image can also be built from the source:
 
 Building from the source requires:
 
-- The latest stable [Rust toolchain](https://www.rust-lang.org/learn/get-started)
-- [Node.js (24 and later)](https://nodejs.org/en/), with [corepack](https://nodejs.org/api/corepack.html) enabled so pnpm@11 is provisioned automatically
+- The [Rust toolchain](https://www.rust-lang.org/learn/get-started) pinned by `rust-toolchain.toml` (installed automatically by rustup)
+- [Node.js](https://nodejs.org/en/), with [corepack](https://nodejs.org/api/corepack.html) enabled so pnpm@11 is provisioned automatically; pnpm then downloads the Node.js version pinned in `package.json`
 - the [Open Policy Agent](https://www.openpolicyagent.org/docs/latest/#running-opa) binary (or alternatively, Docker)
 
 1. Get the source

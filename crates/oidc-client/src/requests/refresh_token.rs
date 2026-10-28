@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 Kévin Commaille.
 //
@@ -14,7 +15,7 @@ use oauth2_types::{
     requests::{AccessTokenRequest, AccessTokenResponse, RefreshTokenGrant},
     scope::Scope,
 };
-use rand::Rng;
+use rand::RngExt;
 use url::Url;
 
 use super::jose::JwtVerificationData;
@@ -75,7 +76,7 @@ pub async fn refresh_access_token(
     id_token_verification_data: Option<JwtVerificationData<'_>>,
     auth_id_token: Option<&IdToken<'_>>,
     now: DateTime<Utc>,
-    rng: &mut impl Rng,
+    rng: &mut impl RngExt,
 ) -> Result<(AccessTokenResponse, Option<IdToken<'static>>), TokenRefreshError> {
     tracing::debug!("Refreshing access token…");
 

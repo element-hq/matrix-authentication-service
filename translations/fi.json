@@ -30,7 +30,6 @@
     "loading": "Ladataan…",
     "mxid": "Matrix tunnus",
     "password": "Salasana",
-    "password_confirm": "Vahvista salasana",
     "username": "Käyttäjänimi"
   },
   "error": {
@@ -39,11 +38,11 @@
   "mas": {
     "account": {
       "deactivated": {
-        "description": "Tämä tili (<em>%(mxid)s</em>) on poistettu. Jos tämä on virhe, ota yhteyttä palvelimen ylläpitäjään.",
+        "description": "Tämä tili (<em>%(mxid)s</em>) on poistettu. Jos et odottanut tätä, ota yhteyttä palveluntarjoajaasi.",
         "heading": "Tili poistettu"
       },
       "locked": {
-        "description": "Tämä tili (<em>%(mxid)s</em>) on lukittu. Jos tämä on virhe, ota yhteyttä palvelimen ylläpitäjään.",
+        "description": "Tämä tili (<em>%(mxid)s</em>) on lukittu. Jos et odottanut tätä, ota yhteyttä palveluntarjoajaasi.",
         "heading": "Tili lukittu"
       },
       "logged_out": {
@@ -52,9 +51,6 @@
       }
     },
     "back_to_homepage": "Palaa etusivulle",
-    "captcha": {
-      "noscript": "Tämä lomake on suojattu CAPTCHA:lla, ja sen lähettäminen edellyttää JavaScriptin käyttöönottoa. Ota JavaScript käyttöön selaimessasi ja lataa tämä sivu uudelleen."
-    },
     "change_password": {
       "change": "Vaihda salasana",
       "confirm": "Vahvista salasana",
@@ -113,7 +109,7 @@
     "emails": {
       "greeting": "Hei %(username)s,",
       "recovery": {
-        "click_button": "Luo uusi salasana napsauttamalla alla olevaa painiketta:",
+        "click_button": "Luo uusi salasana valitsemalla alla oleva painike:",
         "copy_link": "Luo uusi salasana kopioimalla seuraava linkki ja liittämällä se selaimeen:",
         "create_new_password": "Luo uusi salasana",
         "fallback": "Eikö painike toimi sinulle?",
@@ -149,6 +145,7 @@
     "legacy_consent": {
       "this_will_setup": "Tämä yhdistää <span>%(client_name)s</span> -sovelluksen <span>%(server_name)s</span> tiliisi."
     },
+    "loading": "Ladataan…",
     "login": {
       "call_to_register": "Eikö sinulla ole vielä tiliä?",
       "continue_with_provider": "Jatka %(provider)s -tilillä",
@@ -216,17 +213,13 @@
       }
     },
     "register": {
-      "call_to_login": "Onko sinulla jo tili?",
-      "continue_with_email": "Jatka sähköpostiosoitteella",
-      "continue_with_password": "Jatka salasanalla",
       "create_account": {
-        "description": "Valitse käyttäjänimi jatkaaksesi.",
         "heading": "Luo tili"
       },
       "terms_of_service": "Hyväksyn <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Käyttöehdot</a>"
     },
     "registration_token": {
-      "description": "Anna kotipalvelimen ylläpitäjän antama rekisteröitymispoletti.",
+      "description": "Anna palveluntarjoajasi antama rekisteröitymispoletti.",
       "field": "Rekisteröitymispoletti",
       "headline": "Rekisteröitymispoletti"
     },

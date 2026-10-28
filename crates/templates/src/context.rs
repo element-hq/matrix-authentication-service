@@ -31,11 +31,14 @@ use mas_data_model::{
 use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
 use mas_policy::{Violation, ViolationVariant};
-use mas_router::{Account, GraphQL, PostAuthAction, UrlBuilder};
-use oauth2_types::scope::{OPENID, Scope};
+use mas_router::{Account, GraphQL, Login, PostAuthAction, UrlBuilder};
+use oauth2_types::{
+    requests::ResponseMode,
+    scope::{OPENID, Scope},
+};
 use rand::{
-    Rng, SeedableRng,
-    distributions::{Alphanumeric, DistString},
+    RngExt, SeedableRng,
+    distr::{Alphanumeric, SampleString},
 };
 use rand_chacha::ChaCha8Rng;
 use serde::{Deserialize, Serialize, ser::SerializeStruct};
@@ -110,7 +113,7 @@ pub trait TemplateContext: Serialize {
     ///
     /// This is then used to check for template validity in unit tests and in
     /// the CLI (`cargo run -- templates check`)
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         locales: &[DataLocale],
@@ -148,7 +151,7 @@ pub(crate) fn sample_list<T: TemplateContext>(samples: Vec<T>) -> BTreeMap<Sampl
 }
 
 impl TemplateContext for () {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -185,7 +188,7 @@ impl<T> std::ops::Deref for WithLanguage<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithLanguage<T> {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         locales: &[DataLocale],
@@ -194,7 +197,7 @@ impl<T: TemplateContext> TemplateContext for WithLanguage<T> {
         Self: Sized,
     {
         // Create a forked RNG so we make samples deterministic between locales
-        let rng = ChaCha8Rng::from_rng(rng).unwrap();
+        let rng = ChaCha8Rng::from_rng(&mut *rng);
         locales
             .iter()
             .flat_map(|locale| {
@@ -224,7 +227,7 @@ pub struct WithCsrf<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithCsrf<T> {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         locales: &[DataLocale],
@@ -257,7 +260,7 @@ pub struct WithSession<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithSession<T> {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         locales: &[DataLocale],
@@ -295,7 +298,7 @@ pub struct WithOptionalSession<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for WithOptionalSession<T> {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         locales: &[DataLocale],
@@ -346,7 +349,7 @@ impl Serialize for EmptyContext {
 }
 
 impl TemplateContext for EmptyContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -374,7 +377,7 @@ impl IndexContext {
 }
 
 impl TemplateContext for IndexContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -420,7 +423,7 @@ impl AppContext {
 }
 
 impl TemplateContext for AppContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -453,7 +456,7 @@ impl ApiDocContext {
 }
 
 impl TemplateContext for ApiDocContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -545,7 +548,7 @@ pub struct LoginContext {
 }
 
 impl TemplateContext for LoginContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -645,15 +648,47 @@ impl FormField for RegisterFormField {
     }
 }
 
-/// Context used by the `register.html` template
-#[derive(Serialize, Default)]
+/// An upstream OAuth 2.0 provider, as rendered by the registration page island
+#[derive(Serialize)]
+struct RegisterPageProvider {
+    name: String,
+    brand: Option<String>,
+    /// Submitted back as the `provider` field of the registration form
+    id: String,
+}
+
+impl RegisterPageProvider {
+    fn new(provider: UpstreamOAuthProvider) -> Self {
+        let name = provider
+            .human_name
+            .or_else(|| {
+                provider
+                    .issuer
+                    .as_deref()
+                    .map(|issuer| crate::functions::simplify_url(issuer, true))
+            })
+            .filter(|name| !name.is_empty())
+            .unwrap_or_else(|| provider.id.to_string());
+
+        Self {
+            name,
+            brand: provider.brand_name,
+            id: provider.id.to_string(),
+        }
+    }
+}
+
+/// Context used by the `register/index.html` template
+#[derive(Serialize)]
 pub struct RegisterContext {
-    providers: Vec<UpstreamOAuthProvider>,
-    next: Option<PostAuthContext>,
+    providers: Vec<RegisterPageProvider>,
+    login_link: String,
+    form: FormState<RegisterFormField>,
+    graphql_endpoint: String,
 }
 
 impl TemplateContext for RegisterContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -661,71 +696,36 @@ impl TemplateContext for RegisterContext {
     where
         Self: Sized,
     {
-        sample_list(vec![RegisterContext {
-            providers: Vec::new(),
-            next: None,
-        }])
+        let url_builder = UrlBuilder::new("https://example.com/".parse().unwrap(), None, None);
+        // TODO: samples with errors and with upstream providers
+        sample_list(vec![RegisterContext::new(&url_builder, Vec::new(), None)])
     }
 }
 
 impl RegisterContext {
-    /// Create a new context with the given upstream providers
+    /// Create a new context with the given upstream providers, resolving the
+    /// URLs used by the client-side island from the given [`UrlBuilder`]
     #[must_use]
-    pub fn new(providers: Vec<UpstreamOAuthProvider>) -> Self {
+    pub fn new(
+        url_builder: &UrlBuilder,
+        providers: Vec<UpstreamOAuthProvider>,
+        post_auth_action: Option<&PostAuthAction>,
+    ) -> Self {
         Self {
-            providers,
-            next: None,
-        }
-    }
-
-    /// Add a post authentication action to the context
-    #[must_use]
-    pub fn with_post_action(self, next: PostAuthContext) -> Self {
-        Self {
-            next: Some(next),
-            ..self
-        }
-    }
-}
-
-/// Context used by the `password_register.html` template
-#[derive(Serialize, Default)]
-pub struct PasswordRegisterContext {
-    form: FormState<RegisterFormField>,
-    next: Option<PostAuthContext>,
-}
-
-impl TemplateContext for PasswordRegisterContext {
-    fn sample<R: Rng>(
-        _now: chrono::DateTime<Utc>,
-        _rng: &mut R,
-        _locales: &[DataLocale],
-    ) -> BTreeMap<SampleIdentifier, Self>
-    where
-        Self: Sized,
-    {
-        // TODO: samples with errors
-        sample_list(vec![PasswordRegisterContext {
+            providers: providers
+                .into_iter()
+                .map(RegisterPageProvider::new)
+                .collect(),
+            login_link: url_builder.relative_url_for(&Login::from(post_auth_action.cloned())),
             form: FormState::default(),
-            next: None,
-        }])
+            graphql_endpoint: url_builder.relative_url_for(&GraphQL),
+        }
     }
-}
 
-impl PasswordRegisterContext {
-    /// Add an error on the registration form
+    /// Set the state of the registration form
     #[must_use]
     pub fn with_form_state(self, form: FormState<RegisterFormField>) -> Self {
         Self { form, ..self }
-    }
-
-    /// Add a post authentication action to the context
-    #[must_use]
-    pub fn with_post_action(self, next: PostAuthContext) -> Self {
-        Self {
-            next: Some(next),
-            ..self
-        }
     }
 }
 
@@ -739,7 +739,7 @@ pub struct ConsentContext {
 }
 
 impl TemplateContext for ConsentContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -750,20 +750,32 @@ impl TemplateContext for ConsentContext {
         sample_list(
             Client::samples(now, rng)
                 .into_iter()
-                .map(|client| {
-                    let mut grant = AuthorizationGrant::sample(now, rng);
-                    let action = PostAuthAction::continue_grant(grant.id);
-                    // XXX
-                    grant.client_id = client.id;
-                    Self {
-                        grant,
-                        client,
-                        action,
-                        matrix_user: MatrixUser {
-                            mxid: "@alice:example.com".to_owned(),
-                            display_name: Some("Alice".to_owned()),
-                        },
-                    }
+                .flat_map(|client| {
+                    [
+                        (None, ResponseMode::Query),
+                        (None, ResponseMode::Fragment),
+                        (None, ResponseMode::FormPost),
+                        (Some("some-state".to_owned()), ResponseMode::Query),
+                        (Some("some-state".to_owned()), ResponseMode::Fragment),
+                        (Some("some-state".to_owned()), ResponseMode::FormPost),
+                    ]
+                    .map(|(state, response_mode)| {
+                        let mut grant = AuthorizationGrant::sample(now, rng);
+                        let action = PostAuthAction::continue_grant(grant.id);
+                        // XXX
+                        grant.client_id = client.id;
+                        grant.state = state;
+                        grant.response_mode = response_mode;
+                        Self {
+                            grant,
+                            client: client.clone(),
+                            action,
+                            matrix_user: MatrixUser {
+                                mxid: "@alice:example.com".to_owned(),
+                                display_name: Some("Alice".to_owned()),
+                            },
+                        }
+                    })
                 })
                 .collect(),
         )
@@ -803,7 +815,7 @@ pub struct PolicyViolationContext {
 }
 
 impl TemplateContext for PolicyViolationContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -820,17 +832,53 @@ impl TemplateContext for PolicyViolationContext {
                     grant.client_id = client.id;
 
                     let authorization_grant = PolicyViolationContext::for_authorization_grant(
-                        grant,
+                        grant.clone(),
                         client.clone(),
                         Vec::new(),
                     );
+
+                    let authorization_grant_invalid_scope =
+                        PolicyViolationContext::for_authorization_grant(
+                            grant.clone(),
+                            client.clone(),
+                            vec![Violation {
+                                msg: "scope 'foo' not allowed".to_owned(),
+                                redirect_uri: None,
+                                field: None,
+                                variant: None,
+                            }],
+                        );
+                    let authorization_grant_admin_scope =
+                        PolicyViolationContext::for_authorization_grant(
+                            grant.clone(),
+                            client.clone(),
+                            vec![Violation {
+                                msg: "scope 'urn:mas:admin' requires admin privileges".to_owned(),
+                                redirect_uri: None,
+                                field: None,
+                                variant: Some(ViolationVariant::AdminScopeNotAllowed),
+                            }],
+                        );
+
+                    let authorization_grant_client_not_allowed =
+                        PolicyViolationContext::for_authorization_grant(
+                            grant,
+                            client.clone(),
+                            vec![Violation {
+                                msg: "This client is not allowed to login".to_owned(),
+                                redirect_uri: None,
+                                field: None,
+                                variant: Some(ViolationVariant::ClientNotAllowed),
+                            }],
+                        );
+
                     let device_code_grant = PolicyViolationContext::for_device_code_grant(
                         DeviceCodeGrant {
                             id: Ulid::from_datetime_with_rng(now, rng),
                             state: mas_data_model::DeviceCodeGrantState::Pending,
                             client_id: client.id,
                             scope: [OPENID].into_iter().collect(),
-                            user_code: Alphanumeric.sample_string(rng, 6).to_uppercase(),
+                            user_code: mas_data_model::generate_user_code(rng),
                             device_code: Alphanumeric.sample_string(rng, 32),
                             created_at: now - Duration::try_minutes(5).unwrap(),
                             expires_at: now + Duration::try_minutes(25).unwrap(),
@@ -838,11 +886,44 @@ impl TemplateContext for PolicyViolationContext {
                             user_agent: None,
                             locale: None,
                         },
-                        client,
+                        client.clone(),
                         Vec::new(),
                     );
 
-                    [authorization_grant, device_code_grant]
+                    let device_code_grant_invalid_scope =
+                        PolicyViolationContext::for_device_code_grant(
+                            DeviceCodeGrant {
+                                id: Ulid::from_datetime_with_rng(now, rng),
+                                state: mas_data_model::DeviceCodeGrantState::Pending,
+                                client_id: client.id,
+                                scope: [OPENID].into_iter().collect(),
+                                user_code: mas_data_model::generate_user_code(rng),
+                                device_code: Alphanumeric.sample_string(rng, 32),
+                                created_at: now - Duration::try_minutes(5).unwrap(),
+                                expires_at: now + Duration::try_minutes(25).unwrap(),
+                                ip_address: None,
+                                user_agent: None,
+                                locale: None,
+                            },
+                            client,
+                            vec![Violation {
+                                msg: "user has too many active sessions".to_owned(),
+                                redirect_uri: None,
+                                field: None,
+                                variant: Some(ViolationVariant::TooManySessions {
+                                    need_to_remove: 1,
+                                }),
+                            }],
+                        );
+
+                    [
+                        authorization_grant,
+                        authorization_grant_invalid_scope,
+                        authorization_grant_admin_scope,
+                        authorization_grant_client_not_allowed,
+                        device_code_grant,
+                        device_code_grant_invalid_scope,
+                    ]
                 })
                 .collect(),
         )
@@ -892,7 +973,7 @@ pub struct CompatLoginPolicyViolationContext {
 }
 
 impl TemplateContext for CompatLoginPolicyViolationContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -904,11 +985,43 @@ impl TemplateContext for CompatLoginPolicyViolationContext {
             CompatLoginPolicyViolationContext { violations: vec![] },
             CompatLoginPolicyViolationContext {
                 violations: vec![Violation {
+                    msg: "scope 'foo' not allowed".to_owned(),
+                    redirect_uri: None,
+                    field: None,
+                    variant: None,
+                }],
+            },
+            CompatLoginPolicyViolationContext {
+                violations: vec![Violation {
                     msg: "user has too many active sessions".to_owned(),
                     redirect_uri: None,
                     field: None,
                     variant: Some(ViolationVariant::TooManySessions { need_to_remove: 1 }),
                 }],
+            },
+            CompatLoginPolicyViolationContext {
+                violations: vec![Violation {
+                    msg: "This client is not allowed to login".to_owned(),
+                    redirect_uri: None,
+                    field: None,
+                    variant: Some(ViolationVariant::ClientNotAllowed),
+                }],
+            },
+            CompatLoginPolicyViolationContext {
+                violations: vec![
+                    Violation {
+                        msg: "scope 'foo' not allowed".to_owned(),
+                        redirect_uri: None,
+                        field: None,
+                        variant: None,
+                    },
+                    Violation {
+                        msg: "user has too many active sessions".to_owned(),
+                        redirect_uri: None,
+                        field: None,
+                        variant: Some(ViolationVariant::TooManySessions { need_to_remove: 1 }),
+                    },
+                ],
             },
         ])
     }
@@ -932,7 +1045,7 @@ pub struct CompatSsoContext {
 }
 
 impl TemplateContext for CompatSsoContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1004,7 +1117,7 @@ impl EmailRecoveryContext {
 }
 
 impl TemplateContext for EmailRecoveryContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1069,7 +1182,7 @@ impl EmailVerificationContext {
 }
 
 impl TemplateContext for EmailVerificationContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1141,7 +1254,7 @@ impl RegisterStepsVerifyEmailContext {
 }
 
 impl TemplateContext for RegisterStepsVerifyEmailContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1181,7 +1294,7 @@ impl RegisterStepsEmailInUseContext {
 }
 
 impl TemplateContext for RegisterStepsEmailInUseContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -1236,7 +1349,7 @@ impl RegisterStepsDisplayNameContext {
 }
 
 impl TemplateContext for RegisterStepsDisplayNameContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         _now: chrono::DateTime<chrono::Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -1291,7 +1404,7 @@ impl RegisterStepsRegistrationTokenContext {
 }
 
 impl TemplateContext for RegisterStepsRegistrationTokenContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         _now: chrono::DateTime<chrono::Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -1342,7 +1455,7 @@ impl RecoveryStartContext {
 }
 
 impl TemplateContext for RecoveryStartContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -1384,7 +1497,7 @@ impl RecoveryProgressContext {
 }
 
 impl TemplateContext for RecoveryProgressContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1430,7 +1543,7 @@ impl RecoveryExpiredContext {
 }
 
 impl TemplateContext for RecoveryExpiredContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1494,7 +1607,7 @@ impl RecoveryFinishContext {
 }
 
 impl TemplateContext for RecoveryFinishContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1543,7 +1656,7 @@ impl UpstreamExistingLinkContext {
 }
 
 impl TemplateContext for UpstreamExistingLinkContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1581,7 +1694,7 @@ impl UpstreamSuggestLink {
 }
 
 impl TemplateContext for UpstreamSuggestLink {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1710,7 +1823,7 @@ impl UpstreamRegister {
 }
 
 impl TemplateContext for UpstreamRegister {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -1797,7 +1910,7 @@ impl DeviceLinkContext {
 }
 
 impl TemplateContext for DeviceLinkContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -1836,7 +1949,7 @@ impl DeviceConsentContext {
 }
 
 impl TemplateContext for DeviceConsentContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1852,7 +1965,7 @@ impl TemplateContext for DeviceConsentContext {
                     state: mas_data_model::DeviceCodeGrantState::Pending,
                     client_id: client.id,
                     scope: [OPENID].into_iter().collect(),
-                    user_code: Alphanumeric.sample_string(rng, 6).to_uppercase(),
+                    user_code: mas_data_model::generate_user_code(rng),
                     device_code: Alphanumeric.sample_string(rng, 32),
                     created_at: now - Duration::try_minutes(5).unwrap(),
                     expires_at: now + Duration::try_minutes(25).unwrap(),
@@ -1904,7 +2017,7 @@ impl AccountInactiveContext {
 }
 
 impl TemplateContext for AccountInactiveContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1949,7 +2062,7 @@ impl DeviceNameContext {
 }
 
 impl TemplateContext for DeviceNameContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         _locales: &[DataLocale],
@@ -1975,7 +2088,7 @@ pub struct FormPostContext<T> {
 }
 
 impl<T: TemplateContext> TemplateContext for FormPostContext<T> {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         now: chrono::DateTime<Utc>,
         rng: &mut R,
         locales: &[DataLocale],
@@ -2057,7 +2170,7 @@ impl std::fmt::Display for ErrorContext {
 }
 
 impl TemplateContext for ErrorContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         _now: chrono::DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],
@@ -2151,7 +2264,7 @@ impl NotFoundContext {
 }
 
 impl TemplateContext for NotFoundContext {
-    fn sample<R: Rng>(
+    fn sample<R: RngExt>(
         _now: DateTime<Utc>,
         _rng: &mut R,
         _locales: &[DataLocale],

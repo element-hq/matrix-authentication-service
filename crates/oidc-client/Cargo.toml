@@ -51,3 +51,5 @@ rand_chacha.workspace = true
 rustls.workspace = true
 tokio.workspace = true
 wiremock.workspace = true
+
+mas-data-model.workspace = true

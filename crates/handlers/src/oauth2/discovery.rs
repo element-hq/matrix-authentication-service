@@ -32,6 +32,10 @@ struct DiscoveryResponse {
     // As per MSC4191
     account_management_uri: url::Url,
     account_management_actions_supported: Vec<String>,
+
+    // As per MSC4198
+    #[serde(rename = "org.matrix.msc4198.login_hint_types_supported")]
+    login_hint_types_supported: Vec<String>,
 }
 
 #[tracing::instrument(name = "handlers.oauth2.discovery.get", skip_all)]
@@ -202,6 +206,7 @@ pub(crate) async fn get(
             "org.matrix.session_view".to_owned(),
             "org.matrix.session_end".to_owned(),
         ],
+        login_hint_types_supported: vec!["mxid".to_owned()],
     })
 }
 

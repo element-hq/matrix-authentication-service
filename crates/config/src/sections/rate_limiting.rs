@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -31,6 +32,21 @@ pub struct RateLimitingConfig {
     /// Email authentication-specific rate limits
     #[serde(default)]
     pub email_authentication: EmailauthenticationRateLimitingConfig,
+
+    /// Controls how many user code verification attempts are permitted
+    /// based on source IP address, when linking a device through the
+    /// Device Authorization Grant.
+    /// This can protect against brute-forcing the user code.
+    #[serde(default = "default_device_code_link")]
+    pub device_code_link: RateLimiterConfiguration,
+
+    /// Controls how often the registration form can check whether a username
+    /// is available, based on source address.
+    ///
+    /// The form checks the username as it is typed. This limit makes it
+    /// harder to use those checks to find out which usernames exist.
+    #[serde(default = "default_username_availability")]
+    pub username_availability: RateLimiterConfiguration,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
@@ -167,11 +183,19 @@ impl ConfigurationSection for RateLimitingConfig {
             return Err(error_on_field(error, "registration").into());
         }
 
+        if let Some(error) = error_on_limiter(&self.username_availability) {
+            return Err(error_on_field(error, "username_availability").into());
+        }
+
         if let Some(error) = error_on_limiter(&self.login.per_ip) {
             return Err(error_on_nested_field(error, "login", "per_ip").into());
         }
         if let Some(error) = error_on_limiter(&self.login.per_account) {
             return Err(error_on_nested_field(error, "login", "per_account").into());
+        }
+
+        if let Some(error) = error_on_limiter(&self.device_code_link) {
+            return Err(error_on_field(error, "device_code_link").into());
         }
 
         Ok(())
@@ -257,6 +281,20 @@ fn default_email_authentication_attempt_per_session() -> RateLimiterConfiguratio
     }
 }
 
+fn default_device_code_link() -> RateLimiterConfiguration {
+    RateLimiterConfiguration {
+        burst: NonZeroU32::new(10).unwrap(),
+        per_second: 1.0 / 60.0,
+    }
+}
+
+fn default_username_availability() -> RateLimiterConfiguration {
+    RateLimiterConfiguration {
+        burst: NonZeroU32::new(5).unwrap(),
+        per_second: 1.0,
+    }
+}
+
 impl Default for RateLimitingConfig {
     fn default() -> Self {
         RateLimitingConfig {
@@ -264,6 +302,8 @@ impl Default for RateLimitingConfig {
             registration: default_registration(),
             account_recovery: AccountRecoveryRateLimitingConfig::default(),
             email_authentication: EmailauthenticationRateLimitingConfig::default(),
+            device_code_link: default_device_code_link(),
+            username_availability: default_username_availability(),
         }
     }
 }

@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -7,7 +8,7 @@
 
 use async_trait::async_trait;
 use mas_data_model::{Clock, PolicyData};
-use rand_core::RngCore;
+use rand_core::Rng;
 
 use crate::repository_impl;
 
@@ -43,7 +44,7 @@ pub trait PolicyDataRepository: Send + Sync {
     /// Returns [`Self::Error`] if the underlying repository fails
     async fn set(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         data: serde_json::Value,
     ) -> Result<PolicyData, Self::Error>;
@@ -67,7 +68,7 @@ repository_impl!(PolicyDataRepository:
 
     async fn set(
         &mut self,
-        rng: &mut (dyn RngCore + Send),
+        rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
         data: serde_json::Value,
     ) -> Result<PolicyData, Self::Error>;

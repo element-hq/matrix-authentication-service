@@ -31,7 +31,7 @@ use mas_storage::{
     user::{UserPasswordRepository, UserRepository},
 };
 use opentelemetry::{Key, KeyValue, metrics::Counter};
-use rand::{CryptoRng, RngCore};
+use rand::{CryptoRng, Rng};
 use serde::{Deserialize, Serialize};
 use serde_with::{DurationMilliSeconds, serde_as, skip_serializing_none};
 use thiserror::Error;
@@ -155,6 +155,9 @@ pub enum Credentials {
     #[serde(rename = "m.login.token")]
     Token { token: String },
 
+    #[serde(rename = "m.login.application_service")]
+    ApplicationService,
+
     #[serde(other)]
     Unsupported,
 }
@@ -164,6 +167,7 @@ impl Credentials {
         match self {
             Self::Password { .. } => "m.login.password",
             Self::Token { .. } => "m.login.token",
+            Self::ApplicationService => "m.login.application_service",
             Self::Unsupported => "unsupported",
         }
     }
@@ -198,6 +202,9 @@ pub enum RouteError {
 
     #[error("unsupported login method")]
     Unsupported,
+
+    #[error("appservice login not supported")]
+    AppserviceLoginUnsupported,
 
     #[error("unsupported identifier type")]
     UnsupportedIdentifier,
@@ -264,6 +271,11 @@ impl IntoResponse for RouteError {
             Self::Unsupported => MatrixError {
                 errcode: "M_UNKNOWN",
                 error: "Invalid login type",
+                status: StatusCode::BAD_REQUEST,
+            },
+            Self::AppserviceLoginUnsupported => MatrixError {
+                errcode: "M_APPSERVICE_LOGIN_UNSUPPORTED",
+                error: "Application services can't log in through the legacy authentication API on this server",
                 status: StatusCode::BAD_REQUEST,
             },
             Self::UnsupportedIdentifier => MatrixError {
@@ -394,6 +406,10 @@ pub(crate) async fn post(
             .await?
         }
 
+        (_, Credentials::ApplicationService) => {
+            return Err(RouteError::AppserviceLoginUnsupported);
+        }
+
         _ => {
             return Err(RouteError::Unsupported);
         }
@@ -517,7 +533,7 @@ pub(crate) async fn post(
 /// [`Policy::evaluate_compat_login`], return the appropriate `RouteError`
 /// response.
 async fn process_violations_for_compat_login(
-    rng: &mut (dyn RngCore + Send),
+    rng: &mut (dyn Rng + Send),
     clock: &dyn Clock,
     repo: &mut BoxRepository,
     session_limit_config: Option<&SessionLimitConfig>,
@@ -756,7 +772,7 @@ async fn find_lru_compat_sessions_flawed(
 }
 
 async fn token_login(
-    rng: &mut (dyn RngCore + Send),
+    rng: &mut (dyn Rng + Send),
     clock: &dyn Clock,
     repo: &mut BoxRepository,
     policy: &mut Policy,
@@ -897,7 +913,7 @@ async fn token_login(
 }
 
 async fn user_password_login(
-    mut rng: &mut (impl RngCore + CryptoRng + Send),
+    rng: &mut (impl CryptoRng + Send),
     clock: &impl Clock,
     password_manager: &PasswordManager,
     limiter: &Limiter,
@@ -938,7 +954,7 @@ async fn user_password_login(
 
     match password_manager
         .verify_and_upgrade(
-            &mut rng,
+            &mut *rng,
             user_password.version,
             password,
             user_password.hashed_password.clone(),
@@ -949,7 +965,7 @@ async fn user_password_login(
             // Save the upgraded password if needed
             repo.user_password()
                 .add(
-                    &mut rng,
+                    &mut *rng,
                     clock,
                     &user,
                     version,
@@ -972,7 +988,7 @@ async fn user_password_login(
     let device = if let Some(requested_device_id) = requested_device_id {
         Device::from(requested_device_id)
     } else {
-        Device::generate(&mut rng)
+        Device::generate(&mut *rng)
     };
 
     let session_replaced = repo
@@ -996,7 +1012,7 @@ async fn user_password_login(
     let session = repo
         .compat_session()
         .add(
-            &mut rng,
+            &mut *rng,
             clock,
             &user,
             device,
@@ -1020,7 +1036,7 @@ mod tests {
     use assert_matches::assert_matches;
     use hyper::Request;
     use mas_matrix::{HomeserverConnection, ProvisionRequest};
-    use rand::distributions::{Alphanumeric, DistString};
+    use rand::distr::{Alphanumeric, SampleString};
     use sqlx::PgPool;
 
     use super::*;
@@ -1682,6 +1698,31 @@ mod tests {
         {
           "errcode": "M_UNKNOWN",
           "error": "Invalid login type"
+        }
+        "###);
+    }
+
+    /// Test the response of an `m.login.application_service` login.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_appservice_login_unsupported(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let request = Request::post("/_matrix/client/v3/login").json(serde_json::json!({
+            "type": "m.login.application_service",
+            "identifier": {
+                "type": "m.id.user",
+                "user": "_irc_example",
+            },
+        }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::BAD_REQUEST);
+        let body: serde_json::Value = response.json();
+        insta::assert_json_snapshot!(body, @r###"
+        {
+          "errcode": "M_APPSERVICE_LOGIN_UNSUPPORTED",
+          "error": "Application services can't log in through the legacy authentication API on this server"
         }
         "###);
     }

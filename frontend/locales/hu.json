@@ -26,12 +26,14 @@
   },
   "common": {
     "e2ee": "Végpontok közti titkosítás",
+    "email_address": "E-mail-cím",
     "loading": "Betöltés…",
     "next": "Következő",
     "password": "Jelszó",
     "previous": "Előző",
     "saved": "Mentve",
-    "saving": "Mentés…"
+    "saving": "Mentés…",
+    "username": "Felhasználónév"
   },
   "frontend": {
     "account": {
@@ -113,8 +115,25 @@
       "title": "Valamilyen hiba történt"
     },
     "errors": {
+      "captcha": "A CAPTCHA ellenőrzés sikertelen, próbálja újra",
+      "email_banned": "Az e-mail-címet a kiszolgáló-házirend tiltja",
+      "email_domain_banned": "Az e-mail-tartományt a kiszolgáló-házirend tiltja",
+      "email_domain_not_allowed": "Az e-mail-tartományt nem engedélyezi a kiszolgáló-házirend",
+      "email_not_allowed": "Az e-mail-címet nem engedélyezi a kiszolgáló-házirend",
+      "field_invalid": "This field is invalid",
       "field_required": "Ez a mező kötelező",
-      "rate_limit_exceeded": "Túl sok kérést adott fel egy rövid időszak alatt. Várjon néhány percet, és próbálja újra."
+      "invalid_email": "Please enter a valid email address",
+      "password_mismatch": "A jelszómezők nem egyeznek",
+      "rate_limit_exceeded": "Túl sok kérést adott fel egy rövid időszak alatt. Várjon néhány percet, és próbálja újra.",
+      "unspecified": "Something went wrong. Please try again.",
+      "username_all_numeric": "A felhasználónév nem állhat pusztán számokból",
+      "username_banned": "A felhasználónevet a kiszolgáló-házirend tiltja",
+      "username_invalid": "Username can only contain lowercase letters, numbers, and the characters . _ - + / =",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, and the characters . _ - + / =",
+      "username_not_allowed": "A felhasználónevet nem engedélyezi a kiszolgáló-házirend",
+      "username_taken": "A felhasználónév már foglalt",
+      "username_too_long": "A felhasználónév túl hosszú",
+      "username_too_short": "A felhasználónév túl rövid"
     },
     "last_active": {
       "active_date": "{{relativeDate}} aktív",
@@ -225,6 +244,21 @@
         "user_inputs": "Ne legyen benne személyes, vagy az oldallal kapcsolatos adat.",
         "word_by_itself": "Az egy szavas jelszavak könnyen kitalálhatóak."
       }
+    },
+    "register": {
+      "call_to_login": "Már van fiókja?",
+      "captcha_incomplete": "Please complete the CAPTCHA challenge before continuing",
+      "captcha_loading": "The CAPTCHA is still loading, please wait a moment",
+      "continue_with_email": "Folytatás az e-mail-címével",
+      "continue_with_password": "Folytatás jelszóval",
+      "continue_with_provider": "Continue with {{provider}}",
+      "or_separator": "Vagy",
+      "password_confirm_label": "Jelszó megerősítése",
+      "password_label": "Jelszó",
+      "terms_of_service": "I agree to the <a>Terms and Conditions</a>",
+      "username_available": "This username is available",
+      "username_check_failed": "We couldn't check if this username is available",
+      "username_checking": "Checking availability…"
     },
     "reset_cross_signing": {
       "cancelled": {

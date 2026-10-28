@@ -12,6 +12,8 @@ mod session;
 pub use self::{
     authorization_grant::{AuthorizationCode, AuthorizationGrant, AuthorizationGrantStage, Pkce},
     client::{Client, InvalidRedirectUriError, JwksOrJwksUri},
-    device_code_grant::{DeviceCodeGrant, DeviceCodeGrantState},
+    device_code_grant::{
+        DeviceCodeGrant, DeviceCodeGrantState, generate_user_code, normalize_user_code,
+    },
     session::{Session, SessionState},
 };

@@ -13,7 +13,7 @@ use oauth2_types::{
     registration::{ClientMetadata, Localized},
     requests::GrantType,
 };
-use rand::RngCore;
+use rand::Rng;
 use serde::Serialize;
 use thiserror::Error;
 use ulid::Ulid;
@@ -181,7 +181,7 @@ impl Client {
     }
 
     #[doc(hidden)]
-    pub fn samples(now: DateTime<Utc>, rng: &mut impl RngCore) -> Vec<Client> {
+    pub fn samples(now: DateTime<Utc>, rng: &mut impl Rng) -> Vec<Client> {
         vec![
             // A client with all the URIs set
             Self {

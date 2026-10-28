@@ -26,12 +26,14 @@
   },
   "common": {
     "e2ee": "End-to-end-kryptering",
+    "email_address": "E-postadress",
     "loading": "Laddar …",
     "next": "Nästa",
     "password": "Lösenord",
     "previous": "Föregående",
     "saved": "Sparat",
-    "saving": "Sparar..."
+    "saving": "Sparar...",
+    "username": "Användarnamn"
   },
   "frontend": {
     "account": {
@@ -113,8 +115,25 @@
       "title": "Något gick fel"
     },
     "errors": {
+      "captcha": "CAPTCHA-verifiering misslyckades, försök igen",
+      "email_banned": "Email is banned by the server policy",
+      "email_domain_banned": "E-postdomänen är förbjuden av serverpolicyn",
+      "email_domain_not_allowed": "E-postdomänen är inte tillåten enligt serverpolicyn",
+      "email_not_allowed": "Email is not allowed by the server policy",
+      "field_invalid": "This field is invalid",
       "field_required": "Detta fält är obligatoriskt",
-      "rate_limit_exceeded": "Du har gjort för många förfrågningar under en kort period. Vänta några minuter och försök igen."
+      "invalid_email": "Please enter a valid email address",
+      "password_mismatch": "Lösenordsfälten matchar inte",
+      "rate_limit_exceeded": "Du har gjort för många förfrågningar under en kort period. Vänta några minuter och försök igen.",
+      "unspecified": "Something went wrong. Please try again.",
+      "username_all_numeric": "Användarnamn kan inte enbart bestå av siffror",
+      "username_banned": "Username is banned by the server policy",
+      "username_invalid": "Username can only contain lowercase letters, numbers, and the characters . _ - + / =",
+      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, and the characters . _ - + / =",
+      "username_not_allowed": "Username is not allowed by the server policy",
+      "username_taken": "Detta användarnamn är redan upptaget",
+      "username_too_long": "Användarnamnet är för långt",
+      "username_too_short": "Användarnamnet är för kort"
     },
     "last_active": {
       "active_date": "Aktiv {{relativeDate}}",
@@ -225,6 +244,21 @@
         "user_inputs": "Det ska inte finnas några personliga eller sidrelaterade uppgifter.",
         "word_by_itself": "Enstaka ord är lätta att gissa."
       }
+    },
+    "register": {
+      "call_to_login": "Har redan ett konto",
+      "captcha_incomplete": "Please complete the CAPTCHA challenge before continuing",
+      "captcha_loading": "The CAPTCHA is still loading, please wait a moment",
+      "continue_with_email": "Fortsätt med e-postadress",
+      "continue_with_password": "Continue with password",
+      "continue_with_provider": "Continue with {{provider}}",
+      "or_separator": "eller",
+      "password_confirm_label": "Bekräfta lösenordet",
+      "password_label": "Lösenord",
+      "terms_of_service": "I agree to the <a>Terms and Conditions</a>",
+      "username_available": "This username is available",
+      "username_check_failed": "We couldn't check if this username is available",
+      "username_checking": "Checking availability…"
     },
     "reset_cross_signing": {
       "cancelled": {
