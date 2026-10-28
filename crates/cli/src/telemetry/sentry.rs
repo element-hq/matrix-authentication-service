@@ -46,7 +46,13 @@ pub fn init(config: &TelemetryConfig) -> sentry::ClientInitGuard {
         .release(crate::VERSION)
         .sample_rate(config.sample_rate.unwrap_or(1.0));
     if let Some(traces_sample_rate) = config.traces_sample_rate {
-        options = options.traces_sample_rate(traces_sample_rate);
+        options = options.traces_sampler(move |ctx| match ctx.operation() {
+            // The ops set by `SentryHttpLayer` and by the `sentry.op` field of the
+            // job span in `mas_tasks`. Every other root span, like the ones of the
+            // worker loop, would otherwise be its own transaction.
+            "http.server" | "queue.process" => ctx.sampled().map_or(traces_sample_rate, f32::from),
+            _ => 0.0,
+        });
     }
     if let Some(environment) = config.environment.clone() {
         options = options.environment(environment);

@@ -55,6 +55,8 @@ impl JobContext {
             job.id = %self.id,
             job.queue.name = self.queue_name,
             job.attempt = self.attempt,
+            sentry.name = self.queue_name,
+            sentry.op = "queue.process",
         );
 
         span.add_link(self.metadata.span_context());
@@ -875,9 +877,11 @@ impl JobTracker {
         let task = {
             let log_context = LogContext::new(format!("job-{}", context.queue_name));
             let context = context.clone();
-            let span = context.span();
-            log_context
-                .run(async move || {
+            log_context.run(move || {
+                // Creating the span within the log context makes it the root
+                // span of the Sentry hub of the job, and so its own transaction
+                let span = context.span();
+                async move {
                     // We should never crash, but in case we do, we do that in the task and
                     // don't crash the worker
                     let job = factory.expect("unknown job factory")(payload);
@@ -983,8 +987,9 @@ impl JobTracker {
                     }
 
                     (context_stats.elapsed, result)
-                })
+                }
                 .instrument(span)
+            })
         };
 
         self.in_flight_jobs.add(
