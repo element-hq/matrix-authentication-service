@@ -3,9 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::sync::Arc;
+use std::{borrow::Cow, sync::Arc};
 
 use mas_config::TelemetryConfig;
+use mas_context::LogContext;
+use sentry::protocol::Event;
 use sentry_tracing::EventFilter;
 use tracing::Subscriber;
 use tracing_subscriber::registry::LookupSpan;
@@ -44,7 +46,15 @@ pub fn init(config: &TelemetryConfig) -> sentry::ClientInitGuard {
     let mut options = sentry::ClientOptions::new()
         .transport(SentryTransportFactory::new())
         .release(crate::VERSION)
-        .sample_rate(config.sample_rate.unwrap_or(1.0));
+        .sample_rate(config.sample_rate.unwrap_or(1.0))
+        .attach_stacktrace(true)
+        // The prefixes are matched against function names, which requires the
+        // symbol table to be kept in the binary
+        .in_app_include(["mas_", "oauth2_types", "syn2mas"])
+        .before_send(|mut event| {
+            set_fingerprint(&mut event);
+            Some(event)
+        });
     // Without a sampler or a rate, Sentry doesn't start transactions at all.
     // Only performance traces are sampled here; error events use `sample_rate`.
     if let Some(traces_sample_rate) = config.traces_sample_rate {
@@ -61,6 +71,30 @@ pub fn init(config: &TelemetryConfig) -> sentry::ClientInitGuard {
     }
 
     sentry::init((config.dsn.as_deref(), options))
+}
+
+/// Errors logged from a shared place, like the job runner, all have the same
+/// stack trace. Group them by the log context they were logged in, and by the
+/// GraphQL resolver they come from, on top of the default grouping.
+///
+/// Requests are left out: their tag is the HTTP method, which would split an
+/// error shared by the handlers of several methods. `sentry-tower` attaches
+/// the request to events through the scope, which is applied before
+/// `before_send`.
+fn set_fingerprint(event: &mut Event<'static>) {
+    let mut fingerprint = vec![Cow::Borrowed("{{ default }}")];
+
+    if event.request.is_none()
+        && let Some(tag) = LogContext::maybe_with(|ctx| ctx.tag().clone())
+    {
+        fingerprint.push(tag);
+    }
+
+    if let Some(path) = event.tags.get("graphql.path") {
+        fingerprint.push(Cow::Owned(path.clone()));
+    }
+
+    event.fingerprint = Cow::Owned(fingerprint);
 }
 
 /// Build the `tracing` layer which reports events and spans to Sentry

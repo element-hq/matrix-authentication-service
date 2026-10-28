@@ -168,6 +168,12 @@ impl LogContext {
         }
     }
 
+    /// Get the tag of the log context
+    #[must_use]
+    pub fn tag(&self) -> &Cow<'static, str> {
+        &self.inner.tag
+    }
+
     /// Run a closure with the current log context, if any
     pub fn maybe_with<F, R>(f: F) -> Option<R>
     where
