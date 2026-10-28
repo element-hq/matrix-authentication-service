@@ -138,7 +138,7 @@ async fn test_get(pool: PgPool) {
     response.assert_status(StatusCode::OK);
     let response: GraphQLResponse = response.json();
 
-    assert!(response.errors.is_empty());
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
     assert_eq!(
         response.data,
         serde_json::json!({
@@ -170,7 +170,7 @@ async fn test_anonymous_viewer(pool: PgPool) {
     response.assert_status(StatusCode::OK);
     let response: GraphQLResponse = response.json();
 
-    assert!(response.errors.is_empty());
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
     assert_eq!(
         response.data,
         serde_json::json!({
@@ -215,7 +215,7 @@ async fn test_oauth2_viewer(pool: PgPool) {
     response.assert_status(StatusCode::OK);
     let response: GraphQLResponse = response.json();
 
-    assert!(response.errors.is_empty());
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
     assert_eq!(
         response.data,
         serde_json::json!({
@@ -310,7 +310,7 @@ async fn test_oauth2_admin(pool: PgPool) {
     let response: GraphQLResponse = response.json();
 
     // It should not find the user, because it's not the owner and not an admin
-    assert!(response.errors.is_empty());
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
     assert_eq!(
         response.data,
         serde_json::json!({
@@ -340,7 +340,7 @@ async fn test_oauth2_admin(pool: PgPool) {
     let response: GraphQLResponse = response.json();
 
     // It should find the user, because the token has the admin scope
-    assert!(response.errors.is_empty());
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
     assert_eq!(
         response.data,
         serde_json::json!({
@@ -405,7 +405,7 @@ async fn test_oauth2_client_credentials(pool: PgPool) {
     let response = state.request(request).await;
     response.assert_status(StatusCode::OK);
     let response: GraphQLResponse = response.json();
-    assert!(response.errors.is_empty());
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
     assert_eq!(
         response.data,
         serde_json::json!({
@@ -1386,7 +1386,7 @@ async fn test_username_available_homeserver_failure(pool: PgPool) {
     let response = state.request(request).await;
     response.assert_status(StatusCode::OK);
     let response: GraphQLResponse = response.json();
-    assert!(!response.errors.is_empty());
+    assert!(!response.errors.is_empty(), "{:?}", response.data);
     assert!(response.data["usernameAvailable"].is_null());
 }
 
