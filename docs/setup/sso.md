@@ -622,6 +622,32 @@ upstream_oauth2:
           template: "{{ user.preferred_username }}"
 ```
 
+### ProConnect
+
+Follow the instructions [to create an application for ProConnect](https://partenaires.proconnect.gouv.fr/docs/fournisseur-service).
+
+```yaml
+upstream_oauth2:
+  providers:
+    - id: "<ulid>" # Generate one using https://www.ulidtools.com
+      issuer: "<issuer>" # Fill in accordingly from the ProConnect documentation
+      token_endpoint_auth_method: client_secret_post
+      client_id: "<client ID>" # TO BE FILLED
+      client_secret: "<client secret>" # TO BE FILLED
+      fetch_userinfo: true
+      scope: "openid email usual_name given_name"
+      claims_imports:
+        localpart:
+          action: require
+          template: "{{ user.sub }}"
+        displayname:
+          action: suggest
+          template: "{{ user.given_name }} {{ user.usual_name }}"
+        email:
+          action: suggest
+          template: "{{ user.email }}"
+```
+
 ### Rauthy
 
 1. Click `Clients` in the Rauthy Admin sidebar and click `Add new Client`
