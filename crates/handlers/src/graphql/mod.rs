@@ -388,6 +388,48 @@ async fn get_requester(
     Ok(requester)
 }
 
+/// Log the errors of a GraphQL response which were caused by an internal
+/// error, so that they get reported to Sentry.
+///
+/// Resolvers return internal errors through `?` on an [`anyhow::Error`] or a
+/// [`mas_storage::RepositoryError`], which async-graphql keeps as the error
+/// source. Other errors are user-facing and only logged by the tracing
+/// extension, so a new internal error type reaching a resolver through `?`
+/// has to be added here to be reported.
+fn record_internal_errors(response: &async_graphql::Response) {
+    for error in &response.errors {
+        let Some(source) = error.source.as_deref() else {
+            continue;
+        };
+
+        let source: &(dyn std::error::Error + 'static) =
+            if let Some(err) = source.downcast_ref::<anyhow::Error>() {
+                err.as_ref()
+            } else if let Some(err) = source.downcast_ref::<mas_storage::RepositoryError>() {
+                err
+            } else {
+                continue;
+            };
+
+        // List indices are left out so that the path identifies the resolver
+        let path = error
+            .path
+            .iter()
+            .filter_map(|segment| match segment {
+                async_graphql::PathSegment::Field(name) => Some(name.as_str()),
+                async_graphql::PathSegment::Index(_) => None,
+            })
+            .collect::<Vec<_>>()
+            .join(".");
+
+        tracing::error!(
+            error = source,
+            tags.graphql.path = path,
+            "Internal error while resolving a GraphQL request"
+        );
+    }
+}
+
 pub async fn post(
     AxumState(schema): AxumState<Schema>,
     Extension(ExtraRouterParameters {
@@ -431,6 +473,7 @@ pub async fn post(
 
     let (span, operation) = span_and_operation_for_graphql_request(&mut request);
     let mut response = schema.execute(request).instrument(span).await;
+    record_internal_errors(&response);
 
     if has_session_ended(&mut response) {
         let session_info = session_info.mark_session_ended(clock.now());
@@ -488,6 +531,7 @@ pub async fn get(
 
     let (span, operation) = span_and_operation_for_graphql_request(&mut request);
     let mut response = schema.execute(request).instrument(span).await;
+    record_internal_errors(&response);
 
     if has_session_ended(&mut response) {
         let session_info = session_info.mark_session_ended(clock.now());
