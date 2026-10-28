@@ -35,6 +35,7 @@ use opentelemetry_sdk::{
 use opentelemetry_semantic_conventions as semcov;
 
 mod jaeger;
+pub(crate) mod sentry;
 
 static SCOPE: LazyLock<InstrumentationScope> = LazyLock::new(|| {
     InstrumentationScope::builder(env!("CARGO_PKG_NAME"))
