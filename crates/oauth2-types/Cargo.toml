@@ -22,6 +22,7 @@ base64ct.workspace = true
 chrono.workspace = true
 indexmap.workspace = true
 language-tags.workspace = true
+schemars.workspace = true
 serde_json.workspace = true
 serde_with.workspace = true
 serde.workspace = true

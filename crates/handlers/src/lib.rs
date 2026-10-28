@@ -22,12 +22,15 @@ use std::{
     time::Duration,
 };
 
+use aide::axum::{
+    ApiRouter,
+    routing::{ApiMethodRouter, get, get_with, post},
+};
 use axum::{
-    Extension, Router,
+    Extension,
     extract::{FromRef, FromRequestParts, OriginalUri, RawQuery, State},
     http::Method,
     response::{Html, IntoResponse},
-    routing::{MethodRouter, get, post},
 };
 use headers::HeaderName;
 use hyper::{
@@ -54,7 +57,9 @@ use tower_http::{
     set_header::SetResponseHeaderLayer,
 };
 
-use self::{graphql::ExtraRouterParameters, passwords::PasswordManager};
+use self::{
+    graphql::ExtraRouterParameters, passwords::PasswordManager, undocumented::Undocumented,
+};
 
 mod admin;
 mod compat;
@@ -75,6 +80,7 @@ mod rate_limit;
 mod session;
 #[cfg(test)]
 mod test_utils;
+mod undocumented;
 
 static METER: LazyLock<Meter> = LazyLock::new(|| {
     let scope = opentelemetry::InstrumentationScope::builder(env!("CARGO_PKG_NAME"))
@@ -117,15 +123,18 @@ pub use self::{
     upstream_oauth2::cache::MetadataCache,
 };
 
-pub fn healthcheck_router<S>() -> Router<S>
+pub fn healthcheck_router<S>() -> ApiRouter<S>
 where
     S: Clone + Send + Sync + 'static,
     PgPool: FromRef<S>,
 {
-    Router::new().route(mas_router::Healthcheck::route(), get(self::health::get))
+    ApiRouter::new().api_route(
+        mas_router::Healthcheck::route(),
+        get(Undocumented(self::health::get)),
+    )
 }
 
-pub fn graphql_router<S>(undocumented_oauth2_access: bool) -> Router<S>
+pub fn graphql_router<S>(undocumented_oauth2_access: bool) -> ApiRouter<S>
 where
     S: Clone + Send + Sync + 'static,
     graphql::Schema: FromRef<S>,
@@ -137,10 +146,10 @@ where
     Limiter: FromRef<S>,
     RequesterFingerprint: FromRequestParts<S>,
 {
-    Router::new()
-        .route(
+    ApiRouter::new()
+        .api_route(
             mas_router::GraphQL::route(),
-            get(self::graphql::get).post(self::graphql::post),
+            get(Undocumented(self::graphql::get)).post(Undocumented(self::graphql::post)),
         )
         // Pass the undocumented_oauth2_access parameter through the request extension, as it is
         // per-listener
@@ -161,7 +170,7 @@ where
         )
 }
 
-pub fn discovery_router<S>() -> Router<S>
+pub fn discovery_router<S>() -> ApiRouter<S>
 where
     S: Clone + Send + Sync + 'static,
     Keystore: FromRef<S>,
@@ -170,14 +179,14 @@ where
     BoxClock: FromRequestParts<S>,
     BoxRng: FromRequestParts<S>,
 {
-    Router::new()
-        .route(
+    ApiRouter::new()
+        .api_route(
             mas_router::OidcConfiguration::route(),
-            get(self::oauth2::discovery::get),
+            get(Undocumented(self::oauth2::discovery::get)),
         )
-        .route(
+        .api_route(
             mas_router::Webfinger::route(),
-            get(self::oauth2::webfinger::get),
+            get_with(self::oauth2::webfinger::get, self::oauth2::webfinger::doc),
         )
         .layer(
             CorsLayer::new()
@@ -194,7 +203,7 @@ where
         )
 }
 
-pub fn api_router<S>() -> Router<S>
+pub fn api_router<S>() -> ApiRouter<S>
 where
     S: Clone + Send + Sync + 'static,
     Keystore: FromRef<S>,
@@ -212,34 +221,35 @@ where
     Policy: FromRequestParts<S>,
 {
     // All those routes are API-like, with a common CORS layer
-    Router::new()
-        .route(
+    ApiRouter::new()
+        .api_route(
             mas_router::OAuth2Keys::route(),
-            get(self::oauth2::keys::get),
+            get(Undocumented(self::oauth2::keys::get)),
         )
-        .route(
+        .api_route(
             mas_router::OidcUserinfo::route(),
-            get(self::oauth2::userinfo::get).post(self::oauth2::userinfo::get),
+            get(Undocumented(self::oauth2::userinfo::get))
+                .post(Undocumented(self::oauth2::userinfo::get)),
         )
-        .route(
+        .api_route(
             mas_router::OAuth2Introspection::route(),
-            post(self::oauth2::introspection::post),
+            post(Undocumented(self::oauth2::introspection::post)),
         )
-        .route(
+        .api_route(
             mas_router::OAuth2Revocation::route(),
-            post(self::oauth2::revoke::post),
+            post(Undocumented(self::oauth2::revoke::post)),
         )
-        .route(
+        .api_route(
             mas_router::OAuth2TokenEndpoint::route(),
-            post(self::oauth2::token::post),
+            post(Undocumented(self::oauth2::token::post)),
         )
-        .route(
+        .api_route(
             mas_router::OAuth2RegistrationEndpoint::route(),
-            post(self::oauth2::registration::post),
+            post(Undocumented(self::oauth2::registration::post)),
         )
-        .route(
+        .api_route(
             mas_router::OAuth2DeviceAuthorizationEndpoint::route(),
-            post(self::oauth2::device::authorize::post),
+            post(Undocumented(self::oauth2::device::authorize::post)),
         )
         .layer(
             CorsLayer::new()
@@ -258,7 +268,7 @@ where
         )
 }
 
-pub fn compat_router<S>(templates: Templates) -> Router<S>
+pub fn compat_router<S>(templates: Templates) -> ApiRouter<S>
 where
     S: Clone + Send + Sync + 'static,
     UrlBuilder: FromRef<S>,
@@ -275,18 +285,18 @@ where
     Policy: FromRequestParts<S>,
 {
     // A sub-router for human-facing routes with error handling
-    let human_router = Router::new()
-        .route(
+    let human_router = ApiRouter::new()
+        .api_route(
             mas_router::CompatLoginSsoRedirect::route(),
-            get(self::compat::login_sso_redirect::get),
+            get(Undocumented(self::compat::login_sso_redirect::get)),
         )
-        .route(
+        .api_route(
             mas_router::CompatLoginSsoRedirectIdp::route(),
-            get(self::compat::login_sso_redirect::get),
+            get(Undocumented(self::compat::login_sso_redirect::get)),
         )
-        .route(
+        .api_route(
             mas_router::CompatLoginSsoRedirectSlash::route(),
-            get(self::compat::login_sso_redirect::get),
+            get(Undocumented(self::compat::login_sso_redirect::get)),
         )
         .layer(AndThenLayer::new(
             async move |response: axum::response::Response| {
@@ -295,22 +305,23 @@ where
         ));
 
     // A sub-router for API-facing routes with CORS
-    let api_router = Router::new()
-        .route(
+    let api_router = ApiRouter::new()
+        .api_route(
             mas_router::CompatLogin::route(),
-            get(self::compat::login::get).post(self::compat::login::post),
+            get(Undocumented(self::compat::login::get))
+                .post(Undocumented(self::compat::login::post)),
         )
-        .route(
+        .api_route(
             mas_router::CompatLogout::route(),
-            post(self::compat::logout::post),
+            post(Undocumented(self::compat::logout::post)),
         )
-        .route(
+        .api_route(
             mas_router::CompatLogoutAll::route(),
-            post(self::compat::logout_all::post),
+            post(Undocumented(self::compat::logout_all::post)),
         )
-        .route(
+        .api_route(
             mas_router::CompatRefresh::route(),
-            post(self::compat::refresh::post),
+            post(Undocumented(self::compat::refresh::post)),
         )
         .layer(
             CorsLayer::new()
@@ -327,16 +338,16 @@ where
                 .max_age(Duration::from_hours(1)),
         );
 
-    Router::new().merge(human_router).merge(api_router)
+    ApiRouter::new().merge(human_router).merge(api_router)
 }
 
 /// A `GET` route which redirects to another route, keeping the query string
-fn redirect_to<S>(route: &'static str) -> MethodRouter<S>
+fn redirect_to<S>(route: &'static str) -> ApiMethodRouter<S>
 where
     S: Clone + Send + Sync + 'static,
     UrlBuilder: FromRef<S>,
 {
-    get(
+    get(Undocumented(
         async move |State(url_builder): State<UrlBuilder>, RawQuery(query): RawQuery| {
             let prefix = url_builder.prefix().unwrap_or_default();
             let destination = if let Some(query) = query {
@@ -347,10 +358,10 @@ where
 
             axum::response::Redirect::to(&destination)
         },
-    )
+    ))
 }
 
-pub fn human_router<S>(templates: Templates) -> Router<S>
+pub fn human_router<S>(templates: Templates) -> ApiRouter<S>
 where
     S: Clone + Send + Sync + 'static,
     UrlBuilder: FromRef<S>,
@@ -372,103 +383,135 @@ where
     BoxRng: FromRequestParts<S>,
     Policy: FromRequestParts<S>,
 {
-    Router::new()
+    ApiRouter::new()
         // XXX: hard-coded redirect from /account to /account/
-        .route("/account", redirect_to(mas_router::Account::route()))
-        .route(mas_router::Account::route(), get(self::views::app::get))
-        .route(
+        .api_route("/account", redirect_to(mas_router::Account::route()))
+        .api_route(
+            mas_router::Account::route(),
+            get(Undocumented(self::views::app::get)),
+        )
+        .api_route(
             mas_router::AccountWildcard::route(),
-            get(self::views::app::get),
+            get(Undocumented(self::views::app::get)),
         )
-        .route(
+        .api_route(
             mas_router::AccountRecoveryFinish::route(),
-            get(self::views::app::get_anonymous),
+            get(Undocumented(self::views::app::get_anonymous)),
         )
-        .route(
+        .api_route(
             mas_router::ChangePasswordDiscovery::route(),
-            get(async |State(url_builder): State<UrlBuilder>| {
-                url_builder.redirect(&mas_router::AccountPasswordChange)
-            }),
+            get(Undocumented(
+                async |State(url_builder): State<UrlBuilder>| {
+                    url_builder.redirect(&mas_router::AccountPasswordChange)
+                },
+            )),
         )
-        .route(mas_router::Index::route(), get(self::views::index::get))
-        .route(
+        .api_route(
+            mas_router::Index::route(),
+            get(Undocumented(self::views::index::get)),
+        )
+        .api_route(
             mas_router::Login::route(),
-            get(self::views::login::get).post(self::views::login::post),
+            get(Undocumented(self::views::login::get)).post(Undocumented(self::views::login::post)),
         )
-        .route(mas_router::Logout::route(), post(self::views::logout::post))
-        .route(
+        .api_route(
+            mas_router::Logout::route(),
+            post(Undocumented(self::views::logout::post)),
+        )
+        .api_route(
             mas_router::Register::route(),
-            get(self::views::register::get).post(self::views::register::post),
+            get(Undocumented(self::views::register::get))
+                .post(Undocumented(self::views::register::post)),
         )
         // Keeps links to the former password registration page working
-        .route(
+        .api_route(
             "/register/password",
             redirect_to(mas_router::Register::route()),
         )
-        .route(
+        .api_route(
             mas_router::RegisterVerifyEmail::route(),
-            get(self::views::register::steps::verify_email::get)
-                .post(self::views::register::steps::verify_email::post),
+            get(Undocumented(
+                self::views::register::steps::verify_email::get,
+            ))
+            .post(Undocumented(
+                self::views::register::steps::verify_email::post,
+            )),
         )
-        .route(
+        .api_route(
             mas_router::RegisterToken::route(),
-            get(self::views::register::steps::registration_token::get)
-                .post(self::views::register::steps::registration_token::post),
+            get(Undocumented(
+                self::views::register::steps::registration_token::get,
+            ))
+            .post(Undocumented(
+                self::views::register::steps::registration_token::post,
+            )),
         )
-        .route(
+        .api_route(
             mas_router::RegisterDisplayName::route(),
-            get(self::views::register::steps::display_name::get)
-                .post(self::views::register::steps::display_name::post),
+            get(Undocumented(
+                self::views::register::steps::display_name::get,
+            ))
+            .post(Undocumented(
+                self::views::register::steps::display_name::post,
+            )),
         )
-        .route(
+        .api_route(
             mas_router::RegisterFinish::route(),
-            get(self::views::register::steps::finish::get),
+            get(Undocumented(self::views::register::steps::finish::get)),
         )
-        .route(
+        .api_route(
             mas_router::AccountRecoveryStart::route(),
-            get(self::views::recovery::start::get).post(self::views::recovery::start::post),
+            get(Undocumented(self::views::recovery::start::get))
+                .post(Undocumented(self::views::recovery::start::post)),
         )
-        .route(
+        .api_route(
             mas_router::AccountRecoveryProgress::route(),
-            get(self::views::recovery::progress::get).post(self::views::recovery::progress::post),
+            get(Undocumented(self::views::recovery::progress::get))
+                .post(Undocumented(self::views::recovery::progress::post)),
         )
-        .route(
+        .api_route(
             mas_router::OAuth2AuthorizationEndpoint::route(),
-            get(self::oauth2::authorization::get),
+            get(Undocumented(self::oauth2::authorization::get)),
         )
-        .route(
+        .api_route(
             mas_router::Consent::route(),
-            get(self::oauth2::authorization::consent::get)
-                .post(self::oauth2::authorization::consent::post),
+            get(Undocumented(self::oauth2::authorization::consent::get))
+                .post(Undocumented(self::oauth2::authorization::consent::post)),
         )
-        .route(
+        .api_route(
             mas_router::CompatLoginSsoComplete::route(),
-            get(self::compat::login_sso_complete::get).post(self::compat::login_sso_complete::post),
+            get(Undocumented(self::compat::login_sso_complete::get))
+                .post(Undocumented(self::compat::login_sso_complete::post)),
         )
-        .route(
+        .api_route(
             mas_router::UpstreamOAuth2Authorize::route(),
-            get(self::upstream_oauth2::authorize::get),
+            get(Undocumented(self::upstream_oauth2::authorize::get)),
         )
-        .route(
+        .api_route(
             mas_router::UpstreamOAuth2Callback::route(),
-            get(self::upstream_oauth2::callback::handler)
-                .post(self::upstream_oauth2::callback::handler),
+            get(Undocumented(self::upstream_oauth2::callback::handler))
+                .post(Undocumented(self::upstream_oauth2::callback::handler)),
         )
-        .route(
+        .api_route(
             mas_router::UpstreamOAuth2Link::route(),
-            get(self::upstream_oauth2::link::get).post(self::upstream_oauth2::link::post),
+            get(Undocumented(self::upstream_oauth2::link::get))
+                .post(Undocumented(self::upstream_oauth2::link::post)),
         )
-        .route(
+        .api_route(
             mas_router::UpstreamOAuth2BackchannelLogout::route(),
-            post(self::upstream_oauth2::backchannel_logout::post),
+            post(Undocumented(
+                self::upstream_oauth2::backchannel_logout::post,
+            )),
         )
-        .route(
+        .api_route(
             mas_router::DeviceCodeLink::route(),
-            get(self::oauth2::device::link::get).post(self::oauth2::device::link::post),
+            get(Undocumented(self::oauth2::device::link::get))
+                .post(Undocumented(self::oauth2::device::link::post)),
         )
-        .route(
+        .api_route(
             mas_router::DeviceCodeConsent::route(),
-            get(self::oauth2::device::consent::get).post(self::oauth2::device::consent::post),
+            get(Undocumented(self::oauth2::device::consent::get))
+                .post(Undocumented(self::oauth2::device::consent::post)),
         )
         .layer(AndThenLayer::new(
             async move |response: axum::response::Response| {
