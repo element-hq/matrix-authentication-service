@@ -76,6 +76,7 @@ mod room_id;
 mod session;
 #[cfg(test)]
 mod test_utils;
+mod username_template;
 
 static METER: LazyLock<Meter> = LazyLock::new(|| {
     let scope = opentelemetry::InstrumentationScope::builder(env!("CARGO_PKG_NAME"))

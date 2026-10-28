@@ -547,7 +547,8 @@ mod tests {
         assert_refused(&response, "fit the registration");
     }
 
-    /// A registration needs a username that fits its token's template
+    /// A registration created with a username template token keeps the name
+    /// rendered for it
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_finish_with_username_template(pool: PgPool) {
         setup();
@@ -557,23 +558,11 @@ mod tests {
         let token = add_registration_token(
             &state,
             "invite_template",
-            Some("user-{random}"),
+            Some("user-{{ random }}"),
             None,
             false,
         )
         .await;
-
-        let registration = add_registration(
-            &state,
-            &cookies,
-            "mallory",
-            Some("mallory@example.com"),
-            true,
-            Some(&token),
-        )
-        .await;
-        let response = finish(&state, &cookies, &registration).await;
-        assert_refused(&response, "fit the registration");
 
         let username = format!("user-{}", "a1".repeat(16));
         let registration = add_registration(
@@ -668,8 +657,14 @@ mod tests {
         let state = TestState::from_pool(pool).await.unwrap();
         let cookies = CookieHelper::new();
 
-        let token =
-            add_registration_token(&state, "invite_link", Some("guest-{random}"), None, true).await;
+        let token = add_registration_token(
+            &state,
+            "invite_link",
+            Some("guest-{{ random }}"),
+            None,
+            true,
+        )
+        .await;
         let username = format!("guest-{}", "a1".repeat(16));
         let registration =
             add_registration(&state, &cookies, &username, None, false, Some(&token)).await;

@@ -761,7 +761,7 @@ mod tests {
         // has a template for one
         for (token, username) in [
             ("invite_alice", "alice"),
-            ("invite_template", "user-{random}"),
+            ("invite_template", "user-{{ random }}"),
         ] {
             let mut repo = state.repository().await.unwrap();
             repo.user_registration_token()
