@@ -393,9 +393,14 @@ pub fn build_router(
             state.clone(),
             client_ip_middleware,
         ))
-        // The `LogContextLayer` binds a Sentry hub to the request, so it must
-        // wrap the `SentryHttpLayer`. axum makes new layers wrap the existing
-        // ones, which is the other way around compared to `tower::ServiceBuilder`.
+        // Careful about the order here: the `LogContextLayer` creates and binds
+        // a `sentry::Hub` which holds the per-request Sentry "context", then
+        // `SentryHttpLayer` populates it with informations from the HTTP
+        // request. In short, `LogContextLayer` must be *around* `SentryHttpLayer`.
+        // Reading the Sentry documentation, you would assume you need to add
+        // the layers the other way around, but that is because the
+        // documentation uses `tower::ServiceBuilder`, which applies layers in
+        // the oposite order compared to `axum`.
         .layer(SentryHttpLayer::new().enable_transaction())
         .layer(mas_context::LogContextLayer::new(|req| {
             otel_http_method(req).into()
