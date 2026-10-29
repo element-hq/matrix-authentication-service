@@ -17,7 +17,7 @@ ARG RUSTUP_VERSION=1.29.0
 # Keep in sync with .node-version and devEngines.runtime in package.json
 ARG NODEJS_VERSION=24.15.0
 # Keep in sync with .github/actions/build-policies/action.yml and policies/Makefile
-ARG OPA_VERSION=1.13.1
+ARG OPA_VERSION=1.21.4
 ARG CARGO_AUDITABLE_VERSION=0.7.2
 
 ##########################################

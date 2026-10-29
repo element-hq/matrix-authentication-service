@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -10,10 +11,10 @@ runs:
   using: composite
   steps:
     - name: Install Open Policy Agent
-      uses: open-policy-agent/setup-opa@34a30e8a924d1b03ce2cf7abe97250bbb1f332b5 # v2.2.0
+      uses: open-policy-agent/setup-opa@b2b258e089860efaadaaf71bf6e3aecb4a3eeff1 # v2.4.0
       with:
         # Keep in sync with the Dockerfile and policies/Makefile
-        version: 1.13.1
+        version: 1.21.4
 
     - name: Build the policies
       run: make
