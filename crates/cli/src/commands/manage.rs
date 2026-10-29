@@ -429,6 +429,10 @@ impl Options {
                     .await?
                     .context("User not found")?;
 
+                // We're about to create a device, let's explicitly acquire a lock, so that
+                // any concurrent sync will read after we've committed
+                repo.user().acquire_lock_for_sync(&user).await?;
+
                 let device = if let Some(device_id) = device_id {
                     device_id.into()
                 } else {
