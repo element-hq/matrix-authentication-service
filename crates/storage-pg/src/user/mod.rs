@@ -601,7 +601,7 @@ impl UserRepository for PgUserRepository<'_> {
             .generate_pagination((Users::Table, Users::UserId), pagination)
             .build_sqlx(PostgresQueryBuilder);
 
-        let edges: Vec<UserLookup> = sqlx::query_as_with(&sql, arguments)
+        let edges: Vec<UserLookup> = sqlx::query_as_with(sqlx::AssertSqlSafe(sql), arguments)
             .traced()
             .fetch_all(&mut *self.conn)
             .await?;
@@ -626,7 +626,7 @@ impl UserRepository for PgUserRepository<'_> {
             .apply_filter(filter)
             .build_sqlx(PostgresQueryBuilder);
 
-        let count: i64 = sqlx::query_scalar_with(&sql, arguments)
+        let count: i64 = sqlx::query_scalar_with(sqlx::AssertSqlSafe(sql), arguments)
             .traced()
             .fetch_one(&mut *self.conn)
             .await?;
