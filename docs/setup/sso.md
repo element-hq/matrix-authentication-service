@@ -258,7 +258,7 @@ Authentication service configuration:
 ```yaml
 upstream_oauth2:
   providers:
-  - id: <id>
+  - id: 01M63F1HX0HD2YZ0XR6CPJ6KRM
     human_name: Authelia
     issuer: "https://<authelia-fqdn>" # TO BE FILLED W/O ANY TRAILING SLASHES
     client_id: "<client-id>" # TO BE FILLED
@@ -362,7 +362,7 @@ Authentication service configuration:
 ```yaml
 upstream_oauth2:
   providers:
-    - id: "01HFS3WM7KSWCEQVJTN0V9X1W6"
+    - id: 01HFS3WM7KSWCEQVJTN0V9X1W6
       issuer: "https://www.facebook.com"
       human_name: "Facebook"
       brand_name: "facebook"
@@ -404,7 +404,7 @@ Authentication service configuration:
 ```yaml
 upstream_oauth2:
   providers:
-    - id: "01HFS67GJ145HCM9ZASYS9DC3J"
+    - id: 01HFS67GJ145HCM9ZASYS9DC3J
       human_name: GitHub
       brand_name: github
       discovery_mode: disabled
@@ -442,7 +442,7 @@ Authentication service configuration:
 ```yaml
 upstream_oauth2:
   providers:
-    - id: "01HFS67GJ145HCM9ZASYS9DC3J"
+    - id: 01HFS67GJ145HCM9ZASYS9DC3J
       issuer: "https://gitlab.com"
       human_name: "GitLab"
       brand_name: "gitlab"
@@ -509,7 +509,7 @@ Create a OAuth2 Client following the [OAuth2 Setup](https://kanidm.github.io/kan
 ```yaml
 upstream_oauth2:
   providers:
-    - id: "[ulid]" # randomly generated ulid (https://www.ulidtools.com/)
+    - id: 01M63F2KBYZGS9SEDFZ5NAWFF5
       id_token_signed_response_alg: ES256 # This is important since Kanidm doesn't support RS256 by default  
       issuer: "https://<kanidm_instance>/oauth2/openid/<client_id>" # TO BE FILLED
       token_endpoint_auth_method: client_secret_basic
@@ -567,7 +567,7 @@ Follow the [Getting Started Guide](https://www.keycloak.org/guides) to install K
 ```yaml
 upstream_oauth2:
   providers:
-    - id: "01H8PKNWKKRPCBW4YGH1RWV279"
+    - id: 01H8PKNWKKRPCBW4YGH1RWV279
       issuer: "https://<keycloak>/realms/<realm>" # TO BE FILLED
       token_endpoint_auth_method: client_secret_basic
       client_id: "matrix-authentication-service"
@@ -600,7 +600,7 @@ Authentication service configuration:
 ```yaml
 upstream_oauth2:
   providers:
-    - id: "01HFRPWGR6BG9SAGAKDTQHG2R2"
+    - id: 01HFRPWGR6BG9SAGAKDTQHG2R2
       human_name: Microsoft Azure AD
       issuer: "https://login.microsoftonline.com/<tenant-id>/v2.0" # TO BE FILLED
       client_id: "<client-id>" # TO BE FILLED
@@ -681,7 +681,7 @@ Authentication service configuration:
 ```yaml
 upstream_oauth2:
   providers:
-    - id: "01JFFHK7HJF70YSYF753GEWVRP"
+    - id: 01JFFHK7HJF70YSYF753GEWVRP
       human_name: Rauthy
       issuer: "https://<rauthy>/auth/v1" # TO BE FILLED
       client_id: "<client-id>" # TO BE FILLED
