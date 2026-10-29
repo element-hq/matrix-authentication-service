@@ -629,12 +629,16 @@ Follow the instructions [to create an application for ProConnect](https://parten
 ```yaml
 upstream_oauth2:
   providers:
-    - id: "<ulid>" # Generate one using https://www.ulidtools.com
-      issuer: "<issuer>" # Fill in accordingly from the ProConnect documentation
+    - id: 01M61BS9GYECQ4Y8JKMV87SGGH
+      # Integration environment, see the ProConnect documentation
+      issuer: "https://fca.integ01.dev-agentconnect.fr/api/v2"
+      # Production environment
+      #issuer: "https://auth.agentconnect.gouv.fr/api/v2"
       token_endpoint_auth_method: client_secret_post
       client_id: "<client ID>" # TO BE FILLED
       client_secret: "<client secret>" # TO BE FILLED
       fetch_userinfo: true
+      userinfo_signed_response_alg: RS256
       scope: "openid email usual_name given_name"
       claims_imports:
         localpart:
