@@ -69,7 +69,9 @@ const mountRegister = async ({
   // The entry point mounts the island when it is imported
   vi.resetModules();
   await import("./register");
-  await screen.findByRole("link", { name: "Already have an account?" });
+  await screen.findByRole("link", {
+    name: /^(Already have an account\?|Sign in with an existing account)$/,
+  });
 };
 
 const unmount = (): void => {
@@ -127,6 +129,7 @@ describe("register island", () => {
       username: "alice",
       email: "alice@example.com",
       passwordless: true,
+      link_invite: false,
     };
 
     it("explains an error on the username above the form", async () => {

@@ -116,7 +116,9 @@ pub struct Request {
     email: Option<String>,
 
     /// Whether registering with this token skips the password step. The user's
-    /// identity is then established by verifying their email address.
+    /// identity is then established by verifying their email address, unless
+    /// the token has a username template and no email: such an invite link
+    /// registers a guest with only a display name.
     #[serde(default)]
     passwordless: bool,
 

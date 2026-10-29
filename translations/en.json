@@ -531,11 +531,11 @@
     },
     "loading": "Loading…",
     "@loading": {
-      "context": "pages/register/index.html:39:26-42"
+      "context": "pages/register/index.html:58:26-42"
     },
     "loading_failed": "Something went wrong while loading the page. Try reloading it.",
     "@loading_failed": {
-      "context": "app.html:28:9-32, pages/register/index.html:51:7-30"
+      "context": "app.html:28:9-32, pages/register/index.html:70:7-30"
     },
     "login": {
       "call_to_register": "Don't have an account yet?",
@@ -770,14 +770,30 @@
     },
     "register": {
       "create_account": {
+        "email_invite_description": "To enable your guest access we will send a verification code to",
+        "@email_invite_description": {
+          "context": "pages/register/index.html:38:15-72"
+        },
+        "email_invite_heading": "You have been invited to join a conversation as a guest",
+        "@email_invite_heading": {
+          "context": "pages/register/index.html:35:29-82"
+        },
         "heading": "Create an account",
         "@heading": {
-          "context": "pages/register/index.html:25:27-67"
+          "context": "pages/register/index.html:43:29-69"
+        },
+        "link_invite_description": "Choose your display name. This is the name other people will see. You can change this at any time.",
+        "@link_invite_description": {
+          "context": "pages/register/index.html:33:27-83"
+        },
+        "link_invite_heading": "You've been invited to join as a guest",
+        "@link_invite_heading": {
+          "context": "pages/register/index.html:32:29-81"
         }
       },
       "javascript_required": "JavaScript is required to create an account. Please enable JavaScript in your browser and reload this page.",
       "@javascript_required": {
-        "context": "pages/register/index.html:58:34-71"
+        "context": "pages/register/index.html:77:34-71"
       },
       "terms_of_service": "I agree to the <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Terms and Conditions</a>",
       "@terms_of_service": {
