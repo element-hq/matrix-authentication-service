@@ -411,7 +411,8 @@ fn record_internal_errors(response: &async_graphql::Response) {
                 continue;
             };
 
-        // List indices are left out so that the path identifies the resolver
+        // Build a string of the path to where the error was, like "users.nodes.id",
+        // leaving out the array indices in the path if any.
         let path = error
             .path
             .iter()
