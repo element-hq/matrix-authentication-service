@@ -34,6 +34,7 @@ mod recovery;
 mod registration;
 mod registration_token;
 mod session;
+mod session_limit_override;
 mod terms;
 
 #[cfg(test)]
@@ -43,7 +44,7 @@ pub use self::{
     email::PgUserEmailRepository, password::PgUserPasswordRepository,
     recovery::PgUserRecoveryRepository, registration::PgUserRegistrationRepository,
     registration_token::PgUserRegistrationTokenRepository, session::PgBrowserSessionRepository,
-    terms::PgUserTermsRepository,
+    session_limit_override::PgUserSessionLimitOverrideRepository, terms::PgUserTermsRepository,
 };
 
 /// An implementation of [`UserRepository`] for a PostgreSQL connection

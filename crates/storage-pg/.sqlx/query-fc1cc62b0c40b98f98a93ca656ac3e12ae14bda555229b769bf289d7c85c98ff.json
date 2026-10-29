@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT user_session_limit_override_id\n                     , user_id\n                     , oauth2_client_id\n                     , soft_limit\n                     , hard_limit\n                     , created_at\n                     , updated_at\n                FROM user_session_limit_overrides\n                WHERE user_id = $1\n                  AND oauth2_client_id IS NOT DISTINCT FROM $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_session_limit_override_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "oauth2_client_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "soft_limit",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "hard_limit",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "fc1cc62b0c40b98f98a93ca656ac3e12ae14bda555229b769bf289d7c85c98ff"
+}

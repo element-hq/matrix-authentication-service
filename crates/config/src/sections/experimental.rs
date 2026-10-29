@@ -4,12 +4,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::num::NonZeroU64;
+use std::{collections::HashMap, num::NonZeroU64};
 
 use chrono::Duration;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
+use ulid::Ulid;
 
 use crate::ConfigurationSection;
 
@@ -155,7 +156,13 @@ pub struct SessionLimitConfig {
     /// This is the limit that is displayed in the UI
     ///
     /// [`hard_limit`]: Self::hard_limit
-    pub soft_limit: NonZeroU64,
+    ///
+    /// May be omitted when [`per_client`] is set. In that case there is no
+    /// global limit: only the listed OAuth 2.0 clients are limited.
+    ///
+    /// [`per_client`]: Self::per_client
+    #[serde(default)]
+    pub soft_limit: Option<NonZeroU64>,
     /// Upon login, when `dangerous_hard_limit_eviction: false`, will refuse the
     /// new login (policy violation error), otherwise, see
     /// [`dangerous_hard_limit_eviction`].
@@ -163,8 +170,13 @@ pub struct SessionLimitConfig {
     /// The hard limit is enforced in all contexts
     /// (interactive/non-interactive).
     ///
+    /// May be omitted together with [`soft_limit`] when [`per_client`] is set.
+    ///
     /// [`dangerous_hard_limit_eviction`]: Self::dangerous_hard_limit_eviction
-    pub hard_limit: NonZeroU64,
+    /// [`soft_limit`]: Self::soft_limit
+    /// [`per_client`]: Self::per_client
+    #[serde(default)]
+    pub hard_limit: Option<NonZeroU64>,
     /// When set, only accounts with <= `max_session_threshold` sessions have
     /// the session limits applied.
     ///
@@ -209,32 +221,235 @@ pub struct SessionLimitConfig {
     /// [`max_session_threshold`]: Self::max_session_threshold
     #[serde(default = "default_false")]
     pub dangerous_hard_limit_eviction: bool,
+
+    /// Optional session limits that apply when logging into a specific OAuth
+    /// 2.0 client, replacing the top-level limits for that client.
+    ///
+    /// Keys are OAuth 2.0 client IDs (ULIDs). Values use the same fields as
+    /// this section. Optional fields do not inherit from the top-level
+    /// config: omitted `max_session_threshold` means limits always apply,
+    /// and `dangerous_hard_limit_eviction` defaults to `false`.
+    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
+    #[schemars(with = "HashMap<String, SessionLimitRules>")]
+    pub per_client: HashMap<Ulid, SessionLimitRules>,
+}
+
+/// Session limit numbers applied either globally or to one OAuth 2.0 client.
+///
+/// This is the value type of [`SessionLimitConfig::per_client`].
+#[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
+pub struct SessionLimitRules {
+    /// See [`SessionLimitConfig::soft_limit`]
+    pub soft_limit: NonZeroU64,
+    /// See [`SessionLimitConfig::hard_limit`]
+    pub hard_limit: NonZeroU64,
+    /// See [`SessionLimitConfig::max_session_threshold`]
+    pub max_session_threshold: Option<NonZeroU64>,
+    /// See [`SessionLimitConfig::dangerous_hard_limit_eviction`]
+    #[serde(default = "default_false")]
+    pub dangerous_hard_limit_eviction: bool,
+}
+
+impl SessionLimitRules {
+    fn validate(&self) -> Result<(), Box<figment::error::Error>> {
+        validate_session_limit_bounds(
+            self.soft_limit,
+            self.hard_limit,
+            self.dangerous_hard_limit_eviction,
+        )
+    }
+}
+
+fn validate_session_limit_bounds(
+    soft_limit: NonZeroU64,
+    hard_limit: NonZeroU64,
+    dangerous_hard_limit_eviction: bool,
+) -> Result<(), Box<figment::error::Error>> {
+    // We assume the `hard_limit` is >= the `soft_limit`
+    //
+    // Why? The UI only shows the soft_limit to users. If hard_limit were smaller
+    // than soft_limit, users could hit the hard_limit without ever reaching the
+    // visible soft_limit threshold — making the actual limit invisible and the
+    // failure confusing.
+    if hard_limit < soft_limit {
+        return Err(figment::error::Error::from(
+            "Session `hard_limit` must be greater than or equal to the user-facing `soft_limit`.",
+        )
+        .with_path("hard_limit")
+        .into());
+    }
+
+    // See [`SessionLimitConfig::dangerous_hard_limit_eviction`] docstring
+    if dangerous_hard_limit_eviction && hard_limit.get() < 2 {
+        return Err(figment::error::Error::from(
+            "Session `hard_limit` must be at least 2 when automatic `dangerous_hard_limit_eviction` is set. \
+            See configuration docs for more info.",
+        ).with_path("hard_limit").into());
+    }
+
+    Ok(())
 }
 
 impl SessionLimitConfig {
     fn validate(&self) -> Result<(), Box<figment::error::Error>> {
-        // We assume the `hard_limit` is >= the `soft_limit`
-        //
-        // Why? The UI only shows the soft_limit to users. If hard_limit were smaller
-        // than soft_limit, users could hit the hard_limit without ever reaching the
-        // visible soft_limit threshold — making the actual limit invisible and the
-        // failure confusing.
-        if self.hard_limit < self.soft_limit {
-            return Err(figment::error::Error::from(
-                "Session `hard_limit` must be greater than or equal to the user-facing `soft_limit`.",
-            )
-            .with_path("hard_limit")
-            .into());
+        match (self.soft_limit, self.hard_limit) {
+            (Some(soft_limit), Some(hard_limit)) => {
+                validate_session_limit_bounds(
+                    soft_limit,
+                    hard_limit,
+                    self.dangerous_hard_limit_eviction,
+                )?;
+            }
+            (None, None) => {
+                if self.dangerous_hard_limit_eviction {
+                    return Err(figment::error::Error::from(
+                        "Session `dangerous_hard_limit_eviction` requires a global `hard_limit`.",
+                    )
+                    .with_path("dangerous_hard_limit_eviction")
+                    .into());
+                }
+                if self.per_client.is_empty() {
+                    return Err(figment::error::Error::from(
+                        "Session limits require `soft_limit` and `hard_limit`, or a non-empty `per_client` map.",
+                    )
+                    .into());
+                }
+            }
+            (Some(_), None) => {
+                return Err(figment::error::Error::from(
+                    "Session `hard_limit` is required when `soft_limit` is set.",
+                )
+                .with_path("hard_limit")
+                .into());
+            }
+            (None, Some(_)) => {
+                return Err(figment::error::Error::from(
+                    "Session `soft_limit` is required when `hard_limit` is set.",
+                )
+                .with_path("soft_limit")
+                .into());
+            }
         }
 
-        // See [`SessionLimitConfig::dangerous_hard_limit_eviction`] docstring
-        if self.dangerous_hard_limit_eviction && self.hard_limit.get() < 2 {
-            return Err(figment::error::Error::from(
-                "Session `hard_limit` must be at least 2 when automatic `dangerous_hard_limit_eviction` is set. \
-                See configuration docs for more info.",
-            ).with_path("hard_limit").into());
+        for (client_id, rules) in &self.per_client {
+            rules
+                .validate()
+                .map_err(|err| Box::new((*err).with_path(&format!("per_client.{client_id}"))))?;
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #![expect(clippy::result_large_err)]
+
+    use figment::{
+        Figment, Jail,
+        providers::{Format, Yaml},
+    };
+
+    use super::*;
+
+    #[test]
+    fn per_client_hard_limit_must_be_at_least_soft_limit() {
+        let config = SessionLimitConfig {
+            soft_limit: Some(NonZeroU64::new(10).unwrap()),
+            hard_limit: Some(NonZeroU64::new(10).unwrap()),
+            max_session_threshold: None,
+            dangerous_hard_limit_eviction: false,
+            per_client: HashMap::from([(
+                Ulid::nil(),
+                SessionLimitRules {
+                    soft_limit: NonZeroU64::new(5).unwrap(),
+                    hard_limit: NonZeroU64::new(2).unwrap(),
+                    max_session_threshold: None,
+                    dangerous_hard_limit_eviction: false,
+                },
+            )]),
+        };
+
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn per_client_eviction_requires_hard_limit_at_least_two() {
+        let config = SessionLimitConfig {
+            soft_limit: Some(NonZeroU64::new(1).unwrap()),
+            hard_limit: Some(NonZeroU64::new(2).unwrap()),
+            max_session_threshold: None,
+            dangerous_hard_limit_eviction: false,
+            per_client: HashMap::from([(
+                Ulid::nil(),
+                SessionLimitRules {
+                    soft_limit: NonZeroU64::new(1).unwrap(),
+                    hard_limit: NonZeroU64::new(1).unwrap(),
+                    max_session_threshold: None,
+                    dangerous_hard_limit_eviction: true,
+                },
+            )]),
+        };
+
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn per_client_only_does_not_require_global_limits() {
+        let config: SessionLimitConfig = serde_json::from_value(serde_json::json!({
+            "per_client": {
+                "00000000000000000000000000": {
+                    "soft_limit": 2,
+                    "hard_limit": 3
+                }
+            }
+        }))
+        .unwrap();
+
+        assert!(config.soft_limit.is_none());
+        assert!(config.hard_limit.is_none());
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn session_limit_requires_global_limits_or_per_client() {
+        let config = SessionLimitConfig {
+            soft_limit: None,
+            hard_limit: None,
+            max_session_threshold: None,
+            dangerous_hard_limit_eviction: false,
+            per_client: HashMap::new(),
+        };
+
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn per_client_only_yaml_does_not_require_global_limits() {
+        Jail::expect_with(|jail| {
+            jail.create_file(
+                "config.yaml",
+                r"
+                    experimental:
+                      session_limit:
+                        per_client:
+                          '01FSHN9A2Q9FXBM5T1WDB4P6S0':
+                            soft_limit: 2
+                            hard_limit: 3
+                ",
+            )?;
+
+            let figment = Figment::new().merge(Yaml::file("config.yaml"));
+            let config = figment.extract_inner::<ExperimentalConfig>("experimental")?;
+            let session_limit = config.session_limit.as_ref().unwrap();
+            assert!(session_limit.soft_limit.is_none());
+            assert!(session_limit.hard_limit.is_none());
+            assert_eq!(session_limit.per_client.len(), 1);
+            config
+                .validate(&figment)
+                .map_err(|err| figment::Error::from(err.to_string()))?;
+
+            Ok(())
+        });
     }
 }
