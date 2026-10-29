@@ -958,7 +958,7 @@ impl JobTracker {
                             error,
                         }) if context.attempt < MAX_ATTEMPTS => {
                             let delay = retry_delay(context.attempt);
-                            tracing::warn!(
+                            tracing::error!(
                                 error = &**error as &dyn std::error::Error,
                                 job.id = %context.id,
                                 job.queue.name = %context.queue_name,
