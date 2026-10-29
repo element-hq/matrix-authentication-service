@@ -137,14 +137,15 @@ jobs:
           version: 0.17.0
           use-cache: false
 
-      - name: Install cargo-zigbuild
+      - name: Install cargo-zigbuild and cargo-auditable
         uses: taiki-e/install-action@5488ac5a951645ce95062214902ac4b6bc1a1037 # v2
         with:
-          tool: cargo-zigbuild@0.24.0
+          tool: cargo-zigbuild@0.24.0,cargo-auditable@0.7.7
 
       - name: Build the binary
+        # Argument order matters: `cargo zigbuild auditable` does not work
         run: |
-          cargo zigbuild \
+          cargo auditable zigbuild \
             --release \
             --target ${{ matrix.target }}.2.17 \
             --no-default-features \
