@@ -134,7 +134,10 @@ enum Subcommand {
         #[arg(long)]
         expires_in: Option<u32>,
 
-        /// Only allow registering with this username
+        /// Only allow registering with this username. A value with `{` is a
+        /// minijinja template, rendered with `random` when registering through
+        /// `/register?token=<token>`. A template token works only through that
+        /// link: the registration token step refuses it.
         #[arg(long)]
         username: Option<String>,
 

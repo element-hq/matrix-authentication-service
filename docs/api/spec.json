@@ -7339,7 +7339,7 @@
             "type": "boolean"
           },
           "username": {
-            "description": "A username imposed on the registering user. If null, the user can\nchoose their own username.",
+            "description": "A username imposed on the registering user. If null, the user can\nchoose their own username. A value with `{` is a minijinja template,\nrendered with `random` when registering through the token's link. A\ntemplate token works only through that link: the registration token\nstep refuses it.",
             "type": [
               "string",
               "null"
@@ -7444,7 +7444,7 @@
             "format": "date-time"
           },
           "username": {
-            "description": "A username to impose on the registering user. If set, the user cannot\nchoose their own username.",
+            "description": "A username to impose on the registering user. If set, the user cannot\nchoose their own username. A value with `{` is a minijinja template:\nregistering through the token's `/register?token=…` link renders it\nwith `random`, 32 random lowercase letters and digits, without showing\nthe user the name. A template token works only through that link: the\nregistration token step refuses it.",
             "type": [
               "string",
               "null"

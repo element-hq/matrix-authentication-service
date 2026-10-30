@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -60,6 +61,7 @@ pub use self::{
         Authentication, AuthenticationMethod, BrowserSession, MatrixUser, Password, User,
         UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode, UserRecoverySession,
         UserRecoveryTicket, UserRegistration, UserRegistrationPassword, UserRegistrationToken,
+        is_username_template,
     },
     utils::{BoxClock, BoxRng, UlidExt},
     version::AppVersion,

@@ -13,16 +13,24 @@ pub(crate) mod verify_email;
 
 /// Whether `token` can be used for `registration`, whose email address is
 /// `email`: it pins no other username or email address, and it is passwordless
-/// if the registration has neither a password nor an upstream link
+/// if the registration has neither a password nor an upstream link. A rendered
+/// name can't be checked against its template, so a username template fits
+/// only the registration it was rendered for.
 fn token_fits(
     token: &UserRegistrationToken,
     registration: &UserRegistration,
     email: Option<&str>,
 ) -> bool {
-    token
-        .username
-        .as_ref()
-        .is_none_or(|username| *username == registration.username)
+    let username_fits = if token.username_template().is_some() {
+        registration.user_registration_token_id == Some(token.id)
+    } else {
+        token
+            .username
+            .as_ref()
+            .is_none_or(|username| *username == registration.username)
+    };
+
+    username_fits
         && token
             .email
             .as_deref()

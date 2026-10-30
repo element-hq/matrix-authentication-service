@@ -230,6 +230,9 @@ pub struct UserRegistrationPassword {
 pub struct UserRegistrationToken {
     pub id: Ulid,
     pub token: String,
+    /// A localpart to impose, or a template for one (see
+    /// [`is_username_template`]). A template token works only through its
+    /// `/register?token=…` link: the registration token step refuses it.
     pub username: Option<String>,
     pub email: Option<String>,
     pub passwordless: bool,
@@ -269,7 +272,8 @@ impl UserRegistrationToken {
     }
 
     /// Returns `true` if the token is an invite: it registers without a
-    /// password, as the username and the email address it pins
+    /// password, as the username (or username template) and the email
+    /// address it pins
     #[must_use]
     pub fn is_invite(&self) -> bool {
         self.passwordless && self.username.is_some() && self.email.is_some()
@@ -281,6 +285,22 @@ impl UserRegistrationToken {
     pub fn can_be_used(&self, now: DateTime<Utc>) -> bool {
         self.is_valid(now)
     }
+
+    /// The username, if it is a template (see [`is_username_template`])
+    #[must_use]
+    pub fn username_template(&self) -> Option<&str> {
+        self.username
+            .as_deref()
+            .filter(|username| is_username_template(username))
+    }
+}
+
+/// Whether a registration token's `username` is a minijinja template,
+/// rendered with `random` when registering. Every minijinja delimiter starts
+/// with `{`, which the registration policy refuses in a localpart.
+#[must_use]
+pub fn is_username_template(username: &str) -> bool {
+    username.contains('{')
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]

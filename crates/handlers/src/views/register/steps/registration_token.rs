@@ -406,6 +406,70 @@ mod tests {
         assert_refused(&state, &response, &registration).await;
     }
 
+    /// A username template token fits only the registration it was rendered
+    /// for, even if the template could render the registration's username
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_refuses_token_with_username_template(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        add_registration_token(
+            &state,
+            "invite_template",
+            Some("user-{{ random }}"),
+            None,
+            false,
+        )
+        .await;
+        let registration = add_registration(
+            &state,
+            &cookies,
+            &format!("user-{}", "a1".repeat(16)),
+            Some("invitee@example.com"),
+            true,
+            None,
+        )
+        .await;
+
+        let response = submit_token(&state, &cookies, &registration, "invite_template").await;
+        assert_refused(&state, &response, &registration).await;
+    }
+
+    /// Posting a username template token again for the registration it was
+    /// attached to when registering changes nothing
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_accepts_own_username_template_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let token = add_registration_token(
+            &state,
+            "invite_template",
+            Some("user-{{ random }}"),
+            None,
+            false,
+        )
+        .await;
+        let registration = add_registration(
+            &state,
+            &cookies,
+            &format!("user-{}", "a1".repeat(16)),
+            Some("invitee@example.com"),
+            true,
+            Some(&token),
+        )
+        .await;
+
+        let response = submit_token(&state, &cookies, &registration, "invite_template").await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(
+            LOCATION,
+            &mas_router::RegisterFinish::new(registration.id).path_and_query(),
+        );
+    }
+
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_refuses_token_pinning_another_email(pool: PgPool) {
         setup();
