@@ -1,7 +1,7 @@
 {
   "name": "matrix-authentication-service",
   "private": true,
-  "packageManager": "pnpm@11.3.0+sha512.2c403d6594527287672b1f7056343a1f7c3634036a67ffabfcc2b3d7595d843768f8787148d1b57cf7956c90606bbd192857c363af19e96d2d0ec9ec5741d215",
+  "packageManager": "pnpm@11.28.9+sha512.35421cea2720eca3f5ad722b67e8ef18f4d3cd4745ed2fcfeb0dc288d4e9437fad3870d91ee6e83f268f0f6f7e0f62723317b19617bb45ee4333172ef51159f8",
   "devEngines": {
     "runtime": {
       "name": "node",
