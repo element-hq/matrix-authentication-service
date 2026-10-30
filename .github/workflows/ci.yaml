@@ -45,7 +45,7 @@ jobs:
         uses: open-policy-agent/setup-regal@761188c3b435761fa254beca508a44875619648f # v2.0.0
         with:
           # Keep in sync with policies/Makefile
-          version: 0.38.1
+          version: 0.43.0
 
       - name: Lint policies
         working-directory: ./policies

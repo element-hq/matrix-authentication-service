@@ -129,14 +129,14 @@ violation contains {"msg": msg} if {
 	some scope in split(input.scope, " ")
 	not admin_scope(scope)
 	not allowed_scope(scope)
-	msg := sprintf("scope '%s' not allowed", [scope])
+	msg := $"scope '{scope}' not allowed"
 }
 
 violation contains {"code": "admin-scope-not-allowed", "msg": msg} if {
 	some scope in split(input.scope, " ")
 	admin_scope(scope)
 	not allowed_scope(scope)
-	msg := sprintf("scope '%s' requires admin privileges", [scope])
+	msg := $"scope '{scope}' requires admin privileges"
 }
 
 violation contains {"msg": "only one device scope is allowed at a time"} if {

@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -51,8 +52,8 @@ host_matches_client_uri(_) if {
 
 host_matches_client_uri(x) if {
 	client_uri := parse_uri(input.client_metadata.client_uri)
-	uri := parse_uri(x)
-	is_subdomain(client_uri.host, uri.host)
+	parsed_uri := parse_uri(x)
+	is_subdomain(client_uri.host, parsed_uri.host)
 }
 
 # If the grant_types is missing, we assume it is authorization_code
@@ -137,14 +138,14 @@ valid_native_redirector(x) if {
 	reverse_dns_match(client_uri.host, url.scheme)
 }
 
-valid_redirect_uri(uri) if {
+valid_redirect_uri(redirect_uri) if {
 	input.client_metadata.application_type == "native"
-	valid_native_redirector(uri)
+	valid_native_redirector(redirect_uri)
 }
 
-valid_redirect_uri(uri) if {
-	secure_url(uri)
-	host_matches_client_uri(uri)
+valid_redirect_uri(redirect_uri) if {
+	secure_url(redirect_uri)
+	host_matches_client_uri(redirect_uri)
 }
 
 # METADATA

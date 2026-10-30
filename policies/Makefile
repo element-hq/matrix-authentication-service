@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -7,9 +8,9 @@
 DOCKER := 0
 PODMAN := 0
 # Keep in sync with Dockerfile and .github/actions/build-policies/action.yml
-OPA_DOCKER_IMAGE := docker.io/openpolicyagent/opa:1.13.1
+OPA_DOCKER_IMAGE := docker.io/openpolicyagent/opa:1.21.4
 # Keep in sync with .github/workflows/ci.yaml
-REGAL_DOCKER_IMAGE := ghcr.io/open-policy-agent/regal:0.38.1
+REGAL_DOCKER_IMAGE := ghcr.io/open-policy-agent/regal:0.43.0
 
 INPUTS := \
 	common/common.rego \
