@@ -395,12 +395,12 @@ pub fn build_router(
         ))
         // Careful about the order here: the `LogContextLayer` creates and binds
         // a `sentry::Hub` which holds the per-request Sentry "context", then
-        // `SentryHttpLayer` populates it with informations from the HTTP
+        // `SentryHttpLayer` populates it with information from the HTTP
         // request. In short, `LogContextLayer` must be *around* `SentryHttpLayer`.
         // Reading the Sentry documentation, you would assume you need to add
         // the layers the other way around, but that is because the
         // documentation uses `tower::ServiceBuilder`, which applies layers in
-        // the oposite order compared to `axum`.
+        // the opposite order compared to `axum`.
         .layer(SentryHttpLayer::new().enable_transaction())
         .layer(mas_context::LogContextLayer::new(|req| {
             otel_http_method(req).into()
