@@ -45,6 +45,8 @@ pub fn init(config: &TelemetryConfig) -> sentry::ClientInitGuard {
         .transport(SentryTransportFactory::new())
         .release(crate::VERSION)
         .sample_rate(config.sample_rate.unwrap_or(1.0));
+    // Without a sampler or a rate, Sentry doesn't start transactions at all.
+    // Only performance traces are sampled here; error events use `sample_rate`.
     if let Some(traces_sample_rate) = config.traces_sample_rate {
         options = options.traces_sampler(move |ctx| match ctx.operation() {
             // The ops set by `SentryHttpLayer` and by the `sentry.op` field of the
