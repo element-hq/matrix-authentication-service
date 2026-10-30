@@ -71,7 +71,6 @@ impl CompatRefreshTokenRepository for PgCompatRefreshTokenRepository<'_> {
             db.query.text,
             compat_refresh_token.id = %id,
         ),
-        err,
     )]
     async fn lookup(&mut self, id: Ulid) -> Result<Option<CompatRefreshToken>, Self::Error> {
         let res = sqlx::query_as!(
@@ -105,7 +104,6 @@ impl CompatRefreshTokenRepository for PgCompatRefreshTokenRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn find_by_token(
         &mut self,
@@ -145,7 +143,6 @@ impl CompatRefreshTokenRepository for PgCompatRefreshTokenRepository<'_> {
             %compat_session.id,
             user.id = %compat_session.user_id,
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -195,7 +192,6 @@ impl CompatRefreshTokenRepository for PgCompatRefreshTokenRepository<'_> {
             %successor_compat_refresh_token.id,
             compat_session.id = %compat_refresh_token.session_id,
         ),
-        err,
     )]
     async fn consume_and_replace(
         &mut self,

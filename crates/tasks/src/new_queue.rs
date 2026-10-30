@@ -653,7 +653,7 @@ impl QueueWorker {
         let locked = match locked {
             Either::Left(locked) => locked,
             Either::Right(txn) => {
-                tracing::error!("Another worker has the leader lock, aborting");
+                tracing::warn!("Another worker has the leader lock, aborting");
                 txn.rollback()
                     .await
                     .map_err(QueueRunnerError::CommitTransaction)?;
@@ -958,7 +958,7 @@ impl JobTracker {
                             error,
                         }) if context.attempt < MAX_ATTEMPTS => {
                             let delay = retry_delay(context.attempt);
-                            tracing::warn!(
+                            tracing::error!(
                                 error = &**error as &dyn std::error::Error,
                                 job.id = %context.id,
                                 job.queue.name = %context.queue_name,

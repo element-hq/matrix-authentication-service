@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -80,12 +81,14 @@ impl IntoResponse for RouteError {
                 | Self::InvalidSigningKey
                 | Self::NoSuchClient(_)
                 | Self::NoSuchUser(_)
+                | Self::AuthorizationVerificationError(AuthorizationVerificationError::Internal(_))
         );
         let response = match self {
             Self::Internal(_)
             | Self::InvalidSigningKey
             | Self::NoSuchClient(_)
-            | Self::NoSuchUser(_) => {
+            | Self::NoSuchUser(_)
+            | Self::AuthorizationVerificationError(AuthorizationVerificationError::Internal(_)) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()).into_response()
             }
             Self::AuthorizationVerificationError(_) | Self::Unauthorized => {

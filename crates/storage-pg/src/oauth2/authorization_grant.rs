@@ -196,7 +196,6 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             grant.scope = %scope,
             %client.id,
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -297,7 +296,6 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             db.query.text,
             grant.id = %id,
         ),
-        err,
     )]
     async fn lookup(&mut self, id: Ulid) -> Result<Option<AuthorizationGrant>, Self::Error> {
         let res = sqlx::query_as!(
@@ -346,7 +344,6 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn find_by_code(
         &mut self,
@@ -401,7 +398,6 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             client.id = %grant.client_id,
             %browser_session.id,
         ),
-        err,
     )]
     async fn fulfill(
         &mut self,
@@ -443,7 +439,6 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             client.id = %grant.client_id,
             %session.id,
         ),
-        err,
     )]
     async fn exchange(
         &mut self,
@@ -485,7 +480,6 @@ impl OAuth2AuthorizationGrantRepository for PgOAuth2AuthorizationGrantRepository
             until = %until,
             limit = limit,
         ),
-        err,
     )]
     async fn cleanup(
         &mut self,

@@ -153,7 +153,6 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
             oauth2_device_code.scope = %params.scope,
             oauth2_client.id = %params.client.id,
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -221,7 +220,6 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
             db.query.text,
             oauth2_device_code.id = %id,
         ),
-        err,
     )]
     async fn lookup(&mut self, id: Ulid) -> Result<Option<DeviceCodeGrant>, Self::Error> {
         let res = sqlx::query_as!(
@@ -265,7 +263,6 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
             db.query.text,
             oauth2_device_code.user_code = %user_code,
         ),
-        err,
     )]
     async fn find_by_user_code(
         &mut self,
@@ -312,7 +309,6 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
             db.query.text,
             oauth2_device_code.device_code = %device_code,
         ),
-        err,
     )]
     async fn find_by_device_code(
         &mut self,
@@ -362,7 +358,6 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
             browser_session.id = %browser_session.id,
             user.id = %browser_session.user.id,
         ),
-        err,
     )]
     async fn fulfill(
         &mut self,
@@ -408,7 +403,6 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
             browser_session.id = %browser_session.id,
             user.id = %browser_session.user.id,
         ),
-        err,
     )]
     async fn reject(
         &mut self,
@@ -450,7 +444,6 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
             oauth2_client.id = %device_code_grant.client_id,
             oauth2_session.id = %session.id,
         ),
-        err,
     )]
     async fn exchange(
         &mut self,
@@ -492,7 +485,6 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
             until = %until,
             limit = limit,
         ),
-        err,
     )]
     async fn cleanup(
         &mut self,

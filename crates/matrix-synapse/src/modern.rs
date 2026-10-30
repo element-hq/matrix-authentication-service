@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -66,7 +67,7 @@ impl HomeserverConnection for SynapseConnection {
         &self.homeserver
     }
 
-    #[tracing::instrument(name = "homeserver.verify_token", skip_all, err(Debug))]
+    #[tracing::instrument(name = "homeserver.verify_token", skip_all)]
     async fn verify_token(&self, token: &str) -> Result<bool, anyhow::Error> {
         Ok(self.access_token == token)
     }
@@ -78,7 +79,6 @@ impl HomeserverConnection for SynapseConnection {
             matrix.homeserver = self.homeserver,
             matrix.localpart = localpart,
         ),
-        err(Debug),
     )]
     async fn query_user(&self, localpart: &str) -> Result<MatrixUser, anyhow::Error> {
         #[derive(Deserialize)]
@@ -123,7 +123,6 @@ impl HomeserverConnection for SynapseConnection {
             matrix.homeserver = self.homeserver,
             matrix.localpart = request.localpart(),
         ),
-        err(Debug),
     )]
     async fn provision_user(&self, request: &ProvisionRequest) -> Result<bool, anyhow::Error> {
         #[derive(Serialize)]
@@ -199,7 +198,6 @@ impl HomeserverConnection for SynapseConnection {
             matrix.homeserver = self.homeserver,
             matrix.localpart = localpart,
         ),
-        err(Debug),
     )]
     async fn is_localpart_available(&self, localpart: &str) -> Result<bool, anyhow::Error> {
         // Synapse will give us an error if the localpart is not ASCII, so we bail out
@@ -242,7 +240,6 @@ impl HomeserverConnection for SynapseConnection {
             matrix.localpart = localpart,
             matrix.device_id = device_id,
         ),
-        err(Debug),
     )]
     async fn upsert_device(
         &self,
@@ -287,7 +284,6 @@ impl HomeserverConnection for SynapseConnection {
             matrix.localpart = localpart,
             matrix.device_id = device_id,
         ),
-        err(Debug),
     )]
     async fn update_device_display_name(
         &self,
@@ -331,7 +327,6 @@ impl HomeserverConnection for SynapseConnection {
             matrix.localpart = localpart,
             matrix.device_id = device_id,
         ),
-        err(Debug),
     )]
     async fn delete_device(&self, localpart: &str, device_id: &str) -> Result<(), anyhow::Error> {
         #[derive(Serialize)]
@@ -368,7 +363,6 @@ impl HomeserverConnection for SynapseConnection {
             matrix.localpart = localpart,
             matrix.device_count = devices.len(),
         ),
-        err(Debug),
     )]
     async fn sync_devices(
         &self,
@@ -406,7 +400,6 @@ impl HomeserverConnection for SynapseConnection {
             matrix.localpart = localpart,
             matrix.erase = erase,
         ),
-        err(Debug),
     )]
     async fn delete_user(&self, localpart: &str, erase: bool) -> Result<(), anyhow::Error> {
         #[derive(Serialize)]
@@ -439,7 +432,6 @@ impl HomeserverConnection for SynapseConnection {
             matrix.homeserver = self.homeserver,
             matrix.localpart = localpart,
         ),
-        err(Debug),
     )]
     async fn reactivate_user(&self, localpart: &str) -> Result<(), anyhow::Error> {
         #[derive(Serialize)]
@@ -471,7 +463,6 @@ impl HomeserverConnection for SynapseConnection {
             matrix.homeserver = self.homeserver,
             matrix.localpart = localpart,
         ),
-        err(Debug),
     )]
     async fn set_displayname(
         &self,
@@ -511,7 +502,6 @@ impl HomeserverConnection for SynapseConnection {
             matrix.homeserver = self.homeserver,
             matrix.localpart = localpart,
         ),
-        err(Debug),
     )]
     async fn unset_displayname(&self, localpart: &str) -> Result<(), anyhow::Error> {
         #[derive(Serialize)]
@@ -543,7 +533,6 @@ impl HomeserverConnection for SynapseConnection {
             matrix.homeserver = self.homeserver,
             matrix.localpart = localpart,
         ),
-        err(Debug),
     )]
     async fn allow_cross_signing_reset(&self, localpart: &str) -> Result<(), anyhow::Error> {
         #[derive(Serialize)]

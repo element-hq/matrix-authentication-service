@@ -122,7 +122,6 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
             db.query.text,
             user_registration.id = %id,
         ),
-        err,
     )]
     async fn lookup(&mut self, id: Ulid) -> Result<Option<UserRegistration>, Self::Error> {
         let res = sqlx::query_as!(
@@ -163,7 +162,6 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
             db.query.text,
             user_registration.id,
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -226,7 +224,6 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
             user_registration.id = %user_registration.id,
             user_registration.display_name = display_name,
         ),
-        err,
     )]
     async fn set_display_name(
         &mut self,
@@ -261,7 +258,6 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
             user_registration.id = %user_registration.id,
             user_registration.terms_url = %terms_url,
         ),
-        err,
     )]
     async fn set_terms_url(
         &mut self,
@@ -297,7 +293,6 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
             %user_email_authentication.id,
             %user_email_authentication.email,
         ),
-        err,
     )]
     async fn set_email_authentication(
         &mut self,
@@ -333,7 +328,6 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
             user_registration.hashed_password = hashed_password,
             user_registration.hashed_password_version = version,
         ),
-        err,
     )]
     async fn set_password(
         &mut self,
@@ -373,7 +367,6 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
             %user_registration.id,
             %user_registration_token.id,
         ),
-        err,
     )]
     async fn set_registration_token(
         &mut self,
@@ -408,7 +401,6 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
             %user_registration.id,
             %upstream_oauth_authorization_session.id,
         ),
-        err,
     )]
     async fn set_upstream_oauth_authorization_session(
         &mut self,
@@ -443,7 +435,6 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
             db.query.text,
             user_registration.id = %user_registration.id,
         ),
-        err,
     )]
     async fn complete(
         &mut self,
@@ -477,7 +468,6 @@ impl UserRegistrationRepository for PgUserRegistrationRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn cleanup(
         &mut self,
