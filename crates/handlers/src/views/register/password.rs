@@ -1029,6 +1029,7 @@ mod tests {
                 Some("alice".to_owned()),
                 Some("alice@example.com".to_owned()),
                 true,
+                None,
             )
             .await
             .unwrap();
@@ -1096,6 +1097,7 @@ mod tests {
                 None,
                 None,
                 true,
+                None,
             )
             .await
             .unwrap();
@@ -1154,6 +1156,7 @@ mod tests {
                 Some("alice".to_owned()),
                 None,
                 false,
+                None,
             )
             .await
             .unwrap();
@@ -1291,6 +1294,7 @@ mod tests {
                 Some("alice".to_owned()),
                 Some("alice@example.com".to_owned()),
                 true,
+                None,
             )
             .await
             .unwrap();

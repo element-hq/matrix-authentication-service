@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO user_registration_tokens\n                    (user_registration_token_id, token, usage_limit, created_at, expires_at, username, email, passwordless, room_id)\n                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Int4",
+        "Timestamptz",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Bool",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7a1d56167aa05c881e3a1183683840671485e643aca6bfff6adf3a17a50c1b50"
+}
