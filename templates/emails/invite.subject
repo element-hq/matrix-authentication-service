@@ -1,0 +1,14 @@
+{#
+Copyright 2026 Element Creations Ltd.
+
+SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE files in the repository root for full details.
+-#}
+
+{%- set _ = translator(lang) -%}
+
+{%- if opens_room -%}
+  {{ _("mas.emails.invite.subject", server_name=branding.server_name) }}
+{%- else -%}
+  {{ _("mas.emails.invite.subject_no_room", server_name=branding.server_name) }}
+{%- endif %}

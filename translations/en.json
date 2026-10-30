@@ -314,6 +314,87 @@
         "context": "emails/verification.html:17:3-64, emails/verification.txt:17:3-64",
         "description": "Greeting at the top of emails sent to the user"
       },
+      "invite": {
+        "accept": "Accept the invitation",
+        "@accept": {
+          "context": "emails/invite.html:68:9-38"
+        },
+        "approval": "Someone in the room will approve your request.",
+        "@approval": {
+          "context": "emails/invite.html:51:26-57, emails/invite.txt:35:37-68"
+        },
+        "click_button": "Click on the button below to accept the invitation:",
+        "@click_button": {
+          "context": "emails/invite.html:53:7-42"
+        },
+        "copy_link": "Copy the following link and paste it into a browser to accept the invitation:",
+        "@copy_link": {
+          "context": "emails/invite.html:70:47-79, emails/invite.txt:37:3-35"
+        },
+        "fallback": "The button doesn't work for you?",
+        "@fallback": {
+          "context": "emails/invite.html:70:9-40"
+        },
+        "headline": "You have been invited to ask to join %(room)s on %(server_name)s.",
+        "@headline": {
+          "context": "emails/invite.html:30:21-102, emails/invite.txt:30:21-102",
+          "description": "Headline of the room invite email, when it doesn't say who sent it"
+        },
+        "headline_from": "%(inviter)s invited you to ask to join %(room)s on %(server_name)s.",
+        "@headline_from": {
+          "context": "emails/invite.html:25:23-142, emails/invite.txt:25:23-142",
+          "description": "Headline of the room invite email, naming the sender by display name or Matrix ID"
+        },
+        "headline_from_name_and_mxid": "%(name)s (%(mxid)s) invited you to ask to join %(room)s on %(server_name)s.",
+        "@headline_from_name_and_mxid": {
+          "context": "emails/invite.html:19:23-156, emails/invite.txt:19:23-156",
+          "description": "Headline of the room invite email, naming the sender by display name and Matrix ID"
+        },
+        "headline_from_name_and_mxid_no_room": "%(name)s (%(mxid)s) invited you to join %(server_name)s.",
+        "@headline_from_name_and_mxid_no_room": {
+          "context": "emails/invite.html:11:23-148, emails/invite.txt:11:23-148",
+          "description": "Headline of the invite email, naming the sender by display name and Matrix ID, when it opens no room"
+        },
+        "headline_from_name_and_mxid_unnamed_room": "%(name)s (%(mxid)s) invited you to ask to join a room on %(server_name)s.",
+        "@headline_from_name_and_mxid_unnamed_room": {
+          "context": "emails/invite.html:21:23-153, emails/invite.txt:21:23-153",
+          "description": "Headline of the room invite email, naming the sender by display name and Matrix ID, when the room has no name"
+        },
+        "headline_from_no_room": "%(inviter)s invited you to join %(server_name)s.",
+        "@headline_from_no_room": {
+          "context": "emails/invite.html:13:23-134, emails/invite.txt:13:23-134",
+          "description": "Headline of the invite email, naming the sender by display name or Matrix ID, when it opens no room"
+        },
+        "headline_from_unnamed_room": "%(inviter)s invited you to ask to join a room on %(server_name)s.",
+        "@headline_from_unnamed_room": {
+          "context": "emails/invite.html:27:23-139, emails/invite.txt:27:23-139",
+          "description": "Headline of the room invite email, naming the sender by display name or Matrix ID, when the room has no name"
+        },
+        "headline_no_room": "You have been invited to join %(server_name)s.",
+        "@headline_no_room": {
+          "context": "emails/invite.html:15:23-96, emails/invite.txt:15:23-96",
+          "description": "Headline of the invite email, when it doesn't say who sent it and opens no room"
+        },
+        "headline_unnamed_room": "You have been invited to ask to join a room on %(server_name)s.",
+        "@headline_unnamed_room": {
+          "context": "emails/invite.html:32:21-99, emails/invite.txt:32:21-99",
+          "description": "Headline of the room invite email, when it doesn't say who sent it or name the room"
+        },
+        "subject": "You have been invited to a room on %(server_name)s",
+        "@subject": {
+          "context": "emails/invite.subject:11:5-69",
+          "description": "The subject line of the room invite email"
+        },
+        "subject_no_room": "You have been invited to %(server_name)s",
+        "@subject_no_room": {
+          "context": "emails/invite.subject:13:5-77",
+          "description": "The subject line of the invite email, when it opens no room"
+        },
+        "you_can_ignore": "If you weren't expecting this invitation, you can ignore this email.",
+        "@you_can_ignore": {
+          "context": "emails/invite.html:75:7-44, emails/invite.txt:41:3-40"
+        }
+      },
       "recovery": {
         "click_button": "Click on the button below to create a new password:",
         "@click_button": {

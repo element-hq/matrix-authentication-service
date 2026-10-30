@@ -168,6 +168,7 @@ mod tests {
               "username": null,
               "email": null,
               "passwordless": false,
+              "room_id": null,
               "usage_limit": 5,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
