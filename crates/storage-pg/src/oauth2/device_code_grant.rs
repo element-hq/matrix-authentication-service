@@ -50,6 +50,7 @@ struct OAuth2DeviceGrantLookup {
     oauth2_session_id: Option<Uuid>,
     ip_address: Option<IpAddr>,
     user_agent: Option<String>,
+    login_hint: Option<String>,
     locale: Option<String>,
 }
 
@@ -72,6 +73,7 @@ impl TryFrom<OAuth2DeviceGrantLookup> for DeviceCodeGrant {
             oauth2_session_id,
             ip_address,
             user_agent,
+            login_hint,
             locale,
         }: OAuth2DeviceGrantLookup,
     ) -> Result<Self, Self::Error> {
@@ -135,6 +137,7 @@ impl TryFrom<OAuth2DeviceGrantLookup> for DeviceCodeGrant {
             expires_at,
             ip_address,
             user_agent,
+            login_hint,
             locale,
         })
     }
@@ -180,9 +183,10 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
                     , expires_at
                     , ip_address
                     , user_agent
+                    , login_hint
                     )
                 VALUES
-                    ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             "#,
             Uuid::from(id),
             Uuid::from(client_id),
@@ -193,6 +197,7 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
             expires_at,
             params.ip_address as Option<IpAddr>,
             params.user_agent.as_deref(),
+            params.login_hint
         )
         .traced()
         .execute(&mut *self.conn)
@@ -209,6 +214,7 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
             expires_at,
             ip_address: params.ip_address,
             user_agent: params.user_agent,
+            login_hint: params.login_hint,
             locale: None,
         })
     }
@@ -239,6 +245,7 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
                      , oauth2_session_id
                      , ip_address as "ip_address: IpAddr"
                      , user_agent
+                     , login_hint
                      , locale
                 FROM
                     oauth2_device_code_grant
@@ -285,6 +292,7 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
                      , oauth2_session_id
                      , ip_address as "ip_address: IpAddr"
                      , user_agent
+                     , login_hint
                      , locale
                 FROM
                     oauth2_device_code_grant
@@ -331,6 +339,7 @@ impl OAuth2DeviceCodeGrantRepository for PgOAuth2DeviceCodeGrantRepository<'_> {
                      , oauth2_session_id
                      , ip_address as "ip_address: IpAddr"
                      , user_agent
+                     , login_hint
                      , locale
                 FROM
                     oauth2_device_code_grant
