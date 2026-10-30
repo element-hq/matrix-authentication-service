@@ -209,3 +209,39 @@ passes_session_threshold if {
 	# Otherwise, check whether the total number of sessions is under the threshold
 	input.session_counts.total <= data.session_limit.max_session_threshold
 }
+
+first_party_scope("openid") := true
+
+first_party_scope("urn:matrix:client:api:*") := true
+
+first_party_scope("urn:matrix:org.matrix.msc2967.client:api:*") := true
+
+first_party_scope(scope) if startswith(scope, "urn:matrix:client:device:")
+
+first_party_scope(scope) if startswith(scope, "urn:matrix:org.matrix.msc2967.client:device:")
+
+skip_consent_client if not data.skip_consent.client_ids
+
+skip_consent_client if input.client.id in data.skip_consent.client_ids
+
+# METADATA
+# entrypoint: true
+default skip_consent := false
+
+skip_consent if {
+	allow
+
+	# Not the device code grant, where someone else may hold the device
+	input.grant_type == "authorization_code"
+
+	skip_consent_client
+
+	# The first sign-in right after registering
+	input.session_counts.total == 0
+	account_age_ns := time.parse_rfc3339_ns(input.now) - time.parse_rfc3339_ns(input.user.created_at)
+	account_age_ns <= data.skip_consent.max_account_age_seconds * 1000000000
+
+	every scope in split(input.scope, " ") {
+		first_party_scope(scope)
+	}
+}
