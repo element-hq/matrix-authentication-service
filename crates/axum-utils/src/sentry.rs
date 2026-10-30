@@ -40,12 +40,14 @@ impl IntoResponseParts for SentryEventID {
 #[macro_export]
 macro_rules! record_error {
     ($error:expr, !) => {{
-        tracing::warn!(message = &$error as &dyn std::error::Error);
+        let error = &$error;
+        tracing::warn!(error = error as &dyn std::error::Error, "{error}");
         Option::<$crate::sentry::SentryEventID>::None
     }};
 
     ($error:expr) => {{
-        tracing::error!(message = &$error as &dyn std::error::Error);
+        let error = &$error;
+        tracing::error!(error = error as &dyn std::error::Error, "{error}");
 
         // With the `sentry-tracing` integration, Sentry should have
         // captured an error, so let's extract the last event ID from the
