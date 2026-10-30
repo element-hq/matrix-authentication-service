@@ -231,7 +231,6 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn list(
         &mut self,
@@ -322,7 +321,6 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             db.query.text,
             user_registration_token.filter = ?filter,
         ),
-        err,
     )]
     async fn count(&mut self, filter: UserRegistrationTokenFilter) -> Result<usize, Self::Error> {
         let (sql, values) = Query::select()
@@ -354,7 +352,6 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             db.query.text,
             user_registration_token.id = %id,
         ),
-        err,
     )]
     async fn lookup(&mut self, id: Ulid) -> Result<Option<UserRegistrationToken>, Self::Error> {
         let res = sqlx::query_as!(
@@ -391,7 +388,6 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             db.query.text,
             token = %token,
         ),
-        err,
     )]
     async fn find_by_token(
         &mut self,
@@ -431,7 +427,6 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             db.query.text,
             user_registration_token.token = %token,
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -484,7 +479,6 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             db.query.text,
             user_registration_token.id = %token.id,
         ),
-        err,
     )]
     async fn use_token(
         &mut self,
@@ -525,7 +519,6 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             db.query.text,
             user_registration_token.id = %token.id,
         ),
-        err,
     )]
     async fn revoke(
         &mut self,
@@ -560,7 +553,6 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             db.query.text,
             user_registration_token.id = %token.id,
         ),
-        err,
     )]
     async fn unrevoke(
         &mut self,
@@ -592,7 +584,6 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             db.query.text,
             user_registration_token.id = %token.id,
         ),
-        err,
     )]
     async fn set_expiry(
         &mut self,
@@ -626,7 +617,6 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             db.query.text,
             user_registration_token.id = %token.id,
         ),
-        err,
     )]
     async fn set_usage_limit(
         &mut self,

@@ -86,7 +86,6 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
             db.query.text,
         ),
         skip_all,
-        err,
     )]
     async fn schedule(
         &mut self,
@@ -128,7 +127,6 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
             db.query.text,
         ),
         skip_all,
-        err,
     )]
     async fn schedule_later(
         &mut self,
@@ -197,7 +195,6 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn reserve(
         &mut self,
@@ -262,7 +259,6 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
             db.query.text,
             job.id = %id,
         ),
-        err,
     )]
     async fn mark_as_completed(&mut self, clock: &dyn Clock, id: Ulid) -> Result<(), Self::Error> {
         let now = clock.now();
@@ -291,7 +287,6 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
             db.query.text,
             job.id = %id,
         ),
-        err
     )]
     async fn mark_as_failed(
         &mut self,
@@ -331,7 +326,6 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
             db.query.text,
             job.id = %id,
         ),
-        err
     )]
     async fn retry(
         &mut self,
@@ -424,7 +418,6 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
         fields(
             db.query.text,
         ),
-        err
     )]
     async fn schedule_available_jobs(&mut self, clock: &dyn Clock) -> Result<usize, Self::Error> {
         let now = clock.now();
@@ -455,7 +448,6 @@ impl QueueJobRepository for PgQueueJobRepository<'_> {
             until = %until,
             limit = limit,
         ),
-        err,
     )]
     async fn cleanup(
         &mut self,

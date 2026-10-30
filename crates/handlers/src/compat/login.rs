@@ -495,6 +495,11 @@ pub(crate) async fn post(
         )
         .await
     {
+        tracing::warn!(
+            error = ?err,
+            "Failed to provision the device on the homeserver, ending the session"
+        );
+
         // Something went wrong, let's end this session and schedule a device sync
         let mut repo = repository_factory.create().await?;
         let session = repo.compat_session().finish(&clock, session).await?;

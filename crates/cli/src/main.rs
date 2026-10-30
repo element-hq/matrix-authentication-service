@@ -7,12 +7,11 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use std::{io::IsTerminal, process::ExitCode, sync::Arc};
+use std::{io::IsTerminal, process::ExitCode};
 
 use anyhow::Context;
 use clap::Parser;
 use mas_config::{ConfigurationSectionExt, TelemetryConfig};
-use sentry_tracing::EventFilter;
 use tracing_subscriber::{
     EnvFilter, Layer, Registry, filter::LevelFilter, layer::SubscriberExt, util::SubscriberInitExt,
 };
@@ -27,32 +26,6 @@ mod util;
 
 /// The application version, as reported by `git describe` at build time
 static VERSION: &str = env!("VERGEN_GIT_DESCRIBE");
-
-#[derive(Debug)]
-struct SentryTransportFactory {
-    client: reqwest::Client,
-}
-
-impl SentryTransportFactory {
-    fn new() -> Self {
-        Self {
-            client: mas_http::reqwest_client(),
-        }
-    }
-}
-
-impl sentry::TransportFactory for SentryTransportFactory {
-    fn create_transport_with_options(
-        &self,
-        options: sentry::TransportOptions,
-    ) -> Arc<dyn sentry::Transport> {
-        let transport = sentry::transports::ReqwestHttpTransportOptions::from(options)
-            .with_client(self.client.clone())
-            .build();
-
-        Arc::new(transport)
-    }
-}
 
 fn main() -> anyhow::Result<ExitCode> {
     let mut builder = tokio::runtime::Builder::new_multi_thread();
@@ -118,31 +91,8 @@ async fn try_main() -> anyhow::Result<ExitCode> {
         .context("Failed to load telemetry config")?;
 
     // Setup Sentry
-    let mut sentry_options = sentry::ClientOptions::new()
-        .transport(SentryTransportFactory::new())
-        .release(VERSION)
-        .sample_rate(telemetry_config.sentry.sample_rate.unwrap_or(1.0));
-    if let Some(traces_sample_rate) = telemetry_config.sentry.traces_sample_rate {
-        sentry_options = sentry_options.traces_sample_rate(traces_sample_rate);
-    }
-    if let Some(environment) = telemetry_config.sentry.environment.clone() {
-        sentry_options = sentry_options.environment(environment);
-    }
-    let sentry = sentry::init((telemetry_config.sentry.dsn.as_deref(), sentry_options));
-
-    let sentry_layer = sentry.is_enabled().then(|| {
-        sentry_tracing::layer().event_filter(|md| {
-            // By default, Sentry records all events as breadcrumbs, except errors.
-            //
-            // Because we're emitting error events for 5xx responses, we need to exclude
-            // them and also record them as breadcrumbs.
-            if md.name() == "http.server.response" {
-                EventFilter::Breadcrumb
-            } else {
-                sentry_tracing::default_event_filter(md)
-            }
-        })
-    });
+    let sentry = self::telemetry::sentry::init(&telemetry_config);
+    let sentry_layer = sentry.is_enabled().then(self::telemetry::sentry::layer);
 
     // Setup OpenTelemetry tracing and metrics
     self::telemetry::setup(&telemetry_config).context("failed to setup OpenTelemetry")?;
@@ -174,5 +124,13 @@ async fn try_main() -> anyhow::Result<ExitCode> {
 
     // And run the command
     tracing::trace!(?opts, "Running command");
-    opts.run(&figment).await
+    let res = opts.run(&figment).await;
+
+    // The error is printed once we return from `main`, at which point the
+    // Sentry client is already shut down
+    if let Err(err) = &res {
+        sentry::capture_error::<dyn std::error::Error>(err.as_ref());
+    }
+
+    res
 }

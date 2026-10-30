@@ -1,4 +1,4 @@
-# syntax = docker/dockerfile:1.21.0
+# syntax = docker/dockerfile:1.28.0
 # Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
@@ -13,12 +13,13 @@
 # The Debian version and version name must be in sync
 ARG DEBIAN_VERSION=13
 ARG DEBIAN_VERSION_NAME=trixie
-ARG RUSTUP_VERSION=1.29.0
+ARG RUSTUP_VERSION=1.29.2
 # Keep in sync with .node-version and devEngines.runtime in package.json
-ARG NODEJS_VERSION=24.15.0
+ARG NODEJS_VERSION=24.22.1
 # Keep in sync with .github/actions/build-policies/action.yml and policies/Makefile
 ARG OPA_VERSION=1.21.4
-ARG CARGO_AUDITABLE_VERSION=0.7.2
+# Keep in sync with .github/workflows/build.yaml
+ARG CARGO_AUDITABLE_VERSION=0.7.7
 
 ##########################################
 ## Build stage that builds the frontend ##
@@ -91,8 +92,8 @@ ENV RUSTUP_HOME=/usr/local/rustup \
 # Network access: to download rustup
 RUN --network=default \
   case "${BUILDARCH}" in \
-    amd64) RUSTUP_TRIPLE="x86_64-unknown-linux-gnu"; RUSTUP_SHA256="4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10" ;; \
-    arm64) RUSTUP_TRIPLE="aarch64-unknown-linux-gnu"; RUSTUP_SHA256="9732d6c5e2a098d3521fca8145d826ae0aaa067ef2385ead08e6feac88fa5792" ;; \
+    amd64) RUSTUP_TRIPLE="x86_64-unknown-linux-gnu"; RUSTUP_SHA256="5be191e8c70a5007074254cb74d78dbfdd25cd5a61c27de7b8e5410122ec24f4" ;; \
+    arm64) RUSTUP_TRIPLE="aarch64-unknown-linux-gnu"; RUSTUP_SHA256="a9c168dbea81a84671c6b7a5c1795cb0eb699020110d107ddfca427bd797e697" ;; \
     *) echo "unsupported architecture: ${BUILDARCH}" >&2; exit 1 ;; \
   esac && \
   curl -fsSLo rustup-init "https://static.rust-lang.org/rustup/archive/${RUSTUP_VERSION}/${RUSTUP_TRIPLE}/rustup-init" && \

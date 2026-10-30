@@ -579,6 +579,7 @@ features = ["http", "axum-matched-path"]
 # Sentry tracing integration
 [workspace.dependencies.sentry-tracing]
 version = "0.49.3"
+features = ["backtrace"]
 
 # Serialization and deserialization
 [workspace.dependencies.serde]

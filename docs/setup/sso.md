@@ -258,7 +258,7 @@ Authentication service configuration:
 ```yaml
 upstream_oauth2:
   providers:
-  - id: <id>
+  - id: 01M63F1HX0HD2YZ0XR6CPJ6KRM
     human_name: Authelia
     issuer: "https://<authelia-fqdn>" # TO BE FILLED W/O ANY TRAILING SLASHES
     client_id: "<client-id>" # TO BE FILLED
@@ -277,7 +277,6 @@ upstream_oauth2:
           action: suggest
           template: "{{ user.email }}"
 ```
-
 
 ### Authentik
 
@@ -314,6 +313,39 @@ upstream_oauth2:
           template: "{{ user.email }}"
 ```
 
+### Discord
+
+1. Create a new application in the Discord Developer Portal (see [documentation](https://discord.com/developers/applications))
+2. Add the following "Redirect URI" in the OAuth2 tab under settings: `https://<auth-service-domain>/upstream/callback/<id>`
+
+Authentication service configuration:
+
+```yaml
+upstream_oauth2:
+  providers:
+    - id: 01JQK7DK6VFH62NMW4HS9RKD3R
+      human_name: Discord
+      brand_name: "discord"
+      token_endpoint_auth_method: "client_secret_post"
+      issuer: "https://discord.com"
+      client_id: "<client-id>" # TO BE FILLED
+      client_secret: "<client-secret>" # TO BE FILLED
+      fetch_userinfo: true
+      userinfo_endpoint: "https://discord.com/api/users/@me"
+      scope: "openid identify email"
+      claims_imports:
+        localpart:
+          action: suggest
+          template: "{{ user.username }}"
+        displayname:
+          action: suggest
+          template: "{{ user.global_name }}"
+        email:
+          action: suggest
+          template: "{{ user.email }}"
+        account_name:
+          template: "{{ user.username }}"
+```
 
 ### Facebook
 
@@ -330,7 +362,7 @@ Authentication service configuration:
 ```yaml
 upstream_oauth2:
   providers:
-    - id: "01HFS3WM7KSWCEQVJTN0V9X1W6"
+    - id: 01HFS3WM7KSWCEQVJTN0V9X1W6
       issuer: "https://www.facebook.com"
       human_name: "Facebook"
       brand_name: "facebook"
@@ -356,39 +388,6 @@ upstream_oauth2:
           template: "{{ user.name }}"
 ```
 
-
-### GitLab
-
-1. Create a [new application](https://gitlab.com/profile/applications).
-2. Add the `openid` scope. Optionally add the `profile` and `email` scope if you want to import the user's name and email.
-3. Add this Callback URL: `https://<auth-service-domain>/upstream/callback/<id>`
-
-Authentication service configuration:
-
-```yaml
-upstream_oauth2:
-  providers:
-    - id: "01HFS67GJ145HCM9ZASYS9DC3J"
-      issuer: "https://gitlab.com"
-      human_name: "GitLab"
-      brand_name: "gitlab"
-      token_endpoint_auth_method: "client_secret_post"
-      client_id: "<client-id>" # TO BE FILLED
-      client_secret: "<client-secret>" # TO BE FILLED
-      scope: "openid profile email"
-      claims_imports:
-        displayname:
-          action: suggest
-          template: "{{ user.name }}"
-        localpart:
-          action: ignore
-        email:
-          action: suggest
-          template: "{{ user.email }}"
-        account_name:
-          template: "@{{ user.preferred_username }}"
-```
-
 ### GitHub
 
 GitHub doesn't support OpenID Connect, but it does support OAuth 2.0.
@@ -405,7 +404,7 @@ Authentication service configuration:
 ```yaml
 upstream_oauth2:
   providers:
-    - id: "01HFS67GJ145HCM9ZASYS9DC3J"
+    - id: 01HFS67GJ145HCM9ZASYS9DC3J
       human_name: GitHub
       brand_name: github
       discovery_mode: disabled
@@ -432,6 +431,37 @@ upstream_oauth2:
           template: "@{{ userinfo_claims.login }}"
 ```
 
+### GitLab
+
+1. Create a [new application](https://gitlab.com/profile/applications).
+2. Add the `openid` scope. Optionally add the `profile` and `email` scope if you want to import the user's name and email.
+3. Add this Callback URL: `https://<auth-service-domain>/upstream/callback/<id>`
+
+Authentication service configuration:
+
+```yaml
+upstream_oauth2:
+  providers:
+    - id: 01HFS67GJ145HCM9ZASYS9DC3J
+      issuer: "https://gitlab.com"
+      human_name: "GitLab"
+      brand_name: "gitlab"
+      token_endpoint_auth_method: "client_secret_post"
+      client_id: "<client-id>" # TO BE FILLED
+      client_secret: "<client-secret>" # TO BE FILLED
+      scope: "openid profile email"
+      claims_imports:
+        displayname:
+          action: suggest
+          template: "{{ user.name }}"
+        localpart:
+          action: ignore
+        email:
+          action: suggest
+          template: "{{ user.email }}"
+        account_name:
+          template: "@{{ user.preferred_username }}"
+```
 
 ### Google
 
@@ -465,7 +495,6 @@ upstream_oauth2:
           template: "{{ user.email }}"
 ```
 
-
 ### Kanidm
 
 
@@ -480,7 +509,7 @@ Create a OAuth2 Client following the [OAuth2 Setup](https://kanidm.github.io/kan
 ```yaml
 upstream_oauth2:
   providers:
-    - id: "[ulid]" # randomly generated ulid (https://www.ulidtools.com/)
+    - id: 01M63F2KBYZGS9SEDFZ5NAWFF5
       id_token_signed_response_alg: ES256 # This is important since Kanidm doesn't support RS256 by default  
       issuer: "https://<kanidm_instance>/oauth2/openid/<client_id>" # TO BE FILLED
       token_endpoint_auth_method: client_secret_basic
@@ -538,7 +567,7 @@ Follow the [Getting Started Guide](https://www.keycloak.org/guides) to install K
 ```yaml
 upstream_oauth2:
   providers:
-    - id: "01H8PKNWKKRPCBW4YGH1RWV279"
+    - id: 01H8PKNWKKRPCBW4YGH1RWV279
       issuer: "https://<keycloak>/realms/<realm>" # TO BE FILLED
       token_endpoint_auth_method: client_secret_basic
       client_id: "matrix-authentication-service"
@@ -556,7 +585,6 @@ upstream_oauth2:
           template: "{{ user.email }}"
 ```
 
-
 ### Microsoft Azure Active Directory
 
 Azure AD can act as an OpenID Connect Provider.
@@ -572,7 +600,7 @@ Authentication service configuration:
 ```yaml
 upstream_oauth2:
   providers:
-    - id: "01HFRPWGR6BG9SAGAKDTQHG2R2"
+    - id: 01HFRPWGR6BG9SAGAKDTQHG2R2
       human_name: Microsoft Azure AD
       issuer: "https://login.microsoftonline.com/<tenant-id>/v2.0" # TO BE FILLED
       client_id: "<client-id>" # TO BE FILLED
@@ -594,40 +622,35 @@ upstream_oauth2:
           template: "{{ user.preferred_username }}"
 ```
 
-### Discord
+### ProConnect
 
-1. Create a new application in the Discord Developer Portal (see [documentation](https://discord.com/developers/applications))
-2. Add the following "Redirect URI" in the OAuth2 tab under settings: `https://<auth-service-domain>/upstream/callback/<id>`
-
-Authentication service configuration:
+Follow the instructions [to create an application for ProConnect](https://partenaires.proconnect.gouv.fr/docs/fournisseur-service).
 
 ```yaml
 upstream_oauth2:
   providers:
-    - id: 01JQK7DK6VFH62NMW4HS9RKD3R
-      human_name: Discord
-      brand_name: "discord"
-      token_endpoint_auth_method: "client_secret_post"
-      issuer: "https://discord.com"
-      client_id: "<client-id>" # TO BE FILLED
-      client_secret: "<client-secret>" # TO BE FILLED
+    - id: 01M61BS9GYECQ4Y8JKMV87SGGH
+      # Integration environment, see the ProConnect documentation
+      issuer: "https://fca.integ01.dev-agentconnect.fr/api/v2"
+      # Production environment
+      #issuer: "https://auth.agentconnect.gouv.fr/api/v2"
+      token_endpoint_auth_method: client_secret_post
+      client_id: "<client ID>" # TO BE FILLED
+      client_secret: "<client secret>" # TO BE FILLED
       fetch_userinfo: true
-      userinfo_endpoint: "https://discord.com/api/users/@me"
-      scope: "openid identify email"
+      userinfo_signed_response_alg: RS256
+      scope: "openid email usual_name given_name"
       claims_imports:
         localpart:
-          action: suggest
-          template: "{{ user.username }}"
+          action: require
+          template: "{{ user.sub }}"
         displayname:
           action: suggest
-          template: "{{ user.global_name }}"
+          template: "{{ user.given_name }} {{ user.usual_name }}"
         email:
           action: suggest
           template: "{{ user.email }}"
-        account_name:
-          template: "{{ user.username }}"
 ```
-
 
 ### Rauthy
 
@@ -658,7 +681,7 @@ Authentication service configuration:
 ```yaml
 upstream_oauth2:
   providers:
-    - id: "01JFFHK7HJF70YSYF753GEWVRP"
+    - id: 01JFFHK7HJF70YSYF753GEWVRP
       human_name: Rauthy
       issuer: "https://<rauthy>/auth/v1" # TO BE FILLED
       client_id: "<client-id>" # TO BE FILLED
@@ -691,7 +714,6 @@ To use a Rauthy-supported [Ephemeral Client](https://sebadob.github.io/rauthy/wo
   "id_token_signed_response_alg": "RS256"
 }
 ```
-
 
 ### Shibboleth
 
