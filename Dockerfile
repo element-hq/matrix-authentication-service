@@ -18,6 +18,7 @@ ARG RUSTUP_VERSION=1.29.0
 ARG NODEJS_VERSION=24.15.0
 # Keep in sync with .github/actions/build-policies/action.yml and policies/Makefile
 ARG OPA_VERSION=1.13.1
+# Keep in sync with .github/workflows/build.yaml
 ARG CARGO_AUDITABLE_VERSION=0.7.7
 
 ##########################################
