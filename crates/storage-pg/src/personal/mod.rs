@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -61,19 +62,19 @@ mod tests {
 
         // We start off with no sessions
         let full_list = repo.personal_session().list(all, pagination).await.unwrap();
-        assert!(full_list.edges.is_empty());
+        assert_eq!(full_list.edges, []);
         let active_list = repo
             .personal_session()
             .list(active, pagination)
             .await
             .unwrap();
-        assert!(active_list.edges.is_empty());
+        assert_eq!(active_list.edges, []);
         let finished_list = repo
             .personal_session()
             .list(finished, pagination)
             .await
             .unwrap();
-        assert!(finished_list.edges.is_empty());
+        assert_eq!(finished_list.edges, []);
 
         // Start a personal session for that user
         let device = Device::generate(&mut rng);
@@ -120,7 +121,7 @@ mod tests {
             .list(finished, pagination)
             .await
             .unwrap();
-        assert!(finished_list.edges.is_empty());
+        assert_eq!(finished_list.edges, []);
 
         // Lookup the session and check it didn't change
         let session_lookup = repo
@@ -160,7 +161,7 @@ mod tests {
             .list(active, pagination)
             .await
             .unwrap();
-        assert!(active_list.edges.is_empty());
+        assert_eq!(active_list.edges, []);
         let finished_list = repo
             .personal_session()
             .list(finished, pagination)

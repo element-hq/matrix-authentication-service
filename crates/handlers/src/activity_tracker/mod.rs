@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -10,6 +11,7 @@ mod worker;
 use std::net::IpAddr;
 
 use chrono::{DateTime, Utc};
+use mas_context::LogContext;
 use mas_data_model::{
     BrowserSession, Clock, CompatSession, Session, personal::session::PersonalSession,
 };
@@ -75,12 +77,14 @@ impl ActivityTracker {
         let tracker = ActivityTracker { channel: sender };
 
         // Spawn the flush loop and the worker
-        task_tracker.spawn(
+        task_tracker.spawn(LogContext::new("activity-tracker-flush").run(|| {
             tracker
                 .clone()
-                .flush_loop(flush_interval, cancellation_token.clone()),
+                .flush_loop(flush_interval, cancellation_token.clone())
+        }));
+        task_tracker.spawn(
+            LogContext::new("activity-tracker").run(|| worker.run(receiver, cancellation_token)),
         );
-        task_tracker.spawn(worker.run(receiver, cancellation_token));
 
         tracker
     }

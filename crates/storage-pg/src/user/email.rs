@@ -139,7 +139,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             db.query.text,
             user_email.id = %id,
         ),
-        err,
     )]
     async fn lookup(&mut self, id: Ulid) -> Result<Option<UserEmail>, Self::Error> {
         let res = sqlx::query_as!(
@@ -174,7 +173,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             %user.id,
             user_email.email = email,
         ),
-        err,
     )]
     async fn find(&mut self, user: &User, email: &str) -> Result<Option<UserEmail>, Self::Error> {
         let res = sqlx::query_as!(
@@ -209,7 +207,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             db.query.text,
             user_email.email = email,
         ),
-        err,
     )]
     async fn find_by_email(&mut self, email: &str) -> Result<Option<UserEmail>, Self::Error> {
         let res = sqlx::query_as!(
@@ -246,7 +243,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             db.query.text,
             %user.id,
         ),
-        err,
     )]
     async fn all(&mut self, user: &User) -> Result<Vec<UserEmail>, Self::Error> {
         let res = sqlx::query_as!(
@@ -277,7 +273,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn list(
         &mut self,
@@ -322,7 +317,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn count(&mut self, filter: UserEmailFilter<'_>) -> Result<usize, Self::Error> {
         let (sql, arguments) = Query::select()
@@ -350,7 +344,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             user_email.id,
             user_email.email = email,
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -394,7 +387,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             %user_email.id,
             %user_email.email,
         ),
-        err,
     )]
     async fn remove(&mut self, user_email: UserEmail) -> Result<(), Self::Error> {
         let res = sqlx::query!(
@@ -419,7 +411,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn remove_bulk(&mut self, filter: UserEmailFilter<'_>) -> Result<usize, Self::Error> {
         let (sql, arguments) = Query::delete()
@@ -444,7 +435,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             user_email_authentication.id,
             user_email_authentication.email = email,
         ),
-        err,
     )]
     async fn add_authentication_for_session(
         &mut self,
@@ -496,7 +486,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             user_email_authentication.id,
             user_email_authentication.email = email,
         ),
-        err,
     )]
     async fn add_authentication_for_registration(
         &mut self,
@@ -549,7 +538,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             user_email_authentication_code.id,
             user_email_authentication_code.code = code,
         ),
-        err,
     )]
     async fn add_authentication_code(
         &mut self,
@@ -604,7 +592,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             db.query.text,
             user_email_authentication.id = %id,
         ),
-        err,
     )]
     async fn lookup_authentication(
         &mut self,
@@ -639,7 +626,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             %authentication.id,
             user_email_authentication_code.code = code,
         ),
-        err,
     )]
     async fn find_authentication_code(
         &mut self,
@@ -678,7 +664,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             %user_email_authentication_code.id,
             %user_email_authentication_code.code,
         ),
-        err,
     )]
     async fn complete_authentication_with_code(
         &mut self,
@@ -723,7 +708,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             %user_email_authentication.email,
             %upstream_oauth_authorization_session.id,
         ),
-        err,
     )]
     async fn complete_authentication_with_upstream(
         &mut self,
@@ -768,7 +752,6 @@ impl UserEmailRepository for PgUserEmailRepository<'_> {
             until = %until,
             limit = limit,
         ),
-        err,
     )]
     async fn cleanup_authentications(
         &mut self,

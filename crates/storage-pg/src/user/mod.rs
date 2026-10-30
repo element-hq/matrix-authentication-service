@@ -206,7 +206,6 @@ impl UserRepository for PgUserRepository<'_> {
             db.query.text,
             user.id = %id,
         ),
-        err,
     )]
     async fn lookup(&mut self, id: Ulid) -> Result<Option<User>, Self::Error> {
         let res = sqlx::query_as!(
@@ -240,7 +239,6 @@ impl UserRepository for PgUserRepository<'_> {
             db.query.text,
             user.username = username,
         ),
-        err,
     )]
     async fn find_by_username(&mut self, username: &str) -> Result<Option<User>, Self::Error> {
         // We may have multiple users with the same username, but with a different
@@ -291,7 +289,6 @@ impl UserRepository for PgUserRepository<'_> {
             user.username = username,
             user.id,
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -340,7 +337,6 @@ impl UserRepository for PgUserRepository<'_> {
             db.query.text,
             user.username = username,
         ),
-        err,
     )]
     async fn exists(&mut self, username: &str) -> Result<bool, Self::Error> {
         let exists = sqlx::query_scalar!(
@@ -365,7 +361,6 @@ impl UserRepository for PgUserRepository<'_> {
             db.query.text,
             %user.id,
         ),
-        err,
     )]
     async fn lock(&mut self, clock: &dyn Clock, mut user: User) -> Result<User, Self::Error> {
         if user.locked_at.is_some() {
@@ -400,7 +395,6 @@ impl UserRepository for PgUserRepository<'_> {
             db.query.text,
             %user.id,
         ),
-        err,
     )]
     async fn unlock(&mut self, mut user: User) -> Result<User, Self::Error> {
         if user.locked_at.is_none() {
@@ -433,7 +427,6 @@ impl UserRepository for PgUserRepository<'_> {
             db.query.text,
             %user.id,
         ),
-        err,
     )]
     async fn deactivate(&mut self, clock: &dyn Clock, mut user: User) -> Result<User, Self::Error> {
         if user.deactivated_at.is_some() {
@@ -469,7 +462,6 @@ impl UserRepository for PgUserRepository<'_> {
             db.query.text,
             %user.id,
         ),
-        err,
     )]
     async fn reactivate(&mut self, mut user: User) -> Result<User, Self::Error> {
         if user.deactivated_at.is_none() {
@@ -502,7 +494,6 @@ impl UserRepository for PgUserRepository<'_> {
             db.query.text,
             %user.id,
         ),
-        err,
     )]
     async fn delete_unsupported_threepids(&mut self, user: &User) -> Result<usize, Self::Error> {
         let res = sqlx::query!(
@@ -527,7 +518,6 @@ impl UserRepository for PgUserRepository<'_> {
             %user.id,
             user.can_request_admin = can_request_admin,
         ),
-        err,
     )]
     async fn set_can_request_admin(
         &mut self,
@@ -560,7 +550,6 @@ impl UserRepository for PgUserRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn list(
         &mut self,
@@ -617,7 +606,6 @@ impl UserRepository for PgUserRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn count(&mut self, filter: UserFilter<'_>) -> Result<usize, Self::Error> {
         let (sql, arguments) = Query::select()
@@ -643,7 +631,6 @@ impl UserRepository for PgUserRepository<'_> {
             db.query.text,
             user.id = %user.id,
         ),
-        err,
     )]
     async fn acquire_lock_for_sync(&mut self, user: &User) -> Result<(), Self::Error> {
         // XXX: this lock isn't stictly scoped to users, but as we don't use many

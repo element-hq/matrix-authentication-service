@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -47,7 +48,7 @@ mod tests {
 
         // The provider list should be empty at the start
         let all_providers = repo.upstream_oauth_provider().all_enabled().await.unwrap();
-        assert!(all_providers.is_empty());
+        assert_eq!(all_providers, []);
 
         // Let's add a provider
         let provider = repo
@@ -486,7 +487,7 @@ mod tests {
         assert_eq!(&edge_ids, &ids[6..8]);
 
         // There should not be any disabled providers
-        assert!(
+        assert_eq!(
             repo.upstream_oauth_provider()
                 .list(
                     UpstreamOAuthProviderFilter::new().disabled_only(),
@@ -494,8 +495,8 @@ mod tests {
                 )
                 .await
                 .unwrap()
-                .edges
-                .is_empty()
+                .edges,
+            []
         );
     }
 

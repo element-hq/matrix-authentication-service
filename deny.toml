@@ -20,13 +20,6 @@ ignore = [
     # RSA key extraction "Marvin Attack". This is only relevant when using
     # PKCS#1 v1.5 encryption, which we don't
     "RUSTSEC-2023-0071",
-    # A bug in wasmtime, but we are not affected, as we only have a single
-    # Engine/Store, and as the advisory says explicitly:
-    # > This bug is not triggerable by guest WebAssembly programs.
-    "RUSTSEC-2026-0222",
-    # A bug in wasmtime, but we are not affected as we're not using the WASI
-    # capabilities and filesystem APIs
-    "RUSTSEC-2026-0269",
 ]
 
 # Only warn about unmaintained crates in direct dependencies of the workspace,
@@ -100,7 +93,7 @@ skip = [
     { name = "rand_chacha", version = "0.3.1" },
     { name = "rand_core", version = "0.6.4" },
     { name = "getrandom", version = "0.2.16" },
-    # ...and opentelemetry_sdk and sentry pull the 0.9 generation
+    # ...and opentelemetry_sdk pulls the 0.9 generation
     { name = "rand", version = "0.9.4" },
     { name = "rand_chacha", version = "0.9.0" },
     { name = "rand_core", version = "0.9.3" },

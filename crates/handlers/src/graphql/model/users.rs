@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -632,9 +633,9 @@ impl User {
                 let maybe_session = match browser_session_param {
                     Some(id) => {
                         // This might fail, but we're probably alright with it
-                        let id = NodeType::BrowserSession
-                            .extract_ulid(&id)
-                            .context("Invalid browser_session parameter")?;
+                        let id = NodeType::BrowserSession.extract_ulid(&id).map_err(|_| {
+                            async_graphql::Error::new("Invalid browser_session parameter")
+                        })?;
 
                         let Some(session) = repo
                             .browser_session()

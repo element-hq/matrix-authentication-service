@@ -69,7 +69,7 @@ struct SessionLookup {
 
 impl Node<Ulid> for SessionLookup {
     fn cursor(&self) -> Ulid {
-        self.user_id.into()
+        self.user_session_id.into()
     }
 }
 
@@ -193,7 +193,6 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             db.query.text,
             user_session.id = %id,
         ),
-        err,
     )]
     async fn lookup(&mut self, id: Ulid) -> Result<Option<BrowserSession>, Self::Error> {
         let res = sqlx::query_as!(
@@ -236,7 +235,6 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             %user.id,
             user_session.id,
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -284,7 +282,6 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             db.query.text,
             %user_session.id,
         ),
-        err,
     )]
     async fn finish(
         &mut self,
@@ -318,7 +315,6 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn finish_bulk(
         &mut self,
@@ -346,7 +342,6 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn list(
         &mut self,
@@ -437,7 +432,6 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn count(&mut self, filter: BrowserSessionFilter<'_>) -> Result<usize, Self::Error> {
         let (sql, arguments) = sea_query::Query::select()
@@ -465,7 +459,6 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             %user_password.id,
             user_session_authentication.id,
         ),
-        err,
     )]
     async fn authenticate_with_password(
         &mut self,
@@ -514,7 +507,6 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             %upstream_oauth_session.id,
             user_session_authentication.id,
         ),
-        err,
     )]
     async fn authenticate_with_upstream(
         &mut self,
@@ -561,7 +553,6 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             db.query.text,
             %user_session.id,
         ),
-        err,
     )]
     async fn get_last_authentication(
         &mut self,
@@ -599,7 +590,6 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn record_batch_activity(
         &mut self,
@@ -652,7 +642,6 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             until = %until,
             limit = limit,
         ),
-        err,
     )]
     async fn cleanup_finished(
         &mut self,
@@ -717,7 +706,6 @@ impl BrowserSessionRepository for PgBrowserSessionRepository<'_> {
             threshold = %threshold,
             limit = limit,
         ),
-        err,
     )]
     async fn cleanup_inactive_ips(
         &mut self,

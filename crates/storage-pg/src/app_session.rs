@@ -283,7 +283,6 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
             db.query.text,
         ),
         skip_all,
-        err,
     )]
     async fn list(
         &mut self,
@@ -439,7 +438,6 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
             db.query.text,
         ),
         skip_all,
-        err,
     )]
     async fn count(&mut self, filter: AppSessionFilter<'_>) -> Result<usize, Self::Error> {
         let (compat_filter, oauth2_filter) = split_filter(filter);
@@ -491,7 +489,6 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
             %device_id = device.as_str()
         ),
         skip_all,
-        err,
     )]
     async fn finish_sessions_to_replace_device(
         &mut self,
@@ -595,11 +592,11 @@ mod tests {
         assert_eq!(repo.app_session().count(finished).await.unwrap(), 0);
 
         let full_list = repo.app_session().list(all, pagination).await.unwrap();
-        assert!(full_list.edges.is_empty());
+        assert_eq!(full_list.edges, []);
         let active_list = repo.app_session().list(active, pagination).await.unwrap();
-        assert!(active_list.edges.is_empty());
+        assert_eq!(active_list.edges, []);
         let finished_list = repo.app_session().list(finished, pagination).await.unwrap();
-        assert!(finished_list.edges.is_empty());
+        assert_eq!(finished_list.edges, []);
 
         // Start a compat session for that user
         let device = Device::generate(&mut rng);
@@ -626,7 +623,7 @@ mod tests {
             AppSession::Compat(Box::new(compat_session.clone()))
         );
         let finished_list = repo.app_session().list(finished, pagination).await.unwrap();
-        assert!(finished_list.edges.is_empty());
+        assert_eq!(finished_list.edges, []);
 
         // Finish the session
         let compat_session = repo
@@ -646,7 +643,7 @@ mod tests {
             AppSession::Compat(Box::new(compat_session.clone()))
         );
         let active_list = repo.app_session().list(active, pagination).await.unwrap();
-        assert!(active_list.edges.is_empty());
+        assert_eq!(active_list.edges, []);
         let finished_list = repo.app_session().list(finished, pagination).await.unwrap();
         assert_eq!(finished_list.edges.len(), 1);
         assert_eq!(
@@ -749,7 +746,7 @@ mod tests {
         );
 
         let active_list = repo.app_session().list(active, pagination).await.unwrap();
-        assert!(active_list.edges.is_empty());
+        assert_eq!(active_list.edges, []);
 
         let finished_list = repo.app_session().list(finished, pagination).await.unwrap();
         assert_eq!(finished_list.edges.len(), 2);
@@ -792,7 +789,7 @@ mod tests {
         let filter = AppSessionFilter::new().for_user(&user2);
         assert_eq!(repo.app_session().count(filter).await.unwrap(), 0);
         let list = repo.app_session().list(filter, pagination).await.unwrap();
-        assert!(list.edges.is_empty());
+        assert_eq!(list.edges, []);
     }
 
     /// Test the created-at filters on [`AppSessionFilter`]: they should apply
