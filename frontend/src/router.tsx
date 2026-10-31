@@ -10,14 +10,18 @@ import { createRouter } from "@tanstack/react-router";
 import LoadingScreen from "./components/LoadingScreen";
 import { routeTree } from "./routeTree.gen";
 
-export const makeRouter = (basepath: string, queryClient: QueryClient) =>
+export const makeRouter = (
+  basepath: string,
+  queryClient: QueryClient,
+  serverName: string,
+) =>
   createRouter({
     routeTree,
     scrollRestoration: true,
     basepath,
     defaultPendingComponent: LoadingScreen,
     defaultPreload: "intent",
-    context: { queryClient },
+    context: { queryClient, serverName },
   });
 
 // Register the router instance for type safety

@@ -9,6 +9,8 @@ Please see LICENSE files in the repository root for full details.
 
 {% extends "base.html" %}
 
+{% block title %}{{ _("app.page_title", page=_("mas.policy_violation.heading"), server=branding.server_name) }}{% endblock title %}
+
 {% set violation = violations | selectattr("code", "defined") | first | default({}) %}
 {% set code = violation.code | default("") %}
 

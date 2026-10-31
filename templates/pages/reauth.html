@@ -8,6 +8,8 @@ Please see LICENSE files in the repository root for full details.
 
 {% extends "base.html" %}
 
+{% block title %}{{ _("app.page_title", page=_("mas.page_titles.verify_identity"), server=branding.server_name) }}{% endblock title %}
+
 {% block content %}
   <header class="page-heading">
     <div class="icon">

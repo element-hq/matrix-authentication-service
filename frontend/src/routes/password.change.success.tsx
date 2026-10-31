@@ -6,12 +6,15 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import IconCheckCircle from "@vector-im/compound-design-tokens/assets/web/icons/check-circle-solid";
+import i18n from "i18next";
 import { useTranslation } from "react-i18next";
 import { ButtonLink } from "../components/ButtonLink";
 import Layout from "../components/Layout";
 import PageHeading from "../components/PageHeading";
+import { documentTitle } from "../utils/documentTitle";
 
 export const Route = createFileRoute("/password/change/success")({
+  head: (ctx) => documentTitle(ctx, i18n.t("frontend.password_change.title")),
   component: ChangePasswordSuccess,
 });
 

@@ -10,6 +10,16 @@ Please see LICENSE files in the repository root for full details.
 
 {% extends "base.html" %}
 
+{% block title %}
+  {%- if grant.state == "pending" -%}
+    {{ _("app.page_title", page=_("mas.page_titles.allow_access"), server=branding.server_name) }}
+  {%- elif grant.state == "rejected" -%}
+    {{ _("app.page_title", page=_("mas.device_consent.denied.heading"), server=branding.server_name) }}
+  {%- else -%}
+    {{ _("app.page_title", page=_("mas.device_consent.granted.heading"), server=branding.server_name) }}
+  {%- endif -%}
+{% endblock title %}
+
 {% block content %}
   {% set client_display_name = client.client_name or client.client_id %}
   {% set user_agent = grant.user_agent | parse_user_agent() %}

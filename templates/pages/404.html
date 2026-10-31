@@ -8,6 +8,8 @@ Please see LICENSE files in the repository root for full details.
 
 {% extends "base.html" %}
 
+{% block title %}{{ _("app.page_title", page=_("mas.not_found.heading"), server=branding.server_name) }}{% endblock title %}
+
 {% block content %}
 <main class="w-96 flex-1 flex flex-col gap-2 justify-center">
   <h1 class="text-xl font-semibold">{{ _("mas.not_found.heading") }}</h1>

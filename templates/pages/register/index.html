@@ -9,6 +9,8 @@ Please see LICENSE files in the repository root for full details.
 
 {% extends "base.html" %}
 
+{% block title %}{{ _("app.page_title", page=_("mas.register.create_account.heading"), server=branding.server_name) }}{% endblock title %}
+
 {% block head %}
   {{ include_asset('src/entrypoints/register.tsx') | indent(4) | safe }}
   {# Pre-load the locale data for the current language #}

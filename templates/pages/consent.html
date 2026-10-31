@@ -10,6 +10,8 @@ Please see LICENSE files in the repository root for full details.
 
 {% extends "base.html" %}
 
+{% block title %}{{ _("app.page_title", page=_("mas.page_titles.allow_access"), server=branding.server_name) }}{% endblock title %}
+
 {% block content %}
   {% set client_display_name = client.client_name or client.client_id %}
   {# The URI we can display to distinguish this client #}

@@ -7,6 +7,7 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, notFound, Outlet } from "@tanstack/react-router";
 import { Heading, Tooltip } from "@vector-im/compound-web";
+import i18n from "i18next";
 import { useTranslation } from "react-i18next";
 import Layout from "../components/Layout";
 import NavBar from "../components/NavBar";
@@ -14,6 +15,7 @@ import NavItem, { NavItemErrorIcon } from "../components/NavItem";
 import UserGreeting from "../components/UserGreeting";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
+import { documentTitle } from "../utils/documentTitle";
 
 const QUERY = graphql(/* GraphQL */ `
   query CurrentUserGreeting {
@@ -46,6 +48,7 @@ const query = queryOptions({
 
 export const Route = createFileRoute("/_account")({
   loader: ({ context }) => context.queryClient.ensureQueryData(query),
+  head: (ctx) => documentTitle(ctx, i18n.t("frontend.account.title")),
   component: Account,
 });
 

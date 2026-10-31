@@ -7,10 +7,12 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import IconArrowLeft from "@vector-im/compound-design-tokens/assets/web/icons/arrow-left";
 import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
+import i18n from "i18next";
 import { useTranslation } from "react-i18next";
 import { ButtonLink } from "../components/ButtonLink";
 import Layout from "../components/Layout";
 import PageHeading from "../components/PageHeading";
+import { documentTitle } from "../utils/documentTitle";
 import { query } from "./emails.$id.verify";
 
 export const Route = createFileRoute("/emails/$id/in-use")({
@@ -27,6 +29,8 @@ export const Route = createFileRoute("/emails/$id/in-use")({
     }
   },
 
+  head: (ctx) =>
+    documentTitle(ctx, i18n.t("frontend.page_titles.email_in_use")),
   component: EmailInUse,
 });
 

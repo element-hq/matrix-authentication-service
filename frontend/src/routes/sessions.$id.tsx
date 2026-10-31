@@ -7,6 +7,7 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Alert } from "@vector-im/compound-web";
+import i18n from "i18next";
 import { useTranslation } from "react-i18next";
 import Layout from "../components/Layout";
 import { Link } from "../components/Link";
@@ -15,6 +16,7 @@ import CompatSessionDetail from "../components/SessionDetail/CompatSessionDetail
 import OAuth2SessionDetail from "../components/SessionDetail/OAuth2SessionDetail";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
+import { documentTitle } from "../utils/documentTitle";
 
 const QUERY = graphql(/* GraphQL */ `
   query SessionDetail($id: ID!) {
@@ -45,6 +47,7 @@ export const Route = createFileRoute("/sessions/$id")({
   loader: ({ context, params }) =>
     context.queryClient.ensureQueryData(query(params.id)),
   notFoundComponent: NotFound,
+  head: (ctx) => documentTitle(ctx, i18n.t("frontend.page_titles.session")),
   component: SessionDetail,
 });
 
