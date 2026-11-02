@@ -87,6 +87,11 @@ skip = [
     { name = "darling", version = "0.20.11" },
     { name = "darling_core", version = "0.20.11" },
     { name = "darling_macro", version = "0.20.11" },
+    # vergen-gitcl (via bon) moved to darling 0.24; aide-macros, async-graphql
+    # and serde_with are still on 0.23
+    { name = "darling", version = "0.23.0" },
+    { name = "darling_core", version = "0.23.0" },
+    { name = "darling_macro", version = "0.23.0" },
 
     # We moved to rand 0.10, but cookie and sqlx still pull the 0.8 generation
     { name = "rand", version = "0.8.6" },
