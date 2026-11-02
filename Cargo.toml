@@ -526,7 +526,7 @@ version = "2.1.1"
 
 # Matrix-related types
 [workspace.dependencies.ruma-common]
-version = "0.19.0"
+version = "0.20.1"
 
 # TLS stack
 [workspace.dependencies.rustls]
