@@ -4564,8 +4564,8 @@ packages:
   set-cookie-parser@3.1.0:
     resolution: {integrity: sha512-kjnC1DXBHcxaOaOXBHBeRtltsDG2nUiUni+jP92M9gYdW12rsmx92UsfpH7o5tDRs7I1ZZPSQJQGv3UaRfCiuw==}
 
-  shell-quote@1.9.0:
-    resolution: {integrity: sha512-Iov+JwFv/2HcTpcwNMKd8+IWNb8tboQJNQTkAY/LLVK7gGH9jy+LGkVqPxfekHl+yMmiqXszdGWXgkfml7hjqA==}
+  shell-quote@1.12.0:
+    resolution: {integrity: sha512-PcByqNyT/38F2kDNi006HAMRJaULuBzq/FOsw3qdZvX/GA9W/jamDaRskgHjubHiftXK5sIFxLNkvrXUwcof6Q==}
     engines: {node: '>= 0.4'}
 
   siginfo@2.0.0:
@@ -5584,7 +5584,7 @@ snapshots:
       listr2: 10.2.2
       log-symbols: 7.0.1
       micromatch: 4.0.8
-      shell-quote: 1.9.0
+      shell-quote: 1.12.0
       string-env-interpolation: 1.0.1
       ts-log: 3.0.2
       tslib: 2.8.1
@@ -9170,7 +9170,7 @@ snapshots:
 
   set-cookie-parser@3.1.0: {}
 
-  shell-quote@1.9.0: {}
+  shell-quote@1.12.0: {}
 
   siginfo@2.0.0: {}
 
