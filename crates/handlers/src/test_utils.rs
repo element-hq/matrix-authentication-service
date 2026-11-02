@@ -245,7 +245,11 @@ impl TestState {
         let clock = Arc::new(MockClock::default());
         let rng = Arc::new(Mutex::new(ChaChaRng::seed_from_u64(42)));
 
-        let limiter = Limiter::new(&RateLimitingConfig::default()).unwrap();
+        // The default refills one username availability check per second, so
+        // tests exhausting the burst could see a token come back mid-test.
+        let mut rate_limiting = RateLimitingConfig::default();
+        rate_limiting.username_availability.per_second = 1.0 / 3600.0;
+        let limiter = Limiter::new(&rate_limiting).unwrap();
 
         let graphql_state = TestGraphQLState {
             repository_factory: PgRepositoryFactory::new(pool.clone()).boxed(),
