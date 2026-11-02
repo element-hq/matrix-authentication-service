@@ -847,13 +847,13 @@
           "description": "GraphQL endpoint",
           "type": "object",
           "properties": {
-            "undocumented_oauth2_access": {
-              "description": "Allow access for OAuth 2.0 clients (undocumented)",
-              "type": "boolean"
-            },
             "name": {
               "type": "string",
               "const": "graphql"
+            },
+            "undocumented_oauth2_access": {
+              "description": "Allow access for OAuth 2.0 clients (undocumented)",
+              "type": "boolean"
             }
           },
           "required": [
@@ -890,13 +890,13 @@
           "description": "Static files",
           "type": "object",
           "properties": {
-            "path": {
-              "description": "Path to the directory to serve.",
-              "type": "string"
-            },
             "name": {
               "type": "string",
               "const": "assets"
+            },
+            "path": {
+              "description": "Path to the directory to serve.",
+              "type": "string"
             }
           },
           "required": [
