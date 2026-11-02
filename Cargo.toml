@@ -380,12 +380,12 @@ version = "0.3.17"
 
 # Templates
 [workspace.dependencies.minijinja]
-version = "2.21.0"
-features = ["urlencode", "loader", "json", "speedups", "unstable_machinery"]
+version = "3.0.5"
+features = ["urlencode", "serde", "json", "speedups", "unstable_machinery"]
 
 # Additional filters for minijinja
 [workspace.dependencies.minijinja-contrib]
-version = "2.21.0"
+version = "3.0.5"
 features = ["pycompat"]
 
 # Utilities to deal with non-zero values

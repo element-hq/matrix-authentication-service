@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -10,7 +11,7 @@
 
 use std::{fs::File, io::BufReader};
 
-use ::minijinja::{machinery::WhitespaceConfig, syntax::SyntaxConfig};
+use ::minijinja::syntax::SyntaxConfig;
 use camino::Utf8PathBuf;
 use clap::Parser;
 use key::Context;
@@ -75,12 +76,7 @@ fn main() {
         if options.extensions.split(',').any(|e| e == extension) {
             tracing::debug!("Parsing {relative}");
             let template = std::fs::read_to_string(&path).expect("Failed to read template");
-            match minijinja::parse(
-                &template,
-                relative.as_str(),
-                SyntaxConfig::default(),
-                WhitespaceConfig::default(),
-            ) {
+            match minijinja::parse(&template, relative.as_str(), SyntaxConfig::default()) {
                 Ok(ast) => {
                     context.set_current_file(relative.as_str());
                     minijinja::find_in_stmt(&mut context, &ast).unwrap();
