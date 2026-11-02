@@ -67,7 +67,7 @@
     "@vitest/coverage-v8": "^4.1.9",
     "browserslist-to-esbuild": "^2.1.1",
     "graphql": "^16.14.0",
-    "happy-dom": "^20.10.6",
+    "happy-dom": "^21.0.4",
     "i18next-cli": "^1.74.1",
     "knip": "^6.24.0",
     "msw": "^2.14.6",
