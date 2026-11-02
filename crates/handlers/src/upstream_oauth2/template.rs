@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -10,7 +10,7 @@ use std::{collections::HashMap, sync::Arc};
 use base64ct::{Base64, Base64Unpadded, Base64Url, Base64UrlUnpadded, Encoding};
 use minijinja::{
     Environment, Error, ErrorKind, Value,
-    value::{Enumerator, Object},
+    value::{Enumerator, Object, Serde},
 };
 
 /// Context passed to the attribute mapping template
@@ -77,14 +77,14 @@ impl Object for AttributeMappingContext {
                 if let Some(id_token) = self.id_token_claims.clone() {
                     merged_user.extend(id_token);
                 }
-                Some(Value::from_serialize(merged_user))
+                Some(Value::from(Serde(merged_user)))
             }
-            "id_token_claims" => self.id_token_claims.as_ref().map(Value::from_serialize),
-            "userinfo_claims" => self.userinfo_claims.as_ref().map(Value::from_serialize),
+            "id_token_claims" => self.id_token_claims.as_ref().map(|v| Value::from(Serde(v))),
+            "userinfo_claims" => self.userinfo_claims.as_ref().map(|v| Value::from(Serde(v))),
             "extra_callback_parameters" => self
                 .extra_callback_parameters
                 .as_ref()
-                .map(Value::from_serialize),
+                .map(|v| Value::from(Serde(v))),
             _ => None,
         }
     }
@@ -171,7 +171,7 @@ fn from_json(value: &str) -> Result<Value, minijinja::Error> {
         .with_source(e)
     })?;
 
-    Ok(Value::from_serialize(value))
+    Ok(Value::from(Serde(value)))
 }
 
 pub fn environment() -> Environment<'static> {

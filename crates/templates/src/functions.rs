@@ -14,7 +14,7 @@ use std::{
     collections::{BTreeMap, HashMap, HashSet},
     fmt::{Formatter, Write as _},
     str::FromStr,
-    sync::{Arc, Mutex, atomic::AtomicUsize},
+    sync::{Arc, atomic::AtomicUsize},
 };
 
 use camino::{Utf8Path, Utf8PathBuf};
@@ -24,7 +24,7 @@ use mas_spa::ViteManifest;
 use minijinja::{
     Error, ErrorKind, State, Value, escape_formatter,
     machinery::make_string_output,
-    value::{Kwargs, Object, ViaDeserialize, from_args},
+    value::{Kwargs, Object, Serde, from_args},
 };
 use url::Url;
 
@@ -149,7 +149,7 @@ fn filter_id_color_hash(input: &str) -> u32 {
 /// Filter which parses a user-agent string
 fn filter_parse_user_agent(user_agent: String) -> Value {
     let user_agent = mas_data_model::UserAgent::parse(user_agent);
-    Value::from_serialize(user_agent)
+    Value::from(Serde(user_agent))
 }
 
 enum ParamsWhere {
@@ -158,9 +158,9 @@ enum ParamsWhere {
 }
 
 fn function_add_params_to_url(
-    uri: ViaDeserialize<Url>,
+    Serde(uri): Serde<Url>,
     mode: &str,
-    params: ViaDeserialize<HashMap<String, Value>>,
+    Serde(params): Serde<HashMap<String, Value>>,
 ) -> Result<String, Error> {
     use ParamsWhere::{Fragment, Query};
 
@@ -243,7 +243,7 @@ impl std::fmt::Display for TranslatorFunc {
 }
 
 impl Object for TranslatorFunc {
-    fn call(self: &Arc<Self>, _state: &State, args: &[Value]) -> Result<Value, Error> {
+    fn call(self: &Arc<Self>, _state: &mut State, args: &[Value]) -> Result<Value, Error> {
         let (lang,): (&str,) = from_args(args)?;
 
         let lang: DataLocale = lang.parse().map_err(|e| {
@@ -278,7 +278,7 @@ impl std::fmt::Display for TranslateFunc {
 }
 
 impl Object for TranslateFunc {
-    fn call(self: &Arc<Self>, state: &State, args: &[Value]) -> Result<Value, Error> {
+    fn call(self: &Arc<Self>, state: &mut State, args: &[Value]) -> Result<Value, Error> {
         let (key, kwargs): (&str, Kwargs) = from_args(args)?;
 
         let (message, _locale) = if let Some(count) = kwargs.get("count")? {
@@ -335,7 +335,7 @@ impl Object for TranslateFunc {
 
     fn call_method(
         self: &Arc<Self>,
-        _state: &State,
+        _state: &mut State,
         name: &str,
         args: &[Value],
     ) -> Result<Value, Error> {
@@ -411,13 +411,14 @@ impl Object for TranslateFunc {
     }
 }
 
+/// Helper to track included assets during a template render
 #[derive(Default, Debug)]
-struct IncludedAssetsTrackerInner {
+struct IncludedAssetsTracker {
     preloaded: HashSet<Utf8PathBuf>,
     included: HashSet<Utf8PathBuf>,
 }
 
-impl IncludedAssetsTrackerInner {
+impl IncludedAssetsTracker {
     /// Mark an asset as preloaded. Returns true if it was not already marked.
     fn mark_preloaded(&mut self, asset: &Utf8Path) -> bool {
         self.preloaded.insert(asset.to_owned())
@@ -429,22 +430,6 @@ impl IncludedAssetsTrackerInner {
         self.included.insert(asset.to_owned())
     }
 }
-
-/// Helper to track included assets during a template render
-#[derive(Default, Debug)]
-struct IncludedAssetsTracker {
-    inner: Mutex<IncludedAssetsTrackerInner>,
-}
-
-impl IncludedAssetsTracker {
-    fn lock(&self) -> std::sync::MutexGuard<'_, IncludedAssetsTrackerInner> {
-        // There is no reason for this mutex to ever get poisoned, so it's fine
-        // to unwrap here
-        self.inner.lock().unwrap()
-    }
-}
-
-impl Object for IncludedAssetsTracker {}
 
 struct IncludeAsset {
     url_builder: UrlBuilder,
@@ -467,18 +452,16 @@ impl std::fmt::Display for IncludeAsset {
 }
 
 impl Object for IncludeAsset {
-    fn call(self: &Arc<Self>, state: &State, args: &[Value]) -> Result<Value, Error> {
+    fn call(self: &Arc<Self>, state: &mut State, args: &[Value]) -> Result<Value, Error> {
         let (path,): (&str,) = from_args(args)?;
         let path: &Utf8Path = path.into();
 
         let assets_base: &Utf8Path = self.url_builder.assets_base().into();
 
         // We store the list of assets we've already included and already preloaded in a
-        // 'temp' object. Those live throughout the template render and reset on each
-        // new render.
-        let tracker =
-            state.get_or_set_temp_object("included_assets_tracker", IncludedAssetsTracker::default);
-        let mut tracker = tracker.lock();
+        // render-local extension. Those live throughout the template render and reset on
+        // each new render.
+        let tracker = state.get_or_insert_extension_with(IncludedAssetsTracker::default);
 
         // Grab the main asset and its imports from the manifest
         let (main, imported) = self.vite_manifest.find_assets(path).map_err(|e| {
@@ -597,7 +580,7 @@ impl std::fmt::Display for FakeIncludeAsset {
 }
 
 impl Object for FakeIncludeAsset {
-    fn call(self: &Arc<Self>, _state: &State, args: &[Value]) -> Result<Value, Error> {
+    fn call(self: &Arc<Self>, _state: &mut State, args: &[Value]) -> Result<Value, Error> {
         let (path,): (&str,) = from_args(args)?;
 
         Ok(Value::from_safe_string(format!(
@@ -624,7 +607,7 @@ impl std::fmt::Display for Counter {
 impl Object for Counter {
     fn call_method(
         self: &Arc<Self>,
-        _state: &State,
+        _state: &mut State,
         name: &str,
         args: &[Value],
     ) -> Result<Value, Error> {
