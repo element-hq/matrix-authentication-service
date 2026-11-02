@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -9,7 +10,7 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router";
-import { type RenderResult, render } from "@testing-library/react";
+import { type RenderResult, render, waitFor } from "@testing-library/react";
 import { TooltipProvider } from "@vector-im/compound-web";
 import i18n from "i18next";
 import { setupServer } from "msw/node";
@@ -38,9 +39,7 @@ async function renderPage(route: string): Promise<RenderResult> {
     context: { queryClient },
     history,
   });
-  await router.load();
-
-  return render(
+  const result = render(
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <I18nextProvider i18n={i18n}>
@@ -49,6 +48,21 @@ async function renderPage(route: string): Promise<RenderResult> {
       </TooltipProvider>
     </QueryClientProvider>,
   );
+
+  // React only retries a suspended render (e.g. a lazy route chunk) outside
+  // the act() environment, which `waitFor` provides. The timeout stays under
+  // vitest's 5s test timeout so a stuck page reports this error.
+  await waitFor(
+    () => {
+      if (router.state.status !== "idle") throw new Error("Router is loading");
+      if (!result.container.hasChildNodes()) {
+        throw new Error("Nothing rendered");
+      }
+    },
+    { timeout: 4000 },
+  );
+
+  return result;
 }
 
 export { renderPage };
