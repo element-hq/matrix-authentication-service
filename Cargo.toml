@@ -186,7 +186,7 @@ features = ["db"]
 
 # Utility for converting between different cases
 [workspace.dependencies.convert_case]
-version = "0.11.0"
+version = "0.12.0"
 
 # CRC calculation
 [workspace.dependencies.crc]
