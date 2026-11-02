@@ -91,7 +91,7 @@ jobs:
           chmod -R u=rwX,go=rX assets-dist/
 
       - name: Upload assets
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: assets
           path: assets-dist
@@ -156,7 +156,7 @@ jobs:
             -p mas-cli
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: binary-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/mas-cli
@@ -205,13 +205,13 @@ jobs:
           done
 
       - name: Upload aarch64 archive
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: mas-cli-aarch64-linux
           path: mas-cli-aarch64-linux.tar.gz
 
       - name: Upload x86_64 archive
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: mas-cli-x86_64-linux
           path: mas-cli-x86_64-linux.tar.gz
@@ -301,7 +301,7 @@ jobs:
           cp "$DEBUG_FILE" /tmp/bake/debug.json
 
       - name: Upload bake files
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: bake-files
           path: /tmp/bake/
@@ -440,7 +440,7 @@ jobs:
             }
 
       - name: Upload digests
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: digests-${{ matrix.arch }}
           path: /tmp/digests/*
