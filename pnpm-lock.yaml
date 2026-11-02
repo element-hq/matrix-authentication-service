@@ -14,8 +14,8 @@ importers:
   .:
     devDependencies:
       '@localazy/cli':
-        specifier: ^2.0.11
-        version: 2.0.11
+        specifier: ^2.0.12
+        version: 2.0.12
       node:
         specifier: runtime:24.22.1
         version: runtime:24.22.1
@@ -1071,8 +1071,8 @@ packages:
     peerDependencies:
       solid-js: ^1.8.8
 
-  '@localazy/cli@2.0.11':
-    resolution: {integrity: sha512-Mzz2TlWqAfNGJmyO+qKlyY7nk4QycwSWODh0tOi+AlZUSJREbX9Wg1HAIKuG5pnlj7JYIv2NWRR1T+pZhdxuDw==}
+  '@localazy/cli@2.0.12':
+    resolution: {integrity: sha512-PwpPNZZBt5wQZ4g+v/q50w/p5QAazn0FSZajGqxob1/odgYAYAIP2WkzA4T5gNKEVEmq9fUKLyAPWQzJOwqKvg==}
     engines: {node: '>=18.20.7', npm: '>=6.0.0'}
     hasBin: true
 
@@ -5016,6 +5016,18 @@ packages:
     resolution: {integrity: sha512-42AtmgqjV+X1VpdOfyTGOYRi0/zsoLqtXQckTmqTeybT+BDIbM/Guxo7x3pE2vtpr1ok6xRqM9OpBe+Jyoqyww==}
     engines: {node: '>=18'}
 
+  ws@8.22.0:
+    resolution: {integrity: sha512-Ydggc987+RO0AnWtZ/7Wq9FtNvcrL1b/RO0ud9mWjUPgDrsAAwQSF51sm2hm1XofbU/4jkpGEsLFsZZxU+1DOg==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
   ws@8.22.1:
     resolution: {integrity: sha512-oyL6OPYme/CmiFvNuGzeoxCJ4nOrZE2O1FwM9MWM1AsGri6nLXB2pg+lNA8aLeXMSav0J6eIVS1j6vUPzUtK9g==}
     engines: {node: '>=10.0.0'}
@@ -6069,10 +6081,10 @@ snapshots:
       '@solid-primitives/utils': 6.4.1(solid-js@1.9.18)
       solid-js: 1.9.18
 
-  '@localazy/cli@2.0.11':
+  '@localazy/cli@2.0.12':
     dependencies:
       '@sinonjs/text-encoding': 0.7.2
-      ws: 8.22.1
+      ws: 8.22.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -9480,6 +9492,8 @@ snapshots:
       ansi-styles: 6.2.3
       string-width: 7.2.0
       strip-ansi: 7.2.0
+
+  ws@8.22.0: {}
 
   ws@8.22.1: {}
 
