@@ -64,7 +64,7 @@
     "@types/react-dom": "19.3.0",
     "@types/swagger-ui-dist": "^3.30.6",
     "@vitejs/plugin-react": "^6.1.2",
-    "@vitest/coverage-v8": "^4.1.9",
+    "@vitest/coverage-v8": "^4.1.12",
     "browserslist-to-esbuild": "^2.1.1",
     "graphql": "^16.14.0",
     "happy-dom": "^21.0.4",
@@ -79,7 +79,7 @@
     "typescript": "^6.0.3",
     "vite": "8.3.4",
     "vite-plugin-graphql-codegen": "^4.0.1",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.12"
   },
   "msw": {
     "workerDirectory": [
