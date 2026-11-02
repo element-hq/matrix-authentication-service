@@ -41,7 +41,7 @@ exports[`<OAuth2SessionDetail> > renders a finished session details 1`] = `
           type="button"
         >
           <div
-            class="_indicator-icon_147l5_17"
+            class="_indicator-icon_j097f_17"
             style="--cpd-icon-button-size: 100%;"
           >
             <svg
@@ -351,7 +351,7 @@ exports[`<OAuth2SessionDetail> > renders session details 1`] = `
           type="button"
         >
           <div
-            class="_indicator-icon_147l5_17"
+            class="_indicator-icon_j097f_17"
             style="--cpd-icon-button-size: 100%;"
           >
             <svg

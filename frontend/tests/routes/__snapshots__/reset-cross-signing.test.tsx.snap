@@ -48,7 +48,7 @@ exports[`Reset cross signing > renders the cancelled page 1`] = `
     >
       <nav>
         <a
-          class="_link_k9ljz_8"
+          class="_link_13esb_8"
           data-kind="primary"
           data-size="md"
           href="https://matrix.org/policy"
@@ -64,7 +64,7 @@ exports[`Reset cross signing > renders the cancelled page 1`] = `
           •
         </div>
         <a
-          class="_link_k9ljz_8"
+          class="_link_13esb_8"
           data-kind="primary"
           data-size="md"
           href="https://matrix.org/tos"
@@ -221,7 +221,7 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
     >
       <nav>
         <a
-          class="_link_k9ljz_8"
+          class="_link_13esb_8"
           data-kind="primary"
           data-size="md"
           href="https://matrix.org/policy"
@@ -237,7 +237,7 @@ exports[`Reset cross signing > renders the deep link page 1`] = `
           •
         </div>
         <a
-          class="_link_k9ljz_8"
+          class="_link_13esb_8"
           data-kind="primary"
           data-size="md"
           href="https://matrix.org/tos"
@@ -309,7 +309,7 @@ exports[`Reset cross signing > renders the errored page 1`] = `
     >
       <nav>
         <a
-          class="_link_k9ljz_8"
+          class="_link_13esb_8"
           data-kind="primary"
           data-size="md"
           href="https://matrix.org/policy"
@@ -325,7 +325,7 @@ exports[`Reset cross signing > renders the errored page 1`] = `
           •
         </div>
         <a
-          class="_link_k9ljz_8"
+          class="_link_13esb_8"
           data-kind="primary"
           data-size="md"
           href="https://matrix.org/tos"
@@ -482,7 +482,7 @@ exports[`Reset cross signing > renders the page 1`] = `
     >
       <nav>
         <a
-          class="_link_k9ljz_8"
+          class="_link_13esb_8"
           data-kind="primary"
           data-size="md"
           href="https://matrix.org/policy"
@@ -498,7 +498,7 @@ exports[`Reset cross signing > renders the page 1`] = `
           •
         </div>
         <a
-          class="_link_k9ljz_8"
+          class="_link_13esb_8"
           data-kind="primary"
           data-size="md"
           href="https://matrix.org/tos"
@@ -561,7 +561,7 @@ exports[`Reset cross signing > renders the success page 1`] = `
     >
       <nav>
         <a
-          class="_link_k9ljz_8"
+          class="_link_13esb_8"
           data-kind="primary"
           data-size="md"
           href="https://matrix.org/policy"
@@ -577,7 +577,7 @@ exports[`Reset cross signing > renders the success page 1`] = `
           •
         </div>
         <a
-          class="_link_k9ljz_8"
+          class="_link_13esb_8"
           data-kind="primary"
           data-size="md"
           href="https://matrix.org/tos"
@@ -640,7 +640,7 @@ exports[`Reset cross signing > renders the success page 2`] = `
     >
       <nav>
         <a
-          class="_link_k9ljz_8"
+          class="_link_13esb_8"
           data-kind="primary"
           data-size="md"
           href="https://matrix.org/policy"
@@ -656,7 +656,7 @@ exports[`Reset cross signing > renders the success page 2`] = `
           •
         </div>
         <a
-          class="_link_k9ljz_8"
+          class="_link_13esb_8"
           data-kind="primary"
           data-size="md"
           href="https://matrix.org/tos"
