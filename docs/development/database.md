@@ -33,14 +33,16 @@ Preparing this flat file is done through `sqlx-cli`, and should be done everytim
 # Install the CLI, matching the version of `sqlx` in Cargo.lock
 cargo install sqlx-cli@0.9.0 --no-default-features --features postgres,sqlx-toml
 
-cd crates/storage-pg/ # Must be in the mas-storage-pg crate folder
 export DATABASE_URL=postgresql:///matrix_auth
-cargo sqlx prepare
+export SYN2MAS_DATABASE_URL=postgresql:///matrix_auth_syn2mas
+misc/sqlx_update.sh
 ```
 
-Both `mas-storage-pg` and `syn2mas` use the query macros, each with its own
-`.sqlx` directory. `misc/sqlx_update.sh` prepares both, including the temporary
-tables `syn2mas` needs.
+The offline data of both `mas-storage-pg` and `syn2mas` lives in the `.sqlx`
+directory at the root of the workspace. `syn2mas` renames the MAS tables while it
+runs, so its queries are checked against a second database, set in
+`SYN2MAS_DATABASE_URL`, which the script migrates and sets up. Pass `--check` to
+only check that the data is up to date.
 
 ## Migrations
 

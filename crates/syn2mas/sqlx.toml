@@ -3,6 +3,11 @@
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 # Please see LICENSE files in the repository root for full details.
 
+[common]
+# syn2mas renames the MAS tables while it runs, so its queries are checked
+# against a separate database, see misc/sqlx_update.sh
+database-url-var = "SYN2MAS_DATABASE_URL"
+
 [macros.preferred-crates]
 # Stay on chrono even if a dependency enables the `time` feature of sqlx
 date-time = "chrono"
