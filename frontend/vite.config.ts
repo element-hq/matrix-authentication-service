@@ -199,6 +199,11 @@ export default defineConfig((env) => ({
     tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
+      codeSplittingOptions: {
+        // Error components render when something already failed, possibly the
+        // network, so keep them out of separately fetched chunks.
+        defaultBehavior: [["component"], ["notFoundComponent"]],
+      },
       verboseFileRoutes: false,
     }),
 
