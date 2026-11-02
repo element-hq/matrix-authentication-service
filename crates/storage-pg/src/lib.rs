@@ -488,3 +488,22 @@ fn generate_lock_id(database_name: &str) -> i64 {
     // 0x3d32ad9e chosen by fair dice roll
     0x3d32_ad9e * i64::from(CRC_IEEE.checksum(database_name.as_bytes()))
 }
+
+#[cfg(test)]
+mod tests {
+    use sqlx::postgres::PgConnectOptions;
+
+    #[test]
+    fn default_username_is_not_whoami_stub() {
+        // whoami's stub backend, used when its `std` feature is off, always
+        // returns this name
+        assert_ne!(whoami::username().ok().as_deref(), Some("anonymous"));
+
+        if std::env::var_os("PGUSER").is_none() {
+            assert_ne!(
+                PgConnectOptions::new_without_pgpass().get_username(),
+                "anonymous"
+            );
+        }
+    }
+}
