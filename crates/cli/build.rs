@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -8,6 +9,10 @@ use vergen_gitcl::{Emitter, GitclBuilder, RustcBuilder};
 fn main() -> anyhow::Result<()> {
     // Instruct rustc that we'll be using #[cfg(tokio_unstable)]
     println!("cargo::rustc-check-cfg=cfg(tokio_unstable)");
+
+    // vergen reads VERGEN_GIT_DESCRIBE but doesn't tell Cargo to rerun the build
+    // script when it changes.
+    println!("cargo::rerun-if-env-changed=VERGEN_GIT_DESCRIBE");
 
     // At build time, we override the version through the environment variable
     // VERGEN_GIT_DESCRIBE. In some contexts, it means this variable is set but
