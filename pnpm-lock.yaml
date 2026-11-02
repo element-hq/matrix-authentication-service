@@ -53,11 +53,11 @@ importers:
         specifier: ^1.170.18
         version: 1.170.18(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@vector-im/compound-design-tokens':
-        specifier: 10.2.2
-        version: 10.2.2(@types/react@19.3.0)(react@19.3.1)
+        specifier: 11.3.1
+        version: 11.3.1(@types/react@19.3.0)(react@19.3.1)
       '@vector-im/compound-web':
         specifier: ^10.4.0
-        version: 10.4.0(@fontsource/inconsolata@5.3.0)(@fontsource/inter@5.3.0)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(@vector-im/compound-design-tokens@10.2.2(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        version: 10.4.0(@fontsource/inconsolata@5.3.0)(@fontsource/inter@5.3.0)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(@vector-im/compound-design-tokens@11.3.1(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@zxcvbn-ts/core':
         specifier: ^4.2.0
         version: 4.2.0
@@ -2695,13 +2695,19 @@ packages:
   '@types/ws@8.18.2':
     resolution: {integrity: sha512-67MQl+fpWKVTT1NYdnmo3U4sc/xPo/zQBncVnI74qmQa0z/b+1g6iYqNmGCPbxO+zz2aklb08a0oHfegiVd0/w==}
 
-  '@vector-im/compound-design-tokens@10.2.2':
-    resolution: {integrity: sha512-kncYroDEwyvvk4K4E67ExP4RYp9NEineD1tB38KeJwTmOvcrPtGjWyBAyJgOGeRuc7G5edNLkWnAbvk5yZJ+5w==}
+  '@vector-im/compound-design-tokens@11.3.1':
+    resolution: {integrity: sha512-pTw2sgtq/yYV/y5lvkTHaJ8q55cq0dikk+BAUKRzI+bKGJhg+OzWVHDdWUK2zRAVKZ5UI/zpUgoW2w8q4n5R3w==}
     peerDependencies:
+      '@adobe/leonardo-contrast-colors': ^1.0.0
       '@types/react': '*'
+      chroma-js: ^3.0.0
       react: ^17 || ^18 || ^19.0.0
     peerDependenciesMeta:
+      '@adobe/leonardo-contrast-colors':
+        optional: true
       '@types/react':
+        optional: true
+      chroma-js:
         optional: true
       react:
         optional: true
@@ -4352,6 +4358,12 @@ packages:
 
   sentence-case@3.0.4:
     resolution: {integrity: sha512-8LS0JInaQMCRoQ7YUytAo/xUu5W2XnQxV2HI/6uM6U7CITS1RqPElr30V6uIqyMKM9lJGRVFy5/4CuzcixNYSg==}
+
+  seroval-plugins@1.6.11:
+    resolution: {integrity: sha512-LmB3nd8pL39jKHKvnpTUjcjBtNwR8MLty/ydAR8qbfXt5j6/6KqR1atuw8cVmD2/lDxAkvAwq5tI/HsisD9Fqg==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      seroval: ^1.0
 
   seroval-plugins@1.6.12:
     resolution: {integrity: sha512-+reiwp/lYxiyctSrdvX7OQ1YLrcbWYgBiZrhSFL+V43b0/DGRLNVSDyZINbQe+tWplPOI2fw2dPrdv6hcc09kQ==}
@@ -7085,7 +7097,7 @@ snapshots:
       '@tanstack/history': 1.162.0
       cookie-es: 3.1.1
       seroval: 1.6.11
-      seroval-plugins: 1.6.12(seroval@1.6.11)
+      seroval-plugins: 1.6.11(seroval@1.6.11)
 
   '@tanstack/router-devtools-core@1.168.0(@tanstack/router-core@1.171.15)(csstype@3.2.3)':
     dependencies:
@@ -7272,12 +7284,12 @@ snapshots:
     dependencies:
       '@types/node': 26.6.5
 
-  '@vector-im/compound-design-tokens@10.2.2(@types/react@19.3.0)(react@19.3.1)':
+  '@vector-im/compound-design-tokens@11.3.1(@types/react@19.3.0)(react@19.3.1)':
     optionalDependencies:
       '@types/react': 19.3.0
       react: 19.3.1
 
-  '@vector-im/compound-web@10.4.0(@fontsource/inconsolata@5.3.0)(@fontsource/inter@5.3.0)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(@vector-im/compound-design-tokens@10.2.2(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+  '@vector-im/compound-web@10.4.0(@fontsource/inconsolata@5.3.0)(@fontsource/inter@5.3.0)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(@vector-im/compound-design-tokens@11.3.1(@types/react@19.3.0)(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
       '@floating-ui/react': 0.27.19(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@floating-ui/react-dom': 2.1.8(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -7289,7 +7301,7 @@ snapshots:
       '@radix-ui/react-progress': 1.2.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@radix-ui/react-separator': 1.2.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@radix-ui/react-slot': 1.5.0(@types/react@19.3.0)(react@19.3.1)
-      '@vector-im/compound-design-tokens': 10.2.2(@types/react@19.3.0)(react@19.3.1)
+      '@vector-im/compound-design-tokens': 11.3.1(@types/react@19.3.0)(react@19.3.1)
       classnames: 2.5.1
       react: 19.3.1
       vaul: 1.1.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -8835,6 +8847,10 @@ snapshots:
       no-case: 3.0.4
       tslib: 2.8.1
       upper-case-first: 2.0.2
+
+  seroval-plugins@1.6.11(seroval@1.6.11):
+    dependencies:
+      seroval: 1.6.11
 
   seroval-plugins@1.6.12(seroval@1.6.11):
     dependencies:
