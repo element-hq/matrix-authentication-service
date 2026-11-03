@@ -120,16 +120,16 @@
       "email_domain_banned": "Az e-mail-tartományt a kiszolgáló-házirend tiltja",
       "email_domain_not_allowed": "Az e-mail-tartományt nem engedélyezi a kiszolgáló-házirend",
       "email_not_allowed": "Az e-mail-címet nem engedélyezi a kiszolgáló-házirend",
-      "field_invalid": "This field is invalid",
+      "field_invalid": "Ez a mező érvénytelen",
       "field_required": "Ez a mező kötelező",
-      "invalid_email": "Please enter a valid email address",
+      "invalid_email": "Adjon meg egy érvényes e-mail-címet",
       "password_mismatch": "A jelszómezők nem egyeznek",
       "rate_limit_exceeded": "Túl sok kérést adott fel egy rövid időszak alatt. Várjon néhány percet, és próbálja újra.",
-      "unspecified": "Something went wrong. Please try again.",
+      "unspecified": "Valami hiba történt. Próbálja újra.",
       "username_all_numeric": "A felhasználónév nem állhat pusztán számokból",
       "username_banned": "A felhasználónevet a kiszolgáló-házirend tiltja",
-      "username_invalid": "Username can only contain lowercase letters, numbers, and the characters . _ - + / =",
-      "username_invalid_chars": "Username contains invalid characters. Use lowercase letters, numbers, and the characters . _ - + / =",
+      "username_invalid": "A felhasználónév csak kisbetűket, számokat és a következő karaktereket tartalmazhatja: . _ - + / =",
+      "username_invalid_chars": "A felhasználónév érvénytelen karaktereket tartalmaz. Csak kisbetűket, számokat és a következő karaktereket használja: . _ - + / =",
       "username_not_allowed": "A felhasználónevet nem engedélyezi a kiszolgáló-házirend",
       "username_taken": "A felhasználónév már foglalt",
       "username_too_long": "A felhasználónév túl hosszú",
@@ -164,14 +164,14 @@
       "current_password_label": "Jelenlegi jelszó",
       "failure": {
         "description": {
-          "account_locked": "A fiókja zárolva van, és jelenleg nem állítható helyre. Ha erre nem számított, akkor lépjen kapcsolatba a kiszolgáló rendszergazdájával.",
+          "account_locked": "A fiókja zárolva van, és jelenleg nem állítható helyre. Ha erre nem számított, akkor lépjen kapcsolatba a fiókszolgáltatójával.",
           "expired_recovery_ticket": "A helyreállítási hivatkozás lejárt. Kezdje az elejéről a fiókja helyreállítási folyamatát.",
           "invalid_new_password": "A választott új jelszó érvénytelen; lehet, hogy nem felel meg a beállított biztonsági házirendnek.",
           "no_current_password": "Nincs jelenlegi jelszava.",
           "no_such_recovery_ticket": "A helyreállítási hivatkozás érvénytelen. Ha a helyreállítási üzenetből másolta ki a hivatkozást, akkor ellenőrizze, hogy a teljes hivatkozást átmásolta-e.",
           "password_changes_disabled": "A jelszómódosítás le van tiltva.",
           "recovery_ticket_already_used": "A helyreállítási hivatkozás már fel lett használva. Többé nem használható.",
-          "unspecified": "Ez ideiglenes probléma is lehet, így próbálja újra később. Ha a probléma továbbra is fennáll, lépjen kapcsolatba a kiszolgáló rendszergazdájával.",
+          "unspecified": "Ez ideiglenes probléma is lehet, így próbálja újra később. Ha a probléma továbbra is fennáll, lépjen kapcsolatba a fiókszolgáltatójával.",
           "wrong_password": "A jelenlegi jelszóként megadott jelszó helytelen. Próbálja újra."
         },
         "title": "A jelszó frissítése sikertelen"
@@ -247,18 +247,18 @@
     },
     "register": {
       "call_to_login": "Már van fiókja?",
-      "captcha_incomplete": "Please complete the CAPTCHA challenge before continuing",
-      "captcha_loading": "The CAPTCHA is still loading, please wait a moment",
+      "captcha_incomplete": "Oldja meg a CAPTCHA-feladatot, mielőtt továbbmenne",
+      "captcha_loading": "A CAPTCHA még betöltődik, várjon egy pillanatot",
       "continue_with_email": "Folytatás az e-mail-címével",
       "continue_with_password": "Folytatás jelszóval",
-      "continue_with_provider": "Continue with {{provider}}",
+      "continue_with_provider": "Folytatás ezzel: {{provider}}",
       "or_separator": "Vagy",
       "password_confirm_label": "Jelszó megerősítése",
       "password_label": "Jelszó",
-      "terms_of_service": "I agree to the <a>Terms and Conditions</a>",
-      "username_available": "This username is available",
-      "username_check_failed": "We couldn't check if this username is available",
-      "username_checking": "Checking availability…"
+      "terms_of_service": "Elfogadom a <a>Felhasználási feltételeket</a>",
+      "username_available": "Ez a felhasználónév elérhető",
+      "username_check_failed": "Nem tudtuk ellenőrizni, hogy ez a felhasználónév szabad-e",
+      "username_checking": "Elérhetőség ellenőrzése…"
     },
     "reset_cross_signing": {
       "cancelled": {
@@ -273,7 +273,7 @@
         "positive_1": "A fiókja részletei, a névjegyei, a beállításai és a csevegéslistája meg lesz tartva"
       },
       "failure": {
-        "description": "Ez ideiglenes probléma is lehet, így próbálja újra később. Ha a probléma továbbra is fennáll, lépjen kapcsolatba a kiszolgáló rendszergazdájával.",
+        "description": "Ez ideiglenes probléma is lehet, így próbálja újra később. Ha a probléma továbbra is fennáll, lépjen kapcsolatba a fiókszolgáltatójával.",
         "heading": "A kriptográfiai személyazonossága alaphelyzetbe állításának engedélyezése sikertelen"
       },
       "finish_reset": "Alaphelyzetbe állítás befejezése",
