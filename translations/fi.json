@@ -136,7 +136,7 @@
       "rate_limit_exceeded": "Olet tehnyt liian monta pyyntöä lyhyessä ajassa. Odota muutama minuutti ja yritä uudelleen.",
       "username_all_numeric": "Käyttäjänimi ei voi koostua pelkästään numeroista",
       "username_banned": "Palvelinkäytäntö kieltää käyttäjänimen",
-      "username_invalid_chars": "Käyttäjänimi sisältää virheellisiä merkkejä. Käytä vain pieniä kirjaimia, numeroita, viivoja ja alaviivoja.",
+      "username_invalid_chars": "Käyttäjänimi sisältää virheellisiä merkkejä. Käytä vain pieniä kirjaimia, numeroita ja merkkejä . _ - + / =",
       "username_not_allowed": "Palvelinkäytäntö ei salli käyttäjänimeä",
       "username_taken": "Tämä käyttäjänimi on jo käytössä.",
       "username_too_long": "Käyttäjänimi on liian pitkä",
@@ -146,6 +146,7 @@
       "this_will_setup": "Tämä yhdistää <span>%(client_name)s</span> -sovelluksen <span>%(server_name)s</span> tiliisi."
     },
     "loading": "Ladataan…",
+    "loading_failed": "Sivun lataamisessa tapahtui virhe. Yritä ladata se uudelleen.",
     "login": {
       "call_to_register": "Eikö sinulla ole vielä tiliä?",
       "continue_with_provider": "Jatka %(provider)s -tilillä",
@@ -171,8 +172,16 @@
     "not_you": "Etkö ole %(username)s?",
     "or_separator": "Tai",
     "policy_violation": {
-      "description": "Tämä voi johtua pyynnön laatineesta sovelluksesta, kirjautuneesta käyttäjästä tai itse pyynnöstä.",
-      "heading": "Valtuutuspyyntö hylättiin tämän palvelun noudattaman käytännön mukaisesti",
+      "admin_scope_not_allowed": {
+        "description": "Tämä sovellus vaatii ylläpitäjän oikeudet. Kirjaudu sisään ylläpitäjän tilillä jatkaaksesi.",
+        "heading": "Ylläpitäjän oikeudet vaaditaan"
+      },
+      "client_not_allowed": {
+        "description": "Tätä sovellusta ei sallita kirjautua tähän palveluun.",
+        "heading": "Sovellus ei sallittu"
+      },
+      "description": "Palvelun käytäntö on hylännyt pyyntösi. Tämä voi johtua sovelluksesta, tilistäsi tai itse pyynnöstä.",
+      "heading": "Pyyntö hylätty",
       "logged_as": "Kirjautuneena käyttäjälle <span class=\"font-semibold\">%(username)s</span>",
       "too_many_sessions": {
         "description": "Tilisi on jo kirjautunut sisään enimmäismäärälle laitteita. Jatka <span class=\"font-semibold\">poistamalla %(num_devices_to_remove)s olemassa olevista laitteistasi</span> ja kirjautumalla uudelleen sisään.",
@@ -216,6 +225,7 @@
       "create_account": {
         "heading": "Luo tili"
       },
+      "javascript_required": "Tilin luomiseen tarvitaan JavaScript. Ota JavaScript käyttöön selaimessasi ja lataa sivu uudelleen.",
       "terms_of_service": "Hyväksyn <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Käyttöehdot</a>"
     },
     "registration_token": {
