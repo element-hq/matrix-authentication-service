@@ -63,7 +63,7 @@ pub struct Params {
 
     /// An extra parameter to track whether the POST request was re-made by us
     /// to the same URL to escape Same-Site cookies restrictions
-    #[serde(default)]
+    #[serde(default, with = "string_bool")]
     did_mas_repost_to_itself: bool,
 
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -78,6 +78,28 @@ pub struct Params {
 
     #[serde(flatten)]
     extra_callback_parameters: Option<serde_json::Value>,
+}
+
+/// Templates render booleans as `True`/`False`, so this flag goes through the
+/// `form_post` template as an explicit string and is parsed case-insensitively.
+mod string_bool {
+    use serde::{Deserialize, Deserializer, Serializer, de::Error};
+
+    #[expect(clippy::trivially_copy_pass_by_ref, reason = "serde's signature")]
+    pub fn serialize<S: Serializer>(value: &bool, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(if *value { "true" } else { "false" })
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<bool, D::Error> {
+        let value = String::deserialize(deserializer)?;
+        if value.eq_ignore_ascii_case("true") {
+            Ok(true)
+        } else if value.eq_ignore_ascii_case("false") {
+            Ok(false)
+        } else {
+            Err(D::Error::custom("expected `true` or `false`"))
+        }
+    }
 }
 
 impl Params {
