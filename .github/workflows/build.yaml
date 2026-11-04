@@ -150,10 +150,10 @@ jobs:
       - name: Build the binary
         # Argument order matters: `cargo zigbuild auditable` does not work
         env:
-          # zig's linker (used by `cargo-zigbuild`) drops the whole symbol table
-          # when asked to strip only debug info (Cargo's release default).
-          # This makes sure we don't make the linker strip the binary, and instead
-          # strip the binary ourselves (below).
+          # Zig's linker (used by `cargo-zigbuild`) drops the whole symbol table even
+          # when asked to only strip debug info (Cargo's release default). Since it
+          # doesn't behave correctly, we prevent the linker from stripping the binary,
+          # and instead strip the binary ourselves (below).
           CARGO_PROFILE_RELEASE_STRIP: none
         run: |
           cargo auditable zigbuild \
@@ -164,10 +164,13 @@ jobs:
             -p mas-cli
 
       - name: Strip debug info from the binary
-        # Drops only the debug sections and keeps `.symtab`, which is what Cargo's
-        # default strip should produce, but zig's linker doesn't.
-        # This is useful as Sentry's backtrace feature will report back the
-        # symbol names in the stack traces of errors.
+        # Drops only the debug sections and keeps `.symtab` (mimics what a correctly
+        # behaving Cargo release preset strip stage should produce). The `.symtab` is
+        # useful as Sentry's backtrace feature will report back the symbol names in the
+        # stack traces of errors.
+        #
+        # XXX: This is only necessary because of `cargo-zigbuild` not behaving
+        # correctly and this is our workaround (see details in step above).
         run: |
           "$(rustc --print sysroot)/lib/rustlib/$(rustc --print host-tuple)/bin/llvm-objcopy" \
             --strip-debug \
