@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -498,4 +499,121 @@ pub(crate) async fn handler(
         url_builder.redirect(&mas_router::UpstreamOAuth2Link::new(link.id)),
     )
         .into_response())
+}
+
+#[cfg(test)]
+mod tests {
+    use hyper::{Request, StatusCode};
+    use mas_data_model::{
+        Clock, UlidExt, UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
+        UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderPkceMode,
+        UpstreamOAuthProviderResponseMode, UpstreamOAuthProviderTokenAuthMethod,
+    };
+    use mas_iana::jose::JsonWebSignatureAlg;
+    use mas_router::Route;
+    use mas_storage::{RepositoryAccess, upstream_oauth2::UpstreamOAuthProviderParams};
+    use oauth2_types::scope::{OPENID, Scope};
+    use sqlx::PgPool;
+    use ulid::Ulid;
+
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
+
+    /// Extract the `name`/`value` pairs of the hidden inputs in a rendered
+    /// `form_post.html`
+    fn hidden_inputs(body: &str) -> Vec<(String, String)> {
+        body.split("<input type=\"hidden\" name=\"")
+            .skip(1)
+            .map(|rest| {
+                let (name, rest) = rest.split_once('"').unwrap();
+                let value = rest
+                    .split_once("value=\"")
+                    .unwrap()
+                    .1
+                    .split_once('"')
+                    .unwrap()
+                    .0;
+                (name.to_owned(), value.to_owned())
+            })
+            .collect()
+    }
+
+    /// Upstream `form_post` callbacks are usually cross-site, so the session
+    /// cookie is missing and MAS renders a form re-posting the parameters to
+    /// itself with `did_mas_repost_to_itself` set
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_form_post_repost(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+        let provider = repo
+            .upstream_oauth_provider()
+            .upsert(
+                &state.clock,
+                Ulid::from_datetime_with_rng(state.clock.now(), &mut rng),
+                UpstreamOAuthProviderParams {
+                    issuer: Some("https://upstream.example.com/".to_owned()),
+                    human_name: Some("Upstream Ltd.".to_owned()),
+                    brand_name: None,
+                    scope: Scope::from_iter([OPENID]),
+                    token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
+                    token_endpoint_signing_alg: None,
+                    id_token_signed_response_alg: JsonWebSignatureAlg::Rs256,
+                    client_id: "client".to_owned(),
+                    encrypted_client_secret: None,
+                    claims_imports: UpstreamOAuthProviderClaimsImports::default(),
+                    authorization_endpoint_override: None,
+                    token_endpoint_override: None,
+                    userinfo_endpoint_override: None,
+                    fetch_userinfo: false,
+                    userinfo_signed_response_alg: None,
+                    jwks_uri_override: None,
+                    discovery_mode: UpstreamOAuthProviderDiscoveryMode::Disabled,
+                    pkce_mode: UpstreamOAuthProviderPkceMode::Disabled,
+                    response_mode: Some(UpstreamOAuthProviderResponseMode::FormPost),
+                    additional_authorization_parameters: Vec::new(),
+                    forward_login_hint: false,
+                    ui_order: 0,
+                    on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    registration_token_required: false,
+                },
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let callback = mas_router::UpstreamOAuth2Callback::new(provider.id)
+            .path_and_query()
+            .into_owned();
+
+        // First POST: no cookie, so we get the self-posting form
+        let request = Request::post(callback.as_str()).form(serde_json::json!({
+            "state": "some-state",
+            "code": "some-code",
+        }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let params = hidden_inputs(response.body());
+        assert_eq!(
+            params,
+            [
+                ("code".to_owned(), "some-code".to_owned()),
+                ("did_mas_repost_to_itself".to_owned(), "true".to_owned()),
+                ("state".to_owned(), "some-state".to_owned()),
+            ]
+        );
+
+        // Re-posting the form must be recognised as our own repost: instead of
+        // rendering the form again, the handler moves on and looks up the
+        // session cookie, which is still missing here
+        let request = Request::post(callback.as_str()).form(&params);
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::BAD_REQUEST);
+        assert!(
+            response.body().contains("Missing session cookie"),
+            "{}",
+            response.body()
+        );
+    }
 }
