@@ -525,23 +525,36 @@ pub(crate) async fn handler(
 
 #[cfg(test)]
 mod tests {
-    use hyper::{Request, StatusCode};
+    use std::collections::HashMap;
+
+    use chrono::Duration;
+    use hyper::{Request, StatusCode, header::LOCATION};
     use mas_data_model::{
         Clock, UlidExt, UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
         UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderPkceMode,
         UpstreamOAuthProviderResponseMode, UpstreamOAuthProviderTokenAuthMethod,
     };
     use mas_iana::jose::JsonWebSignatureAlg;
+    use mas_jose::{
+        claims,
+        constraints::Constrainable,
+        jwt::{JsonWebSignatureHeader, Jwt},
+    };
     use mas_router::Route;
     use mas_storage::{RepositoryAccess, upstream_oauth2::UpstreamOAuthProviderParams};
     use oauth2_types::scope::{OPENID, Scope};
     use sqlx::PgPool;
     use ulid::Ulid;
+    use url::Url;
+    use wiremock::{
+        Mock, MockServer, ResponseTemplate,
+        matchers::{method, path},
+    };
 
-    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
+    use crate::test_utils::{CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup};
 
-    /// Extract the `name`/`value` pairs of the hidden inputs in a rendered
-    /// `form_post.html`
+    /// Extract the `name`/`value` pairs of the hidden inputs of a rendered
+    /// form, like a browser would submit them
     fn hidden_inputs(body: &str) -> Vec<(String, String)> {
         body.split("<input type=\"hidden\" name=\"")
             .skip(1)
@@ -559,13 +572,28 @@ mod tests {
             .collect()
     }
 
-    /// Upstream `form_post` callbacks are usually cross-site, so the session
-    /// cookie is missing and MAS renders a form re-posting the parameters to
-    /// itself with `did_mas_repost_to_itself` set
+    fn location(response: &hyper::Response<String>) -> Url {
+        let location = response
+            .headers()
+            .get(LOCATION)
+            .expect("missing Location header")
+            .to_str()
+            .unwrap();
+        Url::options()
+            .base_url(Some(&"https://example.com/".parse().unwrap()))
+            .parse(location)
+            .unwrap()
+    }
+
+    /// Sign in through an upstream provider using the `form_post` response
+    /// mode. The provider's POST to the callback is cross-site, so the browser
+    /// doesn't send the session cookie with it.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_form_post_repost(pool: PgPool) {
+    async fn test_form_post_sign_in(pool: PgPool) {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
+        let upstream = MockServer::start().await;
+        let issuer = format!("{}/", upstream.uri());
 
         let mut rng = state.rng();
         let mut repo = state.repository().await.unwrap();
@@ -575,7 +603,7 @@ mod tests {
                 &state.clock,
                 Ulid::from_datetime_with_rng(state.clock.now(), &mut rng),
                 UpstreamOAuthProviderParams {
-                    issuer: Some("https://upstream.example.com/".to_owned()),
+                    issuer: Some(issuer.clone()),
                     human_name: Some("Upstream Ltd.".to_owned()),
                     brand_name: None,
                     scope: Scope::from_iter([OPENID]),
@@ -585,12 +613,14 @@ mod tests {
                     client_id: "client".to_owned(),
                     encrypted_client_secret: None,
                     claims_imports: UpstreamOAuthProviderClaimsImports::default(),
-                    authorization_endpoint_override: None,
-                    token_endpoint_override: None,
+                    authorization_endpoint_override: Some(
+                        format!("{issuer}authorize").parse().unwrap(),
+                    ),
+                    token_endpoint_override: Some(format!("{issuer}token").parse().unwrap()),
                     userinfo_endpoint_override: None,
                     fetch_userinfo: false,
                     userinfo_signed_response_alg: None,
-                    jwks_uri_override: None,
+                    jwks_uri_override: Some(format!("{issuer}jwks").parse().unwrap()),
                     discovery_mode: UpstreamOAuthProviderDiscoveryMode::Disabled,
                     pkce_mode: UpstreamOAuthProviderPkceMode::Disabled,
                     response_mode: Some(UpstreamOAuthProviderResponseMode::FormPost),
@@ -605,37 +635,84 @@ mod tests {
             .unwrap();
         repo.save().await.unwrap();
 
+        let cookies = CookieHelper::new();
+
+        // Start the authorization flow, which redirects to the provider
+        let authorize = mas_router::UpstreamOAuth2Authorize::new(provider.id)
+            .path_and_query()
+            .into_owned();
+        let request = cookies.with_cookies(Request::get(authorize.as_str()).empty());
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::TEMPORARY_REDIRECT);
+        let query: HashMap<String, String> =
+            location(&response).query_pairs().into_owned().collect();
+        let upstream_state = query["state"].clone();
+        let nonce = query["nonce"].clone();
+
+        // The provider issues an ID token for that flow
+        let alg = JsonWebSignatureAlg::Rs256;
+        let key = state.key_store.signing_key_for_algorithm(&alg).unwrap();
+        let signer = key.params().signing_key_for_alg(&alg).unwrap();
+        let header = JsonWebSignatureHeader::new(alg).with_kid(key.kid().unwrap());
+        let now = state.clock.now();
+        let mut id_token_claims = HashMap::new();
+        claims::ISS
+            .insert(&mut id_token_claims, issuer.clone())
+            .unwrap();
+        claims::SUB
+            .insert(&mut id_token_claims, "upstream-subject")
+            .unwrap();
+        claims::AUD
+            .insert(&mut id_token_claims, "client".to_owned())
+            .unwrap();
+        claims::IAT.insert(&mut id_token_claims, now).unwrap();
+        claims::EXP
+            .insert(&mut id_token_claims, now + Duration::hours(1))
+            .unwrap();
+        claims::NONCE.insert(&mut id_token_claims, nonce).unwrap();
+        let id_token = Jwt::sign_with_rng(&mut rng, header, id_token_claims, &signer).unwrap();
+
+        Mock::given(method("POST"))
+            .and(path("/token"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "access_token": "upstream-access-token",
+                "token_type": "Bearer",
+                "expires_in": 3600,
+                "id_token": id_token.as_str(),
+            })))
+            .expect(1)
+            .mount(&upstream)
+            .await;
+        Mock::given(method("GET"))
+            .and(path("/jwks"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(state.key_store.public_jwks()))
+            .mount(&upstream)
+            .await;
+
+        // The provider makes the browser POST to the callback. This is a
+        // cross-site request, so it comes without cookies
         let callback = mas_router::UpstreamOAuth2Callback::new(provider.id)
             .path_and_query()
             .into_owned();
-
-        // First POST: no cookie, so we get the self-posting form
         let request = Request::post(callback.as_str()).form(serde_json::json!({
-            "state": "some-state",
-            "code": "some-code",
+            "state": upstream_state,
+            "code": "upstream-code",
         }));
         let response = state.request(request).await;
         response.assert_status(StatusCode::OK);
-        let params = hidden_inputs(response.body());
-        assert_eq!(
-            params,
-            [
-                ("code".to_owned(), "some-code".to_owned()),
-                ("did_mas_repost_to_itself".to_owned(), "true".to_owned()),
-                ("state".to_owned(), "some-state".to_owned()),
-            ]
-        );
 
-        // Re-posting the form must be recognised as our own repost: instead of
-        // rendering the form again, the handler moves on and looks up the
-        // session cookie, which is still missing here
-        let request = Request::post(callback.as_str()).form(&params);
+        // MAS answers with a form which the browser submits back to the
+        // callback, this time same-site and with cookies
+        let request = cookies
+            .with_cookies(Request::post(callback.as_str()).form(hidden_inputs(response.body())));
         let response = state.request(request).await;
-        response.assert_status(StatusCode::BAD_REQUEST);
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
         assert!(
-            response.body().contains("Missing session cookie"),
+            location(&response).path().starts_with("/upstream/link/"),
             "{}",
-            response.body()
+            location(&response)
         );
     }
 }
