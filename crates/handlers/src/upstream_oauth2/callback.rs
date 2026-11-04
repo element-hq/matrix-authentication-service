@@ -80,8 +80,14 @@ pub struct Params {
     extra_callback_parameters: Option<serde_json::Value>,
 }
 
-/// Templates render booleans as `True`/`False`, so this flag goes through the
-/// `form_post` template as an explicit string and is parsed case-insensitively.
+/// A serializer/deserializer which represents booleans as `"true"`/`"false"`
+/// strings, parsed case-insensitively.
+///
+/// The template engine renders booleans as `True`/`False`, so if we just used
+/// the default serializer for booleans, the `form_post.html` template would
+/// render the `did_mas_repost_to_itself` in `Params` as
+/// `<input type="hidden" name="did_mas_repost_to_itself" value="True" />`
+/// which would then not get deserialized back as booleans correctly.
 mod string_bool {
     use serde::{Deserialize, Deserializer, Serializer, de::Error};
 
