@@ -165,7 +165,7 @@ jobs:
 
       - name: Strip debug info from the binary
         # Drops only the debug sections and keeps `.symtab`, which is what Cargo's
-        # default strip produces with the gcc linker in the Dockerfile.
+        # default strip should produce, but zig's linker doesn't.
         # This is useful as Sentry's backtrace feature will report back the
         # symbol names in the stack traces of errors.
         run: |
