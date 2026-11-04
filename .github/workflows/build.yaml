@@ -153,7 +153,7 @@ jobs:
           # zig's linker (used by `cargo-zigbuild`) drops the whole symbol table
           # when asked to strip only debug info (Cargo's release default).
           # This makes sure we don't make the linker strip the binary, and instead
-          # strip the binary ourselves.
+          # strip the binary ourselves (below).
           CARGO_PROFILE_RELEASE_STRIP: none
         run: |
           cargo auditable zigbuild \
