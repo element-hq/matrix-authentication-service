@@ -127,6 +127,7 @@ jobs:
         run: |
           rustup toolchain install
           rustup target add ${{ matrix.target }}
+          # This is needed for `llvm-objcopy` used below
           rustup component add llvm-tools
 
       - name: Setup sccache
@@ -149,9 +150,10 @@ jobs:
       - name: Build the binary
         # Argument order matters: `cargo zigbuild auditable` does not work
         env:
-          # zig's linker drops the whole symbol table when asked to strip only
-          # debug info (Cargo's release default). The Sentry SDK needs the
-          # symbol table to name frames and to mark `mas_*` frames as in-app.
+          # zig's linker (used by `cargo-zigbuild`) drops the whole symbol table
+          # when asked to strip only debug info (Cargo's release default).
+          # This makes sure we don't make the linker strip the binary, and instead
+          # strip the binary ourselves.
           CARGO_PROFILE_RELEASE_STRIP: none
         run: |
           cargo auditable zigbuild \
@@ -163,7 +165,9 @@ jobs:
 
       - name: Strip debug info from the binary
         # Drops only the debug sections and keeps `.symtab`, which is what Cargo's
-        # default strip produces with the gcc linker in the Dockerfile
+        # default strip produces with the gcc linker in the Dockerfile.
+        # This is useful as Sentry's backtrace feature will report back the
+        # symbol names in the stack traces of errors.
         run: |
           "$(rustc --print sysroot)/lib/rustlib/$(rustc --print host-tuple)/bin/llvm-objcopy" \
             --strip-debug \
