@@ -283,7 +283,6 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
             db.query.text,
         ),
         skip_all,
-        err,
     )]
     async fn list(
         &mut self,
@@ -439,7 +438,6 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
             db.query.text,
         ),
         skip_all,
-        err,
     )]
     async fn count(&mut self, filter: AppSessionFilter<'_>) -> Result<usize, Self::Error> {
         let (compat_filter, oauth2_filter) = split_filter(filter);
@@ -491,7 +489,6 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
             %device_id = device.as_str()
         ),
         skip_all,
-        err,
     )]
     async fn finish_sessions_to_replace_device(
         &mut self,

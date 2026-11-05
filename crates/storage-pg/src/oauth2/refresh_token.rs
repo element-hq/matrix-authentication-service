@@ -90,7 +90,6 @@ impl OAuth2RefreshTokenRepository for PgOAuth2RefreshTokenRepository<'_> {
             db.query.text,
             refresh_token.id = %id,
         ),
-        err,
     )]
     async fn lookup(&mut self, id: Ulid) -> Result<Option<RefreshToken>, Self::Error> {
         let res = sqlx::query_as!(
@@ -125,7 +124,6 @@ impl OAuth2RefreshTokenRepository for PgOAuth2RefreshTokenRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn find_by_token(
         &mut self,
@@ -166,7 +164,6 @@ impl OAuth2RefreshTokenRepository for PgOAuth2RefreshTokenRepository<'_> {
             client.id = %session.client_id,
             refresh_token.id,
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -216,7 +213,6 @@ impl OAuth2RefreshTokenRepository for PgOAuth2RefreshTokenRepository<'_> {
             %refresh_token.id,
             session.id = %refresh_token.session_id,
         ),
-        err,
     )]
     async fn consume(
         &mut self,
@@ -255,7 +251,6 @@ impl OAuth2RefreshTokenRepository for PgOAuth2RefreshTokenRepository<'_> {
             %refresh_token.id,
             session.id = %refresh_token.session_id,
         ),
-        err,
     )]
     async fn revoke(
         &mut self,
@@ -289,7 +284,6 @@ impl OAuth2RefreshTokenRepository for PgOAuth2RefreshTokenRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn cleanup_revoked(
         &mut self,
@@ -343,7 +337,6 @@ impl OAuth2RefreshTokenRepository for PgOAuth2RefreshTokenRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn cleanup_consumed(
         &mut self,

@@ -38,7 +38,7 @@ use opentelemetry_semantic_conventions::trace::{
     USER_AGENT_ORIGINAL,
 };
 use rustls::ServerConfig;
-use sentry_tower::{NewSentryLayer, SentryHttpLayer};
+use sentry_tower::SentryHttpLayer;
 use tower::Layer;
 use tower_http::services::{ServeDir, fs::ServeFileSystemResponseBody};
 use tracing::Span;
@@ -393,16 +393,18 @@ pub fn build_router(
             state.clone(),
             client_ip_middleware,
         ))
+        // Careful about the order here: the `LogContextLayer` creates and binds
+        // a `sentry::Hub` which holds the per-request Sentry "context", then
+        // `SentryHttpLayer` populates it with information from the HTTP
+        // request. In short, `LogContextLayer` must be *around* `SentryHttpLayer`.
+        // Reading the Sentry documentation, you would assume you need to add
+        // the layers the other way around, but that is because the
+        // documentation uses `tower::ServiceBuilder`, which applies layers in
+        // the opposite order compared to `axum`.
+        .layer(SentryHttpLayer::new().enable_transaction())
         .layer(mas_context::LogContextLayer::new(|req| {
             otel_http_method(req).into()
         }))
-        // Careful about the order here: the `NewSentryLayer` must be around the
-        // `SentryHttpLayer`. axum makes new layers wrap the existing ones,
-        // which is the other way around compared to `tower::ServiceBuilder`.
-        // So even if the Sentry docs has an example that does
-        // 'NewSentryHttpLayer then SentryHttpLayer', we must do the opposite.
-        .layer(SentryHttpLayer::new().enable_transaction())
-        .layer(NewSentryLayer::new_from_top())
         .with_state(state)
 }
 

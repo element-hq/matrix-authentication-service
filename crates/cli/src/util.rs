@@ -484,16 +484,22 @@ pub async fn load_policy_factory_dynamic_data_continuously(
                 _ = interval.tick() => {}
             }
 
-            if let Err(err) =
-                load_policy_factory_dynamic_data(&policy_factory, &*repository_factory).await
-            {
-                tracing::error!(
-                    error = ?err,
-                    "Failed to load policy factory dynamic data"
-                );
+            let Ok(()) = LogContext::new("policy-data-reload")
+                .run(async || {
+                    load_policy_factory_dynamic_data(&policy_factory, &*repository_factory)
+                        .await
+                        .inspect_err(|err| {
+                            tracing::error!(
+                                error = ?err,
+                                "Failed to load policy factory dynamic data"
+                            );
+                        })
+                })
+                .await
+            else {
                 cancellation_token.cancel();
                 return;
-            }
+            };
         }
     });
 

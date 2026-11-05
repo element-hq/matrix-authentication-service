@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -143,7 +144,8 @@ pub struct SentryConfig {
 
     /// Sample rate for tracing transactions
     ///
-    /// Defaults to `0.0` if not set.
+    /// Tracing is disabled if not set. A rate of `0.0` still records the
+    /// transactions of requests with a sampled `sentry-trace` header.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[schemars(example = 0.5, range(min = 0.0, max = 1.0))]
     pub traces_sample_rate: Option<f32>,

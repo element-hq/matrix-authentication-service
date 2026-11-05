@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -171,7 +172,10 @@ impl OAuth2SessionMutations {
         let state = ctx.state();
         let homeserver = state.homeserver_connection();
         let user_id = NodeType::User.extract_ulid(&input.user_id)?;
-        let scope: Scope = input.scope.parse().context("Invalid scope")?;
+        let scope: Scope = input
+            .scope
+            .parse()
+            .map_err(|_| async_graphql::Error::new("Invalid scope"))?;
         let permanent = input.permanent.unwrap_or(false);
         let requester = ctx.requester();
 
@@ -197,7 +201,7 @@ impl OAuth2SessionMutations {
             .user()
             .lookup(user_id)
             .await?
-            .context("User not found")?;
+            .ok_or_else(|| async_graphql::Error::new("User not found"))?;
 
         // Generate a new access token
         let access_token = TokenType::AccessToken.generate(&mut rng);

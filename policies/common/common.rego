@@ -1,3 +1,4 @@
+# Copyright 2025, 2026 Element Creations Ltd.
 # Copyright 2025 New Vector Ltd.
 #
 # SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -46,13 +47,13 @@ matches_prefixes(str, prefixes) if {
 normalize_cidr(ip) := ip if contains(ip, "/")
 
 # If it's an IPv4, append /32
-normalize_cidr(ip) := sprintf("%s/32", [ip]) if {
+normalize_cidr(ip) := $"{ip}/32" if {
 	not contains(ip, "/")
 	not contains(ip, ":")
 }
 
 # If it's an IPv6, append /128
-normalize_cidr(ip) := sprintf("%s/128", [ip]) if {
+normalize_cidr(ip) := $"{ip}/128" if {
 	not contains(ip, "/")
 	contains(ip, ":")
 }
@@ -62,7 +63,7 @@ ip_in_list(ip, list) if {
 	net.cidr_contains(normalize_cidr(cidr), ip)
 }
 
-mxid(username, server_name) := sprintf("@%s:%s", [username, server_name])
+mxid(username, server_name) := $"@{username}:{server_name}"
 
 requester_banned(requester, policy) if ip_in_list(requester.ip_address, policy.banned_ips)
 

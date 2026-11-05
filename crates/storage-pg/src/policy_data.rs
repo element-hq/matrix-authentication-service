@@ -58,7 +58,6 @@ impl PolicyDataRepository for PgPolicyDataRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn get(&mut self) -> Result<Option<PolicyData>, Self::Error> {
         let row = sqlx::query_as!(
@@ -87,7 +86,6 @@ impl PolicyDataRepository for PgPolicyDataRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn set(
         &mut self,
@@ -124,7 +122,6 @@ impl PolicyDataRepository for PgPolicyDataRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn prune(&mut self, keep: usize) -> Result<usize, Self::Error> {
         let res = sqlx::query!(

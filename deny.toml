@@ -82,18 +82,22 @@ skip = [
     { name = "foldhash", version = "0.1.5" },
     { name = "gimli", version = "0.32.3" },
     { name = "object", version = "0.37.3" },
-    # async-graphql, zxcvbn's derive_builder and sea-query still use an old
-    # darling; aide-macros 0.16 moved on to 0.23
+    # zxcvbn's derive_builder and sea-query still use darling 0.20
     { name = "darling", version = "0.20.11" },
     { name = "darling_core", version = "0.20.11" },
     { name = "darling_macro", version = "0.20.11" },
+    # aide-macros and async-graphql are still on darling 0.23, while serde_with
+    # and vergen-gitcl (via bon) moved to 0.24
+    { name = "darling", version = "0.23.0" },
+    { name = "darling_core", version = "0.23.0" },
+    { name = "darling_macro", version = "0.23.0" },
 
     # We moved to rand 0.10, but cookie and sqlx still pull the 0.8 generation
     { name = "rand", version = "0.8.6" },
     { name = "rand_chacha", version = "0.3.1" },
     { name = "rand_core", version = "0.6.4" },
     { name = "getrandom", version = "0.2.16" },
-    # ...and opentelemetry_sdk and sentry pull the 0.9 generation
+    # ...and opentelemetry_sdk pulls the 0.9 generation
     { name = "rand", version = "0.9.4" },
     { name = "rand_chacha", version = "0.9.0" },
     { name = "rand_core", version = "0.9.3" },

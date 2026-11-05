@@ -350,7 +350,7 @@ exports[`Account home page > renders the page 1`] = `
             type="button"
           >
             <div
-              class="_indicator-icon_147l5_17"
+              class="_indicator-icon_j097f_17"
               style="--cpd-icon-button-size: 100%;"
             >
               <svg
@@ -434,7 +434,7 @@ exports[`Account home page > renders the page 1`] = `
               type="button"
             >
               <div
-                class="_indicator-icon_147l5_17"
+                class="_indicator-icon_j097f_17"
                 style="--cpd-icon-button-size: 100%;"
               >
                 <svg
@@ -555,7 +555,7 @@ exports[`Account home page > renders the page 1`] = `
               type="button"
             >
               <div
-                class="_indicator-icon_147l5_17"
+                class="_indicator-icon_j097f_17"
                 style="--cpd-icon-button-size: 100%;"
               >
                 <svg
@@ -650,7 +650,7 @@ exports[`Account home page > renders the page 1`] = `
               type="button"
             >
               <div
-                class="_indicator-icon_147l5_17"
+                class="_indicator-icon_j097f_17"
                 style="--cpd-icon-button-size: 100%;"
               >
                 <svg
@@ -740,7 +740,7 @@ exports[`Account home page > renders the page 1`] = `
     >
       <nav>
         <a
-          class="_link_k9ljz_8"
+          class="_link_13esb_8"
           data-kind="primary"
           data-size="md"
           href="https://matrix.org/policy"
@@ -756,7 +756,7 @@ exports[`Account home page > renders the page 1`] = `
           •
         </div>
         <a
-          class="_link_k9ljz_8"
+          class="_link_13esb_8"
           data-kind="primary"
           data-size="md"
           href="https://matrix.org/tos"

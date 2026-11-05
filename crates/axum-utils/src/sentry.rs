@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -15,14 +16,11 @@ pub struct SentryEventID(Uuid);
 
 impl SentryEventID {
     /// Create a new Sentry event ID header for the last event on the hub.
+    ///
+    /// Returns `None` if the last event was not sent, e.g. because it was
+    /// sampled out, in which case Sentry records a nil ID.
     pub fn for_last_event() -> Option<Self> {
-        sentry::last_event_id().map(Self)
-    }
-}
-
-impl From<Uuid> for SentryEventID {
-    fn from(uuid: Uuid) -> Self {
-        Self(uuid)
+        sentry::last_event_id().filter(|id| !id.is_nil()).map(Self)
     }
 }
 
@@ -42,12 +40,14 @@ impl IntoResponseParts for SentryEventID {
 #[macro_export]
 macro_rules! record_error {
     ($error:expr, !) => {{
-        tracing::warn!(message = &$error as &dyn std::error::Error);
+        let error = &$error;
+        tracing::warn!(error = error as &dyn std::error::Error, "{error}");
         Option::<$crate::sentry::SentryEventID>::None
     }};
 
     ($error:expr) => {{
-        tracing::error!(message = &$error as &dyn std::error::Error);
+        let error = &$error;
+        tracing::error!(error = error as &dyn std::error::Error, "{error}");
 
         // With the `sentry-tracing` integration, Sentry should have
         // captured an error, so let's extract the last event ID from the

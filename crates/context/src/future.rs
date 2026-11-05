@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -5,7 +6,7 @@
 
 use std::{
     pin::Pin,
-    sync::atomic::Ordering,
+    sync::{Arc, atomic::Ordering},
     task::{Context, Poll},
 };
 
@@ -19,23 +20,25 @@ pub type LogContextFuture<F> = TaskLocalFuture<crate::LogContext, PollRecordingF
 impl LogContext {
     /// Wrap a future with the given log context
     pub(crate) fn wrap_future<F: Future>(&self, future: F) -> LogContextFuture<F> {
-        let future = PollRecordingFuture::new(future);
+        let future = PollRecordingFuture::new(future, self.inner.hub.clone());
         crate::CURRENT_LOG_CONTEXT.scope(self.clone(), future)
     }
 }
 
 pin_project_lite::pin_project! {
     /// A future which records the elapsed time and the number of polls in the
-    /// active log context
+    /// active log context, and polls the inner future with the Sentry hub of
+    /// the log context
     pub struct PollRecordingFuture<F> {
         #[pin]
         inner: F,
+        hub: Arc<sentry::Hub>,
     }
 }
 
 impl<F: Future> PollRecordingFuture<F> {
-    pub(crate) fn new(inner: F) -> Self {
-        Self { inner }
+    pub(crate) fn new(inner: F, hub: Arc<sentry::Hub>) -> Self {
+        Self { inner, hub }
     }
 }
 
@@ -45,7 +48,7 @@ impl<F: Future> Future for PollRecordingFuture<F> {
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let start = Instant::now();
         let this = self.project();
-        let result = this.inner.poll(cx);
+        let result = sentry::Hub::run(this.hub.clone(), || this.inner.poll(cx));
 
         // Record the number of polls and the time we spent polling the future
         let elapsed = start.elapsed().as_nanos().try_into().unwrap_or(u64::MAX);

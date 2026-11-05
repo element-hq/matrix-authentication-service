@@ -200,7 +200,6 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
             db.query.text,
             session.id = %id,
         ),
-        err,
     )]
     async fn lookup(&mut self, id: Ulid) -> Result<Option<PersonalSession>, Self::Error> {
         let res = sqlx::query_as!(
@@ -239,7 +238,6 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
             session.id,
             session.scope = %scope,
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -307,7 +305,6 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
             %session.id,
             %session.scope,
         ),
-        err,
     )]
     async fn revoke(
         &mut self,
@@ -364,7 +361,6 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn revoke_bulk(
         &mut self,
@@ -431,7 +427,6 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn list(
         &mut self,
@@ -538,7 +533,6 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn count(&mut self, filter: PersonalSessionFilter<'_>) -> Result<usize, Self::Error> {
         let (sql, arguments) = Query::select()
@@ -580,7 +574,6 @@ impl PersonalSessionRepository for PgPersonalSessionRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn record_batch_activity(
         &mut self,

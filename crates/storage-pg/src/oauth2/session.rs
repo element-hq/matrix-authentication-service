@@ -227,7 +227,6 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
             db.query.text,
             session.id = %id,
         ),
-        err,
     )]
     async fn lookup(&mut self, id: Ulid) -> Result<Option<Session>, Self::Error> {
         let res = sqlx::query_as!(
@@ -268,7 +267,6 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
             session.id,
             session.scope = %scope,
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -329,7 +327,6 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn finish_bulk(
         &mut self,
@@ -360,7 +357,6 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
             %session.scope,
             client.id = %session.client_id,
         ),
-        err,
     )]
     async fn finish(
         &mut self,
@@ -394,7 +390,6 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn list(
         &mut self,
@@ -470,7 +465,6 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn count(&mut self, filter: OAuth2SessionFilter<'_>) -> Result<usize, Self::Error> {
         let (sql, arguments) = Query::select()
@@ -495,7 +489,6 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn record_batch_activity(
         &mut self,
@@ -549,7 +542,6 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
             client.id = %session.client_id,
             session.user_agent = user_agent,
         ),
-        err,
     )]
     async fn record_user_agent(
         &mut self,
@@ -583,7 +575,6 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
             client.id = %session.client_id,
             session.human_name = ?human_name,
         ),
-        err,
     )]
     async fn set_human_name(
         &mut self,
@@ -619,7 +610,6 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
             until = %until,
             limit = limit,
         ),
-        err,
     )]
     async fn cleanup_finished(
         &mut self,
@@ -678,7 +668,6 @@ impl OAuth2SessionRepository for PgOAuth2SessionRepository<'_> {
             threshold = %threshold,
             limit = limit,
         ),
-        err,
     )]
     async fn cleanup_inactive_ips(
         &mut self,

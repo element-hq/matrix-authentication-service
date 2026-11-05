@@ -325,7 +325,7 @@ async fn migration_table_exists(conn: &mut PgConnection) -> Result<bool, sqlx::E
 /// # Errors
 ///
 /// This function returns an error if the migration fails.
-#[::tracing::instrument(name = "db.migrate", skip_all, err)]
+#[::tracing::instrument(name = "db.migrate", skip_all)]
 pub async fn migrate(conn: &mut PgConnection) -> Result<(), MigrateError> {
     // Get the database name and use it to derive an advisory lock key. This
     // is the same lock key used by SQLx default migrator, so that it works even

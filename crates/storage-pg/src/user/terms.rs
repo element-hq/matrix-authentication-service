@@ -42,7 +42,6 @@ impl UserTermsRepository for PgUserTermsRepository<'_> {
             user_terms.id,
             %user_terms.url = terms_url.as_str(),
         ),
-        err,
     )]
     async fn accept_terms(
         &mut self,

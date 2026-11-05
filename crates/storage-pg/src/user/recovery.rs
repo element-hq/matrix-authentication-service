@@ -88,7 +88,6 @@ impl UserRecoveryRepository for PgUserRecoveryRepository<'_> {
             db.query.text,
             user_recovery_session.id = %id,
         ),
-        err,
     )]
     async fn lookup_session(
         &mut self,
@@ -187,7 +186,6 @@ impl UserRecoveryRepository for PgUserRecoveryRepository<'_> {
             db.query.text,
             user_recovery_ticket.id = ticket,
         ),
-        err,
     )]
     async fn find_ticket(
         &mut self,
@@ -290,7 +288,6 @@ impl UserRecoveryRepository for PgUserRecoveryRepository<'_> {
             %user_recovery_session.id,
             %user_recovery_session.email,
         ),
-        err,
     )]
     async fn consume_ticket(
         &mut self,
@@ -337,7 +334,6 @@ impl UserRecoveryRepository for PgUserRecoveryRepository<'_> {
             until = %until,
             limit = limit,
         ),
-        err,
     )]
     async fn cleanup(
         &mut self,

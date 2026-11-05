@@ -201,7 +201,6 @@ impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
             db.query.text,
             upstream_oauth_provider.id = %id,
         ),
-        err,
     )]
     async fn lookup(
         &mut self,
@@ -249,7 +248,6 @@ impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
             %upstream_oauth_provider.client_id,
             upstream_oauth_authorization_session.id,
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -312,7 +310,6 @@ impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
             %upstream_oauth_authorization_session.id,
             %upstream_oauth_link.id,
         ),
-        err,
     )]
     async fn complete_with_link(
         &mut self,
@@ -371,7 +368,6 @@ impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
             db.query.text,
             %upstream_oauth_authorization_session.id,
         ),
-        err,
     )]
     async fn consume(
         &mut self,
@@ -408,7 +404,6 @@ impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn list(
         &mut self,
@@ -543,7 +538,6 @@ impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn count(
         &mut self,
@@ -580,7 +574,6 @@ impl UpstreamOAuthSessionRepository for PgUpstreamOAuthSessionRepository<'_> {
             until = %until,
             limit = limit,
         ),
-        err,
     )]
     async fn cleanup_orphaned(
         &mut self,

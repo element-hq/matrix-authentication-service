@@ -267,7 +267,6 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             db.query.text,
             upstream_oauth_provider.id = %id,
         ),
-        err,
     )]
     async fn lookup(&mut self, id: Ulid) -> Result<Option<UpstreamOAuthProvider>, Self::Error> {
         let res = sqlx::query_as!(
@@ -326,7 +325,6 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             upstream_oauth_provider.issuer = params.issuer,
             upstream_oauth_provider.client_id = %params.client_id,
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -450,7 +448,6 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             db.query.text,
             upstream_oauth_provider.id = %id,
         ),
-        err,
     )]
     async fn delete_by_id(&mut self, id: Ulid) -> Result<(), Self::Error> {
         // Delete the authorization sessions first, as they have a foreign key
@@ -518,7 +515,6 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             upstream_oauth_provider.issuer = params.issuer,
             upstream_oauth_provider.client_id = %params.client_id,
         ),
-        err,
     )]
     async fn upsert(
         &mut self,
@@ -673,7 +669,6 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
             db.query.text,
             %upstream_oauth_provider.id,
         ),
-        err,
     )]
     async fn disable(
         &mut self,
@@ -707,7 +702,6 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn list(
         &mut self,
@@ -923,7 +917,6 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn count(
         &mut self,
@@ -957,7 +950,6 @@ impl UpstreamOAuthProviderRepository for PgUpstreamOAuthProviderRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn all_enabled(&mut self) -> Result<Vec<UpstreamOAuthProvider>, Self::Error> {
         let res = sqlx::query_as!(

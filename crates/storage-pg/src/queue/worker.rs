@@ -43,7 +43,6 @@ impl QueueWorkerRepository for PgQueueWorkerRepository<'_> {
             worker.id,
             db.query.text,
         ),
-        err,
     )]
     async fn register(
         &mut self,
@@ -76,7 +75,6 @@ impl QueueWorkerRepository for PgQueueWorkerRepository<'_> {
             %worker.id,
             db.query.text,
         ),
-        err,
     )]
     async fn heartbeat(&mut self, clock: &dyn Clock, worker: &Worker) -> Result<(), Self::Error> {
         let now = clock.now();
@@ -106,7 +104,6 @@ impl QueueWorkerRepository for PgQueueWorkerRepository<'_> {
             %worker.id,
             db.query.text,
         ),
-        err,
     )]
     async fn shutdown(&mut self, clock: &dyn Clock, worker: &Worker) -> Result<(), Self::Error> {
         let now = clock.now();
@@ -158,7 +155,6 @@ impl QueueWorkerRepository for PgQueueWorkerRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn shutdown_dead_workers(
         &mut self,
@@ -192,7 +188,6 @@ impl QueueWorkerRepository for PgQueueWorkerRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn remove_leader_lease_if_expired(
         &mut self,
@@ -220,7 +215,6 @@ impl QueueWorkerRepository for PgQueueWorkerRepository<'_> {
             %worker.id,
             db.query.text,
         ),
-        err,
     )]
     async fn try_get_leader_lease(
         &mut self,

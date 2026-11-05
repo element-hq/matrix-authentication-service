@@ -329,7 +329,6 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
             db.query.text,
             oauth2_client.id = %id,
         ),
-        err,
     )]
     async fn lookup(&mut self, id: Ulid) -> Result<Option<Client>, Self::Error> {
         let res = sqlx::query_as!(
@@ -378,7 +377,6 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn load_batch(
         &mut self,
@@ -437,7 +435,6 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
             client.id,
             client.name = client_name
         ),
-        err,
     )]
     async fn add_or_reuse(
         &mut self,
@@ -580,7 +577,6 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
             db.query.text,
             client.id = %client_id,
         ),
-        err,
     )]
     async fn upsert_static(
         &mut self,
@@ -693,7 +689,6 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn all_static(&mut self) -> Result<Vec<Client>, Self::Error> {
         let res = sqlx::query_as!(
@@ -741,7 +736,6 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
             db.query.text,
             client.id = %id,
         ),
-        err,
     )]
     async fn delete_by_id(&mut self, id: Ulid) -> Result<(), Self::Error> {
         // Delete the authorization grants
@@ -894,7 +888,6 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn list(
         &mut self,
@@ -1002,7 +995,6 @@ impl OAuth2ClientRepository for PgOAuth2ClientRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn count(&mut self, filter: OAuth2ClientFilter<'_>) -> Result<usize, Self::Error> {
         let (sql, arguments) = Query::select()

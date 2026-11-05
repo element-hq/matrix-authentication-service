@@ -13,7 +13,7 @@ use chrono::{DateTime, Utc};
 use figment::providers::{Format, Yaml};
 use mas_config::{PasswordAlgorithm, PasswordHashingScheme};
 use rand::RngExt;
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 use sqlx::postgres::PgConnectOptions;
 use tracing::warn;
 use url::Url;
@@ -30,7 +30,7 @@ pub use self::oidc::OidcProvider;
 pub struct Config {
     pub database: DatabaseSection,
 
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_default")]
     pub password_config: PasswordSection,
 
     pub bcrypt_rounds: Option<u32>,
@@ -65,22 +65,22 @@ pub struct Config {
 
     pub registration_shared_secret: Option<String>,
 
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_default")]
     pub login_via_existing_session: EnableableSection,
 
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_default")]
     pub cas_config: EnableableSection,
 
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_default")]
     pub saml2_config: EnableableSection,
 
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_default")]
     pub jwt_config: EnableableSection,
 
     #[serde(default)]
     pub oidc_config: Option<OidcProvider>,
 
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_default")]
     pub oidc_providers: Vec<OidcProvider>,
 
     pub server_name: String,
@@ -332,11 +332,55 @@ fn default_true() -> bool {
     true
 }
 
+/// Deserialize a value, treating an explicit `null` as the default value.
+///
+/// An empty section in the YAML file (e.g. `cas_config:` with nothing under
+/// it) is parsed as `null`, which Synapse treats the same as the section
+/// being absent.
+fn null_as_default<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Default + Deserialize<'de>,
+{
+    Ok(Option::<T>::deserialize(deserializer)?.unwrap_or_default())
+}
+
 #[cfg(test)]
 mod test {
+    use figment::{
+        Figment,
+        providers::{Format, Yaml},
+    };
     use sqlx::postgres::PgConnectOptions;
 
-    use super::{DatabaseArgsSuboption, DatabaseSection};
+    use super::{Config, DatabaseArgsSuboption, DatabaseSection};
+
+    #[test]
+    fn test_empty_sections() {
+        let config: Config = Figment::from(Yaml::string(
+            r"
+server_name: example.com
+database:
+  name: psycopg2
+password_config:
+login_via_existing_session:
+cas_config:
+saml2_config:
+jwt_config:
+oidc_providers:
+",
+        ))
+        .extract()
+        .expect("config with empty sections should load");
+
+        assert!(config.password_config.enabled);
+        assert!(config.password_config.localdb_enabled);
+        assert!(!config.login_via_existing_session.enabled);
+        assert!(!config.cas_config.enabled);
+        assert!(!config.saml2_config.enabled);
+        assert!(!config.jwt_config.enabled);
+        assert!(config.oidc_providers.is_empty());
+    }
 
     #[test]
     fn test_to_sqlx_postgres() {

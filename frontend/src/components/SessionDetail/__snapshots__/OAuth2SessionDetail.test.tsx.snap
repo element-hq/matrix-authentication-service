@@ -36,12 +36,12 @@ exports[`<OAuth2SessionDetail> > renders a finished session details 1`] = `
           data-kind="primary"
           data-state="closed"
           role="button"
-          style="--cpd-icon-button-size: var(--cpd-space-6x);"
+          style="--cpd-icon-button-size: var(--cpd-space-6x); margin-inline: var(--cpd-space-2x);"
           tabindex="0"
           type="button"
         >
           <div
-            class="_indicator-icon_147l5_17"
+            class="_indicator-icon_j097f_17"
             style="--cpd-icon-button-size: 100%;"
           >
             <svg
@@ -346,12 +346,12 @@ exports[`<OAuth2SessionDetail> > renders session details 1`] = `
           data-kind="primary"
           data-state="closed"
           role="button"
-          style="--cpd-icon-button-size: var(--cpd-space-6x);"
+          style="--cpd-icon-button-size: var(--cpd-space-6x); margin-inline: var(--cpd-space-2x);"
           tabindex="0"
           type="button"
         >
           <div
-            class="_indicator-icon_147l5_17"
+            class="_indicator-icon_j097f_17"
             style="--cpd-icon-button-size: 100%;"
           >
             <svg

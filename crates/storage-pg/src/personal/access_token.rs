@@ -64,7 +64,6 @@ impl PersonalAccessTokenRepository for PgPersonalAccessTokenRepository<'_> {
             db.query.text,
             personal_access_token.id = %id,
         ),
-        err,
     )]
     async fn lookup(&mut self, id: Ulid) -> Result<Option<PersonalAccessToken>, Self::Error> {
         let res = sqlx::query_as!(
@@ -97,7 +96,6 @@ impl PersonalAccessTokenRepository for PgPersonalAccessTokenRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn find_by_token(
         &mut self,
@@ -135,7 +133,6 @@ impl PersonalAccessTokenRepository for PgPersonalAccessTokenRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn find_active_for_session(
         &mut self,
@@ -174,7 +171,6 @@ impl PersonalAccessTokenRepository for PgPersonalAccessTokenRepository<'_> {
             personal_access_token.id,
             %session.id,
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -225,7 +221,6 @@ impl PersonalAccessTokenRepository for PgPersonalAccessTokenRepository<'_> {
             %access_token.id,
             personal_session.id = %access_token.session_id,
         ),
-        err,
     )]
     async fn revoke(
         &mut self,

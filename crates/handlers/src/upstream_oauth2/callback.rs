@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -62,7 +63,7 @@ pub struct Params {
 
     /// An extra parameter to track whether the POST request was re-made by us
     /// to the same URL to escape Same-Site cookies restrictions
-    #[serde(default)]
+    #[serde(default, with = "string_bool")]
     did_mas_repost_to_itself: bool,
 
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -77,6 +78,34 @@ pub struct Params {
 
     #[serde(flatten)]
     extra_callback_parameters: Option<serde_json::Value>,
+}
+
+/// A serializer/deserializer which represents booleans as `"true"`/`"false"`
+/// strings, parsed case-insensitively.
+///
+/// The template engine renders booleans as `True`/`False`, so if we just used
+/// the default serializer for booleans, the `form_post.html` template would
+/// render the `did_mas_repost_to_itself` in `Params` as
+/// `<input type="hidden" name="did_mas_repost_to_itself" value="True" />`
+/// which would then not get deserialized back as booleans correctly.
+mod string_bool {
+    use serde::{Deserialize, Deserializer, Serializer, de::Error};
+
+    #[expect(clippy::trivially_copy_pass_by_ref, reason = "serde's signature")]
+    pub fn serialize<S: Serializer>(value: &bool, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(if *value { "true" } else { "false" })
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<bool, D::Error> {
+        let value = String::deserialize(deserializer)?;
+        if value.eq_ignore_ascii_case("true") {
+            Ok(true)
+        } else if value.eq_ignore_ascii_case("false") {
+            Ok(false)
+        } else {
+            Err(D::Error::custom("expected `true` or `false`"))
+        }
+    }
 }
 
 impl Params {
@@ -498,4 +527,198 @@ pub(crate) async fn handler(
         url_builder.redirect(&mas_router::UpstreamOAuth2Link::new(link.id)),
     )
         .into_response())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use chrono::Duration;
+    use hyper::{Request, StatusCode, header::LOCATION};
+    use mas_data_model::{
+        Clock, UlidExt, UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
+        UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderPkceMode,
+        UpstreamOAuthProviderResponseMode, UpstreamOAuthProviderTokenAuthMethod,
+    };
+    use mas_iana::jose::JsonWebSignatureAlg;
+    use mas_jose::{
+        claims,
+        constraints::Constrainable,
+        jwt::{JsonWebSignatureHeader, Jwt},
+    };
+    use mas_router::Route;
+    use mas_storage::{RepositoryAccess, upstream_oauth2::UpstreamOAuthProviderParams};
+    use oauth2_types::scope::{OPENID, Scope};
+    use sqlx::PgPool;
+    use ulid::Ulid;
+    use url::Url;
+    use wiremock::{
+        Mock, MockServer, ResponseTemplate,
+        matchers::{method, path},
+    };
+
+    use crate::test_utils::{CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup};
+
+    /// Extract the `name`/`value` pairs of the hidden inputs of a rendered
+    /// form, like a browser would submit them
+    fn hidden_inputs(body: &str) -> Vec<(String, String)> {
+        body.split("<input type=\"hidden\" name=\"")
+            .skip(1)
+            .map(|rest| {
+                let (name, rest) = rest.split_once('"').unwrap();
+                let value = rest
+                    .split_once("value=\"")
+                    .unwrap()
+                    .1
+                    .split_once('"')
+                    .unwrap()
+                    .0;
+                (name.to_owned(), value.to_owned())
+            })
+            .collect()
+    }
+
+    fn location(response: &hyper::Response<String>) -> Url {
+        let location = response
+            .headers()
+            .get(LOCATION)
+            .expect("missing Location header")
+            .to_str()
+            .unwrap();
+        Url::options()
+            .base_url(Some(&"https://example.com/".parse().unwrap()))
+            .parse(location)
+            .unwrap()
+    }
+
+    /// Sign in through an upstream provider using the `form_post` response
+    /// mode. The provider's POST to the callback is cross-site, so the browser
+    /// doesn't send the session cookie with it.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_form_post_sign_in(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let upstream = MockServer::start().await;
+        let issuer = format!("{}/", upstream.uri());
+
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+        let provider = repo
+            .upstream_oauth_provider()
+            .upsert(
+                &state.clock,
+                Ulid::from_datetime_with_rng(state.clock.now(), &mut rng),
+                UpstreamOAuthProviderParams {
+                    issuer: Some(issuer.clone()),
+                    human_name: Some("Upstream Ltd.".to_owned()),
+                    brand_name: None,
+                    scope: Scope::from_iter([OPENID]),
+                    token_endpoint_auth_method: UpstreamOAuthProviderTokenAuthMethod::None,
+                    token_endpoint_signing_alg: None,
+                    id_token_signed_response_alg: JsonWebSignatureAlg::Rs256,
+                    client_id: "client".to_owned(),
+                    encrypted_client_secret: None,
+                    claims_imports: UpstreamOAuthProviderClaimsImports::default(),
+                    authorization_endpoint_override: Some(
+                        format!("{issuer}authorize").parse().unwrap(),
+                    ),
+                    token_endpoint_override: Some(format!("{issuer}token").parse().unwrap()),
+                    userinfo_endpoint_override: None,
+                    fetch_userinfo: false,
+                    userinfo_signed_response_alg: None,
+                    jwks_uri_override: Some(format!("{issuer}jwks").parse().unwrap()),
+                    discovery_mode: UpstreamOAuthProviderDiscoveryMode::Disabled,
+                    pkce_mode: UpstreamOAuthProviderPkceMode::Disabled,
+                    response_mode: Some(UpstreamOAuthProviderResponseMode::FormPost),
+                    additional_authorization_parameters: Vec::new(),
+                    forward_login_hint: false,
+                    ui_order: 0,
+                    on_backchannel_logout: UpstreamOAuthProviderOnBackchannelLogout::DoNothing,
+                    registration_token_required: false,
+                },
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let cookies = CookieHelper::new();
+
+        // Start the authorization flow, which redirects to the provider
+        let authorize = mas_router::UpstreamOAuth2Authorize::new(provider.id)
+            .path_and_query()
+            .into_owned();
+        let request = cookies.with_cookies(Request::get(authorize.as_str()).empty());
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::TEMPORARY_REDIRECT);
+        let query: HashMap<String, String> =
+            location(&response).query_pairs().into_owned().collect();
+        let upstream_state = query["state"].clone();
+        let nonce = query["nonce"].clone();
+
+        // The provider issues an ID token for that flow
+        let alg = JsonWebSignatureAlg::Rs256;
+        let key = state.key_store.signing_key_for_algorithm(&alg).unwrap();
+        let signer = key.params().signing_key_for_alg(&alg).unwrap();
+        let header = JsonWebSignatureHeader::new(alg).with_kid(key.kid().unwrap());
+        let now = state.clock.now();
+        let mut id_token_claims = HashMap::new();
+        claims::ISS
+            .insert(&mut id_token_claims, issuer.clone())
+            .unwrap();
+        claims::SUB
+            .insert(&mut id_token_claims, "upstream-subject")
+            .unwrap();
+        claims::AUD
+            .insert(&mut id_token_claims, "client".to_owned())
+            .unwrap();
+        claims::IAT.insert(&mut id_token_claims, now).unwrap();
+        claims::EXP
+            .insert(&mut id_token_claims, now + Duration::hours(1))
+            .unwrap();
+        claims::NONCE.insert(&mut id_token_claims, nonce).unwrap();
+        let id_token = Jwt::sign_with_rng(&mut rng, header, id_token_claims, &signer).unwrap();
+
+        Mock::given(method("POST"))
+            .and(path("/token"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "access_token": "upstream-access-token",
+                "token_type": "Bearer",
+                "expires_in": 3600,
+                "id_token": id_token.as_str(),
+            })))
+            .expect(1)
+            .mount(&upstream)
+            .await;
+        Mock::given(method("GET"))
+            .and(path("/jwks"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(state.key_store.public_jwks()))
+            .mount(&upstream)
+            .await;
+
+        // The provider makes the browser POST to the callback. This is a
+        // cross-site request, so it comes without cookies
+        let callback = mas_router::UpstreamOAuth2Callback::new(provider.id)
+            .path_and_query()
+            .into_owned();
+        let request = Request::post(callback.as_str()).form(serde_json::json!({
+            "state": upstream_state,
+            "code": "upstream-code",
+        }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+
+        // MAS answers with a form which the browser submits back to the
+        // callback, this time same-site and with cookies
+        let request = cookies
+            .with_cookies(Request::post(callback.as_str()).form(hidden_inputs(response.body())));
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+        assert!(
+            location(&response).path().starts_with("/upstream/link/"),
+            "{}",
+            location(&response)
+        );
+    }
 }

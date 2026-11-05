@@ -61,7 +61,6 @@ impl CompatAccessTokenRepository for PgCompatAccessTokenRepository<'_> {
             db.query.text,
             compat_session.id = %id,
         ),
-        err,
     )]
     async fn lookup(&mut self, id: Ulid) -> Result<Option<CompatAccessToken>, Self::Error> {
         let res = sqlx::query_as!(
@@ -94,7 +93,6 @@ impl CompatAccessTokenRepository for PgCompatAccessTokenRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn find_by_token(
         &mut self,
@@ -133,7 +131,6 @@ impl CompatAccessTokenRepository for PgCompatAccessTokenRepository<'_> {
             %compat_session.id,
             user.id = %compat_session.user_id,
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -182,7 +179,6 @@ impl CompatAccessTokenRepository for PgCompatAccessTokenRepository<'_> {
             %compat_access_token.id,
             compat_session.id = %compat_access_token.session_id,
         ),
-        err,
     )]
     async fn expire(
         &mut self,

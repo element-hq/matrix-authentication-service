@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -6,7 +7,8 @@
 
 import type { Decorator, Preview } from "@storybook/react-vite";
 import { TooltipProvider } from "@vector-im/compound-web";
-import { initialize, mswLoader } from "msw-storybook-addon";
+import { setupWorker } from "msw/browser";
+import { mswLoader } from "msw-storybook-addon/csf3";
 import { useEffect, useLayoutEffect } from "react";
 import { I18nextProvider } from "react-i18next";
 import "../src/entrypoints/vendor.css";
@@ -15,16 +17,6 @@ import i18n, { setupI18n } from "../src/i18n";
 import { DummyRouter } from "../src/test-utils/router";
 import { handlers } from "../tests/mocks/handlers";
 import localazyMetadata from "./locales";
-
-initialize(
-  {
-    onUnhandledRequest: "bypass",
-    serviceWorker: {
-      url: "./mockServiceWorker.js",
-    },
-  },
-  handlers,
-);
 
 setupI18n();
 
@@ -96,7 +88,20 @@ const withTooltipProvider: Decorator = (Story, _context) => {
 };
 
 const preview: Preview = {
-  loaders: [mswLoader],
+  loaders: [
+    mswLoader(async () => {
+      const worker = setupWorker(...handlers);
+
+      await worker.start({
+        onUnhandledRequest: "bypass",
+        serviceWorker: {
+          url: "./mockServiceWorker.js",
+        },
+      });
+
+      return worker;
+    }),
+  ],
   parameters: {
     controls: {
       matchers: {

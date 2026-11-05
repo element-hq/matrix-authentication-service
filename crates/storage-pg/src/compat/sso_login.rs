@@ -156,7 +156,6 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
             db.query.text,
             compat_sso_login.id = %id,
         ),
-        err,
     )]
     async fn lookup(&mut self, id: Ulid) -> Result<Option<CompatSsoLogin>, Self::Error> {
         let res = sqlx::query_as!(
@@ -192,7 +191,6 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
             db.query.text,
             %compat_session.id,
         ),
-        err,
     )]
     async fn find_for_session(
         &mut self,
@@ -230,7 +228,6 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
         fields(
             db.query.text,
         ),
-        err,
     )]
     async fn find_by_token(
         &mut self,
@@ -270,7 +267,6 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
             compat_sso_login.id,
             compat_sso_login.redirect_uri = %redirect_uri,
         ),
-        err,
     )]
     async fn add(
         &mut self,
@@ -316,7 +312,6 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
             %browser_session.id,
             user.id = %browser_session.user.id,
         ),
-        err,
     )]
     async fn fulfill(
         &mut self,
@@ -360,7 +355,6 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
             %compat_session.id,
             compat_session.device.id = compat_session.device.as_ref().map(mas_data_model::Device::as_str),
         ),
-        err,
     )]
     async fn exchange(
         &mut self,
@@ -401,7 +395,6 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
         fields(
             db.query.text,
         ),
-        err
     )]
     async fn list(
         &mut self,
@@ -465,7 +458,6 @@ impl CompatSsoLoginRepository for PgCompatSsoLoginRepository<'_> {
         fields(
             db.query.text,
         ),
-        err
     )]
     async fn count(&mut self, filter: CompatSsoLoginFilter<'_>) -> Result<usize, Self::Error> {
         let (sql, arguments) = Query::select()

@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -6,17 +7,13 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use std::{io::IsTerminal, process::ExitCode, sync::Arc};
+use std::{io::IsTerminal, process::ExitCode};
 
 use anyhow::Context;
 use clap::Parser;
 use mas_config::{ConfigurationSectionExt, TelemetryConfig};
-use sentry_tracing::EventFilter;
 use tracing_subscriber::{
-    EnvFilter, Layer, Registry,
-    filter::{LevelFilter, filter_fn},
-    layer::SubscriberExt,
-    util::SubscriberInitExt,
+    EnvFilter, Layer, Registry, filter::LevelFilter, layer::SubscriberExt, util::SubscriberInitExt,
 };
 
 mod app_state;
@@ -29,32 +26,6 @@ mod util;
 
 /// The application version, as reported by `git describe` at build time
 static VERSION: &str = env!("VERGEN_GIT_DESCRIBE");
-
-#[derive(Debug)]
-struct SentryTransportFactory {
-    client: reqwest::Client,
-}
-
-impl SentryTransportFactory {
-    fn new() -> Self {
-        Self {
-            client: mas_http::reqwest_client(),
-        }
-    }
-}
-
-impl sentry::TransportFactory for SentryTransportFactory {
-    fn create_transport_with_options(
-        &self,
-        options: sentry::TransportOptions,
-    ) -> Arc<dyn sentry::Transport> {
-        let transport = sentry::transports::ReqwestHttpTransportOptions::from(options)
-            .with_client(self.client.clone())
-            .build();
-
-        Arc::new(transport)
-    }
-}
 
 fn main() -> anyhow::Result<ExitCode> {
     let mut builder = tokio::runtime::Builder::new_multi_thread();
@@ -104,10 +75,6 @@ async fn try_main() -> anyhow::Result<ExitCode> {
         .or_else(|_| EnvFilter::try_new("info"))
         .context("could not setup logging filter")?;
 
-    // Suppress the following warning from the Jaeger propagator:
-    //   Invalid jaeger header format header_value=""
-    let suppress_layer = filter_fn(|metadata| metadata.name() != "JaegerPropagator.InvalidHeader");
-
     // Setup the rustls crypto provider
     rustls::crypto::aws_lc_rs::default_provider()
         .install_default()
@@ -124,31 +91,8 @@ async fn try_main() -> anyhow::Result<ExitCode> {
         .context("Failed to load telemetry config")?;
 
     // Setup Sentry
-    let sentry = sentry::init((
-        telemetry_config.sentry.dsn.as_deref(),
-        sentry::ClientOptions {
-            transport: Some(Arc::new(SentryTransportFactory::new())),
-            environment: telemetry_config.sentry.environment.clone().map(Into::into),
-            release: Some(VERSION.into()),
-            sample_rate: telemetry_config.sentry.sample_rate.unwrap_or(1.0),
-            traces_sample_rate: telemetry_config.sentry.traces_sample_rate.unwrap_or(0.0),
-            ..Default::default()
-        },
-    ));
-
-    let sentry_layer = sentry.is_enabled().then(|| {
-        sentry_tracing::layer().event_filter(|md| {
-            // By default, Sentry records all events as breadcrumbs, except errors.
-            //
-            // Because we're emitting error events for 5xx responses, we need to exclude
-            // them and also record them as breadcrumbs.
-            if md.name() == "http.server.response" {
-                EventFilter::Breadcrumb
-            } else {
-                sentry_tracing::default_event_filter(md)
-            }
-        })
-    });
+    let sentry = self::telemetry::sentry::init(&telemetry_config);
+    let sentry_layer = sentry.is_enabled().then(self::telemetry::sentry::layer);
 
     // Setup OpenTelemetry tracing and metrics
     self::telemetry::setup(&telemetry_config).context("failed to setup OpenTelemetry")?;
@@ -163,7 +107,6 @@ async fn try_main() -> anyhow::Result<ExitCode> {
         .with_filter(LevelFilter::INFO);
 
     let subscriber = Registry::default()
-        .with(suppress_layer)
         .with(sentry_layer)
         .with(telemetry_layer)
         .with(filter_layer)
@@ -181,5 +124,13 @@ async fn try_main() -> anyhow::Result<ExitCode> {
 
     // And run the command
     tracing::trace!(?opts, "Running command");
-    opts.run(&figment).await
+    let res = opts.run(&figment).await;
+
+    // The error is printed once we return from `main`, at which point the
+    // Sentry client is already shut down
+    if let Err(err) = &res {
+        sentry::capture_error::<dyn std::error::Error>(err.as_ref());
+    }
+
+    res
 }
