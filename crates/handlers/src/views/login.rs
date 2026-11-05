@@ -482,9 +482,32 @@ async fn render(
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(clock, rng);
     let providers = repo.upstream_oauth_provider().all_enabled().await?;
 
+    // Only the `password` keyword is acted on here: the GET handler already
+    // turned a usable provider hint into a redirect, and on POST a provider
+    // hint must not turn a form submission into one.
+    let password_only = match hints.login_method.as_ref() {
+        Some(LoginMethodHint::Password) => {
+            if !site_config.password_login_enabled {
+                tracing::warn!(
+                    "The io.element.login_method parameter asked for the password method, which is disabled; ignoring it"
+                );
+            }
+            site_config.password_login_enabled
+        }
+        Some(LoginMethodHint::Unknown(value)) => {
+            tracing::warn!(
+                login_method = value,
+                "Unknown io.element.login_method value, ignoring it"
+            );
+            false
+        }
+        Some(LoginMethodHint::UpstreamOAuth2(_)) | None => false,
+    };
+
     let ctx = LoginContext::default()
         .with_form_state(form_state)
-        .with_upstream_providers(providers);
+        .with_upstream_providers(providers)
+        .with_password_only(password_only);
 
     let ctx = handle_login_hint(ctx, &hints.login_hint, homeserver, site_config);
 
@@ -752,6 +775,16 @@ mod test {
         );
     }
 
+    /// Assert whether the rendered login page links to the registration page.
+    fn assert_register_link(body: &str, expected: bool) {
+        assert_eq!(
+            body.contains(&format!(r#"href="{}"#, escape_html("/register"))),
+            expected,
+            "expected the link to /register to be {}, body: {body}",
+            if expected { "present" } else { "absent" }
+        );
+    }
+
     /// A provider hint skips the login page and starts that provider's
     /// authorization flow, carrying the post-auth action over.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -780,6 +813,26 @@ mod test {
         );
     }
 
+    /// The `password` hint renders the page with only the password form:
+    /// no provider buttons, and no link to create an account.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_login_method_hint_password(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let first = add_upstream_oauth_provider(&state, "first.com", "First Ltd.", 0).await;
+        let second = add_upstream_oauth_provider(&state, "second.com", "Second Ltd.", 1).await;
+
+        let request = Request::get("/login?io.element.login_method=password").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body = response.body();
+        assert!(body.contains(r#"name="password""#), "body: {body}");
+        assert_provider_link(body, first.id, false);
+        assert_provider_link(body, second.id, false);
+        assert_register_link(body, false);
+    }
+
     /// Unusable hints leave the login page unchanged.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_unusable_login_method_hints(pool: PgPool) {
@@ -802,6 +855,7 @@ mod test {
         for hint in [
             "upstream-oauth2:01ARZ3NDEKTSV4RRFFQ69G5FAV".to_owned(),
             format!("upstream-oauth2:{}", disabled.id),
+            "not-a-login-method".to_owned(),
         ] {
             let request = Request::get(format!("/login?io.element.login_method={hint}")).empty();
             let response = state.request(request).await;
@@ -814,7 +868,35 @@ mod test {
             assert_provider_link(body, first.id, true);
             assert_provider_link(body, second.id, true);
             assert_provider_link(body, disabled.id, false);
+            assert_register_link(body, true);
         }
+    }
+
+    /// The hint never enables a method the operator turned off.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_login_method_hint_password_disabled(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_login_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let first = add_upstream_oauth_provider(&state, "first.com", "First Ltd.", 0).await;
+        let second = add_upstream_oauth_provider(&state, "second.com", "Second Ltd.", 1).await;
+
+        let request = Request::get("/login?io.element.login_method=password").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body = response.body();
+        assert!(!body.contains(r#"name="password""#), "body: {body}");
+        assert_provider_link(body, first.id, true);
+        assert_provider_link(body, second.id, true);
+        assert_register_link(body, true);
     }
 
     /// With a live session the hint is ignored and the user is sent on.
@@ -872,6 +954,40 @@ mod test {
         assert!(body.contains("Invalid credentials"), "body: {body}");
         assert_provider_link(body, first.id, true);
         assert_provider_link(body, second.id, true);
+    }
+
+    /// On a failed password attempt the `password` hint keeps the provider
+    /// buttons and the link to create an account hidden.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_login_method_hint_password_on_post(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let first = add_upstream_oauth_provider(&state, "first.com", "First Ltd.", 0).await;
+        let second = add_upstream_oauth_provider(&state, "second.com", "Second Ltd.", 1).await;
+
+        let request = Request::get("/login?io.element.login_method=password").empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        let csrf_token = extract_csrf(response.body()).to_owned();
+
+        let request =
+            Request::post("/login?io.element.login_method=password").form(serde_json::json!({
+                "csrf": csrf_token,
+                "username": "john",
+                "password": "hunter2",
+            }));
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body = response.body();
+        assert!(body.contains("Invalid credentials"), "body: {body}");
+        assert_provider_link(body, first.id, false);
+        assert_provider_link(body, second.id, false);
+        assert_register_link(body, false);
     }
 
     async fn user_with_password(
