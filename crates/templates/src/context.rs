@@ -545,6 +545,11 @@ pub struct LoginContext {
     form: FormState<LoginFormField>,
     next: Option<PostAuthContext>,
     providers: Vec<UpstreamOAuthProvider>,
+
+    /// The client asked for the password method: the upstream providers and
+    /// the link to create an account are hidden, since the request is to log
+    /// in with a password and nothing else.
+    password_only: bool,
 }
 
 impl TemplateContext for LoginContext {
@@ -562,11 +567,13 @@ impl TemplateContext for LoginContext {
                 form: FormState::default(),
                 next: None,
                 providers: Vec::new(),
+                password_only: false,
             },
             LoginContext {
                 form: FormState::default(),
                 next: None,
                 providers: Vec::new(),
+                password_only: true,
             },
             LoginContext {
                 form: FormState::default()
@@ -580,12 +587,14 @@ impl TemplateContext for LoginContext {
                     ),
                 next: None,
                 providers: Vec::new(),
+                password_only: false,
             },
             LoginContext {
                 form: FormState::default()
                     .with_error_on_field(LoginFormField::Username, FieldError::Exists),
                 next: None,
                 providers: Vec::new(),
+                password_only: false,
             },
         ])
     }
@@ -607,6 +616,16 @@ impl LoginContext {
     #[must_use]
     pub fn with_upstream_providers(self, providers: Vec<UpstreamOAuthProvider>) -> Self {
         Self { providers, ..self }
+    }
+
+    /// Hide everything but the password form, see
+    /// [`LoginContext::password_only`]
+    #[must_use]
+    pub fn with_password_only(self, password_only: bool) -> Self {
+        Self {
+            password_only,
+            ..self
+        }
     }
 
     /// Add a post authentication action to the context
