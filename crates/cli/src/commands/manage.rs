@@ -543,6 +543,7 @@ impl Options {
                             username,
                             email,
                             passwordless,
+                            ..Default::default()
                         },
                     )
                     .await?;

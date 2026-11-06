@@ -3800,6 +3800,7 @@
                         "username": null,
                         "email": null,
                         "passwordless": false,
+                        "continue_url": null,
                         "usage_limit": 10,
                         "times_used": 5,
                         "created_at": "1970-01-01T00:00:00Z",
@@ -3826,6 +3827,7 @@
                         "username": null,
                         "email": null,
                         "passwordless": false,
+                        "continue_url": null,
                         "usage_limit": null,
                         "times_used": 0,
                         "created_at": "1970-01-01T00:00:00Z",
@@ -3890,6 +3892,7 @@
                       "username": null,
                       "email": null,
                       "passwordless": false,
+                      "continue_url": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -3910,7 +3913,7 @@
             }
           },
           "400": {
-            "description": "The email or the username template is not valid, or the registration policy refuses the email or the username",
+            "description": "The continue URL, the email or the username template is not valid, or the registration policy refuses the email or the username",
             "content": {
               "application/json": {
                 "schema": {
@@ -3919,7 +3922,7 @@
                 "example": {
                   "errors": [
                     {
-                      "title": "Not allowed by the registration policy: username: username is banned"
+                      "title": "Continue URL \"app.example.com\" is not an ASCII http or https URL"
                     }
                   ]
                 }
@@ -3983,6 +3986,7 @@
                       "username": null,
                       "email": null,
                       "passwordless": false,
+                      "continue_url": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -4068,6 +4072,7 @@
                       "username": null,
                       "email": null,
                       "passwordless": false,
+                      "continue_url": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -4145,6 +4150,7 @@
                       "username": null,
                       "email": null,
                       "passwordless": false,
+                      "continue_url": null,
                       "usage_limit": null,
                       "times_used": 0,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -4239,6 +4245,7 @@
                       "username": null,
                       "email": null,
                       "passwordless": false,
+                      "continue_url": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -7390,6 +7397,13 @@
             "description": "Whether registering with this token skips the password step. The user's\nidentity is then established by verifying their email address.",
             "type": "boolean"
           },
+          "continue_url": {
+            "description": "Where the user is sent once they have registered or signed in through\nthe token's link. If null, they go where they would without a link.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "usage_limit": {
             "description": "Maximum number of times this token can be used",
             "type": [
@@ -7496,6 +7510,15 @@
             "description": "Whether registering with this token skips the password step. The user's\nidentity is then established by verifying their email address.",
             "type": "boolean",
             "default": false
+          },
+          "continue_url": {
+            "description": "Where to send the user once they have registered or signed in through\nthe token's link. It must be an http or https URL, with anything but\nvisible ASCII characters percent-encoded, and is used as given: it can\nbe a page of any client, or one that lets the user pick a client.\nWhoever holds the link can reach this URL without signing in, even\nonce the token is used, expired or revoked.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "example": "https://app.example.com/#/room/%21room%3Aexample.com"
           }
         }
       },
