@@ -422,7 +422,7 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
 
         let (sql, arguments) = with_clause.query(select).build_sqlx(PostgresQueryBuilder);
 
-        let edges: Vec<AppSessionLookup> = sqlx::query_as_with(&sql, arguments)
+        let edges: Vec<AppSessionLookup> = sqlx::query_as_with(sqlx::AssertSqlSafe(sql), arguments)
             .traced()
             .fetch_all(&mut *self.conn)
             .await?;
@@ -471,7 +471,7 @@ impl AppSessionRepository for PgAppSessionRepository<'_> {
 
         let (sql, arguments) = with_clause.query(select).build_sqlx(PostgresQueryBuilder);
 
-        let count: i64 = sqlx::query_scalar_with(&sql, arguments)
+        let count: i64 = sqlx::query_scalar_with(sqlx::AssertSqlSafe(sql), arguments)
             .traced()
             .fetch_one(&mut *self.conn)
             .await?;
