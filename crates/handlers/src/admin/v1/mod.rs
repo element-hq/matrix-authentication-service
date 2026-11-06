@@ -14,7 +14,7 @@ use aide::axum::{
 use axum::extract::{FromRef, FromRequestParts};
 use mas_data_model::{AppVersion, BoxRng, SiteConfig};
 use mas_matrix::HomeserverConnection;
-use mas_policy::PolicyFactory;
+use mas_policy::{Policy, PolicyFactory};
 use mas_router::UrlBuilder;
 
 use super::call_context::CallContext;
@@ -45,6 +45,7 @@ where
     UrlBuilder: FromRef<S>,
     BoxRng: FromRequestParts<S>,
     CallContext: FromRequestParts<S>,
+    Policy: FromRequestParts<S>,
 {
     ApiRouter::<S>::new()
         .api_route(
@@ -208,6 +209,13 @@ where
             .post_with(
                 self::user_registration_tokens::add,
                 self::user_registration_tokens::add_doc,
+            ),
+        )
+        .api_route(
+            "/user-registration-tokens/invite-emails",
+            post_with(
+                self::user_registration_tokens::invite_emails,
+                self::user_registration_tokens::invite_emails_doc,
             ),
         )
         .api_route(

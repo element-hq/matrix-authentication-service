@@ -651,3 +651,75 @@ pub struct CleanupInactiveUserSessionIpsJob;
 impl InsertableJob for CleanupInactiveUserSessionIpsJob {
     const QUEUE_NAME: &'static str = "cleanup-inactive-user-session-ips";
 }
+
+/// Send an invite email with a registration token's link
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SendInviteEmailJob {
+    registration_token_id: Ulid,
+    email: String,
+    room_name: Option<String>,
+    inviter: Option<String>,
+    inviter_name: Option<String>,
+}
+
+impl SendInviteEmailJob {
+    /// Create a new job to send an invite email
+    ///
+    /// # Parameters
+    ///
+    /// * `registration_token_id` - The registration token whose link is sent
+    /// * `email` - The address to send the email to
+    /// * `room_name` - The name of the room the token opens
+    /// * `inviter` - The Matrix ID of the user who sent the invite
+    /// * `inviter_name` - The display name of the user who sent the invite
+    #[must_use]
+    pub fn new(
+        registration_token_id: Ulid,
+        email: String,
+        room_name: Option<String>,
+        inviter: Option<String>,
+        inviter_name: Option<String>,
+    ) -> Self {
+        Self {
+            registration_token_id,
+            email,
+            room_name,
+            inviter,
+            inviter_name,
+        }
+    }
+
+    /// The registration token whose link is sent
+    #[must_use]
+    pub fn registration_token_id(&self) -> Ulid {
+        self.registration_token_id
+    }
+
+    /// The address to send the email to
+    #[must_use]
+    pub fn email(&self) -> &str {
+        &self.email
+    }
+
+    /// The name of the room the token opens
+    #[must_use]
+    pub fn room_name(&self) -> Option<&str> {
+        self.room_name.as_deref()
+    }
+
+    /// The Matrix ID of the user who sent the invite
+    #[must_use]
+    pub fn inviter(&self) -> Option<&str> {
+        self.inviter.as_deref()
+    }
+
+    /// The display name of the user who sent the invite
+    #[must_use]
+    pub fn inviter_name(&self) -> Option<&str> {
+        self.inviter_name.as_deref()
+    }
+}
+
+impl InsertableJob for SendInviteEmailJob {
+    const QUEUE_NAME: &'static str = "send-invite-email";
+}
