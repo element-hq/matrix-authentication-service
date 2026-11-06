@@ -210,6 +210,10 @@ pub(crate) struct RegisterForm {
     #[serde(default)]
     accept_terms: String,
 
+    /// Only asked for by invite links, which skip the display name step
+    #[serde(default)]
+    display_name: String,
+
     /// The invite code, carried by a hidden field when the page was opened
     /// from an invite link
     #[serde(default)]
@@ -806,6 +810,7 @@ mod tests {
                     "username": username,
                     "email": "alice@example.com",
                     "passwordless": true,
+                    "link_invite": false,
                 })
             );
             assert_eq!(
@@ -1143,6 +1148,33 @@ mod tests {
                 "providers with {token}"
             );
         }
+    }
+
+    /// A link listing the addresses it allows isn't an invite link, so its page
+    /// asks for an address
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_listed_link_asks_for_email(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let token =
+            add_registration_token(&state, "link", Some("user-{{ random }}"), None, true).await;
+        allow_emails(&state, token, &["alice@example.com"]).await;
+
+        let response = state
+            .request(Request::get("/register?token=link").empty())
+            .await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-invite"),
+            serde_json::json!({
+                "valid": true,
+                "username": "user-{{ random }}",
+                "email": null,
+                "passwordless": true,
+                "link_invite": false,
+            })
+        );
     }
 
     /// Without password registration, the page is just the provider buttons

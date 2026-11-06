@@ -16,13 +16,32 @@ Please see LICENSE files in the repository root for full details.
 {% endblock head %}
 
 {% block content %}
+  {% set guest_invite = invite and invite.valid and invite.passwordless %}
+  {% set link_invite = guest_invite and invite.link_invite %}
   <header class="page-heading">
     <div class="icon">
-      {{ icon.user_profile_solid() }}
+      {% if guest_invite %}
+        {{ icon.chat_solid() }}
+      {% else %}
+        {{ icon.user_profile_solid() }}
+      {% endif %}
     </div>
 
     <div class="header">
-      <h1 class="title">{{ _("mas.register.create_account.heading") }}</h1>
+      {% if link_invite %}
+        <h1 class="title">{{ _("mas.register.create_account.link_invite_heading") }}</h1>
+        <p class="text">{{ _("mas.register.create_account.link_invite_description") }}</p>
+      {% elif guest_invite %}
+        <h1 class="title">{{ _("mas.register.create_account.email_invite_heading") }}</h1>
+        {% if invite.email %}
+          <p class="text">
+            {{ _("mas.register.create_account.email_invite_description") }}<br>
+            <span class="text-primary">{{ invite.email }}</span>
+          </p>
+        {% endif %}
+      {% else %}
+        <h1 class="title">{{ _("mas.register.create_account.heading") }}</h1>
+      {% endif %}
     </div>
   </header>
 

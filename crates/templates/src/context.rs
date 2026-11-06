@@ -643,12 +643,17 @@ pub enum RegisterFormField {
 
     /// The registration token (a.k.a. invite code) field
     Token,
+
+    /// The display name field, only shown for invite links
+    DisplayName,
 }
 
 impl FormField for RegisterFormField {
     fn keep(&self) -> bool {
         match self {
-            Self::Username | Self::Email | Self::AcceptTerms | Self::Token => true,
+            Self::Username | Self::Email | Self::AcceptTerms | Self::Token | Self::DisplayName => {
+                true
+            }
             Self::Password | Self::PasswordConfirm => false,
         }
     }
@@ -690,6 +695,7 @@ struct InvitePinnedIdentity {
     username: Option<String>,
     email: Option<String>,
     passwordless: bool,
+    link_invite: bool,
 }
 
 /// The invite code the registration page was opened with, as the island sees it
@@ -712,6 +718,7 @@ impl InviteContext {
                 username: token.username.clone(),
                 email: token.email.clone(),
                 passwordless: token.passwordless,
+                link_invite: token.is_invite_link(),
             }),
         }
     }

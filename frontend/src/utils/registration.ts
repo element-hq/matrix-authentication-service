@@ -39,6 +39,8 @@ export const inviteSchema = v.union([
     /** The email address the code was issued for */
     email: v.nullable(v.string()),
     passwordless: v.boolean(),
+    /** A guest invite, registering with a display name and no email address */
+    link_invite: v.boolean(),
   }),
 ]);
 

@@ -242,8 +242,8 @@ pub(crate) async fn get(
         )));
     }
 
-    // Without a password or an upstream link, the user registers with a
-    // passwordless token and a verified email address
+    // Without a password or an upstream link, the user registers with an
+    // invite link, or a passwordless token and a verified email address
     if registration.password.is_none()
         && registration
             .upstream_oauth_authorization_session_id
@@ -251,7 +251,8 @@ pub(crate) async fn get(
         && !registration_token
             .as_ref()
             .is_some_and(|registration_token| {
-                registration_token.passwordless && email_authentication.is_some()
+                registration_token.is_invite_link()
+                    || (registration_token.passwordless && email_authentication.is_some())
             })
     {
         return Err(InternalError::from_anyhow(anyhow::anyhow!(
@@ -616,8 +617,35 @@ mod tests {
         assert_refused(&response, "no passwordless registration token");
     }
 
-    /// A passwordless token still needs a verified email address, even one
-    /// pinning a username
+    /// An invite link needs no verified email address
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_finish_invite_link_without_email(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let token = add_registration_token(
+            &state,
+            "invite_link",
+            Some("guest-{{ random }}"),
+            None,
+            true,
+        )
+        .await;
+        let username = format!("guest-{}", "a1".repeat(16));
+        let registration =
+            add_registration(&state, &cookies, &username, None, false, Some(&token)).await;
+
+        let response = finish(&state, &cookies, &registration).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(
+            LOCATION,
+            &mas_router::RegisterDisplayName::new(registration.id).path_and_query(),
+        );
+    }
+
+    /// A passwordless token pinning neither a username template nor an email
+    /// address still needs a verified one
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_finish_refuses_passwordless_token_without_verified_email(pool: PgPool) {
         setup();
