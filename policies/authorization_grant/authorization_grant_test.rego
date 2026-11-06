@@ -361,3 +361,68 @@ test_no_session_limiting_past_max_session_threshold if {
 	result.allow
 	result.need_to_remove_sessions == 0
 }
+
+skip_consent_data := {"client_ids": ["01ELEMENTWEB"], "max_account_age_seconds": 600}
+
+fresh_account_input := {
+	"user": {"username": "guest-abc", "created_at": "2026-10-15T10:00:00Z"},
+	"client": {"id": "01ELEMENTWEB"},
+	"session_counts": {"total": 0, "oauth2": 0, "compat": 0, "personal": 0},
+	"scope": "openid urn:matrix:client:api:* urn:matrix:client:device:ABCDEFGHIJ",
+	"grant_type": "authorization_code",
+	"requester": {},
+	"now": "2026-10-15T10:05:00Z",
+}
+
+test_skip_consent_fresh_account if {
+	authorization_grant.skip_consent with input as fresh_account_input
+		with data.skip_consent as skip_consent_data
+}
+
+test_skip_consent_without_data if {
+	not authorization_grant.skip_consent with input as fresh_account_input
+}
+
+test_skip_consent_other_client if {
+	not authorization_grant.skip_consent with input as object.union(fresh_account_input, {"client": {"id": "01ATTACKER"}})
+		with data.skip_consent as skip_consent_data
+}
+
+test_skip_consent_any_client if {
+	authorization_grant.skip_consent with input as object.union(fresh_account_input, {"client": {"id": "01ANYCLIENT"}})
+		with data.skip_consent as {"max_account_age_seconds": 600}
+}
+
+test_skip_consent_old_account if {
+	not authorization_grant.skip_consent with input as object.union(fresh_account_input, {"now": "2026-10-15T10:10:01Z"})
+		with data.skip_consent as skip_consent_data
+}
+
+test_skip_consent_existing_session if {
+	not authorization_grant.skip_consent with input as object.union(
+		fresh_account_input,
+		{"session_counts": {"total": 1, "oauth2": 1, "compat": 0, "personal": 0}},
+	)
+		with data.skip_consent as skip_consent_data
+}
+
+test_skip_consent_device_code if {
+	not authorization_grant.skip_consent with input as object.union(
+		fresh_account_input,
+		{"grant_type": "urn:ietf:params:oauth:grant-type:device_code"},
+	)
+		with data.skip_consent as skip_consent_data
+}
+
+test_skip_consent_other_scope if {
+	not authorization_grant.skip_consent with input as object.union(fresh_account_input, {"scope": "openid urn:mas:graphql:*"})
+		with data.skip_consent as skip_consent_data
+}
+
+test_skip_consent_violation if {
+	not authorization_grant.skip_consent with input as object.union(
+		fresh_account_input,
+		{"scope": "openid urn:matrix:client:api:* urn:matrix:client:device:ABCDEFGHIJ urn:matrix:client:device:KLMNOPQRST"},
+	)
+		with data.skip_consent as skip_consent_data
+}
