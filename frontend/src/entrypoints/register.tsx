@@ -13,6 +13,7 @@ import { setGraphqlEndpoint } from "../graphql";
 import { mountIsland } from "../utils/mountIsland";
 import {
   fieldStateSchema,
+  inviteSchema,
   providerSchema,
   serverErrorSchema,
 } from "../utils/registration";
@@ -77,6 +78,7 @@ const schema = v.object({
   providers: v.pipe(v.string(), v.parseJson(), v.array(providerSchema)),
   /** Href for the "already have an account?" call to action */
   loginLink: v.string(),
+  invite: v.optional(v.pipe(v.string(), v.parseJson(), inviteSchema)),
 });
 
 type Data = v.InferOutput<typeof schema>;
@@ -94,6 +96,7 @@ const RegisterPage: React.FC<{ data: Data }> = ({ data }) =>
       fields={data.form.fields}
       providers={data.providers}
       loginLink={data.loginLink}
+      invite={data.invite}
     />
   ) : (
     <ProvidersOnlyForm

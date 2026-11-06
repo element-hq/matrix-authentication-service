@@ -387,6 +387,10 @@
       "@email_not_allowed": {
         "context": "components/field.html:51:11-44"
       },
+      "field_invalid": "This field is invalid",
+      "@field_invalid": {
+        "context": "components/field.html:60:9-38"
+      },
       "field_required": "This field is required",
       "@field_required": {
         "context": "components/field.html:28:9-39"
@@ -525,7 +529,7 @@
     },
     "or_separator": "Or",
     "@or_separator": {
-      "context": "components/field.html:116:10-31",
+      "context": "components/field.html:118:10-31",
       "description": "Separator between the login methods"
     },
     "policy_violation": {
