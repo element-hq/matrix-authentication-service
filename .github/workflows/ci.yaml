@@ -203,6 +203,9 @@ jobs:
             exit 1
           fi
 
+      - name: Validate the OpenAPI documents
+        run: pipx run --spec openapi-spec-validator==0.9.0 openapi-spec-validator docs/api/spec.json docs/api/routes.json
+
   clippy:
     name: Run Clippy
     needs: [rustfmt, opa-lint]

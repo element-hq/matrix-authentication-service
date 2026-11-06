@@ -19,6 +19,13 @@ disallowed-methods = [
     { path = "ulid::Ulid::datetime", reason = "use mas_data_model::UlidExt::datetime_utc instead" },
     { path = "reqwest::Client::new", reason = "use mas_http::reqwest_client instead" },
     { path = "reqwest::RequestBuilder::send", reason = "use send_traced instead" },
+    { path = "axum::Router::route", reason = "use aide::axum::ApiRouter::api_route so the route is listed in the API documentation" },
+    { path = "axum::Router::route_service", reason = "services are not listed in the API documentation: list the route by hand in the routes-schema binary of mas-handlers" },
+    { path = "axum::Router::nest", reason = "use aide::axum::ApiRouter::nest so the routes are listed in the API documentation" },
+    { path = "axum::Router::nest_service", reason = "services are not listed in the API documentation: list the route by hand in the routes-schema binary of mas-handlers" },
+    { path = "aide::axum::ApiRouter::route", reason = "use api_route so the route is listed in the API documentation" },
+    { path = "aide::axum::ApiRouter::route_service", reason = "services are not listed in the API documentation: list the route by hand in the routes-schema binary of mas-handlers" },
+    { path = "aide::axum::ApiRouter::nest_service", reason = "services are not listed in the API documentation: list the route by hand in the routes-schema binary of mas-handlers" },
 ]
 
 disallowed-types = [

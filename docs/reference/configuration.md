@@ -100,6 +100,8 @@ The following additional resources are available, although it is recommended to 
 - `name: prometheus`: serves a Prometheus-compatible metrics endpoint on `/metrics`, if the Prometheus exporter is enabled in `telemetry.metrics.exporter`.
 - `name: health`: serves the health check endpoint on `/health`.
 
+The paths and methods served by each resource, relative to the listener's `prefix`, are described in an OpenAPI document [here](../api/routes.json).
+
 ## `database`
 
 Configure how to connect to the PostgreSQL database.
