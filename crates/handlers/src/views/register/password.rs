@@ -179,7 +179,10 @@ pub(super) async fn register(
                 state.add_error_on_field(RegisterFormField::Email, FieldError::Required);
             } else if Address::from_str(email).is_err() {
                 state.add_error_on_field(RegisterFormField::Email, FieldError::Invalid);
-            } else if pinned_email.is_some_and(|pinned| !pinned.eq_ignore_ascii_case(email)) {
+            } else if registration_token
+                .as_ref()
+                .is_some_and(|token| !token.allows_email(email))
+            {
                 state.add_error_on_field(RegisterFormField::Email, FieldError::Mismatch);
             }
         }
@@ -272,12 +275,12 @@ pub(super) async fn register(
 
         if state.is_valid() {
             // Check the rate limit if we are about to process the form. A
-            // passwordless code pinning an email address skips the
+            // passwordless code pinning or listing email addresses skips the
             // registration limit, so that people behind one address can accept
             // their invites together.
-            let skips_limit = registration_token
-                .as_ref()
-                .is_some_and(|token| token.passwordless && token.email.is_some());
+            let skips_limit = registration_token.as_ref().is_some_and(|token| {
+                token.passwordless && (token.email.is_some() || token.allowed_emails.is_some())
+            });
             if !skips_limit && let Err(e) = limiter.check_registration(requester) {
                 tracing::warn!(error = &e as &dyn std::error::Error);
                 state.add_error_on_form(FormError::RateLimitExceeded);
@@ -454,7 +457,7 @@ mod tests {
     use sqlx::PgPool;
     use ulid::Ulid;
 
-    use super::super::tests::{add_registration_token, csrf_token, mint_csrf_token};
+    use super::super::tests::{add_registration_token, allow_emails, csrf_token, mint_csrf_token};
     use crate::{
         SiteConfig,
         test_utils::{
@@ -1303,6 +1306,80 @@ mod tests {
         }
     }
 
+    /// A link listing the addresses it allows registers any of them, whatever
+    /// its case, and refuses any other before sending a code. The page never
+    /// shows the list.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_listed_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let listed = ["Alice@Example.com", "bob@example.com"];
+
+        let token =
+            add_registration_token(&state, "link", Some("user-{{ random }}"), None, true).await;
+        allow_emails(&state, token, &listed).await;
+
+        let assert_unlisted = |body: &str| {
+            let body = body.to_ascii_lowercase();
+            for email in listed {
+                assert!(
+                    !body.contains(&email.to_ascii_lowercase()),
+                    "{email} in {body}"
+                );
+            }
+        };
+
+        let response = state
+            .request(Request::get("/register?token=link").empty())
+            .await;
+        response.assert_status(StatusCode::OK);
+        assert_unlisted(response.body());
+
+        let cookies = CookieHelper::new();
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "email": "mallory@example.com",
+                "token": "link",
+                "accept_terms": "on",
+            }),
+        );
+        let response = state.request(cookies.with_cookies(request)).await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            form_state(response.body())["fields"]["email"]["errors"],
+            serde_json::json!([{"kind": "mismatch"}])
+        );
+        assert_unlisted(response.body());
+
+        let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "email": "alice@example.com",
+                "token": "link",
+                "accept_terms": "on",
+            }),
+        );
+        let response = state.request(cookies.with_cookies(request)).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo
+            .user_registration()
+            .lookup(registration_id(&response))
+            .await
+            .unwrap()
+            .unwrap();
+        let email_authentication = repo
+            .user_email()
+            .lookup_authentication(registration.email_authentication_id.unwrap())
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(email_authentication.email, "alice@example.com");
+    }
+
     /// A passwordless invite code is a way to register on its own: it works
     /// with password registration off, and with passwords disabled entirely
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -1399,6 +1476,41 @@ mod tests {
                 &state,
                 ip,
                 serde_json::json!({ "token": token, "username": format!("guest{i}") }),
+            )
+            .await;
+            response.assert_status(StatusCode::SEE_OTHER);
+        }
+    }
+
+    /// The addresses a code lists skip the registration rate limit, as a
+    /// pinned one does
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_listed_invite_skips_rate_limit(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let ip = IpAddr::from([192, 0, 2, 1]);
+
+        let limits = RateLimitingConfig::default();
+        let burst = limits.registration.burst.get();
+        assert!(burst < limits.email_authentication.per_ip.burst.get());
+
+        let emails: Vec<String> = (0..=burst)
+            .map(|i| format!("user{i}@example.com"))
+            .collect();
+        let token =
+            add_registration_token(&state, "link", Some("user-{{ random }}"), None, true).await;
+        allow_emails(
+            &state,
+            token,
+            &emails.iter().map(String::as_str).collect::<Vec<_>>(),
+        )
+        .await;
+
+        for email in emails {
+            let response = register_from(
+                &state,
+                ip,
+                serde_json::json!({ "token": "link", "email": email }),
             )
             .await;
             response.assert_status(StatusCode::SEE_OTHER);

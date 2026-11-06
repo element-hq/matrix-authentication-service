@@ -3985,7 +3985,7 @@
             }
           },
           "400": {
-            "description": "The request has no invites, an invalid token, or an address which is missing, invalid or not the token's",
+            "description": "The request has no invites, an invalid token, or an address which is missing, invalid or not one the token allows",
             "content": {
               "application/json": {
                 "schema": {
@@ -7708,7 +7708,7 @@
             ]
           },
           "email": {
-            "description": "The address to send the link to. Required if the token has no email\naddress, and otherwise the token's address, ignoring case.",
+            "description": "The address to send the link to. Required if the token has no email\naddress, and otherwise the token's address, ignoring case. For a token\nlisting the addresses it allows, one of them, ignoring case.",
             "type": [
               "string",
               "null"

@@ -435,7 +435,9 @@ mod tests {
 
     use crate::{
         test_utils::{CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup},
-        views::register::tests::{add_registration, add_registration_token, link_upstream},
+        views::register::tests::{
+            add_registration, add_registration_token, allow_emails, link_upstream,
+        },
     };
 
     async fn finish(
@@ -556,6 +558,41 @@ mod tests {
                 .await;
         let registration =
             add_registration(&state, &cookies, "bob", None, true, Some(&token)).await;
+        let response = finish(&state, &cookies, &registration).await;
+        assert_refused(&response, "fit the registration");
+    }
+
+    /// A verified address is checked against the list the token has when
+    /// finishing, whatever its case
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_finish_with_listed_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let token =
+            add_registration_token(&state, "link", Some("user-{{ random }}"), None, true).await;
+        let token = allow_emails(&state, token, &["Alice@Example.com"]).await;
+
+        let username = format!("user-{}", "a1".repeat(16));
+        let registration = add_registration(
+            &state,
+            &cookies,
+            &username,
+            Some("alice@example.com"),
+            false,
+            Some(&token),
+        )
+        .await;
+        let response = finish(&state, &cookies, &registration).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(
+            LOCATION,
+            &mas_router::RegisterDisplayName::new(registration.id).path_and_query(),
+        );
+
+        // The list replaced after the code was sent
+        allow_emails(&state, token, &["bob@example.com"]).await;
         let response = finish(&state, &cookies, &registration).await;
         assert_refused(&response, "fit the registration");
     }

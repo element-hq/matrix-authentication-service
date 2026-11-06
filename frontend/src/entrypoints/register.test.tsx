@@ -181,4 +181,32 @@ describe("register island", () => {
       ).toBeTruthy();
     });
   });
+
+  describe("with an invite listing the email addresses it allows", () => {
+    it("explains an unlisted address on the email field", async () => {
+      await mountRegister({
+        invite: {
+          valid: true,
+          username: null,
+          email: null,
+          passwordless: true,
+        },
+        form: {
+          errors: [],
+          fields: {
+            email: {
+              value: "mallory@example.com",
+              errors: [{ kind: "mismatch" }],
+            },
+          },
+        },
+      });
+
+      const field = screen.getByLabelText("Email address").closest("div");
+      expect(field).toHaveTextContent(
+        "This invite isn't for this email address. Use the address you were invited with.",
+      );
+      expect(screen.queryByRole("alert")).toBeNull();
+    });
+  });
 });
