@@ -14,7 +14,9 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt as _, CsrfToken},
 };
-use mas_data_model::{BoxClock, BoxRng, CaptchaConfig, SiteConfig, UserRegistrationToken};
+use mas_data_model::{
+    BoxClock, BoxRng, CaptchaConfig, SiteConfig, UserRegistrationToken, is_username_template,
+};
 use mas_i18n::DataLocale;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
@@ -33,7 +35,7 @@ use zeroize::Zeroizing;
 use super::{RegisterForm, cookie::UserRegistrationSessions};
 use crate::{
     BoundActivityTracker, Limiter, RequesterFingerprint, passwords::PasswordManager,
-    views::shared::OptionalPostAuthAction,
+    username_template, views::shared::OptionalPostAuthAction,
 };
 
 /// Register a user with a password, from the form posted on `/register`. The
@@ -83,17 +85,37 @@ pub(super) async fn register(
 
     let (pinned_username, pinned_email, passwordless) = match &registration_token {
         Some(token) => (
-            token.username.as_deref(),
+            token
+                .username
+                .as_deref()
+                .filter(|username| !is_username_template(username)),
             token.email.as_deref(),
             token.passwordless,
         ),
         None => (None, None, false),
     };
 
-    // An empty field means the user accepted whatever the invite code pins
-    let username = match pinned_username {
-        Some(pinned) if form.username.is_empty() => pinned.to_owned(),
-        _ => form.username.clone(),
+    // A template is rendered whatever the form says. Otherwise an empty field
+    // means the user accepted whatever the invite code pins.
+    let rendered_username = registration_token.as_ref().and_then(|token| {
+        let template = token.username_template()?;
+        Some(
+            username_template::render(template, &mut *rng).inspect_err(|e| {
+                tracing::warn!(
+                    error = e as &dyn std::error::Error,
+                    user_registration_token.id = %token.id,
+                    %template,
+                    "Failed to render the invite code's username template"
+                );
+            }),
+        )
+    });
+    let username = match &rendered_username {
+        Some(rendered) => rendered.as_deref().unwrap_or_default().to_owned(),
+        None => match pinned_username {
+            Some(pinned) if form.username.is_empty() => pinned.to_owned(),
+            _ => form.username.clone(),
+        },
     };
 
     // The email field is only shown if the server requires it, but a
@@ -135,7 +157,9 @@ pub(super) async fn register(
         }
 
         let mut homeserver_denied_username = false;
-        if username.is_empty() {
+        if rendered_username.as_ref().is_some_and(Result::is_err) {
+            state.add_error_on_field(RegisterFormField::Username, FieldError::Invalid);
+        } else if username.is_empty() {
             state.add_error_on_field(RegisterFormField::Username, FieldError::Required);
         } else if repo.user().exists(&username).await? {
             // The user already exists in the database
@@ -1075,6 +1099,150 @@ mod tests {
             .unwrap()
             .unwrap();
         assert_eq!(email_authentication.email, "alice@example.com");
+    }
+
+    /// An invite code with a username template registers the name it renders
+    /// to, whatever the form says
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_username_template(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let token = add_registration_token(
+            &state,
+            "invite_template",
+            Some("user-{{ random }}"),
+            Some("invitee@example.com"),
+            true,
+        )
+        .await;
+
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({ "username": "mallory", "token": "invite_template" }),
+        )
+        .await;
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo
+            .user_registration()
+            .lookup(registration_id(&response))
+            .await
+            .unwrap()
+            .unwrap();
+        let random = registration.username.strip_prefix("user-").unwrap();
+        assert_eq!(random.len(), 32);
+        assert!(
+            random
+                .bytes()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+        );
+        assert_eq!(registration.user_registration_token_id, Some(token.id));
+    }
+
+    /// The policy judges the name rendered from a username template
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_banned_username_template(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config_and_policy_data(
+            pool,
+            test_site_config(),
+            serde_json::json!({
+                "registration": {
+                    "banned_usernames": { "prefixes": ["user-"] },
+                },
+            }),
+        )
+        .await
+        .unwrap();
+
+        add_registration_token(
+            &state,
+            "invite_template",
+            Some("user-{{ random }}"),
+            Some("invitee@example.com"),
+            true,
+        )
+        .await;
+
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({ "username": "mallory", "token": "invite_template" }),
+        )
+        .await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            form_state(response.body())["fields"]["username"]["errors"][0]["code"],
+            serde_json::json!("username-banned")
+        );
+    }
+
+    /// A username template which doesn't render refuses the registration on
+    /// the username field
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_broken_username_template(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        // An unknown variable, and a syntax error
+        for (token, template) in [
+            ("invite_unknown", "user-{{ email }}"),
+            ("invite_syntax", "user-{{ random"),
+        ] {
+            add_registration_token(
+                &state,
+                token,
+                Some(template),
+                Some("invitee@example.com"),
+                true,
+            )
+            .await;
+
+            let response = register_from(
+                &state,
+                IpAddr::from([192, 0, 2, 1]),
+                serde_json::json!({ "username": "mallory", "token": token }),
+            )
+            .await;
+            response.assert_status(StatusCode::OK);
+            assert_eq!(
+                form_state(response.body())["fields"]["username"]["errors"][0],
+                serde_json::json!({"kind": "invalid"}),
+                "{template}"
+            );
+        }
+    }
+
+    /// Single braces aren't minijinja delimiters, so a template with
+    /// `{random}` renders as is, and the policy refuses the name
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_single_brace_username_template(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        add_registration_token(
+            &state,
+            "invite_single_brace",
+            Some("user-{random}"),
+            Some("invitee@example.com"),
+            true,
+        )
+        .await;
+
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({ "username": "mallory", "token": "invite_single_brace" }),
+        )
+        .await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            form_state(response.body())["fields"]["username"]["errors"][0]["code"],
+            serde_json::json!("username-invalid-chars")
+        );
     }
 
     /// Registering with an invite code which is no longer valid is refused
