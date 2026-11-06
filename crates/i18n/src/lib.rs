@@ -5,6 +5,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
+mod check;
 pub mod sprintf;
 pub mod translations;
 mod translator;
@@ -14,6 +15,7 @@ pub use icu_locale_core::{ParseError, locale};
 pub use icu_provider::{DataError, DataLocale};
 
 pub use self::{
+    check::{CheckError, CheckReport, TranslationIssue, check_translations},
     sprintf::{Argument, ArgumentList, Message},
     translator::{LoadError, Translator},
 };
