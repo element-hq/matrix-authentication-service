@@ -26,7 +26,8 @@ use mas_storage::{
     user::UserRegistrationTokenRepository,
 };
 use mas_templates::{
-    FieldError, RegisterContext, RegisterFormField, TemplateContext, Templates, ToFormState,
+    FieldError, FormState, InviteContext, RegisterContext, RegisterFormField, TemplateContext,
+    Templates, ToFormState,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -50,6 +51,16 @@ pub use self::cookie::UserRegistrationSessions as UserRegistrationSessionsCookie
 #[error("Upstream OAuth 2.0 provider not found")]
 struct ProviderNotFound;
 
+/// The query parameters of the registration page: an invite link deep-links
+/// with a registration token, on top of the usual post-auth action
+#[derive(Deserialize)]
+pub(crate) struct QueryParams {
+    token: Option<String>,
+
+    #[serde(flatten)]
+    action: OptionalPostAuthAction,
+}
+
 #[tracing::instrument(name = "handlers.views.register.get", skip_all)]
 pub(crate) async fn get(
     mut rng: BoxRng,
@@ -60,7 +71,7 @@ pub(crate) async fn get(
     State(site_config): State<SiteConfig>,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
-    Query(query): Query<OptionalPostAuthAction>,
+    Query(query): Query<QueryParams>,
     cookie_jar: CookieJar,
 ) -> Result<Response, InternalError> {
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
@@ -73,9 +84,25 @@ pub(crate) async fn get(
             .record_browser_session(&clock, &session)
             .await;
 
-        let reply = query.go_next(&url_builder);
+        let reply = query.action.go_next(&url_builder);
         return Ok((cookie_jar, reply).into_response());
     }
+
+    // Resolve the invite code the link carried. A blank code is no code, and
+    // only a valid code can register.
+    let token = query
+        .token
+        .as_deref()
+        .map(str::trim)
+        .filter(|token| !token.is_empty());
+    let registration_token = match token {
+        Some(token) => repo
+            .user_registration_token()
+            .find_by_token(token)
+            .await?
+            .filter(|token| token.is_valid(clock.now())),
+        None => None,
+    };
 
     let providers = repo.upstream_oauth_provider().all_enabled().await?;
 
@@ -87,7 +114,7 @@ pub(crate) async fn get(
 
             let mut destination = UpstreamOAuth2Authorize::new(provider.id);
 
-            if let Some(action) = query.post_auth_action {
+            if let Some(action) = query.action.post_auth_action {
                 destination = destination.and_then(action);
             }
 
@@ -95,12 +122,29 @@ pub(crate) async fn get(
         }
 
         if providers.is_empty() {
-            let destination = mas_router::Login::from(query.post_auth_action);
+            let destination = mas_router::Login::from(query.action.post_auth_action);
             return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
         }
     }
 
-    let ctx = RegisterContext::new(&url_builder, providers, query.post_auth_action.as_ref())
+    let mut ctx = RegisterContext::new(
+        &url_builder,
+        providers,
+        query.action.post_auth_action.as_ref(),
+    );
+
+    // A code which resolved travels back on submission through a hidden field
+    if let Some(token) = token {
+        let mut form = FormState::default();
+        if registration_token.is_some() {
+            form.set_value(RegisterFormField::Token, Some(token.to_owned()));
+        }
+        ctx = ctx
+            .with_form_state(form)
+            .with_invite(InviteContext::new(registration_token.as_ref()));
+    }
+
+    let ctx = ctx
         .with_captcha(site_config.captcha.clone())
         .with_csrf(csrf_token.form_value())
         .with_language(locale);
@@ -134,7 +178,8 @@ pub(crate) struct RegisterForm {
     #[serde(default)]
     accept_terms: String,
 
-    /// The registration token whose pins the registration must fit
+    /// The invite code, carried by a hidden field when the page was opened
+    /// from an invite link
     #[serde(default)]
     token: String,
 
@@ -171,7 +216,7 @@ pub(crate) async fn post(
         Option<TypedHeader<headers::UserAgent>>,
         BoundActivityTracker,
     ),
-    Query(query): Query<OptionalPostAuthAction>,
+    Query(query): Query<QueryParams>,
     cookie_jar: CookieJar,
     Form(form): Form<ProtectedForm<RegisterForm>>,
 ) -> Result<Response, InternalError> {
@@ -180,7 +225,10 @@ pub(crate) async fn post(
     let Ok(mut form) = cookie_jar.verify_form(&clock, form) else {
         // An invalid token most likely comes from a page left open past the CSRF token lifetime
         tracing::debug!("Invalid CSRF token on the registration form, redirecting to a fresh one");
-        let destination = Register::from(query.post_auth_action);
+        let mut destination = Register::from(query.action.post_auth_action);
+        if let Some(token) = query.token {
+            destination = destination.with_token(token);
+        }
         return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
     };
 
@@ -221,7 +269,7 @@ pub(crate) async fn post(
             &mut repo,
             cookie_jar,
             &provider,
-            query.post_auth_action,
+            query.action.post_auth_action,
             carried_username,
         )
         .await?;
@@ -235,32 +283,36 @@ pub(crate) async fn post(
         return Ok(StatusCode::METHOD_NOT_ALLOWED.into_response());
     }
 
-    let registration_token = if form.token.is_empty() {
+    let token = form.token.trim();
+    let registration_token = if token.is_empty() {
         None
     } else {
         repo.user_registration_token()
-            .find_by_token(&form.token)
+            .find_by_token(token)
             .await?
             .filter(|found| found.is_valid(clock.now()))
     };
 
     // Only the code's error is reported: checking the rest of the form would
-    // tell whether a username exists
-    if !form.token.is_empty() && registration_token.is_none() {
+    // tell whether a username exists. The code isn't submitted again, so the
+    // next submission is an ordinary registration.
+    if !token.is_empty() && registration_token.is_none() {
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
-        let form_state = form
+        let mut form_state = form
             .to_form_state()
             .with_error_on_field(RegisterFormField::Token, FieldError::Invalid);
+        form_state.set_value(RegisterFormField::Token, None);
 
         let content = self::password::render(
             locale,
             form_state,
-            &query,
+            &query.action,
             csrf_token,
             &mut repo,
             &templates,
             &url_builder,
             site_config.captcha.clone(),
+            self::password::InviteCode::Invalid,
         )
         .await?;
 
@@ -283,7 +335,7 @@ pub(crate) async fn post(
         repo,
         user_agent,
         &activity_tracker,
-        query,
+        query.action,
         cookie_jar,
         form,
         registration_token,
@@ -640,6 +692,53 @@ mod tests {
         assert_eq!(
             json_attribute(&body, "data-captcha-config")["site_key"],
             serde_json::json!("site-key")
+        );
+    }
+
+    /// Opening the page with an invite code resolves it server-side, and the
+    /// code travels back through the form
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_get_with_invite(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        add_registration_token(
+            &state,
+            "invite_alice",
+            Some("alice"),
+            Some("alice@example.com"),
+            true,
+        )
+        .await;
+
+        let request = Request::get("/register?token=invite_alice").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-invite"),
+            serde_json::json!({
+                "valid": true,
+                "username": "alice",
+                "email": "alice@example.com",
+                "passwordless": true,
+            })
+        );
+        assert_eq!(
+            json_attribute(response.body(), "data-form")["fields"]["token"]["value"],
+            serde_json::json!("invite_alice")
+        );
+
+        // A code the server doesn't know only says so, and isn't submitted
+        let request = Request::get("/register?token=nope").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-invite"),
+            serde_json::json!({ "valid": false })
+        );
+        assert_eq!(
+            json_attribute(response.body(), "data-form")["fields"]["token"]["value"],
+            serde_json::Value::Null
         );
     }
 

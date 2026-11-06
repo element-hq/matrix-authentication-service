@@ -26,8 +26,8 @@ use mas_storage::{
     user::{UserEmailRepository, UserRegistrationRepository as _, UserRepository},
 };
 use mas_templates::{
-    FieldError, FormError, FormState, RegisterContext, RegisterFormField, TemplateContext,
-    Templates, ToFormState as _,
+    FieldError, FormError, FormState, InviteContext, RegisterContext, RegisterFormField,
+    TemplateContext, Templates, ToFormState as _,
 };
 use zeroize::Zeroizing;
 
@@ -266,6 +266,8 @@ pub(super) async fn register(
     };
 
     if !state.is_valid() {
+        // Re-render with what the invite code resolved to, so the form keeps
+        // the shape the user submitted it in
         let content = render(
             locale,
             state,
@@ -275,6 +277,9 @@ pub(super) async fn register(
             templates,
             url_builder,
             site_config.captcha.clone(),
+            registration_token
+                .as_ref()
+                .map_or(InviteCode::Missing, InviteCode::Valid),
         )
         .await?;
 
@@ -365,6 +370,13 @@ pub(super) async fn register(
         .into_response())
 }
 
+/// The invite code the registration form was submitted with
+pub(super) enum InviteCode<'a> {
+    Missing,
+    Invalid,
+    Valid(&'a UserRegistrationToken),
+}
+
 /// Render the registration page again, with the errors the form collected
 #[expect(clippy::too_many_arguments)]
 pub(super) async fn render(
@@ -376,10 +388,21 @@ pub(super) async fn render(
     templates: &Templates,
     url_builder: &UrlBuilder,
     captcha_config: Option<CaptchaConfig>,
+    invite: InviteCode<'_>,
 ) -> Result<String, InternalError> {
+    let registration_token = match invite {
+        InviteCode::Valid(registration_token) => Some(registration_token),
+        InviteCode::Missing | InviteCode::Invalid => None,
+    };
     let providers = repo.upstream_oauth_provider().all_enabled().await?;
-    let ctx = RegisterContext::new(url_builder, providers, action.post_auth_action.as_ref())
-        .with_form_state(form_state)
+    let mut ctx = RegisterContext::new(url_builder, providers, action.post_auth_action.as_ref())
+        .with_form_state(form_state);
+
+    if !matches!(invite, InviteCode::Missing) {
+        ctx = ctx.with_invite(InviteContext::new(registration_token));
+    }
+
+    let ctx = ctx
         .with_captcha(captcha_config)
         .with_csrf(csrf_token.form_value())
         .with_language(locale);
