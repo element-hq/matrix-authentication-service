@@ -13,7 +13,8 @@ pub(crate) mod verify_email;
 
 /// Whether `token` can be used for `registration`, whose email address is
 /// `email`: it pins no other username, and no other email address, ignoring
-/// case
+/// case, and it is passwordless if the registration has neither a password
+/// nor an upstream link
 fn token_fits(
     token: &UserRegistrationToken,
     registration: &UserRegistration,
@@ -31,6 +32,11 @@ fn token_fits(
                 .as_deref()
                 .is_none_or(|pinned| pinned.eq_ignore_ascii_case(email))
         })
+        && (token.passwordless
+            || registration.password.is_some()
+            || registration
+                .upstream_oauth_authorization_session_id
+                .is_some())
 }
 
 #[cfg(test)]
@@ -39,13 +45,17 @@ mod tests {
     use mas_data_model::{UserRegistration, UserRegistrationPassword, UserRegistrationToken};
     use ulid::Ulid;
 
-    fn token(username: Option<&str>, email: Option<&str>) -> UserRegistrationToken {
+    fn token(
+        username: Option<&str>,
+        email: Option<&str>,
+        passwordless: bool,
+    ) -> UserRegistrationToken {
         UserRegistrationToken {
             id: Ulid::nil(),
             token: "token".to_owned(),
             username: username.map(ToOwned::to_owned),
             email: email.map(ToOwned::to_owned),
-            passwordless: false,
+            passwordless,
             usage_limit: None,
             times_used: 0,
             created_at: DateTime::<Utc>::UNIX_EPOCH,
@@ -55,7 +65,7 @@ mod tests {
         }
     }
 
-    fn registration(username: &str) -> UserRegistration {
+    fn registration(username: &str, password: bool, upstream: bool) -> UserRegistration {
         UserRegistration {
             id: Ulid::nil(),
             username: username.to_owned(),
@@ -63,11 +73,11 @@ mod tests {
             terms_url: None,
             email_authentication_id: None,
             user_registration_token_id: None,
-            password: Some(UserRegistrationPassword {
+            password: password.then(|| UserRegistrationPassword {
                 hashed_password: "hash".to_owned(),
                 version: 1,
             }),
-            upstream_oauth_authorization_session_id: None,
+            upstream_oauth_authorization_session_id: upstream.then(Ulid::nil),
             post_auth_action: None,
             ip_address: None,
             user_agent: None,
@@ -82,10 +92,13 @@ mod tests {
 
     #[test]
     fn test_token_fits() {
-        let alice = registration("alice");
-        let bob = registration("bob");
-        let pins = token(Some("alice"), ALICE_UPPER);
-        let plain = token(None, None);
+        let alice = registration("alice", true, false);
+        let bob = registration("bob", true, false);
+        let no_password = registration("alice", false, false);
+        let upstream = registration("alice", false, true);
+        let pins = token(Some("alice"), ALICE_UPPER, false);
+        let plain = token(None, None, false);
+        let passwordless = token(None, None, true);
 
         for (case, token, registration, email, fits) in [
             ("no pins", &plain, &alice, None, true),
@@ -93,6 +106,9 @@ mod tests {
             ("another username", &pins, &bob, ALICE, false),
             ("another email", &pins, &alice, BOB, false),
             ("no email for a pin", &pins, &alice, None, false),
+            ("no password", &plain, &no_password, None, false),
+            ("passwordless", &passwordless, &no_password, None, true),
+            ("upstream", &plain, &upstream, None, true),
         ] {
             assert_eq!(
                 super::token_fits(token, registration, email),

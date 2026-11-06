@@ -292,6 +292,7 @@ mod tests {
             "invite_alice",
             Some("alice"),
             Some("alice@example.com"),
+            false,
         )
         .await;
         let registration = add_registration(&state, &cookies, "alice", None, true, None).await;
@@ -328,7 +329,14 @@ mod tests {
         let state = TestState::from_pool(pool).await.unwrap();
         let cookies = CookieHelper::new();
 
-        add_registration_token(&state, "invite_alice", None, Some("alice@example.com")).await;
+        add_registration_token(
+            &state,
+            "invite_alice",
+            None,
+            Some("alice@example.com"),
+            false,
+        )
+        .await;
 
         let registration = add_registration(
             &state,

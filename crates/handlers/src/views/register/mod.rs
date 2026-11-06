@@ -413,6 +413,7 @@ mod tests {
         token: &str,
         username: Option<&str>,
         email: Option<&str>,
+        passwordless: bool,
     ) -> mas_data_model::UserRegistrationToken {
         let mut repo = state.repository().await.unwrap();
         let token = repo
@@ -424,6 +425,7 @@ mod tests {
                     token: token.to_owned(),
                     username: username.map(ToOwned::to_owned),
                     email: email.map(ToOwned::to_owned),
+                    passwordless,
                     ..Default::default()
                 },
             )
@@ -517,6 +519,60 @@ mod tests {
                 .save(state.cookie_jar(), &state.clock),
         );
 
+        registration
+    }
+
+    /// Link a registration to an upstream identity, as registering through an
+    /// upstream provider does
+    pub(super) async fn link_upstream(
+        state: &TestState,
+        registration: mas_data_model::UserRegistration,
+    ) -> mas_data_model::UserRegistration {
+        let provider_id = provider(state).await;
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+
+        let provider = repo
+            .upstream_oauth_provider()
+            .lookup(provider_id)
+            .await
+            .unwrap()
+            .unwrap();
+        let session = repo
+            .upstream_oauth_session()
+            .add(
+                &mut rng,
+                &state.clock,
+                &provider,
+                registration.username.clone(),
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+        let link = repo
+            .upstream_oauth_link()
+            .add(
+                &mut rng,
+                &state.clock,
+                &provider,
+                registration.username.clone(),
+                None,
+            )
+            .await
+            .unwrap();
+        let session = repo
+            .upstream_oauth_session()
+            .complete_with_link(&state.clock, session, &link, None, None, None, None)
+            .await
+            .unwrap();
+        let registration = repo
+            .user_registration()
+            .set_upstream_oauth_authorization_session(registration, &session)
+            .await
+            .unwrap();
+
+        repo.save().await.unwrap();
         registration
     }
 

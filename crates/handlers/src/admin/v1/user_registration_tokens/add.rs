@@ -172,7 +172,8 @@ pub async fn handler(
         });
     }
 
-    // The same input as `POST /register` in `views/register/password.rs`. The
+    // The same input as `POST /register` in `views/register/password.rs`,
+    // which also evaluates a passwordless registration as `Password`. The
     // request comes from an admin client, not the user registering.
     let result = match (params.username.as_deref(), params.email.as_deref()) {
         (Some(username), email) => Some(
