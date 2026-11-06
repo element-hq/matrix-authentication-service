@@ -29,6 +29,9 @@ pub struct UserRegistrationTokenParams {
 
     /// Optional email to impose on the registering user
     pub email: Option<String>,
+
+    /// Whether registrations using this token skip the password step
+    pub passwordless: bool,
 }
 
 /// A filter to apply when listing [`UserRegistrationToken`]s

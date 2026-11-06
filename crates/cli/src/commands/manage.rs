@@ -141,6 +141,11 @@ enum Subcommand {
         /// Only allow registering with this email address
         #[arg(long)]
         email: Option<String>,
+
+        /// Don't require a password when registering with this token; the
+        /// user is identified by a code sent to their email address
+        #[arg(long, action = ArgAction::SetTrue)]
+        passwordless: bool,
     },
 
     /// Trigger a provisioning job for all users
@@ -498,6 +503,7 @@ impl Options {
                 expires_in,
                 username,
                 email,
+                passwordless,
             } => {
                 let _span = info_span!("cli.manage.add_user_registration_token").entered();
 
@@ -533,6 +539,7 @@ impl Options {
                             expires_at,
                             username,
                             email,
+                            passwordless,
                         },
                     )
                     .await?;
