@@ -22,7 +22,6 @@ use mas_router::UrlBuilder;
 use mas_storage::{
     BoxRepository, RepositoryAccess,
     queue::{QueueJobRepositoryExt as _, SendEmailAuthenticationCodeJob},
-    upstream_oauth2::UpstreamOAuthProviderRepository as _,
     user::{UserEmailRepository, UserRegistrationRepository as _, UserRepository},
 };
 use mas_templates::{
@@ -394,7 +393,7 @@ pub(super) async fn render(
         InviteCode::Valid(registration_token) => Some(registration_token),
         InviteCode::Missing | InviteCode::Invalid => None,
     };
-    let providers = repo.upstream_oauth_provider().all_enabled().await?;
+    let providers = super::offered_providers(repo, registration_token).await?;
     let mut ctx = RegisterContext::new(url_builder, providers, action.post_auth_action.as_ref())
         .with_form_state(form_state);
 
