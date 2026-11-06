@@ -262,6 +262,7 @@ mod tests {
     use mas_storage::{
         RepositoryAccess,
         upstream_oauth2::{UpstreamOAuthProviderParams, UpstreamOAuthSessionRepository},
+        user::{UserRegistrationTokenParams, UserRegistrationTokenRepository as _},
     };
     use oauth2_types::scope::{OPENID, Scope};
     use sqlx::PgPool;
@@ -359,10 +360,122 @@ mod tests {
 
     /// Mint a CSRF token out of band, for the configurations where the page
     /// doesn't render a form to read one from
-    fn mint_csrf_token(state: &TestState, cookies: &CookieHelper) -> String {
+    pub(super) fn mint_csrf_token(state: &TestState, cookies: &CookieHelper) -> String {
         let (csrf_token, cookie_jar) = state.cookie_jar().csrf_token(&state.clock, state.rng());
         cookies.import(cookie_jar);
         csrf_token.form_value().clone()
+    }
+
+    pub(super) async fn add_registration_token(
+        state: &TestState,
+        token: &str,
+        username: Option<&str>,
+        email: Option<&str>,
+    ) -> mas_data_model::UserRegistrationToken {
+        let mut repo = state.repository().await.unwrap();
+        let token = repo
+            .user_registration_token()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                UserRegistrationTokenParams {
+                    token: token.to_owned(),
+                    username: username.map(ToOwned::to_owned),
+                    email: email.map(ToOwned::to_owned),
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+        token
+    }
+
+    /// Start a registration in this browser, as `POST /register` and the
+    /// email verification step leave it
+    pub(super) async fn add_registration(
+        state: &TestState,
+        cookies: &CookieHelper,
+        username: &str,
+        verified_email: Option<&str>,
+        with_password: bool,
+        token: Option<&mas_data_model::UserRegistrationToken>,
+    ) -> mas_data_model::UserRegistration {
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+
+        let mut registration = repo
+            .user_registration()
+            .add(
+                &mut rng,
+                &state.clock,
+                username.to_owned(),
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        if let Some(email) = verified_email {
+            let authentication = repo
+                .user_email()
+                .add_authentication_for_registration(
+                    &mut rng,
+                    &state.clock,
+                    email.to_owned(),
+                    &registration,
+                )
+                .await
+                .unwrap();
+            let code = repo
+                .user_email()
+                .add_authentication_code(
+                    &mut rng,
+                    &state.clock,
+                    chrono::Duration::minutes(5),
+                    &authentication,
+                    "123456".to_owned(),
+                )
+                .await
+                .unwrap();
+            let authentication = repo
+                .user_email()
+                .complete_authentication_with_code(&state.clock, authentication, &code)
+                .await
+                .unwrap();
+            registration = repo
+                .user_registration()
+                .set_email_authentication(registration, &authentication)
+                .await
+                .unwrap();
+        }
+
+        if with_password {
+            registration = repo
+                .user_registration()
+                .set_password(registration, "hashed".to_owned(), 1)
+                .await
+                .unwrap();
+        }
+
+        if let Some(token) = token {
+            registration = repo
+                .user_registration()
+                .set_registration_token(registration, token)
+                .await
+                .unwrap();
+        }
+
+        repo.save().await.unwrap();
+
+        cookies.import(
+            super::UserRegistrationSessionsCookie::default()
+                .add(&registration)
+                .save(state.cookie_jar(), &state.clock),
+        );
+
+        registration
     }
 
     /// Decode the upstream sessions cookie set by the given response, if any
