@@ -15,6 +15,7 @@ use axum::extract::{FromRef, FromRequestParts};
 use mas_data_model::{AppVersion, BoxRng, SiteConfig};
 use mas_matrix::HomeserverConnection;
 use mas_policy::PolicyFactory;
+use mas_router::UrlBuilder;
 
 use super::call_context::CallContext;
 use crate::passwords::PasswordManager;
@@ -41,6 +42,7 @@ where
     SiteConfig: FromRef<S>,
     AppVersion: FromRef<S>,
     Arc<PolicyFactory>: FromRef<S>,
+    UrlBuilder: FromRef<S>,
     BoxRng: FromRequestParts<S>,
     CallContext: FromRequestParts<S>,
 {
