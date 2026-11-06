@@ -290,6 +290,7 @@ pub async fn handler(
                 expires_at: params.expires_at,
                 username: params.username,
                 email: params.email,
+                allowed_emails: None,
                 passwordless: params.passwordless,
                 continue_url: params.continue_url,
             },

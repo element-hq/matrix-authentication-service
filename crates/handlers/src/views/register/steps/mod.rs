@@ -61,6 +61,7 @@ mod tests {
             token: "token".to_owned(),
             username: username.map(ToOwned::to_owned),
             email: email.map(ToOwned::to_owned),
+            allowed_emails: None,
             passwordless,
             continue_url: None,
             usage_limit: None,

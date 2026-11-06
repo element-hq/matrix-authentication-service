@@ -235,6 +235,9 @@ pub struct UserRegistrationToken {
     /// `/register?token=…` link: the registration token step refuses it.
     pub username: Option<String>,
     pub email: Option<String>,
+    /// The email addresses allowed to register with this token, or `None` for
+    /// any. A token pins `email` or lists these, never both.
+    pub allowed_emails: Option<Vec<String>>,
     pub passwordless: bool,
     pub continue_url: Option<String>,
     pub usage_limit: Option<u32>,

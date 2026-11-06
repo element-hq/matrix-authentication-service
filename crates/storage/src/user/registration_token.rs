@@ -30,6 +30,9 @@ pub struct UserRegistrationTokenParams {
     /// Optional email to impose on the registering user
     pub email: Option<String>,
 
+    /// Optional email addresses the registering user must use one of
+    pub allowed_emails: Option<Vec<String>>,
+
     /// Whether registrations using this token skip the password step
     pub passwordless: bool,
 
