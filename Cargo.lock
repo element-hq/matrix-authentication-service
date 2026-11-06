@@ -3981,6 +3981,7 @@ version = "1.29.0-rc.1"
 dependencies = [
  "anyhow",
  "arc-swap",
+ "chrono",
  "mas-data-model",
  "oauth2-types",
  "opa-wasm",

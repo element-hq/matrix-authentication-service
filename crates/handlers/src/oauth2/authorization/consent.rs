@@ -18,7 +18,11 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt, ProtectedForm},
 };
-use mas_data_model::{AuthorizationGrantStage, BoxClock, BoxRng, MatrixUser};
+use mas_data_model::{
+    AuthorizationGrant, AuthorizationGrantStage, BoxClock, BoxRng, BrowserSession, Client,
+    MatrixUser,
+};
+use mas_i18n::DataLocale;
 use mas_keystore::Keystore;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
@@ -91,6 +95,7 @@ pub(crate) async fn get(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
+    State(key_store): State<Keystore>,
     State(homeserver): State<Arc<dyn HomeserverConnection>>,
     mut policy: Policy,
     mut repo: BoxRepository,
@@ -149,22 +154,20 @@ pub(crate) async fn get(
 
     let session_counts = count_user_sessions_for_limiting(&mut repo, &session.user).await?;
 
-    // We can close the repository early, we don't need it at this point
-    repo.save().await?;
+    let input = mas_policy::AuthorizationGrantInput {
+        user: Some(&session.user),
+        client: &client,
+        session_counts: Some(session_counts),
+        scope: &grant.scope,
+        grant_type: mas_policy::GrantType::AuthorizationCode,
+        requester: mas_policy::Requester {
+            ip_address: activity_tracker.ip(),
+            user_agent,
+        },
+        now: clock.now(),
+    };
 
-    let res = policy
-        .evaluate_authorization_grant(mas_policy::AuthorizationGrantInput {
-            user: Some(&session.user),
-            client: &client,
-            session_counts: Some(session_counts),
-            scope: &grant.scope,
-            grant_type: mas_policy::GrantType::AuthorizationCode,
-            requester: mas_policy::Requester {
-                ip_address: activity_tracker.ip(),
-                user_agent,
-            },
-        })
-        .await?;
+    let res = policy.evaluate_authorization_grant(input.clone()).await?;
     if !res.valid() {
         let ctx = PolicyViolationContext::for_authorization_grant(grant, client, res.violations)
             .with_session(session)
@@ -175,6 +178,35 @@ pub(crate) async fn get(
 
         return Ok((cookie_jar, Html(content)).into_response());
     }
+
+    if policy.evaluate_skip_consent(input).await? {
+        tracing::info!(
+            user.id = %session.user.id,
+            client.id = %client.id,
+            "Approving the authorization grant without consent, as allowed by the policy"
+        );
+
+        let callback_destination = CallbackDestination::try_from(&grant)?;
+
+        return approve_grant(
+            &mut rng,
+            &clock,
+            &locale,
+            &templates,
+            &url_builder,
+            &key_store,
+            repo,
+            cookie_jar,
+            &session,
+            &client,
+            grant,
+            callback_destination,
+        )
+        .await;
+    }
+
+    // We can close the repository early, we don't need it at this point
+    repo.save().await?;
 
     // Fetch informations about the user. This is purely cosmetic, so we let it
     // fail and put a 1s timeout to it in case we fail to query it
@@ -301,6 +333,7 @@ pub(crate) async fn post(
                 ip_address: activity_tracker.ip(),
                 user_agent,
             },
+            now: clock.now(),
         })
         .await?;
 
@@ -316,10 +349,43 @@ pub(crate) async fn post(
     }
 
     // All good, let's fulfill the grant with the browser session.
+    approve_grant(
+        &mut rng,
+        &clock,
+        &locale,
+        &templates,
+        &url_builder,
+        &key_store,
+        repo,
+        cookie_jar,
+        &browser_session,
+        &client,
+        grant,
+        callback_destination,
+    )
+    .await
+}
+
+/// Fulfills the grant with the browser session, and sends the response to the
+/// client
+async fn approve_grant(
+    rng: &mut BoxRng,
+    clock: &BoxClock,
+    locale: &DataLocale,
+    templates: &Templates,
+    url_builder: &UrlBuilder,
+    key_store: &Keystore,
+    mut repo: BoxRepository,
+    cookie_jar: CookieJar,
+    browser_session: &BrowserSession,
+    client: &Client,
+    grant: AuthorizationGrant,
+    callback_destination: CallbackDestination,
+) -> Result<Response, RouteError> {
     // The OAuth2 session will be created later at token exchange time.
     let grant = repo
         .oauth2_authorization_grant()
-        .fulfill(&clock, &browser_session, grant)
+        .fulfill(clock, browser_session, grant)
         .await?;
 
     let mut params = AuthorizationResponse::default();
@@ -329,17 +395,17 @@ pub(crate) async fn post(
         // Fetch the last authentication
         let last_authentication = repo
             .browser_session()
-            .get_last_authentication(&browser_session)
+            .get_last_authentication(browser_session)
             .await?;
 
         params.id_token = Some(generate_id_token(
-            &mut rng,
-            &clock,
-            &url_builder,
-            &key_store,
-            &client,
+            rng,
+            clock,
+            url_builder,
+            key_store,
+            client,
             Some(&grant),
-            &browser_session,
+            browser_session,
             None,
             last_authentication.as_ref(),
         )?);
@@ -354,7 +420,153 @@ pub(crate) async fn post(
 
     Ok((
         cookie_jar,
-        callback_destination.go(&templates, &locale, params)?,
+        callback_destination.go(templates, locale, params)?,
     )
         .into_response())
+}
+
+#[cfg(test)]
+mod tests {
+    use hyper::{Request, StatusCode, header::LOCATION};
+    use mas_axum_utils::SessionInfoExt;
+    use mas_matrix::{HomeserverConnection, ProvisionRequest};
+    use mas_router::SimpleRoute;
+    use oauth2_types::registration::ClientRegistrationResponse;
+    use sqlx::PgPool;
+
+    use crate::test_utils::{
+        CookieHelper, RequestBuilderExt, ResponseExt, TestState, policy_factory, setup,
+    };
+
+    /// Starts an authorization for the client, and requests its consent page
+    async fn request_consent(
+        state: &TestState,
+        cookies: &CookieHelper,
+        client_id: &str,
+    ) -> hyper::Response<String> {
+        let query = url::form_urlencoded::Serializer::new(String::new())
+            .append_pair("response_type", "code")
+            .append_pair("client_id", client_id)
+            .append_pair("redirect_uri", "https://example.com/callback")
+            .append_pair(
+                "scope",
+                "openid urn:matrix:client:api:* urn:matrix:client:device:ABCDEFGHIJ",
+            )
+            .append_pair("state", "state")
+            .append_pair("response_mode", "query")
+            .finish();
+        let request = Request::get(format!(
+            "{}?{query}",
+            mas_router::OAuth2AuthorizationEndpoint::PATH
+        ))
+        .empty();
+        let response = state.request(cookies.with_cookies(request)).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        let consent = response.headers()[LOCATION].to_str().unwrap();
+
+        state
+            .request(cookies.with_cookies(Request::get(consent).empty()))
+            .await
+    }
+
+    /// Creates a user with a browser session, and stores its cookie
+    async fn sign_in(state: &TestState, cookies: &CookieHelper, username: &str) {
+        let mut repo = state.repository().await.unwrap();
+        let user = repo
+            .user()
+            .add(&mut state.rng(), &state.clock, username.to_owned())
+            .await
+            .unwrap();
+        state
+            .homeserver_connection
+            .provision_user(&ProvisionRequest::new(&user.username, &user.sub, false))
+            .await
+            .unwrap();
+        let browser_session = repo
+            .browser_session()
+            .add(&mut state.rng(), &state.clock, &user, None)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+        cookies.import(state.cookie_jar().set_session(&browser_session));
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_skip_consent(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://example.com/",
+                "redirect_uris": ["https://example.com/callback"],
+                "token_endpoint_auth_method": "none",
+                "response_types": ["code"],
+                "grant_types": ["authorization_code"],
+            }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+        let ClientRegistrationResponse { client_id, .. } = response.json();
+
+        let alice = CookieHelper::new();
+        sign_in(&state, &alice, "alice").await;
+        let bob = CookieHelper::new();
+        sign_in(&state, &bob, "bob").await;
+
+        // Without policy data, consent is asked
+        let response = request_consent(&state, &alice, &client_id).await;
+        response.assert_status(StatusCode::OK);
+        assert!(response.body().contains("Use another account"));
+
+        state.policy_factory = policy_factory(
+            mas_policy::BaseData {
+                server_name: "example.com".to_owned(),
+                session_limit: None,
+            },
+            serde_json::json!({
+                "skip_consent": {
+                    "client_ids": [client_id],
+                    "max_account_age_seconds": 600,
+                },
+            }),
+        )
+        .await
+        .unwrap();
+
+        // The new account is sent straight back to the client with a code
+        let response = request_consent(&state, &alice, &client_id).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        let location: url::Url = response.headers()[LOCATION]
+            .to_str()
+            .unwrap()
+            .parse()
+            .unwrap();
+        assert_eq!(location.path(), "/callback");
+        let (_, code) = location
+            .query_pairs()
+            .find(|(key, _)| key == "code")
+            .unwrap();
+
+        let request =
+            Request::post(mas_router::OAuth2TokenEndpoint::PATH).form(serde_json::json!({
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": "https://example.com/callback",
+                "client_id": client_id,
+            }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+
+        // Once the account has a session, consent is asked again
+        let response = request_consent(&state, &alice, &client_id).await;
+        response.assert_status(StatusCode::OK);
+        assert!(response.body().contains("Use another account"));
+
+        // Once an account without sessions is older than the window, consent
+        // is asked again
+        state.clock.advance(chrono::Duration::seconds(601));
+        let response = request_consent(&state, &bob, &client_id).await;
+        response.assert_status(StatusCode::OK);
+        assert!(response.body().contains("Use another account"));
+    }
 }
