@@ -3949,6 +3949,75 @@
         }
       }
     },
+    "/api/admin/v1/user-registration-tokens/invite-emails": {
+      "post": {
+        "tags": [
+          "user-registration-token"
+        ],
+        "summary": "Email invite links for user registration tokens",
+        "description": "Emails each address a link to register with its token. The email is sent only if the token is still valid by then.",
+        "operationId": "sendUserRegistrationTokenInviteEmails",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteEmailsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "The emails were scheduled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteEmailsResponse"
+                },
+                "example": {
+                  "scheduled": 2
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has no invites, an invalid token, or an address which is missing, invalid or not the token's",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Registration token 00000000000000000000000000 has no email address, so the invite needs one"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "A registration token was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Registration token ID 00000000000000000000000000 not found"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/v1/user-registration-tokens/{id}": {
       "get": {
         "tags": [
@@ -7536,6 +7605,87 @@
         "required": [
           "data",
           "links"
+        ]
+      },
+      "InviteEmailsRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/user-registration-tokens/invite-emails` endpoint",
+        "type": "object",
+        "properties": {
+          "invites": {
+            "description": "The tokens to email a link for. A token and address given more than\nonce, ignoring case, are emailed once.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InviteEmail"
+            }
+          },
+          "room_name": {
+            "description": "The name of the room the invites are for, shown in the email. With it,\nthe email tells the recipient they are asking to join and that someone\nin the room approves the request. Without it, the email names no room.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Project X"
+          },
+          "inviter": {
+            "description": "The Matrix ID of the user sending the invites, shown in the email. It is\nleft out if it isn't a valid Matrix ID.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "@bob:example.com"
+          },
+          "inviter_name": {
+            "description": "The display name of the user sending the invites, shown in the email",
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Bob"
+          }
+        },
+        "required": [
+          "invites"
+        ]
+      },
+      "InviteEmail": {
+        "title": "A registration token to email a link for",
+        "type": "object",
+        "properties": {
+          "registration_token_id": {
+            "description": "The ID of the registration token",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
+          },
+          "email": {
+            "description": "The address to send the link to. Required if the token has no email\naddress, and otherwise the token's address, ignoring case.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email",
+            "example": "alice@example.com"
+          }
+        },
+        "required": [
+          "registration_token_id"
+        ]
+      },
+      "InviteEmailsResponse": {
+        "title": "Response to the `POST /api/admin/v1/user-registration-tokens/invite-emails` endpoint",
+        "type": "object",
+        "properties": {
+          "scheduled": {
+            "description": "How many emails were scheduled, after dropping repeated invites",
+            "type": "integer",
+            "format": "uint",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "scheduled"
         ]
       },
       "EditUserRegistrationTokenRequest": {
