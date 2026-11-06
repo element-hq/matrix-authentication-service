@@ -286,6 +286,7 @@ mod tests {
                     token: "token_expired".to_owned(),
                     usage_limit: Some(5),
                     expires_at: Some(expires_at),
+                    ..Default::default()
                 },
             )
             .await
@@ -320,6 +321,8 @@ mod tests {
               "attributes": {
                 "token": "token_expired",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 5,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -342,6 +345,8 @@ mod tests {
               "attributes": {
                 "token": "token_used",
                 "valid": true,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -364,6 +369,8 @@ mod tests {
               "attributes": {
                 "token": "token_revoked",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -386,6 +393,8 @@ mod tests {
               "attributes": {
                 "token": "token_unused",
                 "valid": true,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -408,6 +417,8 @@ mod tests {
               "attributes": {
                 "token": "token_used_revoked",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -461,6 +472,8 @@ mod tests {
               "attributes": {
                 "token": "token_used",
                 "valid": true,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -483,6 +496,8 @@ mod tests {
               "attributes": {
                 "token": "token_used_revoked",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -528,6 +543,8 @@ mod tests {
               "attributes": {
                 "token": "token_expired",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 5,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -550,6 +567,8 @@ mod tests {
               "attributes": {
                 "token": "token_revoked",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -572,6 +591,8 @@ mod tests {
               "attributes": {
                 "token": "token_unused",
                 "valid": true,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -625,6 +646,8 @@ mod tests {
               "attributes": {
                 "token": "token_revoked",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -647,6 +670,8 @@ mod tests {
               "attributes": {
                 "token": "token_used_revoked",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -692,6 +717,8 @@ mod tests {
               "attributes": {
                 "token": "token_expired",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 5,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -714,6 +741,8 @@ mod tests {
               "attributes": {
                 "token": "token_used",
                 "valid": true,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -736,6 +765,8 @@ mod tests {
               "attributes": {
                 "token": "token_unused",
                 "valid": true,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -789,6 +820,8 @@ mod tests {
               "attributes": {
                 "token": "token_expired",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 5,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -834,6 +867,8 @@ mod tests {
               "attributes": {
                 "token": "token_used",
                 "valid": true,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -856,6 +891,8 @@ mod tests {
               "attributes": {
                 "token": "token_revoked",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -878,6 +915,8 @@ mod tests {
               "attributes": {
                 "token": "token_unused",
                 "valid": true,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -900,6 +939,8 @@ mod tests {
               "attributes": {
                 "token": "token_used_revoked",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -953,6 +994,8 @@ mod tests {
               "attributes": {
                 "token": "token_used",
                 "valid": true,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -975,6 +1018,8 @@ mod tests {
               "attributes": {
                 "token": "token_unused",
                 "valid": true,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1020,6 +1065,8 @@ mod tests {
               "attributes": {
                 "token": "token_expired",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 5,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1042,6 +1089,8 @@ mod tests {
               "attributes": {
                 "token": "token_revoked",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1064,6 +1113,8 @@ mod tests {
               "attributes": {
                 "token": "token_used_revoked",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1119,6 +1170,8 @@ mod tests {
               "attributes": {
                 "token": "token_used_revoked",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1172,6 +1225,8 @@ mod tests {
               "attributes": {
                 "token": "token_expired",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 5,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1194,6 +1249,8 @@ mod tests {
               "attributes": {
                 "token": "token_used",
                 "valid": true,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1240,6 +1297,8 @@ mod tests {
               "attributes": {
                 "token": "token_revoked",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1262,6 +1321,8 @@ mod tests {
               "attributes": {
                 "token": "token_unused",
                 "valid": true,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1308,6 +1369,8 @@ mod tests {
               "attributes": {
                 "token": "token_used_revoked",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1380,6 +1443,8 @@ mod tests {
               "attributes": {
                 "token": "token_expired",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 5,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1402,6 +1467,8 @@ mod tests {
               "attributes": {
                 "token": "token_used",
                 "valid": true,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1424,6 +1491,8 @@ mod tests {
               "attributes": {
                 "token": "token_revoked",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1446,6 +1515,8 @@ mod tests {
               "attributes": {
                 "token": "token_unused",
                 "valid": true,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1468,6 +1539,8 @@ mod tests {
               "attributes": {
                 "token": "token_used_revoked",
                 "valid": false,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1528,6 +1601,8 @@ mod tests {
               "attributes": {
                 "token": "token_used",
                 "valid": true,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 1,
                 "created_at": "2022-01-16T14:40:00Z",
@@ -1550,6 +1625,8 @@ mod tests {
               "attributes": {
                 "token": "token_unused",
                 "valid": true,
+                "username": null,
+                "email": null,
                 "usage_limit": 10,
                 "times_used": 0,
                 "created_at": "2022-01-16T14:40:00Z",

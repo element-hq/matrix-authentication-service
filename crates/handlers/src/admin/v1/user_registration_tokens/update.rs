@@ -199,6 +199,8 @@ mod tests {
             "attributes": {
               "token": "test_update_expiry",
               "valid": true,
+              "username": null,
+              "email": null,
               "usage_limit": null,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -239,6 +241,8 @@ mod tests {
             "attributes": {
               "token": "test_update_expiry",
               "valid": true,
+              "username": null,
+              "email": null,
               "usage_limit": null,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -305,6 +309,8 @@ mod tests {
             "attributes": {
               "token": "test_update_limit",
               "valid": true,
+              "username": null,
+              "email": null,
               "usage_limit": 10,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -345,6 +351,8 @@ mod tests {
             "attributes": {
               "token": "test_update_limit",
               "valid": true,
+              "username": null,
+              "email": null,
               "usage_limit": null,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -412,6 +420,8 @@ mod tests {
             "attributes": {
               "token": "test_update_multiple",
               "valid": true,
+              "username": null,
+              "email": null,
               "usage_limit": 20,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -448,6 +458,7 @@ mod tests {
                     token: "test_update_none".to_owned(),
                     usage_limit: Some(5),
                     expires_at: Some(state.clock.now() + Duration::days(30)),
+                    ..Default::default()
                 },
             )
             .await
@@ -476,6 +487,8 @@ mod tests {
             "attributes": {
               "token": "test_update_none",
               "valid": true,
+              "username": null,
+              "email": null,
               "usage_limit": 5,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",

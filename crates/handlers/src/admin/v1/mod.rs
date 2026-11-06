@@ -14,7 +14,7 @@ use aide::axum::{
 use axum::extract::{FromRef, FromRequestParts};
 use mas_data_model::{AppVersion, BoxRng, SiteConfig};
 use mas_matrix::HomeserverConnection;
-use mas_policy::PolicyFactory;
+use mas_policy::{Policy, PolicyFactory};
 
 use super::call_context::CallContext;
 use crate::passwords::PasswordManager;
@@ -43,6 +43,7 @@ where
     Arc<PolicyFactory>: FromRef<S>,
     BoxRng: FromRequestParts<S>,
     CallContext: FromRequestParts<S>,
+    Policy: FromRequestParts<S>,
 {
     ApiRouter::<S>::new()
         .api_route(

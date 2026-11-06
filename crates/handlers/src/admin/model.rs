@@ -631,6 +631,14 @@ pub struct UserRegistrationToken {
     /// Whether the token is valid
     valid: bool,
 
+    /// A username imposed on the registering user. If null, the user can
+    /// choose their own username.
+    username: Option<String>,
+
+    /// An email address imposed on the registering user. If null, the user
+    /// can choose their own email.
+    email: Option<String>,
+
     /// Maximum number of times this token can be used
     usage_limit: Option<u32>,
 
@@ -656,6 +664,8 @@ impl UserRegistrationToken {
             id: token.id,
             valid: token.is_valid(now),
             token: token.token,
+            username: token.username,
+            email: token.email,
             usage_limit: token.usage_limit,
             times_used: token.times_used,
             created_at: token.created_at,
@@ -683,6 +693,8 @@ impl UserRegistrationToken {
                 id: Ulid::from_bytes([0x01; 16]),
                 token: "abc123def456".to_owned(),
                 valid: true,
+                username: None,
+                email: None,
                 usage_limit: Some(10),
                 times_used: 5,
                 created_at: DateTime::default(),
@@ -694,6 +706,8 @@ impl UserRegistrationToken {
                 id: Ulid::from_bytes([0x02; 16]),
                 token: "xyz789abc012".to_owned(),
                 valid: false,
+                username: None,
+                email: None,
                 usage_limit: None,
                 times_used: 0,
                 created_at: DateTime::default(),

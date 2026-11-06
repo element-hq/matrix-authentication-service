@@ -162,6 +162,8 @@ mod tests {
             "attributes": {
               "token": "test_token_456",
               "valid": true,
+              "username": null,
+              "email": null,
               "usage_limit": 5,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
