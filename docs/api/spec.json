@@ -3805,7 +3805,8 @@
                         "created_at": "1970-01-01T00:00:00Z",
                         "last_used_at": "1970-01-01T00:00:00Z",
                         "expires_at": "1970-01-31T00:00:00Z",
-                        "revoked_at": null
+                        "revoked_at": null,
+                        "invite_url": "https://example.com/register?token=abc123def456"
                       },
                       "links": {
                         "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
@@ -3830,7 +3831,8 @@
                         "created_at": "1970-01-01T00:00:00Z",
                         "last_used_at": null,
                         "expires_at": null,
-                        "revoked_at": "1970-01-01T00:00:00Z"
+                        "revoked_at": "1970-01-01T00:00:00Z",
+                        "invite_url": "https://example.com/register?token=xyz789abc012"
                       },
                       "links": {
                         "self": "/api/admin/v1/user-registration-tokens/02081040G2081040G2081040G2"
@@ -3893,7 +3895,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "last_used_at": "1970-01-01T00:00:00Z",
                       "expires_at": "1970-01-31T00:00:00Z",
-                      "revoked_at": null
+                      "revoked_at": null,
+                      "invite_url": "https://example.com/register?token=abc123def456"
                     },
                     "links": {
                       "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
@@ -3985,7 +3988,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "last_used_at": "1970-01-01T00:00:00Z",
                       "expires_at": "1970-01-31T00:00:00Z",
-                      "revoked_at": null
+                      "revoked_at": null,
+                      "invite_url": "https://example.com/register?token=abc123def456"
                     },
                     "links": {
                       "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
@@ -4069,7 +4073,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "last_used_at": "1970-01-01T00:00:00Z",
                       "expires_at": "1970-01-31T00:00:00Z",
-                      "revoked_at": null
+                      "revoked_at": null,
+                      "invite_url": "https://example.com/register?token=abc123def456"
                     },
                     "links": {
                       "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
@@ -4145,7 +4150,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "last_used_at": null,
                       "expires_at": null,
-                      "revoked_at": "1970-01-01T00:00:00Z"
+                      "revoked_at": "1970-01-01T00:00:00Z",
+                      "invite_url": "https://example.com/register?token=xyz789abc012"
                     },
                     "links": {
                       "self": "/api/admin/v1/user-registration-tokens/02081040G2081040G2081040G2"
@@ -4238,7 +4244,8 @@
                       "created_at": "1970-01-01T00:00:00Z",
                       "last_used_at": "1970-01-01T00:00:00Z",
                       "expires_at": "1970-01-31T00:00:00Z",
-                      "revoked_at": null
+                      "revoked_at": null,
+                      "invite_url": "https://example.com/register?token=abc123def456"
                     },
                     "links": {
                       "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
@@ -7426,6 +7433,11 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "invite_url": {
+            "description": "URL to share with the user to register with this token",
+            "type": "string",
+            "format": "uri"
           }
         },
         "required": [
@@ -7433,7 +7445,8 @@
           "valid",
           "passwordless",
           "times_used",
-          "created_at"
+          "created_at",
+          "invite_url"
         ]
       },
       "AddUserRegistrationTokenRequest": {

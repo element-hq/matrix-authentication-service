@@ -6,9 +6,10 @@
 // Please see LICENSE files in the repository root for full details.
 
 use aide::{OperationIo, transform::TransformOperation};
-use axum::{Json, response::IntoResponse};
+use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
+use mas_router::UrlBuilder;
 use ulid::Ulid;
 
 use crate::{
@@ -77,6 +78,7 @@ pub async fn handler(
     CallContext {
         mut repo, clock, ..
     }: CallContext,
+    State(url_builder): State<UrlBuilder>,
     id: UlidPathParam,
 ) -> Result<Json<SingleResponse<UserRegistrationToken>>, RouteError> {
     let id = *id;
@@ -97,7 +99,7 @@ pub async fn handler(
     repo.save().await?;
 
     Ok(Json(SingleResponse::new(
-        UserRegistrationToken::new(token, clock.now()),
+        UserRegistrationToken::new(token, clock.now(), &url_builder),
         format!("/api/admin/v1/user-registration-tokens/{id}/unrevoke"),
     )))
 }
@@ -170,7 +172,8 @@ mod tests {
               "created_at": "2022-01-16T14:40:00Z",
               "last_used_at": null,
               "expires_at": null,
-              "revoked_at": null
+              "revoked_at": null,
+              "invite_url": "https://example.com/register?token=test_token_456"
             },
             "links": {
               "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
