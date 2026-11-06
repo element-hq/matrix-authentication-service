@@ -535,6 +535,7 @@ impl Options {
                         username,
                         email,
                         passwordless,
+                        None,
                     )
                     .await?;
 

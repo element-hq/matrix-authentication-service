@@ -233,6 +233,7 @@ pub struct UserRegistrationToken {
     pub username: Option<String>,
     pub email: Option<String>,
     pub passwordless: bool,
+    pub room_id: Option<String>,
     pub usage_limit: Option<u32>,
     pub times_used: u32,
     pub created_at: DateTime<Utc>,

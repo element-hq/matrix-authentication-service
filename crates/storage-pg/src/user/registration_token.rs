@@ -50,6 +50,7 @@ struct UserRegistrationTokenLookup {
     username: Option<String>,
     email: Option<String>,
     passwordless: bool,
+    room_id: Option<String>,
     usage_limit: Option<i32>,
     times_used: i32,
     created_at: DateTime<Utc>,
@@ -217,6 +218,7 @@ impl TryFrom<UserRegistrationTokenLookup> for UserRegistrationToken {
             username: res.username,
             email: res.email,
             passwordless: res.passwordless,
+            room_id: res.room_id,
             usage_limit,
             times_used,
             created_at: res.created_at,
@@ -272,6 +274,13 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
                     UserRegistrationTokens::Passwordless,
                 )),
                 UserRegistrationTokenLookupIden::Passwordless,
+            )
+            .expr_as(
+                Expr::col((
+                    UserRegistrationTokens::Table,
+                    UserRegistrationTokens::RoomId,
+                )),
+                UserRegistrationTokenLookupIden::RoomId,
             )
             .expr_as(
                 Expr::col((
@@ -386,6 +395,7 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
                        username,
                        email,
                        passwordless,
+                       room_id,
                        usage_limit,
                        times_used,
                        created_at,
@@ -428,6 +438,7 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
                        username,
                        email,
                        passwordless,
+                       room_id,
                        usage_limit,
                        times_used,
                        created_at,
@@ -468,6 +479,7 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
         username: Option<String>,
         email: Option<String>,
         passwordless: bool,
+        room_id: Option<String>,
     ) -> Result<UserRegistrationToken, Self::Error> {
         let created_at = clock.now();
         let id = Ulid::from_datetime_with_rng(created_at, rng);
@@ -480,8 +492,8 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
         sqlx::query!(
             r#"
                 INSERT INTO user_registration_tokens
-                    (user_registration_token_id, token, usage_limit, created_at, expires_at, username, email, passwordless)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    (user_registration_token_id, token, usage_limit, created_at, expires_at, username, email, passwordless, room_id)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             "#,
             Uuid::from(id),
             &token,
@@ -491,6 +503,7 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             username.as_deref(),
             email.as_deref(),
             passwordless,
+            room_id.as_deref(),
         )
         .traced()
         .execute(&mut *self.conn)
@@ -502,6 +515,7 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             username,
             email,
             passwordless,
+            room_id,
             usage_limit,
             times_used: 0,
             created_at,
@@ -786,6 +800,7 @@ mod tests {
                 None,
                 None,
                 false,
+                None,
             )
             .await
             .unwrap();
@@ -840,6 +855,7 @@ mod tests {
                 None,
                 None,
                 false,
+                None,
             )
             .await
             .unwrap();
@@ -888,6 +904,7 @@ mod tests {
                 None,
                 None,
                 false,
+                None,
             )
             .await
             .unwrap();
@@ -927,6 +944,61 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_room_id(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+
+        for room_id in [None, Some("!abc:example.com".to_owned())] {
+            let token = repo
+                .user_registration_token()
+                .add(
+                    &mut rng,
+                    &clock,
+                    format!("token_{room_id:?}"),
+                    None,
+                    None,
+                    None,
+                    None,
+                    false,
+                    room_id.clone(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(token.room_id, room_id);
+
+            let looked_up = repo
+                .user_registration_token()
+                .lookup(token.id)
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(looked_up, token);
+
+            let found = repo
+                .user_registration_token()
+                .find_by_token(&token.token)
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(found, token);
+        }
+
+        let page = repo
+            .user_registration_token()
+            .list(
+                UserRegistrationTokenFilter::new(clock.now()),
+                Pagination::first(10),
+            )
+            .await
+            .unwrap();
+        let mut room_ids: Vec<_> = page.edges.into_iter().map(|e| e.node.room_id).collect();
+        room_ids.sort();
+        assert_eq!(room_ids, [None, Some("!abc:example.com".to_owned())]);
+    }
+
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
     async fn test_list_and_count(pool: PgPool) {
         let mut rng = ChaChaRng::seed_from_u64(42);
         let clock = MockClock::default();
@@ -946,6 +1018,7 @@ mod tests {
                 None,
                 None,
                 false,
+                None,
             )
             .await
             .unwrap();
@@ -962,6 +1035,7 @@ mod tests {
                 None,
                 None,
                 false,
+                None,
             )
             .await
             .unwrap();
@@ -984,6 +1058,7 @@ mod tests {
                 None,
                 None,
                 false,
+                None,
             )
             .await
             .unwrap();
@@ -1000,6 +1075,7 @@ mod tests {
                 None,
                 None,
                 false,
+                None,
             )
             .await
             .unwrap();

@@ -213,6 +213,7 @@ pub enum UserRegistrationTokens {
     Username,
     Email,
     Passwordless,
+    RoomId,
     UsageLimit,
     TimesUsed,
     CreatedAt,

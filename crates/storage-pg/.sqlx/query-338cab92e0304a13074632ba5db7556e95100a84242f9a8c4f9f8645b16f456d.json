@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT user_registration_token_id,\n                       token,\n                       username,\n                       email,\n                       passwordless,\n                       usage_limit,\n                       times_used,\n                       created_at,\n                       last_used_at,\n                       expires_at,\n                       revoked_at\n                FROM user_registration_tokens\n                WHERE user_registration_token_id = $1\n            ",
+  "query": "\n                SELECT user_registration_token_id,\n                       token,\n                       username,\n                       email,\n                       passwordless,\n                       room_id,\n                       usage_limit,\n                       times_used,\n                       created_at,\n                       last_used_at,\n                       expires_at,\n                       revoked_at\n                FROM user_registration_tokens\n                WHERE token = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -30,38 +30,43 @@
       },
       {
         "ordinal": 5,
+        "name": "room_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
         "name": "usage_limit",
         "type_info": "Int4"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "times_used",
         "type_info": "Int4"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "last_used_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "expires_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "revoked_at",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Text"
       ]
     },
     "nullable": [
@@ -71,6 +76,7 @@
       true,
       false,
       true,
+      true,
       false,
       false,
       true,
@@ -78,5 +84,5 @@
       true
     ]
   },
-  "hash": "a3e55b75ae98f025db44d3d0dfd88382ce4f53810a86d43d2eeddad758ccb870"
+  "hash": "338cab92e0304a13074632ba5db7556e95100a84242f9a8c4f9f8645b16f456d"
 }

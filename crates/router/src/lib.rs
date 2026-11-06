@@ -31,6 +31,15 @@ mod tests {
             Login::and_continue_grant(Ulid::nil()).path_and_query(),
             Cow::Borrowed("/login?kind=continue_authorization_grant&id=00000000000000000000000000")
         );
+        assert_eq!(
+            Register::and_then(PostAuthAction::ContinueRoomInvite { id: Ulid::nil() })
+                .path_and_query(),
+            Cow::Borrowed("/register?kind=continue_room_invite&id=00000000000000000000000000")
+        );
+        assert_eq!(
+            OpenInviteRoom(Ulid::nil()).path_and_query(),
+            Cow::Borrowed("/open-room/00000000000000000000000000")
+        );
     }
 
     #[test]
