@@ -300,6 +300,22 @@ pub trait UserRegistrationTokenRepository: Send + Sync {
         email: Option<String>,
     ) -> Result<UserRegistrationToken, Self::Error>;
 
+    /// Set the email addresses allowed by this [`UserRegistrationToken`]
+    ///
+    /// # Parameters
+    ///
+    /// * `token`: The [`UserRegistrationToken`] to update
+    /// * `allowed_emails`: The new email addresses, or `None` for any
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn set_allowed_emails(
+        &mut self,
+        token: UserRegistrationToken,
+        allowed_emails: Option<Vec<String>>,
+    ) -> Result<UserRegistrationToken, Self::Error>;
+
     /// List [`UserRegistrationToken`]s based on the provided filter
     ///
     /// Returns a list of matching [`UserRegistrationToken`]s
@@ -374,6 +390,11 @@ repository_impl!(UserRegistrationTokenRepository:
         &mut self,
         token: UserRegistrationToken,
         email: Option<String>,
+    ) -> Result<UserRegistrationToken, Self::Error>;
+    async fn set_allowed_emails(
+        &mut self,
+        token: UserRegistrationToken,
+        allowed_emails: Option<Vec<String>>,
     ) -> Result<UserRegistrationToken, Self::Error>;
     async fn list(
         &mut self,

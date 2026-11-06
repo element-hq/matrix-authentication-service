@@ -4166,6 +4166,23 @@
               }
             }
           },
+          "400": {
+            "description": "`allowed_emails` is empty or set on a token with an `email` or without `passwordless`, or an address in it is not valid or refused by the registration policy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "The token has an `email`, so it can't have `allowed_emails`"
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "404": {
             "description": "Registration token was not found",
             "content": {
@@ -7739,6 +7756,20 @@
             ],
             "format": "uint32",
             "minimum": 0
+          },
+          "allowed_emails": {
+            "description": "New email addresses the registering user must use one of, replacing\nthe old ones, or null to allow any. It can't be set on a token with an\n`email` or without `passwordless`. It must not be empty, and each\naddress must pass the registration policy. Repeats of an address in\nanother case are dropped.",
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "alice@example.com",
+              "bob@example.com"
+            ]
           }
         }
       },

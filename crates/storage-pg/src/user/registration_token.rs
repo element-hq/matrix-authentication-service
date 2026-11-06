@@ -787,6 +787,40 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
 
         Ok(token)
     }
+
+    #[tracing::instrument(
+        name = "db.user_registration_token.set_allowed_emails",
+        skip_all,
+        fields(
+            db.query.text,
+            user_registration_token.id = %token.id,
+        ),
+        err,
+    )]
+    async fn set_allowed_emails(
+        &mut self,
+        mut token: UserRegistrationToken,
+        allowed_emails: Option<Vec<String>>,
+    ) -> Result<UserRegistrationToken, Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                UPDATE user_registration_tokens
+                SET allowed_emails = $2
+                WHERE user_registration_token_id = $1
+            "#,
+            Uuid::from(token.id),
+            allowed_emails.as_deref() as Option<&[String]>,
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        token.allowed_emails = allowed_emails;
+
+        Ok(token)
+    }
 }
 
 #[cfg(test)]
@@ -1119,6 +1153,51 @@ mod tests {
                 format!("{:?}", res.unwrap_err())
                     .contains("user_registration_tokens_allowed_emails_check")
             );
+        }
+    }
+
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_set_allowed_emails(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+
+        let mut token = repo
+            .user_registration_token()
+            .add(
+                &mut rng,
+                &clock,
+                UserRegistrationTokenParams {
+                    token: "test_token".to_owned(),
+                    allowed_emails: Some(vec!["alice@example.com".to_owned()]),
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+
+        for allowed_emails in [
+            Some(vec![
+                "bob@example.com".to_owned(),
+                "carol@example.com".to_owned(),
+            ]),
+            None,
+        ] {
+            token = repo
+                .user_registration_token()
+                .set_allowed_emails(token, allowed_emails.clone())
+                .await
+                .unwrap();
+            assert_eq!(token.allowed_emails, allowed_emails);
+
+            let looked_up = repo
+                .user_registration_token()
+                .lookup(token.id)
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(looked_up, token);
         }
     }
 
