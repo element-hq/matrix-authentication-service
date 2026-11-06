@@ -1263,6 +1263,83 @@ impl TemplateContext for EmailVerificationContext {
     }
 }
 
+/// Context used by the `emails/invite.{txt,html,subject}` templates
+#[derive(Serialize)]
+pub struct EmailInviteContext {
+    room_name: Option<String>,
+    inviter: Option<String>,
+    inviter_name: Option<String>,
+    invite_link: Url,
+}
+
+impl EmailInviteContext {
+    /// Constructs a context for the invite email
+    #[must_use]
+    pub fn new(
+        room_name: Option<String>,
+        inviter: Option<String>,
+        inviter_name: Option<String>,
+        invite_link: Url,
+    ) -> Self {
+        Self {
+            room_name,
+            inviter,
+            inviter_name,
+            invite_link,
+        }
+    }
+}
+
+impl TemplateContext for EmailInviteContext {
+    fn sample<R: RngExt>(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut R,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
+    where
+        Self: Sized,
+    {
+        let url_builder = UrlBuilder::new("https://example.com/".parse().unwrap(), None, None);
+        let invite_link = url_builder.absolute_url_for(
+            &mas_router::Register::default().with_token("abcdefghijkl".to_owned()),
+        );
+
+        sample_list(vec![
+            Self::new(
+                Some("Project X".to_owned()),
+                Some("@alice:example.com".to_owned()),
+                Some("Alice O'Brien & Co".to_owned()),
+                invite_link.clone(),
+            ),
+            Self::new(
+                None,
+                Some("@alice:example.com".to_owned()),
+                Some("Alice O'Brien & Co".to_owned()),
+                invite_link.clone(),
+            ),
+            Self::new(
+                Some("Project X".to_owned()),
+                None,
+                Some("Alice O'Brien & Co".to_owned()),
+                invite_link.clone(),
+            ),
+            Self::new(
+                None,
+                Some("@alice:example.com".to_owned()),
+                None,
+                invite_link.clone(),
+            ),
+            Self::new(
+                Some("Project X".to_owned()),
+                None,
+                None,
+                invite_link.clone(),
+            ),
+            Self::new(None, None, None, invite_link),
+        ])
+    }
+}
+
 /// Fields of the email verification form
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
