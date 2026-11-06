@@ -41,7 +41,8 @@ pub use self::{
     },
     policy_data::PolicyData,
     site_config::{
-        CaptchaConfig, CaptchaService, SessionExpirationConfig, SessionLimitConfig, SiteConfig,
+        CaptchaConfig, CaptchaService, SessionExpirationConfig, SessionLimitConfig,
+        SessionLimitRules, SiteConfig,
     },
     tokens::{
         AccessToken, AccessTokenState, RefreshToken, RefreshTokenState, TokenFormatError, TokenType,
@@ -60,6 +61,7 @@ pub use self::{
         Authentication, AuthenticationMethod, BrowserSession, MatrixUser, Password, User,
         UserEmail, UserEmailAuthentication, UserEmailAuthenticationCode, UserRecoverySession,
         UserRecoveryTicket, UserRegistration, UserRegistrationPassword, UserRegistrationToken,
+        UserSessionLimitOverride,
     },
     utils::{BoxClock, BoxRng, UlidExt},
     version::AppVersion,

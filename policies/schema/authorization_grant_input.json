@@ -22,6 +22,17 @@
         }
       ]
     },
+    "session_limit": {
+      "description": "Effective session limits for this evaluation, if any.\nFalls back to `data.session_limit` in bundled policies when omitted.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/SessionLimitInput"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "client": {
       "type": "object",
       "additionalProperties": true
@@ -66,6 +77,15 @@
           "type": "integer",
           "format": "uint64",
           "minimum": 0
+        },
+        "against_limit": {
+          "description": "Count compared against soft/hard limits for this evaluation.\nGlobal path: same as `total`. Per-client path: that client's OAuth 2.0\nsessions. Omitted in older inputs; policies fall back to `total`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
         }
       },
       "required": [
@@ -73,6 +93,38 @@
         "oauth2",
         "compat",
         "personal"
+      ]
+    },
+    "SessionLimitInput": {
+      "description": "Effective session limits passed into a policy evaluation.",
+      "type": "object",
+      "properties": {
+        "soft_limit": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "hard_limit": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "max_session_threshold": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        },
+        "dangerous_hard_limit_eviction": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "soft_limit",
+        "hard_limit",
+        "dangerous_hard_limit_eviction"
       ]
     },
     "GrantType": {

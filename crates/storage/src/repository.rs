@@ -28,7 +28,7 @@ use crate::{
     user::{
         BrowserSessionRepository, UserEmailRepository, UserPasswordRepository,
         UserRecoveryRepository, UserRegistrationRepository, UserRegistrationTokenRepository,
-        UserRepository, UserTermsRepository,
+        UserRepository, UserSessionLimitOverrideRepository, UserTermsRepository,
     },
 };
 
@@ -155,6 +155,11 @@ pub trait RepositoryAccess: Send {
         &'c mut self,
     ) -> Box<dyn UserRegistrationTokenRepository<Error = Self::Error> + 'c>;
 
+    /// Get a [`UserSessionLimitOverrideRepository`]
+    fn user_session_limit_override<'c>(
+        &'c mut self,
+    ) -> Box<dyn UserSessionLimitOverrideRepository<Error = Self::Error> + 'c>;
+
     /// Get an [`UserTermsRepository`]
     fn user_terms<'c>(&'c mut self) -> Box<dyn UserTermsRepository<Error = Self::Error> + 'c>;
 
@@ -268,7 +273,7 @@ mod impls {
         user::{
             BrowserSessionRepository, UserEmailRepository, UserPasswordRepository,
             UserRegistrationRepository, UserRegistrationTokenRepository, UserRepository,
-            UserTermsRepository,
+            UserSessionLimitOverrideRepository, UserTermsRepository,
         },
     };
 
@@ -372,6 +377,15 @@ mod impls {
         ) -> Box<dyn UserRegistrationTokenRepository<Error = Self::Error> + 'c> {
             Box::new(MapErr::new(
                 self.inner.user_registration_token(),
+                &mut self.mapper,
+            ))
+        }
+
+        fn user_session_limit_override<'c>(
+            &'c mut self,
+        ) -> Box<dyn UserSessionLimitOverrideRepository<Error = Self::Error> + 'c> {
+            Box::new(MapErr::new(
+                self.inner.user_session_limit_override(),
                 &mut self.mapper,
             ))
         }
@@ -559,6 +573,12 @@ mod impls {
             &'c mut self,
         ) -> Box<dyn UserRegistrationTokenRepository<Error = Self::Error> + 'c> {
             (**self).user_registration_token()
+        }
+
+        fn user_session_limit_override<'c>(
+            &'c mut self,
+        ) -> Box<dyn UserSessionLimitOverrideRepository<Error = Self::Error> + 'c> {
+            (**self).user_session_limit_override()
         }
 
         fn user_terms<'c>(&'c mut self) -> Box<dyn UserTermsRepository<Error = Self::Error> + 'c> {

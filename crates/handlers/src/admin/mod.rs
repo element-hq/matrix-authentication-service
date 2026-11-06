@@ -91,6 +91,13 @@ fn finish(t: TransformOpenApi) -> TransformOpenApi {
             ..Tag::default()
         })
         .tag(Tag {
+            name: "user-session-limit-override".to_owned(),
+            description: Some(
+                "Manage per-user overrides of session limit soft/hard numbers".to_owned(),
+            ),
+            ..Tag::default()
+        })
+        .tag(Tag {
             name: "upstream-oauth-link".to_owned(),
             description: Some(
                 "Manage links between local users and identities from upstream OAuth 2.0 providers"

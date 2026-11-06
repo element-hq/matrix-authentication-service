@@ -5,7 +5,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::net::IpAddr;
+use std::{net::IpAddr, num::NonZeroU64};
 
 use chrono::{DateTime, Utc};
 use rand::RngExt;
@@ -287,4 +287,19 @@ pub struct UserRegistration {
     pub user_agent: Option<String>,
     pub created_at: DateTime<Utc>,
     pub completed_at: Option<DateTime<Utc>>,
+}
+
+/// Per-user override of session limit soft/hard numbers.
+///
+/// `oauth2_client_id` is `None` for a global override, or `Some` for a
+/// specific OAuth 2.0 client.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct UserSessionLimitOverride {
+    pub id: Ulid,
+    pub user_id: Ulid,
+    pub oauth2_client_id: Option<Ulid>,
+    pub soft_limit: NonZeroU64,
+    pub hard_limit: NonZeroU64,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }

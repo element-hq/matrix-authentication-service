@@ -1046,3 +1046,79 @@ impl PersonalSession {
         self
     }
 }
+
+/// A per-user override of session limit soft/hard numbers
+#[derive(Serialize, JsonSchema)]
+pub struct UserSessionLimitOverride {
+    #[serde(skip)]
+    id: Ulid,
+
+    /// When the override was created
+    created_at: DateTime<Utc>,
+
+    /// When the override was last updated
+    updated_at: DateTime<Utc>,
+
+    /// The ID of the user this override applies to
+    #[schemars(with = "super::schema::Ulid")]
+    user_id: Ulid,
+
+    /// The OAuth 2.0 client this override applies to.
+    /// `null` means this is a global override for the user.
+    #[schemars(with = "Option<super::schema::Ulid>")]
+    client_id: Option<Ulid>,
+
+    /// Soft session limit
+    soft_limit: u64,
+
+    /// Hard session limit
+    hard_limit: u64,
+}
+
+impl Resource for UserSessionLimitOverride {
+    const KIND: &'static str = "user-session-limit-override";
+    const PATH: &'static str = "/api/admin/v1/user-session-limit-overrides";
+
+    fn id(&self) -> Ulid {
+        self.id
+    }
+}
+
+impl From<mas_data_model::UserSessionLimitOverride> for UserSessionLimitOverride {
+    fn from(value: mas_data_model::UserSessionLimitOverride) -> Self {
+        Self {
+            id: value.id,
+            created_at: value.created_at,
+            updated_at: value.updated_at,
+            user_id: value.user_id,
+            client_id: value.oauth2_client_id,
+            soft_limit: value.soft_limit.get(),
+            hard_limit: value.hard_limit.get(),
+        }
+    }
+}
+
+impl UserSessionLimitOverride {
+    pub fn samples() -> [Self; 2] {
+        [
+            Self {
+                id: Ulid::from_bytes([0x01; 16]),
+                created_at: DateTime::default(),
+                updated_at: DateTime::default(),
+                user_id: Ulid::from_bytes([0x02; 16]),
+                client_id: None,
+                soft_limit: 3,
+                hard_limit: 5,
+            },
+            Self {
+                id: Ulid::from_bytes([0x03; 16]),
+                created_at: DateTime::default(),
+                updated_at: DateTime::default(),
+                user_id: Ulid::from_bytes([0x02; 16]),
+                client_id: Some(Ulid::from_bytes([0x04; 16])),
+                soft_limit: 2,
+                hard_limit: 4,
+            },
+        ]
+    }
+}

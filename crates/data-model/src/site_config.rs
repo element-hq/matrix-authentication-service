@@ -4,10 +4,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::num::NonZeroU64;
+use std::{collections::HashMap, num::NonZeroU64};
 
 use chrono::Duration;
 use serde::Serialize;
+use ulid::Ulid;
 use url::Url;
 
 /// Which Captcha service is being used
@@ -39,13 +40,41 @@ pub struct SessionExpirationConfig {
     pub compat_session_inactivity_ttl: Option<Duration>,
 }
 
+/// Effective session limit numbers (global or for one OAuth 2.0 client).
+///
+/// See [`mas_config::ExperimentalSessionLimitRules`]
+#[derive(Serialize, Debug, Clone, Copy)]
+pub struct SessionLimitRules {
+    pub soft_limit: NonZeroU64,
+    pub hard_limit: NonZeroU64,
+    pub max_session_threshold: Option<NonZeroU64>,
+    pub dangerous_hard_limit_eviction: bool,
+}
+
 /// See [`mas_config::ExperimentalSessionLimitConfig`]
+///
+/// This is the global limit. Per-client limits live on
+/// [`SiteConfig::session_limit_per_client`] and are not part of static policy
+/// data.
 #[derive(Serialize, Debug, Clone)]
 pub struct SessionLimitConfig {
     pub soft_limit: NonZeroU64,
     pub hard_limit: NonZeroU64,
     pub max_session_threshold: Option<NonZeroU64>,
     pub dangerous_hard_limit_eviction: bool,
+}
+
+impl SessionLimitConfig {
+    /// The global (non-client-specific) limit numbers.
+    #[must_use]
+    pub fn rules(&self) -> SessionLimitRules {
+        SessionLimitRules {
+            soft_limit: self.soft_limit,
+            hard_limit: self.hard_limit,
+            max_session_threshold: self.max_session_threshold,
+            dangerous_hard_limit_eviction: self.dangerous_hard_limit_eviction,
+        }
+    }
 }
 
 /// Random site configuration we want accessible in various places.
@@ -117,8 +146,15 @@ pub struct SiteConfig {
     /// The iframe URL to show in the plan tab of the UI
     pub plan_management_iframe_uri: Option<String>,
 
-    /// Limits on the number of application sessions that each user can have
+    /// Limits on the number of application sessions that each user can have.
+    ///
+    /// `None` when session limits are disabled, or when only
+    /// [`Self::session_limit_per_client`] is configured.
     pub session_limit: Option<SessionLimitConfig>,
+
+    /// Session limits that replace [`Self::session_limit`] when logging into a
+    /// specific OAuth 2.0 client. Not included in static policy data.
+    pub session_limit_per_client: HashMap<Ulid, SessionLimitRules>,
 
     /// Whether the Device Authorization Grant (RFC 8628) is enabled.
     pub device_code_grant_enabled: bool,
