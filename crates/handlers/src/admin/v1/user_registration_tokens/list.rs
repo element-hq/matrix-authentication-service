@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 // Copyright 2025 The Matrix.org Foundation C.I.C.
 //
@@ -191,6 +192,7 @@ mod tests {
     use chrono::Duration;
     use hyper::{Request, StatusCode};
     use mas_data_model::Clock as _;
+    use mas_storage::user::UserRegistrationTokenParams;
     use sqlx::PgPool;
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
@@ -203,9 +205,11 @@ mod tests {
             .add(
                 &mut state.rng(),
                 &state.clock,
-                "token_unused".to_owned(),
-                Some(10),
-                None,
+                UserRegistrationTokenParams {
+                    token: "token_unused".to_owned(),
+                    usage_limit: Some(10),
+                    ..Default::default()
+                },
             )
             .await
             .unwrap();
@@ -216,9 +220,11 @@ mod tests {
             .add(
                 &mut state.rng(),
                 &state.clock,
-                "token_used".to_owned(),
-                Some(10),
-                None,
+                UserRegistrationTokenParams {
+                    token: "token_used".to_owned(),
+                    usage_limit: Some(10),
+                    ..Default::default()
+                },
             )
             .await
             .unwrap();
@@ -233,9 +239,11 @@ mod tests {
             .add(
                 &mut state.rng(),
                 &state.clock,
-                "token_revoked".to_owned(),
-                Some(10),
-                None,
+                UserRegistrationTokenParams {
+                    token: "token_revoked".to_owned(),
+                    usage_limit: Some(10),
+                    ..Default::default()
+                },
             )
             .await
             .unwrap();
@@ -250,9 +258,11 @@ mod tests {
             .add(
                 &mut state.rng(),
                 &state.clock,
-                "token_used_revoked".to_owned(),
-                Some(10),
-                None,
+                UserRegistrationTokenParams {
+                    token: "token_used_revoked".to_owned(),
+                    usage_limit: Some(10),
+                    ..Default::default()
+                },
             )
             .await
             .unwrap();
@@ -272,9 +282,11 @@ mod tests {
             .add(
                 &mut state.rng(),
                 &state.clock,
-                "token_expired".to_owned(),
-                Some(5),
-                Some(expires_at),
+                UserRegistrationTokenParams {
+                    token: "token_expired".to_owned(),
+                    usage_limit: Some(5),
+                    expires_at: Some(expires_at),
+                },
             )
             .await
             .unwrap();

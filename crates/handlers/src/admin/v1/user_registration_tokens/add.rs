@@ -11,6 +11,7 @@ use chrono::{DateTime, Utc};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
 use mas_data_model::BoxRng;
+use mas_storage::user::UserRegistrationTokenParams;
 use rand::distr::{Alphanumeric, SampleString};
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -100,9 +101,11 @@ pub async fn handler(
         .add(
             &mut rng,
             &clock,
-            token,
-            params.usage_limit,
-            params.expires_at,
+            UserRegistrationTokenParams {
+                token,
+                usage_limit: params.usage_limit,
+                expires_at: params.expires_at,
+            },
         )
         .await?;
 
