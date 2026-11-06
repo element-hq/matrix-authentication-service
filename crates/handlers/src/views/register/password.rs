@@ -38,8 +38,8 @@ use crate::{
 };
 
 /// Register a user with a password, from the form posted on `/register`. The
-/// caller has verified the CSRF token, checked that password registration is
-/// enabled and resolved the registration token the form carried.
+/// caller has verified the CSRF token, resolved the invite code the form
+/// carried and checked that this registration is allowed.
 #[tracing::instrument(name = "handlers.views.register.password", skip_all)]
 #[expect(clippy::too_many_arguments)]
 pub(super) async fn register(
@@ -1127,6 +1127,59 @@ mod tests {
                 None => response.assert_status(StatusCode::SEE_OTHER),
             }
         }
+    }
+
+    /// A passwordless invite code is a way to register on its own: it works
+    /// with password registration off, and with passwords disabled entirely
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_passwordless_token_without_password_registration(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_login_enabled: false,
+                password_registration_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        add_registration_token(
+            &state,
+            "invite_alice",
+            Some("alice"),
+            Some("alice@example.com"),
+            true,
+        )
+        .await;
+
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({ "token": "invite_alice" }),
+        )
+        .await;
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo
+            .user_registration()
+            .lookup(registration_id(&response))
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(registration.username, "alice");
+        assert!(registration.password.is_none());
+
+        // The same request without the invite code has nothing to register with
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({ "username": "mallory", "email": "mallory@example.com" }),
+        )
+        .await;
+        response.assert_status(StatusCode::METHOD_NOT_ALLOWED);
     }
 
     /// Post the registration form from the given IP address

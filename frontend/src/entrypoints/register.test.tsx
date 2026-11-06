@@ -90,6 +90,24 @@ describe("register island", () => {
   afterEach(unmount);
 
   describe("with an invalid invite", () => {
+    it.each([0, 1, 2])(
+      "says so without password registration, with %i providers",
+      async (count) => {
+        await mountRegister({
+          passwordRegistration: false,
+          providers: PROVIDERS.slice(0, count),
+          invite: { valid: false },
+        });
+
+        expect(screen.getByRole("alert")).toHaveTextContent(
+          "This invite link is invalid or has expired",
+        );
+        expect(
+          screen.queryAllByRole("button", { name: /^Continue with/ }),
+        ).toHaveLength(count);
+      },
+    );
+
     it("says so above the password form", async () => {
       await mountRegister({ invite: { valid: false } });
 

@@ -387,10 +387,17 @@ export const ProvidersOnlyForm: React.FC<{
   csrfToken: string;
   providers: Provider[];
   loginLink: string;
-}> = ({ csrfToken, providers, loginLink }) => (
-  <Form.Root method="POST">
-    <input type="hidden" name="csrf" value={csrfToken} />
-    <ProviderButtons providers={providers} />
-    <LoginLink href={loginLink} />
-  </Form.Root>
-);
+  inviteInvalid: boolean;
+}> = ({ csrfToken, providers, loginLink, inviteInvalid }) => {
+  const { t } = useTranslation();
+  return (
+    <Form.Root method="POST">
+      <input type="hidden" name="csrf" value={csrfToken} />
+      {inviteInvalid && (
+        <ErrorAlert>{t("frontend.register.invite_invalid")}</ErrorAlert>
+      )}
+      <ProviderButtons providers={providers} />
+      <LoginLink href={loginLink} />
+    </Form.Root>
+  );
+};
