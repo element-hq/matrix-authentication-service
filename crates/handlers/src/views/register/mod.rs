@@ -21,8 +21,13 @@ use mas_data_model::{BoxClock, BoxRng, SiteConfig, UpstreamOAuthProvider};
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
 use mas_router::{Register, UpstreamOAuth2Authorize, UrlBuilder};
-use mas_storage::{BoxRepository, upstream_oauth2::UpstreamOAuthProviderRepository};
-use mas_templates::{RegisterContext, RegisterFormField, TemplateContext, Templates, ToFormState};
+use mas_storage::{
+    BoxRepository, upstream_oauth2::UpstreamOAuthProviderRepository,
+    user::UserRegistrationTokenRepository,
+};
+use mas_templates::{
+    FieldError, RegisterContext, RegisterFormField, TemplateContext, Templates, ToFormState,
+};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use ulid::Ulid;
@@ -129,6 +134,10 @@ pub(crate) struct RegisterForm {
     #[serde(default)]
     accept_terms: String,
 
+    /// The registration token whose pins the registration must fit
+    #[serde(default)]
+    token: String,
+
     /// Which upstream provider the user chose, if any: each provider has its
     /// own submit button
     #[serde(default, skip_serializing)]
@@ -226,6 +235,38 @@ pub(crate) async fn post(
         return Ok(StatusCode::METHOD_NOT_ALLOWED.into_response());
     }
 
+    let registration_token = if form.token.is_empty() {
+        None
+    } else {
+        repo.user_registration_token()
+            .find_by_token(&form.token)
+            .await?
+            .filter(|found| found.is_valid(clock.now()))
+    };
+
+    // Only the code's error is reported: checking the rest of the form would
+    // tell whether a username exists
+    if !form.token.is_empty() && registration_token.is_none() {
+        let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
+        let form_state = form
+            .to_form_state()
+            .with_error_on_field(RegisterFormField::Token, FieldError::Invalid);
+
+        let content = self::password::render(
+            locale,
+            form_state,
+            &query,
+            csrf_token,
+            &mut repo,
+            &templates,
+            &url_builder,
+            site_config.captcha.clone(),
+        )
+        .await?;
+
+        return Ok((cookie_jar, Html(content)).into_response());
+    }
+
     self::password::register(
         &mut rng,
         &clock,
@@ -245,6 +286,7 @@ pub(crate) async fn post(
         query,
         cookie_jar,
         form,
+        registration_token,
     )
     .await
 }
