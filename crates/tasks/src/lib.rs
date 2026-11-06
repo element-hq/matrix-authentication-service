@@ -161,6 +161,7 @@ pub async fn init(
         .register_handler::<mas_storage::queue::CleanupInactiveOAuth2SessionIpsJob>()
         .register_handler::<mas_storage::queue::CleanupInactiveCompatSessionIpsJob>()
         .register_handler::<mas_storage::queue::CleanupInactiveUserSessionIpsJob>()
+        .register_handler::<mas_storage::queue::CleanupDeactivatedUsersJob>()
         .register_deprecated_queue("cleanup-expired-tokens")
         // Recurring jobs are spread across the hour at ~5 minute intervals
         // to avoid clustering and distribute database load evenly.
@@ -284,6 +285,11 @@ pub async fn init(
             // Run once a day at 2:00 AM
             "0 0 2 * * *".parse()?,
             mas_storage::queue::PruneStalePolicyDataJob,
+        )
+        .add_schedule(
+            "cleanup-deactivated-users",
+            "0 45 * * * *".parse()?,
+            mas_storage::queue::CleanupDeactivatedUsersJob,
         );
 
     Ok(worker)
