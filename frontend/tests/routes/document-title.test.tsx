@@ -16,15 +16,16 @@ import { renderPage, server } from "./render";
 
 describe("Document title", () => {
   it.each([
-    ["/", "Your account – example.com"],
-    ["/password/change/success", "Change your password – example.com"],
-    ["/reset-cross-signing", "Reset identity – example.com"],
+    ["/", "Your account • example.com"],
+    ["/password/change/success", "Change your password • example.com"],
+    ["/reset-cross-signing", "Reset identity • example.com"],
     // Inherits the title of the parent route
-    ["/reset-cross-signing/success", "Reset identity – example.com"],
-    ["/this-route-does-not-exist", "Page not found – example.com"],
+    ["/reset-cross-signing/success", "Reset identity • example.com"],
+    ["/this-route-does-not-exist", "Page not found • example.com"],
   ])("sets the title for %s", async (route, title) => {
     await renderPage(route);
     await waitFor(() => expect(document.title).toBe(title));
+    expect(document.head.querySelectorAll("title")).toHaveLength(1);
   });
 
   it("uses the error title when the route fails to load", async () => {
@@ -36,8 +37,9 @@ describe("Document title", () => {
 
     await renderPage("/");
     await waitFor(() =>
-      expect(document.title).toBe("Something went wrong – example.com"),
+      expect(document.title).toBe("Something went wrong • example.com"),
     );
+    expect(document.head.querySelectorAll("title")).toHaveLength(1);
   });
 
   it("uses the error title when a child of a titled route fails", async () => {
@@ -49,25 +51,26 @@ describe("Document title", () => {
 
     await renderPage("/");
     await waitFor(() =>
-      expect(document.title).toBe("Something went wrong – example.com"),
+      expect(document.title).toBe("Something went wrong • example.com"),
     );
+    expect(document.head.querySelectorAll("title")).toHaveLength(1);
   });
 
   it("updates the title on navigation", async () => {
     const { router } = await renderPage("/");
     await waitFor(() =>
-      expect(document.title).toBe("Your account – example.com"),
+      expect(document.title).toBe("Your account • example.com"),
     );
 
     await act(() => router.navigate({ to: "/reset-cross-signing" }));
     await waitFor(() =>
-      expect(document.title).toBe("Reset identity – example.com"),
+      expect(document.title).toBe("Reset identity • example.com"),
     );
     expect(document.head.querySelectorAll("title")).toHaveLength(1);
 
     await act(() => router.history.back());
     await waitFor(() =>
-      expect(document.title).toBe("Your account – example.com"),
+      expect(document.title).toBe("Your account • example.com"),
     );
     expect(document.head.querySelectorAll("title")).toHaveLength(1);
   });

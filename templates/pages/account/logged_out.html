@@ -8,7 +8,9 @@ Please see LICENSE files in the repository root for full details.
 
 {% extends "base.html" %}
 
-{% block title %}{{ _("app.page_title", page=_("mas.account.logged_out.heading"), server=branding.server_name) }}{% endblock title %}
+{% block title -%}
+  {{ _("app.page_title", page=_("mas.account.logged_out.heading"), service=branding.service_name) }}
+{%- endblock title %}
 
 {% block content %}
   <main class="flex flex-col gap-6">

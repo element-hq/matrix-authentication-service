@@ -15,7 +15,6 @@ import NavItem, { NavItemErrorIcon } from "../components/NavItem";
 import UserGreeting from "../components/UserGreeting";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
-import { documentTitle } from "../utils/documentTitle";
 
 const QUERY = graphql(/* GraphQL */ `
   query CurrentUserGreeting {
@@ -48,7 +47,7 @@ const query = queryOptions({
 
 export const Route = createFileRoute("/_account")({
   loader: ({ context }) => context.queryClient.ensureQueryData(query),
-  head: (ctx) => documentTitle(ctx, i18n.t("frontend.account.title")),
+  staticData: { title: () => i18n.t("frontend.account.title") },
   component: Account,
 });
 

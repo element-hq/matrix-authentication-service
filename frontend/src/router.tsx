@@ -13,7 +13,7 @@ import { routeTree } from "./routeTree.gen";
 export const makeRouter = (
   basepath: string,
   queryClient: QueryClient,
-  serverName: string,
+  serviceName: string,
 ) =>
   createRouter({
     routeTree,
@@ -21,7 +21,7 @@ export const makeRouter = (
     basepath,
     defaultPendingComponent: LoadingScreen,
     defaultPreload: "intent",
-    context: { queryClient, serverName },
+    context: { queryClient, serviceName },
   });
 
 // Register the router instance for type safety

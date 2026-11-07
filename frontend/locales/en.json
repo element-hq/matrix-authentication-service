@@ -157,7 +157,6 @@
       "client_details_name": "Name",
       "client_title": "Client info"
     },
-    "page_title": "{{page}} – {{server}}",
     "page_titles": {
       "client": "App details",
       "email_in_use": "Email address in use",

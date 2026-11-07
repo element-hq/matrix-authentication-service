@@ -12,7 +12,6 @@ import { useTranslation } from "react-i18next";
 import { ButtonLink } from "../components/ButtonLink";
 import Layout from "../components/Layout";
 import PageHeading from "../components/PageHeading";
-import { documentTitle } from "../utils/documentTitle";
 import { query } from "./emails.$id.verify";
 
 export const Route = createFileRoute("/emails/$id/in-use")({
@@ -29,8 +28,7 @@ export const Route = createFileRoute("/emails/$id/in-use")({
     }
   },
 
-  head: (ctx) =>
-    documentTitle(ctx, i18n.t("frontend.page_titles.email_in_use")),
+  staticData: { title: () => i18n.t("frontend.page_titles.email_in_use") },
   component: EmailInUse,
 });
 

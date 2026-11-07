@@ -28,7 +28,6 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import PageHeading from "../components/PageHeading";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
-import { documentTitle } from "../utils/documentTitle";
 
 const QUERY = graphql(/* GraphQL */ `
   query VerifyEmail($id: ID!) {
@@ -75,7 +74,7 @@ export const Route = createFileRoute("/emails/$id/verify")({
     }
   },
 
-  head: (ctx) => documentTitle(ctx, i18n.t("frontend.verify_email.heading")),
+  staticData: { title: () => i18n.t("frontend.verify_email.heading") },
   component: EmailVerify,
 });
 

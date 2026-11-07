@@ -9,52 +9,47 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
   createRootRouteWithContext,
   type ErrorRouteComponent,
-  HeadContent,
   Outlet,
+  useMatches,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import { useLayoutEffect } from "react";
+import i18n from "i18next";
 import GenericError from "../components/GenericError";
 import Layout, { query } from "../components/Layout";
 import NotFound from "../components/NotFound";
-import { documentTitle } from "../utils/documentTitle";
+import { DocumentTitle, titleFromMatches } from "../utils/documentTitle";
 
-const DocumentHead: React.FC = () => {
-  // The server-rendered <title> stays until the router can set one, so that the
-  // page still has a title if the app fails to load. While the router is
-  // mounted it would shadow the <title> React hoists into <head>, so it's taken
-  // out and put back if an error boundary above the router takes over.
-  useLayoutEffect(() => {
-    const title = document.querySelector("title[data-static]");
-    title?.remove();
-    return () => {
-      if (title) document.head.prepend(title);
-    };
-  }, []);
-
-  return <HeadContent />;
+const RouteTitle: React.FC = () => {
+  const { serviceName } = Route.useRouteContext();
+  const matches = useMatches();
+  return (
+    <DocumentTitle>{titleFromMatches(matches, serviceName)}</DocumentTitle>
+  );
 };
 
-// Replaces the root component, so it needs its own <DocumentHead />. The
-// not-found component renders inside the root <Outlet /> and doesn't.
-const ErrorComponent: ErrorRouteComponent = ({ error }) => (
-  <>
-    <DocumentHead />
-    <Layout>
-      <GenericError error={error} />
-    </Layout>
-  </>
-);
+// Replaces the root component, so it needs its own title. The not-found
+// component renders inside the root <Outlet /> and doesn't.
+const ErrorComponent: ErrorRouteComponent = ({ error }) => {
+  const { serviceName } = Route.useRouteContext();
+  return (
+    <>
+      <DocumentTitle>
+        {`${i18n.t("frontend.error.title")} • ${serviceName}`}
+      </DocumentTitle>
+      <Layout>
+        <GenericError error={error} />
+      </Layout>
+    </>
+  );
+};
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
-  serverName: string;
+  serviceName: string;
 }>()({
-  head: (ctx) => documentTitle(ctx),
-
   component: () => (
     <>
-      <DocumentHead />
+      <RouteTitle />
       <Outlet />
 
       {import.meta.env.DEV &&

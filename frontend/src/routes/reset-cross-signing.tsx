@@ -15,7 +15,6 @@ import { useTranslation } from "react-i18next";
 import * as v from "valibot";
 import Layout from "../components/Layout";
 import PageHeading from "../components/PageHeading";
-import { documentTitle } from "../utils/documentTitle";
 
 const searchSchema = v.object({
   deepLink: v.optional(v.boolean()),
@@ -23,8 +22,7 @@ const searchSchema = v.object({
 
 export const Route = createFileRoute("/reset-cross-signing")({
   validateSearch: searchSchema,
-  head: (ctx) =>
-    documentTitle(ctx, i18n.t("frontend.page_titles.reset_identity")),
+  staticData: { title: () => i18n.t("frontend.page_titles.reset_identity") },
   component: () => (
     <Layout>
       <Outlet />

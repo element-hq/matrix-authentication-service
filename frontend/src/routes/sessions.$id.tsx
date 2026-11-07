@@ -16,7 +16,6 @@ import CompatSessionDetail from "../components/SessionDetail/CompatSessionDetail
 import OAuth2SessionDetail from "../components/SessionDetail/OAuth2SessionDetail";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
-import { documentTitle } from "../utils/documentTitle";
 
 const QUERY = graphql(/* GraphQL */ `
   query SessionDetail($id: ID!) {
@@ -47,7 +46,7 @@ export const Route = createFileRoute("/sessions/$id")({
   loader: ({ context, params }) =>
     context.queryClient.ensureQueryData(query(params.id)),
   notFoundComponent: NotFound,
-  head: (ctx) => documentTitle(ctx, i18n.t("frontend.page_titles.session")),
+  staticData: { title: () => i18n.t("frontend.page_titles.session") },
   component: SessionDetail,
 });
 

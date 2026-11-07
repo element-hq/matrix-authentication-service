@@ -27,7 +27,6 @@ import {
   usePages,
 } from "../pagination";
 import { getNinetyDaysAgo } from "../utils/dates";
-import { documentTitle } from "../utils/documentTitle";
 
 const PAGE_SIZE = 6;
 
@@ -138,7 +137,7 @@ export const Route = createFileRoute("/_account/sessions/")({
       context.queryClient.ensureQueryData(listQuery(pagination, inactive)),
     ]),
 
-  head: (ctx) => documentTitle(ctx, i18n.t("frontend.page_titles.sessions")),
+  staticData: { title: () => i18n.t("frontend.page_titles.sessions") },
   component: Sessions,
 });
 

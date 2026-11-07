@@ -10,7 +10,6 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { preload } from "react-dom";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
-import { documentTitle } from "../utils/documentTitle";
 
 const QUERY = graphql(/* GraphQL */ `
   query PlanManagementTab {
@@ -35,7 +34,7 @@ export const Route = createFileRoute("/_account/plan/")({
 
     preload(planManagementIframeUri, { as: "document" });
   },
-  head: (ctx) => documentTitle(ctx, i18n.t("frontend.nav.plan")),
+  staticData: { title: () => i18n.t("frontend.nav.plan") },
   component: RouteComponent,
 });
 

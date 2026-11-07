@@ -13,7 +13,6 @@ import Layout from "../components/Layout";
 import { Link } from "../components/Link";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
-import { documentTitle } from "../utils/documentTitle";
 
 const CURRENT_VIEWER_QUERY = graphql(/* GraphQL */ `
   query CurrentViewer {
@@ -78,7 +77,7 @@ export const Route = createFileRoute("/devices/$")({
     });
   },
 
-  head: (ctx) => documentTitle(ctx, i18n.t("frontend.page_titles.session")),
+  staticData: { title: () => i18n.t("frontend.page_titles.session") },
   notFoundComponent: NotFound,
 });
 

@@ -39,7 +39,7 @@ async function renderPage(
   const history = createMemoryHistory({ initialEntries: [route] });
   const router = createRouter({
     routeTree,
-    context: { queryClient, serverName: "example.com" },
+    context: { queryClient, serviceName: "example.com" },
     history,
   });
   const result = render(

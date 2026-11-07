@@ -25,7 +25,6 @@ import Separator from "../components/Separator";
 import { graphql } from "../gql";
 import { graphqlRequest } from "../graphql";
 import { translateSetPasswordError } from "../i18n/password_changes";
-import { documentTitle } from "../utils/documentTitle";
 
 const CHANGE_PASSWORD_MUTATION = graphql(/* GraphQL */ `
   mutation ChangePassword(
@@ -67,7 +66,7 @@ const query = queryOptions({
 
 export const Route = createFileRoute("/password/change/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(query),
-  head: (ctx) => documentTitle(ctx, i18n.t("frontend.password_change.title")),
+  staticData: { title: () => i18n.t("frontend.password_change.title") },
   component: ChangePassword,
 });
 

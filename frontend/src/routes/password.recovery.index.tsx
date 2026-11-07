@@ -31,7 +31,6 @@ import PasswordCreationDoubleInput from "../components/PasswordCreationDoubleInp
 import { type FragmentType, graphql, useFragment } from "../gql";
 import { graphqlRequest } from "../graphql";
 import { translateSetPasswordError } from "../i18n/password_changes";
-import { documentTitle } from "../utils/documentTitle";
 
 const RECOVER_PASSWORD_MUTATION = graphql(/* GraphQL */ `
   mutation RecoverPassword($ticket: String!, $newPassword: String!) {
@@ -104,7 +103,7 @@ export const Route = createFileRoute("/password/recovery/")({
     }
   },
 
-  head: (ctx) => documentTitle(ctx, i18n.t("frontend.password_reset.title")),
+  staticData: { title: () => i18n.t("frontend.password_reset.title") },
   component: RecoverPassword,
 });
 
