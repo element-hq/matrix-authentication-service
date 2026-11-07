@@ -21,7 +21,9 @@ declare module "@tanstack/react-router" {
  *
  * A route that failed or wasn't found replaces its own title and those of its
  * children, so a broken page doesn't keep the title of the page the user was
- * trying to reach.
+ * trying to reach. This only covers errors and not-found results from route
+ * loading: a component that throws while rendering is caught by its route's
+ * boundary without changing the match status, so the page keeps its title.
  */
 export const titleFromMatches = (
   matches: MakeRouteMatchUnion[],
