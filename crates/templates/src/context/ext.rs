@@ -26,7 +26,8 @@ pub trait SiteConfigExt: private::Sealed {
 
 impl SiteConfigExt for SiteConfig {
     fn templates_branding(&self) -> SiteBranding {
-        let mut branding = SiteBranding::new(self.server_name.clone());
+        let mut branding = SiteBranding::new(self.server_name.clone())
+            .with_service_name(self.service_name.clone());
 
         if let Some(policy_uri) = &self.policy_uri {
             branding = branding.with_policy_uri(policy_uri.as_str());
