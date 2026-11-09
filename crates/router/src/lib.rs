@@ -32,6 +32,13 @@ mod tests {
             Cow::Borrowed("/login?kind=continue_authorization_grant&id=00000000000000000000000000")
         );
         assert_eq!(
+            Register::and_then(PostAuthAction::ContinueRegistrationToken { id: Ulid::nil() })
+                .path_and_query(),
+            Cow::Borrowed(
+                "/register?kind=continue_registration_token&id=00000000000000000000000000"
+            )
+        );
+        assert_eq!(
             RegisterContinue(Ulid::nil()).path_and_query(),
             Cow::Borrowed("/register/continue/00000000000000000000000000")
         );

@@ -31,6 +31,9 @@ pub enum PostAuthAction {
         #[serde(flatten)]
         action: Option<AccountAction>,
     },
+    ContinueRegistrationToken {
+        id: Ulid,
+    },
 }
 
 impl PostAuthAction {
@@ -73,6 +76,7 @@ impl PostAuthAction {
             Self::ManageAccount { action } => url_builder.redirect(&Account {
                 action: action.clone(),
             }),
+            Self::ContinueRegistrationToken { id } => url_builder.redirect(&RegisterContinue(*id)),
         }
     }
 }
