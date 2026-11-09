@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -169,147 +170,131 @@ export const Index: Story = {
 
 export const MultipleEmails: Story = {
   name: "Multiple email addresses, email change allowed",
-  parameters: {
-    msw: {
-      handlers: [
-        userProfileHandler({
-          passwordLoginEnabled: true,
-          passwordChangeAllowed: true,
-          emailChangeAllowed: true,
-          emailTotalCount: 3,
-          accountDeactivationAllowed: true,
-          hasPassword: true,
-        }),
-        threeEmailsHandler,
-      ],
-    },
+  beforeEach({ msw }) {
+    msw.use(
+      userProfileHandler({
+        passwordLoginEnabled: true,
+        passwordChangeAllowed: true,
+        emailChangeAllowed: true,
+        emailTotalCount: 3,
+        accountDeactivationAllowed: true,
+        hasPassword: true,
+      }),
+      threeEmailsHandler,
+    );
   },
 };
 
 export const NoEmails: Story = {
   name: "No email address, email change not allowed",
-  parameters: {
-    msw: {
-      handlers: [
-        userProfileHandler({
-          passwordLoginEnabled: true,
-          passwordChangeAllowed: true,
-          emailChangeAllowed: false,
-          emailTotalCount: 0,
-          accountDeactivationAllowed: true,
-          hasPassword: true,
-        }),
-      ],
-    },
+  beforeEach({ msw }) {
+    msw.use(
+      userProfileHandler({
+        passwordLoginEnabled: true,
+        passwordChangeAllowed: true,
+        emailChangeAllowed: false,
+        emailTotalCount: 0,
+        accountDeactivationAllowed: true,
+        hasPassword: true,
+      }),
+    );
   },
 };
 
 export const MultipleEmailsNoChange: Story = {
   name: "Multiple email addresses, email change not allowed",
-  parameters: {
-    msw: {
-      handlers: [
-        userProfileHandler({
-          passwordLoginEnabled: true,
-          passwordChangeAllowed: true,
-          emailChangeAllowed: false,
-          emailTotalCount: 3,
-          accountDeactivationAllowed: true,
-          hasPassword: true,
-        }),
-        threeEmailsHandler,
-      ],
-    },
+  beforeEach({ msw }) {
+    msw.use(
+      userProfileHandler({
+        passwordLoginEnabled: true,
+        passwordChangeAllowed: true,
+        emailChangeAllowed: false,
+        emailTotalCount: 3,
+        accountDeactivationAllowed: true,
+        hasPassword: true,
+      }),
+      threeEmailsHandler,
+    );
   },
 };
 
 export const NoEmailChange: Story = {
   name: "One email address, email change not allowed",
-  parameters: {
-    msw: {
-      handlers: [
-        userProfileHandler({
-          passwordLoginEnabled: true,
-          passwordChangeAllowed: true,
-          emailChangeAllowed: false,
-          emailTotalCount: 1,
-          accountDeactivationAllowed: true,
-          hasPassword: true,
-        }),
-      ],
-    },
+  beforeEach({ msw }) {
+    msw.use(
+      userProfileHandler({
+        passwordLoginEnabled: true,
+        passwordChangeAllowed: true,
+        emailChangeAllowed: false,
+        emailTotalCount: 1,
+        accountDeactivationAllowed: true,
+        hasPassword: true,
+      }),
+    );
   },
 };
 
 export const NoPasswordChange: Story = {
   name: "Password change not allowed",
-  parameters: {
-    msw: {
-      handlers: [
-        userProfileHandler({
-          passwordLoginEnabled: true,
-          passwordChangeAllowed: false,
-          emailChangeAllowed: true,
-          emailTotalCount: 1,
-          accountDeactivationAllowed: true,
-          hasPassword: true,
-        }),
-      ],
-    },
+  beforeEach({ msw }) {
+    msw.use(
+      userProfileHandler({
+        passwordLoginEnabled: true,
+        passwordChangeAllowed: false,
+        emailChangeAllowed: true,
+        emailTotalCount: 1,
+        accountDeactivationAllowed: true,
+        hasPassword: true,
+      }),
+    );
   },
 };
 
 export const NoPasswordLogin: Story = {
   name: "Password login not allowed",
-  parameters: {
-    msw: {
-      handlers: [
-        userProfileHandler({
-          passwordLoginEnabled: false,
-          passwordChangeAllowed: false,
-          emailChangeAllowed: true,
-          emailTotalCount: 1,
-          accountDeactivationAllowed: true,
-          hasPassword: true,
-        }),
-      ],
-    },
+  beforeEach({ msw }) {
+    msw.use(
+      userProfileHandler({
+        passwordLoginEnabled: false,
+        passwordChangeAllowed: false,
+        emailChangeAllowed: true,
+        emailTotalCount: 1,
+        accountDeactivationAllowed: true,
+        hasPassword: true,
+      }),
+    );
   },
 };
 
 export const NoPasswordNoEmailChangeNoAccountDeactivation: Story = {
   name: "No password, no email change, no account deactivation",
-  parameters: {
-    msw: {
-      handlers: [
-        userProfileHandler({
-          passwordLoginEnabled: false,
-          passwordChangeAllowed: false,
-          emailChangeAllowed: false,
-          emailTotalCount: 0,
-          accountDeactivationAllowed: false,
-          hasPassword: false,
-        }),
-      ],
-    },
+  beforeEach({ msw }) {
+    msw.use(
+      userProfileHandler({
+        passwordLoginEnabled: false,
+        passwordChangeAllowed: false,
+        emailChangeAllowed: false,
+        emailTotalCount: 0,
+        accountDeactivationAllowed: false,
+        hasPassword: false,
+      }),
+    );
   },
 };
 
 export const NoAccountDeactivation: Story = {
   name: "No account deactivation",
-  parameters: {
-    msw: {
-      handlers: [
-        userProfileHandler({
-          passwordLoginEnabled: true,
-          passwordChangeAllowed: true,
-          emailChangeAllowed: true,
-          emailTotalCount: 1,
-          accountDeactivationAllowed: false,
-          hasPassword: true,
-        }),
-      ],
-    },
+  beforeEach({ msw }) {
+    msw.use(
+      userProfileHandler({
+        passwordLoginEnabled: true,
+        passwordChangeAllowed: true,
+        emailChangeAllowed: true,
+        emailTotalCount: 1,
+        accountDeactivationAllowed: false,
+        hasPassword: true,
+      }),
+    );
   },
 };
 

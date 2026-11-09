@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -9,7 +10,7 @@ import type { StorybookConfig } from "@storybook/react-vite";
 const config: StorybookConfig = {
   stories: ["../{src,stories}/**/*.stories.@(js|jsx|ts|tsx)"],
 
-  addons: ["@storybook/addon-docs"],
+  addons: ["@storybook/addon-docs", "msw-storybook-addon"],
 
   framework: "@storybook/react-vite",
 

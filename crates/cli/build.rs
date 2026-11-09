@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use vergen_gitcl::{Emitter, GitclBuilder, RustcBuilder};
+use vergen_gitcl::{Emitter, Gitcl, Rustc};
 
 fn main() -> anyhow::Result<()> {
     // Instruct rustc that we'll be using #[cfg(tokio_unstable)]
@@ -27,10 +27,10 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    let gitcl = GitclBuilder::default()
+    let gitcl = Gitcl::builder()
         .describe(true, false, Some("v*.*.*"))
-        .build()?;
-    let rustc = RustcBuilder::default().semver(true).build()?;
+        .build();
+    let rustc = Rustc::builder().semver(true).build();
 
     Emitter::default()
         .add_instructions(&gitcl)?

@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -14,24 +15,22 @@ import { App } from "./app";
 const meta = {
   title: "Pages/Reset cross signing",
   tags: ["!autodocs"],
-  parameters: {
-    msw: {
-      handlers: [
-        mockAllowCrossSigningResetMutation(async () => {
-          await delay();
+  beforeEach({ msw }) {
+    msw.use(
+      mockAllowCrossSigningResetMutation(async () => {
+        await delay();
 
-          return HttpResponse.json({
-            data: {
-              allowUserCrossSigningReset: {
-                user: {
-                  id: "user-id",
-                },
+        return HttpResponse.json({
+          data: {
+            allowUserCrossSigningReset: {
+              user: {
+                id: "user-id",
               },
             },
-          });
-        }),
-      ],
-    },
+          },
+        });
+      }),
+    );
   },
 } satisfies Meta;
 
@@ -56,18 +55,16 @@ export const Cancelled: Story = {
 
 export const Errored: Story = {
   render: () => <App route="/reset-cross-signing" />,
-  parameters: {
-    msw: {
-      handlers: [
-        mockCurrentViewerQuery(() =>
-          HttpResponse.json(
-            {
-              errors: [{ message: "Request failed" }],
-            },
-            { status: 400 },
-          ),
+  beforeEach({ msw }) {
+    msw.use(
+      mockCurrentViewerQuery(() =>
+        HttpResponse.json(
+          {
+            errors: [{ message: "Request failed" }],
+          },
+          { status: 400 },
         ),
-      ],
-    },
+      ),
+    );
   },
 };

@@ -38,11 +38,11 @@
   "mas": {
     "account": {
       "deactivated": {
-        "description": "Ez a fiók (<em>%(mxid)s</em>) törölve lett. Ha erre nem számított, vegye fel a kapcsolatot a kiszolgáló rendszergazdájával.",
+        "description": "Ez a fiók (<em>%(mxid)s</em>) törölve lett. Ha erre nem számított, vegye fel a kapcsolatot a fiókszolgáltatójával.",
         "heading": "Fiók törölve"
       },
       "locked": {
-        "description": "Ez a fiók (<em>%(mxid)s</em>) zárolva lett. Ha erre nem számított, vegye fel a kapcsolatot a kiszolgáló rendszergazdájával.",
+        "description": "Ez a fiók (<em>%(mxid)s</em>) zárolva lett. Ha erre nem számított, vegye fel a kapcsolatot a fiókszolgáltatójával.",
         "heading": "Fiók zárolva"
       },
       "logged_out": {
@@ -136,7 +136,7 @@
       "rate_limit_exceeded": "Túl sok kérést adott fel egy rövid időszak alatt. Várjon néhány percet, és próbálja újra.",
       "username_all_numeric": "A felhasználónév nem állhat pusztán számokból",
       "username_banned": "A felhasználónevet a kiszolgáló-házirend tiltja",
-      "username_invalid_chars": "A felhasználónév érvénytelen karaktereket tartalmaz. Csak kisbetűket, számokat, kötőjeleket és aláhúzásokat használjon.",
+      "username_invalid_chars": "A felhasználónév érvénytelen karaktereket tartalmaz. Csak kisbetűket, számokat és ezeket a karaktereket használja: . _ + / =",
       "username_not_allowed": "A felhasználónevet nem engedélyezi a kiszolgáló-házirend",
       "username_taken": "A felhasználónév már foglalt",
       "username_too_long": "A felhasználónév túl hosszú",
@@ -146,6 +146,7 @@
       "this_will_setup": "Egy beállítja a(z) <span>%(client_name)s</span> klienst a(z) <span>%(server_name)s</span> fiókjával."
     },
     "loading": "Betöltés…",
+    "loading_failed": "Hiba történt az oldal betöltése során. Próbálja meg újratölteni az oldalt.",
     "login": {
       "call_to_register": "Még nincs fiókja?",
       "continue_with_provider": "Folytatás ezzel a szolgáltatóval: %(provider)s",
@@ -171,8 +172,16 @@
     "not_you": "Nem %(username)s?",
     "or_separator": "Vagy",
     "policy_violation": {
+      "admin_scope_not_allowed": {
+        "description": "Ehhez az alkalmazáshoz rendszergazdai jogosultságok szükségesek. A folytatáshoz jelentkezzen be egy rendszergazdai fiókkal.",
+        "heading": "Rendszergazdai hozzáférés szükséges"
+      },
+      "client_not_allowed": {
+        "description": "Ez az alkalmazás nem jelentkezhet be ebbe a szolgáltatásba.",
+        "heading": "Az alkalmazás nem engedélyezett"
+      },
       "description": "Ez a kérést feladó kliens, a jelenleg bejelentkezett felhasználó, vagy maga a kérés miatt is lehet.",
-      "heading": "Az engedélyezési kérés a szolgáltatás által betartatott házirend alapján elutasítva",
+      "heading": "Kérés elutasítva",
       "logged_as": "Bejelentkezve mint <span class=\"font-semibold\">%(username)s</span>",
       "too_many_sessions": {
         "description": "A fiókja már a maximális számú eszközön be van jelentkezve. A folytatáshoz távolítson el <span class=\"font-semibold\">%(num_devices_to_remove)s eszközt</span>, majd jelentkezzen be újra.",
@@ -216,10 +225,11 @@
       "create_account": {
         "heading": "Fiók létrehozása"
       },
+      "javascript_required": "A fiók létrehozásához JavaScript szükséges. Engedélyezze a JavaScriptet a böngészőjében, és töltse újra az oldalt.",
       "terms_of_service": "Elfogadom a <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Szolgáltatási feltételeket</a>"
     },
     "registration_token": {
-      "description": "Adja meg a Matrix-kiszolgáló rendszergazdája által megadott regisztrációs tokent.",
+      "description": "Adja meg a fiókszolgáltatója által megadott regisztrációs tokent.",
       "field": "Regisztrációs token",
       "headline": "Regisztrációs token"
     },

@@ -127,6 +127,8 @@ jobs:
         run: |
           rustup toolchain install
           rustup target add ${{ matrix.target }}
+          # This is needed for `llvm-objcopy` used below
+          rustup component add llvm-tools
 
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@fc920bf0ec8de6ee65d409111f7ec508035751ba # v0.0.11
@@ -147,6 +149,12 @@ jobs:
 
       - name: Build the binary
         # Argument order matters: `cargo zigbuild auditable` does not work
+        env:
+          # Zig's linker (used by `cargo-zigbuild`) drops the whole symbol table even
+          # when asked to only strip debug info (Cargo's release default). Since it
+          # doesn't behave correctly, we prevent the linker from stripping the binary,
+          # and instead strip the binary ourselves (below).
+          CARGO_PROFILE_RELEASE_STRIP: none
         run: |
           cargo auditable zigbuild \
             --release \
@@ -154,6 +162,19 @@ jobs:
             --no-default-features \
             --features dist \
             -p mas-cli
+
+      - name: Strip debug info from the binary
+        # Drops only the debug sections and keeps `.symtab` (mimics what a correctly
+        # behaving Cargo release preset strip stage should produce). The `.symtab` is
+        # useful as Sentry's backtrace feature will report back the symbol names in the
+        # stack traces of errors.
+        #
+        # XXX: This is only necessary because of `cargo-zigbuild` not behaving
+        # correctly and this is our workaround (see details in step above).
+        run: |
+          "$(rustc --print sysroot)/lib/rustlib/$(rustc --print host-tuple)/bin/llvm-objcopy" \
+            --strip-debug \
+            target/${{ matrix.target }}/release/mas-cli
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -336,7 +357,7 @@ jobs:
 
     steps:
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
         with:
           buildkitd-config-inline: |
             [registry."docker.io"]
@@ -476,7 +497,7 @@ jobs:
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
