@@ -40,6 +40,7 @@ use crate::{
     upstream_oauth2::authorize::start_authorization,
 };
 
+pub(crate) mod continue_url;
 mod cookie;
 pub(crate) mod password;
 pub(crate) mod steps;

@@ -31,6 +31,10 @@ mod tests {
             Login::and_continue_grant(Ulid::nil()).path_and_query(),
             Cow::Borrowed("/login?kind=continue_authorization_grant&id=00000000000000000000000000")
         );
+        assert_eq!(
+            RegisterContinue(Ulid::nil()).path_and_query(),
+            Cow::Borrowed("/register/continue/00000000000000000000000000")
+        );
     }
 
     #[test]

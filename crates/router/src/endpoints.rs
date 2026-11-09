@@ -353,6 +353,22 @@ impl From<Option<PostAuthAction>> for Register {
     }
 }
 
+/// `GET /register/continue/{id}`
+#[derive(Debug, Clone)]
+pub struct RegisterContinue(pub Ulid);
+
+impl Route for RegisterContinue {
+    type Query = ();
+
+    fn route() -> &'static str {
+        "/register/continue/{id}"
+    }
+
+    fn path(&self) -> std::borrow::Cow<'static, str> {
+        format!("/register/continue/{}", self.0).into()
+    }
+}
+
 /// `GET|POST /register/steps/{id}/token`
 #[derive(Debug, Clone)]
 pub struct RegisterToken {
