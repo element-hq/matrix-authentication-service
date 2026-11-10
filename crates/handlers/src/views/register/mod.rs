@@ -291,6 +291,18 @@ pub(crate) async fn post(
     };
     let action = post_auth_action(query.action, found_token.as_ref());
 
+    // A browser signed in since the page loaded, such as by going Back after
+    // registering, goes on instead of registering again
+    let (session_info, cookie_jar) = cookie_jar.session_info();
+    if let Some(session) = session_info.load_active_session(&mut repo).await? {
+        activity_tracker
+            .record_browser_session(&clock, &session)
+            .await;
+
+        let reply = action.go_next(&url_builder);
+        return Ok((cookie_jar, reply).into_response());
+    }
+
     // Carry the username along so we can prefill it if the user gets to pick
     // one when they come back
     if let Some(provider_id) = &form.provider {
@@ -1485,6 +1497,61 @@ mod tests {
         let response = state.request(cookies.with_cookies(request)).await;
         response.assert_status(StatusCode::SEE_OTHER);
         response.assert_header_value(LOCATION, "/consent/00000000000000000000000000");
+    }
+
+    /// Submitting an invite link's form again once registered, as going Back
+    /// does, goes on to the continue URL rather than registering a second
+    /// account
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_signed_in_with_continue_token(pool: PgPool) {
+        use mas_storage::user::UserFilter;
+
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+        let mut repo = state.repository().await.unwrap();
+        let token = repo
+            .user_registration_token()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                UserRegistrationTokenParams {
+                    token: "link".to_owned(),
+                    username: Some("guest-{{ random }}".to_owned()),
+                    passwordless: true,
+                    continue_url: Some(CONTINUE_URL.to_owned()),
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let form = serde_json::json!({
+            "csrf": csrf_token,
+            "token": "link",
+            "display_name": "Alice",
+            "accept_terms": "on",
+        });
+        let request = cookies.with_cookies(Request::post("/register?token=link").form(&form));
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+        let finish = response.headers()[LOCATION].to_str().unwrap().to_owned();
+        let response = state
+            .request(cookies.with_cookies(Request::get(finish).empty()))
+            .await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        let request = cookies.with_cookies(Request::post("/register?token=link").form(&form));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, &format!("/register/continue/{}", token.id));
+
+        let mut repo = state.repository().await.unwrap();
+        assert_eq!(repo.user().count(UserFilter::new()).await.unwrap(), 1);
     }
 
     /// The Sign in link of an invite's page goes on to the invite's continue
