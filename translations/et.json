@@ -136,7 +136,7 @@
       "rate_limit_exceeded": "Sa oled lühikese aja jooksul teinud liiga palju päringuid. Palun oota paar minutit ja proovi uuesti.",
       "username_all_numeric": "Kasutajanimi ei tohi koosneda vaid numbritest",
       "username_banned": "Kasutajanimi on serverireeglite alusel keelatud",
-      "username_invalid_chars": "Kasutajanimes on keelatud tähemärke. Palun kasuta vaid väiketähti, numbreid, sidekriipsu ja alakriipsu.",
+      "username_invalid_chars": "Kasutajanimi sisaldab keelatud märke. Kasuta väiketähti, numbreid ja märke . _ - + / =",
       "username_not_allowed": "Kasutajanimi pole serveri reeglite alusel lubatud",
       "username_taken": "Selline kasutajanimi on juba olemas",
       "username_too_long": "Kasutajanimi on liiga pikk",
@@ -172,8 +172,16 @@
     "not_you": "Kas sina pole %(username)s?",
     "or_separator": "või",
     "policy_violation": {
-      "description": "Põhjustajaks võib olla autentimispäringu teinud klient, hetkel sisselogitud kasutaja või päring ise.",
-      "heading": "Selle teenuse reeglite alusel keelduti autentimispäringust",
+      "admin_scope_not_allowed": {
+        "description": "See rakendus eeldab peakasutaja õiguste kasutamist. Jätkamaks logi sisse peakasutajana.",
+        "heading": "Vajalik on ligipääs peakasutaja õigustes"
+      },
+      "client_not_allowed": {
+        "description": "See rakendus ei või antud teenusesse sisse logida.",
+        "heading": "Rakendus pole lubatud"
+      },
+      "description": "See päring on blokeeritud teenuse kasutustingimuste alusel. Põhjustajaks võib olla autentimispäringu teinud klient, hetkel sisselogitud kasutaja või päring ise.",
+      "heading": "Keeldumine autentimispäringust",
       "logged_as": "Sisselogitud kui <span class=\"font-semibold\">%(username)s</span>",
       "too_many_sessions": {
         "description": "Sinu kasutajakonto on juba sisse loginud kõikides lubatud seadmetes. Jätkamiseks eemalda <span class=\"font-semibold\">oma olemasolevatest seadmetest %(num_devices_to_remove)s</span> ja logi uuesti sisse.",
@@ -217,6 +225,7 @@
       "create_account": {
         "heading": "Loo kasutajakonto"
       },
+      "javascript_required": "Konto loomiseks on vajalik JavaScript. Palun luba oma veebibrauseris JavaScripti kasutamine ja laadi see leht uuesti.",
       "terms_of_service": "Ma nõustun <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">teenuse kasutustingimustega</a>"
     },
     "registration_token": {
