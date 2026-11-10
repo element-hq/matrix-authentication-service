@@ -7,6 +7,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { Alert } from "@vector-im/compound-web";
+import i18n from "i18next";
 import { useTranslation } from "react-i18next";
 import Layout from "../components/Layout";
 import { Link } from "../components/Link";
@@ -76,6 +77,7 @@ export const Route = createFileRoute("/devices/$")({
     });
   },
 
+  staticData: { title: () => i18n.t("frontend.page_titles.session") },
   notFoundComponent: NotFound,
 });
 

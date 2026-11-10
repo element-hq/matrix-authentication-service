@@ -7,6 +7,7 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Alert } from "@vector-im/compound-web";
+import i18n from "i18next";
 import { useTranslation } from "react-i18next";
 import Layout from "../components/Layout";
 import { Link } from "../components/Link";
@@ -45,6 +46,7 @@ export const Route = createFileRoute("/sessions/$id")({
   loader: ({ context, params }) =>
     context.queryClient.ensureQueryData(query(params.id)),
   notFoundComponent: NotFound,
+  staticData: { title: () => i18n.t("frontend.page_titles.session") },
   component: SessionDetail,
 });
 

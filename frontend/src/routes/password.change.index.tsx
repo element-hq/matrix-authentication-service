@@ -13,6 +13,7 @@ import {
 import { createFileRoute, notFound, useRouter } from "@tanstack/react-router";
 import IconLockSolid from "@vector-im/compound-design-tokens/assets/web/icons/lock-solid";
 import { Alert, Form } from "@vector-im/compound-web";
+import i18n from "i18next";
 import { type FormEvent, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { ButtonLink } from "../components/ButtonLink";
@@ -65,6 +66,7 @@ const query = queryOptions({
 
 export const Route = createFileRoute("/password/change/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(query),
+  staticData: { title: () => i18n.t("frontend.password_change.title") },
   component: ChangePassword,
 });
 

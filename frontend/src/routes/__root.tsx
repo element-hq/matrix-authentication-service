@@ -10,23 +10,46 @@ import {
   createRootRouteWithContext,
   type ErrorRouteComponent,
   Outlet,
+  useMatches,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import i18n from "i18next";
 import GenericError from "../components/GenericError";
 import Layout, { query } from "../components/Layout";
 import NotFound from "../components/NotFound";
+import { DocumentTitle, titleFromMatches } from "../utils/documentTitle";
 
-const ErrorComponent: ErrorRouteComponent = ({ error }) => (
-  <Layout>
-    <GenericError error={error} />
-  </Layout>
-);
+const RouteTitle: React.FC = () => {
+  const { serviceName } = Route.useRouteContext();
+  const matches = useMatches();
+  return (
+    <DocumentTitle>{titleFromMatches(matches, serviceName)}</DocumentTitle>
+  );
+};
+
+// Replaces the root component, so it needs its own title. The not-found
+// component renders inside the root <Outlet /> and doesn't.
+const ErrorComponent: ErrorRouteComponent = ({ error }) => {
+  const { serviceName } = Route.useRouteContext();
+  return (
+    <>
+      <DocumentTitle>
+        {`${i18n.t("frontend.error.title")} • ${serviceName}`}
+      </DocumentTitle>
+      <Layout>
+        <GenericError error={error} />
+      </Layout>
+    </>
+  );
+};
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
+  serviceName: string;
 }>()({
   component: () => (
     <>
+      <RouteTitle />
       <Outlet />
 
       {import.meta.env.DEV &&

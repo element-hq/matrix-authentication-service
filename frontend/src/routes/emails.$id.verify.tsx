@@ -19,6 +19,7 @@ import {
 import IconArrowLeft from "@vector-im/compound-design-tokens/assets/web/icons/arrow-left";
 import IconSend from "@vector-im/compound-design-tokens/assets/web/icons/send-solid";
 import { Alert, Button, Form } from "@vector-im/compound-web";
+import i18n from "i18next";
 import { useRef } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { ButtonLink } from "../components/ButtonLink";
@@ -73,6 +74,7 @@ export const Route = createFileRoute("/emails/$id/verify")({
     }
   },
 
+  staticData: { title: () => i18n.t("frontend.verify_email.heading") },
   component: EmailVerify,
 });
 
