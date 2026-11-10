@@ -130,7 +130,7 @@ describe("register island", () => {
       username: "alice",
       email: "alice@example.com",
       passwordless: true,
-      link_invite: false,
+      without_email: false,
     };
 
     it("explains an error on the username above the form", async () => {
@@ -193,7 +193,7 @@ describe("register island", () => {
           username: "user-{{ random }}",
           email: null,
           passwordless: true,
-          link_invite: false,
+          without_email: false,
         },
       });
 
@@ -209,7 +209,7 @@ describe("register island", () => {
           username: null,
           email: null,
           passwordless: true,
-          link_invite: false,
+          without_email: false,
         },
         form: {
           errors: [],

@@ -64,9 +64,9 @@ const ErrorAlert: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   </div>
 );
 
-const LoginLink: React.FC<{ href: string; guest?: boolean }> = ({
+const LoginLink: React.FC<{ href: string; passwordless?: boolean }> = ({
   href,
-  guest,
+  passwordless,
 }) => {
   const { t } = useTranslation();
   return (
@@ -77,8 +77,8 @@ const LoginLink: React.FC<{ href: string; guest?: boolean }> = ({
       href={href}
       className={styles.loginLink}
     >
-      {guest
-        ? t("frontend.register.call_to_login_guest")
+      {passwordless
+        ? t("frontend.register.call_to_login_passwordless")
         : t("frontend.register.call_to_login")}
     </Button>
   );
@@ -125,9 +125,9 @@ export const PasswordRegisterForm: React.FC<{
   // error on the `token` field, which has no control of its own to carry it
   const inviteInvalid =
     invite?.valid === false || (fields.token?.errors.length ?? 0) > 0;
-  const linkInvite = invite?.valid === true && invite.link_invite;
+  const withoutEmail = invite?.valid === true && invite.without_email;
   const showEmailField =
-    !linkInvite && !pinnedEmail && (emailRequired || passwordless);
+    !withoutEmail && !pinnedEmail && (emailRequired || passwordless);
   // `null` until the widget has mounted; the handle reports `valid: true`
   // straight away when there is no captcha to solve.
   const captchaRef = useRef<CaptchaHandle>(null);
@@ -249,7 +249,7 @@ export const PasswordRegisterForm: React.FC<{
 
       {step === "password" && (
         <>
-          {linkInvite && (
+          {withoutEmail && (
             <Form.Field
               name="display_name"
               serverInvalid={serverErrors("display_name").length > 0}
@@ -319,7 +319,7 @@ export const PasswordRegisterForm: React.FC<{
           {passwordless ? (
             // The line about the pinned address already says a code is coming
             !pinnedEmail &&
-            !linkInvite && (
+            !withoutEmail && (
               <Text size="sm" className="text-secondary">
                 {t("frontend.register.passwordless_notice")}
               </Text>
@@ -378,7 +378,7 @@ export const PasswordRegisterForm: React.FC<{
           {/* The form's first submit button, so that Enter in any of the fields
           registers rather than picking a provider */}
           <Form.Submit>
-            {passwordless && !linkInvite
+            {passwordless && !withoutEmail
               ? t("frontend.register.send_code")
               : t("action.continue")}
           </Form.Submit>
@@ -409,7 +409,7 @@ export const PasswordRegisterForm: React.FC<{
         </>
       )}
 
-      <LoginLink href={loginLink} guest={passwordless} />
+      <LoginLink href={loginLink} passwordless={passwordless} />
     </Form.Root>
   );
 };

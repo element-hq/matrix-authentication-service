@@ -118,17 +118,17 @@ pub(super) async fn register(
         },
     };
 
-    // An invite link registers a guest with a display name and no email
-    // address, whatever the server requires of other registrations
-    let link_invite = registration_token
+    // A token registering without an email address asks for a display name
+    // instead, whatever the server requires of other registrations
+    let without_email = registration_token
         .as_ref()
-        .is_some_and(UserRegistrationToken::is_invite_link);
+        .is_some_and(UserRegistrationToken::registers_without_email);
 
     // The email field is only shown if the server requires it. Any other
     // passwordless registration needs one, as verifying it is what establishes
     // the user's identity, and an invite code pinning an address forces it.
     let email = if ((site_config.password_registration_email_required || passwordless)
-        && !link_invite)
+        && !without_email)
         || pinned_email.is_some()
     {
         Some(match pinned_email {
@@ -193,7 +193,7 @@ pub(super) async fn register(
             }
         }
 
-        if link_invite {
+        if without_email {
             let display_name = form.display_name.trim();
             if display_name.is_empty() {
                 state.add_error_on_field(RegisterFormField::DisplayName, FieldError::Required);
@@ -365,7 +365,7 @@ pub(super) async fn register(
         registration
     };
 
-    let registration = if link_invite {
+    let registration = if without_email {
         repo.user_registration()
             .set_display_name(registration, form.display_name.trim().to_owned())
             .await?
@@ -397,7 +397,8 @@ pub(super) async fn register(
     };
 
     // A passwordless registration doesn't get a password at all: the verified
-    // email address, or for an invite link the link itself, is its credential
+    // email address, or for a token registering without one the token itself,
+    // is its credential
     let registration = if passwordless {
         registration
     } else {
@@ -1099,10 +1100,11 @@ mod tests {
         assert_eq!(email_authentication.email, "alice@example.com");
     }
 
-    /// An invite link registers with the display name typed on the form,
-    /// without any email address, even where registrations otherwise need one
+    /// A token registering without an email address registers with the display
+    /// name typed on the form, even where registrations otherwise need an email
+    /// address
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_register_with_invite_link(pool: PgPool) {
+    async fn test_register_without_email(pool: PgPool) {
         setup();
         let state = TestState::from_pool_with_site_config(
             pool,

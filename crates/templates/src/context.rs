@@ -644,7 +644,8 @@ pub enum RegisterFormField {
     /// The registration token (a.k.a. invite code) field
     Token,
 
-    /// The display name field, only shown for invite links
+    /// The display name field, only shown for tokens registering without an
+    /// email address
     DisplayName,
 }
 
@@ -695,7 +696,7 @@ struct InvitePinnedIdentity {
     username: Option<String>,
     email: Option<String>,
     passwordless: bool,
-    link_invite: bool,
+    without_email: bool,
 }
 
 /// The invite code the registration page was opened with, as the island sees it
@@ -718,7 +719,7 @@ impl InviteContext {
                 username: token.username.clone(),
                 email: token.email.clone(),
                 passwordless: token.passwordless,
-                link_invite: token.is_invite_link(),
+                without_email: token.registers_without_email(),
             }),
         }
     }

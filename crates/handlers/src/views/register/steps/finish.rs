@@ -242,8 +242,9 @@ pub(crate) async fn get(
         )));
     }
 
-    // Without a password or an upstream link, the user registers with an
-    // invite link, or a passwordless token and a verified email address
+    // Without a password or an upstream link, the user registers with a token
+    // registering without an email address, or a passwordless token and a
+    // verified email address
     if registration.password.is_none()
         && registration
             .upstream_oauth_authorization_session_id
@@ -251,7 +252,7 @@ pub(crate) async fn get(
         && !registration_token
             .as_ref()
             .is_some_and(|registration_token| {
-                registration_token.is_invite_link()
+                registration_token.registers_without_email()
                     || (registration_token.passwordless && email_authentication.is_some())
             })
     {
@@ -617,9 +618,9 @@ mod tests {
         assert_refused(&response, "no passwordless registration token");
     }
 
-    /// An invite link needs no verified email address
+    /// A token registering without an email address needs no verified one
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_finish_invite_link_without_email(pool: PgPool) {
+    async fn test_finish_without_email(pool: PgPool) {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
         let cookies = CookieHelper::new();

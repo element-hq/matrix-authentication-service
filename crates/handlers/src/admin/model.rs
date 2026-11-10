@@ -650,8 +650,7 @@ pub struct UserRegistrationToken {
     /// Whether registering with this token skips the password step. The user's
     /// identity is then established by verifying their email address, unless
     /// the token has a username template and neither an email nor allowed
-    /// addresses: such an invite link registers a guest with only a display
-    /// name.
+    /// addresses: such a token registers with only a display name.
     passwordless: bool,
 
     /// Where the user is sent once they have registered or signed in through

@@ -274,11 +274,11 @@ impl UserRegistrationToken {
         true
     }
 
-    /// Returns `true` if the token is an invite link: passwordless, with a
-    /// username template and no email address pinned or allowed, registering a
-    /// guest with no credential beyond the link itself
+    /// Returns `true` if registering with the token needs no email address:
+    /// passwordless, with a username template and no email address pinned or
+    /// allowed
     #[must_use]
-    pub fn is_invite_link(&self) -> bool {
+    pub fn registers_without_email(&self) -> bool {
         self.passwordless
             && self.email.is_none()
             && self.allowed_emails.is_none()
@@ -378,9 +378,9 @@ mod tests {
     }
 
     #[test]
-    fn test_is_invite_link() {
-        assert!(token(None, None).is_invite_link());
-        assert!(!token(None, Some(&["alice@example.com"])).is_invite_link());
-        assert!(!token(Some("alice@example.com"), None).is_invite_link());
+    fn test_registers_without_email() {
+        assert!(token(None, None).registers_without_email());
+        assert!(!token(None, Some(&["alice@example.com"])).registers_without_email());
+        assert!(!token(Some("alice@example.com"), None).registers_without_email());
     }
 }

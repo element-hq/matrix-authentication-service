@@ -247,7 +247,7 @@
     },
     "register": {
       "call_to_login": "Already have an account?",
-      "call_to_login_guest": "Sign in with an existing account",
+      "call_to_login_passwordless": "Sign in with an existing account",
       "captcha_incomplete": "Please complete the CAPTCHA challenge before continuing",
       "captcha_loading": "The CAPTCHA is still loading, please wait a moment",
       "continue_with_email": "Continue with email address",

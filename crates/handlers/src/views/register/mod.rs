@@ -210,7 +210,8 @@ pub(crate) struct RegisterForm {
     #[serde(default)]
     accept_terms: String,
 
-    /// Only asked for by invite links, which skip the display name step
+    /// Only asked for by tokens registering without an email address, which
+    /// skip the display name step
     #[serde(default)]
     display_name: String,
 
@@ -822,7 +823,7 @@ mod tests {
                     "username": username,
                     "email": "alice@example.com",
                     "passwordless": true,
-                    "link_invite": false,
+                    "without_email": false,
                 })
             );
             assert_eq!(
@@ -1162,8 +1163,8 @@ mod tests {
         }
     }
 
-    /// A link listing the addresses it allows isn't an invite link, so its page
-    /// asks for an address
+    /// A link listing the addresses it allows doesn't register without an email
+    /// address, so its page asks for one
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_listed_link_asks_for_email(pool: PgPool) {
         setup();
@@ -1184,7 +1185,7 @@ mod tests {
                 "username": "user-{{ random }}",
                 "email": null,
                 "passwordless": true,
-                "link_invite": false,
+                "without_email": false,
             })
         );
     }
