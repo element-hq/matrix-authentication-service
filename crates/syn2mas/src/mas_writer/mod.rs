@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -18,7 +19,7 @@ use std::{
 
 use chrono::{DateTime, Utc};
 use futures_util::{FutureExt, TryStreamExt, future::BoxFuture};
-use sqlx::{Executor, PgConnection, query, query_as};
+use sqlx::{AssertSqlSafe, Executor, PgConnection, query, query_as};
 use thiserror::Error;
 use thiserror_ext::{Construct, ContextInto};
 use tokio::sync::mpsc::{self, Receiver, Sender};
@@ -814,7 +815,7 @@ impl MasWriter {
             // We should reset the database so that we're starting from scratch.
             warn!("Partial syn2mas migration has already been done; resetting.");
             for table in MAS_TABLES_AFFECTED_BY_MIGRATION {
-                query(&format!("TRUNCATE syn2mas__{table};"))
+                query(AssertSqlSafe(format!("TRUNCATE syn2mas__{table};")))
                     .execute(conn.as_mut())
                     .await
                     .into_database_with(|| format!("failed to truncate table syn2mas__{table}"))?;
@@ -1027,7 +1028,7 @@ impl MasWriter {
             // those tables, which would be a hassle, or to do that after
             // restoring the constraints, which would mean we wouldn't validate
             // that we've done valid FKs in dry-run mode.
-            query(&format!("TRUNCATE TABLE {tables} CASCADE;"))
+            query(AssertSqlSafe(format!("TRUNCATE TABLE {tables} CASCADE;")))
                 .execute(self.conn.as_mut())
                 .await
                 .into_database_with(|| "failed to truncate all tables")?;
@@ -1169,18 +1170,20 @@ mod test {
                 .collect::<Vec<_>>()
                 .join(", ");
 
-            let table_rows = sqlx::query(&format!("SELECT {column_name_list} FROM {table_name};"))
-                .fetch(&mut *conn)
-                .map_ok(|row| {
-                    let mut columns_to_values = BTreeMap::new();
-                    for (idx, column) in row.columns().iter().enumerate() {
-                        columns_to_values.insert(column.name().to_owned(), row.get(idx));
-                    }
-                    RowSnapshot { columns_to_values }
-                })
-                .try_collect::<BTreeSet<RowSnapshot>>()
-                .await
-                .expect("failed to fetch rows from table for snapshotting");
+            let table_rows = sqlx::query(sqlx::AssertSqlSafe(format!(
+                "SELECT {column_name_list} FROM {table_name};"
+            )))
+            .fetch(&mut *conn)
+            .map_ok(|row| {
+                let mut columns_to_values = BTreeMap::new();
+                for (idx, column) in row.columns().iter().enumerate() {
+                    columns_to_values.insert(column.name().to_owned(), row.get(idx));
+                }
+                RowSnapshot { columns_to_values }
+            })
+            .try_collect::<BTreeSet<RowSnapshot>>()
+            .await
+            .expect("failed to fetch rows from table for snapshotting");
 
             if !table_rows.is_empty() {
                 out.tables

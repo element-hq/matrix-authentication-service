@@ -1,0 +1,184 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT user_registration_id\n                     , ip_address\n                     , user_agent\n                     , post_auth_action\n                     , username\n                     , display_name\n                     , terms_url\n                     , email_authentication_id\n                     , user_registration_token_id\n                     , hashed_password\n                     , hashed_password_version\n                     , upstream_oauth_authorization_session_id\n                     , created_at\n                     , completed_at\n                FROM user_registrations\n                WHERE user_registration_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_registration_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "user_registration_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "ip_address",
+        "type_info": "Inet",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "ip_address"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "user_agent",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "user_agent"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "post_auth_action",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "post_auth_action"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "username",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "username"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "display_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "display_name"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "terms_url",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "terms_url"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "email_authentication_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "email_authentication_id"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "user_registration_token_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "user_registration_token_id"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "hashed_password",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "hashed_password"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "hashed_password_version",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "hashed_password_version"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "upstream_oauth_authorization_session_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "upstream_oauth_authorization_session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "completed_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "user_registrations",
+            "name": "completed_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "8f2533e9dd57add790826039820f5751c53bccd0df633cadb51cde7612f20978"
+}
