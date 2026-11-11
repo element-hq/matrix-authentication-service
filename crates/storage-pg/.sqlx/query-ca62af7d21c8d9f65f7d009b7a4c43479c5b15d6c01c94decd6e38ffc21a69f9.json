@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                DELETE FROM user_session_limit_overrides\n                WHERE user_session_limit_override_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ca62af7d21c8d9f65f7d009b7a4c43479c5b15d6c01c94decd6e38ffc21a69f9"
+}

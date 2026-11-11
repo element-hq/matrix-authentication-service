@@ -361,3 +361,43 @@ test_no_session_limiting_past_max_session_threshold if {
 	result.allow
 	result.need_to_remove_sessions == 0
 }
+
+# Per-evaluation `input.session_limit` replaces static `data.session_limit`.
+test_session_limiting_input_overrides_data if {
+	result := {
+		"allow": authorization_grant.allow,
+		"need_to_remove_sessions": need_to_remove_sessions(authorization_grant.violation),
+	} with input.user as user
+		with input.session_counts as {"total": 32}
+		with data.session_limit as {"soft_limit": 32, "hard_limit": 64}
+		with input.session_limit as {"soft_limit": 64, "hard_limit": 128}
+	result.allow
+	result.need_to_remove_sessions == 0
+}
+
+# Per-client counts use `against_limit` instead of `total`.
+test_session_limiting_against_limit if {
+	result := {
+		"allow": authorization_grant.allow,
+		"need_to_remove_sessions": need_to_remove_sessions(authorization_grant.violation),
+	} with input.user as user
+		# `total` is over the static limit; `against_limit` is not.
+		with input.session_counts as {"total": 100, "against_limit": 1}
+		with data.session_limit as {"soft_limit": 1, "hard_limit": 1}
+		with input.session_limit as {"soft_limit": 32, "hard_limit": 64}
+	result.allow
+	result.need_to_remove_sessions == 0
+}
+
+test_session_limiting_against_limit_hit if {
+	result := {
+		"allow": authorization_grant.allow,
+		"need_to_remove_sessions": need_to_remove_sessions(authorization_grant.violation),
+	} with input.user as user
+		# `total` is under the limit; `against_limit` is not.
+		with input.session_counts as {"total": 1, "against_limit": 32}
+		with data.session_limit as {"soft_limit": 1000, "hard_limit": 1000}
+		with input.session_limit as {"soft_limit": 32, "hard_limit": 64}
+	not result.allow
+	result.need_to_remove_sessions == 1
+}
