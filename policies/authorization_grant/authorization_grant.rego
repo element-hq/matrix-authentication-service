@@ -220,7 +220,9 @@ first_party_scope(scope) if startswith(scope, "urn:matrix:client:device:")
 
 first_party_scope(scope) if startswith(scope, "urn:matrix:org.matrix.msc2967.client:device:")
 
-skip_consent_client if not data.skip_consent.client_ids
+# Without `client_ids`, any client qualifies, because the age and session
+# conditions in `skip_consent` limit the skip to a new account's first sign-in.
+skip_consent_client if not "client_ids" in object.keys(data.skip_consent)
 
 skip_consent_client if input.client.id in data.skip_consent.client_ids
 
