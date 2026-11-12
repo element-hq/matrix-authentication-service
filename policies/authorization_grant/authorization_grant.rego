@@ -209,3 +209,43 @@ passes_session_threshold if {
 	# Otherwise, check whether the total number of sessions is under the threshold
 	input.session_counts.total <= data.session_limit.max_session_threshold
 }
+
+# The scopes the consent page shows without a warning, as in
+# `safe_scope_prefixes` in `templates/components/scope.html`
+safe_scope("openid") := true
+
+safe_scope("urn:matrix:client:api:*") := true
+
+safe_scope("urn:matrix:org.matrix.msc2967.client:api:*") := true
+
+safe_scope(scope) if startswith(scope, "urn:matrix:client:device:")
+
+safe_scope(scope) if startswith(scope, "urn:matrix:org.matrix.msc2967.client:device:")
+
+# Without `client_ids`, any client qualifies, because the age and session
+# conditions in `skip_consent` limit the skip to a new account's first sign-in.
+skip_consent_client if not "client_ids" in object.keys(data.skip_consent)
+
+skip_consent_client if input.client.id in data.skip_consent.client_ids
+
+# METADATA
+# entrypoint: true
+default skip_consent := false
+
+skip_consent if {
+	allow
+
+	# Not the device code grant, where someone else may hold the device
+	input.grant_type == "authorization_code"
+
+	skip_consent_client
+
+	# The first sign-in right after registering
+	input.session_counts.total == 0
+	account_age_ns := time.parse_rfc3339_ns(input.now) - time.parse_rfc3339_ns(input.user.created_at)
+	account_age_ns <= data.skip_consent.max_account_age_seconds * 1000000000
+
+	every scope in split(input.scope, " ") {
+		safe_scope(scope)
+	}
+}

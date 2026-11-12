@@ -3980,9 +3980,12 @@ version = "1.29.0"
 dependencies = [
  "anyhow",
  "arc-swap",
+ "chrono",
  "mas-data-model",
  "oauth2-types",
  "opa-wasm",
+ "rand 0.10.3",
+ "rand_chacha 0.10.0",
  "schemars 1.2.3",
  "serde",
  "serde_json",

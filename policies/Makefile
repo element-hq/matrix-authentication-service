@@ -42,6 +42,7 @@ policy.wasm: $(INPUTS)
 		-e "authorization_grant/violation" \
 		-e "compat_login/violation" \
 		-e "email/violation" \
+		-e "authorization_grant/skip_consent" \
 		$^
 	tar xzf bundle.tar.gz /policy.wasm
 	$(RM) bundle.tar.gz
