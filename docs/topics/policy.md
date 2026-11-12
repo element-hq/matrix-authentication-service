@@ -67,6 +67,7 @@ This is especially important as in the future it will make it possible to implem
 
 For the authorization code grant, the policy also decides whether the user is asked for consent.
 The default policy only skips it when [`policy.data.skip_consent`](../reference/configuration.md#policy) is set, on the first sign-in of a newly created account.
+A custom policy that does not define the `authorization_grant/skip_consent` entrypoint never skips it.
 
 To understand the authorization process and how sessions are created, refer to the [authorization and sessions](./authorization.md) section.
 

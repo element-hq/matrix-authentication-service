@@ -31,5 +31,9 @@ tracing.workspace = true
 mas-data-model.workspace = true
 oauth2-types.workspace = true
 
+[dev-dependencies]
+rand.workspace = true
+rand_chacha.workspace = true
+
 [[bin]]
 name = "schema"
