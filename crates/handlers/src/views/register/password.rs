@@ -14,7 +14,7 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt as _, CsrfToken},
 };
-use mas_data_model::{BoxClock, BoxRng, CaptchaConfig, SiteConfig, UserRegistrationToken};
+use mas_data_model::{BoxClock, BoxRng, CaptchaConfig, SiteConfig};
 use mas_i18n::DataLocale;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
@@ -23,7 +23,10 @@ use mas_storage::{
     BoxRepository, RepositoryAccess,
     queue::{QueueJobRepositoryExt as _, SendEmailAuthenticationCodeJob},
     upstream_oauth2::UpstreamOAuthProviderRepository as _,
-    user::{UserEmailRepository, UserRegistrationRepository as _, UserRepository},
+    user::{
+        UserEmailRepository, UserRegistrationRepository as _, UserRegistrationTokenRepository as _,
+        UserRepository,
+    },
 };
 use mas_templates::{
     FieldError, FormError, FormState, RegisterContext, RegisterFormField, TemplateContext,
@@ -38,8 +41,8 @@ use crate::{
 };
 
 /// Register a user with a password, from the form posted on `/register`. The
-/// caller has verified the CSRF token, checked that password registration is
-/// enabled and resolved the registration token the form carried.
+/// caller has verified the CSRF token and checked that password registration is
+/// enabled.
 #[tracing::instrument(name = "handlers.views.register.password", skip_all)]
 #[expect(clippy::too_many_arguments)]
 pub(super) async fn register(
@@ -61,7 +64,6 @@ pub(super) async fn register(
     query: OptionalPostAuthAction,
     cookie_jar: CookieJar,
     form: RegisterForm,
-    registration_token: Option<UserRegistrationToken>,
 ) -> Result<Response, InternalError> {
     let ip_address = activity_tracker.ip();
 
@@ -81,6 +83,15 @@ pub(super) async fn register(
         .is_ok();
 
     let state = form.to_form_state();
+
+    let registration_token = if form.token.is_empty() {
+        None
+    } else {
+        repo.user_registration_token()
+            .find_by_token(&form.token)
+            .await?
+            .filter(|found| found.is_valid(clock.now()))
+    };
 
     let (pinned_username, pinned_email) = match &registration_token {
         Some(token) => (token.username.as_deref(), token.email.as_deref()),
@@ -110,6 +121,10 @@ pub(super) async fn register(
 
         if !passed_captcha {
             state.add_error_on_form(FormError::Captcha);
+        }
+
+        if !form.token.is_empty() && registration_token.is_none() {
+            state.add_error_on_field(RegisterFormField::Token, FieldError::Invalid);
         }
 
         // An invite code may only be used to register the identity it was
@@ -353,7 +368,7 @@ pub(super) async fn register(
 
 /// Render the registration page again, with the errors the form collected
 #[expect(clippy::too_many_arguments)]
-pub(super) async fn render(
+async fn render(
     locale: DataLocale,
     form_state: FormState<RegisterFormField>,
     action: &OptionalPostAuthAction,
