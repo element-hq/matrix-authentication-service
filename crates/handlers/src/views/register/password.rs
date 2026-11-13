@@ -1508,6 +1508,66 @@ mod tests {
         assert_eq!(email_authentication.email, "alice@example.com");
     }
 
+    /// Empty fields take the values the registration token pins, and a pinned
+    /// email address is verified even when the server doesn't require one
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_pinned_token_fills_empty_fields(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_registration_email_required: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        add_registration_token(
+            &state,
+            "pins_dave",
+            Some("dave"),
+            Some("dave@example.com"),
+            false,
+        )
+        .await;
+
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({
+                "username": "",
+                "email": "",
+                "password": "correcthorsebatterystaple",
+                "password_confirm": "correcthorsebatterystaple",
+                "token": "pins_dave",
+            }),
+        )
+        .await;
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        // The handler redirects with the ID as the second to last portion of the path
+        let id = response.headers()[LOCATION]
+            .to_str()
+            .unwrap()
+            .rsplit('/')
+            .nth(1)
+            .unwrap()
+            .parse()
+            .unwrap();
+
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
+        assert_eq!(registration.username, "dave");
+        let authentication = repo
+            .user_email()
+            .lookup_authentication(registration.email_authentication_id.unwrap())
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(authentication.email, "dave@example.com");
+    }
+
     /// A passwordless invite code is a way to register on its own: it works
     /// with password registration off, and with passwords disabled entirely
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -1574,66 +1634,6 @@ mod tests {
             .client_ip(ip)
             .form(form);
         state.request(cookies.with_cookies(request)).await
-    }
-
-    /// Empty fields take the values the registration token pins, and a pinned
-    /// email address is verified even when the server doesn't require one
-    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
-    async fn test_register_with_pinned_token_fills_empty_fields(pool: PgPool) {
-        setup();
-        let state = TestState::from_pool_with_site_config(
-            pool,
-            SiteConfig {
-                password_registration_email_required: false,
-                ..test_site_config()
-            },
-        )
-        .await
-        .unwrap();
-
-        add_registration_token(
-            &state,
-            "pins_dave",
-            Some("dave"),
-            Some("dave@example.com"),
-            false,
-        )
-        .await;
-
-        let response = register_from(
-            &state,
-            IpAddr::from([192, 0, 2, 1]),
-            serde_json::json!({
-                "username": "",
-                "email": "",
-                "password": "correcthorsebatterystaple",
-                "password_confirm": "correcthorsebatterystaple",
-                "token": "pins_dave",
-            }),
-        )
-        .await;
-        response.assert_status(StatusCode::SEE_OTHER);
-
-        // The handler redirects with the ID as the second to last portion of the path
-        let id = response.headers()[LOCATION]
-            .to_str()
-            .unwrap()
-            .rsplit('/')
-            .nth(1)
-            .unwrap()
-            .parse()
-            .unwrap();
-
-        let mut repo = state.repository().await.unwrap();
-        let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
-        assert_eq!(registration.username, "dave");
-        let authentication = repo
-            .user_email()
-            .lookup_authentication(registration.email_authentication_id.unwrap())
-            .await
-            .unwrap()
-            .unwrap();
-        assert_eq!(authentication.email, "dave@example.com");
     }
 
     /// Passwordless codes pinning an email address skip the registration rate
