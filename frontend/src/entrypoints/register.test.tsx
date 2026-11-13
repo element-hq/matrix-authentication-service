@@ -69,7 +69,9 @@ const mountRegister = async ({
   // The entry point mounts the island when it is imported
   vi.resetModules();
   await import("./register");
-  await screen.findByRole("link", { name: "Already have an account?" });
+  await screen.findByRole("link", {
+    name: /^(Already have an account\?|Sign in with an existing account)$/,
+  });
 };
 
 const unmount = (): void => {
@@ -128,6 +130,7 @@ describe("register island", () => {
       username: "alice",
       email: "alice@example.com",
       passwordless: true,
+      without_email: false,
     };
 
     it("explains an error on the username above the form", async () => {
@@ -183,6 +186,22 @@ describe("register island", () => {
   });
 
   describe("with an invite listing the email addresses it allows", () => {
+    it("asks a link's user for an address and a code, not a display name", async () => {
+      await mountRegister({
+        invite: {
+          valid: true,
+          username: "user-{{ random }}",
+          email: null,
+          passwordless: true,
+          without_email: false,
+        },
+      });
+
+      expect(screen.getByLabelText("Email address")).toBeRequired();
+      expect(screen.getByRole("button", { name: "Send code" })).toBeVisible();
+      expect(screen.queryByLabelText("Display name")).toBeNull();
+    });
+
     it("explains an unlisted address on the email field", async () => {
       await mountRegister({
         invite: {
@@ -190,6 +209,7 @@ describe("register island", () => {
           username: null,
           email: null,
           passwordless: true,
+          without_email: false,
         },
         form: {
           errors: [],

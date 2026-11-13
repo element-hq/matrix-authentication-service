@@ -16,13 +16,32 @@ Please see LICENSE files in the repository root for full details.
 {% endblock head %}
 
 {% block content %}
+  {% set passwordless = invite and invite.valid and invite.passwordless %}
+  {% set without_email = passwordless and invite.without_email %}
   <header class="page-heading">
     <div class="icon">
-      {{ icon.user_profile_solid() }}
+      {% if passwordless %}
+        {{ icon.chat_solid() }}
+      {% else %}
+        {{ icon.user_profile_solid() }}
+      {% endif %}
     </div>
 
     <div class="header">
-      <h1 class="title">{{ _("mas.register.create_account.heading") }}</h1>
+      {% if without_email %}
+        <h1 class="title">{{ _("mas.register.create_account.without_email_heading") }}</h1>
+        <p class="text">{{ _("mas.register.create_account.without_email_description") }}</p>
+      {% elif passwordless %}
+        <h1 class="title">{{ _("mas.register.create_account.passwordless_heading") }}</h1>
+        {% if invite.email %}
+          <p class="text">
+            {{ _("mas.register.create_account.passwordless_description") }}<br>
+            <span class="text-primary">{{ invite.email }}</span>
+          </p>
+        {% endif %}
+      {% else %}
+        <h1 class="title">{{ _("mas.register.create_account.heading") }}</h1>
+      {% endif %}
     </div>
   </header>
 

@@ -521,11 +521,11 @@
     },
     "loading": "Loading…",
     "@loading": {
-      "context": "pages/register/index.html:39:26-42"
+      "context": "pages/register/index.html:58:26-42"
     },
     "loading_failed": "Something went wrong while loading the page. Try reloading it.",
     "@loading_failed": {
-      "context": "app.html:28:9-32, pages/register/index.html:51:7-30"
+      "context": "app.html:28:9-32, pages/register/index.html:70:7-30"
     },
     "login": {
       "call_to_register": "Don't have an account yet?",
@@ -762,12 +762,28 @@
       "create_account": {
         "heading": "Create an account",
         "@heading": {
-          "context": "pages/register/index.html:25:27-67"
+          "context": "pages/register/index.html:43:29-69"
+        },
+        "passwordless_description": "To enable your guest access we will send a verification code to",
+        "@passwordless_description": {
+          "context": "pages/register/index.html:38:15-72"
+        },
+        "passwordless_heading": "You have been invited to join a conversation as a guest",
+        "@passwordless_heading": {
+          "context": "pages/register/index.html:35:29-82"
+        },
+        "without_email_description": "Choose your display name. This is the name other people will see. You can change this at any time.",
+        "@without_email_description": {
+          "context": "pages/register/index.html:33:27-85"
+        },
+        "without_email_heading": "You've been invited to join as a guest",
+        "@without_email_heading": {
+          "context": "pages/register/index.html:32:29-83"
         }
       },
       "javascript_required": "JavaScript is required to create an account. Please enable JavaScript in your browser and reload this page.",
       "@javascript_required": {
-        "context": "pages/register/index.html:58:34-71"
+        "context": "pages/register/index.html:77:34-71"
       },
       "terms_of_service": "I agree to the <a href=\"%s\" data-kind=\"primary\" class=\"cpd-link\">Terms and Conditions</a>",
       "@terms_of_service": {

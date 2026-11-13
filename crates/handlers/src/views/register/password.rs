@@ -119,11 +119,18 @@ pub(super) async fn register(
         }),
     };
 
-    // The email field is only shown if the server requires it. A passwordless
-    // registration needs one, as verifying it is what establishes the user's
-    // identity, and a registration token pinning an address forces it.
-    let email = if site_config.password_registration_email_required
-        || passwordless
+    // A token registering without an email address asks for a display name
+    // instead, whatever the server requires of other registrations
+    let without_email = registration_token
+        .as_ref()
+        .is_some_and(UserRegistrationToken::registers_without_email);
+
+    // The email field is only shown if the server requires it. Any other
+    // passwordless registration needs one, as verifying it is what establishes
+    // the user's identity, and a registration token pinning an address forces
+    // it.
+    let email = if ((site_config.password_registration_email_required || passwordless)
+        && !without_email)
         || pinned_email.is_some()
     {
         Some(match pinned_email {
@@ -194,6 +201,15 @@ pub(super) async fn register(
                 .is_some_and(|token| !token.allows_email(email))
             {
                 state.add_error_on_field(RegisterFormField::Email, FieldError::Mismatch);
+            }
+        }
+
+        if without_email {
+            let display_name = form.display_name.trim();
+            if display_name.is_empty() {
+                state.add_error_on_field(RegisterFormField::DisplayName, FieldError::Required);
+            } else if display_name.len() > 255 {
+                state.add_error_on_field(RegisterFormField::DisplayName, FieldError::Invalid);
             }
         }
 
@@ -376,6 +392,14 @@ pub(super) async fn register(
         registration
     };
 
+    let registration = if without_email {
+        repo.user_registration()
+            .set_display_name(registration, form.display_name.trim().to_owned())
+            .await?
+    } else {
+        registration
+    };
+
     let registration = if let Some(email) = email {
         // Create a new user email authentication session
         let user_email_authentication = repo
@@ -400,7 +424,8 @@ pub(super) async fn register(
     };
 
     // A passwordless registration doesn't get a password at all: the verified
-    // email address is its credential
+    // email address, or for a token registering without one the token itself,
+    // is its credential
     let registration = if passwordless {
         registration
     } else {
@@ -1133,6 +1158,96 @@ mod tests {
 
         let mut repo = state.repository().await.unwrap();
         assert!(!repo.user().exists("alice").await.unwrap());
+    }
+
+    /// A token registering without an email address registers with the display
+    /// name typed on the form, even where registrations otherwise need an email
+    /// address
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_without_email(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_registration_email_required: true,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        add_registration_token(
+            &state,
+            "invite_link",
+            Some("guest-{{ random }}"),
+            None,
+            true,
+        )
+        .await;
+
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({ "token": "invite_link", "display_name": " " }),
+        )
+        .await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            form_state(response.body())["fields"]["display_name"]["errors"],
+            serde_json::json!([{"kind": "required"}])
+        );
+
+        let cookies = CookieHelper::new();
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "token": "invite_link",
+                "display_name": " Alice ",
+                "accept_terms": "on",
+            }),
+        );
+        let response = state.request(cookies.with_cookies(request)).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+        let id = registration_id(&response);
+
+        let request = Request::get(&*mas_router::RegisterFinish::new(id).path_and_query()).empty();
+        let response = state.request(cookies.with_cookies(request)).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
+        assert!(registration.completed_at.is_some());
+        assert!(registration.email_authentication_id.is_none());
+        assert_eq!(registration.display_name.as_deref(), Some("Alice"));
+    }
+
+    /// A link listing the addresses it allows needs one, and no display name
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_listed_link_without_email(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let token =
+            add_registration_token(&state, "link", Some("user-{{ random }}"), None, true).await;
+        allow_emails(&state, token, &["alice@example.com"]).await;
+
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({ "token": "link" }),
+        )
+        .await;
+        response.assert_status(StatusCode::OK);
+        let fields = &form_state(response.body())["fields"];
+        assert_eq!(
+            fields["email"]["errors"],
+            serde_json::json!([{"kind": "required"}])
+        );
+        assert!(
+            fields["display_name"]["errors"]
+                .as_array()
+                .is_none_or(Vec::is_empty)
+        );
     }
 
     /// An invite code with a username template registers the name it renders

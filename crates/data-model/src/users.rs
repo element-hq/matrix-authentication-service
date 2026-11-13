@@ -274,6 +274,17 @@ impl UserRegistrationToken {
         true
     }
 
+    /// Returns `true` if registering with the token needs no email address:
+    /// passwordless, with a username template and no email address pinned or
+    /// allowed
+    #[must_use]
+    pub fn registers_without_email(&self) -> bool {
+        self.passwordless
+            && self.email.is_none()
+            && self.allowed_emails.is_none()
+            && self.username_template().is_some()
+    }
+
     /// Returns `true` if `email` may use this token, ignoring case:
     /// the address it pins, one it lists, or any if it does neither
     #[must_use]
@@ -364,5 +375,12 @@ mod tests {
         assert!(!pinned.allows_email("carol@example.com"));
 
         assert!(token(None, None).allows_email("carol@example.com"));
+    }
+
+    #[test]
+    fn test_registers_without_email() {
+        assert!(token(None, None).registers_without_email());
+        assert!(!token(None, Some(&["alice@example.com"])).registers_without_email());
+        assert!(!token(Some("alice@example.com"), None).registers_without_email());
     }
 }
