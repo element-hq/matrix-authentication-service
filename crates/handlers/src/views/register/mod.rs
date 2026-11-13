@@ -1353,6 +1353,28 @@ mod tests {
         assert!(upstream_sessions(&state, &response).is_none());
     }
 
+    /// The fresh page a stale CSRF token sends the user back to keeps the
+    /// invite code the link carried
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_invalid_csrf_keeps_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let (csrf_token, _body) = render_page(&state, &cookies).await;
+
+        let request = cookies.with_cookies(Request::post("/register?token=invite").form(
+            serde_json::json!({
+                "csrf": format!("{csrf_token}invalid"),
+                "username": "alice",
+                "token": "invite",
+            }),
+        ));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/register?token=invite");
+    }
+
     /// The continue URL of the tokens [`add_continue_token`] adds, which no
     /// page of MAS and no redirect to one should show
     const CONTINUE_URL: &str = "https://app.example.com/#/room/secretroom";
