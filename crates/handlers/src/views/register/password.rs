@@ -130,7 +130,7 @@ pub(super) async fn register(
         // An invite code may only be used to register the identity it was
         // issued for
         if pinned_username.is_some_and(|pinned| pinned != username) {
-            state.add_error_on_field(RegisterFormField::Username, FieldError::Invalid);
+            state.add_error_on_field(RegisterFormField::Username, FieldError::Mismatch);
         }
 
         let mut homeserver_denied_username = false;
@@ -1009,7 +1009,7 @@ mod tests {
                 "pins_alice",
                 "mallory",
                 "mallory@example.com",
-                Some(("username", "invalid")),
+                Some(("username", "mismatch")),
             ),
             (
                 "pins_email",
