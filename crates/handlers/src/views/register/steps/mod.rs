@@ -63,6 +63,7 @@ mod tests {
             username: username.map(ToOwned::to_owned),
             email: email.map(ToOwned::to_owned),
             passwordless,
+            continue_url: None,
             usage_limit: None,
             times_used: 0,
             created_at: DateTime::<Utc>::UNIX_EPOCH,

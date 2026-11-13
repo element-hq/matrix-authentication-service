@@ -526,6 +526,9 @@ pub enum PostAuthContextInner {
 
     /// Go to the account management page
     ManageAccount,
+
+    /// Continue to the URL of a registration token
+    ContinueRegistrationToken,
 }
 
 /// Context used in login screen, for the post-auth action to do

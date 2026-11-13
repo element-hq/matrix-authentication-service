@@ -20,7 +20,7 @@ use mas_axum_utils::{
 use mas_data_model::{BoxClock, BoxRng, SiteConfig, UpstreamOAuthProvider, UserRegistrationToken};
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
-use mas_router::{Register, UpstreamOAuth2Authorize, UrlBuilder};
+use mas_router::{PostAuthAction, Register, UpstreamOAuth2Authorize, UrlBuilder};
 use mas_storage::{
     BoxRepository, RepositoryError, upstream_oauth2::UpstreamOAuthProviderRepository,
     user::UserRegistrationTokenRepository,
@@ -40,6 +40,7 @@ use crate::{
     upstream_oauth2::authorize::start_authorization,
 };
 
+pub(crate) mod continue_url;
 mod cookie;
 pub(crate) mod password;
 pub(crate) mod steps;
@@ -79,30 +80,29 @@ pub(crate) async fn get(
 
     let maybe_session = session_info.load_active_session(&mut repo).await?;
 
-    if let Some(session) = maybe_session {
-        activity_tracker
-            .record_browser_session(&clock, &session)
-            .await;
-
-        let reply = query.action.go_next(&url_builder);
-        return Ok((cookie_jar, reply).into_response());
-    }
-
-    // Resolve the invite code the link carried. A blank code is no code, and
-    // only a valid code can register.
+    // Resolve the invite code the link carried. A blank code is no code.
     let token = query
         .token
         .as_deref()
         .map(str::trim)
         .filter(|token| !token.is_empty());
-    let registration_token = match token {
-        Some(token) => repo
-            .user_registration_token()
-            .find_by_token(token)
-            .await?
-            .filter(|token| token.is_valid(clock.now())),
+    let found_token = match token {
+        Some(token) => repo.user_registration_token().find_by_token(token).await?,
         None => None,
     };
+    let action = post_auth_action(query.action, found_token.as_ref());
+
+    if let Some(session) = maybe_session {
+        activity_tracker
+            .record_browser_session(&clock, &session)
+            .await;
+
+        let reply = action.go_next(&url_builder);
+        return Ok((cookie_jar, reply).into_response());
+    }
+
+    // Only a valid code can register
+    let registration_token = found_token.filter(|token| token.is_valid(clock.now()));
     let passwordless_invite = registration_token
         .as_ref()
         .is_some_and(|token| token.passwordless);
@@ -120,7 +120,7 @@ pub(crate) async fn get(
 
             let mut destination = UpstreamOAuth2Authorize::new(provider.id);
 
-            if let Some(action) = query.action.post_auth_action {
+            if let Some(action) = action.post_auth_action {
                 destination = destination.and_then(action);
             }
 
@@ -128,16 +128,12 @@ pub(crate) async fn get(
         }
 
         if providers.is_empty() {
-            let destination = mas_router::Login::from(query.action.post_auth_action);
+            let destination = mas_router::Login::from(action.post_auth_action);
             return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
         }
     }
 
-    let mut ctx = RegisterContext::new(
-        &url_builder,
-        providers,
-        query.action.post_auth_action.as_ref(),
-    );
+    let mut ctx = RegisterContext::new(&url_builder, providers, action.post_auth_action.as_ref());
 
     // A code which resolved travels back on submission through a hidden field
     if let Some(token) = token {
@@ -158,6 +154,23 @@ pub(crate) async fn get(
     let content = templates.render_register(&ctx)?;
 
     Ok((cookie_jar, Html(content)).into_response())
+}
+
+/// The query's post-auth action if there is one, otherwise continuing to the
+/// URL of the registration token, whatever its validity, so that a link opened
+/// again after registering still leads there
+fn post_auth_action(
+    action: OptionalPostAuthAction,
+    registration_token: Option<&UserRegistrationToken>,
+) -> OptionalPostAuthAction {
+    action
+        .post_auth_action
+        .or_else(|| {
+            registration_token
+                .filter(|token| token.continue_url.is_some())
+                .map(|token| PostAuthAction::ContinueRegistrationToken { id: token.id })
+        })
+        .into()
 }
 
 /// The upstream providers the registration page offers: none with a
@@ -255,6 +268,25 @@ pub(crate) async fn post(
     // isn't worth an error
     form.username = form.username.trim().to_lowercase();
 
+    // Resolve the invite code now: it decides whether a password is needed at
+    // all, and a passwordless one is a way to register on its own. An invalid
+    // invite's page doesn't submit its code, which then only names the
+    // post-auth action.
+    form.token = form.token.trim().to_owned();
+    let action_token = if form.token.is_empty() {
+        query.token.as_deref().map_or("", str::trim)
+    } else {
+        &form.token
+    };
+    let found_token = if action_token.is_empty() {
+        None
+    } else {
+        repo.user_registration_token()
+            .find_by_token(action_token)
+            .await?
+    };
+    let action = post_auth_action(query.action, found_token.as_ref());
+
     // Carry the username along so we can prefill it if the user gets to pick
     // one when they come back
     if let Some(provider_id) = &form.provider {
@@ -288,7 +320,7 @@ pub(crate) async fn post(
             &mut repo,
             cookie_jar,
             &provider,
-            query.action.post_auth_action,
+            action.post_auth_action,
             carried_username,
         )
         .await?;
@@ -298,15 +330,8 @@ pub(crate) async fn post(
         return Ok((cookie_jar, Redirect::to(url.as_str())).into_response());
     }
 
-    form.token = form.token.trim().to_owned();
-    let registration_token = if form.token.is_empty() {
-        None
-    } else {
-        repo.user_registration_token()
-            .find_by_token(&form.token)
-            .await?
-            .filter(|found| found.is_valid(clock.now()))
-    };
+    let registration_token =
+        found_token.filter(|found| !form.token.is_empty() && found.is_valid(clock.now()));
 
     let passwordless_invite = registration_token
         .as_ref()
@@ -329,7 +354,7 @@ pub(crate) async fn post(
         let content = self::password::render(
             locale,
             form_state,
-            &query.action,
+            &action,
             csrf_token,
             &mut repo,
             &templates,
@@ -358,7 +383,7 @@ pub(crate) async fn post(
         repo,
         user_agent,
         &activity_tracker,
-        query.action,
+        action,
         cookie_jar,
         form,
         registration_token,
@@ -1339,6 +1364,404 @@ mod tests {
         let response = state.request(request).await;
         response.assert_status(StatusCode::SEE_OTHER);
         response.assert_header_value(LOCATION, "/register?token=invite");
+    }
+
+    /// The continue URL of the tokens [`add_continue_token`] adds, which no
+    /// page of MAS and no redirect to one should show
+    const CONTINUE_URL: &str = "https://app.example.com/#/room/secretroom";
+
+    /// Add a passwordless invite for alice, which continues to [`CONTINUE_URL`]
+    async fn add_continue_token(
+        state: &TestState,
+        token: &str,
+        used: bool,
+    ) -> mas_data_model::UserRegistrationToken {
+        let mut repo = state.repository().await.unwrap();
+        let mut token = repo
+            .user_registration_token()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                UserRegistrationTokenParams {
+                    token: token.to_owned(),
+                    usage_limit: Some(1),
+                    username: Some("alice".to_owned()),
+                    email: Some("alice@example.com".to_owned()),
+                    passwordless: true,
+                    continue_url: Some(CONTINUE_URL.to_owned()),
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+        if used {
+            token = repo
+                .user_registration_token()
+                .use_token(&state.clock, token)
+                .await
+                .unwrap();
+        }
+        repo.save().await.unwrap();
+        token
+    }
+
+    fn assert_no_continue_url(response: &hyper::Response<String>) {
+        assert!(!response.body().contains("secretroom"));
+        if let Some(location) = response.headers().get(LOCATION) {
+            assert!(!location.to_str().unwrap().contains("secretroom"));
+        }
+    }
+
+    /// A signed-in browser opening an invite link goes straight on to the
+    /// invite's continue URL, also once its token has been used, unless the
+    /// link asks for something else
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_get_signed_in_with_continue_token(pool: PgPool) {
+        use mas_axum_utils::SessionInfoExt as _;
+
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let mut rng = state.rng();
+        let valid = add_continue_token(&state, "valid", false).await;
+        let used = add_continue_token(&state, "used", true).await;
+
+        let mut repo = state.repository().await.unwrap();
+        let bob = repo
+            .user()
+            .add(&mut rng, &state.clock, "bob".to_owned())
+            .await
+            .unwrap();
+        let session = repo
+            .browser_session()
+            .add(&mut rng, &state.clock, &bob, None)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let cookies = CookieHelper::new();
+        cookies.import(state.cookie_jar().set_session(&session));
+        for token in [valid, used] {
+            let request = Request::get(format!("/register?token={}", token.token)).empty();
+            let response = state.request(cookies.with_cookies(request)).await;
+            response.assert_status(StatusCode::SEE_OTHER);
+            response.assert_header_value(LOCATION, &format!("/register/continue/{}", token.id));
+            assert_no_continue_url(&response);
+        }
+
+        let request = Request::get(
+            "/register?token=used&kind=continue_authorization_grant&id=00000000000000000000000000",
+        )
+        .empty();
+        let response = state.request(cookies.with_cookies(request)).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/consent/00000000000000000000000000");
+    }
+
+    /// The Sign in link of an invite's page goes on to the invite's continue
+    /// URL, also when the invite can no longer register
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_get_with_continue_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let valid = add_continue_token(&state, "valid", false).await;
+        let used = add_continue_token(&state, "used", true).await;
+
+        for (token, valid) in [(valid, true), (used, false)] {
+            let request = Request::get(format!("/register?token={}", token.token)).empty();
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::OK);
+            assert_eq!(
+                json_attribute(response.body(), "data-invite")["valid"],
+                serde_json::json!(valid)
+            );
+            assert!(response.body().contains(&escape_html(&format!(
+                "/login?kind=continue_registration_token&id={}",
+                token.id
+            ))));
+            assert_no_continue_url(&response);
+        }
+    }
+
+    /// Registering from an invite goes on to the invite's continue URL,
+    /// including from the email-in-use page
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_with_continue_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+        let token = add_continue_token(&state, "valid", false).await;
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let request = cookies.with_cookies(Request::post("/register?token=valid").form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "token": "valid",
+                "accept_terms": "on",
+            }),
+        ));
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+        assert_no_continue_url(&response);
+        let location = response.headers()[LOCATION].to_str().unwrap();
+        let id: Ulid = location.split('/').nth(3).unwrap().parse().unwrap();
+
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
+        assert_eq!(
+            registration.post_auth_action,
+            Some(serde_json::json!({ "kind": "continue_registration_token", "id": token.id }))
+        );
+
+        // Someone else has the address by the time it is verified
+        let authentication = repo
+            .user_email()
+            .lookup_authentication(registration.email_authentication_id.unwrap())
+            .await
+            .unwrap()
+            .unwrap();
+        let code = repo
+            .user_email()
+            .add_authentication_code(
+                &mut rng,
+                &state.clock,
+                chrono::Duration::minutes(5),
+                &authentication,
+                "123456".to_owned(),
+            )
+            .await
+            .unwrap();
+        repo.user_email()
+            .complete_authentication_with_code(&state.clock, authentication, &code)
+            .await
+            .unwrap();
+        let bob = repo
+            .user()
+            .add(&mut rng, &state.clock, "bob".to_owned())
+            .await
+            .unwrap();
+        repo.user_email()
+            .add(&mut rng, &state.clock, &bob, "alice@example.com".to_owned())
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let request = Request::get(&*mas_router::RegisterFinish::new(id).path_and_query()).empty();
+        let response = state.request(cookies.with_cookies(request)).await;
+        response.assert_status(StatusCode::OK);
+        assert!(response.body().contains(&escape_html(&format!(
+            "/register?kind=continue_registration_token&id={}",
+            token.id
+        ))));
+        assert_no_continue_url(&response);
+    }
+
+    /// The page for an invite which can no longer register still goes on to
+    /// the invite's continue URL from its Sign in link
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_with_used_continue_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+        let token = add_continue_token(&state, "used", true).await;
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let request = cookies.with_cookies(Request::post("/register").form(serde_json::json!({
+            "csrf": csrf_token,
+            "token": "used",
+            "accept_terms": "on",
+        })));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-invite"),
+            serde_json::json!({ "valid": false })
+        );
+        assert!(response.body().contains(&escape_html(&format!(
+            "/login?kind=continue_registration_token&id={}",
+            token.id
+        ))));
+        assert_no_continue_url(&response);
+    }
+
+    /// A provider button on the page of an invite which can no longer register
+    /// still goes on to the invite's continue URL
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_with_provider_and_used_continue_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+        let token = add_continue_token(&state, "used", true).await;
+        let provider_id = provider(&state).await;
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let request = cookies.with_cookies(Request::post("/register?token=used").form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "provider": provider_id.to_string(),
+            }),
+        ));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        assert_no_continue_url(&response);
+
+        let sessions = upstream_sessions(&state, &response)
+            .expect("the upstream sessions cookie should be set");
+        assert_eq!(
+            sessions[0]["post_auth_action"],
+            serde_json::json!({
+                "kind": "continue_registration_token",
+                "id": token.id.to_string(),
+            })
+        );
+    }
+
+    /// The code in the page's URL only names the post-auth action: a submission
+    /// without a code of its own is an ordinary registration
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_with_continue_token_in_url_only(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool.clone()).await.unwrap();
+        let token = add_continue_token(&state, "valid", false).await;
+
+        for password_registration_enabled in [true, false] {
+            let state = TestState::from_pool_with_site_config(
+                pool.clone(),
+                SiteConfig {
+                    password_registration_enabled,
+                    ..test_site_config()
+                },
+            )
+            .await
+            .unwrap();
+            let cookies = CookieHelper::new();
+
+            let csrf_token = mint_csrf_token(&state, &cookies);
+            let request = cookies.with_cookies(Request::post("/register?token=valid").form(
+                serde_json::json!({
+                    "csrf": csrf_token,
+                    "username": "bob",
+                    "email": "bob@example.com",
+                    "password": "correcthorsebatterystaple",
+                    "password_confirm": "correcthorsebatterystaple",
+                    "accept_terms": "on",
+                }),
+            ));
+            let response = state.request(request).await;
+
+            let mut repo = state.repository().await.unwrap();
+            if password_registration_enabled {
+                response.assert_status(StatusCode::SEE_OTHER);
+                let location = response.headers()[LOCATION].to_str().unwrap();
+                let id: Ulid = location.split('/').nth(3).unwrap().parse().unwrap();
+                let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
+                assert_eq!(registration.username, "bob");
+                assert!(registration.password.is_some());
+                assert!(registration.user_registration_token_id.is_none());
+            } else {
+                response.assert_status(StatusCode::METHOD_NOT_ALLOWED);
+            }
+
+            let token = repo
+                .user_registration_token()
+                .lookup(token.id)
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(token.times_used, 0);
+        }
+    }
+
+    /// A registration from the page of an invite which can no longer register
+    /// still goes on to the invite's continue URL
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_from_used_continue_token_page(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+        let token = add_continue_token(&state, "used", true).await;
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let request = cookies.with_cookies(Request::post("/register?token=used").form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "username": "bob",
+                "email": "bob@example.com",
+                "password": "correcthorsebatterystaple",
+                "password_confirm": "correcthorsebatterystaple",
+                "accept_terms": "on",
+            }),
+        ));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        assert_no_continue_url(&response);
+        let location = response.headers()[LOCATION].to_str().unwrap();
+        let id: Ulid = location.split('/').nth(3).unwrap().parse().unwrap();
+
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
+        assert!(registration.user_registration_token_id.is_none());
+        assert_eq!(
+            registration.post_auth_action,
+            Some(serde_json::json!({ "kind": "continue_registration_token", "id": token.id }))
+        );
+    }
+
+    /// Without password registration, the redirects away from a code which
+    /// isn't an invite go on to its continue URL
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_get_redirects_with_continue_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_registration_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let mut repo = state.repository().await.unwrap();
+        let token = repo
+            .user_registration_token()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                UserRegistrationTokenParams {
+                    token: "with_url".to_owned(),
+                    continue_url: Some(CONTINUE_URL.to_owned()),
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+        let action = mas_router::PostAuthAction::ContinueRegistrationToken { id: token.id };
+
+        let response = state
+            .request(Request::get("/register?token=with_url").empty())
+            .await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(
+            LOCATION,
+            &mas_router::Login::from(Some(action.clone())).path_and_query(),
+        );
+        assert_no_continue_url(&response);
+
+        let provider_id = provider(&state).await;
+        let response = state
+            .request(Request::get("/register?token=with_url").empty())
+            .await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(
+            LOCATION,
+            &UpstreamOAuth2Authorize::new(provider_id)
+                .and_then(action)
+                .path_and_query(),
+        );
+        assert_no_continue_url(&response);
     }
 
     /// A username too long to ever become an MXID is dropped instead of being

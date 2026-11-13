@@ -20,6 +20,7 @@ use mas_storage::user::UserRegistrationTokenParams;
 use rand::distr::{Alphanumeric, SampleString};
 use schemars::JsonSchema;
 use serde::Deserialize;
+use url::Url;
 
 use crate::{
     admin::{
@@ -35,6 +36,9 @@ use crate::{
 pub enum RouteError {
     #[error("A registration token with the same token already exists")]
     Conflict(Box<mas_data_model::UserRegistrationToken>),
+
+    #[error("Continue URL {0:?} is not an ASCII http or https URL")]
+    ContinueUrlNotValid(String),
 
     #[error("Email {email:?} is not valid")]
     EmailNotValid {
@@ -71,7 +75,8 @@ impl IntoResponse for RouteError {
         let sentry_event_id = record_error!(self, Self::Internal(_));
         let status = match self {
             Self::Conflict(_) | Self::UsernameTaken(_) => StatusCode::CONFLICT,
-            Self::EmailNotValid { .. }
+            Self::ContinueUrlNotValid(_)
+            | Self::EmailNotValid { .. }
             | Self::InvalidUsernameTemplate { .. }
             | Self::NotAllowed(_) => StatusCode::BAD_REQUEST,
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
@@ -132,6 +137,15 @@ pub struct Request {
     /// identity is then established by verifying their email address.
     #[serde(default)]
     passwordless: bool,
+
+    /// Where to send the user once they have registered or signed in through
+    /// the token's link. It must be an http or https URL, with anything but
+    /// visible ASCII characters percent-encoded, and is used as given: it can
+    /// be a page of any client, or one that lets the user pick a client.
+    /// Whoever holds the link can reach this URL without signing in, even
+    /// once the token is used, expired or revoked.
+    #[schemars(url, example = &"https://app.example.com/#/room/%21room%3Aexample.com")]
+    continue_url: Option<String>,
 }
 
 pub fn doc(operation: TransformOperation) -> TransformOperation {
@@ -146,12 +160,12 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
                 .example(response)
         })
         .response_with::<400, RouteError, _>(|t| {
-            let response = ErrorResponse::from_error(&RouteError::NotAllowed(NotAllowed(vec![
-                "username: username is banned".to_owned(),
-            ])));
+            let response = ErrorResponse::from_error(&RouteError::ContinueUrlNotValid(
+                "app.example.com".to_owned(),
+            ));
             t.description(
-                "The email or the username template is not valid, or the registration policy \
-                 refuses the email or the username",
+                "The continue URL, the email or the username template is not valid, or the \
+                 registration policy refuses the email or the username",
             )
             .example(response)
         })
@@ -185,6 +199,17 @@ pub async fn handler(
     NoApi(mut policy): NoApi<Policy>,
     Json(params): Json<Request>,
 ) -> Result<(StatusCode, Json<SingleResponse<UserRegistrationToken>>), RouteError> {
+    // Web URLs only, so not an app's own scheme such as `matrix:`. The URL
+    // goes in a `Location` header as given, where a browser resolves one
+    // without `//` against MAS.
+    if let Some(url) = &params.continue_url
+        && !(url.bytes().all(|b| b.is_ascii_graphic())
+            && (url.starts_with("http://") || url.starts_with("https://"))
+            && Url::parse(url).is_ok())
+    {
+        return Err(RouteError::ContinueUrlNotValid(url.clone()));
+    }
+
     if let Some(email) = &params.email
         && let Err(source) = Address::from_str(email)
     {
@@ -271,6 +296,7 @@ pub async fn handler(
                 username: params.username,
                 email: params.email,
                 passwordless: params.passwordless,
+                continue_url: params.continue_url,
             },
         )
         .await?;
@@ -322,6 +348,7 @@ mod tests {
               "username": null,
               "email": null,
               "passwordless": false,
+              "continue_url": null,
               "usage_limit": 5,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -389,6 +416,7 @@ mod tests {
               "username": null,
               "email": null,
               "passwordless": false,
+              "continue_url": null,
               "usage_limit": 1,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -437,6 +465,7 @@ mod tests {
               "username": "alice",
               "email": "alice@example.com",
               "passwordless": true,
+              "continue_url": null,
               "usage_limit": null,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -454,6 +483,97 @@ mod tests {
           }
         }
         "#);
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_create_continue_url(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+
+        let mut ids = Vec::new();
+        for (name, continue_url) in [
+            (
+                "with_url",
+                Some("https://app.example.com/#/room/%21room%3Aexample.com?via=example.com"),
+            ),
+            ("no_url", None),
+        ] {
+            let request = Request::post("/api/admin/v1/user-registration-tokens")
+                .bearer(&token)
+                .json(serde_json::json!({ "token": name, "continue_url": continue_url }));
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::CREATED);
+            let body: serde_json::Value = response.json();
+            assert_eq!(
+                body["data"]["attributes"]["continue_url"],
+                serde_json::json!(continue_url)
+            );
+            let id = body["data"]["id"].as_str().unwrap().to_owned();
+
+            let request = Request::get(format!("/api/admin/v1/user-registration-tokens/{id}"))
+                .bearer(&token)
+                .empty();
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::OK);
+            let body: serde_json::Value = response.json();
+            assert_eq!(
+                body["data"]["attributes"]["continue_url"],
+                serde_json::json!(continue_url)
+            );
+
+            ids.push((id, continue_url));
+        }
+
+        let request = Request::get("/api/admin/v1/user-registration-tokens")
+            .bearer(&token)
+            .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        for (id, continue_url) in ids {
+            let listed = body["data"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|token| token["id"] == id)
+                .unwrap();
+            assert_eq!(
+                listed["attributes"]["continue_url"],
+                serde_json::json!(continue_url)
+            );
+        }
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_create_invalid_continue_url(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+
+        for continue_url in [
+            "app.example.com/#/room/%21room%3Aexample.com",
+            "/#/room/%21room%3Aexample.com",
+            "javascript:alert(1)",
+            "matrix:roomid/room:example.com",
+            "https://app.example.com/#/room/a b",
+            "https://app.example.com/#/room/a\nb",
+            "https://app.example.com/#/room/é",
+            "https:app.example.com/#/room/a",
+            "https:/app.example.com/#/room/a",
+            "https://",
+        ] {
+            let request = Request::post("/api/admin/v1/user-registration-tokens")
+                .bearer(&token)
+                .json(serde_json::json!({ "continue_url": continue_url }));
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::BAD_REQUEST);
+            let body: serde_json::Value = response.json();
+            assert_eq!(
+                body["errors"][0]["title"],
+                format!("Continue URL {continue_url:?} is not an ASCII http or https URL")
+            );
+        }
     }
 
     /// Post `body` and return the response's status and error titles
@@ -644,6 +764,7 @@ mod tests {
               "username": null,
               "email": null,
               "passwordless": false,
+              "continue_url": null,
               "usage_limit": 5,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",

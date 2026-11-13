@@ -31,6 +31,9 @@ pub enum PostAuthAction {
         #[serde(flatten)]
         action: Option<AccountAction>,
     },
+    ContinueRegistrationToken {
+        id: Ulid,
+    },
 }
 
 impl PostAuthAction {
@@ -73,6 +76,7 @@ impl PostAuthAction {
             Self::ManageAccount { action } => url_builder.redirect(&Account {
                 action: action.clone(),
             }),
+            Self::ContinueRegistrationToken { id } => url_builder.redirect(&RegisterContinue(*id)),
         }
     }
 }
@@ -350,6 +354,22 @@ impl From<Option<PostAuthAction>> for Register {
                 post_auth_action,
             },
         }
+    }
+}
+
+/// `GET /register/continue/{id}`
+#[derive(Debug, Clone)]
+pub struct RegisterContinue(pub Ulid);
+
+impl Route for RegisterContinue {
+    type Query = ();
+
+    fn route() -> &'static str {
+        "/register/continue/{id}"
+    }
+
+    fn path(&self) -> std::borrow::Cow<'static, str> {
+        format!("/register/continue/{}", self.0).into()
     }
 }
 
