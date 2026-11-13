@@ -638,7 +638,7 @@ pub enum RegisterFormField {
     /// The terms of service agreement field
     AcceptTerms,
 
-    /// The registration token (a.k.a. invite code) field
+    /// The registration token field
     Token,
 }
 

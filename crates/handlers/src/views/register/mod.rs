@@ -298,21 +298,28 @@ pub(crate) async fn post(
         return Ok((cookie_jar, Redirect::to(url.as_str())).into_response());
     }
 
-    let token = form.token.trim();
-    let registration_token = if token.is_empty() {
+    form.token = form.token.trim().to_owned();
+    let registration_token = if form.token.is_empty() {
         None
     } else {
         repo.user_registration_token()
-            .find_by_token(token)
+            .find_by_token(&form.token)
             .await?
             .filter(|found| found.is_valid(clock.now()))
     };
 
-    // Only the code's error is reported: checking the rest of the form would
-    // tell whether a username exists, even with registration closed. The code
-    // isn't submitted again, so the next submission is an ordinary
-    // registration.
-    if !token.is_empty() && registration_token.is_none() {
+    let passwordless_invite = registration_token
+        .as_ref()
+        .is_some_and(|token| token.passwordless);
+
+    if !site_config.password_registration_enabled && !passwordless_invite {
+        if form.token.is_empty() || registration_token.is_some() {
+            return Ok(StatusCode::METHOD_NOT_ALLOWED.into_response());
+        }
+
+        // Only the token's error is reported: with registration closed,
+        // checking the rest of the form would tell whether a username exists.
+        // The token isn't submitted again.
         let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
         let mut form_state = form
             .to_form_state()
@@ -333,14 +340,6 @@ pub(crate) async fn post(
         .await?;
 
         return Ok((cookie_jar, Html(content)).into_response());
-    }
-
-    let passwordless_invite = registration_token
-        .as_ref()
-        .is_some_and(|token| token.passwordless);
-
-    if !site_config.password_registration_enabled && !passwordless_invite {
-        return Ok(StatusCode::METHOD_NOT_ALLOWED.into_response());
     }
 
     self::password::register(
@@ -949,9 +948,9 @@ mod tests {
         }
     }
 
-    /// Posting an invite code which has become invalid reports only the code,
-    /// so the form can't tell whether a username exists, even with password
-    /// registration disabled
+    /// Posting a registration token which has become invalid reports it with
+    /// the rest of the form. With password registration disabled, only the
+    /// token is reported, so the form can't tell whether a username exists.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_post_with_used_invite(pool: PgPool) {
         setup();
@@ -1004,16 +1003,25 @@ mod tests {
             );
 
             let form = json_attribute(response.body(), "data-form");
-            assert_eq!(form["errors"], serde_json::json!([]));
-            for (field, state) in form["fields"].as_object().unwrap() {
-                let errors = if field == "token" {
-                    serde_json::json!([{"kind": "invalid"}])
-                } else {
-                    serde_json::json!([])
-                };
-                assert_eq!(state["errors"], errors, "errors on {field}");
+            let fields = form["fields"].as_object().unwrap();
+            assert_eq!(
+                fields["token"]["errors"],
+                serde_json::json!([{"kind": "invalid"}])
+            );
+            assert_eq!(fields["token"]["value"], serde_json::Value::Null);
+            if password_registration_enabled {
+                assert_eq!(
+                    fields["username"]["errors"],
+                    serde_json::json!([{"kind": "exists"}])
+                );
+            } else {
+                assert_eq!(form["errors"], serde_json::json!([]));
+                for (field, state) in fields {
+                    if field != "token" {
+                        assert_eq!(state["errors"], serde_json::json!([]), "errors on {field}");
+                    }
+                }
             }
-            assert_eq!(form["fields"]["token"]["value"], serde_json::Value::Null);
         }
     }
 
