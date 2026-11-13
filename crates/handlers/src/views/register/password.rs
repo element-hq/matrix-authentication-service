@@ -39,8 +39,8 @@ use crate::{
 };
 
 /// Register a user with a password, from the form posted on `/register`. The
-/// caller has verified the CSRF token, resolved the invite code the form
-/// carried and checked that this registration is allowed.
+/// caller has verified the CSRF token, resolved the registration token the
+/// form carried and checked that this registration is allowed.
 #[tracing::instrument(name = "handlers.views.register.password", skip_all)]
 #[expect(clippy::too_many_arguments)]
 pub(super) async fn register(
@@ -82,6 +82,7 @@ pub(super) async fn register(
         .is_ok();
 
     let state = form.to_form_state();
+    let token_invalid = !form.token.is_empty() && registration_token.is_none();
 
     let (pinned_username, pinned_email, passwordless) = match &registration_token {
         Some(token) => (
@@ -96,7 +97,7 @@ pub(super) async fn register(
     };
 
     // A template is rendered whatever the form says. Otherwise an empty field
-    // means the user accepted whatever the invite code pins.
+    // means the user accepted whatever the registration token pins.
     let rendered_username = registration_token.as_ref().and_then(|token| {
         let template = token.username_template()?;
         Some(
@@ -126,7 +127,8 @@ pub(super) async fn register(
 
     // The email field is only shown if the server requires it. Any other
     // passwordless registration needs one, as verifying it is what establishes
-    // the user's identity, and an invite code pinning an address forces it.
+    // the user's identity, and a registration token pinning an address forces
+    // it.
     let email = if ((site_config.password_registration_email_required || passwordless)
         && !without_email)
         || pinned_email.is_some()
@@ -147,10 +149,17 @@ pub(super) async fn register(
             state.add_error_on_form(FormError::Captcha);
         }
 
-        // An invite code may only be used to register the identity it was
-        // issued for
+        // The token isn't submitted again, so the next submission is an
+        // ordinary registration
+        if token_invalid {
+            state.add_error_on_field(RegisterFormField::Token, FieldError::Invalid);
+            state.set_value(RegisterFormField::Token, None);
+        }
+
+        // A registration token may only be used to register the identity it
+        // was issued for
         if pinned_username.is_some_and(|pinned| pinned != username) {
-            state.add_error_on_field(RegisterFormField::Username, FieldError::Invalid);
+            state.add_error_on_field(RegisterFormField::Username, FieldError::Mismatch);
         }
 
         let mut homeserver_denied_username = false;
@@ -324,9 +333,13 @@ pub(super) async fn register(
             templates,
             url_builder,
             site_config.captcha.clone(),
-            registration_token
-                .as_ref()
-                .map_or(InviteCode::Missing, InviteCode::Valid),
+            if token_invalid {
+                InviteCode::Invalid
+            } else {
+                registration_token
+                    .as_ref()
+                    .map_or(InviteCode::Missing, InviteCode::Valid)
+            },
         )
         .await?;
 
@@ -1334,7 +1347,8 @@ mod tests {
         );
     }
 
-    /// Registering with an invite code which is no longer valid is refused
+    /// Registering with a registration token which is no longer valid is
+    /// refused
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_with_revoked_token(pool: PgPool) {
         setup();
@@ -1369,8 +1383,8 @@ mod tests {
         assert!(!repo.user().exists("bob").await.unwrap());
     }
 
-    /// An invite code may only register the username and email address it pins,
-    /// the email address in any case
+    /// A registration token may only register the username and email address it
+    /// pins, the email address in any case
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_with_pinned_token(pool: PgPool) {
         setup();
@@ -1384,7 +1398,7 @@ mod tests {
                 "pins_alice",
                 "mallory",
                 "mallory@example.com",
-                Some(("username", "invalid")),
+                Some(("username", "mismatch")),
             ),
             (
                 "pins_email",
@@ -1560,6 +1574,66 @@ mod tests {
             .client_ip(ip)
             .form(form);
         state.request(cookies.with_cookies(request)).await
+    }
+
+    /// Empty fields take the values the registration token pins, and a pinned
+    /// email address is verified even when the server doesn't require one
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_pinned_token_fills_empty_fields(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_registration_email_required: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        add_registration_token(
+            &state,
+            "pins_dave",
+            Some("dave"),
+            Some("dave@example.com"),
+            false,
+        )
+        .await;
+
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({
+                "username": "",
+                "email": "",
+                "password": "correcthorsebatterystaple",
+                "password_confirm": "correcthorsebatterystaple",
+                "token": "pins_dave",
+            }),
+        )
+        .await;
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        // The handler redirects with the ID as the second to last portion of the path
+        let id = response.headers()[LOCATION]
+            .to_str()
+            .unwrap()
+            .rsplit('/')
+            .nth(1)
+            .unwrap()
+            .parse()
+            .unwrap();
+
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
+        assert_eq!(registration.username, "dave");
+        let authentication = repo
+            .user_email()
+            .lookup_authentication(registration.email_authentication_id.unwrap())
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(authentication.email, "dave@example.com");
     }
 
     /// Passwordless codes pinning an email address skip the registration rate
