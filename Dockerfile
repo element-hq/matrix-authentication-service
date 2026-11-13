@@ -26,6 +26,8 @@ ARG CARGO_AUDITABLE_VERSION=0.7.7
 ##########################################
 FROM --platform=${BUILDPLATFORM} docker.io/library/node:${NODEJS_VERSION}-${DEBIAN_VERSION_NAME} AS frontend
 
+ARG NODE_USE_ENV_PROXY
+
 WORKDIR /app
 
 # Enable corepack so the pnpm version pinned in package.json's `packageManager`
