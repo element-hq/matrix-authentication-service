@@ -262,38 +262,6 @@ pub trait UserRegistrationTokenRepository: Send + Sync {
         usage_limit: Option<u32>,
     ) -> Result<UserRegistrationToken, Self::Error>;
 
-    /// Set or clear the username imposed by this [`UserRegistrationToken`]
-    ///
-    /// # Parameters
-    ///
-    /// * `token`: The [`UserRegistrationToken`] to update
-    /// * `username`: The new username, or `None` to clear it
-    ///
-    /// # Errors
-    ///
-    /// Returns [`Self::Error`] if the underlying repository fails
-    async fn set_username(
-        &mut self,
-        token: UserRegistrationToken,
-        username: Option<String>,
-    ) -> Result<UserRegistrationToken, Self::Error>;
-
-    /// Set or clear the email imposed by this [`UserRegistrationToken`]
-    ///
-    /// # Parameters
-    ///
-    /// * `token`: The [`UserRegistrationToken`] to update
-    /// * `email`: The new email, or `None` to clear it
-    ///
-    /// # Errors
-    ///
-    /// Returns [`Self::Error`] if the underlying repository fails
-    async fn set_email(
-        &mut self,
-        token: UserRegistrationToken,
-        email: Option<String>,
-    ) -> Result<UserRegistrationToken, Self::Error>;
-
     /// List [`UserRegistrationToken`]s based on the provided filter
     ///
     /// Returns a list of matching [`UserRegistrationToken`]s
@@ -358,16 +326,6 @@ repository_impl!(UserRegistrationTokenRepository:
         &mut self,
         token: UserRegistrationToken,
         usage_limit: Option<u32>,
-    ) -> Result<UserRegistrationToken, Self::Error>;
-    async fn set_username(
-        &mut self,
-        token: UserRegistrationToken,
-        username: Option<String>,
-    ) -> Result<UserRegistrationToken, Self::Error>;
-    async fn set_email(
-        &mut self,
-        token: UserRegistrationToken,
-        email: Option<String>,
     ) -> Result<UserRegistrationToken, Self::Error>;
     async fn list(
         &mut self,

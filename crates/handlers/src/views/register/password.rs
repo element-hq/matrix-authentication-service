@@ -14,7 +14,7 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt as _, CsrfToken},
 };
-use mas_data_model::{BoxClock, BoxRng, CaptchaConfig, SiteConfig, UserRegistrationToken};
+use mas_data_model::{BoxClock, BoxRng, CaptchaConfig, SiteConfig};
 use mas_i18n::DataLocale;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
@@ -23,7 +23,10 @@ use mas_storage::{
     BoxRepository, RepositoryAccess,
     queue::{QueueJobRepositoryExt as _, SendEmailAuthenticationCodeJob},
     upstream_oauth2::UpstreamOAuthProviderRepository as _,
-    user::{UserEmailRepository, UserRegistrationRepository as _, UserRepository},
+    user::{
+        UserEmailRepository, UserRegistrationRepository as _, UserRegistrationTokenRepository as _,
+        UserRepository,
+    },
 };
 use mas_templates::{
     FieldError, FormError, FormState, RegisterContext, RegisterFormField, TemplateContext,
@@ -38,8 +41,8 @@ use crate::{
 };
 
 /// Register a user with a password, from the form posted on `/register`. The
-/// caller has verified the CSRF token, checked that password registration is
-/// enabled and resolved the registration token the form carried.
+/// caller has verified the CSRF token and checked that password registration is
+/// enabled.
 #[tracing::instrument(name = "handlers.views.register.password", skip_all)]
 #[expect(clippy::too_many_arguments)]
 pub(super) async fn register(
@@ -61,7 +64,6 @@ pub(super) async fn register(
     query: OptionalPostAuthAction,
     cookie_jar: CookieJar,
     form: RegisterForm,
-    registration_token: Option<UserRegistrationToken>,
 ) -> Result<Response, InternalError> {
     let ip_address = activity_tracker.ip();
 
@@ -82,6 +84,15 @@ pub(super) async fn register(
 
     let state = form.to_form_state();
 
+    let registration_token = if form.token.is_empty() {
+        None
+    } else {
+        repo.user_registration_token()
+            .find_by_token(&form.token)
+            .await?
+            .filter(|found| found.is_valid(clock.now()))
+    };
+
     let (pinned_username, pinned_email, passwordless) = match &registration_token {
         Some(token) => (
             token.username.as_deref(),
@@ -91,7 +102,8 @@ pub(super) async fn register(
         None => (None, None, false),
     };
 
-    // An empty field means the user accepted whatever the invite code pins
+    // An empty field means the user accepted whatever the registration token
+    // pins
     let username = match pinned_username {
         Some(pinned) if form.username.is_empty() => pinned.to_owned(),
         _ => form.username.clone(),
@@ -99,7 +111,7 @@ pub(super) async fn register(
 
     // The email field is only shown if the server requires it. A passwordless
     // registration needs one, as verifying it is what establishes the user's
-    // identity, and an invite code pinning an address forces it.
+    // identity, and a registration token pinning an address forces it.
     let email = if site_config.password_registration_email_required
         || passwordless
         || pinned_email.is_some()
@@ -120,10 +132,14 @@ pub(super) async fn register(
             state.add_error_on_form(FormError::Captcha);
         }
 
-        // An invite code may only be used to register the identity it was
-        // issued for
+        if !form.token.is_empty() && registration_token.is_none() {
+            state.add_error_on_field(RegisterFormField::Token, FieldError::Invalid);
+        }
+
+        // A registration token may only be used to register the identity it
+        // was issued for
         if pinned_username.is_some_and(|pinned| pinned != username) {
-            state.add_error_on_field(RegisterFormField::Username, FieldError::Invalid);
+            state.add_error_on_field(RegisterFormField::Username, FieldError::Mismatch);
         }
 
         let mut homeserver_denied_username = false;
@@ -367,7 +383,7 @@ pub(super) async fn register(
 
 /// Render the registration page again, with the errors the form collected
 #[expect(clippy::too_many_arguments)]
-pub(super) async fn render(
+async fn render(
     locale: DataLocale,
     form_state: FormState<RegisterFormField>,
     action: &OptionalPostAuthAction,
@@ -1020,7 +1036,8 @@ mod tests {
         assert_eq!(email_authentication.email, "alice@example.com");
     }
 
-    /// Registering with an invite code which is no longer valid is refused
+    /// Registering with a registration token which is no longer valid is
+    /// refused
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_with_revoked_token(pool: PgPool) {
         setup();
@@ -1055,8 +1072,8 @@ mod tests {
         assert!(!repo.user().exists("bob").await.unwrap());
     }
 
-    /// An invite code may only register the username and email address it pins,
-    /// the email address in any case
+    /// A registration token may only register the username and email address it
+    /// pins, the email address in any case
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_with_pinned_token(pool: PgPool) {
         setup();
@@ -1070,7 +1087,7 @@ mod tests {
                 "pins_alice",
                 "mallory",
                 "mallory@example.com",
-                Some(("username", "invalid")),
+                Some(("username", "mismatch")),
             ),
             (
                 "pins_email",
@@ -1104,6 +1121,66 @@ mod tests {
                 None => response.assert_status(StatusCode::SEE_OTHER),
             }
         }
+    }
+
+    /// Empty fields take the values the registration token pins, and a pinned
+    /// email address is verified even when the server doesn't require one
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_pinned_token_fills_empty_fields(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_registration_email_required: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        add_registration_token(
+            &state,
+            "pins_dave",
+            Some("dave"),
+            Some("dave@example.com"),
+            false,
+        )
+        .await;
+
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({
+                "username": "",
+                "email": "",
+                "password": "correcthorsebatterystaple",
+                "password_confirm": "correcthorsebatterystaple",
+                "token": "pins_dave",
+            }),
+        )
+        .await;
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        // The handler redirects with the ID as the second to last portion of the path
+        let id = response.headers()[LOCATION]
+            .to_str()
+            .unwrap()
+            .rsplit('/')
+            .nth(1)
+            .unwrap()
+            .parse()
+            .unwrap();
+
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
+        assert_eq!(registration.username, "dave");
+        let authentication = repo
+            .user_email()
+            .lookup_authentication(registration.email_authentication_id.unwrap())
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(authentication.email, "dave@example.com");
     }
 
     /// Post the registration form from the given IP address

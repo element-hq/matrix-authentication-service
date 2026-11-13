@@ -199,7 +199,9 @@ pub async fn handler(
     NotAllowed::check(result.map(violations).unwrap_or_default())?;
 
     // The holder of a token pinned to a name someone else already has can
-    // never finish registering
+    // never finish registering. An email address already in use is not
+    // refused: a client minting tokens for addresses its users typed would
+    // tell them which addresses have an account
     if let Some(username) = &params.username
         && repo.user().exists(username).await?
     {
