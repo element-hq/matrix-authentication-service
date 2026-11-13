@@ -282,7 +282,10 @@ pub(super) async fn register(
             // Check the rate limit if we are about to process the form. A
             // passwordless code pinning an email address skips the
             // registration limit, so that people behind one address can accept
-            // their invites together.
+            // their invites together. This can't register in bulk: such a code
+            // is minted by an admin client for one address, only one account
+            // can register with that address, and the email authentication
+            // limits below still apply.
             let skips_limit = registration_token
                 .as_ref()
                 .is_some_and(|token| token.passwordless && token.email.is_some());
