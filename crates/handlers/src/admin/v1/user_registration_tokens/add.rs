@@ -90,6 +90,9 @@ impl NotAllowed {
 #[serde(rename = "AddUserRegistrationTokenRequest")]
 pub struct Request {
     /// The token string. If not provided, a random token will be generated.
+    /// Anyone holding the token can open its invite URL, which shows the
+    /// username and email address it imposes, so a token provided here must be
+    /// as hard to guess as a generated one.
     token: Option<String>,
 
     /// Maximum number of times this token can be used. If not provided, the

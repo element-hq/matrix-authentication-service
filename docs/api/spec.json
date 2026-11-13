@@ -7454,7 +7454,7 @@
         "type": "object",
         "properties": {
           "token": {
-            "description": "The token string. If not provided, a random token will be generated.",
+            "description": "The token string. If not provided, a random token will be generated.\nAnyone holding the token can open its invite URL, which shows the\nusername and email address it imposes, so a token provided here must be\nas hard to guess as a generated one.",
             "type": [
               "string",
               "null"
