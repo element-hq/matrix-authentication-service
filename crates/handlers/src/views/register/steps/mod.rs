@@ -14,9 +14,10 @@ pub(crate) mod verify_email;
 /// Whether `token` can be used for `registration`, whose email address is
 /// `email`: it pins no other username, and no other email address, ignoring
 /// case, and it is passwordless if the registration has neither a password
-/// nor an upstream link. A rendered name can't be checked against its
-/// template, so a username template fits only the registration it was
-/// rendered for.
+/// nor an upstream link, so that the token step can't swap a passwordless
+/// token for one that isn't, leaving a registration with no password at all.
+/// A rendered name can't be checked against its template, so a username
+/// template fits only the registration it was rendered for.
 fn token_fits(
     token: &UserRegistrationToken,
     registration: &UserRegistration,
