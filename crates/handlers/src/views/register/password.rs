@@ -98,14 +98,15 @@ pub(super) async fn register(
         None => (None, None),
     };
 
-    // An empty field means the user accepted whatever the invite code pins
+    // An empty field means the user accepted whatever the registration token
+    // pins
     let username = match pinned_username {
         Some(pinned) if form.username.is_empty() => pinned.to_owned(),
         _ => form.username.clone(),
     };
 
-    // The email field is only shown if the server requires it, and an invite
-    // code pinning an address forces it
+    // The email field is only shown if the server requires it, and a
+    // registration token pinning an address forces it
     let email = if site_config.password_registration_email_required || pinned_email.is_some() {
         Some(match pinned_email {
             Some(pinned) if form.email.is_empty() => pinned.to_owned(),
@@ -127,8 +128,8 @@ pub(super) async fn register(
             state.add_error_on_field(RegisterFormField::Token, FieldError::Invalid);
         }
 
-        // An invite code may only be used to register the identity it was
-        // issued for
+        // A registration token may only be used to register the identity it
+        // was issued for
         if pinned_username.is_some_and(|pinned| pinned != username) {
             state.add_error_on_field(RegisterFormField::Username, FieldError::Mismatch);
         }
@@ -959,7 +960,8 @@ mod tests {
         assert!(!user_exists);
     }
 
-    /// Registering with an invite code which is no longer valid is refused
+    /// Registering with a registration token which is no longer valid is
+    /// refused
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_with_revoked_token(pool: PgPool) {
         setup();
@@ -994,8 +996,8 @@ mod tests {
         assert!(!repo.user().exists("bob").await.unwrap());
     }
 
-    /// An invite code may only register the username and email address it pins,
-    /// the email address in any case
+    /// A registration token may only register the username and email address it
+    /// pins, the email address in any case
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_with_pinned_token(pool: PgPool) {
         setup();
