@@ -770,7 +770,6 @@ mod tests {
     async fn test_get_with_invite(pool: PgPool) {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
-        let mut rng = state.rng();
 
         // The island hides the username field of an invite which pins one or
         // has a template for one
@@ -778,22 +777,14 @@ mod tests {
             ("invite_alice", "alice"),
             ("invite_template", "user-{{ random }}"),
         ] {
-            let mut repo = state.repository().await.unwrap();
-            repo.user_registration_token()
-                .add(
-                    &mut rng,
-                    &state.clock,
-                    UserRegistrationTokenParams {
-                        token: token.to_owned(),
-                        username: Some(username.to_owned()),
-                        email: Some("alice@example.com".to_owned()),
-                        passwordless: true,
-                        ..Default::default()
-                    },
-                )
-                .await
-                .unwrap();
-            repo.save().await.unwrap();
+            add_registration_token(
+                &state,
+                token,
+                Some(username),
+                Some("alice@example.com"),
+                true,
+            )
+            .await;
 
             let request = Request::get(format!("/register?token={token}")).empty();
             let response = state.request(request).await;

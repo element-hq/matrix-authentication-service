@@ -96,27 +96,27 @@ pub(super) async fn register(
         None => (None, None, false),
     };
 
-    // A template is rendered whatever the form says. Otherwise an empty field
-    // means the user accepted whatever the registration token pins.
-    let rendered_username = registration_token.as_ref().and_then(|token| {
-        let template = token.username_template()?;
-        Some(
-            username_template::render(template, &mut *rng).inspect_err(|e| {
+    // A template is rendered whatever the form says, and `None` stands for one
+    // which doesn't render. Otherwise an empty field means the user accepted
+    // whatever the registration token pins.
+    let template = registration_token
+        .as_ref()
+        .and_then(|token| Some((token, token.username_template()?)));
+    let username = match template {
+        Some((token, template)) => username_template::render(template, &mut *rng)
+            .inspect_err(|e| {
                 tracing::warn!(
                     error = e as &dyn std::error::Error,
                     user_registration_token.id = %token.id,
                     %template,
                     "Failed to render the invite code's username template"
                 );
-            }),
-        )
-    });
-    let username = match &rendered_username {
-        Some(rendered) => rendered.as_deref().unwrap_or_default().to_owned(),
-        None => match pinned_username {
+            })
+            .ok(),
+        None => Some(match pinned_username {
             Some(pinned) if form.username.is_empty() => pinned.to_owned(),
             _ => form.username.clone(),
-        },
+        }),
     };
 
     // The email field is only shown if the server requires it. A passwordless
@@ -151,32 +151,34 @@ pub(super) async fn register(
 
         // A registration token may only be used to register the identity it
         // was issued for
-        if pinned_username.is_some_and(|pinned| pinned != username) {
+        if pinned_username.is_some_and(|pinned| username.as_deref() != Some(pinned)) {
             state.add_error_on_field(RegisterFormField::Username, FieldError::Mismatch);
         }
 
         let mut homeserver_denied_username = false;
-        if rendered_username.as_ref().is_some_and(Result::is_err) {
-            state.add_error_on_field(RegisterFormField::Username, FieldError::Invalid);
-        } else if username.is_empty() {
-            state.add_error_on_field(RegisterFormField::Username, FieldError::Required);
-        } else if repo.user().exists(&username).await? {
-            // The user already exists in the database
-            state.add_error_on_field(RegisterFormField::Username, FieldError::Exists);
-        } else if !homeserver
-            .is_localpart_available(&username)
-            .await
-            .map_err(InternalError::from_anyhow)?
-        {
-            // The user already exists on the homeserver
-            tracing::warn!(
-                username = &username,
-                "Homeserver denied username provided by user"
-            );
+        if let Some(username) = &username {
+            if username.is_empty() {
+                state.add_error_on_field(RegisterFormField::Username, FieldError::Required);
+            } else if repo.user().exists(username).await? {
+                // The user already exists in the database
+                state.add_error_on_field(RegisterFormField::Username, FieldError::Exists);
+            } else if !homeserver
+                .is_localpart_available(username)
+                .await
+                .map_err(InternalError::from_anyhow)?
+            {
+                // The user already exists on the homeserver
+                tracing::warn!(
+                    username = username,
+                    "Homeserver denied username provided by user"
+                );
 
-            // We defer adding the error on the field, until we know whether we had another
-            // error from the policy, to avoid showing both
-            homeserver_denied_username = true;
+                // We defer adding the error on the field, until we know whether we had another
+                // error from the policy, to avoid showing both
+                homeserver_denied_username = true;
+            }
+        } else {
+            state.add_error_on_field(RegisterFormField::Username, FieldError::Invalid);
         }
 
         if let Some(email) = &email {
@@ -229,19 +231,27 @@ pub(super) async fn register(
             state.add_error_on_field(RegisterFormField::AcceptTerms, FieldError::Required);
         }
 
-        let res = policy
-            .evaluate_register(mas_policy::RegisterInput {
-                registration_method: mas_policy::RegistrationMethod::Password,
-                username: &username,
-                email: email.as_deref(),
-                requester: mas_policy::Requester {
-                    ip_address: activity_tracker.ip(),
-                    user_agent: user_agent.clone(),
-                },
-            })
-            .await?;
+        // Without a username the invite can't be used whatever else the form
+        // says, so there is nothing for the policy to judge
+        let violations = match &username {
+            Some(username) => {
+                policy
+                    .evaluate_register(mas_policy::RegisterInput {
+                        registration_method: mas_policy::RegistrationMethod::Password,
+                        username,
+                        email: email.as_deref(),
+                        requester: mas_policy::Requester {
+                            ip_address: activity_tracker.ip(),
+                            user_agent: user_agent.clone(),
+                        },
+                    })
+                    .await?
+                    .violations
+            }
+            None => Vec::new(),
+        };
 
-        for violation in res.violations {
+        for violation in violations {
             match violation.field.as_deref() {
                 Some("email") => state.add_error_on_field(
                     RegisterFormField::Email,
@@ -308,7 +318,8 @@ pub(super) async fn register(
         state
     };
 
-    if !state.is_valid() {
+    // A template which doesn't render always leaves the form invalid
+    let Some(username) = username.filter(|_| state.is_valid()) else {
         // Re-render with what the invite code resolved to, so the form keeps
         // the shape the user submitted it in
         let content = render(
@@ -331,7 +342,7 @@ pub(super) async fn register(
         .await?;
 
         return Ok((cookie_jar, Html(content)).into_response());
-    }
+    };
 
     let post_auth_action = query
         .post_auth_action
@@ -1203,8 +1214,8 @@ mod tests {
         );
     }
 
-    /// A username template which doesn't render refuses the registration on
-    /// the username field
+    /// A username template which doesn't render refuses the registration with
+    /// one error on the username field
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_with_broken_username_template(pool: PgPool) {
         setup();
@@ -1232,8 +1243,8 @@ mod tests {
             .await;
             response.assert_status(StatusCode::OK);
             assert_eq!(
-                form_state(response.body())["fields"]["username"]["errors"][0],
-                serde_json::json!({"kind": "invalid"}),
+                form_state(response.body())["fields"]["username"]["errors"],
+                serde_json::json!([{"kind": "invalid"}]),
                 "{template}"
             );
         }
