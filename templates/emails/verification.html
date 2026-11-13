@@ -1,4 +1,5 @@
 {#
+Copyright 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 
@@ -14,6 +15,10 @@ Please see LICENSE files in the repository root for full details.
   {%- set username = user_registration.username -%}
 {%- endif -%}
 
-{{ _("mas.emails.greeting", username=(username|default("user"))) }}<br />
+{% if username is defined -%}
+{{ _("mas.emails.greeting", username=username) }}
+{%- else -%}
+{{ _("mas.emails.greeting_unnamed") }}
+{%- endif %}<br />
 <br />
 {{ _("mas.emails.verify.body_html", code=authentication_code.code) }}<br />
