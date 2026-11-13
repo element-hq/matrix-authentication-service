@@ -242,6 +242,23 @@ pub(crate) async fn get(
         )));
     }
 
+    // Without a password or an upstream link, the user registers with a
+    // passwordless token and a verified email address
+    if registration.password.is_none()
+        && registration
+            .upstream_oauth_authorization_session_id
+            .is_none()
+        && !registration_token
+            .as_ref()
+            .is_some_and(|registration_token| {
+                registration_token.passwordless && email_authentication.is_some()
+            })
+    {
+        return Err(InternalError::from_anyhow(anyhow::anyhow!(
+            "Registration has no password, no upstream link, and no passwordless registration token it fits"
+        )));
+    }
+
     // If this registration was created from an upstream OAuth session, check
     // it is still valid and wasn't linked to a user in the meantime
     let upstream_oauth = if let Some(upstream_oauth_authorization_session_id) =
@@ -419,7 +436,7 @@ mod tests {
 
     use crate::{
         test_utils::{CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup},
-        views::register::tests::{add_registration, add_registration_token},
+        views::register::tests::{add_registration, add_registration_token, link_upstream},
     };
 
     async fn finish(
@@ -444,57 +461,94 @@ mod tests {
         );
     }
 
-    /// A registration matching the pins of its token completes, and uses the
-    /// token although the server doesn't require one
+    /// A registration matching the pins of its token completes, with a password
+    /// or with a passwordless token, and uses the token although the server
+    /// doesn't require one
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_finish_with_pinned_token(pool: PgPool) {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
         let cookies = CookieHelper::new();
 
-        let token = add_registration_token(
-            &state,
-            "invite_alice",
-            Some("alice"),
-            Some("alice@example.com"),
-        )
-        .await;
-        let registration = add_registration(
-            &state,
-            &cookies,
-            "alice",
-            Some("alice@example.com"),
-            true,
-            Some(&token),
-        )
-        .await;
+        for (username, with_password, passwordless) in
+            [("alice", true, false), ("bob", false, true)]
+        {
+            let email = format!("{username}@example.com");
+            let token = add_registration_token(
+                &state,
+                &format!("invite_{username}"),
+                Some(username),
+                Some(&email),
+                passwordless,
+            )
+            .await;
+            let registration = add_registration(
+                &state,
+                &cookies,
+                username,
+                Some(&email),
+                with_password,
+                Some(&token),
+            )
+            .await;
 
-        let response = finish(&state, &cookies, &registration).await;
-        response.assert_status(StatusCode::SEE_OTHER);
-        response.assert_header_value(
-            LOCATION,
-            &mas_router::RegisterDisplayName::new(registration.id).path_and_query(),
-        );
+            let response = finish(&state, &cookies, &registration).await;
+            response.assert_status(StatusCode::SEE_OTHER);
+            response.assert_header_value(
+                LOCATION,
+                &mas_router::RegisterDisplayName::new(registration.id).path_and_query(),
+            );
 
-        let mut repo = state.repository().await.unwrap();
-        repo.user_registration()
-            .set_display_name(registration.clone(), "Alice".to_owned())
-            .await
-            .unwrap();
-        repo.save().await.unwrap();
+            let mut repo = state.repository().await.unwrap();
+            repo.user_registration()
+                .set_display_name(registration.clone(), username.to_owned())
+                .await
+                .unwrap();
+            repo.save().await.unwrap();
 
-        let response = finish(&state, &cookies, &registration).await;
-        response.assert_status(StatusCode::SEE_OTHER);
+            let response = finish(&state, &cookies, &registration).await;
+            response.assert_status(StatusCode::SEE_OTHER);
 
-        let mut repo = state.repository().await.unwrap();
-        assert!(repo.user().exists("alice").await.unwrap());
-        let token = repo
-            .user_registration_token()
-            .lookup(token.id)
-            .await
-            .unwrap()
-            .unwrap();
-        assert_eq!(token.times_used, 1);
+            let mut repo = state.repository().await.unwrap();
+            assert!(repo.user().exists(username).await.unwrap());
+            let token = repo
+                .user_registration_token()
+                .lookup(token.id)
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(token.times_used, 1);
+        }
+    }
+
+    /// A registration linked upstream needs neither a password nor a
+    /// passwordless token
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_finish_upstream_without_password(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let token = add_registration_token(&state, "plain", None, None, false).await;
+        for (username, token) in [("alice", None), ("bob", Some(&token))] {
+            let registration = add_registration(
+                &state,
+                &cookies,
+                username,
+                Some(&format!("{username}@example.com")),
+                false,
+                token,
+            )
+            .await;
+            let registration = link_upstream(&state, registration).await;
+
+            let response = finish(&state, &cookies, &registration).await;
+            response.assert_status(StatusCode::SEE_OTHER);
+            response.assert_header_value(
+                LOCATION,
+                &mas_router::RegisterDisplayName::new(registration.id).path_and_query(),
+            );
+        }
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -508,6 +562,7 @@ mod tests {
             "invite_alice",
             Some("alice"),
             Some("alice@example.com"),
+            true,
         )
         .await;
         let registration = add_registration(
@@ -515,7 +570,7 @@ mod tests {
             &cookies,
             "alice",
             Some("mallory@example.com"),
-            true,
+            false,
             Some(&token),
         )
         .await;
@@ -524,10 +579,48 @@ mod tests {
 
         // A registration without an email address doesn't match a pinned one
         let token =
-            add_registration_token(&state, "pins_email", None, Some("bob@example.com")).await;
+            add_registration_token(&state, "pins_email", None, Some("bob@example.com"), false)
+                .await;
         let registration =
             add_registration(&state, &cookies, "bob", None, true, Some(&token)).await;
         let response = finish(&state, &cookies, &registration).await;
         assert_refused(&response, "fit the registration");
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_finish_refuses_no_password_without_passwordless_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let registration = add_registration(
+            &state,
+            &cookies,
+            "bob",
+            Some("bob@example.com"),
+            false,
+            None,
+        )
+        .await;
+        let response = finish(&state, &cookies, &registration).await;
+        assert_refused(&response, "no passwordless registration token");
+    }
+
+    /// A passwordless token still needs a verified email address, even one
+    /// pinning a username
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_finish_refuses_passwordless_token_without_verified_email(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        for (token, username) in [("no_pins", None), ("username_only", Some("dave"))] {
+            let token = add_registration_token(&state, token, username, None, true).await;
+            let registration =
+                add_registration(&state, &cookies, "dave", None, false, Some(&token)).await;
+
+            let response = finish(&state, &cookies, &registration).await;
+            assert_refused(&response, "no passwordless registration token");
+        }
     }
 }
