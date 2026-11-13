@@ -727,31 +727,38 @@ mod tests {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
 
-        add_registration_token(
-            &state,
-            "invite_alice",
-            Some("alice"),
-            Some("alice@example.com"),
-            true,
-        )
-        .await;
+        // The island hides the username field of an invite which pins one or
+        // has a template for one
+        for (token, username) in [
+            ("invite_alice", "alice"),
+            ("invite_template", "user-{{ random }}"),
+        ] {
+            add_registration_token(
+                &state,
+                token,
+                Some(username),
+                Some("alice@example.com"),
+                true,
+            )
+            .await;
 
-        let request = Request::get("/register?token=invite_alice").empty();
-        let response = state.request(request).await;
-        response.assert_status(StatusCode::OK);
-        assert_eq!(
-            json_attribute(response.body(), "data-invite"),
-            serde_json::json!({
-                "valid": true,
-                "username": "alice",
-                "email": "alice@example.com",
-                "passwordless": true,
-            })
-        );
-        assert_eq!(
-            json_attribute(response.body(), "data-form")["fields"]["token"]["value"],
-            serde_json::json!("invite_alice")
-        );
+            let request = Request::get(format!("/register?token={token}")).empty();
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::OK);
+            assert_eq!(
+                json_attribute(response.body(), "data-invite"),
+                serde_json::json!({
+                    "valid": true,
+                    "username": username,
+                    "email": "alice@example.com",
+                    "passwordless": true,
+                })
+            );
+            assert_eq!(
+                json_attribute(response.body(), "data-form")["fields"]["token"]["value"],
+                serde_json::json!(token)
+            );
+        }
 
         // A code the server doesn't know only says so, and isn't submitted
         let request = Request::get("/register?token=nope").empty();

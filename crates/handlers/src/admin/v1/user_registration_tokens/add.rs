@@ -13,7 +13,7 @@ use chrono::{DateTime, Utc};
 use hyper::StatusCode;
 use lettre::Address;
 use mas_axum_utils::record_error;
-use mas_data_model::BoxRng;
+use mas_data_model::{BoxRng, is_username_template};
 use mas_policy::{EvaluationResult, Policy};
 use mas_router::UrlBuilder;
 use mas_storage::user::UserRegistrationTokenParams;
@@ -27,7 +27,7 @@ use crate::{
         model::UserRegistrationToken,
         response::{ErrorResponse, SingleResponse},
     },
-    impl_from_error_for_route,
+    impl_from_error_for_route, username_template,
 };
 
 #[derive(Debug, thiserror::Error, OperationIo)]
@@ -42,6 +42,14 @@ pub enum RouteError {
 
         #[source]
         source: lettre::address::AddressError,
+    },
+
+    #[error("Username template {template:?} is not valid")]
+    InvalidUsernameTemplate {
+        template: String,
+
+        #[source]
+        source: minijinja::Error,
     },
 
     #[error(transparent)]
@@ -63,7 +71,9 @@ impl IntoResponse for RouteError {
         let sentry_event_id = record_error!(self, Self::Internal(_));
         let status = match self {
             Self::Conflict(_) | Self::UsernameTaken(_) => StatusCode::CONFLICT,
-            Self::EmailNotValid { .. } | Self::NotAllowed(_) => StatusCode::BAD_REQUEST,
+            Self::EmailNotValid { .. }
+            | Self::InvalidUsernameTemplate { .. }
+            | Self::NotAllowed(_) => StatusCode::BAD_REQUEST,
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
         (status, sentry_event_id, Json(error)).into_response()
@@ -103,8 +113,15 @@ pub struct Request {
     expires_at: Option<DateTime<Utc>>,
 
     /// A username to impose on the registering user. If set, the user cannot
-    /// choose their own username. It must pass the registration policy and
-    /// must not be taken.
+    /// choose their own username. A value with `{` is a minijinja template:
+    /// registering through the token's `/register?token=…` link renders it
+    /// with `random`, 32 random lowercase letters and digits, without showing
+    /// the user the name. A template token works only through that link: the
+    /// registration token step refuses it. A template must render with a
+    /// sample `random`, and the result pass the registration policy. A
+    /// username which isn't a template must pass the policy and must not be
+    /// taken.
+    #[schemars(example = &"user-{{ random }}")]
     username: Option<String>,
 
     /// An email address to impose on the registering user. If set, the user
@@ -133,8 +150,8 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
                 "username: username is banned".to_owned(),
             ])));
             t.description(
-                "The email is not valid, or the registration policy refuses the email or the \
-                 username",
+                "The email or the username template is not valid, or the registration policy \
+                 refuses the email or the username",
             )
             .example(response)
         })
@@ -177,10 +194,27 @@ pub async fn handler(
         });
     }
 
+    // A template is checked by rendering it with a sample, as the name it
+    // renders to is only known when registering, which checks it again
+    let template_sample = match params.username.as_deref() {
+        Some(username) if is_username_template(username) => Some(
+            username_template::render_sample(username).map_err(|source| {
+                RouteError::InvalidUsernameTemplate {
+                    template: username.to_owned(),
+                    source,
+                }
+            })?,
+        ),
+        _ => None,
+    };
+
     // The same input as `POST /register` in `views/register/password.rs`,
     // which also evaluates a passwordless registration as `Password`. The
     // request comes from an admin client, not the user registering.
-    let result = match (params.username.as_deref(), params.email.as_deref()) {
+    let result = match (
+        template_sample.as_deref().or(params.username.as_deref()),
+        params.email.as_deref(),
+    ) {
         (Some(username), email) => Some(
             policy
                 .evaluate_register(mas_policy::RegisterInput {
@@ -208,6 +242,7 @@ pub async fn handler(
     // refused: a client minting tokens for addresses its users typed would
     // tell them which addresses have an account
     if let Some(username) = &params.username
+        && template_sample.is_none()
         && repo.user().exists(username).await?
     {
         return Err(RouteError::UsernameTaken(username.clone()));
@@ -456,10 +491,26 @@ mod tests {
             create(&mut state, serde_json::json!({ "email": "not-an-email" })).await;
         assert_eq!(status, StatusCode::BAD_REQUEST);
         assert_eq!(title, r#"Email "not-an-email" is not valid"#);
+
+        // The template's error comes first, then minijinja's render error
+        for (username, source) in [
+            ("user-{{ random", "syntax error"),
+            ("user-{{ email }}", "undefined value"),
+        ] {
+            let (status, errors) =
+                create_errors(&mut state, serde_json::json!({ "username": username })).await;
+            assert_eq!(status, StatusCode::BAD_REQUEST, "{username}");
+            assert_eq!(
+                errors[0],
+                format!("Username template {username:?} is not valid")
+            );
+            assert!(errors[1].contains(source), "{errors:?}");
+        }
     }
 
     /// A pinned email or username the registration policy refuses is a 400
-    /// naming every violation
+    /// naming every violation. A template is checked by what it renders to
+    /// with a sample.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_create_refused_by_policy(pool: PgPool) {
         setup();
@@ -498,6 +549,18 @@ mod tests {
                 serde_json::json!({ "email": "bob@banned.example", "username": "user-banned" }),
                 "Not allowed by the registration policy: email: email domain is banned; username: username is banned",
             ),
+            (
+                serde_json::json!({ "username": "banned-{{ random }}" }),
+                "Not allowed by the registration policy: username: username is banned",
+            ),
+            (
+                serde_json::json!({ "username": "User-{{ random }}" }),
+                "Not allowed by the registration policy: username: username contains invalid characters",
+            ),
+            (
+                serde_json::json!({ "username": "user-{random}" }),
+                "Not allowed by the registration policy: username: username contains invalid characters",
+            ),
         ] {
             let (status, title) = create(&mut state, body).await;
             assert_eq!(status, StatusCode::BAD_REQUEST, "{error}");
@@ -506,28 +569,51 @@ mod tests {
 
         let (status, _) = create(
             &mut state,
-            serde_json::json!({ "email": "bob@example.com", "username": "user-bob" }),
+            serde_json::json!({ "email": "bob@example.com", "username": "user-{{ random }}" }),
         )
         .await;
         assert_eq!(status, StatusCode::CREATED);
     }
 
-    /// A token pinned to a username nobody can register with is refused
+    /// A token pinned to a username nobody can register with is refused. A
+    /// template is never taken, even by its sample's name or its own string.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_create_username_taken(pool: PgPool) {
         setup();
         let mut state = TestState::from_pool(pool).await.unwrap();
 
         let mut repo = state.repository().await.unwrap();
-        repo.user()
-            .add(&mut state.rng(), &state.clock, "alice".to_owned())
-            .await
-            .unwrap();
+        for username in [
+            "alice",
+            "user-a0b1c2d3e4f5g6h7i8j9k0l1m2n3o4p5",
+            "user-{{ random }}",
+        ] {
+            repo.user()
+                .add(&mut state.rng(), &state.clock, username.to_owned())
+                .await
+                .unwrap();
+        }
         repo.save().await.unwrap();
 
         let (status, title) = create(&mut state, serde_json::json!({ "username": "alice" })).await;
         assert_eq!(status, StatusCode::CONFLICT);
         assert_eq!(title, r#"Username "alice" is already taken"#);
+
+        let (status, _) = create(
+            &mut state,
+            serde_json::json!({ "token": "template", "username": "user-{{ random }}" }),
+        )
+        .await;
+        assert_eq!(status, StatusCode::CREATED);
+
+        let mut repo = state.repository().await.unwrap();
+        let token = repo
+            .user_registration_token()
+            .find_by_token("template")
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(token.username.as_deref(), Some("user-{{ random }}"));
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
