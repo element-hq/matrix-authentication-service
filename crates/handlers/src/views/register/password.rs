@@ -1088,6 +1088,39 @@ mod tests {
         assert_eq!(email_authentication.email, "alice@example.com");
     }
 
+    /// A passwordless invite code requires an email address, even when the
+    /// server doesn't
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_passwordless_token_requires_email(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_registration_email_required: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        add_registration_token(&state, "invite", None, None, true).await;
+
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({ "username": "alice", "token": "invite" }),
+        )
+        .await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            form_state(response.body())["fields"]["email"]["errors"],
+            serde_json::json!([{"kind": "required"}])
+        );
+
+        let mut repo = state.repository().await.unwrap();
+        assert!(!repo.user().exists("alice").await.unwrap());
+    }
+
     /// An invite code with a username template registers the name it renders
     /// to, whatever the form says
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]

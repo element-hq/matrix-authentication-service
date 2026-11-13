@@ -463,58 +463,64 @@ mod tests {
         );
     }
 
-    /// A registration matching the pins of its passwordless token completes,
-    /// and uses the token although the server doesn't require one
+    /// A registration matching the pins of its token completes, with a password
+    /// or with a passwordless token, and uses the token although the server
+    /// doesn't require one
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_finish_with_pinned_token(pool: PgPool) {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
         let cookies = CookieHelper::new();
 
-        let token = add_registration_token(
-            &state,
-            "invite_alice",
-            Some("alice"),
-            Some("alice@example.com"),
-            true,
-        )
-        .await;
-        let registration = add_registration(
-            &state,
-            &cookies,
-            "alice",
-            Some("alice@example.com"),
-            false,
-            Some(&token),
-        )
-        .await;
+        for (username, with_password, passwordless) in
+            [("alice", true, false), ("bob", false, true)]
+        {
+            let email = format!("{username}@example.com");
+            let token = add_registration_token(
+                &state,
+                &format!("invite_{username}"),
+                Some(username),
+                Some(&email),
+                passwordless,
+            )
+            .await;
+            let registration = add_registration(
+                &state,
+                &cookies,
+                username,
+                Some(&email),
+                with_password,
+                Some(&token),
+            )
+            .await;
 
-        let response = finish(&state, &cookies, &registration).await;
-        response.assert_status(StatusCode::SEE_OTHER);
-        response.assert_header_value(
-            LOCATION,
-            &mas_router::RegisterDisplayName::new(registration.id).path_and_query(),
-        );
+            let response = finish(&state, &cookies, &registration).await;
+            response.assert_status(StatusCode::SEE_OTHER);
+            response.assert_header_value(
+                LOCATION,
+                &mas_router::RegisterDisplayName::new(registration.id).path_and_query(),
+            );
 
-        let mut repo = state.repository().await.unwrap();
-        repo.user_registration()
-            .set_display_name(registration.clone(), "Alice".to_owned())
-            .await
-            .unwrap();
-        repo.save().await.unwrap();
+            let mut repo = state.repository().await.unwrap();
+            repo.user_registration()
+                .set_display_name(registration.clone(), username.to_owned())
+                .await
+                .unwrap();
+            repo.save().await.unwrap();
 
-        let response = finish(&state, &cookies, &registration).await;
-        response.assert_status(StatusCode::SEE_OTHER);
+            let response = finish(&state, &cookies, &registration).await;
+            response.assert_status(StatusCode::SEE_OTHER);
 
-        let mut repo = state.repository().await.unwrap();
-        assert!(repo.user().exists("alice").await.unwrap());
-        let token = repo
-            .user_registration_token()
-            .lookup(token.id)
-            .await
-            .unwrap()
-            .unwrap();
-        assert_eq!(token.times_used, 1);
+            let mut repo = state.repository().await.unwrap();
+            assert!(repo.user().exists(username).await.unwrap());
+            let token = repo
+                .user_registration_token()
+                .lookup(token.id)
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(token.times_used, 1);
+        }
     }
 
     /// A registration linked upstream needs neither a password nor a
