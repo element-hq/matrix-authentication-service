@@ -414,6 +414,7 @@ mod tests {
     use hyper::{Request, Response, StatusCode, header::LOCATION};
     use mas_data_model::UserRegistration;
     use mas_router::Route as _;
+    use mas_storage::RepositoryAccess as _;
     use sqlx::PgPool;
 
     use crate::{
@@ -443,7 +444,8 @@ mod tests {
         );
     }
 
-    /// A registration matching the pins of its token goes on to the next step
+    /// A registration matching the pins of its token completes, and uses the
+    /// token although the server doesn't require one
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_finish_with_pinned_token(pool: PgPool) {
         setup();
@@ -473,6 +475,26 @@ mod tests {
             LOCATION,
             &mas_router::RegisterDisplayName::new(registration.id).path_and_query(),
         );
+
+        let mut repo = state.repository().await.unwrap();
+        repo.user_registration()
+            .set_display_name(registration.clone(), "Alice".to_owned())
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let response = finish(&state, &cookies, &registration).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        let mut repo = state.repository().await.unwrap();
+        assert!(repo.user().exists("alice").await.unwrap());
+        let token = repo
+            .user_registration_token()
+            .lookup(token.id)
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(token.times_used, 1);
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
