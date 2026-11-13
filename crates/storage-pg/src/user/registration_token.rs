@@ -10,7 +10,9 @@ use mas_data_model::{Clock, UlidExt as _, UserRegistrationToken};
 use mas_storage::{
     Page, Pagination,
     pagination::Node,
-    user::{UserRegistrationTokenFilter, UserRegistrationTokenRepository},
+    user::{
+        UserRegistrationTokenFilter, UserRegistrationTokenParams, UserRegistrationTokenRepository,
+    },
 };
 use rand::Rng;
 use sea_query::{Condition, Expr, ExprTrait, PostgresQueryBuilder, Query, enum_def};
@@ -47,6 +49,8 @@ impl<'c> PgUserRegistrationTokenRepository<'c> {
 struct UserRegistrationTokenLookup {
     user_registration_token_id: Uuid,
     token: String,
+    username: Option<String>,
+    email: Option<String>,
     usage_limit: Option<i32>,
     times_used: i32,
     created_at: DateTime<Utc>,
@@ -211,6 +215,8 @@ impl TryFrom<UserRegistrationTokenLookup> for UserRegistrationToken {
         Ok(UserRegistrationToken {
             id,
             token: res.token,
+            username: res.username,
+            email: res.email,
             usage_limit,
             times_used,
             created_at: res.created_at,
@@ -248,6 +254,17 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             .expr_as(
                 Expr::col((UserRegistrationTokens::Table, UserRegistrationTokens::Token)),
                 UserRegistrationTokenLookupIden::Token,
+            )
+            .expr_as(
+                Expr::col((
+                    UserRegistrationTokens::Table,
+                    UserRegistrationTokens::Username,
+                )),
+                UserRegistrationTokenLookupIden::Username,
+            )
+            .expr_as(
+                Expr::col((UserRegistrationTokens::Table, UserRegistrationTokens::Email)),
+                UserRegistrationTokenLookupIden::Email,
             )
             .expr_as(
                 Expr::col((
@@ -359,6 +376,8 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             r#"
                 SELECT user_registration_token_id,
                        token,
+                       username,
+                       email,
                        usage_limit,
                        times_used,
                        created_at,
@@ -398,6 +417,8 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             r#"
                 SELECT user_registration_token_id,
                        token,
+                       username,
+                       email,
                        usage_limit,
                        times_used,
                        created_at,
@@ -425,17 +446,22 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
         skip_all,
         fields(
             db.query.text,
-            user_registration_token.token = %token,
+            user_registration_token.token = %params.token,
         ),
     )]
     async fn add(
         &mut self,
         rng: &mut (dyn Rng + Send),
         clock: &dyn mas_data_model::Clock,
-        token: String,
-        usage_limit: Option<u32>,
-        expires_at: Option<DateTime<Utc>>,
+        params: UserRegistrationTokenParams,
     ) -> Result<UserRegistrationToken, Self::Error> {
+        let UserRegistrationTokenParams {
+            token,
+            usage_limit,
+            expires_at,
+            username,
+            email,
+        } = params;
         let created_at = clock.now();
         let id = Ulid::from_datetime_with_rng(created_at, rng);
 
@@ -447,14 +473,16 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
         sqlx::query!(
             r#"
                 INSERT INTO user_registration_tokens
-                    (user_registration_token_id, token, usage_limit, created_at, expires_at)
-                VALUES ($1, $2, $3, $4, $5)
+                    (user_registration_token_id, token, usage_limit, created_at, expires_at, username, email)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
             "#,
             Uuid::from(id),
             &token,
             usage_limit_i32,
             created_at,
             expires_at,
+            username.as_deref(),
+            email.as_deref(),
         )
         .traced()
         .execute(&mut *self.conn)
@@ -463,6 +491,8 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
         Ok(UserRegistrationToken {
             id,
             token,
+            username,
+            email,
             usage_limit,
             times_used: 0,
             created_at,
@@ -653,7 +683,10 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
 mod tests {
     use chrono::Duration;
     use mas_data_model::{Clock as _, clock::MockClock};
-    use mas_storage::{Pagination, user::UserRegistrationTokenFilter};
+    use mas_storage::{
+        Pagination,
+        user::{UserRegistrationTokenFilter, UserRegistrationTokenParams},
+    };
     use rand::SeedableRng;
     use rand_chacha::ChaChaRng;
     use sqlx::PgPool;
@@ -670,7 +703,14 @@ mod tests {
         // Create a token
         let token = repo
             .user_registration_token()
-            .add(&mut rng, &clock, "test_token".to_owned(), None, None)
+            .add(
+                &mut rng,
+                &clock,
+                UserRegistrationTokenParams {
+                    token: "test_token".to_owned(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
 
@@ -715,7 +755,14 @@ mod tests {
         // Create a token without expiry
         let token = repo
             .user_registration_token()
-            .add(&mut rng, &clock, "test_token_expiry".to_owned(), None, None)
+            .add(
+                &mut rng,
+                &clock,
+                UserRegistrationTokenParams {
+                    token: "test_token_expiry".to_owned(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
 
@@ -754,7 +801,14 @@ mod tests {
         // Create a token without usage limit
         let token = repo
             .user_registration_token()
-            .add(&mut rng, &clock, "test_token_limit".to_owned(), None, None)
+            .add(
+                &mut rng,
+                &clock,
+                UserRegistrationTokenParams {
+                    token: "test_token_limit".to_owned(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
 
@@ -803,14 +857,28 @@ mod tests {
         // 1. A regular token
         let _token1 = repo
             .user_registration_token()
-            .add(&mut rng, &clock, "token1".to_owned(), None, None)
+            .add(
+                &mut rng,
+                &clock,
+                UserRegistrationTokenParams {
+                    token: "token1".to_owned(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
 
         // 2. A token that has been used
         let token2 = repo
             .user_registration_token()
-            .add(&mut rng, &clock, "token2".to_owned(), None, None)
+            .add(
+                &mut rng,
+                &clock,
+                UserRegistrationTokenParams {
+                    token: "token2".to_owned(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
         let token2 = repo
@@ -823,14 +891,29 @@ mod tests {
         let past_time = clock.now() - Duration::days(1);
         let token3 = repo
             .user_registration_token()
-            .add(&mut rng, &clock, "token3".to_owned(), None, Some(past_time))
+            .add(
+                &mut rng,
+                &clock,
+                UserRegistrationTokenParams {
+                    token: "token3".to_owned(),
+                    expires_at: Some(past_time),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
 
         // 4. A token that is revoked
         let token4 = repo
             .user_registration_token()
-            .add(&mut rng, &clock, "token4".to_owned(), None, None)
+            .add(
+                &mut rng,
+                &clock,
+                UserRegistrationTokenParams {
+                    token: "token4".to_owned(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
         let token4 = repo

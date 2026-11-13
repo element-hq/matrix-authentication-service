@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 // Copyright 2025 The Matrix.org Foundation C.I.C.
 //
@@ -104,6 +105,7 @@ pub async fn handler(
 #[cfg(test)]
 mod tests {
     use hyper::{Request, StatusCode};
+    use mas_storage::user::UserRegistrationTokenParams;
     use sqlx::PgPool;
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
@@ -122,9 +124,11 @@ mod tests {
             .add(
                 &mut state.rng(),
                 &state.clock,
-                "test_token_456".to_owned(),
-                Some(5),
-                None,
+                UserRegistrationTokenParams {
+                    token: "test_token_456".to_owned(),
+                    usage_limit: Some(5),
+                    ..Default::default()
+                },
             )
             .await
             .unwrap();
@@ -158,6 +162,8 @@ mod tests {
             "attributes": {
               "token": "test_token_456",
               "valid": true,
+              "username": null,
+              "email": null,
               "usage_limit": 5,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
@@ -188,9 +194,10 @@ mod tests {
             .add(
                 &mut state.rng(),
                 &state.clock,
-                "test_token_789".to_owned(),
-                None,
-                None,
+                UserRegistrationTokenParams {
+                    token: "test_token_789".to_owned(),
+                    ..Default::default()
+                },
             )
             .await
             .unwrap();

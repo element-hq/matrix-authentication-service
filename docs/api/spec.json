@@ -3797,6 +3797,8 @@
                       "attributes": {
                         "token": "abc123def456",
                         "valid": true,
+                        "username": null,
+                        "email": null,
                         "usage_limit": 10,
                         "times_used": 5,
                         "created_at": "1970-01-01T00:00:00Z",
@@ -3819,6 +3821,8 @@
                       "attributes": {
                         "token": "xyz789abc012",
                         "valid": false,
+                        "username": null,
+                        "email": null,
                         "usage_limit": null,
                         "times_used": 0,
                         "created_at": "1970-01-01T00:00:00Z",
@@ -3879,6 +3883,8 @@
                     "attributes": {
                       "token": "abc123def456",
                       "valid": true,
+                      "username": null,
+                      "email": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -3893,6 +3899,40 @@
                   "links": {
                     "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The email is not valid, or the registration policy refuses the email or the username",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Not allowed by the registration policy: username: username is banned"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A token with the same token already exists, or the username is taken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Username \"alice\" is already taken"
+                    }
+                  ]
                 }
               }
             }
@@ -3934,6 +3974,8 @@
                     "attributes": {
                       "token": "abc123def456",
                       "valid": true,
+                      "username": null,
+                      "email": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -4015,6 +4057,8 @@
                     "attributes": {
                       "token": "abc123def456",
                       "valid": true,
+                      "username": null,
+                      "email": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -4088,6 +4132,8 @@
                     "attributes": {
                       "token": "xyz789abc012",
                       "valid": false,
+                      "username": null,
+                      "email": null,
                       "usage_limit": null,
                       "times_used": 0,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -4178,6 +4224,8 @@
                     "attributes": {
                       "token": "abc123def456",
                       "valid": true,
+                      "username": null,
+                      "email": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
@@ -7310,6 +7358,20 @@
             "description": "Whether the token is valid",
             "type": "boolean"
           },
+          "username": {
+            "description": "A username imposed on the registering user. If null, the user can\nchoose their own username.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email": {
+            "description": "An email address imposed on the registering user. If null, the user\ncan choose their own email.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "usage_limit": {
             "description": "Maximum number of times this token can be used",
             "type": [
@@ -7389,6 +7451,20 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "username": {
+            "description": "A username to impose on the registering user. If set, the user cannot\nchoose their own username. It must pass the registration policy and\nmust not be taken.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email": {
+            "description": "An email address to impose on the registering user. If set, the user\ncannot choose their own email. It must pass the registration policy.",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       },
