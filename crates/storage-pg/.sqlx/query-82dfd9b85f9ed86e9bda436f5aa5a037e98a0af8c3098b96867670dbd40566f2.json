@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT user_registration_token_id,\n                       token,\n                       username,\n                       email,\n                       passwordless,\n                       continue_url,\n                       usage_limit,\n                       times_used,\n                       created_at,\n                       last_used_at,\n                       expires_at,\n                       revoked_at\n                FROM user_registration_tokens\n                WHERE token = $1\n            ",
+  "query": "\n                SELECT user_registration_token_id,\n                       token,\n                       username,\n                       email,\n                       allowed_emails,\n                       passwordless,\n                       continue_url,\n                       usage_limit,\n                       times_used,\n                       created_at,\n                       last_used_at,\n                       expires_at,\n                       revoked_at\n                FROM user_registration_tokens\n                WHERE user_registration_token_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -25,53 +25,59 @@
       },
       {
         "ordinal": 4,
+        "name": "allowed_emails",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 5,
         "name": "passwordless",
         "type_info": "Bool"
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "continue_url",
         "type_info": "Text"
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "usage_limit",
         "type_info": "Int4"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "times_used",
         "type_info": "Int4"
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "last_used_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "expires_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 11,
+        "ordinal": 12,
         "name": "revoked_at",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Text"
+        "Uuid"
       ]
     },
     "nullable": [
       false,
       false,
+      true,
       true,
       true,
       false,
@@ -84,5 +90,5 @@
       true
     ]
   },
-  "hash": "1d36801dfdb16edaa1e7117ba81e4465c89c6e3106b84131ce6cd05f98901af4"
+  "hash": "82dfd9b85f9ed86e9bda436f5aa5a037e98a0af8c3098b96867670dbd40566f2"
 }

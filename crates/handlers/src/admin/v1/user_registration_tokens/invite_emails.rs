@@ -47,7 +47,7 @@ pub enum RouteError {
     #[error("Registration token {0} has no email address, so the invite needs one")]
     NoEmail(Ulid),
 
-    #[error("Email {email:?} is not the one registration token {id} is for")]
+    #[error("Email {email:?} is not one registration token {id} allows")]
     EmailMismatch { id: Ulid, email: String },
 
     #[error("Email {email:?} is not valid")]
@@ -90,7 +90,8 @@ pub struct Invite {
     registration_token_id: Ulid,
 
     /// The address to send the link to. Required if the token has no email
-    /// address, and otherwise the token's address, ignoring case.
+    /// address, and otherwise the token's address, ignoring case. For a token
+    /// listing the addresses it allows, one of them, ignoring case.
     #[schemars(email, example = &"alice@example.com")]
     email: Option<String>,
 }
@@ -144,7 +145,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             let response = ErrorResponse::from_error(&RouteError::NoEmail(Ulid::nil()));
             t.description(
                 "The request has no invites, an invalid token, or an address which is missing, \
-                 invalid or not the token's",
+                 invalid or not one the token allows",
             )
             .example(response)
         })
@@ -204,10 +205,15 @@ pub async fn handler(
             return Err(RouteError::TokenNotValid(id));
         }
 
+        if let Some(email) = &invite.email
+            && !token.allows_email(email)
+        {
+            return Err(RouteError::EmailMismatch {
+                id,
+                email: email.clone(),
+            });
+        }
         let email = match (invite.email, token.email) {
-            (Some(email), Some(pinned)) if !email.eq_ignore_ascii_case(&pinned) => {
-                return Err(RouteError::EmailMismatch { id, email });
-            }
             (_, Some(pinned)) => pinned,
             (Some(email), None) => email,
             (None, None) => return Err(RouteError::NoEmail(id)),
@@ -428,6 +434,56 @@ mod tests {
         assert_eq!(job_payloads(&pool).await[0]["email"], "alice@example.com");
     }
 
+    /// A token listing the addresses it allows is sent only to one of them
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_send_listed(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool.clone()).await.unwrap();
+        let mut repo = state.repository().await.unwrap();
+        let token = repo
+            .user_registration_token()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                UserRegistrationTokenParams {
+                    token: "listed".to_owned(),
+                    allowed_emails: Some(vec!["Alice@Example.com".to_owned()]),
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let (status, body) = send(
+            &mut state,
+            serde_json::json!({
+                "invites": [{ "registration_token_id": token.id, "email": "bob@example.com" }],
+            }),
+        )
+        .await;
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        assert_eq!(
+            body["errors"][0]["title"],
+            format!(
+                r#"Email "bob@example.com" is not one registration token {} allows"#,
+                token.id
+            )
+        );
+        assert_eq!(job_payloads(&pool).await, Vec::<serde_json::Value>::new());
+
+        let (status, body) = send(
+            &mut state,
+            serde_json::json!({
+                "invites": [{ "registration_token_id": token.id, "email": "alice@example.com" }],
+            }),
+        )
+        .await;
+        assert_eq!(status, StatusCode::ACCEPTED);
+        assert_eq!(body, serde_json::json!({ "scheduled": 1 }));
+        assert_eq!(job_payloads(&pool).await[0]["email"], "alice@example.com");
+    }
+
     /// A bad request schedules nothing at all, so no part of the batch goes out
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_send_invalid(pool: PgPool) {
@@ -472,7 +528,7 @@ mod tests {
                 serde_json::json!({ "registration_token_id": valid.id, "email": "bob@example.com" }),
                 StatusCode::BAD_REQUEST,
                 format!(
-                    r#"Email "bob@example.com" is not the one registration token {} is for"#,
+                    r#"Email "bob@example.com" is not one registration token {} allows"#,
                     valid.id
                 ),
             ),

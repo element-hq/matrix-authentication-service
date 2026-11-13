@@ -235,6 +235,9 @@ pub struct UserRegistrationToken {
     /// `/register?token=…` link: the registration token step refuses it.
     pub username: Option<String>,
     pub email: Option<String>,
+    /// The email addresses allowed to register with this token, or `None` for
+    /// any. A token pins `email` or lists these, never both.
+    pub allowed_emails: Option<Vec<String>>,
     pub passwordless: bool,
     pub continue_url: Option<String>,
     pub usage_limit: Option<u32>,
@@ -269,6 +272,20 @@ impl UserRegistrationToken {
         }
 
         true
+    }
+
+    /// Returns `true` if `email` may use this token, ignoring case:
+    /// the address it pins, one it lists, or any if it does neither
+    #[must_use]
+    pub fn allows_email(&self, email: &str) -> bool {
+        self.email
+            .as_deref()
+            .is_none_or(|pinned| pinned.eq_ignore_ascii_case(email))
+            && self.allowed_emails.as_ref().is_none_or(|allowed| {
+                allowed
+                    .iter()
+                    .any(|allowed| allowed.eq_ignore_ascii_case(email))
+            })
     }
 
     /// Returns `true` if the token can still be used (not expired and under
@@ -310,4 +327,42 @@ pub struct UserRegistration {
     pub user_agent: Option<String>,
     pub created_at: DateTime<Utc>,
     pub completed_at: Option<DateTime<Utc>>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn token(email: Option<&str>, allowed_emails: Option<&[&str]>) -> UserRegistrationToken {
+        UserRegistrationToken {
+            id: Ulid::nil(),
+            token: "token".to_owned(),
+            username: Some("user-{{ random }}".to_owned()),
+            email: email.map(ToOwned::to_owned),
+            allowed_emails: allowed_emails
+                .map(|emails| emails.iter().map(|&email| email.to_owned()).collect()),
+            passwordless: true,
+            continue_url: None,
+            usage_limit: None,
+            times_used: 0,
+            created_at: DateTime::UNIX_EPOCH,
+            last_used_at: None,
+            expires_at: None,
+            revoked_at: None,
+        }
+    }
+
+    #[test]
+    fn test_allows_email() {
+        let listed = token(None, Some(&["Alice@Example.com", "bob@example.com"]));
+        assert!(listed.allows_email("alice@example.com"));
+        assert!(listed.allows_email("BOB@EXAMPLE.COM"));
+        assert!(!listed.allows_email("carol@example.com"));
+
+        let pinned = token(Some("Alice@Example.com"), None);
+        assert!(pinned.allows_email("alice@example.com"));
+        assert!(!pinned.allows_email("carol@example.com"));
+
+        assert!(token(None, None).allows_email("carol@example.com"));
+    }
 }

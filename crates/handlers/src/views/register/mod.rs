@@ -537,6 +537,25 @@ mod tests {
         token
     }
 
+    /// Make `token` allow only `emails`
+    pub(super) async fn allow_emails(
+        state: &TestState,
+        token: mas_data_model::UserRegistrationToken,
+        emails: &[&str],
+    ) -> mas_data_model::UserRegistrationToken {
+        let mut repo = state.repository().await.unwrap();
+        let token = repo
+            .user_registration_token()
+            .set_allowed_emails(
+                token,
+                Some(emails.iter().map(|&email| email.to_owned()).collect()),
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+        token
+    }
+
     /// Start a registration in this browser, as `POST /register` and the
     /// email verification step leave it
     pub(super) async fn add_registration(

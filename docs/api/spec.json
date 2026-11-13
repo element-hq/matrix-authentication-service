@@ -3799,6 +3799,7 @@
                         "valid": true,
                         "username": null,
                         "email": null,
+                        "allowed_emails": null,
                         "passwordless": false,
                         "continue_url": null,
                         "usage_limit": 10,
@@ -3826,6 +3827,7 @@
                         "valid": false,
                         "username": null,
                         "email": null,
+                        "allowed_emails": null,
                         "passwordless": false,
                         "continue_url": null,
                         "usage_limit": null,
@@ -3891,6 +3893,7 @@
                       "valid": true,
                       "username": null,
                       "email": null,
+                      "allowed_emails": null,
                       "passwordless": false,
                       "continue_url": null,
                       "usage_limit": 10,
@@ -3913,7 +3916,7 @@
             }
           },
           "400": {
-            "description": "The continue URL, the email or the username template is not valid, or the registration policy refuses the email or the username",
+            "description": "The continue URL, an email or the username template is not valid, the registration policy refuses an email or the username, `allowed_emails` is empty, or it is set with `email` or without `passwordless`",
             "content": {
               "application/json": {
                 "schema": {
@@ -3982,7 +3985,7 @@
             }
           },
           "400": {
-            "description": "The request has no invites, an invalid token, or an address which is missing, invalid or not the token's",
+            "description": "The request has no invites, an invalid token, or an address which is missing, invalid or not one the token allows",
             "content": {
               "application/json": {
                 "schema": {
@@ -4054,6 +4057,7 @@
                       "valid": true,
                       "username": null,
                       "email": null,
+                      "allowed_emails": null,
                       "passwordless": false,
                       "continue_url": null,
                       "usage_limit": 10,
@@ -4140,6 +4144,7 @@
                       "valid": true,
                       "username": null,
                       "email": null,
+                      "allowed_emails": null,
                       "passwordless": false,
                       "continue_url": null,
                       "usage_limit": 10,
@@ -4157,6 +4162,23 @@
                   "links": {
                     "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`allowed_emails` is empty or set on a token with an `email` or without `passwordless`, or an address in it is not valid or refused by the registration policy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "The token has an `email`, so it can't have `allowed_emails`"
+                    }
+                  ]
                 }
               }
             }
@@ -4218,6 +4240,7 @@
                       "valid": false,
                       "username": null,
                       "email": null,
+                      "allowed_emails": null,
                       "passwordless": false,
                       "continue_url": null,
                       "usage_limit": null,
@@ -4313,6 +4336,7 @@
                       "valid": true,
                       "username": null,
                       "email": null,
+                      "allowed_emails": null,
                       "passwordless": false,
                       "continue_url": null,
                       "usage_limit": 10,
@@ -7462,6 +7486,16 @@
               "null"
             ]
           },
+          "allowed_emails": {
+            "description": "The email addresses the registering user must use one of. If null,\nthe user can use any.",
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
           "passwordless": {
             "description": "Whether registering with this token skips the password step. The user's\nidentity is then established by verifying their email address.",
             "type": "boolean"
@@ -7575,6 +7609,20 @@
               "null"
             ]
           },
+          "allowed_emails": {
+            "description": "The email addresses the registering user must use one of, in place of\n`email`, for a `passwordless` token. If set, it must not be empty, and\neach address must pass the registration policy. Repeats of an address\nin another case are dropped.",
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "alice@example.com",
+              "bob@example.com"
+            ]
+          },
           "passwordless": {
             "description": "Whether registering with this token skips the password step. The user's\nidentity is then established by verifying their email address.",
             "type": "boolean",
@@ -7660,7 +7708,7 @@
             ]
           },
           "email": {
-            "description": "The address to send the link to. Required if the token has no email\naddress, and otherwise the token's address, ignoring case.",
+            "description": "The address to send the link to. Required if the token has no email\naddress, and otherwise the token's address, ignoring case. For a token\nlisting the addresses it allows, one of them, ignoring case.",
             "type": [
               "string",
               "null"
@@ -7708,6 +7756,20 @@
             ],
             "format": "uint32",
             "minimum": 0
+          },
+          "allowed_emails": {
+            "description": "New email addresses the registering user must use one of, replacing\nthe old ones, or null to allow any. It can't be set on a token with an\n`email` or without `passwordless`. It must not be empty, and each\naddress must pass the registration policy. Repeats of an address in\nanother case are dropped.",
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "alice@example.com",
+              "bob@example.com"
+            ]
           }
         }
       },
