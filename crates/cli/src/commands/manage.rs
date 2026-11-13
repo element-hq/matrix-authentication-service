@@ -133,14 +133,6 @@ enum Subcommand {
         /// If not provided, the token never expires.
         #[arg(long)]
         expires_in: Option<u32>,
-
-        /// Only allow registering with this username
-        #[arg(long)]
-        username: Option<String>,
-
-        /// Only allow registering with this email address
-        #[arg(long)]
-        email: Option<String>,
     },
 
     /// Trigger a provisioning job for all users
@@ -496,8 +488,6 @@ impl Options {
                 usage_limit,
                 unlimited,
                 expires_in,
-                username,
-                email,
             } => {
                 let _span = info_span!("cli.manage.add_user_registration_token").entered();
 
@@ -531,8 +521,7 @@ impl Options {
                             token: token_str,
                             usage_limit,
                             expires_at,
-                            username,
-                            email,
+                            ..Default::default()
                         },
                     )
                     .await?;
