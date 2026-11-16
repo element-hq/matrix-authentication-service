@@ -17,6 +17,7 @@ use ruma_common::UserId;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
+use unicode_segmentation::UnicodeSegmentation as _;
 
 use crate::{
     admin::{call_context::CallContext, response::ErrorResponse},
@@ -167,12 +168,16 @@ fn is_control_or_bidi(c: char) -> bool {
         )
 }
 
-/// Strip control and bidirectional characters, and keep at most
-/// [`MAX_NAME_LENGTH`] characters
+/// Strip control and bidirectional characters, and keep the whole grapheme
+/// clusters that fit in [`MAX_NAME_LENGTH`] characters
 fn sanitize(text: &str) -> String {
-    text.chars()
-        .filter(|c| !is_control_or_bidi(*c))
-        .take(MAX_NAME_LENGTH)
+    let text: String = text.chars().filter(|c| !is_control_or_bidi(*c)).collect();
+    let mut length = 0;
+    text.graphemes(true)
+        .take_while(|grapheme| {
+            length += grapheme.chars().count();
+            length <= MAX_NAME_LENGTH
+        })
         .collect()
 }
 
@@ -547,6 +552,23 @@ mod tests {
             assert_eq!(payload["room_name"], format!("Project X{}", "x".repeat(91)));
             assert_eq!(payload["inviter"], expected, "{inviter:?}");
             assert_eq!(payload["inviter_name"], format!("Bob{}", "é".repeat(97)));
+        }
+    }
+
+    /// A cut keeps whole grapheme clusters
+    #[test]
+    fn test_sanitize_graphemes() {
+        let combining = "e\u{301}";
+        let family = "\u{1F469}\u{200D}\u{1F469}\u{200D}\u{1F467}";
+        for (text, expected) in [
+            (
+                format!("{}{combining}", "a".repeat(98)),
+                format!("{}{combining}", "a".repeat(98)),
+            ),
+            (format!("{}{combining}", "a".repeat(99)), "a".repeat(99)),
+            (format!("{}{family}", "a".repeat(98)), "a".repeat(98)),
+        ] {
+            assert_eq!(super::sanitize(&text), expected);
         }
     }
 
