@@ -18,7 +18,10 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer};
 use ulid::Ulid;
 
-use super::add::{AllowedEmailsError, NotAllowed, allowed_emails_violations, parse_allowed_emails};
+use super::add::{
+    AllowedEmailsError, MAX_ALLOWED_EMAILS, NotAllowed, allowed_emails_violations,
+    parse_allowed_emails,
+};
 use crate::{
     admin::{
         call_context::CallContext,
@@ -72,6 +75,7 @@ pub struct Request {
         deserialize_with = "deserialize_some"
     )]
     #[schemars(example = &["alice@example.com", "bob@example.com"])]
+    #[schemars(length(max = MAX_ALLOWED_EMAILS))]
     allowed_emails: Option<Option<Vec<String>>>,
 }
 
@@ -133,7 +137,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         .response_with::<400, RouteError, _>(|t| {
             let response = ErrorResponse::from_error(&RouteError::EmailAndAllowedEmails);
             t.description(
-                "`allowed_emails` is empty or set on a token with an `email` or without \
+                "`allowed_emails` is empty, too long, or set on a token with an `email` or without \
                  `passwordless`, or an address in it is not valid or refused by the registration \
                  policy",
             )
@@ -759,6 +763,11 @@ mod tests {
                 listed.id,
                 json!({ "allowed_emails": [] }),
                 "`allowed_emails` must not be empty",
+            ),
+            (
+                listed.id,
+                json!({ "allowed_emails": vec!["alice@example.com"; 101] }),
+                "`allowed_emails` can't hold more than 100 addresses",
             ),
             (
                 listed.id,

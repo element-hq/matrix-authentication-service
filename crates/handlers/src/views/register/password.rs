@@ -200,6 +200,9 @@ pub(super) async fn register(
                 .as_ref()
                 .is_some_and(|token| !token.allows_email(email))
             {
+                // This tells whoever holds the link whether an address is on
+                // its list, which is accepted: a meeting's participants usually
+                // see each other's addresses anyway
                 state.add_error_on_field(RegisterFormField::Email, FieldError::Mismatch);
             }
         }

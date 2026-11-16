@@ -3916,7 +3916,7 @@
             }
           },
           "400": {
-            "description": "The continue URL, an email or the username template is not valid, the registration policy refuses an email or the username, `allowed_emails` is empty, or it is set with `email` or without `passwordless`",
+            "description": "The continue URL, an email or the username template is not valid, the registration policy refuses an email or the username, `allowed_emails` is empty or too long, or it is set with `email` or without `passwordless`",
             "content": {
               "application/json": {
                 "schema": {
@@ -4167,7 +4167,7 @@
             }
           },
           "400": {
-            "description": "`allowed_emails` is empty or set on a token with an `email` or without `passwordless`, or an address in it is not valid or refused by the registration policy",
+            "description": "`allowed_emails` is empty, too long, or set on a token with an `email` or without `passwordless`, or an address in it is not valid or refused by the registration policy",
             "content": {
               "application/json": {
                 "schema": {
@@ -7618,6 +7618,7 @@
             "items": {
               "type": "string"
             },
+            "maxItems": 100,
             "example": [
               "alice@example.com",
               "bob@example.com"
@@ -7767,6 +7768,7 @@
             "items": {
               "type": "string"
             },
+            "maxItems": 100,
             "example": [
               "alice@example.com",
               "bob@example.com"
