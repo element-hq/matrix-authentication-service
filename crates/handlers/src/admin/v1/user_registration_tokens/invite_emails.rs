@@ -29,6 +29,10 @@ use crate::{
 /// and readable. The value itself is a choice.
 const MAX_NAME_LENGTH: usize = 100;
 
+/// How many invites one request can hold. A request is checked and scheduled
+/// in one transaction, and this keeps it short. The value itself is a choice.
+const MAX_INVITES: usize = 100;
+
 /// Spaces the sends of one request at about 10 per second, so that a large
 /// batch doesn't burst against the SMTP server. The queue makes scheduled jobs
 /// available on each worker wakeup (about once a second), so sends go out in
@@ -40,6 +44,9 @@ const SEND_INTERVAL: Duration = Duration::milliseconds(100);
 pub enum RouteError {
     #[error("No invites given")]
     NoInvites,
+
+    #[error("More than {MAX_INVITES} invites given")]
+    TooManyInvites,
 
     #[error("Registration token ID {0} not found")]
     TokenNotFound(Ulid),
@@ -74,6 +81,7 @@ impl IntoResponse for RouteError {
         let status = match self {
             Self::TokenNotFound(_) => StatusCode::NOT_FOUND,
             Self::NoInvites
+            | Self::TooManyInvites
             | Self::TokenNotValid(_)
             | Self::NoEmail(_)
             | Self::EmailMismatch { .. }
@@ -105,6 +113,7 @@ pub struct Invite {
 pub struct Request {
     /// The tokens to email a link for. A token and address given more than
     /// once, ignoring case, are emailed once.
+    #[schemars(length(max = MAX_INVITES))]
     invites: Vec<Invite>,
 
     /// The name of the room the invites are for, shown in the email. With it,
@@ -137,7 +146,9 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         .summary("Email invite links for user registration tokens")
         .description(
             "Emails each address a link to register with its token. The email is sent only if \
-             the token is still valid by then.",
+             the token is still valid by then. MAS does not rate-limit this endpoint and does not \
+             verify the room or inviter fields, so a caller acting for users must apply its own \
+             limits.",
         )
         .tag("user-registration-token")
         .response_with::<202, Json<Response>, _>(|t| {
@@ -147,8 +158,8 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         .response_with::<400, RouteError, _>(|t| {
             let response = ErrorResponse::from_error(&RouteError::NoEmail(Ulid::nil()));
             t.description(
-                "The request has no invites, an invalid token, or an address which is missing, \
-                 invalid or not one the token allows",
+                "The request has no invites or too many, an invalid token, or an address which is \
+                 missing, invalid or not one the token allows",
             )
             .example(response)
         })
@@ -196,6 +207,9 @@ pub async fn handler(
 ) -> Result<(StatusCode, Json<Response>), RouteError> {
     if params.invites.is_empty() {
         return Err(RouteError::NoInvites);
+    }
+    if params.invites.len() > MAX_INVITES {
+        return Err(RouteError::TooManyInvites);
     }
 
     let now = clock.now();
@@ -558,6 +572,11 @@ mod tests {
         let (status, body) = send(&mut state, serde_json::json!({ "invites": [] })).await;
         assert_eq!(status, StatusCode::BAD_REQUEST);
         assert_eq!(body["errors"][0]["title"], "No invites given");
+
+        let invites = vec![serde_json::json!({ "registration_token_id": valid.id }); 101];
+        let (status, body) = send(&mut state, serde_json::json!({ "invites": invites })).await;
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        assert_eq!(body["errors"][0]["title"], "More than 100 invites given");
 
         let (status, _) = send(
             &mut state,
