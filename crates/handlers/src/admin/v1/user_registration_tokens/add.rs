@@ -307,6 +307,9 @@ pub async fn handler(
         return Err(RouteError::EmailAndAllowedEmails);
     }
 
+    // Only the passwordless form always asks for an address. A password form
+    // asks only when the server requires one, and without an address a listed
+    // token fails only at the end of registration.
     if params.allowed_emails.is_some() && !params.passwordless {
         return Err(RouteError::AllowedEmailsNotPasswordless);
     }
