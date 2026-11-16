@@ -14,11 +14,11 @@ use ulid::Ulid;
 
 use crate::views::shared::OptionalPostAuthAction;
 
-/// Send the browser to the continue URL of a registration token. The token's
-/// validity doesn't matter, so that its link still leads there after
-/// registering. No session is needed either: the URL is no secret from
-/// whoever holds the link, and getting there grants nothing. Without a token
-/// or a continue URL, it goes where a missing post-auth action goes.
+/// Send the browser to the continue URL of a registration token. A used or
+/// expired token still leads there, so that its link works after registering.
+/// No session is needed either: the URL is no secret from whoever holds the
+/// link, and getting there grants nothing. Without a token, a continue URL, or
+/// with a revoked token, it goes where a missing post-auth action goes.
 #[tracing::instrument(
     name = "handlers.views.register.continue_url.get",
     fields(user_registration_token.id = %id),
@@ -33,6 +33,7 @@ pub(crate) async fn get(
         .user_registration_token()
         .lookup(id)
         .await?
+        .filter(|token| token.revoked_at.is_none())
         .and_then(|token| token.continue_url);
 
     Ok(match continue_url {
@@ -96,7 +97,8 @@ mod tests {
         assert_continues(&state, token.id, CONTINUE_URL).await;
     }
 
-    /// A token that can no longer register still leads to its continue URL
+    /// A used or expired token still leads to its continue URL, a revoked one
+    /// goes where a missing post-auth action goes
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_continue_invalid_token(pool: PgPool) {
         setup();
@@ -119,10 +121,9 @@ mod tests {
             .unwrap();
         repo.save().await.unwrap();
 
-        for token in [used, revoked] {
-            assert!(!token.is_valid(state.clock.now()));
-            assert_continues(&state, token.id, CONTINUE_URL).await;
-        }
+        assert!(!used.is_valid(state.clock.now()));
+        assert_continues(&state, used.id, CONTINUE_URL).await;
+        assert_continues(&state, revoked.id, "/").await;
 
         state.clock.advance(Duration::hours(2));
         assert!(!expired.is_valid(state.clock.now()));
