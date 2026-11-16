@@ -3922,7 +3922,7 @@
                 "example": {
                   "errors": [
                     {
-                      "title": "Continue URL \"app.example.com\" is not an ASCII http or https URL"
+                      "title": "Continue URL \"app.example.com\" is not an http or https URL in visible ASCII"
                     }
                   ]
                 }
