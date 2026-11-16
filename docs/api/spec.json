@@ -3955,7 +3955,7 @@
           "user-registration-token"
         ],
         "summary": "Email invite links for user registration tokens",
-        "description": "Emails each address a link to register with its token. The email is sent only if the token is still valid by then.",
+        "description": "Emails each address a link to register with its token. The email is sent only if the token is still valid by then. MAS does not rate-limit this endpoint and does not verify the room or inviter fields, so a caller acting for users must apply its own limits.",
         "operationId": "sendUserRegistrationTokenInviteEmails",
         "requestBody": {
           "content": {

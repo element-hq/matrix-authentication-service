@@ -136,7 +136,9 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
         .summary("Email invite links for user registration tokens")
         .description(
             "Emails each address a link to register with its token. The email is sent only if \
-             the token is still valid by then.",
+             the token is still valid by then. MAS does not rate-limit this endpoint and does not \
+             verify the room or inviter fields, so a caller acting for users must apply its own \
+             limits.",
         )
         .tag("user-registration-token")
         .response_with::<202, Json<Response>, _>(|t| {
