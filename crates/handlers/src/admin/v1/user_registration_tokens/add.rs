@@ -31,6 +31,11 @@ use crate::{
     impl_from_error_for_route, username_template,
 };
 
+/// How many addresses a token can list. Each is checked against the policy in
+/// the request's transaction, and the list is loaded with the token on every
+/// view of its link; this keeps both small. The value itself is a choice.
+pub(super) const MAX_ALLOWED_EMAILS: usize = 100;
+
 #[derive(Debug, thiserror::Error, OperationIo)]
 #[aide(output_with = "Json<ErrorResponse>")]
 pub enum RouteError {
@@ -117,6 +122,9 @@ pub enum AllowedEmailsError {
     #[error("`allowed_emails` must not be empty")]
     Empty,
 
+    #[error("`allowed_emails` can't hold more than {MAX_ALLOWED_EMAILS} addresses")]
+    TooMany,
+
     #[error("Email {email:?} is not valid")]
     EmailNotValid {
         email: String,
@@ -164,6 +172,7 @@ pub struct Request {
     /// each address must pass the registration policy. Repeats of an address
     /// in another case are dropped.
     #[schemars(example = &["alice@example.com", "bob@example.com"])]
+    #[schemars(length(max = MAX_ALLOWED_EMAILS))]
     allowed_emails: Option<Vec<String>>,
 
     /// Whether registering with this token skips the password step. The user's
@@ -199,7 +208,7 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
             t.description(
                 "The continue URL, an email or the username template is not valid, the \
                  registration policy refuses an email or the username, `allowed_emails` is \
-                 empty, or it is set with `email` or without `passwordless`",
+                 empty or too long, or it is set with `email` or without `passwordless`",
             )
             .example(response)
         })
@@ -223,11 +232,15 @@ fn violations(result: EvaluationResult) -> Vec<String> {
         .collect()
 }
 
-/// `emails`, each checked to be an address, without the repeats of an address
-/// in another case
+/// `emails`, at most [`MAX_ALLOWED_EMAILS`] of them, each checked to be an
+/// address, without the repeats of an address in another case
 pub(super) fn parse_allowed_emails(
     mut emails: Vec<String>,
 ) -> Result<Vec<String>, AllowedEmailsError> {
+    if emails.len() > MAX_ALLOWED_EMAILS {
+        return Err(AllowedEmailsError::TooMany);
+    }
+
     for email in &emails {
         if let Err(source) = Address::from_str(email) {
             return Err(AllowedEmailsError::EmailNotValid {
@@ -778,6 +791,10 @@ mod tests {
             (
                 serde_json::json!({ "allowed_emails": [], "passwordless": true }),
                 "`allowed_emails` must not be empty",
+            ),
+            (
+                serde_json::json!({ "allowed_emails": vec!["alice@example.com"; 101], "passwordless": true }),
+                "`allowed_emails` can't hold more than 100 addresses",
             ),
             (
                 serde_json::json!({
