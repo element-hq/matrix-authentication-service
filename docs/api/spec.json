@@ -3982,7 +3982,7 @@
             }
           },
           "400": {
-            "description": "The request has no invites, an invalid token, or an address which is missing, invalid or not the token's",
+            "description": "The request has no invites or too many, an invalid token, or an address which is missing, invalid or not the token's",
             "content": {
               "application/json": {
                 "schema": {
@@ -7616,7 +7616,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/InviteEmail"
-            }
+            },
+            "maxItems": 100
           },
           "room_name": {
             "description": "The name of the room the invites are for, shown in the email. With it,\nthe email tells the recipient they are asking to join and that someone\nin the room approves the request. Without it, the email names no room.",
