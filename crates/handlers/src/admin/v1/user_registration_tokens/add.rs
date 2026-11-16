@@ -37,7 +37,7 @@ pub enum RouteError {
     #[error("A registration token with the same token already exists")]
     Conflict(Box<mas_data_model::UserRegistrationToken>),
 
-    #[error("Continue URL {0:?} is not an ASCII http or https URL")]
+    #[error("Continue URL {0:?} is not an http or https URL in visible ASCII")]
     ContinueUrlNotValid(String),
 
     #[error("Email {email:?} is not valid")]
@@ -674,7 +674,9 @@ mod tests {
             let body: serde_json::Value = response.json();
             assert_eq!(
                 body["errors"][0]["title"],
-                format!("Continue URL {continue_url:?} is not an ASCII http or https URL")
+                format!(
+                    "Continue URL {continue_url:?} is not an http or https URL in visible ASCII"
+                )
             );
         }
     }
