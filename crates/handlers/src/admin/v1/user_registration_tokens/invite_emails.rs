@@ -28,8 +28,10 @@ use crate::{
 /// and readable. The value itself is a choice.
 const MAX_NAME_LENGTH: usize = 100;
 
-/// The delay between the scheduled sends of one request, so that a large batch
-/// doesn't burst against the SMTP server
+/// Spaces the sends of one request at about 10 per second, so that a large
+/// batch doesn't burst against the SMTP server. The queue makes scheduled jobs
+/// available on each worker wakeup (about once a second), so sends go out in
+/// small groups rather than exactly this far apart.
 const SEND_INTERVAL: Duration = Duration::milliseconds(100);
 
 #[derive(Debug, thiserror::Error, OperationIo)]
