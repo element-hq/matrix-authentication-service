@@ -17,6 +17,7 @@ use ruma_common::UserId;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
+use unicode_segmentation::UnicodeSegmentation as _;
 
 use crate::{
     admin::{call_context::CallContext, response::ErrorResponse},
@@ -28,8 +29,10 @@ use crate::{
 /// and readable. The value itself is a choice.
 const MAX_NAME_LENGTH: usize = 100;
 
-/// The delay between the scheduled sends of one request, so that a large batch
-/// doesn't burst against the SMTP server
+/// Spaces the sends of one request at about 10 per second, so that a large
+/// batch doesn't burst against the SMTP server. The queue makes scheduled jobs
+/// available on each worker wakeup (about once a second), so sends go out in
+/// small groups rather than exactly this far apart.
 const SEND_INTERVAL: Duration = Duration::milliseconds(100);
 
 #[derive(Debug, thiserror::Error, OperationIo)]
@@ -159,15 +162,23 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
 /// Whether `c` is a control character, including the bidirectional controls
 /// which `char::is_control` doesn't cover
 fn is_control_or_bidi(c: char) -> bool {
-    c.is_control() || matches!(c, '\u{202A}'..='\u{202E}' | '\u{2066}'..='\u{2069}')
+    c.is_control()
+        || matches!(
+            c,
+            '\u{061C}' | '\u{200E}' | '\u{200F}' | '\u{202A}'..='\u{202E}' | '\u{2066}'..='\u{2069}'
+        )
 }
 
-/// Strip control and bidirectional characters, and keep at most
-/// [`MAX_NAME_LENGTH`] characters
+/// Strip control and bidirectional characters, and keep the whole grapheme
+/// clusters that fit in [`MAX_NAME_LENGTH`] characters
 fn sanitize(text: &str) -> String {
-    text.chars()
-        .filter(|c| !is_control_or_bidi(*c))
-        .take(MAX_NAME_LENGTH)
+    let text: String = text.chars().filter(|c| !is_control_or_bidi(*c)).collect();
+    let mut length = 0;
+    text.graphemes(true)
+        .take_while(|grapheme| {
+            length += grapheme.chars().count();
+            length <= MAX_NAME_LENGTH
+        })
         .collect()
 }
 
@@ -566,7 +577,7 @@ mod tests {
         setup();
         let mut state = TestState::from_pool(pool.clone()).await.unwrap();
 
-        let controls = "\u{0}\n\u{7f}\u{85}\u{202A}\u{202E}\u{2066}\u{2069}";
+        let controls = "\u{0}\n\u{7f}\u{85}\u{61C}\u{200E}\u{200F}\u{202A}\u{202E}\u{2066}\u{2069}";
         let long_id = format!("@{}:example.com", "b".repeat(200));
         let inviters = [
             (long_id.clone(), serde_json::Value::from(long_id)),
@@ -597,6 +608,23 @@ mod tests {
             assert_eq!(payload["room_name"], format!("Project X{}", "x".repeat(91)));
             assert_eq!(payload["inviter"], expected, "{inviter:?}");
             assert_eq!(payload["inviter_name"], format!("Bob{}", "é".repeat(97)));
+        }
+    }
+
+    /// A cut keeps whole grapheme clusters
+    #[test]
+    fn test_sanitize_graphemes() {
+        let combining = "e\u{301}";
+        let family = "\u{1F469}\u{200D}\u{1F469}\u{200D}\u{1F467}";
+        for (text, expected) in [
+            (
+                format!("{}{combining}", "a".repeat(98)),
+                format!("{}{combining}", "a".repeat(98)),
+            ),
+            (format!("{}{combining}", "a".repeat(99)), "a".repeat(99)),
+            (format!("{}{family}", "a".repeat(98)), "a".repeat(98)),
+        ] {
+            assert_eq!(super::sanitize(&text), expected);
         }
     }
 

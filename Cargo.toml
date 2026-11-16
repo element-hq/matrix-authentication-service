@@ -692,6 +692,10 @@ features = ["env-filter", "chrono"]
 [workspace.dependencies.tracing-appender]
 version = "0.2.5"
 
+# Unicode text segmentation
+[workspace.dependencies.unicode-segmentation]
+version = "1.12.0"
+
 # URL manipulation
 [workspace.dependencies.url]
 version = "2.5.7"
