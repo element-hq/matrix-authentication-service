@@ -273,17 +273,15 @@ pub(crate) async fn post(
     // invite's page doesn't submit its code, which then only names the
     // post-auth action.
     form.token = form.token.trim().to_owned();
-    let action_token = if form.token.is_empty() {
-        query.token.as_deref().map_or("", str::trim)
-    } else {
-        &form.token
-    };
-    let found_token = if action_token.is_empty() {
-        None
-    } else {
-        repo.user_registration_token()
-            .find_by_token(action_token)
-            .await?
+    let form_token = Some(form.token.as_str()).filter(|token| !token.is_empty());
+    let url_token = query
+        .token
+        .as_deref()
+        .map(str::trim)
+        .filter(|token| !token.is_empty());
+    let found_token = match form_token.or(url_token) {
+        Some(token) => repo.user_registration_token().find_by_token(token).await?,
+        None => None,
     };
     let action = post_auth_action(query.action, found_token.as_ref());
 
@@ -331,14 +329,14 @@ pub(crate) async fn post(
     }
 
     let registration_token =
-        found_token.filter(|found| !form.token.is_empty() && found.is_valid(clock.now()));
+        found_token.filter(|found| form_token.is_some() && found.is_valid(clock.now()));
 
     let passwordless_invite = registration_token
         .as_ref()
         .is_some_and(|token| token.passwordless);
 
     if !site_config.password_registration_enabled && !passwordless_invite {
-        if form.token.is_empty() || registration_token.is_some() {
+        if form_token.is_none() || registration_token.is_some() {
             return Ok(StatusCode::METHOD_NOT_ALLOWED.into_response());
         }
 
