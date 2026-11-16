@@ -160,7 +160,11 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
 /// Whether `c` is a control character, including the bidirectional controls
 /// which `char::is_control` doesn't cover
 fn is_control_or_bidi(c: char) -> bool {
-    c.is_control() || matches!(c, '\u{202A}'..='\u{202E}' | '\u{2066}'..='\u{2069}')
+    c.is_control()
+        || matches!(
+            c,
+            '\u{061C}' | '\u{200E}' | '\u{200F}' | '\u{202A}'..='\u{202E}' | '\u{2066}'..='\u{2069}'
+        )
 }
 
 /// Strip control and bidirectional characters, and keep at most
@@ -512,7 +516,7 @@ mod tests {
         setup();
         let mut state = TestState::from_pool(pool.clone()).await.unwrap();
 
-        let controls = "\u{0}\n\u{7f}\u{85}\u{202A}\u{202E}\u{2066}\u{2069}";
+        let controls = "\u{0}\n\u{7f}\u{85}\u{61C}\u{200E}\u{200F}\u{202A}\u{202E}\u{2066}\u{2069}";
         let long_id = format!("@{}:example.com", "b".repeat(200));
         let inviters = [
             (long_id.clone(), serde_json::Value::from(long_id)),
