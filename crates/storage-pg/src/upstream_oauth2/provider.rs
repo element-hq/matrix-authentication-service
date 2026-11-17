@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -200,10 +200,8 @@ impl TryFrom<ProviderLookup> for UpstreamOAuthProvider {
                     .source(e)
             })?;
 
-        let additional_authorization_parameters = value
-            .additional_parameters
-            .map(|Json(x)| x)
-            .unwrap_or_default();
+        let additional_authorization_parameters =
+            value.additional_parameters.map_or_default(|Json(x)| x);
 
         let on_backchannel_logout = value.on_backchannel_logout.parse().map_err(|e| {
             DatabaseInconsistencyError::on("upstream_oauth_providers")

@@ -135,15 +135,7 @@ impl TryFrom<AppSessionLookup> for AppSession {
                 Some(is_synapse_admin),
             ) => {
                 let id = compat_session_id.into();
-                let device = device_id_opt
-                    .map(Device::try_from)
-                    .transpose()
-                    .map_err(|e| {
-                        DatabaseInconsistencyError::on("compat_sessions")
-                            .column("device_id")
-                            .row(id)
-                            .source(e)
-                    })?;
+                let device = device_id_opt.map(Device::from);
 
                 let state = match finished_at {
                     None => CompatSessionState::Valid,
