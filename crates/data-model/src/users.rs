@@ -324,8 +324,7 @@ pub fn is_username_template(username: &str) -> bool {
     username.contains('{')
 }
 
-/// How many characters a display name chosen while registering can have: the
-/// most Synapse accepts
+/// How many characters a display name can have: the most Synapse accepts
 pub const MAX_DISPLAY_NAME_LENGTH: usize = 256;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]

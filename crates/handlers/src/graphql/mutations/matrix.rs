@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -96,7 +97,7 @@ impl MatrixMutations {
 
         if let Some(display_name) = &input.display_name {
             // Let's do some basic validation on the display name
-            if display_name.len() > 256 {
+            if display_name.chars().count() > mas_data_model::MAX_DISPLAY_NAME_LENGTH {
                 return Ok(SetDisplayNamePayload::Invalid);
             }
 
