@@ -1511,12 +1511,31 @@ mod tests {
         }
     }
 
-    /// Submitting the form again once registered, as going Back does, goes on
-    /// rather than registering a second account
+    /// Sign the browser in as a new user
+    async fn sign_in(state: &TestState, cookies: &CookieHelper) {
+        use mas_axum_utils::SessionInfoExt as _;
+
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+        let bob = repo
+            .user()
+            .add(&mut rng, &state.clock, "bob".to_owned())
+            .await
+            .unwrap();
+        let session = repo
+            .browser_session()
+            .add(&mut rng, &state.clock, &bob, None)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+        cookies.import(state.cookie_jar().set_session(&session));
+    }
+
+    /// Submitting an invite's form again once signed in, as going Back after
+    /// registering does, goes on rather than registering a second account
+    /// under a fresh name from the username template
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_post_signed_in(pool: PgPool) {
-        use mas_storage::user::UserFilter;
-
         setup();
         let state = TestState::from_pool_with_site_config(
             pool,
@@ -1527,49 +1546,46 @@ mod tests {
         )
         .await
         .unwrap();
+        add_registration_token(&state, "invite", Some("user-{{ random }}"), None, false).await;
         let cookies = CookieHelper::new();
+        sign_in(&state, &cookies).await;
 
         let csrf_token = mint_csrf_token(&state, &cookies);
-        let register = || {
-            cookies.with_cookies(
-                Request::post(&*mas_router::Register::default().path_and_query()).form(
-                    serde_json::json!({
-                        "csrf": csrf_token,
-                        "username": "alice",
-                        "password": "correcthorsebatterystaple",
-                        "password_confirm": "correcthorsebatterystaple",
-                        "accept_terms": "on",
-                    }),
-                ),
-            )
-        };
-        let response = state.request(register()).await;
-        cookies.save_cookies(&response);
-        response.assert_status(StatusCode::SEE_OTHER);
-        let id: Ulid = response.headers()[LOCATION]
-            .to_str()
-            .unwrap()
-            .rsplit('/')
-            .nth(1)
-            .unwrap()
-            .parse()
-            .unwrap();
-
-        let request = Request::post(&*mas_router::RegisterDisplayName::new(id).path_and_query())
-            .form(serde_json::json!({ "csrf": csrf_token, "action": "skip" }));
+        let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "token": "invite",
+                "password": "correcthorsebatterystaple",
+                "password_confirm": "correcthorsebatterystaple",
+                "accept_terms": "on",
+            }),
+        );
         let response = state.request(cookies.with_cookies(request)).await;
-        response.assert_status(StatusCode::SEE_OTHER);
-        let request = Request::get(&*mas_router::RegisterFinish::new(id).path_and_query()).empty();
-        let response = state.request(cookies.with_cookies(request)).await;
-        cookies.save_cookies(&response);
-        response.assert_status(StatusCode::SEE_OTHER);
-
-        let response = state.request(register()).await;
         response.assert_status(StatusCode::SEE_OTHER);
         response.assert_header_value(LOCATION, "/");
+    }
 
-        let mut repo = state.repository().await.unwrap();
-        assert_eq!(repo.user().count(UserFilter::new()).await.unwrap(), 1);
+    /// A provider button on a page loaded before signing in goes on too,
+    /// rather than starting an upstream sign-in
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_signed_in_with_provider(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let provider_id = provider(&state).await;
+        let cookies = CookieHelper::new();
+        sign_in(&state, &cookies).await;
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "provider": provider_id.to_string(),
+            }),
+        );
+        let response = state.request(cookies.with_cookies(request)).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/");
+        assert!(upstream_sessions(&state, &response).is_none());
     }
 
     /// Registering from an invite goes on to the invite's continue URL,
