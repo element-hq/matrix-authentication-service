@@ -28,6 +28,8 @@ Please see LICENSE files in the repository root for full details.
       {{ _("mas.errors.field_required") }}
     {% elif error.kind == "exists" and field_name == "username" %}
       {{ _("mas.errors.username_taken") }}
+    {% elif error.kind == "mismatch" and field_name == "token" %}
+      {{ _("mas.errors.registration_token_mismatch") }}
     {% elif error.kind == "policy" %}
       {% if error.code == "username-too-short" %}
         {{ _("mas.errors.username_too_short") }}
