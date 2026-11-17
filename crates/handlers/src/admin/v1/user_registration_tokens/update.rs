@@ -6,10 +6,11 @@
 // Please see LICENSE files in the repository root for full details.
 
 use aide::{OperationIo, transform::TransformOperation};
-use axum::{Json, response::IntoResponse};
+use axum::{Json, extract::State, response::IntoResponse};
 use chrono::{DateTime, Utc};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
+use mas_router::UrlBuilder;
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer};
 use ulid::Ulid;
@@ -104,6 +105,7 @@ pub async fn handler(
     CallContext {
         mut repo, clock, ..
     }: CallContext,
+    State(url_builder): State<UrlBuilder>,
     id: UlidPathParam,
     Json(request): Json<Request>,
 ) -> Result<Json<SingleResponse<UserRegistrationToken>>, RouteError> {
@@ -135,7 +137,7 @@ pub async fn handler(
     repo.save().await?;
 
     Ok(Json(SingleResponse::new(
-        UserRegistrationToken::new(token, clock.now()),
+        UserRegistrationToken::new(token, clock.now(), &url_builder),
         format!("/api/admin/v1/user-registration-tokens/{id}"),
     )))
 }
@@ -207,7 +209,8 @@ mod tests {
               "created_at": "2022-01-16T14:40:00Z",
               "last_used_at": null,
               "expires_at": "2022-02-15T14:40:00Z",
-              "revoked_at": null
+              "revoked_at": null,
+              "invite_url": "https://example.com/register?token=test_update_expiry"
             },
             "links": {
               "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -250,7 +253,8 @@ mod tests {
               "created_at": "2022-01-16T14:40:00Z",
               "last_used_at": null,
               "expires_at": null,
-              "revoked_at": null
+              "revoked_at": null,
+              "invite_url": "https://example.com/register?token=test_update_expiry"
             },
             "links": {
               "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -319,7 +323,8 @@ mod tests {
               "created_at": "2022-01-16T14:40:00Z",
               "last_used_at": null,
               "expires_at": null,
-              "revoked_at": null
+              "revoked_at": null,
+              "invite_url": "https://example.com/register?token=test_update_limit"
             },
             "links": {
               "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -362,7 +367,8 @@ mod tests {
               "created_at": "2022-01-16T14:40:00Z",
               "last_used_at": null,
               "expires_at": null,
-              "revoked_at": null
+              "revoked_at": null,
+              "invite_url": "https://example.com/register?token=test_update_limit"
             },
             "links": {
               "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -432,7 +438,8 @@ mod tests {
               "created_at": "2022-01-16T14:40:00Z",
               "last_used_at": null,
               "expires_at": "2022-02-15T14:40:00Z",
-              "revoked_at": null
+              "revoked_at": null,
+              "invite_url": "https://example.com/register?token=test_update_multiple"
             },
             "links": {
               "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -500,7 +507,8 @@ mod tests {
               "created_at": "2022-01-16T14:40:00Z",
               "last_used_at": null,
               "expires_at": "2022-02-15T14:40:00Z",
-              "revoked_at": null
+              "revoked_at": null,
+              "invite_url": "https://example.com/register?token=test_update_none"
             },
             "links": {
               "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"

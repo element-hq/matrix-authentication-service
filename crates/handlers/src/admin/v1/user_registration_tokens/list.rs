@@ -6,11 +6,12 @@
 // Please see LICENSE files in the repository root for full details.
 
 use aide::{OperationIo, transform::TransformOperation};
-use axum::{Json, response::IntoResponse};
+use axum::{Json, extract::State, response::IntoResponse};
 use axum_extra::extract::{Query, QueryRejection};
 use axum_macros::FromRequestParts;
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
+use mas_router::UrlBuilder;
 use mas_storage::{Page, user::UserRegistrationTokenFilter};
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -136,6 +137,7 @@ pub async fn handler(
     CallContext {
         mut repo, clock, ..
     }: CallContext,
+    State(url_builder): State<UrlBuilder>,
     Pagination(pagination, include_count): Pagination,
     params: FilterParams,
 ) -> Result<Json<PaginatedResponse<UserRegistrationToken>>, RouteError> {
@@ -166,7 +168,7 @@ pub async fn handler(
                 .user_registration_token()
                 .list(filter, pagination)
                 .await?
-                .map(|token| UserRegistrationToken::new(token, now));
+                .map(|token| UserRegistrationToken::new(token, now, &url_builder));
             let count = repo.user_registration_token().count(filter).await?;
             PaginatedResponse::for_page(page, pagination, Some(count), &base)
         }
@@ -175,7 +177,7 @@ pub async fn handler(
                 .user_registration_token()
                 .list(filter, pagination)
                 .await?
-                .map(|token| UserRegistrationToken::new(token, now));
+                .map(|token| UserRegistrationToken::new(token, now, &url_builder));
             PaginatedResponse::for_page(page, pagination, None, &base)
         }
         IncludeCount::Only => {
@@ -329,7 +331,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": "2022-01-15T14:40:00Z",
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_expired"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG064K8BYZXSY5G511Z"
@@ -354,7 +357,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": "2022-01-16T14:40:00Z",
                 "expires_at": null,
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_used"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
@@ -379,7 +383,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": null,
-                "revoked_at": "2022-01-16T14:40:00Z"
+                "revoked_at": "2022-01-16T14:40:00Z",
+                "invite_url": "https://example.com/register?token=token_revoked"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG09AVTNSQFMSR34AJC"
@@ -404,7 +409,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": null,
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_unused"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -429,7 +435,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": "2022-01-16T14:40:00Z",
                 "expires_at": null,
-                "revoked_at": "2022-01-16T14:40:00Z"
+                "revoked_at": "2022-01-16T14:40:00Z",
+                "invite_url": "https://example.com/register?token=token_used_revoked"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0S3ZJD8CXQ7F11KXN"
@@ -485,7 +492,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": "2022-01-16T14:40:00Z",
                 "expires_at": null,
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_used"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
@@ -510,7 +518,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": "2022-01-16T14:40:00Z",
                 "expires_at": null,
-                "revoked_at": "2022-01-16T14:40:00Z"
+                "revoked_at": "2022-01-16T14:40:00Z",
+                "invite_url": "https://example.com/register?token=token_used_revoked"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0S3ZJD8CXQ7F11KXN"
@@ -558,7 +567,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": "2022-01-15T14:40:00Z",
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_expired"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG064K8BYZXSY5G511Z"
@@ -583,7 +593,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": null,
-                "revoked_at": "2022-01-16T14:40:00Z"
+                "revoked_at": "2022-01-16T14:40:00Z",
+                "invite_url": "https://example.com/register?token=token_revoked"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG09AVTNSQFMSR34AJC"
@@ -608,7 +619,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": null,
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_unused"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -664,7 +676,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": null,
-                "revoked_at": "2022-01-16T14:40:00Z"
+                "revoked_at": "2022-01-16T14:40:00Z",
+                "invite_url": "https://example.com/register?token=token_revoked"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG09AVTNSQFMSR34AJC"
@@ -689,7 +702,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": "2022-01-16T14:40:00Z",
                 "expires_at": null,
-                "revoked_at": "2022-01-16T14:40:00Z"
+                "revoked_at": "2022-01-16T14:40:00Z",
+                "invite_url": "https://example.com/register?token=token_used_revoked"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0S3ZJD8CXQ7F11KXN"
@@ -737,7 +751,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": "2022-01-15T14:40:00Z",
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_expired"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG064K8BYZXSY5G511Z"
@@ -762,7 +777,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": "2022-01-16T14:40:00Z",
                 "expires_at": null,
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_used"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
@@ -787,7 +803,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": null,
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_unused"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -843,7 +860,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": "2022-01-15T14:40:00Z",
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_expired"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG064K8BYZXSY5G511Z"
@@ -891,7 +909,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": "2022-01-16T14:40:00Z",
                 "expires_at": null,
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_used"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
@@ -916,7 +935,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": null,
-                "revoked_at": "2022-01-16T14:40:00Z"
+                "revoked_at": "2022-01-16T14:40:00Z",
+                "invite_url": "https://example.com/register?token=token_revoked"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG09AVTNSQFMSR34AJC"
@@ -941,7 +961,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": null,
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_unused"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -966,7 +987,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": "2022-01-16T14:40:00Z",
                 "expires_at": null,
-                "revoked_at": "2022-01-16T14:40:00Z"
+                "revoked_at": "2022-01-16T14:40:00Z",
+                "invite_url": "https://example.com/register?token=token_used_revoked"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0S3ZJD8CXQ7F11KXN"
@@ -1022,7 +1044,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": "2022-01-16T14:40:00Z",
                 "expires_at": null,
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_used"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
@@ -1047,7 +1070,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": null,
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_unused"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -1095,7 +1119,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": "2022-01-15T14:40:00Z",
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_expired"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG064K8BYZXSY5G511Z"
@@ -1120,7 +1145,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": null,
-                "revoked_at": "2022-01-16T14:40:00Z"
+                "revoked_at": "2022-01-16T14:40:00Z",
+                "invite_url": "https://example.com/register?token=token_revoked"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG09AVTNSQFMSR34AJC"
@@ -1145,7 +1171,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": "2022-01-16T14:40:00Z",
                 "expires_at": null,
-                "revoked_at": "2022-01-16T14:40:00Z"
+                "revoked_at": "2022-01-16T14:40:00Z",
+                "invite_url": "https://example.com/register?token=token_used_revoked"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0S3ZJD8CXQ7F11KXN"
@@ -1203,7 +1230,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": "2022-01-16T14:40:00Z",
                 "expires_at": null,
-                "revoked_at": "2022-01-16T14:40:00Z"
+                "revoked_at": "2022-01-16T14:40:00Z",
+                "invite_url": "https://example.com/register?token=token_used_revoked"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0S3ZJD8CXQ7F11KXN"
@@ -1259,7 +1287,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": "2022-01-15T14:40:00Z",
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_expired"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG064K8BYZXSY5G511Z"
@@ -1284,7 +1313,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": "2022-01-16T14:40:00Z",
                 "expires_at": null,
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_used"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
@@ -1333,7 +1363,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": null,
-                "revoked_at": "2022-01-16T14:40:00Z"
+                "revoked_at": "2022-01-16T14:40:00Z",
+                "invite_url": "https://example.com/register?token=token_revoked"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG09AVTNSQFMSR34AJC"
@@ -1358,7 +1389,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": null,
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_unused"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -1407,7 +1439,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": "2022-01-16T14:40:00Z",
                 "expires_at": null,
-                "revoked_at": "2022-01-16T14:40:00Z"
+                "revoked_at": "2022-01-16T14:40:00Z",
+                "invite_url": "https://example.com/register?token=token_used_revoked"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0S3ZJD8CXQ7F11KXN"
@@ -1482,7 +1515,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": "2022-01-15T14:40:00Z",
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_expired"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG064K8BYZXSY5G511Z"
@@ -1507,7 +1541,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": "2022-01-16T14:40:00Z",
                 "expires_at": null,
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_used"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
@@ -1532,7 +1567,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": null,
-                "revoked_at": "2022-01-16T14:40:00Z"
+                "revoked_at": "2022-01-16T14:40:00Z",
+                "invite_url": "https://example.com/register?token=token_revoked"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG09AVTNSQFMSR34AJC"
@@ -1557,7 +1593,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": null,
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_unused"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -1582,7 +1619,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": "2022-01-16T14:40:00Z",
                 "expires_at": null,
-                "revoked_at": "2022-01-16T14:40:00Z"
+                "revoked_at": "2022-01-16T14:40:00Z",
+                "invite_url": "https://example.com/register?token=token_used_revoked"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0S3ZJD8CXQ7F11KXN"
@@ -1645,7 +1683,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": "2022-01-16T14:40:00Z",
                 "expires_at": null,
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_used"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG07HNEZXNQM2KNBNF6"
@@ -1670,7 +1709,8 @@ mod tests {
                 "created_at": "2022-01-16T14:40:00Z",
                 "last_used_at": null,
                 "expires_at": null,
-                "revoked_at": null
+                "revoked_at": null,
+                "invite_url": "https://example.com/register?token=token_unused"
               },
               "links": {
                 "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"

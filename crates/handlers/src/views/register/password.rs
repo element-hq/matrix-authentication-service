@@ -14,7 +14,7 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt as _, CsrfToken},
 };
-use mas_data_model::{BoxClock, BoxRng, CaptchaConfig, SiteConfig};
+use mas_data_model::{BoxClock, BoxRng, CaptchaConfig, SiteConfig, UserRegistrationToken};
 use mas_i18n::DataLocale;
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
@@ -22,15 +22,11 @@ use mas_router::UrlBuilder;
 use mas_storage::{
     BoxRepository, RepositoryAccess,
     queue::{QueueJobRepositoryExt as _, SendEmailAuthenticationCodeJob},
-    upstream_oauth2::UpstreamOAuthProviderRepository as _,
-    user::{
-        UserEmailRepository, UserRegistrationRepository as _, UserRegistrationTokenRepository as _,
-        UserRepository,
-    },
+    user::{UserEmailRepository, UserRegistrationRepository as _, UserRepository},
 };
 use mas_templates::{
-    FieldError, FormError, FormState, RegisterContext, RegisterFormField, TemplateContext,
-    Templates, ToFormState as _,
+    FieldError, FormError, FormState, InviteContext, RegisterContext, RegisterFormField,
+    TemplateContext, Templates, ToFormState as _,
 };
 use zeroize::Zeroizing;
 
@@ -41,8 +37,8 @@ use crate::{
 };
 
 /// Register a user with a password, from the form posted on `/register`. The
-/// caller has verified the CSRF token and checked that password registration is
-/// enabled.
+/// caller has verified the CSRF token, resolved the registration token the
+/// form carried and checked that this registration is allowed.
 #[tracing::instrument(name = "handlers.views.register.password", skip_all)]
 #[expect(clippy::too_many_arguments)]
 pub(super) async fn register(
@@ -64,6 +60,7 @@ pub(super) async fn register(
     query: OptionalPostAuthAction,
     cookie_jar: CookieJar,
     form: RegisterForm,
+    registration_token: Option<UserRegistrationToken>,
 ) -> Result<Response, InternalError> {
     let ip_address = activity_tracker.ip();
 
@@ -83,15 +80,7 @@ pub(super) async fn register(
         .is_ok();
 
     let state = form.to_form_state();
-
-    let registration_token = if form.token.is_empty() {
-        None
-    } else {
-        repo.user_registration_token()
-            .find_by_token(&form.token)
-            .await?
-            .filter(|found| found.is_valid(clock.now()))
-    };
+    let token_invalid = !form.token.is_empty() && registration_token.is_none();
 
     let (pinned_username, pinned_email, passwordless) = match &registration_token {
         Some(token) => (
@@ -132,8 +121,11 @@ pub(super) async fn register(
             state.add_error_on_form(FormError::Captcha);
         }
 
-        if !form.token.is_empty() && registration_token.is_none() {
+        // The token isn't submitted again, so the next submission is an
+        // ordinary registration
+        if token_invalid {
             state.add_error_on_field(RegisterFormField::Token, FieldError::Invalid);
+            state.set_value(RegisterFormField::Token, None);
         }
 
         // A registration token may only be used to register the identity it
@@ -264,8 +256,17 @@ pub(super) async fn register(
         }
 
         if state.is_valid() {
-            // Check the rate limit if we are about to process the form
-            if let Err(e) = limiter.check_registration(requester) {
+            // Check the rate limit if we are about to process the form. A
+            // passwordless code pinning an email address skips the
+            // registration limit, so that people behind one address can accept
+            // their invites together. This can't register in bulk: such a code
+            // is minted by an admin client for one address, only one account
+            // can register with that address, and the email authentication
+            // limits below still apply.
+            let skips_limit = registration_token
+                .as_ref()
+                .is_some_and(|token| token.passwordless && token.email.is_some());
+            if !skips_limit && let Err(e) = limiter.check_registration(requester) {
                 tracing::warn!(error = &e as &dyn std::error::Error);
                 state.add_error_on_form(FormError::RateLimitExceeded);
             }
@@ -282,6 +283,8 @@ pub(super) async fn register(
     };
 
     if !state.is_valid() {
+        // Re-render with what the invite code resolved to, so the form keeps
+        // the shape the user submitted it in
         let content = render(
             locale,
             state,
@@ -291,6 +294,13 @@ pub(super) async fn register(
             templates,
             url_builder,
             site_config.captcha.clone(),
+            if token_invalid {
+                InviteCode::Invalid
+            } else {
+                registration_token
+                    .as_ref()
+                    .map_or(InviteCode::Missing, InviteCode::Valid)
+            },
         )
         .await?;
 
@@ -381,9 +391,16 @@ pub(super) async fn register(
         .into_response())
 }
 
+/// The invite code the registration form was submitted with
+pub(super) enum InviteCode<'a> {
+    Missing,
+    Invalid,
+    Valid(&'a UserRegistrationToken),
+}
+
 /// Render the registration page again, with the errors the form collected
 #[expect(clippy::too_many_arguments)]
-async fn render(
+pub(super) async fn render(
     locale: DataLocale,
     form_state: FormState<RegisterFormField>,
     action: &OptionalPostAuthAction,
@@ -392,10 +409,21 @@ async fn render(
     templates: &Templates,
     url_builder: &UrlBuilder,
     captcha_config: Option<CaptchaConfig>,
+    invite: InviteCode<'_>,
 ) -> Result<String, InternalError> {
-    let providers = repo.upstream_oauth_provider().all_enabled().await?;
-    let ctx = RegisterContext::new(url_builder, providers, action.post_auth_action.as_ref())
-        .with_form_state(form_state)
+    let registration_token = match invite {
+        InviteCode::Valid(registration_token) => Some(registration_token),
+        InviteCode::Missing | InviteCode::Invalid => None,
+    };
+    let providers = super::offered_providers(repo, registration_token).await?;
+    let mut ctx = RegisterContext::new(url_builder, providers, action.post_auth_action.as_ref())
+        .with_form_state(form_state);
+
+    if !matches!(invite, InviteCode::Missing) {
+        ctx = ctx.with_invite(InviteContext::new(registration_token));
+    }
+
+    let ctx = ctx
         .with_captcha(captcha_config)
         .with_csrf(csrf_token.form_value())
         .with_language(locale);
@@ -412,6 +440,7 @@ mod tests {
         Request, Response, StatusCode,
         header::{CONTENT_TYPE, LOCATION},
     };
+    use mas_config::RateLimitingConfig;
     use mas_router::Route;
     use mas_storage::{RepositoryAccess, user::UserRegistrationTokenRepository};
     use sqlx::PgPool;
@@ -1216,6 +1245,59 @@ mod tests {
         assert_eq!(authentication.email, "dave@example.com");
     }
 
+    /// A passwordless invite code is a way to register on its own: it works
+    /// with password registration off, and with passwords disabled entirely
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_passwordless_token_without_password_registration(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_login_enabled: false,
+                password_registration_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        add_registration_token(
+            &state,
+            "invite_alice",
+            Some("alice"),
+            Some("alice@example.com"),
+            true,
+        )
+        .await;
+
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({ "token": "invite_alice" }),
+        )
+        .await;
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo
+            .user_registration()
+            .lookup(registration_id(&response))
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(registration.username, "alice");
+        assert!(registration.password.is_none());
+
+        // The same request without the invite code has nothing to register with
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({ "username": "mallory", "email": "mallory@example.com" }),
+        )
+        .await;
+        response.assert_status(StatusCode::METHOD_NOT_ALLOWED);
+    }
+
     /// Post the registration form from the given IP address
     async fn register_from(
         state: &TestState,
@@ -1229,5 +1311,96 @@ mod tests {
             .client_ip(ip)
             .form(form);
         state.request(cookies.with_cookies(request)).await
+    }
+
+    /// Passwordless codes pinning an email address skip the registration rate
+    /// limit, so people behind one address can accept their invites together
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_invites_skip_rate_limit(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let ip = IpAddr::from([192, 0, 2, 1]);
+
+        // Past the registration limit, and within the email one
+        let limits = RateLimitingConfig::default();
+        let burst = limits.registration.burst.get();
+        assert!(burst < limits.email_authentication.per_ip.burst.get());
+
+        for i in 0..=burst {
+            let token = format!("invite_{i}");
+            add_registration_token(
+                &state,
+                &token,
+                None,
+                Some(&format!("guest{i}@example.com")),
+                true,
+            )
+            .await;
+
+            let response = register_from(
+                &state,
+                ip,
+                serde_json::json!({ "token": token, "username": format!("guest{i}") }),
+            )
+            .await;
+            response.assert_status(StatusCode::SEE_OTHER);
+        }
+    }
+
+    /// Any other code is still subject to the registration rate limit
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_token_rate_limited(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let password = "correcthorsebatterystaple";
+
+        for (ip, token, username, email, passwordless) in [
+            ([192, 0, 2, 1], "username_only", Some("bob"), None, true),
+            (
+                [192, 0, 2, 2],
+                "not_passwordless",
+                Some("dave"),
+                Some("dave@example.com"),
+                false,
+            ),
+        ] {
+            add_registration_token(&state, token, username, email, passwordless).await;
+            let ip = IpAddr::from(ip);
+
+            // Spend the limit
+            for i in 0..RateLimitingConfig::default().registration.burst.get() {
+                let response = register_from(
+                    &state,
+                    ip,
+                    serde_json::json!({
+                        "username": format!("user{i}"),
+                        "email": format!("user{i}+{token}@example.com"),
+                        "password": password,
+                        "password_confirm": password,
+                    }),
+                )
+                .await;
+                response.assert_status(StatusCode::SEE_OTHER);
+            }
+
+            let response = register_from(
+                &state,
+                ip,
+                serde_json::json!({
+                    "token": token,
+                    "username": username.unwrap_or("erin"),
+                    "email": email.unwrap_or("erin@example.com"),
+                    "password": password,
+                    "password_confirm": password,
+                }),
+            )
+            .await;
+            response.assert_status(StatusCode::OK);
+            assert_eq!(
+                form_state(response.body())["errors"],
+                serde_json::json!([{"kind": "rate_limit_exceeded"}]),
+                "with {token}"
+            );
+        }
     }
 }
