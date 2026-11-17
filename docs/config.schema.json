@@ -2857,7 +2857,7 @@
           "type": "boolean"
         },
         "passwordless_registration_without_email_allowed": {
-          "description": "Whether a passwordless registration token with a username template and\nno email address registers with only a display name. Defaults to\n`false`.",
+          "description": "Whether a passwordless registration token with a username template and\nno email address registers with only a display name. Defaults to\n`false`.\n\nSuch an account has no email address or password, so it can't sign in\nagain once its browser session ends.",
           "type": "boolean"
         },
         "password_change_allowed": {

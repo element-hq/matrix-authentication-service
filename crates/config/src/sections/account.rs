@@ -60,6 +60,9 @@ pub struct AccountConfig {
     /// Whether a passwordless registration token with a username template and
     /// no email address registers with only a display name. Defaults to
     /// `false`.
+    ///
+    /// Such an account has no email address or password, so it can't sign in
+    /// again once its browser session ends.
     #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
     pub passwordless_registration_without_email_allowed: bool,
 

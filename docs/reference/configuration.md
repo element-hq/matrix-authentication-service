@@ -378,6 +378,9 @@ account:
   # Whether a passwordless registration token with a username template and no
   # email address registers with only a display name
   #
+  # Such an account has no email address or password, so it can't sign in
+  # again once its browser session ends.
+  #
   # Defaults to `false`.
   passwordless_registration_without_email_allowed: false
 
