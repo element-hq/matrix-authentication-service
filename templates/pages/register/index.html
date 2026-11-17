@@ -51,6 +51,7 @@ Please see LICENSE files in the repository root for full details.
        {%- if invite %} data-invite='{{ invite | tojson }}'{% endif %}
        data-branding='{{ branding | tojson }}'
        data-features='{{ features | tojson }}'
+       data-max-display-name-length="{{ max_display_name_length }}"
        data-form='{{ form | tojson }}'
        data-providers='{{ providers | tojson }}'
        data-login-link="{{ login_link }}"

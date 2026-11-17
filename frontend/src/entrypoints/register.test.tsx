@@ -60,6 +60,7 @@ const mountRegister = async ({
     password_registration_email_required: true,
     minimum_password_complexity: 1,
   });
+  el.dataset.maxDisplayNameLength = "256";
   el.dataset.form = JSON.stringify(form);
   el.dataset.providers = JSON.stringify(providers);
   el.dataset.loginLink = "/login";

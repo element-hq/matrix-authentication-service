@@ -96,6 +96,7 @@ export const PasswordRegisterForm: React.FC<{
   tosUri?: string | null;
   emailRequired: boolean;
   minimumPasswordComplexity: number;
+  maxDisplayNameLength: number;
   captchaConfig?: CaptchaConfig;
   formErrors: ServerError[];
   fields: Partial<Record<string, FieldState>>;
@@ -108,6 +109,7 @@ export const PasswordRegisterForm: React.FC<{
   tosUri,
   emailRequired,
   minimumPasswordComplexity,
+  maxDisplayNameLength,
   captchaConfig,
   formErrors,
   fields,
@@ -260,7 +262,7 @@ export const PasswordRegisterForm: React.FC<{
               <Form.TextControl
                 required
                 autoFocus
-                maxLength={255}
+                maxLength={maxDisplayNameLength}
                 autoComplete="name"
                 defaultValue={fields.display_name?.value ?? ""}
               />

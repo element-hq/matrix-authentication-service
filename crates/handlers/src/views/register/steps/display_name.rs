@@ -14,7 +14,7 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt as _, ProtectedForm},
 };
-use mas_data_model::{BoxClock, BoxRng};
+use mas_data_model::{BoxClock, BoxRng, MAX_DISPLAY_NAME_LENGTH};
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::BoxRepository;
 use mas_templates::{
@@ -146,7 +146,7 @@ pub(crate) async fn post(
         FormAction::Set => {
             let display_name = form.display_name.trim();
 
-            if display_name.is_empty() || display_name.len() > 255 {
+            if display_name.is_empty() || display_name.chars().count() > MAX_DISPLAY_NAME_LENGTH {
                 let ctx = RegisterStepsDisplayNameContext::new()
                     .with_form_state(form.to_form_state().with_error_on_field(
                         RegisterStepsDisplayNameFormField::DisplayName,

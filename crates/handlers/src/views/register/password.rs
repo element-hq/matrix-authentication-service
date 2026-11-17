@@ -15,7 +15,8 @@ use mas_axum_utils::{
     csrf::{CsrfExt as _, CsrfToken},
 };
 use mas_data_model::{
-    BoxClock, BoxRng, CaptchaConfig, SiteConfig, UserRegistrationToken, is_username_template,
+    BoxClock, BoxRng, CaptchaConfig, MAX_DISPLAY_NAME_LENGTH, SiteConfig, UserRegistrationToken,
+    is_username_template,
 };
 use mas_i18n::DataLocale;
 use mas_matrix::HomeserverConnection;
@@ -211,7 +212,7 @@ pub(super) async fn register(
             let display_name = form.display_name.trim();
             if display_name.is_empty() {
                 state.add_error_on_field(RegisterFormField::DisplayName, FieldError::Required);
-            } else if display_name.len() > 255 {
+            } else if display_name.chars().count() > MAX_DISPLAY_NAME_LENGTH {
                 state.add_error_on_field(RegisterFormField::DisplayName, FieldError::Invalid);
             }
         }
@@ -1165,7 +1166,7 @@ mod tests {
 
     /// A token registering without an email address registers with the display
     /// name typed on the form, even where registrations otherwise need an email
-    /// address
+    /// address. The name's length is counted in characters.
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_register_without_email(pool: PgPool) {
         setup();
@@ -1187,17 +1188,20 @@ mod tests {
         )
         .await;
 
-        let response = register_from(
-            &state,
-            IpAddr::from([192, 0, 2, 1]),
-            serde_json::json!({ "token": "invite_link", "display_name": " " }),
-        )
-        .await;
-        response.assert_status(StatusCode::OK);
-        assert_eq!(
-            form_state(response.body())["fields"]["display_name"]["errors"],
-            serde_json::json!([{"kind": "required"}])
-        );
+        for (display_name, error) in [(" ".to_owned(), "required"), ("名".repeat(257), "invalid")]
+        {
+            let response = register_from(
+                &state,
+                IpAddr::from([192, 0, 2, 1]),
+                serde_json::json!({ "token": "invite_link", "display_name": display_name }),
+            )
+            .await;
+            response.assert_status(StatusCode::OK);
+            assert_eq!(
+                form_state(response.body())["fields"]["display_name"]["errors"],
+                serde_json::json!([{ "kind": error }])
+            );
+        }
 
         let cookies = CookieHelper::new();
         let csrf_token = mint_csrf_token(&state, &cookies);
@@ -1205,7 +1209,7 @@ mod tests {
             serde_json::json!({
                 "csrf": csrf_token,
                 "token": "invite_link",
-                "display_name": " Alice ",
+                "display_name": format!(" {} ", "名".repeat(256)),
                 "accept_terms": "on",
             }),
         );
@@ -1222,7 +1226,7 @@ mod tests {
         let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
         assert!(registration.completed_at.is_some());
         assert!(registration.email_authentication_id.is_none());
-        assert_eq!(registration.display_name.as_deref(), Some("Alice"));
+        assert_eq!(registration.display_name, Some("名".repeat(256)));
     }
 
     /// A link listing the addresses it allows needs one, and no display name
