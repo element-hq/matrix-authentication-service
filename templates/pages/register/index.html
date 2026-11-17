@@ -20,20 +20,15 @@ Please see LICENSE files in the repository root for full details.
   {% set without_email = passwordless and invite.without_email %}
   <header class="page-heading">
     <div class="icon">
-      {% if passwordless %}
-        {{ icon.chat_solid() }}
-      {% else %}
-        {{ icon.user_profile_solid() }}
-      {% endif %}
+      {{ icon.user_profile_solid() }}
     </div>
 
     <div class="header">
-      {% if without_email %}
-        <h1 class="title">{{ _("mas.register.create_account.without_email_heading") }}</h1>
-        <p class="text">{{ _("mas.register.create_account.without_email_description") }}</p>
-      {% elif passwordless %}
-        <h1 class="title">{{ _("mas.register.create_account.passwordless_heading") }}</h1>
-        {% if invite.email %}
+      {% if passwordless %}
+        <h1 class="title">{{ _("mas.register.create_account.passwordless_heading", server_name=branding.server_name) }}</h1>
+        {% if without_email %}
+          <p class="text">{{ _("mas.register.create_account.without_email_description") }}</p>
+        {% elif invite.email %}
           <p class="text">
             {{ _("mas.register.create_account.passwordless_description") }}<br>
             <span class="text-primary">{{ invite.email }}</span>

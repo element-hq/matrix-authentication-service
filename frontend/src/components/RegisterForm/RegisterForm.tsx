@@ -278,7 +278,7 @@ export const PasswordRegisterForm: React.FC<{
             </Form.Field>
           )}
 
-          {/* A guest invite names the address in the page heading */}
+          {/* A passwordless invite names the address in the page heading */}
           {pinnedEmail && !passwordless && (
             <Text size="sm" className="text-secondary">
               {t("frontend.register.email_verification_notice", {
