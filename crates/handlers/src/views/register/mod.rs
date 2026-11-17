@@ -1630,6 +1630,67 @@ mod tests {
         }
     }
 
+    /// Submitting the form again once registered, as going Back does, goes on
+    /// rather than registering a second account
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_signed_in(pool: PgPool) {
+        use mas_storage::user::UserFilter;
+
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_registration_email_required: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        let cookies = CookieHelper::new();
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let register = || {
+            cookies.with_cookies(
+                Request::post(&*mas_router::Register::default().path_and_query()).form(
+                    serde_json::json!({
+                        "csrf": csrf_token,
+                        "username": "alice",
+                        "password": "correcthorsebatterystaple",
+                        "password_confirm": "correcthorsebatterystaple",
+                        "accept_terms": "on",
+                    }),
+                ),
+            )
+        };
+        let response = state.request(register()).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+        let id: Ulid = response.headers()[LOCATION]
+            .to_str()
+            .unwrap()
+            .rsplit('/')
+            .nth(1)
+            .unwrap()
+            .parse()
+            .unwrap();
+
+        let request = Request::post(&*mas_router::RegisterDisplayName::new(id).path_and_query())
+            .form(serde_json::json!({ "csrf": csrf_token, "action": "skip" }));
+        let response = state.request(cookies.with_cookies(request)).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        let request = Request::get(&*mas_router::RegisterFinish::new(id).path_and_query()).empty();
+        let response = state.request(cookies.with_cookies(request)).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        let response = state.request(register()).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/");
+
+        let mut repo = state.repository().await.unwrap();
+        assert_eq!(repo.user().count(UserFilter::new()).await.unwrap(), 1);
+    }
+
     /// Registering from an invite goes on to the invite's continue URL,
     /// including from the email-in-use page
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
