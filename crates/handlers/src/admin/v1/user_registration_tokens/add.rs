@@ -5,7 +5,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::str::FromStr;
+use std::{collections::HashSet, str::FromStr};
 
 use aide::{NoApi, OperationIo, transform::TransformOperation};
 use axum::{Json, extract::State, response::IntoResponse};
@@ -14,7 +14,7 @@ use hyper::StatusCode;
 use lettre::Address;
 use mas_axum_utils::record_error;
 use mas_data_model::{BoxRng, is_username_template};
-use mas_policy::{EvaluationResult, Policy};
+use mas_policy::{EvaluationError, EvaluationResult, Policy};
 use mas_router::UrlBuilder;
 use mas_storage::user::UserRegistrationTokenParams;
 use rand::distr::{Alphanumeric, SampleString};
@@ -30,6 +30,11 @@ use crate::{
     },
     impl_from_error_for_route, username_template,
 };
+
+/// How many addresses a token can list. Each is checked against the policy in
+/// the request's transaction, and the list is loaded with the token on every
+/// view of its link; this keeps both small. The value itself is a choice.
+pub(super) const MAX_ALLOWED_EMAILS: usize = 100;
 
 #[derive(Debug, thiserror::Error, OperationIo)]
 #[aide(output_with = "Json<ErrorResponse>")]
@@ -47,6 +52,15 @@ pub enum RouteError {
         #[source]
         source: lettre::address::AddressError,
     },
+
+    #[error("`email` and `allowed_emails` can't both be set")]
+    EmailAndAllowedEmails,
+
+    #[error("`allowed_emails` needs `passwordless`")]
+    AllowedEmailsNotPasswordless,
+
+    #[error(transparent)]
+    InvalidAllowedEmails(#[from] AllowedEmailsError),
 
     #[error("Username template {template:?} is not valid")]
     InvalidUsernameTemplate {
@@ -77,6 +91,9 @@ impl IntoResponse for RouteError {
             Self::Conflict(_) | Self::UsernameTaken(_) => StatusCode::CONFLICT,
             Self::ContinueUrlNotValid(_)
             | Self::EmailNotValid { .. }
+            | Self::EmailAndAllowedEmails
+            | Self::AllowedEmailsNotPasswordless
+            | Self::InvalidAllowedEmails(_)
             | Self::InvalidUsernameTemplate { .. }
             | Self::NotAllowed(_) => StatusCode::BAD_REQUEST,
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
@@ -98,6 +115,23 @@ impl NotAllowed {
         violations.sort();
         Err(Self(violations))
     }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum AllowedEmailsError {
+    #[error("`allowed_emails` must not be empty")]
+    Empty,
+
+    #[error("`allowed_emails` can't hold more than {MAX_ALLOWED_EMAILS} addresses")]
+    TooMany,
+
+    #[error("Email {email:?} is not valid")]
+    EmailNotValid {
+        email: String,
+
+        #[source]
+        source: lettre::address::AddressError,
+    },
 }
 
 /// # JSON payload for the `POST /api/admin/v1/user-registration-tokens`
@@ -133,6 +167,14 @@ pub struct Request {
     /// cannot choose their own email. It must pass the registration policy.
     email: Option<String>,
 
+    /// The email addresses the registering user must use one of, in place of
+    /// `email`, for a `passwordless` token. If set, it must not be empty, and
+    /// each address must pass the registration policy. Repeats of an address
+    /// in another case are dropped.
+    #[schemars(example = &["alice@example.com", "bob@example.com"])]
+    #[schemars(length(max = MAX_ALLOWED_EMAILS))]
+    allowed_emails: Option<Vec<String>>,
+
     /// Whether registering with this token skips the password step. The user's
     /// identity is then established by verifying their email address.
     #[serde(default)]
@@ -164,8 +206,9 @@ pub fn doc(operation: TransformOperation) -> TransformOperation {
                 "app.example.com".to_owned(),
             ));
             t.description(
-                "The continue URL, the email or the username template is not valid, or the \
-                 registration policy refuses the email or the username",
+                "The continue URL, an email or the username template is not valid, the \
+                 registration policy refuses an email or the username, `allowed_emails` is \
+                 empty or too long, or it is set with `email` or without `passwordless`",
             )
             .example(response)
         })
@@ -189,6 +232,56 @@ fn violations(result: EvaluationResult) -> Vec<String> {
         .collect()
 }
 
+/// `emails`, at most [`MAX_ALLOWED_EMAILS`] of them, each checked to be an
+/// address, without the repeats of an address in another case
+pub(super) fn parse_allowed_emails(
+    mut emails: Vec<String>,
+) -> Result<Vec<String>, AllowedEmailsError> {
+    if emails.len() > MAX_ALLOWED_EMAILS {
+        return Err(AllowedEmailsError::TooMany);
+    }
+
+    for email in &emails {
+        if let Err(source) = Address::from_str(email) {
+            return Err(AllowedEmailsError::EmailNotValid {
+                email: email.clone(),
+                source,
+            });
+        }
+    }
+
+    let mut seen = HashSet::new();
+    emails.retain(|email| seen.insert(email.to_ascii_lowercase()));
+    if emails.is_empty() {
+        return Err(AllowedEmailsError::Empty);
+    }
+
+    Ok(emails)
+}
+
+/// The email policy's violations for each of `emails`, naming the address
+pub(super) async fn allowed_emails_violations(
+    policy: &mut Policy,
+    emails: &[String],
+) -> Result<Vec<String>, EvaluationError> {
+    let mut violations = Vec::new();
+    for email in emails {
+        let result = policy
+            .evaluate_email(mas_policy::EmailInput {
+                email,
+                requester: mas_policy::Requester::default(),
+            })
+            .await?;
+        violations.extend(
+            result
+                .violations
+                .into_iter()
+                .map(|violation| format!("{email}: {}", violation.msg)),
+        );
+    }
+    Ok(violations)
+}
+
 #[tracing::instrument(name = "handler.admin.v1.user_registration_tokens.post", skip_all)]
 pub async fn handler(
     CallContext {
@@ -210,6 +303,17 @@ pub async fn handler(
         return Err(RouteError::ContinueUrlNotValid(url.clone()));
     }
 
+    if params.email.is_some() && params.allowed_emails.is_some() {
+        return Err(RouteError::EmailAndAllowedEmails);
+    }
+
+    // Only the passwordless form always asks for an address. A password form
+    // asks only when the server requires one, and without an address a listed
+    // token fails only at the end of registration.
+    if params.allowed_emails.is_some() && !params.passwordless {
+        return Err(RouteError::AllowedEmailsNotPasswordless);
+    }
+
     if let Some(email) = &params.email
         && let Err(source) = Address::from_str(email)
     {
@@ -218,6 +322,11 @@ pub async fn handler(
             source,
         });
     }
+
+    let allowed_emails = params
+        .allowed_emails
+        .map(parse_allowed_emails)
+        .transpose()?;
 
     // A template is checked by rendering it with a sample, as the name it
     // renders to is only known when registering, which checks it again
@@ -260,7 +369,11 @@ pub async fn handler(
         ),
         (None, None) => None,
     };
-    NotAllowed::check(result.map(violations).unwrap_or_default())?;
+    let mut refused = result.map(violations).unwrap_or_default();
+    if let Some(allowed_emails) = &allowed_emails {
+        refused.extend(allowed_emails_violations(&mut policy, allowed_emails).await?);
+    }
+    NotAllowed::check(refused)?;
 
     // The holder of a token pinned to a name someone else already has can
     // never finish registering. An email address already in use is not
@@ -295,6 +408,7 @@ pub async fn handler(
                 expires_at: params.expires_at,
                 username: params.username,
                 email: params.email,
+                allowed_emails,
                 passwordless: params.passwordless,
                 continue_url: params.continue_url,
             },
@@ -347,6 +461,7 @@ mod tests {
               "valid": true,
               "username": null,
               "email": null,
+              "allowed_emails": null,
               "passwordless": false,
               "continue_url": null,
               "usage_limit": 5,
@@ -415,6 +530,7 @@ mod tests {
               "valid": true,
               "username": null,
               "email": null,
+              "allowed_emails": null,
               "passwordless": false,
               "continue_url": null,
               "usage_limit": 1,
@@ -464,6 +580,7 @@ mod tests {
               "valid": true,
               "username": "alice",
               "email": "alice@example.com",
+              "allowed_emails": null,
               "passwordless": true,
               "continue_url": null,
               "usage_limit": null,
@@ -630,6 +747,83 @@ mod tests {
         }
     }
 
+    /// A token stores and shows its allowed addresses, without the repeats of
+    /// an address in another case
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_create_allowed_emails(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+
+        let request = Request::post("/api/admin/v1/user-registration-tokens")
+            .bearer(&token)
+            .json(serde_json::json!({
+                "username": "user-{{ random }}",
+                "allowed_emails": ["Alice@Example.com", "bob@example.com", "alice@example.com"],
+                "passwordless": true,
+            }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+        let body: serde_json::Value = response.json();
+        assert_eq!(
+            body["data"]["attributes"]["allowed_emails"],
+            serde_json::json!(["Alice@Example.com", "bob@example.com"])
+        );
+
+        let request = Request::get(format!(
+            "/api/admin/v1/user-registration-tokens/{}",
+            body["data"]["id"].as_str().unwrap()
+        ))
+        .bearer(&token)
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        let body: serde_json::Value = response.json();
+        assert_eq!(
+            body["data"]["attributes"]["allowed_emails"],
+            serde_json::json!(["Alice@Example.com", "bob@example.com"])
+        );
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_create_invalid_allowed_emails(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+
+        for (body, error) in [
+            (
+                serde_json::json!({ "allowed_emails": [], "passwordless": true }),
+                "`allowed_emails` must not be empty",
+            ),
+            (
+                serde_json::json!({ "allowed_emails": vec!["alice@example.com"; 101], "passwordless": true }),
+                "`allowed_emails` can't hold more than 100 addresses",
+            ),
+            (
+                serde_json::json!({
+                    "allowed_emails": ["alice@example.com", "not-an-email"],
+                    "passwordless": true,
+                }),
+                r#"Email "not-an-email" is not valid"#,
+            ),
+            (
+                serde_json::json!({
+                    "email": "alice@example.com",
+                    "allowed_emails": ["alice@example.com"],
+                }),
+                "`email` and `allowed_emails` can't both be set",
+            ),
+            (
+                serde_json::json!({ "allowed_emails": ["alice@example.com"] }),
+                "`allowed_emails` needs `passwordless`",
+            ),
+        ] {
+            let (status, title) = create(&mut state, body).await;
+            assert_eq!(status, StatusCode::BAD_REQUEST, "{error}");
+            assert_eq!(title, error);
+        }
+    }
+
     /// A pinned email or username the registration policy refuses is a 400
     /// naming every violation. A template is checked by what it renders to
     /// with a sample.
@@ -670,6 +864,21 @@ mod tests {
             (
                 serde_json::json!({ "email": "bob@banned.example", "username": "user-banned" }),
                 "Not allowed by the registration policy: email: email domain is banned; username: username is banned",
+            ),
+            (
+                serde_json::json!({
+                    "allowed_emails": ["alice@example.com", "bob@banned.example"],
+                    "passwordless": true,
+                }),
+                "Not allowed by the registration policy: bob@banned.example: email domain is banned",
+            ),
+            (
+                serde_json::json!({
+                    "allowed_emails": ["carol@banned.example", "bob@banned.example"],
+                    "username": "user-banned",
+                    "passwordless": true,
+                }),
+                "Not allowed by the registration policy: bob@banned.example: email domain is banned; carol@banned.example: email domain is banned; username: username is banned",
             ),
             (
                 serde_json::json!({ "username": "banned-{{ random }}" }),
@@ -765,6 +974,7 @@ mod tests {
               "valid": true,
               "username": null,
               "email": null,
+              "allowed_emails": null,
               "passwordless": false,
               "continue_url": null,
               "usage_limit": 5,

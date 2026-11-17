@@ -643,6 +643,10 @@ pub struct UserRegistrationToken {
     /// can choose their own email.
     email: Option<String>,
 
+    /// The email addresses the registering user must use one of. If null,
+    /// the user can use any.
+    allowed_emails: Option<Vec<String>>,
+
     /// Whether registering with this token skips the password step. The user's
     /// identity is then established by verifying their email address.
     passwordless: bool,
@@ -687,6 +691,7 @@ impl UserRegistrationToken {
             token: token.token,
             username: token.username,
             email: token.email,
+            allowed_emails: token.allowed_emails,
             passwordless: token.passwordless,
             continue_url: token.continue_url,
             usage_limit: token.usage_limit,
@@ -719,6 +724,7 @@ impl UserRegistrationToken {
                 valid: true,
                 username: None,
                 email: None,
+                allowed_emails: None,
                 passwordless: false,
                 continue_url: None,
                 usage_limit: Some(10),
@@ -735,6 +741,7 @@ impl UserRegistrationToken {
                 valid: false,
                 username: None,
                 email: None,
+                allowed_emails: None,
                 passwordless: false,
                 continue_url: None,
                 usage_limit: None,

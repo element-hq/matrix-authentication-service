@@ -12,12 +12,12 @@ pub(crate) mod registration_token;
 pub(crate) mod verify_email;
 
 /// Whether `token` can be used for `registration`, whose email address is
-/// `email`: it pins no other username, and no other email address, ignoring
-/// case, and it is passwordless if the registration has neither a password
-/// nor an upstream link, so that the token step can't swap a passwordless
-/// token for one that isn't, leaving a registration with no password at all.
-/// A rendered name can't be checked against its template, so a username
-/// template fits only the registration it was rendered for.
+/// `email`: it pins no other username, allows `email` if it pins or lists
+/// addresses, and it is passwordless if the registration has neither a
+/// password nor an upstream link, so that the token step can't swap a
+/// passwordless token for one that isn't, leaving a registration with no
+/// password at all. A rendered name can't be checked against its template, so
+/// a username template fits only the registration it was rendered for.
 fn token_fits(
     token: &UserRegistrationToken,
     registration: &UserRegistration,
@@ -33,12 +33,10 @@ fn token_fits(
     };
 
     username_fits
-        && email.map_or(token.email.is_none(), |email| {
-            token
-                .email
-                .as_deref()
-                .is_none_or(|pinned| pinned.eq_ignore_ascii_case(email))
-        })
+        && email.map_or(
+            token.email.is_none() && token.allowed_emails.is_none(),
+            |email| token.allows_email(email),
+        )
         && (token.passwordless
             || registration.password.is_some()
             || registration
@@ -55,6 +53,7 @@ mod tests {
     fn token(
         username: Option<&str>,
         email: Option<&str>,
+        allowed_emails: Option<&[&str]>,
         passwordless: bool,
     ) -> UserRegistrationToken {
         UserRegistrationToken {
@@ -62,6 +61,8 @@ mod tests {
             token: "token".to_owned(),
             username: username.map(ToOwned::to_owned),
             email: email.map(ToOwned::to_owned),
+            allowed_emails: allowed_emails
+                .map(|emails| emails.iter().map(|&email| email.to_owned()).collect()),
             passwordless,
             continue_url: None,
             usage_limit: None,
@@ -108,10 +109,11 @@ mod tests {
             user_registration_token_id: Some(Ulid::nil()),
             ..registration("guest-1", true, false)
         };
-        let pins = token(Some("alice"), ALICE_UPPER, false);
-        let template = token(Some("guest-{{ random }}"), None, false);
-        let plain = token(None, None, false);
-        let passwordless = token(None, None, true);
+        let pins = token(Some("alice"), ALICE_UPPER, None, false);
+        let template = token(Some("guest-{{ random }}"), None, None, false);
+        let lists = token(None, None, Some(&["alice@example.com"]), false);
+        let plain = token(None, None, None, false);
+        let passwordless = token(None, None, None, true);
 
         for (case, token, registration, email, fits) in [
             ("no pins", &plain, &alice, None, true),
@@ -121,6 +123,9 @@ mod tests {
             ("no email for a pin", &pins, &alice, None, false),
             ("own template", &template, &from_token, None, true),
             ("typed template", &template, &alice, None, false),
+            ("listed email", &lists, &alice, ALICE_UPPER, true),
+            ("unlisted email", &lists, &alice, BOB, false),
+            ("no email for a list", &lists, &alice, None, false),
             ("no password", &plain, &no_password, None, false),
             ("passwordless", &passwordless, &no_password, None, true),
             ("upstream", &plain, &upstream, None, true),
