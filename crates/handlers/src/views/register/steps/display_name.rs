@@ -14,7 +14,7 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt as _, ProtectedForm},
 };
-use mas_data_model::{BoxClock, BoxRng};
+use mas_data_model::{BoxClock, BoxRng, MAX_DISPLAY_NAME_LENGTH};
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::BoxRepository;
 use mas_templates::{
@@ -146,7 +146,7 @@ pub(crate) async fn post(
         FormAction::Set => {
             let display_name = form.display_name.trim();
 
-            if display_name.is_empty() || display_name.len() > 255 {
+            if display_name.is_empty() || display_name.chars().count() > MAX_DISPLAY_NAME_LENGTH {
                 let ctx = RegisterStepsDisplayNameContext::new()
                     .with_form_state(form.to_form_state().with_error_on_field(
                         RegisterStepsDisplayNameFormField::DisplayName,
@@ -180,4 +180,49 @@ pub(crate) async fn post(
 
     let destination = mas_router::RegisterFinish::new(registration.id);
     return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
+}
+
+#[cfg(test)]
+mod tests {
+    use hyper::{Request, StatusCode};
+    use mas_router::Route as _;
+    use mas_storage::RepositoryAccess as _;
+    use sqlx::PgPool;
+
+    use crate::{
+        test_utils::{CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup},
+        views::register::tests::{add_registration, mint_csrf_token},
+    };
+
+    /// A display name's length is counted in characters, not bytes
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_display_name_length(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+        let registration = add_registration(&state, &cookies, "alice", None, true, None).await;
+        let path = mas_router::RegisterDisplayName::new(registration.id).path_and_query();
+
+        for (display_name, status) in [
+            ("名".repeat(257), StatusCode::OK),
+            ("名".repeat(256), StatusCode::SEE_OTHER),
+        ] {
+            let csrf_token = mint_csrf_token(&state, &cookies);
+            let request = Request::post(&*path).form(serde_json::json!({
+                "csrf": csrf_token,
+                "display_name": display_name,
+            }));
+            let response = state.request(cookies.with_cookies(request)).await;
+            response.assert_status(status);
+        }
+
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo
+            .user_registration()
+            .lookup(registration.id)
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(registration.display_name, Some("名".repeat(256)));
+    }
 }

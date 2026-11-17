@@ -35,7 +35,7 @@ Please see LICENSE files in the repository root for full details.
         <input {{ field.attributes(f) }}
           id="cpd-text-control"
           type="text"
-          maxlength="256"
+          maxlength="{{ max_display_name_length }}"
           class="cpd-text-control"
           required />
       {% endcall %}
