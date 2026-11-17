@@ -272,6 +272,10 @@ impl Templates {
 
         env.add_global("branding", Value::from_object(branding));
         env.add_global("features", Value::from_object(features));
+        env.add_global(
+            "max_display_name_length",
+            Value::from(mas_data_model::MAX_DISPLAY_NAME_LENGTH),
+        );
 
         self::functions::register(
             &mut env,
