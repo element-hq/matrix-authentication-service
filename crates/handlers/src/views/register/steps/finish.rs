@@ -252,8 +252,9 @@ pub(crate) async fn get(
         && !registration_token
             .as_ref()
             .is_some_and(|registration_token| {
-                registration_token.registers_without_email()
-                    || (registration_token.passwordless && email_authentication.is_some())
+                registration_token.registers_without_email(
+                    site_config.passwordless_registration_without_email_allowed,
+                ) || (registration_token.passwordless && email_authentication.is_some())
             })
     {
         return Err(InternalError::from_anyhow(anyhow::anyhow!(

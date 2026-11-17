@@ -712,14 +712,14 @@ impl InviteContext {
     /// Describe the invite code a link carried, `None` standing for a code
     /// which is unknown, expired, revoked or exhausted
     #[must_use]
-    pub fn new(token: Option<&UserRegistrationToken>) -> Self {
+    pub fn new(token: Option<&UserRegistrationToken>, without_email_allowed: bool) -> Self {
         Self {
             valid: token.is_some(),
             pinned: token.map(|token| InvitePinnedIdentity {
                 username: token.username.clone(),
                 email: token.email.clone(),
                 passwordless: token.passwordless,
-                without_email: token.registers_without_email(),
+                without_email: token.registers_without_email(without_email_allowed),
             }),
         }
     }

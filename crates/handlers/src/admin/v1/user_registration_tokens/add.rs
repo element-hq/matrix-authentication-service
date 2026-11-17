@@ -178,7 +178,8 @@ pub struct Request {
     /// Whether registering with this token skips the password step. The user's
     /// identity is then established by verifying their email address, unless
     /// the token has a username template and neither an email nor allowed
-    /// addresses: such a token registers with only a display name.
+    /// addresses, and `account.passwordless_registration_without_email_allowed`
+    /// is set: such a token registers with only a display name.
     #[serde(default)]
     passwordless: bool,
 

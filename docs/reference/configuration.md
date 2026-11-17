@@ -375,6 +375,12 @@ account:
   # This has no effect if password registration is disabled.
   password_registration_email_required: true
 
+  # Whether a passwordless registration token with a username template and no
+  # email address registers with only a display name
+  #
+  # Defaults to `false`.
+  passwordless_registration_without_email_allowed: false
+
   # Whether users are allowed to change their passwords
   #
   # Defaults to `true`.

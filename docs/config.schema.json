@@ -2856,6 +2856,10 @@
           "description": "Whether self-service password registrations require a valid email.\nDefaults to `true`.\n\nThis has no effect if password registration is disabled.",
           "type": "boolean"
         },
+        "passwordless_registration_without_email_allowed": {
+          "description": "Whether a passwordless registration token with a username template and\nno email address registers with only a display name. Defaults to\n`false`.",
+          "type": "boolean"
+        },
         "password_change_allowed": {
           "description": "Whether users are allowed to change their passwords. Defaults to `true`.\n\nThis has no effect if password login is disabled.",
           "type": "boolean"

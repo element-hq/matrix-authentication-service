@@ -15,7 +15,7 @@ use mas_axum_utils::{
     csrf::{CsrfExt as _, CsrfToken},
 };
 use mas_data_model::{
-    BoxClock, BoxRng, CaptchaConfig, MAX_DISPLAY_NAME_LENGTH, SiteConfig, UserRegistrationToken,
+    BoxClock, BoxRng, MAX_DISPLAY_NAME_LENGTH, SiteConfig, UserRegistrationToken,
     is_username_template,
 };
 use mas_i18n::DataLocale;
@@ -122,9 +122,9 @@ pub(super) async fn register(
 
     // A token registering without an email address asks for a display name
     // instead, whatever the server requires of other registrations
-    let without_email = registration_token
-        .as_ref()
-        .is_some_and(UserRegistrationToken::registers_without_email);
+    let without_email = registration_token.as_ref().is_some_and(|token| {
+        token.registers_without_email(site_config.passwordless_registration_without_email_allowed)
+    });
 
     // The email field is only shown if the server requires it. Any other
     // passwordless registration needs one, as verifying it is what establishes
@@ -350,7 +350,7 @@ pub(super) async fn register(
             &mut repo,
             templates,
             url_builder,
-            site_config.captcha.clone(),
+            site_config,
             if token_invalid {
                 InviteCode::Invalid
             } else {
@@ -474,7 +474,7 @@ pub(super) async fn render(
     repo: &mut BoxRepository,
     templates: &Templates,
     url_builder: &UrlBuilder,
-    captcha_config: Option<CaptchaConfig>,
+    site_config: &SiteConfig,
     invite: InviteCode<'_>,
 ) -> Result<String, InternalError> {
     let registration_token = match invite {
@@ -486,11 +486,14 @@ pub(super) async fn render(
         .with_form_state(form_state);
 
     if !matches!(invite, InviteCode::Missing) {
-        ctx = ctx.with_invite(InviteContext::new(registration_token));
+        ctx = ctx.with_invite(InviteContext::new(
+            registration_token,
+            site_config.passwordless_registration_without_email_allowed,
+        ));
     }
 
     let ctx = ctx
-        .with_captcha(captcha_config)
+        .with_captcha(site_config.captcha.clone())
         .with_csrf(csrf_token.form_value())
         .with_language(locale);
 
@@ -1279,6 +1282,41 @@ mod tests {
             &state,
             IpAddr::from([192, 0, 2, 1]),
             serde_json::json!({ "token": "link" }),
+        )
+        .await;
+        response.assert_status(StatusCode::OK);
+        let fields = &form_state(response.body())["fields"];
+        assert_eq!(
+            fields["email"]["errors"],
+            serde_json::json!([{"kind": "required"}])
+        );
+        assert!(
+            fields["display_name"]["errors"]
+                .as_array()
+                .is_none_or(Vec::is_empty)
+        );
+    }
+
+    /// Unless the server allows registering without an email address, a link
+    /// needs one, and no display name
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_without_email_not_allowed(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                passwordless_registration_without_email_allowed: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        add_registration_token(&state, "link", Some("user-{{ random }}"), None, true).await;
+
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({ "token": "link", "display_name": "Alice" }),
         )
         .await;
         response.assert_status(StatusCode::OK);

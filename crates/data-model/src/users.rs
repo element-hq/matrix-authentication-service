@@ -275,11 +275,12 @@ impl UserRegistrationToken {
     }
 
     /// Returns `true` if registering with the token needs no email address:
-    /// passwordless, with a username template and no email address pinned or
-    /// allowed
+    /// `allowed` by the server, passwordless, with a username template and no
+    /// email address pinned or allowed
     #[must_use]
-    pub fn registers_without_email(&self) -> bool {
-        self.passwordless
+    pub fn registers_without_email(&self, allowed: bool) -> bool {
+        allowed
+            && self.passwordless
             && self.email.is_none()
             && self.allowed_emails.is_none()
             && self.username_template().is_some()
@@ -383,9 +384,10 @@ mod tests {
 
     #[test]
     fn test_registers_without_email() {
-        assert!(token(None, None).registers_without_email());
-        assert!(!token(None, Some(&["alice@example.com"])).registers_without_email());
-        assert!(!token(Some("alice@example.com"), None).registers_without_email());
+        assert!(token(None, None).registers_without_email(true));
+        assert!(!token(None, None).registers_without_email(false));
+        assert!(!token(None, Some(&["alice@example.com"])).registers_without_email(true));
+        assert!(!token(Some("alice@example.com"), None).registers_without_email(true));
 
         // Not passwordless, no username, or a username that isn't a template
         for other in [
@@ -402,7 +404,7 @@ mod tests {
                 ..token(None, None)
             },
         ] {
-            assert!(!other.registers_without_email(), "{other:?}");
+            assert!(!other.registers_without_email(true), "{other:?}");
         }
     }
 }

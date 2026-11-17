@@ -57,6 +57,12 @@ pub struct AccountConfig {
     #[serde(default = "default_true", skip_serializing_if = "is_default_true")]
     pub password_registration_email_required: bool,
 
+    /// Whether a passwordless registration token with a username template and
+    /// no email address registers with only a display name. Defaults to
+    /// `false`.
+    #[serde(default = "default_false", skip_serializing_if = "is_default_false")]
+    pub passwordless_registration_without_email_allowed: bool,
+
     /// Whether users are allowed to change their passwords. Defaults to `true`.
     ///
     /// This has no effect if password login is disabled.
@@ -102,6 +108,7 @@ impl Default for AccountConfig {
             displayname_change_allowed: default_true(),
             password_registration_enabled: default_false(),
             password_registration_email_required: default_true(),
+            passwordless_registration_without_email_allowed: default_false(),
             password_change_allowed: default_true(),
             password_recovery_enabled: default_false(),
             password_registration_token_required: default_false(),
@@ -117,6 +124,7 @@ impl AccountConfig {
     pub(crate) fn is_default(&self) -> bool {
         is_default_false(&self.password_registration_enabled)
             && is_default_true(&self.email_change_allowed)
+            && is_default_false(&self.passwordless_registration_without_email_allowed)
             && is_default_true(&self.displayname_change_allowed)
             && is_default_true(&self.password_change_allowed)
             && is_default_false(&self.password_recovery_enabled)

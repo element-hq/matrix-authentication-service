@@ -141,9 +141,10 @@ pub(crate) async fn get(
         if registration_token.is_some() {
             form.set_value(RegisterFormField::Token, Some(token.to_owned()));
         }
-        ctx = ctx
-            .with_form_state(form)
-            .with_invite(InviteContext::new(registration_token.as_ref()));
+        ctx = ctx.with_form_state(form).with_invite(InviteContext::new(
+            registration_token.as_ref(),
+            site_config.passwordless_registration_without_email_allowed,
+        ));
     }
 
     let ctx = ctx
@@ -374,7 +375,7 @@ pub(crate) async fn post(
             &mut repo,
             &templates,
             &url_builder,
-            site_config.captcha.clone(),
+            &site_config,
             self::password::InviteCode::Invalid,
         )
         .await?;
