@@ -123,6 +123,14 @@ describe("register island", () => {
           Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
     });
+
+    it("offers the usual sign-in link", async () => {
+      await mountRegister({ invite: { valid: false } });
+
+      expect(
+        screen.getByRole("link", { name: "Already have an account?" }),
+      ).toBeInTheDocument();
+    });
   });
 
   describe("with an invite pinning the username and email", () => {
@@ -133,6 +141,14 @@ describe("register island", () => {
       passwordless: true,
       without_email: false,
     };
+
+    it("offers to sign in with an existing account", async () => {
+      await mountRegister({ invite });
+
+      expect(
+        screen.getByRole("link", { name: "Sign in with an existing account" }),
+      ).toBeInTheDocument();
+    });
 
     it("explains an error on the username above the form", async () => {
       await mountRegister({
