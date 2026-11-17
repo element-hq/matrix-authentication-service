@@ -285,6 +285,18 @@ pub(crate) async fn post(
     };
     let action = post_auth_action(query.action, found_token.as_ref());
 
+    // A browser signed in since the page loaded, such as by going Back after
+    // registering, goes on instead of registering again
+    let (session_info, cookie_jar) = cookie_jar.session_info();
+    if let Some(session) = session_info.load_active_session(&mut repo).await? {
+        activity_tracker
+            .record_browser_session(&clock, &session)
+            .await;
+
+        let reply = action.go_next(&url_builder);
+        return Ok((cookie_jar, reply).into_response());
+    }
+
     // Carry the username along so we can prefill it if the user gets to pick
     // one when they come back
     if let Some(provider_id) = &form.provider {
@@ -1497,6 +1509,67 @@ mod tests {
             ))));
             assert_no_continue_url(&response);
         }
+    }
+
+    /// Submitting the form again once registered, as going Back does, goes on
+    /// rather than registering a second account
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_signed_in(pool: PgPool) {
+        use mas_storage::user::UserFilter;
+
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_registration_email_required: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        let cookies = CookieHelper::new();
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let register = || {
+            cookies.with_cookies(
+                Request::post(&*mas_router::Register::default().path_and_query()).form(
+                    serde_json::json!({
+                        "csrf": csrf_token,
+                        "username": "alice",
+                        "password": "correcthorsebatterystaple",
+                        "password_confirm": "correcthorsebatterystaple",
+                        "accept_terms": "on",
+                    }),
+                ),
+            )
+        };
+        let response = state.request(register()).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+        let id: Ulid = response.headers()[LOCATION]
+            .to_str()
+            .unwrap()
+            .rsplit('/')
+            .nth(1)
+            .unwrap()
+            .parse()
+            .unwrap();
+
+        let request = Request::post(&*mas_router::RegisterDisplayName::new(id).path_and_query())
+            .form(serde_json::json!({ "csrf": csrf_token, "action": "skip" }));
+        let response = state.request(cookies.with_cookies(request)).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        let request = Request::get(&*mas_router::RegisterFinish::new(id).path_and_query()).empty();
+        let response = state.request(cookies.with_cookies(request)).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        let response = state.request(register()).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/");
+
+        let mut repo = state.repository().await.unwrap();
+        assert_eq!(repo.user().count(UserFilter::new()).await.unwrap(), 1);
     }
 
     /// Registering from an invite goes on to the invite's continue URL,
