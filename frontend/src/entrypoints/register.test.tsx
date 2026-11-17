@@ -186,6 +186,26 @@ describe("register island", () => {
     });
   });
 
+  describe("with an invite link registering without an email", () => {
+    it("asks for a display name and no email address", async () => {
+      await mountRegister({
+        invite: {
+          valid: true,
+          username: "user-{{ random }}",
+          email: null,
+          passwordless: true,
+          without_email: true,
+        },
+      });
+
+      const displayName = screen.getByLabelText("Display name");
+      expect(displayName).toBeRequired();
+      expect(displayName).toHaveAttribute("maxlength", "256");
+      expect(screen.queryByLabelText("Email address")).toBeNull();
+      expect(screen.getByRole("button", { name: "Continue" })).toBeVisible();
+    });
+  });
+
   describe("with an invite listing the email addresses it allows", () => {
     it("asks a link's user for an address and a code, not a display name", async () => {
       await mountRegister({

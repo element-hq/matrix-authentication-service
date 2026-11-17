@@ -386,5 +386,23 @@ mod tests {
         assert!(token(None, None).registers_without_email());
         assert!(!token(None, Some(&["alice@example.com"])).registers_without_email());
         assert!(!token(Some("alice@example.com"), None).registers_without_email());
+
+        // Not passwordless, no username, or a username that isn't a template
+        for other in [
+            UserRegistrationToken {
+                passwordless: false,
+                ..token(None, None)
+            },
+            UserRegistrationToken {
+                username: None,
+                ..token(None, None)
+            },
+            UserRegistrationToken {
+                username: Some("alice".to_owned()),
+                ..token(None, None)
+            },
+        ] {
+            assert!(!other.registers_without_email(), "{other:?}");
+        }
     }
 }

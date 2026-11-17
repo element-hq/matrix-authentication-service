@@ -1160,6 +1160,36 @@ mod tests {
         }
     }
 
+    /// A link with a username template and no address registers without an
+    /// email address, so its page asks for a display name
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_link_registers_without_email(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        add_registration_token(&state, "link", Some("user-{{ random }}"), None, true).await;
+
+        let response = state
+            .request(Request::get("/register?token=link").empty())
+            .await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-invite"),
+            serde_json::json!({
+                "valid": true,
+                "username": "user-{{ random }}",
+                "email": null,
+                "passwordless": true,
+                "without_email": true,
+            })
+        );
+        assert!(
+            response
+                .body()
+                .contains(r#"data-max-display-name-length="256""#)
+        );
+    }
+
     /// A link listing the addresses it allows doesn't register without an email
     /// address, so its page asks for one
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
