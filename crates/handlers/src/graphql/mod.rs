@@ -725,7 +725,7 @@ where
     T: Into<RequestingEntity>,
 {
     fn from(session: Option<T>) -> Self {
-        session.map(Into::into).unwrap_or_default()
+        session.map_or_default(Into::into)
     }
 }
 
