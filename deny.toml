@@ -20,8 +20,9 @@ ignore = [
     # RSA key extraction "Marvin Attack". This is only relevant when using
     # PKCS#1 v1.5 encryption, which we don't
     "RUSTSEC-2023-0071",
-    # chrono is unmaintained. It is used throughout the workspace and by
-    # async-graphql, cron and opa-wasm
+    # chrono is unmaintained. It is used throughout the workspace and by async-graphql,
+    # cron and opa-wasm which will require a bigger refactor to switch away. For now,
+    # it's fine, this is just a warning that we should switch away at some point.
     "RUSTSEC-2026-0543",
 ]
 
