@@ -178,7 +178,7 @@ impl TryFrom<GrantLookup> for AuthorizationGrant {
             response_type_id_token: value.response_type_id_token,
             login_hint: value.login_hint,
             locale: value.locale,
-            raw_parameters: value.raw_parameters.map(|Json(x)| x).unwrap_or_default(),
+            raw_parameters: value.raw_parameters.map_or_default(|Json(x)| x),
         })
     }
 }

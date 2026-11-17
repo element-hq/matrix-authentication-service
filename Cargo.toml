@@ -44,18 +44,14 @@ broken_intra_doc_links = "deny"
 
 # Workspace crates
 mas-axum-utils = { path = "./crates/axum-utils/", version = "=1.30.0-rc.0" }
-mas-cli = { path = "./crates/cli/", version = "=1.30.0-rc.0" }
 mas-config = { path = "./crates/config/", version = "=1.30.0-rc.0" }
 mas-context = { path = "./crates/context/", version = "=1.30.0-rc.0" }
 mas-data-model = { path = "./crates/data-model/", version = "=1.30.0-rc.0" }
 mas-email = { path = "./crates/email/", version = "=1.30.0-rc.0" }
-mas-graphql = { path = "./crates/graphql/", version = "=1.30.0-rc.0" }
 mas-handlers = { path = "./crates/handlers/", version = "=1.30.0-rc.0" }
 mas-http = { path = "./crates/http/", version = "=1.30.0-rc.0" }
 mas-i18n = { path = "./crates/i18n/", version = "=1.30.0-rc.0" }
-mas-i18n-scan = { path = "./crates/i18n-scan/", version = "=1.30.0-rc.0" }
 mas-iana = { path = "./crates/iana/", version = "=1.30.0-rc.0" }
-mas-iana-codegen = { path = "./crates/iana-codegen/", version = "=1.30.0-rc.0" }
 mas-jose = { path = "./crates/jose/", version = "=1.30.0-rc.0" }
 mas-keystore = { path = "./crates/keystore/", version = "=1.30.0-rc.0" }
 mas-listener = { path = "./crates/listener/", version = "=1.30.0-rc.0" }
@@ -87,9 +83,6 @@ version = "1.8.1"
 version = "7.0.17"
 default-features = false
 features = ["chrono", "url", "tracing"]
-
-[workspace.dependencies.async-stream]
-version = "0.3.6"
 
 # Utility to write and implement async traits
 [workspace.dependencies.async-trait]
@@ -290,16 +283,7 @@ features = [
     "tokio",
 ]
 
-# Hyper Rustls support
-[workspace.dependencies.hyper-rustls]
-version = "0.27.7"
-features = ["http1", "http2"]
-default-features = false
-
 # ICU libraries for internationalization
-[workspace.dependencies.icu_calendar]
-version = "2.2.1"
-features = ["compiled_data"]
 [workspace.dependencies.icu_datetime]
 version = "2.2.0"
 features = ["compiled_data"]
@@ -387,10 +371,6 @@ features = ["urlencode", "loader", "json", "speedups", "unstable_machinery"]
 [workspace.dependencies.minijinja-contrib]
 version = "2.24.0"
 features = ["pycompat"]
-
-# Utilities to deal with non-zero values
-[workspace.dependencies.nonzero_ext]
-version = "0.3.0"
 
 # Open Policy Agent support through WASM
 [workspace.dependencies.opa-wasm]
@@ -648,9 +628,6 @@ version = "0.3.0"
 [workspace.dependencies.tokio]
 version = "1.54.1"
 features = ["full"]
-
-[workspace.dependencies.tokio-stream]
-version = "0.1.17"
 
 # Tokio rustls integration
 [workspace.dependencies.tokio-rustls]
