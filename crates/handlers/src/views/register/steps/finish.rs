@@ -438,7 +438,10 @@ mod tests {
     use sqlx::PgPool;
 
     use crate::{
-        test_utils::{CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup},
+        SiteConfig,
+        test_utils::{
+            CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup, test_site_config,
+        },
         views::register::tests::{
             add_registration, add_registration_token, allow_emails, link_upstream,
         },
@@ -671,6 +674,38 @@ mod tests {
             LOCATION,
             &mas_router::RegisterDisplayName::new(registration.id).path_and_query(),
         );
+    }
+
+    /// Unless the server allows registering without an email address, such a
+    /// registration is refused
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_finish_without_email_not_allowed(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                passwordless_registration_without_email_allowed: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        let cookies = CookieHelper::new();
+
+        let token = add_registration_token(
+            &state,
+            "invite_link",
+            Some("guest-{{ random }}"),
+            None,
+            true,
+        )
+        .await;
+        let username = format!("guest-{}", "a1".repeat(16));
+        let registration =
+            add_registration(&state, &cookies, &username, None, false, Some(&token)).await;
+
+        let response = finish(&state, &cookies, &registration).await;
+        assert_refused(&response, "no passwordless registration token it fits");
     }
 
     /// A passwordless token pinning neither a username template nor an email
