@@ -401,6 +401,10 @@ where
             mas_router::Register::route(),
             get(self::views::register::get).post(self::views::register::post),
         )
+        .route(
+            mas_router::RegisterContinue::route(),
+            get(self::views::register::continue_url::get),
+        )
         // Keeps links to the former password registration page working
         .route(
             "/register/password",

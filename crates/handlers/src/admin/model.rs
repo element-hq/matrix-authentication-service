@@ -647,6 +647,10 @@ pub struct UserRegistrationToken {
     /// identity is then established by verifying their email address.
     passwordless: bool,
 
+    /// Where the user is sent once they have registered or signed in through
+    /// the token's link. If null, they go where they would without a link.
+    continue_url: Option<String>,
+
     /// Maximum number of times this token can be used
     usage_limit: Option<u32>,
 
@@ -684,6 +688,7 @@ impl UserRegistrationToken {
             username: token.username,
             email: token.email,
             passwordless: token.passwordless,
+            continue_url: token.continue_url,
             usage_limit: token.usage_limit,
             times_used: token.times_used,
             created_at: token.created_at,
@@ -715,6 +720,7 @@ impl UserRegistrationToken {
                 username: None,
                 email: None,
                 passwordless: false,
+                continue_url: None,
                 usage_limit: Some(10),
                 times_used: 5,
                 created_at: DateTime::default(),
@@ -730,6 +736,7 @@ impl UserRegistrationToken {
                 username: None,
                 email: None,
                 passwordless: false,
+                continue_url: None,
                 usage_limit: None,
                 times_used: 0,
                 created_at: DateTime::default(),
