@@ -93,9 +93,13 @@ pub(super) async fn register(
             .filter(|found| found.is_valid(clock.now()))
     };
 
-    let (pinned_username, pinned_email) = match &registration_token {
-        Some(token) => (token.username.as_deref(), token.email.as_deref()),
-        None => (None, None),
+    let (pinned_username, pinned_email, passwordless) = match &registration_token {
+        Some(token) => (
+            token.username.as_deref(),
+            token.email.as_deref(),
+            token.passwordless,
+        ),
+        None => (None, None, false),
     };
 
     // An empty field means the user accepted whatever the registration token
@@ -105,9 +109,13 @@ pub(super) async fn register(
         _ => form.username.clone(),
     };
 
-    // The email field is only shown if the server requires it, and a
-    // registration token pinning an address forces it
-    let email = if site_config.password_registration_email_required || pinned_email.is_some() {
+    // The email field is only shown if the server requires it. A passwordless
+    // registration needs one, as verifying it is what establishes the user's
+    // identity, and a registration token pinning an address forces it.
+    let email = if site_config.password_registration_email_required
+        || passwordless
+        || pinned_email.is_some()
+    {
         Some(match pinned_email {
             Some(pinned) if form.email.is_empty() => pinned.to_owned(),
             _ => form.email.clone(),
@@ -169,30 +177,33 @@ pub(super) async fn register(
             }
         }
 
-        if form.password.is_empty() {
-            state.add_error_on_field(RegisterFormField::Password, FieldError::Required);
-        }
+        // A passwordless invite code waives the password entirely
+        if !passwordless {
+            if form.password.is_empty() {
+                state.add_error_on_field(RegisterFormField::Password, FieldError::Required);
+            }
 
-        if form.password_confirm.is_empty() {
-            state.add_error_on_field(RegisterFormField::PasswordConfirm, FieldError::Required);
-        }
+            if form.password_confirm.is_empty() {
+                state.add_error_on_field(RegisterFormField::PasswordConfirm, FieldError::Required);
+            }
 
-        if form.password != form.password_confirm {
-            state.add_error_on_field(RegisterFormField::Password, FieldError::Unspecified);
-            state.add_error_on_field(
-                RegisterFormField::PasswordConfirm,
-                FieldError::PasswordMismatch,
-            );
-        }
+            if form.password != form.password_confirm {
+                state.add_error_on_field(RegisterFormField::Password, FieldError::Unspecified);
+                state.add_error_on_field(
+                    RegisterFormField::PasswordConfirm,
+                    FieldError::PasswordMismatch,
+                );
+            }
 
-        if !password_manager.is_password_complex_enough(&form.password)? {
-            state.add_error_on_field(
-                RegisterFormField::Password,
-                FieldError::Policy {
-                    code: Some("password-too-weak"),
-                    message: "Password is too weak".to_owned(),
-                },
-            );
+            if !password_manager.is_password_complex_enough(&form.password)? {
+                state.add_error_on_field(
+                    RegisterFormField::Password,
+                    FieldError::Policy {
+                        code: Some("password-too-weak"),
+                        message: "Password is too weak".to_owned(),
+                    },
+                );
+            }
         }
 
         // If the site has terms of service, the user must accept them
@@ -341,18 +352,21 @@ pub(super) async fn register(
         registration
     };
 
-    // Hash the password
-    let password = Zeroizing::new(form.password);
-    let (version, hashed_password) = password_manager
-        .hash(&mut *rng, password)
-        .await
-        .map_err(InternalError::from_anyhow)?;
+    // A passwordless registration doesn't get a password at all: the verified
+    // email address is its credential
+    let registration = if passwordless {
+        registration
+    } else {
+        let password = Zeroizing::new(form.password);
+        let (version, hashed_password) = password_manager
+            .hash(&mut *rng, password)
+            .await
+            .map_err(InternalError::from_anyhow)?;
 
-    // Add the password to the registration
-    let registration = repo
-        .user_registration()
-        .set_password(registration, hashed_password, version)
-        .await?;
+        repo.user_registration()
+            .set_password(registration, hashed_password, version)
+            .await?
+    };
 
     repo.save().await?;
 
@@ -401,6 +415,7 @@ mod tests {
     use mas_router::Route;
     use mas_storage::{RepositoryAccess, user::UserRegistrationTokenRepository};
     use sqlx::PgPool;
+    use ulid::Ulid;
 
     use super::super::tests::{add_registration_token, csrf_token, mint_csrf_token};
     use crate::{
@@ -420,6 +435,21 @@ mod tests {
             .next()
             .unwrap();
         serde_json::from_str(raw).unwrap()
+    }
+
+    /// Extract the registration ID out of the redirect the handler replies with
+    fn registration_id(response: &Response<String>) -> Ulid {
+        response
+            .headers()
+            .get(LOCATION)
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .rsplit('/')
+            .nth(1)
+            .unwrap()
+            .parse()
+            .unwrap()
     }
 
     /// The username is trimmed and lowercased before anything checks it
@@ -960,6 +990,85 @@ mod tests {
         assert!(!user_exists);
     }
 
+    /// A passwordless invite code lets the user register without a password,
+    /// and pins the username and the email address it was issued for
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_passwordless_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        add_registration_token(
+            &state,
+            "invite_alice",
+            Some("alice"),
+            Some("alice@example.com"),
+            true,
+        )
+        .await;
+
+        // No password, no username and no email: they all come from the code
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({ "username": "", "token": "invite_alice" }),
+        )
+        .await;
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo
+            .user_registration()
+            .lookup(registration_id(&response))
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(registration.username, "alice");
+        assert!(registration.password.is_none());
+        assert!(registration.user_registration_token_id.is_some());
+
+        // The email address from the code is the one being verified
+        let email_authentication = repo
+            .user_email()
+            .lookup_authentication(registration.email_authentication_id.unwrap())
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(email_authentication.email, "alice@example.com");
+    }
+
+    /// A passwordless invite code requires an email address, even when the
+    /// server doesn't
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_register_with_passwordless_token_requires_email(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_registration_email_required: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        add_registration_token(&state, "invite", None, None, true).await;
+
+        let response = register_from(
+            &state,
+            IpAddr::from([192, 0, 2, 1]),
+            serde_json::json!({ "username": "alice", "token": "invite" }),
+        )
+        .await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            form_state(response.body())["fields"]["email"]["errors"],
+            serde_json::json!([{"kind": "required"}])
+        );
+
+        let mut repo = state.repository().await.unwrap();
+        assert!(!repo.user().exists("alice").await.unwrap());
+    }
+
     /// Registering with a registration token which is no longer valid is
     /// refused
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -967,7 +1076,7 @@ mod tests {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
 
-        let token = add_registration_token(&state, "revoked_invite", None, None).await;
+        let token = add_registration_token(&state, "revoked_invite", None, None, true).await;
         let mut repo = state.repository().await.unwrap();
         repo.user_registration_token()
             .revoke(&state.clock, token)
@@ -1003,8 +1112,8 @@ mod tests {
         setup();
         let state = TestState::from_pool(pool).await.unwrap();
 
-        add_registration_token(&state, "pins_alice", Some("alice"), None).await;
-        add_registration_token(&state, "pins_email", None, Some("carol@example.com")).await;
+        add_registration_token(&state, "pins_alice", Some("alice"), None, false).await;
+        add_registration_token(&state, "pins_email", None, Some("carol@example.com"), false).await;
 
         for (token, username, email, error) in [
             (
@@ -1062,7 +1171,14 @@ mod tests {
         .await
         .unwrap();
 
-        add_registration_token(&state, "pins_dave", Some("dave"), Some("dave@example.com")).await;
+        add_registration_token(
+            &state,
+            "pins_dave",
+            Some("dave"),
+            Some("dave@example.com"),
+            false,
+        )
+        .await;
 
         let response = register_from(
             &state,
