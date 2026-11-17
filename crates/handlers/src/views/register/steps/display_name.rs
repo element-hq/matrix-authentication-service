@@ -184,7 +184,7 @@ pub(crate) async fn post(
 
 #[cfg(test)]
 mod tests {
-    use hyper::{Request, StatusCode};
+    use hyper::{Request, StatusCode, header::LOCATION};
     use mas_router::Route as _;
     use mas_storage::RepositoryAccess as _;
     use sqlx::PgPool;
@@ -201,20 +201,30 @@ mod tests {
         let state = TestState::from_pool(pool).await.unwrap();
         let cookies = CookieHelper::new();
         let registration = add_registration(&state, &cookies, "alice", None, true, None).await;
-        let path = mas_router::RegisterDisplayName::new(registration.id).path_and_query();
-
-        for (display_name, status) in [
-            ("名".repeat(257), StatusCode::OK),
-            ("名".repeat(256), StatusCode::SEE_OTHER),
-        ] {
+        let submit = |display_name: String| {
             let csrf_token = mint_csrf_token(&state, &cookies);
-            let request = Request::post(&*path).form(serde_json::json!({
+            let request = Request::post(
+                &*mas_router::RegisterDisplayName::new(registration.id).path_and_query(),
+            )
+            .form(serde_json::json!({
                 "csrf": csrf_token,
                 "display_name": display_name,
             }));
-            let response = state.request(cookies.with_cookies(request)).await;
-            response.assert_status(status);
-        }
+            state.request(cookies.with_cookies(request))
+        };
+
+        // One character over: the form comes back with the field marked invalid
+        let response = submit("名".repeat(257)).await;
+        response.assert_status(StatusCode::OK);
+        assert!(response.body().contains("data-invalid"));
+
+        // At the limit: saved, and on to the finish step
+        let response = submit("名".repeat(256)).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(
+            LOCATION,
+            &mas_router::RegisterFinish::new(registration.id).path_and_query(),
+        );
 
         let mut repo = state.repository().await.unwrap();
         let registration = repo
