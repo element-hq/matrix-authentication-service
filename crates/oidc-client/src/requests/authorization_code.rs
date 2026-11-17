@@ -343,10 +343,7 @@ pub fn build_authorization_url(
     let mut authorization_url = authorization_endpoint;
 
     // Add our parameters to the query, because the URL might already have one.
-    let mut full_query = authorization_url
-        .query()
-        .map(ToOwned::to_owned)
-        .unwrap_or_default();
+    let mut full_query = authorization_url.query().map_or_default(ToOwned::to_owned);
     if !full_query.is_empty() {
         full_query.push('&');
     }

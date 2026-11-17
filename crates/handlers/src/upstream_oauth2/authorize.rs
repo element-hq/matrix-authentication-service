@@ -135,8 +135,7 @@ pub(crate) async fn start_authorization(
 
     let raw_parameters: BTreeMap<String, String> = downstream_grant
         .as_ref()
-        .map(|grant| grant.raw_parameters.clone())
-        .unwrap_or_default();
+        .map_or_default(|grant| grant.raw_parameters.clone());
 
     // Back-compat: honour `forward_login_hint` as long as the operator
     // hasn't explicitly added a `login_hint` template entry to
