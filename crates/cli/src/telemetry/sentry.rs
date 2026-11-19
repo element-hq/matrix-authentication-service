@@ -8,9 +8,13 @@ use std::{borrow::Cow, sync::Arc};
 use mas_config::TelemetryConfig;
 use mas_context::{LogContext, Requester};
 use sentry::protocol::{Event, User};
-use sentry_tracing::EventFilter;
-use tracing::Subscriber;
-use tracing_subscriber::registry::LookupSpan;
+use sentry_tracing::{BreadcrumbLayer, ErrorLayer, SpanLayer};
+use tracing::{Level, Metadata, Subscriber};
+use tracing_subscriber::{
+    Layer,
+    filter::{LevelFilter, filter_fn},
+    registry::LookupSpan,
+};
 
 #[derive(Debug)]
 struct SentryTransportFactory {
@@ -132,20 +136,69 @@ fn add_requester(event: &mut Event<'static>) {
     }
 }
 
+/// The error behind a 5xx response is already reported where it is handled, so
+/// the response log event only needs to be a breadcrumb.
+fn is_http_response(metadata: &Metadata<'_>) -> bool {
+    metadata.name() == "http.server.response"
+}
+
+fn is_breadcrumb(metadata: &Metadata<'_>) -> bool {
+    metadata.is_event()
+        && (is_http_response(metadata) || matches!(*metadata.level(), Level::WARN | Level::INFO))
+}
+
+fn is_error(metadata: &Metadata<'_>) -> bool {
+    metadata.is_event() && *metadata.level() == Level::ERROR && !is_http_response(metadata)
+}
+
 /// Build the `tracing` layer which reports events and spans to Sentry
-pub fn layer<S>() -> sentry_tracing::SentryLayer<S>
+pub fn layer<S>() -> impl Layer<S>
 where
     S: Subscriber + for<'a> LookupSpan<'a>,
 {
-    sentry_tracing::layer().event_filter(|md| {
-        // By default, Sentry records all events as breadcrumbs, except errors.
-        //
-        // Because we're emitting error events for 5xx responses, we need to exclude
-        // them and also record them as breadcrumbs.
-        if md.name() == "http.server.response" {
-            EventFilter::Breadcrumb
-        } else {
-            sentry_tracing::default_event_filter(md)
-        }
-    })
+    // An error event takes the breadcrumbs recorded before it, so the
+    // breadcrumb layer has to see an event first.
+    SpanLayer::new()
+        .with_filter(LevelFilter::INFO)
+        .and_then(BreadcrumbLayer::new().with_filter(filter_fn(is_breadcrumb)))
+        .and_then(ErrorLayer::new().with_filter(filter_fn(is_error)))
+}
+
+#[cfg(test)]
+mod tests {
+    use sentry::protocol::Level;
+    use tracing_subscriber::{Registry, layer::SubscriberExt as _};
+
+    use super::*;
+
+    fn capture(f: impl FnOnce()) -> Vec<Event<'static>> {
+        let subscriber = Registry::default().with(layer());
+        sentry::test::with_captured_events(|| tracing::subscriber::with_default(subscriber, f))
+    }
+
+    fn breadcrumb_messages<'a>(event: &'a Event<'static>) -> Vec<&'a str> {
+        event
+            .breadcrumbs
+            .iter()
+            .filter_map(|breadcrumb| breadcrumb.message.as_deref())
+            .collect()
+    }
+
+    #[test]
+    fn test_event_filters() {
+        let events = capture(|| {
+            tracing::trace!("trace");
+            tracing::debug!("debug");
+            tracing::info!("info");
+            tracing::warn!("warn");
+            tracing::error!(name: "http.server.response", "response");
+            tracing::error!("error");
+        });
+
+        assert_eq!(events.len(), 1);
+        let event = &events[0];
+        assert_eq!(event.level, Level::Error);
+        assert_eq!(event.message.as_deref(), Some("error"));
+        assert_eq!(breadcrumb_messages(event), ["info", "warn", "response"]);
+    }
 }
