@@ -3,11 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
 // Please see LICENSE files in the repository root for full details.
 
-use std::{borrow::Cow, sync::Arc};
+use std::{borrow::Cow, collections::BTreeMap, sync::Arc, time::Duration};
 
 use mas_config::TelemetryConfig;
 use mas_context::{LogContext, Requester};
-use sentry::protocol::{Event, User};
+use sentry::protocol::{Context, Event, User, Value};
 use sentry_tracing::{BreadcrumbLayer, ErrorLayer, SpanLayer};
 use tracing::{Level, Metadata, Subscriber};
 use tracing_subscriber::{
@@ -58,6 +58,7 @@ pub fn init(config: &TelemetryConfig) -> sentry::ClientInitGuard {
         .before_send(|mut event| {
             set_fingerprint(&mut event);
             add_requester(&mut event);
+            LogContext::maybe_with(|ctx| add_log_context(&mut event, ctx));
             Some(event)
         });
     // Without a sampler or a rate, Sentry doesn't start transactions at all.
@@ -136,6 +137,30 @@ fn add_requester(event: &mut Event<'static>) {
     }
 }
 
+fn millis(duration: Duration) -> Value {
+    Value::from(duration.as_secs_f64() * 1000.)
+}
+
+/// Record the tag and the statistics of the log context on the event.
+fn add_log_context(event: &mut Event<'static>, ctx: &LogContext) {
+    let stats = ctx.stats();
+    let context = BTreeMap::from([
+        ("tag".to_owned(), Value::from(ctx.tag().as_ref())),
+        ("polls".to_owned(), Value::from(stats.polls)),
+        ("cpu_time_ms".to_owned(), millis(stats.cpu_time)),
+        ("db_time_ms".to_owned(), millis(stats.db_time)),
+        ("db_queries".to_owned(), Value::from(stats.db_queries)),
+        (
+            "db_rows_fetched".to_owned(),
+            Value::from(stats.db_rows_fetched),
+        ),
+        ("elapsed_ms".to_owned(), millis(stats.elapsed)),
+    ]);
+    event
+        .contexts
+        .insert("Log Context".to_owned(), Context::Other(context));
+}
+
 /// The error behind a 5xx response is already reported where it is handled, so
 /// the response log event only needs to be a breadcrumb.
 fn is_http_response(metadata: &Metadata<'_>) -> bool {
@@ -182,6 +207,25 @@ mod tests {
             .iter()
             .filter_map(|breadcrumb| breadcrumb.message.as_deref())
             .collect()
+    }
+
+    #[test]
+    fn test_add_log_context() {
+        let ctx = LogContext::new("test");
+        ctx.record_query_stats(3, Duration::from_millis(2));
+        let mut event = Event::default();
+        add_log_context(&mut event, &ctx);
+
+        let Some(Context::Other(context)) = event.contexts.get("Log Context") else {
+            panic!("missing log context");
+        };
+        assert_eq!(context["tag"], "test");
+        assert_eq!(context["polls"], 0);
+        assert_eq!(context["db_queries"], 1);
+        assert_eq!(context["db_rows_fetched"], 3);
+        assert_eq!(context["db_time_ms"], 2.0);
+        assert!(context["cpu_time_ms"].is_f64());
+        assert!(context["elapsed_ms"].is_f64());
     }
 
     #[test]
