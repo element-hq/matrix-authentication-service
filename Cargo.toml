@@ -452,7 +452,7 @@ version = "0.2.16"
 # PKCS#1 encoding
 # Pinned: release candidates break their API between releases
 [workspace.dependencies.pkcs1]
-version = "=0.8.0-rc.5"
+version = "=0.8.0"
 features = ["std"]
 
 # PKCS#8 encoding
