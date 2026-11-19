@@ -450,9 +450,8 @@ version = "2.9.4"
 version = "0.2.16"
 
 # PKCS#1 encoding
-# Pinned: release candidates break their API between releases
 [workspace.dependencies.pkcs1]
-version = "=0.8.0-rc.5"
+version = "0.8.0"
 features = ["std"]
 
 # PKCS#8 encoding
@@ -495,10 +494,9 @@ features = [
 ]
 
 # RSA cryptography
-# Pinned: release candidates break their API between releases
 [workspace.dependencies.rsa]
-version = "=0.10.0-rc.19"
-features = ["std", "encoding"]
+version = "0.10.0"
+features = ["std", "encoding", "pkcs1v15"]
 
 # Fast hash algorithm for HashMap
 [workspace.dependencies.rustc-hash]
