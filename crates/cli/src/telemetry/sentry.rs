@@ -57,6 +57,7 @@ pub fn init(config: &TelemetryConfig) -> sentry::ClientInitGuard {
         .in_app_include(["mas_", "oauth2_types", "syn2mas"])
         .before_send(|mut event| {
             set_fingerprint(&mut event);
+            tag_job_fields(&mut event);
             add_requester(&mut event);
             LogContext::maybe_with(|ctx| add_log_context(&mut event, ctx));
             Some(event)
@@ -161,6 +162,27 @@ fn add_log_context(event: &mut Event<'static>, ctx: &LogContext) {
         .insert("Log Context".to_owned(), Context::Other(context));
 }
 
+/// The fields of the job failure events logged by `mas_tasks` to copy into
+/// tags, as Sentry only indexes tags.
+const JOB_TAG_FIELDS: [&str; 3] = ["job.queue.name", "job.attempt", "job.outcome"];
+
+/// Copy the job fields of the event into tags. `sentry-tracing` stores the
+/// fields of the `tracing` event in the "Rust Tracing Fields" context.
+fn tag_job_fields(event: &mut Event<'static>) {
+    let Some(Context::Other(fields)) = event.contexts.get("Rust Tracing Fields") else {
+        return;
+    };
+
+    for key in JOB_TAG_FIELDS {
+        let value = match fields.get(key) {
+            Some(Value::String(value)) => value.clone(),
+            Some(Value::Number(value)) => value.to_string(),
+            _ => continue,
+        };
+        event.tags.insert(key.to_owned(), value);
+    }
+}
+
 /// The error behind a 5xx response is already reported where it is handled, so
 /// the response log event only needs to be a breadcrumb.
 fn is_http_response(metadata: &Metadata<'_>) -> bool {
@@ -244,5 +266,26 @@ mod tests {
         assert_eq!(event.level, Level::Error);
         assert_eq!(event.message.as_deref(), Some("error"));
         assert_eq!(breadcrumb_messages(event), ["info", "warn", "response"]);
+    }
+
+    #[test]
+    fn test_tag_job_fields() {
+        let events = capture(|| {
+            tracing::error!(
+                job.id = "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+                job.queue.name = "send-email",
+                job.attempt = 2,
+                job.outcome = "retry",
+                "Job failed, will retry"
+            );
+        });
+
+        let mut event = events.into_iter().next().unwrap();
+        assert!(event.tags.is_empty());
+        tag_job_fields(&mut event);
+        assert_eq!(event.tags["job.queue.name"], "send-email");
+        assert_eq!(event.tags["job.attempt"], "2");
+        assert_eq!(event.tags["job.outcome"], "retry");
+        assert!(!event.tags.contains_key("job.id"));
     }
 }
