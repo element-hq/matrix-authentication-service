@@ -7,9 +7,11 @@ use std::{borrow::Cow, collections::BTreeMap, sync::Arc, time::Duration};
 
 use mas_config::TelemetryConfig;
 use mas_context::{LogContext, Requester};
-use sentry::protocol::{Context, Event, User, Value};
+use opentelemetry::trace::TraceContextExt as _;
+use sentry::protocol::{Context, Event, TraceContext, User, Value};
 use sentry_tracing::{BreadcrumbLayer, ErrorLayer, SpanLayer};
-use tracing::{Level, Metadata, Subscriber};
+use tracing::{Level, Metadata, Span, Subscriber};
+use tracing_opentelemetry::OpenTelemetrySpanExt as _;
 use tracing_subscriber::{
     Layer,
     filter::{LevelFilter, filter_fn},
@@ -47,6 +49,7 @@ impl sentry::TransportFactory for SentryTransportFactory {
 /// The returned guard flushes the pending events when dropped.
 pub fn init(config: &TelemetryConfig) -> sentry::ClientInitGuard {
     let config = &config.sentry;
+    let sentry_tracing = config.traces_sample_rate.is_some();
     let mut options = sentry::ClientOptions::new()
         .transport(SentryTransportFactory::new())
         .release(crate::VERSION)
@@ -55,10 +58,11 @@ pub fn init(config: &TelemetryConfig) -> sentry::ClientInitGuard {
         // The prefixes are matched against function names, which requires the
         // symbol table to be kept in the binary
         .in_app_include(["mas_", "oauth2_types", "syn2mas"])
-        .before_send(|mut event| {
+        .before_send(move |mut event| {
             set_fingerprint(&mut event);
             tag_job_fields(&mut event);
             add_requester(&mut event);
+            link_trace(&mut event, &Span::current(), sentry_tracing);
             LogContext::maybe_with(|ctx| {
                 set_transaction(&mut event, ctx);
                 add_log_context(&mut event, ctx);
@@ -138,6 +142,37 @@ fn add_requester(event: &mut Event<'static>) {
                 .tags
                 .insert("requester".to_owned(), "homeserver".to_owned());
         }
+    }
+}
+
+/// Link the event to the OpenTelemetry trace of the given span, so that it
+/// can be looked up in the tracing backend.
+///
+/// With Sentry tracing enabled, the trace context of the event points to the
+/// Sentry transaction, so the OpenTelemetry trace ID goes in a tag instead.
+///
+/// `before_send` runs while the tracing dispatcher handles the event, where
+/// [`Span::current`] only resolves through the global dispatcher, not a scoped
+/// one.
+fn link_trace(event: &mut Event<'static>, span: &Span, sentry_tracing: bool) {
+    let context = span.context();
+    let span_context = context.span().span_context().clone();
+    if !span_context.is_valid() {
+        return;
+    }
+
+    if sentry_tracing {
+        event.tags.insert(
+            "otel.trace_id".to_owned(),
+            span_context.trace_id().to_string(),
+        );
+    } else {
+        let trace = TraceContext {
+            trace_id: span_context.trace_id().to_bytes().into(),
+            span_id: span_context.span_id().to_bytes().into(),
+            ..TraceContext::default()
+        };
+        event.contexts.insert("trace".to_owned(), trace.into());
     }
 }
 
@@ -243,6 +278,50 @@ mod tests {
             .iter()
             .filter_map(|breadcrumb| breadcrumb.message.as_deref())
             .collect()
+    }
+
+    #[test]
+    fn test_link_trace() {
+        use opentelemetry::trace::TracerProvider as _;
+
+        let provider = opentelemetry_sdk::trace::SdkTracerProvider::builder().build();
+        let subscriber = Registry::default()
+            .with(tracing_opentelemetry::layer().with_tracer(provider.tracer("test")));
+
+        tracing::subscriber::with_default(subscriber, || {
+            let mut event = Event::default();
+            link_trace(&mut event, &Span::current(), false);
+            link_trace(&mut event, &Span::current(), true);
+            assert!(event.contexts.is_empty());
+            assert!(event.tags.is_empty());
+
+            let span = tracing::info_span!("test");
+            let context = span.context();
+            let span_context = context.span().span_context().clone();
+            assert!(span_context.is_valid());
+
+            link_trace(&mut event, &span, true);
+            assert!(event.contexts.is_empty());
+            assert_eq!(
+                event.tags["otel.trace_id"],
+                span_context.trace_id().to_string()
+            );
+
+            let mut event = Event::default();
+            link_trace(&mut event, &span, false);
+            assert!(event.tags.is_empty());
+            let Some(Context::Trace(trace)) = event.contexts.get("trace") else {
+                panic!("missing trace context");
+            };
+            assert_eq!(
+                trace.trace_id.to_string(),
+                span_context.trace_id().to_string()
+            );
+            assert_eq!(
+                trace.span_id.to_string(),
+                span_context.span_id().to_string()
+            );
+        });
     }
 
     #[test]
