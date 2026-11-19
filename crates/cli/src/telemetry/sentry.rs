@@ -59,7 +59,10 @@ pub fn init(config: &TelemetryConfig) -> sentry::ClientInitGuard {
             set_fingerprint(&mut event);
             tag_job_fields(&mut event);
             add_requester(&mut event);
-            LogContext::maybe_with(|ctx| add_log_context(&mut event, ctx));
+            LogContext::maybe_with(|ctx| {
+                set_transaction(&mut event, ctx);
+                add_log_context(&mut event, ctx);
+            });
             Some(event)
         });
     // Without a sampler or a rate, Sentry doesn't start transactions at all.
@@ -135,6 +138,17 @@ fn add_requester(event: &mut Event<'static>) {
                 .tags
                 .insert("requester".to_owned(), "homeserver".to_owned());
         }
+    }
+}
+
+/// Name the event after the matched route of the request, as its URL has
+/// unbounded cardinality. `sentry-tower` names the transaction it starts, but
+/// not the events captured during it.
+fn set_transaction(event: &mut Event<'static>, ctx: &LogContext) {
+    if event.transaction.is_none()
+        && let Some(route) = ctx.route()
+    {
+        event.transaction = Some(route.to_owned());
     }
 }
 
@@ -229,6 +243,25 @@ mod tests {
             .iter()
             .filter_map(|breadcrumb| breadcrumb.message.as_deref())
             .collect()
+    }
+
+    #[test]
+    fn test_set_transaction() {
+        let ctx = LogContext::new("GET");
+        let mut event = Event::default();
+        set_transaction(&mut event, &ctx);
+        assert_eq!(event.transaction, None);
+
+        ctx.set_route("GET /users/{id}".to_owned());
+        set_transaction(&mut event, &ctx);
+        assert_eq!(event.transaction.as_deref(), Some("GET /users/{id}"));
+
+        let mut event = Event {
+            transaction: Some("custom".to_owned()),
+            ..Event::default()
+        };
+        set_transaction(&mut event, &ctx);
+        assert_eq!(event.transaction.as_deref(), Some("custom"));
     }
 
     #[test]

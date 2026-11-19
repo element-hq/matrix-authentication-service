@@ -136,6 +136,10 @@ struct LogContextInner {
     /// Set once per context, first writer wins.
     requester: OnceLock<Requester>,
 
+    /// The matched route of the request, as `METHOD /path/{param}`. Set once
+    /// per context, first writer wins.
+    route: OnceLock<String>,
+
     /// The Sentry hub bound to the context, which starts with an empty scope
     /// so that unrelated tasks don't share breadcrumbs or spans. Scope
     /// changes made on the main hub are not inherited: global data goes on
@@ -157,6 +161,7 @@ impl LogContext {
             db_rows_fetched: AtomicU64::new(0),
             db_time: AtomicU64::new(0),
             requester: OnceLock::new(),
+            route: OnceLock::new(),
             hub: Arc::new(sentry::Hub::new(
                 sentry::Hub::main().client(),
                 Arc::default(),
@@ -232,6 +237,20 @@ impl LogContext {
     /// `LogContext`, if one exists. No-op outside of a `LogContext` scope.
     pub fn maybe_set_requester(requester: Requester) {
         Self::maybe_with(|ctx| ctx.set_requester(requester));
+    }
+
+    /// Associate the matched route of the request with this log context.
+    /// Silently does nothing if a route has already been recorded (first
+    /// writer wins).
+    pub fn set_route(&self, route: String) {
+        let _ = self.inner.route.set(route);
+    }
+
+    /// Get the matched route associated with this log context, if one was
+    /// set.
+    #[must_use]
+    pub fn route(&self) -> Option<&str> {
+        self.inner.route.get().map(String::as_str)
     }
 
     /// Create a snapshot of the log context statistics
