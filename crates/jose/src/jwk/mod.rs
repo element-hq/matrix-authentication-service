@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -418,7 +419,7 @@ mod tests {
         // Both keys are RSA public keys
         for jwk in &jwks.keys {
             let p = jwk.params().rsa().expect("an RSA key");
-            rsa::RsaPublicKey::try_from(p).unwrap();
+            rsa::PublicKey::try_from(p).unwrap();
         }
 
         let constraints = ConstraintSet::default()
@@ -551,12 +552,12 @@ mod tests {
         let jwks: PublicJsonWebKeySet = serde_json::from_value(jwks).unwrap();
         // The first 6 keys are RSA, 7th is P-256
         let mut keys = jwks.keys.into_iter();
-        rsa::RsaPublicKey::try_from(keys.next().unwrap().params().rsa().unwrap()).unwrap();
-        rsa::RsaPublicKey::try_from(keys.next().unwrap().params().rsa().unwrap()).unwrap();
-        rsa::RsaPublicKey::try_from(keys.next().unwrap().params().rsa().unwrap()).unwrap();
-        rsa::RsaPublicKey::try_from(keys.next().unwrap().params().rsa().unwrap()).unwrap();
-        rsa::RsaPublicKey::try_from(keys.next().unwrap().params().rsa().unwrap()).unwrap();
-        rsa::RsaPublicKey::try_from(keys.next().unwrap().params().rsa().unwrap()).unwrap();
+        rsa::PublicKey::try_from(keys.next().unwrap().params().rsa().unwrap()).unwrap();
+        rsa::PublicKey::try_from(keys.next().unwrap().params().rsa().unwrap()).unwrap();
+        rsa::PublicKey::try_from(keys.next().unwrap().params().rsa().unwrap()).unwrap();
+        rsa::PublicKey::try_from(keys.next().unwrap().params().rsa().unwrap()).unwrap();
+        rsa::PublicKey::try_from(keys.next().unwrap().params().rsa().unwrap()).unwrap();
+        rsa::PublicKey::try_from(keys.next().unwrap().params().rsa().unwrap()).unwrap();
         // 7th is P-256
         elliptic_curve::PublicKey::<p256::NistP256>::try_from(
             keys.next().unwrap().params().ec().unwrap(),

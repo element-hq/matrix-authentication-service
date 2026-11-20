@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -40,7 +40,7 @@ pub struct SessionExpirationConfig {
     pub compat_session_inactivity_ttl: Option<Duration>,
 }
 
-/// See [`mas_config::ExperimentalSessionLimitConfig`]
+/// See `mas_config::ExperimentalSessionLimitConfig`
 #[derive(Serialize, Debug, Clone)]
 pub struct SessionLimitConfig {
     pub soft_limit: NonZeroU64,
