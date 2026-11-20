@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -215,6 +216,51 @@ asymetric_jwt_test!(es512, Es512, ES512_JWT, supported = false);
 asymetric_jwt_test!(es256k, Es256K, ES256K_JWT);
 asymetric_jwt_test!(eddsa_ed25519, EdDsa, EDDSA_ED25519_JWT, supported = false);
 asymetric_jwt_test!(eddsa_ed448, EdDsa, EDDSA_ED448_JWT, supported = false);
+
+/// Public JWKS where the RSA modulus has a leading zero octet, as some
+/// providers emit despite RFC 7518 section 6.3.1.1.
+///
+/// See <https://github.com/element-hq/matrix-authentication-service/issues/6216>
+fn public_jwks_with_zero_padded_rsa_modulus() -> mas_jose::jwk::PublicJsonWebKeySet {
+    use base64ct::{Base64UrlUnpadded, Encoding};
+
+    let mut jwks: serde_json::Value =
+        serde_json::from_str(include_str!("./keys/jwks.pub.json")).unwrap();
+    let rsa_key = jwks["keys"]
+        .as_array_mut()
+        .unwrap()
+        .iter_mut()
+        .find(|key| key["kty"] == "RSA")
+        .unwrap();
+
+    let n = Base64UrlUnpadded::decode_vec(rsa_key["n"].as_str().unwrap()).unwrap();
+    assert_eq!(n.len(), 256);
+    let mut padded_n = vec![0];
+    padded_n.extend_from_slice(&n);
+    rsa_key["n"] = Base64UrlUnpadded::encode_string(&padded_n).into();
+
+    serde_json::from_value(jwks).unwrap()
+}
+
+#[test]
+fn verify_jwt_with_zero_padded_rsa_modulus() {
+    use mas_iana::jose::JsonWebSignatureAlg;
+    use mas_jose::jwt::Jwt;
+
+    let jwks = public_jwks_with_zero_padded_rsa_modulus();
+
+    for (jwt, alg) in [
+        (RS256_JWT, JsonWebSignatureAlg::Rs256),
+        (PS256_JWT, JsonWebSignatureAlg::Ps256),
+    ] {
+        let jwt: Jwt<'_, Payload> = Jwt::try_from(jwt).unwrap();
+        let key = jwks.find_key(&jwt.header().into()).unwrap();
+        let key =
+            mas_jose::jwa::AsymmetricVerifyingKey::from_jwk_and_alg(key.params(), &alg).unwrap();
+        jwt.verify(&key)
+            .unwrap_or_else(|e| panic!("{alg} verification failed: {e}"));
+    }
+}
 
 #[test]
 fn test_private_to_public_jwks() {
