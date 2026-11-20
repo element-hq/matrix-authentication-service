@@ -15,7 +15,7 @@ use axum_extra::extract::Query;
 use hyper::StatusCode;
 use mas_axum_utils::{GenericError, InternalError, SessionInfoExt, cookies::CookieJar};
 use mas_data_model::{AuthorizationCode, BoxClock, BoxRng, Pkce};
-use mas_router::{PostAuthAction, UrlBuilder};
+use mas_router::{LoginMethodHint, PostAuthAction, UrlBuilder};
 use mas_storage::{
     BoxRepository,
     oauth2::{OAuth2AuthorizationGrantRepository, OAuth2ClientRepository},
@@ -82,6 +82,11 @@ pub(crate) struct Params {
 
     #[serde(flatten)]
     pkce: Option<pkce::AuthorizationRequest>,
+
+    /// Which login method the client would like us to use. MAS-specific, so
+    /// not part of the [`AuthorizationRequest`] wire type.
+    #[serde(rename = "io.element.login_method")]
+    login_method: Option<LoginMethodHint>,
 }
 
 /// Given a list of response types and an optional user-defined response mode,
@@ -276,6 +281,7 @@ pub(crate) async fn get(
                     // Client asked for a registration, show the registration prompt
                     repo.save().await?;
 
+                    // TODO: forward `login_method` once the registration page honours it
                     url_builder
                         .redirect(&mas_router::Register::and_then(continue_grant))
                         .into_response()
@@ -292,6 +298,10 @@ pub(crate) async fn get(
                     } else {
                         url
                     };
+
+                    if let Some(login_method) = params.login_method {
+                        url = url.with_login_method(login_method);
+                    }
 
                     url_builder.redirect(&url).into_response()
                 }
@@ -327,4 +337,100 @@ pub(crate) async fn get(
     };
 
     Ok((cookie_jar, response).into_response())
+}
+
+#[cfg(test)]
+mod test {
+    use hyper::{Request, StatusCode, header::LOCATION};
+    use mas_data_model::AuthorizationGrant;
+    use mas_router::{LoginMethodHint, Route, SimpleRoute};
+    use mas_storage::{RepositoryAccess, oauth2::OAuth2AuthorizationGrantRepository};
+    use oauth2_types::registration::ClientRegistrationResponse;
+    use sqlx::PgPool;
+    use ulid::Ulid;
+
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
+
+    const PROVIDER_ID: &str = "01HFRQFT5QFMJFGF01P7JAV2ME";
+
+    /// Register a client which can do the authorization code flow, and return
+    /// its client id.
+    async fn client(state: &TestState) -> String {
+        let request =
+            Request::post(mas_router::OAuth2RegistrationEndpoint::PATH).json(serde_json::json!({
+                "client_uri": "https://example.com/",
+                "redirect_uris": ["https://example.com/callback"],
+                "token_endpoint_auth_method": "none",
+                "response_types": ["code"],
+                "grant_types": ["authorization_code"],
+            }));
+
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+        let registration: ClientRegistrationResponse = response.json();
+        registration.client_id
+    }
+
+    fn authorize_url(client_id: &str, extra: &str) -> String {
+        format!(
+            "/authorize?response_type=code&client_id={client_id}\
+             &redirect_uri=https%3A%2F%2Fexample.com%2Fcallback&scope=openid&state=state{extra}"
+        )
+    }
+
+    fn location(response: &hyper::Response<String>) -> &str {
+        response
+            .headers()
+            .get(LOCATION)
+            .expect("missing Location header")
+            .to_str()
+            .unwrap()
+    }
+
+    /// Load the grant the `/login` or `/register` redirect continues.
+    async fn grant_from_redirect(state: &TestState, location: &str) -> AuthorizationGrant {
+        let id: Ulid = location
+            .split("id=")
+            .nth(1)
+            .expect("no grant id in the redirect")
+            .split('&')
+            .next()
+            .unwrap()
+            .parse()
+            .unwrap();
+
+        let mut repo = state.repository().await.unwrap();
+        repo.oauth2_authorization_grant()
+            .lookup(id)
+            .await
+            .unwrap()
+            .unwrap()
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_login_method_hint_forwarded_to_login(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let client_id = client(&state).await;
+
+        let request = Request::get(authorize_url(
+            &client_id,
+            &format!("&io.element.login_method=upstream-oauth2:{PROVIDER_ID}"),
+        ))
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        let location = location(&response).to_owned();
+        assert!(location.starts_with("/login?"), "location: {location}");
+        let grant = grant_from_redirect(&state, &location).await;
+        assert_eq!(
+            location,
+            mas_router::Login::and_continue_grant(grant.id)
+                .with_login_method(LoginMethodHint::UpstreamOAuth2(
+                    Ulid::from_string(PROVIDER_ID).unwrap()
+                ))
+                .path_and_query()
+        );
+    }
 }

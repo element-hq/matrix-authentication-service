@@ -12,7 +12,7 @@ use axum::{
 use axum_extra::extract::Query;
 use mas_axum_utils::{InternalError, cookies::CookieJar};
 use mas_data_model::{BoxClock, BoxRng};
-use mas_router::{PostAuthAction, UrlBuilder};
+use mas_router::{LoginMethodHint, PostAuthAction, UrlBuilder};
 use mas_storage::BoxRepository;
 use mas_templates::{AppContext, TemplateContext, Templates};
 use serde::Deserialize;
@@ -29,6 +29,9 @@ pub struct Params {
 
     #[serde(rename = "org.matrix.msc4198.login_hint")]
     unstable_login_hint: Option<String>,
+
+    #[serde(rename = "io.element.login_method")]
+    login_method: Option<LoginMethodHint>,
 }
 
 #[tracing::instrument(name = "handlers.views.app.get", skip_all)]
@@ -40,6 +43,7 @@ pub async fn get(
     Query(Params {
         action,
         unstable_login_hint,
+        login_method,
     }): Query<Params>,
     mut repo: BoxRepository,
     clock: BoxClock,
@@ -73,6 +77,10 @@ pub async fn get(
             url = url.with_login_hint(login_hint);
         }
 
+        if let Some(login_method) = login_method {
+            url = url.with_login_method(login_method);
+        }
+
         return Ok((cookie_jar, url_builder.redirect(&url)).into_response());
     };
 
@@ -99,4 +107,43 @@ pub async fn get_anonymous(
     let content = templates.render_app(&ctx)?;
 
     Ok(Html(content).into_response())
+}
+
+#[cfg(test)]
+mod test {
+    use hyper::{Request, StatusCode, header::LOCATION};
+    use mas_router::{AccountAction, LoginMethodHint, Route};
+    use sqlx::PgPool;
+
+    use crate::test_utils::{
+        RequestBuilderExt, ResponseExt, TestState, add_upstream_oauth_provider, setup,
+    };
+
+    /// The deeplink hands the login-method hint over to the login page, next
+    /// to the account-management action.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_deeplink_threads_the_login_method_hint(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let provider_id =
+            add_upstream_oauth_provider(&state, "upstream.example.com", "Upstream Ltd.", 0)
+                .await
+                .id;
+
+        let request = Request::get(format!(
+            "/account/?action=org.matrix.profile\
+             &io.element.login_method=upstream-oauth2:{provider_id}"
+        ))
+        .empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(
+            LOCATION,
+            &mas_router::Login::and_then(mas_router::PostAuthAction::manage_account(Some(
+                AccountAction::OrgMatrixProfile,
+            )))
+            .with_login_method(LoginMethodHint::UpstreamOAuth2(provider_id))
+            .path_and_query(),
+        );
+    }
 }

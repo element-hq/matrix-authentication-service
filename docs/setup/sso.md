@@ -157,6 +157,65 @@ In such cases, the `human_name` parameter of the provider configuration is used 
 
 If there is only one upstream provider configured and the local password database is disabled ([`passwords.enabled`](../reference/configuration.md#passwords) is set to `false`), the authentication service will automatically trigger an authorization flow with this provider.
 
+## Letting clients choose the login method
+
+An OAuth 2.0 client can ask the authentication service to skip its login page and go straight to one login method, by adding an `io.element.login_method` parameter to the authorization request:
+
+```text
+# Start the authorization flow with a given upstream provider
+GET /authorize?client_id=…&redirect_uri=…&scope=…&state=…&io.element.login_method=upstream-oauth2:01HFRQFT5QFMJFGF01P7JAV2ME
+
+# Show only the local password form
+GET /authorize?client_id=…&redirect_uri=…&scope=…&state=…&io.element.login_method=password
+```
+
+Two values are recognised:
+
+- `password`: the local password login method.
+- `upstream-oauth2:<id>`: an upstream provider, identified by its `id` as written in `upstream_oauth2.providers[].id`.
+
+The parameter is a hint, like `login_hint`: it picks between the login methods on offer and changes nothing else. When it names a usable method:
+
+- for an upstream provider, the browser is sent straight into that provider's authorization flow;
+- for `password`, the login page shows only the password form, without the upstream provider buttons or the link to create an account.
+
+Any other value is ignored: a malformed value, the `id` of an unknown or disabled provider, or `password` when password login is disabled. The authentication service then behaves as if the parameter had not been sent and does not return an OAuth error, so a client sending a wrong value still gets a working login page. It logs a warning when serving the login page; look for it when a client reports that the hint has no effect.
+
+The hint never forces a re-authentication. If the browser already has a session with the authentication service, whichever method created it, the hint has no effect and the request goes to the consent step as usual.
+
+### Several upstream identities behind one provider
+
+A single upstream OIDC provider such as Keycloak may itself federate to several identity providers and show its own chooser, which Keycloak skips when it receives a `kc_idp_hint` parameter. To let a client pick one of those identities directly, configure one authentication service provider per upstream identity, all pointing at the same issuer, each with a literal `kc_idp_hint` in its `additional_authorization_parameters`:
+
+```yaml
+upstream_oauth2:
+  providers:
+    - id: 01HFRQFT5QFMJFGF01P7JAV2ME
+      human_name: Corporate SAML
+      issuer: https://keycloak.example/realms/example
+      additional_authorization_parameters:
+        kc_idp_hint: saml
+    - id: 01K3GZ7X1V3G0R3Q9M8P2A6B4C
+      human_name: GitHub
+      issuer: https://keycloak.example/realms/example
+      additional_authorization_parameters:
+        kc_idp_hint: github
+```
+
+The client then sends `io.element.login_method=upstream-oauth2:<id>` with the `id` of the entry to use; hand those ids to whoever configures the clients.
+
+Alternatively, keep a single provider entry and forward the client's own `kc_idp_hint` through a templated `additional_authorization_parameters` entry, as described in [Forwarding parameters to the upstream provider](#forwarding-parameters-to-the-upstream-provider). The client then sends both parameters: `kc_idp_hint=saml` picks the identity at Keycloak, and `io.element.login_method=upstream-oauth2:<id>` skips the authentication service's own login page.
+
+### Account management deeplink
+
+The account management deeplink (`/account/?action=…`) accepts `io.element.login_method` as well. On this path there is no downstream authorization request, so the `params` map described in [Forwarding parameters to the upstream provider](#forwarding-parameters-to-the-upstream-provider) is empty, and templated entries that reference it render empty and are dropped. Literal entries, like the per-provider `kc_idp_hint` above, are sent as usual.
+
+### Limitations
+
+The registration page ignores `io.element.login_method`: with `prompt=create`, the hint is not forwarded.
+
+There is no configuration flag to turn the parameter off: every enabled login method is already reachable from the login page, so the hint only saves the user a click. To make a provider unreachable, set its `enabled` flag to `false`.
+
 ## Backchannel logout
 
 The service supports receiving [OpenID Connect Back-Channel Logout](https://openid.net/specs/openid-connect-backchannel-1_0.html) requests.
