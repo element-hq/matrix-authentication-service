@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 //
 // SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
@@ -14,7 +15,7 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt as _, ProtectedForm},
 };
-use mas_data_model::{BoxClock, BoxRng};
+use mas_data_model::{BoxClock, BoxRng, MAX_DISPLAY_NAME_LENGTH};
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::BoxRepository;
 use mas_templates::{
@@ -146,7 +147,7 @@ pub(crate) async fn post(
         FormAction::Set => {
             let display_name = form.display_name.trim();
 
-            if display_name.is_empty() || display_name.len() > 255 {
+            if display_name.is_empty() || display_name.chars().count() > MAX_DISPLAY_NAME_LENGTH {
                 let ctx = RegisterStepsDisplayNameContext::new()
                     .with_form_state(form.to_form_state().with_error_on_field(
                         RegisterStepsDisplayNameFormField::DisplayName,
@@ -180,4 +181,59 @@ pub(crate) async fn post(
 
     let destination = mas_router::RegisterFinish::new(registration.id);
     return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
+}
+
+#[cfg(test)]
+mod tests {
+    use hyper::{Request, StatusCode, header::LOCATION};
+    use mas_router::Route as _;
+    use mas_storage::RepositoryAccess as _;
+    use sqlx::PgPool;
+
+    use crate::{
+        test_utils::{CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup},
+        views::register::tests::{add_registration, mint_csrf_token},
+    };
+
+    /// A display name's length is counted in characters, not bytes
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_display_name_length(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+        let registration = add_registration(&state, &cookies, "alice", None, true, None).await;
+        let submit = |display_name: String| {
+            let csrf_token = mint_csrf_token(&state, &cookies);
+            let request = Request::post(
+                &*mas_router::RegisterDisplayName::new(registration.id).path_and_query(),
+            )
+            .form(serde_json::json!({
+                "csrf": csrf_token,
+                "display_name": display_name,
+            }));
+            state.request(cookies.with_cookies(request))
+        };
+
+        // One character over: the form comes back with the field marked invalid
+        let response = submit("名".repeat(257)).await;
+        response.assert_status(StatusCode::OK);
+        assert!(response.body().contains("data-invalid"));
+
+        // At the limit: saved, and on to the finish step
+        let response = submit("名".repeat(256)).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(
+            LOCATION,
+            &mas_router::RegisterFinish::new(registration.id).path_and_query(),
+        );
+
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo
+            .user_registration()
+            .lookup(registration.id)
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(registration.display_name, Some("名".repeat(256)));
+    }
 }
