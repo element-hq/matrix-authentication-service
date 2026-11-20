@@ -29,7 +29,7 @@ use mas_storage::{
     },
     user::{
         BrowserSessionFilter, UserEmailRepository, UserFilter, UserPasswordRepository,
-        UserRepository,
+        UserRegistrationTokenParams, UserRepository,
     },
 };
 use mas_storage_pg::{DatabaseError, PgRepository};
@@ -514,7 +514,16 @@ impl Options {
                 // Create the token
                 let registration_token = repo
                     .user_registration_token()
-                    .add(&mut rng, &clock, token_str, usage_limit, expires_at)
+                    .add(
+                        &mut rng,
+                        &clock,
+                        UserRegistrationTokenParams {
+                            token: token_str,
+                            usage_limit,
+                            expires_at,
+                            ..Default::default()
+                        },
+                    )
                     .await?;
 
                 repo.into_inner().commit().await?;
