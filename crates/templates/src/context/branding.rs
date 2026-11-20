@@ -15,21 +15,32 @@ use minijinja::{
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SiteBranding {
     server_name: Arc<str>,
+    service_name: Arc<str>,
     policy_uri: Option<Arc<str>>,
     tos_uri: Option<Arc<str>>,
     imprint: Option<Arc<str>>,
 }
 
 impl SiteBranding {
-    /// Create a new site branding based on the given server name.
+    /// Create a new site branding based on the given server name, which is
+    /// also used as the service name.
     #[must_use]
     pub fn new(server_name: impl Into<Arc<str>>) -> Self {
+        let server_name = server_name.into();
         Self {
-            server_name: server_name.into(),
+            service_name: server_name.clone(),
+            server_name,
             policy_uri: None,
             tos_uri: None,
             imprint: None,
         }
+    }
+
+    /// Set the human-readable name of the service.
+    #[must_use]
+    pub fn with_service_name(mut self, service_name: impl Into<Arc<str>>) -> Self {
+        self.service_name = service_name.into();
+        self
     }
 
     /// Set the policy URI.
@@ -58,6 +69,7 @@ impl Object for SiteBranding {
     fn get_value(self: &Arc<Self>, name: &Value) -> Option<Value> {
         match name.as_str()? {
             "server_name" => Some(self.server_name.clone().into()),
+            "service_name" => Some(self.service_name.clone().into()),
             "policy_uri" => Some(Value::from(self.policy_uri.clone())),
             "tos_uri" => Some(Value::from(self.tos_uri.clone())),
             "imprint" => Some(Value::from(self.imprint.clone())),
@@ -66,6 +78,12 @@ impl Object for SiteBranding {
     }
 
     fn enumerate(self: &Arc<Self>) -> Enumerator {
-        Enumerator::Str(&["server_name", "policy_uri", "tos_uri", "imprint"])
+        Enumerator::Str(&[
+            "server_name",
+            "service_name",
+            "policy_uri",
+            "tos_uri",
+            "imprint",
+        ])
     }
 }

@@ -494,6 +494,8 @@ impl Templates {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeSet;
+
     use rand::SeedableRng;
 
     use super::*;
@@ -506,7 +508,7 @@ mod tests {
 
         let path = Utf8Path::new(env!("CARGO_MANIFEST_DIR")).join("../../templates/");
         let url_builder = UrlBuilder::new("https://example.com/".parse().unwrap(), None, None);
-        let branding = SiteBranding::new("example.com");
+        let branding = SiteBranding::new("example.com").with_service_name("Example Accounts");
         let features = SiteFeatures {
             password_login: true,
             password_registration: true,
@@ -541,6 +543,78 @@ mod tests {
             let render2 = templates.check_render(now, &rng).unwrap();
 
             assert_eq!(render1, render2);
+
+            let page_renders = || {
+                render1.iter().filter(|((template, sample), _)| {
+                    let locale = sample.components.iter().find(|(kind, _)| *kind == "locale");
+                    (template.starts_with("pages/")
+                        || ["app.html", "form_post.html"].contains(template))
+                        && locale.is_none_or(|(_, locale)| locale == "en")
+                })
+            };
+            let title_of = |template: &str, html: &str| -> String {
+                let start = html
+                    .find("<title")
+                    .unwrap_or_else(|| panic!("{template} has no <title>"));
+                let start = html[start..].find('>').unwrap() + start + 1;
+                let end = html[start..].find("</title>").unwrap() + start;
+                html[start..end].to_owned()
+            };
+            let titles = |name: &str| -> BTreeSet<String> {
+                page_renders()
+                    .filter(|((template, _), _)| *template == name)
+                    .map(|((template, _), html)| title_of(template, html))
+                    .collect()
+            };
+
+            let assert_all_contain = |name: &str, needle: &str| {
+                let matching: Vec<_> = page_renders()
+                    .filter(|((template, _), _)| *template == name)
+                    .collect();
+                assert!(!matching.is_empty(), "no renders of {name}");
+                for ((_, sample), html) in matching {
+                    assert!(html.contains(needle), "{name} ({sample:?}) lacks {needle}");
+                }
+            };
+
+            // Every page needs its own title, apart from those that only show the
+            // service name on purpose
+            for ((template, sample), html) in page_renders() {
+                if ["pages/index.html", "app.html"].contains(template) {
+                    continue;
+                }
+                assert_ne!(
+                    title_of(template, html),
+                    "Example Accounts",
+                    "{template} ({sample:?}) has no page title"
+                );
+            }
+
+            assert_eq!(
+                titles("pages/index.html"),
+                ["Example Accounts".to_owned()].into()
+            );
+            assert_eq!(
+                titles("pages/login.html"),
+                ["Sign in • Example Accounts".to_owned()].into()
+            );
+            assert_eq!(
+                titles("pages/device_consent.html"),
+                [
+                    "Access denied • Example Accounts".to_owned(),
+                    "Access granted • Example Accounts".to_owned(),
+                    "Allow access • Example Accounts".to_owned(),
+                ]
+                .into()
+            );
+            assert_eq!(titles("app.html"), ["Example Accounts".to_owned()].into());
+            assert_all_contain("app.html", r#"data-service-name="Example Accounts""#);
+            assert_all_contain(
+                "pages/index.html",
+                r#"<h1 class="title">Example Accounts</h1>"#,
+            );
+            // Matrix IDs keep using the server name
+            assert_all_contain("pages/account/locked.html", ":example.com");
         }
     }
 }

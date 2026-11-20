@@ -1957,12 +1957,26 @@ impl TemplateContext for DeviceConsentContext {
     where
         Self: Sized,
     {
+        let browser_session_id = Ulid::from_datetime_with_rng(now, rng);
+        let states = [
+            mas_data_model::DeviceCodeGrantState::Pending,
+            mas_data_model::DeviceCodeGrantState::Rejected {
+                browser_session_id,
+                rejected_at: now,
+            },
+            mas_data_model::DeviceCodeGrantState::Fulfilled {
+                browser_session_id,
+                fulfilled_at: now,
+            },
+        ];
+
         sample_list(Client::samples(now, rng)
             .into_iter()
-            .map(|client|  {
+            .flat_map(|client| states.iter().cloned().map(move |state| (client.clone(), state)))
+            .map(|(client, state)|  {
                 let grant = DeviceCodeGrant {
                     id: Ulid::from_datetime_with_rng(now, rng),
-                    state: mas_data_model::DeviceCodeGrantState::Pending,
+                    state,
                     client_id: client.id,
                     scope: [OPENID].into_iter().collect(),
                     user_code: mas_data_model::generate_user_code(rng),

@@ -125,6 +125,7 @@ describe("Account sessions page", () => {
       // "You've hit the device limit"})` but this would require some changes to the
       // `Alert` component in Compound itself.
       screen.getByTestId("device-limit-error");
+      expect(document.title).toBe("Sessions • Your account • example.com");
 
       // Sanity check page overall
       expect(asFragment()).toMatchSnapshot();

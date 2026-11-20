@@ -7,6 +7,7 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { H5 } from "@vector-im/compound-web";
+import i18n from "i18next";
 import { useTranslation } from "react-i18next";
 import * as v from "valibot";
 import BrowserSession from "../components/BrowserSession";
@@ -104,6 +105,9 @@ export const Route = createFileRoute("/_account/sessions/browsers")({
   loader: ({ context, deps: { inactive, pagination } }) =>
     context.queryClient.ensureQueryData(query(pagination, inactive)),
 
+  staticData: {
+    title: () => i18n.t("frontend.browser_sessions_overview.heading"),
+  },
   component: BrowserSessions,
 });
 
