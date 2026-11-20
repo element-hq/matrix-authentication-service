@@ -176,7 +176,10 @@ pub struct Request {
     allowed_emails: Option<Vec<String>>,
 
     /// Whether registering with this token skips the password step. The user's
-    /// identity is then established by verifying their email address.
+    /// identity is then established by verifying their email address, unless
+    /// the token has a username template and neither an email nor allowed
+    /// addresses, and `account.passwordless_registration_without_email_allowed`
+    /// is set: such a token registers with only a display name.
     #[serde(default)]
     passwordless: bool,
 

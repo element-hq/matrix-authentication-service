@@ -60,6 +60,7 @@ const mountRegister = async ({
     password_registration_email_required: true,
     minimum_password_complexity: 1,
   });
+  el.dataset.maxDisplayNameLength = "256";
   el.dataset.form = JSON.stringify(form);
   el.dataset.providers = JSON.stringify(providers);
   el.dataset.loginLink = "/login";
@@ -69,7 +70,9 @@ const mountRegister = async ({
   // The entry point mounts the island when it is imported
   vi.resetModules();
   await import("./register");
-  await screen.findByRole("link", { name: "Already have an account?" });
+  await screen.findByRole("link", {
+    name: /^(Already have an account\?|Sign in with an existing account)$/,
+  });
 };
 
 const unmount = (): void => {
@@ -120,6 +123,14 @@ describe("register island", () => {
           Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
     });
+
+    it("offers the usual sign-in link", async () => {
+      await mountRegister({ invite: { valid: false } });
+
+      expect(
+        screen.getByRole("link", { name: "Already have an account?" }),
+      ).toBeInTheDocument();
+    });
   });
 
   describe("with an invite pinning the username and email", () => {
@@ -128,7 +139,16 @@ describe("register island", () => {
       username: "alice",
       email: "alice@example.com",
       passwordless: true,
+      without_email: false,
     };
+
+    it("offers to sign in with an existing account", async () => {
+      await mountRegister({ invite });
+
+      expect(
+        screen.getByRole("link", { name: "Sign in with an existing account" }),
+      ).toBeInTheDocument();
+    });
 
     it("explains an error on the username above the form", async () => {
       await mountRegister({
@@ -182,7 +202,43 @@ describe("register island", () => {
     });
   });
 
+  describe("with an invite link registering without an email", () => {
+    it("asks for a display name and no email address", async () => {
+      await mountRegister({
+        invite: {
+          valid: true,
+          username: "user-{{ random }}",
+          email: null,
+          passwordless: true,
+          without_email: true,
+        },
+      });
+
+      const displayName = screen.getByLabelText("Display name");
+      expect(displayName).toBeRequired();
+      expect(displayName).toHaveAttribute("maxlength", "256");
+      expect(screen.queryByLabelText("Email address")).toBeNull();
+      expect(screen.getByRole("button", { name: "Continue" })).toBeVisible();
+    });
+  });
+
   describe("with an invite listing the email addresses it allows", () => {
+    it("asks a link's user for an address and a code, not a display name", async () => {
+      await mountRegister({
+        invite: {
+          valid: true,
+          username: "user-{{ random }}",
+          email: null,
+          passwordless: true,
+          without_email: false,
+        },
+      });
+
+      expect(screen.getByLabelText("Email address")).toBeRequired();
+      expect(screen.getByRole("button", { name: "Send code" })).toBeVisible();
+      expect(screen.queryByLabelText("Display name")).toBeNull();
+    });
+
     it("explains an unlisted address on the email field", async () => {
       await mountRegister({
         invite: {
@@ -190,6 +246,7 @@ describe("register island", () => {
           username: null,
           email: null,
           passwordless: true,
+          without_email: false,
         },
         form: {
           errors: [],

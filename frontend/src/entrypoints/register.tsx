@@ -67,6 +67,7 @@ const schema = v.object({
       minimum_password_complexity: v.number(),
     }),
   ),
+  maxDisplayNameLength: v.pipe(v.string(), v.parseJson(), v.number()),
   form: v.pipe(
     v.string(),
     v.parseJson(),
@@ -94,6 +95,7 @@ const RegisterPage: React.FC<{ data: Data }> = ({ data }) =>
       tosUri={data.branding.tos_uri}
       emailRequired={data.features.password_registration_email_required}
       minimumPasswordComplexity={data.features.minimum_password_complexity}
+      maxDisplayNameLength={data.maxDisplayNameLength}
       captchaConfig={data.captchaConfig}
       formErrors={data.form.errors}
       fields={data.form.fields}
