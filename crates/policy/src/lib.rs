@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -75,6 +76,8 @@ pub struct Entrypoints {
     pub authorization_grant: String,
     pub compat_login: String,
     pub email: String,
+    /// A policy without this entrypoint never skips the consent screen
+    pub skip_consent: String,
 }
 
 impl Entrypoints {
@@ -256,10 +259,17 @@ impl PolicyFactory {
         };
 
         // Try to instantiate
-        factory
+        let policy = factory
             .instantiate()
             .await
             .map_err(LoadError::Instantiate)?;
+
+        if !policy.has_skip_consent {
+            tracing::info!(
+                entrypoint = %factory.entrypoints.skip_consent,
+                "The policy has no skip consent entrypoint, so the consent screen is never skipped"
+            );
+        }
 
         Ok(factory)
     }
@@ -337,6 +347,8 @@ impl PolicyFactory {
             }
         }
 
+        let has_skip_consent = policy_entrypoints.contains(self.entrypoints.skip_consent.as_str());
+
         let instance = runtime
             .with_data(&mut store, data)
             .await
@@ -346,6 +358,7 @@ impl PolicyFactory {
             store,
             instance,
             entrypoints: self.entrypoints.clone(),
+            has_skip_consent,
         })
     }
 }
@@ -354,6 +367,7 @@ pub struct Policy {
     store: Store<()>,
     instance: opa_wasm::Policy<opa_wasm::DefaultContext>,
     entrypoints: Entrypoints,
+    has_skip_consent: bool,
 }
 
 #[derive(Debug, Error)]
@@ -465,6 +479,39 @@ impl Policy {
         Ok(res)
     }
 
+    /// Evaluate the `skip_consent` entrypoint, which decides whether an
+    /// authorization grant is approved without asking the user.
+    ///
+    /// Returns `false` if the policy does not define the entrypoint.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the policy engine fails to evaluate the entrypoint.
+    #[tracing::instrument(
+        name = "policy.evaluate.skip_consent",
+        skip_all,
+        fields(
+            %input.scope,
+            %input.client.id,
+        ),
+    )]
+    pub async fn evaluate_skip_consent(
+        &mut self,
+        input: AuthorizationGrantInput<'_>,
+    ) -> Result<bool, EvaluationError> {
+        if !self.has_skip_consent {
+            return Ok(false);
+        }
+
+        let res: Vec<model::BooleanResult> = self
+            .instance
+            .evaluate(&mut self.store, &self.entrypoints.skip_consent, &input)
+            .await?;
+
+        // The result set is empty if the policy leaves the rule undefined
+        Ok(res.first().is_some_and(|res| res.result))
+    }
+
     /// Evaluate the `compat_login` entrypoint.
     ///
     /// # Errors
@@ -495,6 +542,11 @@ mod tests {
 
     use std::time::SystemTime;
 
+    use chrono::DateTime;
+    use mas_data_model::{Client, User};
+    use rand::SeedableRng;
+    use rand_chacha::ChaCha8Rng;
+
     use super::*;
 
     fn make_entrypoints() -> Entrypoints {
@@ -504,6 +556,7 @@ mod tests {
             authorization_grant: "authorization_grant/violation".to_owned(),
             compat_login: "compat_login/violation".to_owned(),
             email: "email/violation".to_owned(),
+            skip_consent: "authorization_grant/skip_consent".to_owned(),
         }
     }
 
@@ -694,6 +747,60 @@ mod tests {
             .await
             .unwrap();
         assert!(!res.valid());
+    }
+
+    #[tokio::test]
+    async fn test_skip_consent_without_entrypoint() {
+        let now = DateTime::UNIX_EPOCH;
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let user = &User::samples(now, &mut rng)[0];
+        let client = &Client::samples(now, &mut rng)[0];
+        let scope = "openid".parse().unwrap();
+        let input = AuthorizationGrantInput {
+            user: Some(user),
+            client,
+            session_counts: Some(model::SessionCounts {
+                total: 0,
+                oauth2: 0,
+                compat: 0,
+                personal: 0,
+            }),
+            scope: &scope,
+            grant_type: GrantType::AuthorizationCode,
+            requester: Requester::default(),
+            now,
+        };
+
+        #[expect(clippy::disallowed_types)]
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..")
+            .join("policies")
+            .join("policy.wasm");
+
+        for (entrypoint, expected) in [
+            ("authorization_grant/skip_consent", true),
+            ("authorization_grant/missing", false),
+        ] {
+            let data = Data::new(BaseData {
+                server_name: "example.com".to_owned(),
+                session_limit: None,
+            })
+            .with_rest(serde_json::json!({
+                "skip_consent": { "max_account_age_seconds": 600 },
+            }));
+            let entrypoints = Entrypoints {
+                skip_consent: entrypoint.to_owned(),
+                ..make_entrypoints()
+            };
+
+            let file = tokio::fs::File::open(&path).await.unwrap();
+            let factory = PolicyFactory::load(file, data, entrypoints).await.unwrap();
+            let mut policy = factory.instantiate().await.unwrap();
+
+            let skip = policy.evaluate_skip_consent(input.clone()).await.unwrap();
+            assert_eq!(skip, expected, "entrypoint {entrypoint}");
+        }
     }
 
     #[test]

@@ -84,7 +84,7 @@ re-rendered with an error.
 | Token issuance | `POST /oauth2/token` | `200 OK` with an `oauth2-client:` `requester` |
 | Token revocation | `POST /oauth2/revoke` | `200 OK` with an `oauth2-client:` `requester` |
 | Token introspection | `POST /oauth2/introspect` | `200 OK`, `requester` is the calling client or `homeserver` |
-| Authorization grant | `GET`/`POST /authorize` | a `303 See Other` once the user consents |
+| Authorization grant | `GET`/`POST /authorize` | a `303 See Other` once the grant is approved |
 | Account self-service action | `POST /graphql` | `200 OK`; the actual activity is in `graphql.operation.name` (see below) |
 
 ### Account self-service operations (GraphQL)
