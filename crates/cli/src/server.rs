@@ -195,6 +195,11 @@ async fn log_response_middleware(
     request: axum::extract::Request,
     next: axum::middleware::Next,
 ) -> axum::response::Response {
+    if let Some(route) = otel_http_route(&request) {
+        let route = format!("{} {route}", otel_http_method(&request));
+        LogContext::maybe_with(|ctx| ctx.set_route(route));
+    }
+
     let user_agent: Option<UserAgent> = request.headers().typed_get();
     let user_agent = user_agent.as_ref().map_or("-", |u| u.as_str());
     let method = otel_http_method(&request);
