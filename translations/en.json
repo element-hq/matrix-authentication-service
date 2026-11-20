@@ -311,8 +311,13 @@
     "emails": {
       "greeting": "Hello %(username)s,",
       "@greeting": {
-        "context": "emails/verification.html:17:3-64, emails/verification.txt:17:3-64",
+        "context": "emails/verification.html:19:3-46, emails/verification.txt:19:3-46",
         "description": "Greeting at the top of emails sent to the user"
+      },
+      "greeting_unnamed": "Hello,",
+      "@greeting_unnamed": {
+        "context": "emails/verification.html:21:3-35, emails/verification.txt:21:3-35",
+        "description": "Greeting at the top of emails sent to someone whose username means nothing to them"
       },
       "recovery": {
         "click_button": "Click on the button below to create a new password:",
@@ -347,12 +352,12 @@
       "verify": {
         "body_html": "Your verification code to confirm this email address is: <strong>%(code)s</strong>",
         "@body_html": {
-          "context": "emails/verification.html:19:3-66",
+          "context": "emails/verification.html:24:3-66",
           "description": "The body of the email sent to verify an email address (HTML)"
         },
         "body_text": "Your verification code to confirm this email address is: %(code)s",
         "@body_text": {
-          "context": "emails/verification.txt:19:3-66",
+          "context": "emails/verification.txt:24:3-66",
           "description": "The body of the email sent to verify an email address (text)"
         },
         "subject": "Your email verification code is: %(code)s",

@@ -15,16 +15,22 @@ pub(crate) mod verify_email;
 /// `email`: it pins no other username, and no other email address, ignoring
 /// case, and it is passwordless if the registration has neither a password
 /// nor an upstream link, so that the token step can't swap a passwordless
-/// token for one that isn't, leaving a registration with no password at all
+/// token for one that isn't, leaving a registration with no password at all.
+/// A rendered name can't be checked against its template, so a username
+/// template fits only the registration it was rendered for.
 fn token_fits(
     token: &UserRegistrationToken,
     registration: &UserRegistration,
     email: Option<&str>,
 ) -> bool {
-    let username_fits = token
-        .username
-        .as_ref()
-        .is_none_or(|username| *username == registration.username);
+    let username_fits = if token.username_template().is_some() {
+        registration.user_registration_token_id == Some(token.id)
+    } else {
+        token
+            .username
+            .as_ref()
+            .is_none_or(|username| *username == registration.username)
+    };
 
     username_fits
         && email.map_or(token.email.is_none(), |email| {
@@ -97,7 +103,12 @@ mod tests {
         let bob = registration("bob", true, false);
         let no_password = registration("alice", false, false);
         let upstream = registration("alice", false, true);
+        let from_token = UserRegistration {
+            user_registration_token_id: Some(Ulid::nil()),
+            ..registration("guest-1", true, false)
+        };
         let pins = token(Some("alice"), ALICE_UPPER, false);
+        let template = token(Some("guest-{{ random }}"), None, false);
         let plain = token(None, None, false);
         let passwordless = token(None, None, true);
 
@@ -107,6 +118,8 @@ mod tests {
             ("another username", &pins, &bob, ALICE, false),
             ("another email", &pins, &alice, BOB, false),
             ("no email for a pin", &pins, &alice, None, false),
+            ("own template", &template, &from_token, None, true),
+            ("typed template", &template, &alice, None, false),
             ("no password", &plain, &no_password, None, false),
             ("passwordless", &passwordless, &no_password, None, true),
             ("upstream", &plain, &upstream, None, true),

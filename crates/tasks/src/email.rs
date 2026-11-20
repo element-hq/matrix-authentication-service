@@ -93,6 +93,22 @@ impl RunnableJob for SendEmailAuthenticationCodeJob {
                 None
             };
 
+        // A username rendered from the registration token's template means
+        // nothing to the person registering, so the email doesn't name them
+        let username_from_template = match registration
+            .as_ref()
+            .and_then(|r| r.user_registration_token_id)
+        {
+            Some(token_id) => repo
+                .user_registration_token()
+                .lookup(token_id)
+                .await
+                .map_err(JobError::retry)?
+                .is_some_and(|token| token.username_template().is_some()),
+            None => false,
+        };
+        let registration = registration.filter(|_| !username_from_template);
+
         // Generate a new 6-digit authentication code
         let range = Uniform::<u32>::new(0, 1_000_000).expect("valid range");
         let code = rng.sample(range);
