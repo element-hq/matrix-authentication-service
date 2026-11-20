@@ -153,6 +153,7 @@ pub async fn policy_factory_from_config(
         authorization_grant: config.authorization_grant_entrypoint.clone(),
         compat_login: config.compat_login_entrypoint.clone(),
         email: config.email_entrypoint.clone(),
+        skip_consent: config.skip_consent_entrypoint.clone(),
     };
 
     let session_limit_config =

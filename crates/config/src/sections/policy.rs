@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -78,6 +79,14 @@ fn is_default_email_entrypoint(value: &String) -> bool {
     *value == default_email_entrypoint()
 }
 
+fn default_skip_consent_entrypoint() -> String {
+    "authorization_grant/skip_consent".to_owned()
+}
+
+fn is_default_skip_consent_entrypoint(value: &String) -> bool {
+    *value == default_skip_consent_entrypoint()
+}
+
 fn default_data() -> serde_json::Value {
     serde_json::json!({})
 }
@@ -140,6 +149,13 @@ pub struct PolicyConfig {
     )]
     pub email_entrypoint: String,
 
+    /// Entrypoint to use when deciding whether to skip the consent screen
+    #[serde(
+        default = "default_skip_consent_entrypoint",
+        skip_serializing_if = "is_default_skip_consent_entrypoint"
+    )]
+    pub skip_consent_entrypoint: String,
+
     /// Arbitrary data to pass to the policy
     #[serde(default = "default_data", skip_serializing_if = "is_default_data")]
     pub data: serde_json::Value,
@@ -155,6 +171,7 @@ impl Default for PolicyConfig {
             compat_login_entrypoint: default_compat_login_entrypoint(),
             password_entrypoint: default_password_entrypoint(),
             email_entrypoint: default_email_entrypoint(),
+            skip_consent_entrypoint: default_skip_consent_entrypoint(),
             data: default_data(),
         }
     }
@@ -169,6 +186,7 @@ impl PolicyConfig {
             && is_default_authorization_grant_entrypoint(&self.authorization_grant_entrypoint)
             && is_default_password_entrypoint(&self.password_entrypoint)
             && is_default_email_entrypoint(&self.email_entrypoint)
+            && is_default_skip_consent_entrypoint(&self.skip_consent_entrypoint)
             && is_default_data(&self.data)
     }
 }
