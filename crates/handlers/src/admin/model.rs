@@ -15,6 +15,7 @@ use mas_data_model::{
         session::{PersonalSession as DataModelPersonalSession, PersonalSessionOwner},
     },
 };
+use mas_router::UrlBuilder;
 use oauth2_types::requests::GrantType;
 use schemars::JsonSchema;
 use serde::Serialize;
@@ -660,10 +661,19 @@ pub struct UserRegistrationToken {
 
     /// When the token was revoked. If null, the token is not revoked.
     revoked_at: Option<DateTime<Utc>>,
+
+    /// URL to share with the user to register with this token
+    invite_url: Url,
 }
 
 impl UserRegistrationToken {
-    pub fn new(token: mas_data_model::UserRegistrationToken, now: DateTime<Utc>) -> Self {
+    pub fn new(
+        token: mas_data_model::UserRegistrationToken,
+        now: DateTime<Utc>,
+        url_builder: &UrlBuilder,
+    ) -> Self {
+        let invite_url = url_builder
+            .absolute_url_for(&mas_router::Register::default().with_token(token.token.clone()));
         Self {
             id: token.id,
             valid: token.is_valid(now),
@@ -677,6 +687,7 @@ impl UserRegistrationToken {
             last_used_at: token.last_used_at,
             expires_at: token.expires_at,
             revoked_at: token.revoked_at,
+            invite_url,
         }
     }
 }
@@ -707,6 +718,7 @@ impl UserRegistrationToken {
                 last_used_at: Some(DateTime::default()),
                 expires_at: Some(DateTime::default() + chrono::Duration::days(30)),
                 revoked_at: None,
+                invite_url: Url::parse("https://example.com/register?token=abc123def456").unwrap(),
             },
             Self {
                 id: Ulid::from_bytes([0x02; 16]),
@@ -721,6 +733,7 @@ impl UserRegistrationToken {
                 last_used_at: None,
                 expires_at: None,
                 revoked_at: Some(DateTime::default()),
+                invite_url: Url::parse("https://example.com/register?token=xyz789abc012").unwrap(),
             },
         ]
     }
