@@ -230,6 +230,16 @@ pub struct UserRegistrationPassword {
 pub struct UserRegistrationToken {
     pub id: Ulid,
     pub token: String,
+    /// A localpart to impose, or a template for one (see
+    /// [`is_username_template`]). A template token works only through its
+    /// `/register?token=…` link: the registration token step refuses it.
+    pub username: Option<String>,
+    pub email: Option<String>,
+    /// The email addresses allowed to register with this token, or `None` for
+    /// any. A token pins `email` or lists these, never both.
+    pub allowed_emails: Option<Vec<String>>,
+    pub passwordless: bool,
+    pub continue_url: Option<String>,
     pub usage_limit: Option<u32>,
     pub times_used: u32,
     pub created_at: DateTime<Utc>,
@@ -264,13 +274,58 @@ impl UserRegistrationToken {
         true
     }
 
+    /// Returns `true` if registering with the token needs no email address:
+    /// `allowed` by the server, passwordless, with a username template and no
+    /// email address pinned or allowed
+    #[must_use]
+    pub fn registers_without_email(&self, allowed: bool) -> bool {
+        allowed
+            && self.passwordless
+            && self.email.is_none()
+            && self.allowed_emails.is_none()
+            && self.username_template().is_some()
+    }
+
+    /// Returns `true` if `email` may use this token, ignoring case:
+    /// the address it pins, one it lists, or any if it does neither
+    #[must_use]
+    pub fn allows_email(&self, email: &str) -> bool {
+        self.email
+            .as_deref()
+            .is_none_or(|pinned| pinned.eq_ignore_ascii_case(email))
+            && self.allowed_emails.as_ref().is_none_or(|allowed| {
+                allowed
+                    .iter()
+                    .any(|allowed| allowed.eq_ignore_ascii_case(email))
+            })
+    }
+
     /// Returns `true` if the token can still be used (not expired and under
     /// usage limit)
     #[must_use]
     pub fn can_be_used(&self, now: DateTime<Utc>) -> bool {
         self.is_valid(now)
     }
+
+    /// The username, if it is a template (see [`is_username_template`])
+    #[must_use]
+    pub fn username_template(&self) -> Option<&str> {
+        self.username
+            .as_deref()
+            .filter(|username| is_username_template(username))
+    }
 }
+
+/// Whether a registration token's `username` is a minijinja template,
+/// rendered with `random` when registering. Every minijinja delimiter starts
+/// with `{`, which the registration policy refuses in a localpart.
+#[must_use]
+pub fn is_username_template(username: &str) -> bool {
+    username.contains('{')
+}
+
+/// How many characters a display name can have: the most Synapse accepts
+pub const MAX_DISPLAY_NAME_LENGTH: usize = 256;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UserRegistration {
@@ -287,4 +342,68 @@ pub struct UserRegistration {
     pub user_agent: Option<String>,
     pub created_at: DateTime<Utc>,
     pub completed_at: Option<DateTime<Utc>>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn token(email: Option<&str>, allowed_emails: Option<&[&str]>) -> UserRegistrationToken {
+        UserRegistrationToken {
+            id: Ulid::nil(),
+            token: "token".to_owned(),
+            username: Some("user-{{ random }}".to_owned()),
+            email: email.map(ToOwned::to_owned),
+            allowed_emails: allowed_emails
+                .map(|emails| emails.iter().map(|&email| email.to_owned()).collect()),
+            passwordless: true,
+            continue_url: None,
+            usage_limit: None,
+            times_used: 0,
+            created_at: DateTime::UNIX_EPOCH,
+            last_used_at: None,
+            expires_at: None,
+            revoked_at: None,
+        }
+    }
+
+    #[test]
+    fn test_allows_email() {
+        let listed = token(None, Some(&["Alice@Example.com", "bob@example.com"]));
+        assert!(listed.allows_email("alice@example.com"));
+        assert!(listed.allows_email("BOB@EXAMPLE.COM"));
+        assert!(!listed.allows_email("carol@example.com"));
+
+        let pinned = token(Some("Alice@Example.com"), None);
+        assert!(pinned.allows_email("alice@example.com"));
+        assert!(!pinned.allows_email("carol@example.com"));
+
+        assert!(token(None, None).allows_email("carol@example.com"));
+    }
+
+    #[test]
+    fn test_registers_without_email() {
+        assert!(token(None, None).registers_without_email(true));
+        assert!(!token(None, None).registers_without_email(false));
+        assert!(!token(None, Some(&["alice@example.com"])).registers_without_email(true));
+        assert!(!token(Some("alice@example.com"), None).registers_without_email(true));
+
+        // Not passwordless, no username, or a username that isn't a template
+        for other in [
+            UserRegistrationToken {
+                passwordless: false,
+                ..token(None, None)
+            },
+            UserRegistrationToken {
+                username: None,
+                ..token(None, None)
+            },
+            UserRegistrationToken {
+                username: Some("alice".to_owned()),
+                ..token(None, None)
+            },
+        ] {
+            assert!(!other.registers_without_email(true), "{other:?}");
+        }
+    }
 }

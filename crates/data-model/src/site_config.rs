@@ -80,6 +80,10 @@ pub struct SiteConfig {
     /// Whether a valid email address is required for password registrations.
     pub password_registration_email_required: bool,
 
+    /// Whether a passwordless registration token with a username template and
+    /// no email address registers with only a display name.
+    pub passwordless_registration_without_email_allowed: bool,
+
     /// Whether registration tokens are required for password registrations.
     pub password_registration_token_required: bool,
 

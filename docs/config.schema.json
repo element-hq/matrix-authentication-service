@@ -1939,6 +1939,10 @@
           "description": "Entrypoint to use when adding an email address",
           "type": "string"
         },
+        "skip_consent_entrypoint": {
+          "description": "Entrypoint to use when deciding whether to skip the consent screen",
+          "type": "string"
+        },
         "data": {
           "description": "Arbitrary data to pass to the policy"
         }
@@ -2854,6 +2858,10 @@
         },
         "password_registration_email_required": {
           "description": "Whether self-service password registrations require a valid email.\nDefaults to `true`.\n\nThis has no effect if password registration is disabled.",
+          "type": "boolean"
+        },
+        "passwordless_registration_without_email_allowed": {
+          "description": "Whether a passwordless registration token with a username template and\nno email address registers with only a display name. Defaults to\n`false`.\n\nSuch an account has no email address or password, so it can't sign in\nagain once its browser session ends.",
           "type": "boolean"
         },
         "password_change_allowed": {

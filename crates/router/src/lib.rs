@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -29,6 +30,39 @@ mod tests {
         assert_eq!(
             Login::and_continue_grant(Ulid::nil()).path_and_query(),
             Cow::Borrowed("/login?kind=continue_authorization_grant&id=00000000000000000000000000")
+        );
+        assert_eq!(
+            Register::and_then(PostAuthAction::ContinueRegistrationToken { id: Ulid::nil() })
+                .path_and_query(),
+            Cow::Borrowed(
+                "/register?kind=continue_registration_token&id=00000000000000000000000000"
+            )
+        );
+        assert_eq!(
+            RegisterContinue(Ulid::nil()).path_and_query(),
+            Cow::Borrowed("/register/continue/00000000000000000000000000")
+        );
+    }
+
+    #[test]
+    fn test_register_urls() {
+        assert_eq!(
+            Register::default().path_and_query(),
+            Cow::Borrowed("/register")
+        );
+        assert_eq!(
+            Register::default()
+                .with_token("a token&more".to_owned())
+                .path_and_query(),
+            Cow::Borrowed("/register?token=a+token%26more")
+        );
+        assert_eq!(
+            Register::and_continue_grant(Ulid::nil())
+                .with_token("invite".to_owned())
+                .path_and_query(),
+            Cow::Borrowed(
+                "/register?token=invite&kind=continue_authorization_grant&id=00000000000000000000000000"
+            )
         );
     }
 

@@ -26,7 +26,7 @@ use mas_data_model::{
     UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderDiscoveryMode,
     UpstreamOAuthProviderOnBackchannelLogout, UpstreamOAuthProviderPkceMode,
     UpstreamOAuthProviderTokenAuthMethod, User, UserEmailAuthentication,
-    UserEmailAuthenticationCode, UserRecoverySession, UserRegistration,
+    UserEmailAuthenticationCode, UserRecoverySession, UserRegistration, UserRegistrationToken,
 };
 use mas_i18n::DataLocale;
 use mas_iana::jose::JsonWebSignatureAlg;
@@ -526,6 +526,9 @@ pub enum PostAuthContextInner {
 
     /// Go to the account management page
     ManageAccount,
+
+    /// Continue to the URL of a registration token
+    ContinueRegistrationToken,
 }
 
 /// Context used in login screen, for the post-auth action to do
@@ -637,12 +640,21 @@ pub enum RegisterFormField {
 
     /// The terms of service agreement field
     AcceptTerms,
+
+    /// The registration token field
+    Token,
+
+    /// The display name field, only shown for tokens registering without an
+    /// email address
+    DisplayName,
 }
 
 impl FormField for RegisterFormField {
     fn keep(&self) -> bool {
         match self {
-            Self::Username | Self::Email | Self::AcceptTerms => true,
+            Self::Username | Self::Email | Self::AcceptTerms | Self::Token | Self::DisplayName => {
+                true
+            }
             Self::Password | Self::PasswordConfirm => false,
         }
     }
@@ -678,6 +690,41 @@ impl RegisterPageProvider {
     }
 }
 
+/// The identity an invite code was issued for
+#[derive(Serialize)]
+struct InvitePinnedIdentity {
+    username: Option<String>,
+    email: Option<String>,
+    passwordless: bool,
+    without_email: bool,
+}
+
+/// The invite code the registration page was opened with, as the island sees it
+#[derive(Serialize)]
+pub struct InviteContext {
+    valid: bool,
+
+    #[serde(flatten)]
+    pinned: Option<InvitePinnedIdentity>,
+}
+
+impl InviteContext {
+    /// Describe the invite code a link carried, `None` standing for a code
+    /// which is unknown, expired, revoked or exhausted
+    #[must_use]
+    pub fn new(token: Option<&UserRegistrationToken>, without_email_allowed: bool) -> Self {
+        Self {
+            valid: token.is_some(),
+            pinned: token.map(|token| InvitePinnedIdentity {
+                username: token.username.clone(),
+                email: token.email.clone(),
+                passwordless: token.passwordless,
+                without_email: token.registers_without_email(without_email_allowed),
+            }),
+        }
+    }
+}
+
 /// Context used by the `register/index.html` template
 #[derive(Serialize)]
 pub struct RegisterContext {
@@ -685,6 +732,7 @@ pub struct RegisterContext {
     login_link: String,
     form: FormState<RegisterFormField>,
     graphql_endpoint: String,
+    invite: Option<InviteContext>,
 }
 
 impl TemplateContext for RegisterContext {
@@ -719,6 +767,7 @@ impl RegisterContext {
             login_link: url_builder.relative_url_for(&Login::from(post_auth_action.cloned())),
             form: FormState::default(),
             graphql_endpoint: url_builder.relative_url_for(&GraphQL),
+            invite: None,
         }
     }
 
@@ -726,6 +775,15 @@ impl RegisterContext {
     #[must_use]
     pub fn with_form_state(self, form: FormState<RegisterFormField>) -> Self {
         Self { form, ..self }
+    }
+
+    /// Set the invite code the page was opened with
+    #[must_use]
+    pub fn with_invite(self, invite: InviteContext) -> Self {
+        Self {
+            invite: Some(invite),
+            ..self
+        }
     }
 }
 
@@ -1210,6 +1268,83 @@ impl TemplateContext for EmailVerificationContext {
                 })
                 .collect(),
         )
+    }
+}
+
+/// Context used by the `emails/invite.{txt,html,subject}` templates
+#[derive(Serialize)]
+pub struct EmailInviteContext {
+    room_name: Option<String>,
+    inviter: Option<String>,
+    inviter_name: Option<String>,
+    invite_link: Url,
+}
+
+impl EmailInviteContext {
+    /// Constructs a context for the invite email
+    #[must_use]
+    pub fn new(
+        room_name: Option<String>,
+        inviter: Option<String>,
+        inviter_name: Option<String>,
+        invite_link: Url,
+    ) -> Self {
+        Self {
+            room_name,
+            inviter,
+            inviter_name,
+            invite_link,
+        }
+    }
+}
+
+impl TemplateContext for EmailInviteContext {
+    fn sample<R: RngExt>(
+        _now: chrono::DateTime<Utc>,
+        _rng: &mut R,
+        _locales: &[DataLocale],
+    ) -> BTreeMap<SampleIdentifier, Self>
+    where
+        Self: Sized,
+    {
+        let url_builder = UrlBuilder::new("https://example.com/".parse().unwrap(), None, None);
+        let invite_link = url_builder.absolute_url_for(
+            &mas_router::Register::default().with_token("abcdefghijkl".to_owned()),
+        );
+
+        sample_list(vec![
+            Self::new(
+                Some("Project X".to_owned()),
+                Some("@alice:example.com".to_owned()),
+                Some("Alice O'Brien & Co".to_owned()),
+                invite_link.clone(),
+            ),
+            Self::new(
+                None,
+                Some("@alice:example.com".to_owned()),
+                Some("Alice O'Brien & Co".to_owned()),
+                invite_link.clone(),
+            ),
+            Self::new(
+                Some("Project X".to_owned()),
+                None,
+                Some("Alice O'Brien & Co".to_owned()),
+                invite_link.clone(),
+            ),
+            Self::new(
+                None,
+                Some("@alice:example.com".to_owned()),
+                None,
+                invite_link.clone(),
+            ),
+            Self::new(
+                Some("Project X".to_owned()),
+                None,
+                None,
+                invite_link.clone(),
+            ),
+            Self::new(None, None, None, invite_link),
+        ])
     }
 }
 

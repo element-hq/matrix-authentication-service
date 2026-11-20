@@ -21,7 +21,7 @@ pub(crate) mod cache;
 pub(crate) mod callback;
 mod cookie;
 pub(crate) mod link;
-mod template;
+pub(crate) mod template;
 
 use self::cookie::UpstreamSessions as UpstreamSessionsCookie;
 

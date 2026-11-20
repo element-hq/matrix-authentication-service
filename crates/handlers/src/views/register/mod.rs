@@ -17,12 +17,18 @@ use mas_axum_utils::{
     cookies::CookieJar,
     csrf::{CsrfExt as _, ProtectedForm},
 };
-use mas_data_model::{BoxClock, BoxRng, SiteConfig, UpstreamOAuthProvider};
+use mas_data_model::{BoxClock, BoxRng, SiteConfig, UpstreamOAuthProvider, UserRegistrationToken};
 use mas_matrix::HomeserverConnection;
 use mas_policy::Policy;
-use mas_router::{Register, UpstreamOAuth2Authorize, UrlBuilder};
-use mas_storage::{BoxRepository, upstream_oauth2::UpstreamOAuthProviderRepository};
-use mas_templates::{RegisterContext, RegisterFormField, TemplateContext, Templates, ToFormState};
+use mas_router::{PostAuthAction, Register, UpstreamOAuth2Authorize, UrlBuilder};
+use mas_storage::{
+    BoxRepository, RepositoryError, upstream_oauth2::UpstreamOAuthProviderRepository,
+    user::UserRegistrationTokenRepository,
+};
+use mas_templates::{
+    FieldError, FormState, InviteContext, RegisterContext, RegisterFormField, TemplateContext,
+    Templates, ToFormState,
+};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use ulid::Ulid;
@@ -34,6 +40,7 @@ use crate::{
     upstream_oauth2::authorize::start_authorization,
 };
 
+pub(crate) mod continue_url;
 mod cookie;
 pub(crate) mod password;
 pub(crate) mod steps;
@@ -45,6 +52,16 @@ pub use self::cookie::UserRegistrationSessions as UserRegistrationSessionsCookie
 #[error("Upstream OAuth 2.0 provider not found")]
 struct ProviderNotFound;
 
+/// The query parameters of the registration page: an invite link deep-links
+/// with a registration token, on top of the usual post-auth action
+#[derive(Deserialize)]
+pub(crate) struct QueryParams {
+    token: Option<String>,
+
+    #[serde(flatten)]
+    action: OptionalPostAuthAction,
+}
+
 #[tracing::instrument(name = "handlers.views.register.get", skip_all)]
 pub(crate) async fn get(
     mut rng: BoxRng,
@@ -55,7 +72,7 @@ pub(crate) async fn get(
     State(site_config): State<SiteConfig>,
     mut repo: BoxRepository,
     activity_tracker: BoundActivityTracker,
-    Query(query): Query<OptionalPostAuthAction>,
+    Query(query): Query<QueryParams>,
     cookie_jar: CookieJar,
 ) -> Result<Response, InternalError> {
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
@@ -63,26 +80,47 @@ pub(crate) async fn get(
 
     let maybe_session = session_info.load_active_session(&mut repo).await?;
 
+    // Resolve the invite code the link carried. A blank code is no code.
+    let token = query
+        .token
+        .as_deref()
+        .map(str::trim)
+        .filter(|token| !token.is_empty());
+    let found_token = match token {
+        Some(token) => repo.user_registration_token().find_by_token(token).await?,
+        None => None,
+    };
+    let action = post_auth_action(query.action, found_token.as_ref());
+
     if let Some(session) = maybe_session {
         activity_tracker
             .record_browser_session(&clock, &session)
             .await;
 
-        let reply = query.go_next(&url_builder);
+        let reply = action.go_next(&url_builder);
         return Ok((cookie_jar, reply).into_response());
     }
 
-    let providers = repo.upstream_oauth_provider().all_enabled().await?;
+    // Only a valid code can register
+    let registration_token = found_token.filter(|token| token.is_valid(clock.now()));
+    let passwordless_invite = registration_token
+        .as_ref()
+        .is_some_and(|token| token.passwordless);
+    let token_invalid = token.is_some() && registration_token.is_none();
+
+    let providers = offered_providers(&mut repo, registration_token.as_ref()).await?;
 
     // Without a password form there is nothing to show beyond the provider
-    // buttons, which isn't worth a page for one provider or none
-    if !site_config.password_registration_enabled {
+    // buttons, which isn't worth a page for one provider or none. A
+    // passwordless invite is a way to register on its own, so it keeps the
+    // page. The page also reports an invalid invite.
+    if !site_config.password_registration_enabled && !passwordless_invite && !token_invalid {
         if providers.len() == 1 {
             let provider = providers.into_iter().next().unwrap();
 
             let mut destination = UpstreamOAuth2Authorize::new(provider.id);
 
-            if let Some(action) = query.post_auth_action {
+            if let Some(action) = action.post_auth_action {
                 destination = destination.and_then(action);
             }
 
@@ -90,12 +128,26 @@ pub(crate) async fn get(
         }
 
         if providers.is_empty() {
-            let destination = mas_router::Login::from(query.post_auth_action);
+            let destination = mas_router::Login::from(action.post_auth_action);
             return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
         }
     }
 
-    let ctx = RegisterContext::new(&url_builder, providers, query.post_auth_action.as_ref())
+    let mut ctx = RegisterContext::new(&url_builder, providers, action.post_auth_action.as_ref());
+
+    // A code which resolved travels back on submission through a hidden field
+    if let Some(token) = token {
+        let mut form = FormState::default();
+        if registration_token.is_some() {
+            form.set_value(RegisterFormField::Token, Some(token.to_owned()));
+        }
+        ctx = ctx.with_form_state(form).with_invite(InviteContext::new(
+            registration_token.as_ref(),
+            site_config.passwordless_registration_without_email_allowed,
+        ));
+    }
+
+    let ctx = ctx
         .with_captcha(site_config.captcha.clone())
         .with_csrf(csrf_token.form_value())
         .with_language(locale);
@@ -103,6 +155,36 @@ pub(crate) async fn get(
     let content = templates.render_register(&ctx)?;
 
     Ok((cookie_jar, Html(content)).into_response())
+}
+
+/// The query's post-auth action if there is one, otherwise continuing to the
+/// URL of the registration token, whatever its validity, so that a link opened
+/// again after registering still leads there
+fn post_auth_action(
+    action: OptionalPostAuthAction,
+    registration_token: Option<&UserRegistrationToken>,
+) -> OptionalPostAuthAction {
+    action
+        .post_auth_action
+        .or_else(|| {
+            registration_token
+                .filter(|token| token.continue_url.is_some())
+                .map(|token| PostAuthAction::ContinueRegistrationToken { id: token.id })
+        })
+        .into()
+}
+
+/// The upstream providers the registration page offers: none with a
+/// passwordless token pinning a username, which already decides who registers
+async fn offered_providers(
+    repo: &mut BoxRepository,
+    registration_token: Option<&UserRegistrationToken>,
+) -> Result<Vec<UpstreamOAuthProvider>, RepositoryError> {
+    if registration_token.is_some_and(|token| token.passwordless && token.username.is_some()) {
+        return Ok(Vec::new());
+    }
+
+    repo.upstream_oauth_provider().all_enabled().await
 }
 
 /// A localpart longer than this can never become an MXID (`@` + localpart +
@@ -128,6 +210,16 @@ pub(crate) struct RegisterForm {
 
     #[serde(default)]
     accept_terms: String,
+
+    /// Only asked for by tokens registering without an email address, which
+    /// skip the display name step
+    #[serde(default)]
+    display_name: String,
+
+    /// The invite code, carried by a hidden field when the page was opened
+    /// from an invite link
+    #[serde(default)]
+    token: String,
 
     /// Which upstream provider the user chose, if any: each provider has its
     /// own submit button
@@ -162,7 +254,7 @@ pub(crate) async fn post(
         Option<TypedHeader<headers::UserAgent>>,
         BoundActivityTracker,
     ),
-    Query(query): Query<OptionalPostAuthAction>,
+    Query(query): Query<QueryParams>,
     cookie_jar: CookieJar,
     Form(form): Form<ProtectedForm<RegisterForm>>,
 ) -> Result<Response, InternalError> {
@@ -171,13 +263,45 @@ pub(crate) async fn post(
     let Ok(mut form) = cookie_jar.verify_form(&clock, form) else {
         // An invalid token most likely comes from a page left open past the CSRF token lifetime
         tracing::debug!("Invalid CSRF token on the registration form, redirecting to a fresh one");
-        let destination = Register::from(query.post_auth_action);
+        let mut destination = Register::from(query.action.post_auth_action);
+        if let Some(token) = query.token {
+            destination = destination.with_token(token);
+        }
         return Ok((cookie_jar, url_builder.redirect(&destination)).into_response());
     };
 
     // Matrix localparts are lowercase, so a stray capital or surrounding space
     // isn't worth an error
     form.username = form.username.trim().to_lowercase();
+
+    // Resolve the invite code now: it decides whether a password is needed at
+    // all, and a passwordless one is a way to register on its own. An invalid
+    // invite's page doesn't submit its code, which then only names the
+    // post-auth action.
+    form.token = form.token.trim().to_owned();
+    let form_token = Some(form.token.as_str()).filter(|token| !token.is_empty());
+    let url_token = query
+        .token
+        .as_deref()
+        .map(str::trim)
+        .filter(|token| !token.is_empty());
+    let found_token = match form_token.or(url_token) {
+        Some(token) => repo.user_registration_token().find_by_token(token).await?,
+        None => None,
+    };
+    let action = post_auth_action(query.action, found_token.as_ref());
+
+    // A browser signed in since the page loaded, such as by going Back after
+    // registering, goes on instead of registering again
+    let (session_info, cookie_jar) = cookie_jar.session_info();
+    if let Some(session) = session_info.load_active_session(&mut repo).await? {
+        activity_tracker
+            .record_browser_session(&clock, &session)
+            .await;
+
+        let reply = action.go_next(&url_builder);
+        return Ok((cookie_jar, reply).into_response());
+    }
 
     // Carry the username along so we can prefill it if the user gets to pick
     // one when they come back
@@ -212,7 +336,7 @@ pub(crate) async fn post(
             &mut repo,
             cookie_jar,
             &provider,
-            query.post_auth_action,
+            action.post_auth_action,
             carried_username,
         )
         .await?;
@@ -222,8 +346,41 @@ pub(crate) async fn post(
         return Ok((cookie_jar, Redirect::to(url.as_str())).into_response());
     }
 
-    if !site_config.password_registration_enabled {
-        return Ok(StatusCode::METHOD_NOT_ALLOWED.into_response());
+    let registration_token =
+        found_token.filter(|found| form_token.is_some() && found.is_valid(clock.now()));
+
+    let passwordless_invite = registration_token
+        .as_ref()
+        .is_some_and(|token| token.passwordless);
+
+    if !site_config.password_registration_enabled && !passwordless_invite {
+        if form_token.is_none() || registration_token.is_some() {
+            return Ok(StatusCode::METHOD_NOT_ALLOWED.into_response());
+        }
+
+        // Only the token's error is reported: with registration closed,
+        // checking the rest of the form would tell whether a username exists.
+        // The token isn't submitted again.
+        let (csrf_token, cookie_jar) = cookie_jar.csrf_token(&clock, &mut rng);
+        let mut form_state = form
+            .to_form_state()
+            .with_error_on_field(RegisterFormField::Token, FieldError::Invalid);
+        form_state.set_value(RegisterFormField::Token, None);
+
+        let content = self::password::render(
+            locale,
+            form_state,
+            &action,
+            csrf_token,
+            &mut repo,
+            &templates,
+            &url_builder,
+            &site_config,
+            self::password::InviteCode::Invalid,
+        )
+        .await?;
+
+        return Ok((cookie_jar, Html(content)).into_response());
     }
 
     self::password::register(
@@ -242,9 +399,10 @@ pub(crate) async fn post(
         repo,
         user_agent,
         &activity_tracker,
-        query,
+        action,
         cookie_jar,
         form,
+        registration_token,
     )
     .await
 }
@@ -259,10 +417,13 @@ mod tests {
         UpstreamOAuthProviderPkceMode, UpstreamOAuthProviderTokenAuthMethod,
     };
     use mas_iana::jose::JsonWebSignatureAlg;
+    use mas_router::{Route as _, UpstreamOAuth2Authorize};
     use mas_storage::{
         RepositoryAccess,
         upstream_oauth2::{UpstreamOAuthProviderParams, UpstreamOAuthSessionRepository},
+        user::{UserRegistrationTokenParams, UserRegistrationTokenRepository as _},
     };
+    use mas_templates::escape_html;
     use oauth2_types::scope::{OPENID, Scope};
     use sqlx::PgPool;
     use ulid::Ulid;
@@ -359,10 +520,197 @@ mod tests {
 
     /// Mint a CSRF token out of band, for the configurations where the page
     /// doesn't render a form to read one from
-    fn mint_csrf_token(state: &TestState, cookies: &CookieHelper) -> String {
+    pub(super) fn mint_csrf_token(state: &TestState, cookies: &CookieHelper) -> String {
         let (csrf_token, cookie_jar) = state.cookie_jar().csrf_token(&state.clock, state.rng());
         cookies.import(cookie_jar);
         csrf_token.form_value().clone()
+    }
+
+    pub(super) async fn add_registration_token(
+        state: &TestState,
+        token: &str,
+        username: Option<&str>,
+        email: Option<&str>,
+        passwordless: bool,
+    ) -> mas_data_model::UserRegistrationToken {
+        let mut repo = state.repository().await.unwrap();
+        let token = repo
+            .user_registration_token()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                UserRegistrationTokenParams {
+                    token: token.to_owned(),
+                    username: username.map(ToOwned::to_owned),
+                    email: email.map(ToOwned::to_owned),
+                    passwordless,
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+        token
+    }
+
+    /// Make `token` allow only `emails`
+    pub(super) async fn allow_emails(
+        state: &TestState,
+        token: mas_data_model::UserRegistrationToken,
+        emails: &[&str],
+    ) -> mas_data_model::UserRegistrationToken {
+        let mut repo = state.repository().await.unwrap();
+        let token = repo
+            .user_registration_token()
+            .set_allowed_emails(
+                token,
+                Some(emails.iter().map(|&email| email.to_owned()).collect()),
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+        token
+    }
+
+    /// Start a registration in this browser, as `POST /register` and the
+    /// email verification step leave it
+    pub(super) async fn add_registration(
+        state: &TestState,
+        cookies: &CookieHelper,
+        username: &str,
+        verified_email: Option<&str>,
+        with_password: bool,
+        token: Option<&mas_data_model::UserRegistrationToken>,
+    ) -> mas_data_model::UserRegistration {
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+
+        let mut registration = repo
+            .user_registration()
+            .add(
+                &mut rng,
+                &state.clock,
+                username.to_owned(),
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        if let Some(email) = verified_email {
+            let authentication = repo
+                .user_email()
+                .add_authentication_for_registration(
+                    &mut rng,
+                    &state.clock,
+                    email.to_owned(),
+                    &registration,
+                )
+                .await
+                .unwrap();
+            let code = repo
+                .user_email()
+                .add_authentication_code(
+                    &mut rng,
+                    &state.clock,
+                    chrono::Duration::minutes(5),
+                    &authentication,
+                    "123456".to_owned(),
+                )
+                .await
+                .unwrap();
+            let authentication = repo
+                .user_email()
+                .complete_authentication_with_code(&state.clock, authentication, &code)
+                .await
+                .unwrap();
+            registration = repo
+                .user_registration()
+                .set_email_authentication(registration, &authentication)
+                .await
+                .unwrap();
+        }
+
+        if with_password {
+            registration = repo
+                .user_registration()
+                .set_password(registration, "hashed".to_owned(), 1)
+                .await
+                .unwrap();
+        }
+
+        if let Some(token) = token {
+            registration = repo
+                .user_registration()
+                .set_registration_token(registration, token)
+                .await
+                .unwrap();
+        }
+
+        repo.save().await.unwrap();
+
+        cookies.import(
+            super::UserRegistrationSessionsCookie::default()
+                .add(&registration)
+                .save(state.cookie_jar(), &state.clock),
+        );
+
+        registration
+    }
+
+    /// Link a registration to an upstream identity, as registering through an
+    /// upstream provider does
+    pub(super) async fn link_upstream(
+        state: &TestState,
+        registration: mas_data_model::UserRegistration,
+    ) -> mas_data_model::UserRegistration {
+        let provider_id = provider(state).await;
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+
+        let provider = repo
+            .upstream_oauth_provider()
+            .lookup(provider_id)
+            .await
+            .unwrap()
+            .unwrap();
+        let session = repo
+            .upstream_oauth_session()
+            .add(
+                &mut rng,
+                &state.clock,
+                &provider,
+                registration.username.clone(),
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+        let link = repo
+            .upstream_oauth_link()
+            .add(
+                &mut rng,
+                &state.clock,
+                &provider,
+                registration.username.clone(),
+                None,
+            )
+            .await
+            .unwrap();
+        let session = repo
+            .upstream_oauth_session()
+            .complete_with_link(&state.clock, session, &link, None, None, None, None)
+            .await
+            .unwrap();
+        let registration = repo
+            .user_registration()
+            .set_upstream_oauth_authorization_session(registration, &session)
+            .await
+            .unwrap();
+
+        repo.save().await.unwrap();
+        registration
     }
 
     /// Decode the upstream sessions cookie set by the given response, if any
@@ -429,6 +777,444 @@ mod tests {
         assert_eq!(
             json_attribute(&body, "data-captcha-config")["site_key"],
             serde_json::json!("site-key")
+        );
+    }
+
+    /// Opening the page with an invite code resolves it server-side, and the
+    /// code travels back through the form
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_get_with_invite(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        // The island hides the username field of an invite which pins one or
+        // has a template for one
+        for (token, username) in [
+            ("invite_alice", "alice"),
+            ("invite_template", "user-{{ random }}"),
+        ] {
+            add_registration_token(
+                &state,
+                token,
+                Some(username),
+                Some("alice@example.com"),
+                true,
+            )
+            .await;
+
+            let request = Request::get(format!("/register?token={token}")).empty();
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::OK);
+            assert_eq!(
+                json_attribute(response.body(), "data-invite"),
+                serde_json::json!({
+                    "valid": true,
+                    "username": username,
+                    "email": "alice@example.com",
+                    "passwordless": true,
+                    "without_email": false,
+                })
+            );
+            assert_eq!(
+                json_attribute(response.body(), "data-form")["fields"]["token"]["value"],
+                serde_json::json!(token)
+            );
+        }
+
+        // A code the server doesn't know only says so, and isn't submitted
+        let request = Request::get("/register?token=nope").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-invite"),
+            serde_json::json!({ "valid": false })
+        );
+        assert_eq!(
+            json_attribute(response.body(), "data-form")["fields"]["token"]["value"],
+            serde_json::Value::Null
+        );
+    }
+
+    /// A passwordless invite is a way to register on its own, so the page keeps
+    /// the form even when password registration is disabled
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_get_with_invite_without_password_registration(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_login_enabled: false,
+                password_registration_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        add_registration_token(
+            &state,
+            "invite_alice",
+            Some("alice"),
+            Some("alice@example.com"),
+            true,
+        )
+        .await;
+
+        let request = Request::get("/register?token=invite_alice").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+
+        // Without the code, there is nothing to register with here
+        let request = Request::get("/register").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/login");
+    }
+
+    /// With password registration disabled, an invalid invite link keeps the
+    /// page to say so, whatever the providers. A valid code which isn't
+    /// passwordless can't register there, so it doesn't.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_get_with_invalid_invite_without_password_registration(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_login_enabled: false,
+                password_registration_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        let revoked = add_registration_token(&state, "revoked", None, None, true).await;
+        let expired = add_registration_token(&state, "expired", None, None, true).await;
+        let used = add_registration_token(&state, "used", None, None, true).await;
+        add_registration_token(&state, "not_passwordless", None, None, false).await;
+
+        let mut repo = state.repository().await.unwrap();
+        repo.user_registration_token()
+            .revoke(&state.clock, revoked)
+            .await
+            .unwrap();
+        repo.user_registration_token()
+            .set_expiry(expired, Some(state.clock.now()))
+            .await
+            .unwrap();
+        let used = repo
+            .user_registration_token()
+            .set_usage_limit(used, Some(1))
+            .await
+            .unwrap();
+        repo.user_registration_token()
+            .use_token(&state.clock, used)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        for providers in 0..=2 {
+            if providers > 0 {
+                provider(&state).await;
+            }
+
+            for token in ["unknown", "revoked", "expired", "used"] {
+                let request = Request::get(format!("/register?token={token}")).empty();
+                let response = state.request(request).await;
+                response.assert_status(StatusCode::OK);
+                assert_eq!(
+                    json_attribute(response.body(), "data-invite"),
+                    serde_json::json!({ "valid": false })
+                );
+            }
+
+            let request = Request::get("/register?token=not_passwordless").empty();
+            let response = state.request(request).await;
+            match providers {
+                0 => {
+                    response.assert_status(StatusCode::SEE_OTHER);
+                    response.assert_header_value(LOCATION, "/login");
+                }
+                1 => response.assert_status(StatusCode::SEE_OTHER),
+                _ => response.assert_status(StatusCode::OK),
+            }
+        }
+    }
+
+    /// A blank invite code is no code, and spaces around one are ignored
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_blank_and_padded_tokens(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_login_enabled: false,
+                password_registration_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        let cookies = CookieHelper::new();
+
+        add_registration_token(
+            &state,
+            "invite_alice",
+            Some("alice"),
+            Some("alice@example.com"),
+            true,
+        )
+        .await;
+
+        for token in ["", "%20%20"] {
+            let request = Request::get(format!("/register?token={token}")).empty();
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::SEE_OTHER);
+            response.assert_header_value(LOCATION, "/login");
+        }
+
+        let request = Request::get("/register?token=%20invite_alice%20").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-invite")["valid"],
+            serde_json::json!(true)
+        );
+        assert_eq!(
+            json_attribute(response.body(), "data-form")["fields"]["token"]["value"],
+            serde_json::json!("invite_alice")
+        );
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        for (token, status) in [
+            ("  ", StatusCode::METHOD_NOT_ALLOWED),
+            (" invite_alice ", StatusCode::SEE_OTHER),
+        ] {
+            let request =
+                cookies.with_cookies(Request::post("/register").form(serde_json::json!({
+                    "csrf": csrf_token,
+                    "token": token,
+                    "accept_terms": "on",
+                })));
+            let response = state.request(request).await;
+            response.assert_status(status);
+        }
+    }
+
+    /// Posting a registration token which has become invalid reports it with
+    /// the rest of the form. With password registration disabled, only the
+    /// token is reported, so the form can't tell whether a username exists.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_with_used_invite(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool.clone()).await.unwrap();
+
+        let used = add_registration_token(&state, "used", None, None, true).await;
+        let mut repo = state.repository().await.unwrap();
+        repo.user()
+            .add(&mut state.rng(), &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+        let used = repo
+            .user_registration_token()
+            .set_usage_limit(used, Some(1))
+            .await
+            .unwrap();
+        repo.user_registration_token()
+            .use_token(&state.clock, used)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        for password_registration_enabled in [true, false] {
+            let state = TestState::from_pool_with_site_config(
+                pool.clone(),
+                SiteConfig {
+                    password_registration_enabled,
+                    ..test_site_config()
+                },
+            )
+            .await
+            .unwrap();
+            let cookies = CookieHelper::new();
+
+            let csrf_token = mint_csrf_token(&state, &cookies);
+            let request =
+                cookies.with_cookies(Request::post("/register").form(serde_json::json!({
+                    "csrf": csrf_token,
+                    "username": "alice",
+                    "email": "alice@example.com",
+                    "password": "hunter2",
+                    "password_confirm": "hunter2",
+                    "token": "used",
+                })));
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::OK);
+            assert_eq!(
+                json_attribute(response.body(), "data-invite"),
+                serde_json::json!({ "valid": false })
+            );
+
+            let form = json_attribute(response.body(), "data-form");
+            let fields = form["fields"].as_object().unwrap();
+            assert_eq!(
+                fields["token"]["errors"],
+                serde_json::json!([{"kind": "invalid"}])
+            );
+            assert_eq!(fields["token"]["value"], serde_json::Value::Null);
+            if password_registration_enabled {
+                assert_eq!(
+                    fields["username"]["errors"],
+                    serde_json::json!([{"kind": "exists"}])
+                );
+            } else {
+                assert_eq!(form["errors"], serde_json::json!([]));
+                for (field, state) in fields {
+                    if field != "token" {
+                        assert_eq!(state["errors"], serde_json::json!([]), "errors on {field}");
+                    }
+                }
+            }
+        }
+    }
+
+    /// The form of a passwordless code pinning a username offers no upstream
+    /// provider, also when it comes back with an error, while the sign-in page
+    /// keeps them. Any other code still offers them.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_invite_hides_providers(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let provider_id = provider(&state).await;
+        let providers = serde_json::json!([{
+            "name": "Upstream Ltd.",
+            "brand": null,
+            "id": provider_id.to_string(),
+        }]);
+
+        for (token, username, email, passwordless) in [
+            ("invite", Some("alice"), Some("alice@example.com"), true),
+            ("username_only", Some("bob"), None, true),
+            ("email_only", None, Some("carol@example.com"), true),
+            (
+                "not_passwordless",
+                Some("dave"),
+                Some("dave@example.com"),
+                false,
+            ),
+        ] {
+            add_registration_token(&state, token, username, email, passwordless).await;
+        }
+        // The invite's username is taken, so its form comes back with an error
+        let mut repo = state.repository().await.unwrap();
+        repo.user()
+            .add(&mut state.rng(), &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let request = cookies.with_cookies(Request::get("/register?token=invite").empty());
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-providers"),
+            serde_json::json!([])
+        );
+
+        let request = cookies.with_cookies(Request::post("/register").form(serde_json::json!({
+            "csrf": csrf_token(response.body()),
+            "token": "invite",
+            "accept_terms": "on",
+        })));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-providers"),
+            serde_json::json!([])
+        );
+
+        let response = state.request(Request::get("/login").empty()).await;
+        response.assert_status(StatusCode::OK);
+        assert!(response.body().contains(&escape_html(
+            &UpstreamOAuth2Authorize::new(provider_id).path_and_query()
+        )));
+
+        let request = Request::get("/register?token=username_only").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-providers"),
+            serde_json::json!([])
+        );
+
+        for token in ["email_only", "not_passwordless"] {
+            let request = Request::get(format!("/register?token={token}")).empty();
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::OK);
+            assert_eq!(
+                json_attribute(response.body(), "data-providers"),
+                providers,
+                "providers with {token}"
+            );
+        }
+    }
+
+    /// A link with a username template and no address registers without an
+    /// email address, so its page asks for a display name
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_link_registers_without_email(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        add_registration_token(&state, "link", Some("user-{{ random }}"), None, true).await;
+
+        let response = state
+            .request(Request::get("/register?token=link").empty())
+            .await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-invite"),
+            serde_json::json!({
+                "valid": true,
+                "username": "user-{{ random }}",
+                "email": null,
+                "passwordless": true,
+                "without_email": true,
+            })
+        );
+        assert!(
+            response
+                .body()
+                .contains(r#"data-max-display-name-length="256""#)
+        );
+    }
+
+    /// A link listing the addresses it allows doesn't register without an email
+    /// address, so its page asks for one
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_listed_link_asks_for_email(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let token =
+            add_registration_token(&state, "link", Some("user-{{ random }}"), None, true).await;
+        allow_emails(&state, token, &["alice@example.com"]).await;
+
+        let response = state
+            .request(Request::get("/register?token=link").empty())
+            .await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-invite"),
+            serde_json::json!({
+                "valid": true,
+                "username": "user-{{ random }}",
+                "email": null,
+                "passwordless": true,
+                "without_email": false,
+            })
         );
     }
 
@@ -649,6 +1435,558 @@ mod tests {
         response.assert_status(StatusCode::SEE_OTHER);
         response.assert_header_value(LOCATION, "/register");
         assert!(upstream_sessions(&state, &response).is_none());
+    }
+
+    /// The fresh page a stale CSRF token sends the user back to keeps the
+    /// invite code the link carried
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_invalid_csrf_keeps_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let (csrf_token, _body) = render_page(&state, &cookies).await;
+
+        let request = cookies.with_cookies(Request::post("/register?token=invite").form(
+            serde_json::json!({
+                "csrf": format!("{csrf_token}invalid"),
+                "username": "alice",
+                "token": "invite",
+            }),
+        ));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/register?token=invite");
+    }
+
+    /// The continue URL of the tokens [`add_continue_token`] adds, which no
+    /// page of MAS and no redirect to one should show
+    const CONTINUE_URL: &str = "https://app.example.com/#/room/secretroom";
+
+    /// Add a passwordless invite for alice, which continues to [`CONTINUE_URL`]
+    async fn add_continue_token(
+        state: &TestState,
+        token: &str,
+        used: bool,
+    ) -> mas_data_model::UserRegistrationToken {
+        let mut repo = state.repository().await.unwrap();
+        let mut token = repo
+            .user_registration_token()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                UserRegistrationTokenParams {
+                    token: token.to_owned(),
+                    usage_limit: Some(1),
+                    username: Some("alice".to_owned()),
+                    email: Some("alice@example.com".to_owned()),
+                    passwordless: true,
+                    continue_url: Some(CONTINUE_URL.to_owned()),
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+        if used {
+            token = repo
+                .user_registration_token()
+                .use_token(&state.clock, token)
+                .await
+                .unwrap();
+        }
+        repo.save().await.unwrap();
+        token
+    }
+
+    fn assert_no_continue_url(response: &hyper::Response<String>) {
+        assert!(!response.body().contains("secretroom"));
+        if let Some(location) = response.headers().get(LOCATION) {
+            assert!(!location.to_str().unwrap().contains("secretroom"));
+        }
+    }
+
+    /// A signed-in browser opening an invite link goes straight on to the
+    /// invite's continue URL, also once its token has been used, unless the
+    /// link asks for something else
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_get_signed_in_with_continue_token(pool: PgPool) {
+        use mas_axum_utils::SessionInfoExt as _;
+
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let mut rng = state.rng();
+        let valid = add_continue_token(&state, "valid", false).await;
+        let used = add_continue_token(&state, "used", true).await;
+
+        let mut repo = state.repository().await.unwrap();
+        let bob = repo
+            .user()
+            .add(&mut rng, &state.clock, "bob".to_owned())
+            .await
+            .unwrap();
+        let session = repo
+            .browser_session()
+            .add(&mut rng, &state.clock, &bob, None)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let cookies = CookieHelper::new();
+        cookies.import(state.cookie_jar().set_session(&session));
+        for token in [valid, used] {
+            let request = Request::get(format!("/register?token={}", token.token)).empty();
+            let response = state.request(cookies.with_cookies(request)).await;
+            response.assert_status(StatusCode::SEE_OTHER);
+            response.assert_header_value(LOCATION, &format!("/register/continue/{}", token.id));
+            assert_no_continue_url(&response);
+        }
+
+        let request = Request::get(
+            "/register?token=used&kind=continue_authorization_grant&id=00000000000000000000000000",
+        )
+        .empty();
+        let response = state.request(cookies.with_cookies(request)).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/consent/00000000000000000000000000");
+    }
+
+    /// Submitting an invite link's form again once registered, as going Back
+    /// does, goes on to the continue URL rather than registering a second
+    /// account
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_signed_in_with_continue_token(pool: PgPool) {
+        use mas_storage::user::UserFilter;
+
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+        let mut repo = state.repository().await.unwrap();
+        let token = repo
+            .user_registration_token()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                UserRegistrationTokenParams {
+                    token: "link".to_owned(),
+                    username: Some("guest-{{ random }}".to_owned()),
+                    passwordless: true,
+                    continue_url: Some(CONTINUE_URL.to_owned()),
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let form = serde_json::json!({
+            "csrf": csrf_token,
+            "token": "link",
+            "display_name": "Alice",
+            "accept_terms": "on",
+        });
+        let request = cookies.with_cookies(Request::post("/register?token=link").form(&form));
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+        let finish = response.headers()[LOCATION].to_str().unwrap().to_owned();
+        let response = state
+            .request(cookies.with_cookies(Request::get(finish).empty()))
+            .await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+
+        let request = cookies.with_cookies(Request::post("/register?token=link").form(&form));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, &format!("/register/continue/{}", token.id));
+
+        let mut repo = state.repository().await.unwrap();
+        assert_eq!(repo.user().count(UserFilter::new()).await.unwrap(), 1);
+    }
+
+    /// The Sign in link of an invite's page goes on to the invite's continue
+    /// URL, also when the invite can no longer register
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_get_with_continue_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let valid = add_continue_token(&state, "valid", false).await;
+        let used = add_continue_token(&state, "used", true).await;
+
+        for (token, valid) in [(valid, true), (used, false)] {
+            let request = Request::get(format!("/register?token={}", token.token)).empty();
+            let response = state.request(request).await;
+            response.assert_status(StatusCode::OK);
+            assert_eq!(
+                json_attribute(response.body(), "data-invite")["valid"],
+                serde_json::json!(valid)
+            );
+            assert!(response.body().contains(&escape_html(&format!(
+                "/login?kind=continue_registration_token&id={}",
+                token.id
+            ))));
+            assert_no_continue_url(&response);
+        }
+    }
+
+    /// Sign the browser in as a new user
+    async fn sign_in(state: &TestState, cookies: &CookieHelper) {
+        use mas_axum_utils::SessionInfoExt as _;
+
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+        let bob = repo
+            .user()
+            .add(&mut rng, &state.clock, "bob".to_owned())
+            .await
+            .unwrap();
+        let session = repo
+            .browser_session()
+            .add(&mut rng, &state.clock, &bob, None)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+        cookies.import(state.cookie_jar().set_session(&session));
+    }
+
+    /// Submitting an invite's form again once signed in, as going Back after
+    /// registering does, goes on rather than registering a second account
+    /// under a fresh name from the username template
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_signed_in(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_registration_email_required: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        add_registration_token(&state, "invite", Some("user-{{ random }}"), None, false).await;
+        let cookies = CookieHelper::new();
+        sign_in(&state, &cookies).await;
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "token": "invite",
+                "password": "correcthorsebatterystaple",
+                "password_confirm": "correcthorsebatterystaple",
+                "accept_terms": "on",
+            }),
+        );
+        let response = state.request(cookies.with_cookies(request)).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/");
+    }
+
+    /// A provider button on a page loaded before signing in goes on too,
+    /// rather than starting an upstream sign-in
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_signed_in_with_provider(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let provider_id = provider(&state).await;
+        let cookies = CookieHelper::new();
+        sign_in(&state, &cookies).await;
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "provider": provider_id.to_string(),
+            }),
+        );
+        let response = state.request(cookies.with_cookies(request)).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/");
+        assert!(upstream_sessions(&state, &response).is_none());
+    }
+
+    /// Registering from an invite goes on to the invite's continue URL,
+    /// including from the email-in-use page
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_with_continue_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+        let token = add_continue_token(&state, "valid", false).await;
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let request = cookies.with_cookies(Request::post("/register?token=valid").form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "token": "valid",
+                "accept_terms": "on",
+            }),
+        ));
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::SEE_OTHER);
+        assert_no_continue_url(&response);
+        let location = response.headers()[LOCATION].to_str().unwrap();
+        let id: Ulid = location.split('/').nth(3).unwrap().parse().unwrap();
+
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
+        assert_eq!(
+            registration.post_auth_action,
+            Some(serde_json::json!({ "kind": "continue_registration_token", "id": token.id }))
+        );
+
+        // Someone else has the address by the time it is verified
+        let authentication = repo
+            .user_email()
+            .lookup_authentication(registration.email_authentication_id.unwrap())
+            .await
+            .unwrap()
+            .unwrap();
+        let code = repo
+            .user_email()
+            .add_authentication_code(
+                &mut rng,
+                &state.clock,
+                chrono::Duration::minutes(5),
+                &authentication,
+                "123456".to_owned(),
+            )
+            .await
+            .unwrap();
+        repo.user_email()
+            .complete_authentication_with_code(&state.clock, authentication, &code)
+            .await
+            .unwrap();
+        let bob = repo
+            .user()
+            .add(&mut rng, &state.clock, "bob".to_owned())
+            .await
+            .unwrap();
+        repo.user_email()
+            .add(&mut rng, &state.clock, &bob, "alice@example.com".to_owned())
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let request = Request::get(&*mas_router::RegisterFinish::new(id).path_and_query()).empty();
+        let response = state.request(cookies.with_cookies(request)).await;
+        response.assert_status(StatusCode::OK);
+        assert!(response.body().contains(&escape_html(&format!(
+            "/register?kind=continue_registration_token&id={}",
+            token.id
+        ))));
+        assert_no_continue_url(&response);
+    }
+
+    /// The page for an invite which can no longer register still goes on to
+    /// the invite's continue URL from its Sign in link
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_with_used_continue_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+        let token = add_continue_token(&state, "used", true).await;
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let request = cookies.with_cookies(Request::post("/register").form(serde_json::json!({
+            "csrf": csrf_token,
+            "token": "used",
+            "accept_terms": "on",
+        })));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert_eq!(
+            json_attribute(response.body(), "data-invite"),
+            serde_json::json!({ "valid": false })
+        );
+        assert!(response.body().contains(&escape_html(&format!(
+            "/login?kind=continue_registration_token&id={}",
+            token.id
+        ))));
+        assert_no_continue_url(&response);
+    }
+
+    /// A provider button on the page of an invite which can no longer register
+    /// still goes on to the invite's continue URL
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_with_provider_and_used_continue_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+        let token = add_continue_token(&state, "used", true).await;
+        let provider_id = provider(&state).await;
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let request = cookies.with_cookies(Request::post("/register?token=used").form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "provider": provider_id.to_string(),
+            }),
+        ));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        assert_no_continue_url(&response);
+
+        let sessions = upstream_sessions(&state, &response)
+            .expect("the upstream sessions cookie should be set");
+        assert_eq!(
+            sessions[0]["post_auth_action"],
+            serde_json::json!({
+                "kind": "continue_registration_token",
+                "id": token.id.to_string(),
+            })
+        );
+    }
+
+    /// The code in the page's URL only names the post-auth action: a submission
+    /// without a code of its own is an ordinary registration
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_with_continue_token_in_url_only(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool.clone()).await.unwrap();
+        let token = add_continue_token(&state, "valid", false).await;
+
+        for password_registration_enabled in [true, false] {
+            let state = TestState::from_pool_with_site_config(
+                pool.clone(),
+                SiteConfig {
+                    password_registration_enabled,
+                    ..test_site_config()
+                },
+            )
+            .await
+            .unwrap();
+            let cookies = CookieHelper::new();
+
+            let csrf_token = mint_csrf_token(&state, &cookies);
+            let request = cookies.with_cookies(Request::post("/register?token=valid").form(
+                serde_json::json!({
+                    "csrf": csrf_token,
+                    "username": "bob",
+                    "email": "bob@example.com",
+                    "password": "correcthorsebatterystaple",
+                    "password_confirm": "correcthorsebatterystaple",
+                    "accept_terms": "on",
+                }),
+            ));
+            let response = state.request(request).await;
+
+            let mut repo = state.repository().await.unwrap();
+            if password_registration_enabled {
+                response.assert_status(StatusCode::SEE_OTHER);
+                let location = response.headers()[LOCATION].to_str().unwrap();
+                let id: Ulid = location.split('/').nth(3).unwrap().parse().unwrap();
+                let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
+                assert_eq!(registration.username, "bob");
+                assert!(registration.password.is_some());
+                assert!(registration.user_registration_token_id.is_none());
+            } else {
+                response.assert_status(StatusCode::METHOD_NOT_ALLOWED);
+            }
+
+            let token = repo
+                .user_registration_token()
+                .lookup(token.id)
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(token.times_used, 0);
+        }
+    }
+
+    /// A registration from the page of an invite which can no longer register
+    /// still goes on to the invite's continue URL
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_from_used_continue_token_page(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+        let token = add_continue_token(&state, "used", true).await;
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let request = cookies.with_cookies(Request::post("/register?token=used").form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "username": "bob",
+                "email": "bob@example.com",
+                "password": "correcthorsebatterystaple",
+                "password_confirm": "correcthorsebatterystaple",
+                "accept_terms": "on",
+            }),
+        ));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        assert_no_continue_url(&response);
+        let location = response.headers()[LOCATION].to_str().unwrap();
+        let id: Ulid = location.split('/').nth(3).unwrap().parse().unwrap();
+
+        let mut repo = state.repository().await.unwrap();
+        let registration = repo.user_registration().lookup(id).await.unwrap().unwrap();
+        assert!(registration.user_registration_token_id.is_none());
+        assert_eq!(
+            registration.post_auth_action,
+            Some(serde_json::json!({ "kind": "continue_registration_token", "id": token.id }))
+        );
+    }
+
+    /// Without password registration, the redirects away from a code which
+    /// isn't an invite go on to its continue URL
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_get_redirects_with_continue_token(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_registration_enabled: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let mut repo = state.repository().await.unwrap();
+        let token = repo
+            .user_registration_token()
+            .add(
+                &mut state.rng(),
+                &state.clock,
+                UserRegistrationTokenParams {
+                    token: "with_url".to_owned(),
+                    continue_url: Some(CONTINUE_URL.to_owned()),
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+        let action = mas_router::PostAuthAction::ContinueRegistrationToken { id: token.id };
+
+        let response = state
+            .request(Request::get("/register?token=with_url").empty())
+            .await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(
+            LOCATION,
+            &mas_router::Login::from(Some(action.clone())).path_and_query(),
+        );
+        assert_no_continue_url(&response);
+
+        let provider_id = provider(&state).await;
+        let response = state
+            .request(Request::get("/register?token=with_url").empty())
+            .await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(
+            LOCATION,
+            &UpstreamOAuth2Authorize::new(provider_id)
+                .and_then(action)
+                .path_and_query(),
+        );
+        assert_no_continue_url(&response);
     }
 
     /// A username too long to ever become an MXID is dropped instead of being

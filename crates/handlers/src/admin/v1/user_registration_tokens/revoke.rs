@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 // Copyright 2025 The Matrix.org Foundation C.I.C.
 //
@@ -5,9 +6,10 @@
 // Please see LICENSE files in the repository root for full details.
 
 use aide::{OperationIo, transform::TransformOperation};
-use axum::{Json, response::IntoResponse};
+use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
+use mas_router::UrlBuilder;
 use ulid::Ulid;
 
 use crate::{
@@ -76,6 +78,7 @@ pub async fn handler(
     CallContext {
         mut repo, clock, ..
     }: CallContext,
+    State(url_builder): State<UrlBuilder>,
     id: UlidPathParam,
 ) -> Result<Json<SingleResponse<UserRegistrationToken>>, RouteError> {
     let id = *id;
@@ -96,7 +99,7 @@ pub async fn handler(
     repo.save().await?;
 
     Ok(Json(SingleResponse::new(
-        UserRegistrationToken::new(token, clock.now()),
+        UserRegistrationToken::new(token, clock.now(), &url_builder),
         format!("/api/admin/v1/user-registration-tokens/{id}/revoke"),
     )))
 }
@@ -106,6 +109,7 @@ mod tests {
     use chrono::Duration;
     use hyper::{Request, StatusCode};
     use mas_data_model::Clock as _;
+    use mas_storage::user::UserRegistrationTokenParams;
     use sqlx::PgPool;
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
@@ -122,9 +126,11 @@ mod tests {
             .add(
                 &mut state.rng(),
                 &state.clock,
-                "test_token_456".to_owned(),
-                Some(5),
-                None,
+                UserRegistrationTokenParams {
+                    token: "test_token_456".to_owned(),
+                    usage_limit: Some(5),
+                    ..Default::default()
+                },
             )
             .await
             .unwrap();
@@ -159,9 +165,10 @@ mod tests {
             .add(
                 &mut state.rng(),
                 &state.clock,
-                "test_token_789".to_owned(),
-                None,
-                None,
+                UserRegistrationTokenParams {
+                    token: "test_token_789".to_owned(),
+                    ..Default::default()
+                },
             )
             .await
             .unwrap();

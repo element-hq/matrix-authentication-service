@@ -12,6 +12,34 @@ use ulid::Ulid;
 
 use crate::repository_impl;
 
+/// The parameters of a new [`UserRegistrationToken`]
+#[derive(Debug, Clone, Default)]
+pub struct UserRegistrationTokenParams {
+    /// The token string
+    pub token: String,
+
+    /// Optional limit on how many times the token can be used
+    pub usage_limit: Option<u32>,
+
+    /// Optional expiration time for the token
+    pub expires_at: Option<DateTime<Utc>>,
+
+    /// Optional username to impose on the registering user
+    pub username: Option<String>,
+
+    /// Optional email to impose on the registering user
+    pub email: Option<String>,
+
+    /// Optional email addresses the registering user must use one of
+    pub allowed_emails: Option<Vec<String>>,
+
+    /// Whether registrations using this token skip the password step
+    pub passwordless: bool,
+
+    /// Optional URL the user is sent to once registered or signed in
+    pub continue_url: Option<String>,
+}
+
 /// A filter to apply when listing [`UserRegistrationToken`]s
 #[derive(Debug, Clone, Copy)]
 pub struct UserRegistrationTokenFilter {
@@ -147,9 +175,7 @@ pub trait UserRegistrationTokenRepository: Send + Sync {
     ///
     /// * `rng`: The random number generator to use
     /// * `clock`: The clock used to generate timestamps
-    /// * `token`: The token string
-    /// * `usage_limit`: Optional limit on how many times the token can be used
-    /// * `expires_at`: Optional expiration time for the token
+    /// * `params`: The parameters of the token
     ///
     /// # Errors
     ///
@@ -158,9 +184,7 @@ pub trait UserRegistrationTokenRepository: Send + Sync {
         &mut self,
         rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
-        token: String,
-        usage_limit: Option<u32>,
-        expires_at: Option<DateTime<Utc>>,
+        params: UserRegistrationTokenParams,
     ) -> Result<UserRegistrationToken, Self::Error>;
 
     /// Increment the usage count of a [`UserRegistrationToken`]
@@ -244,6 +268,22 @@ pub trait UserRegistrationTokenRepository: Send + Sync {
         usage_limit: Option<u32>,
     ) -> Result<UserRegistrationToken, Self::Error>;
 
+    /// Set the email addresses allowed by this [`UserRegistrationToken`]
+    ///
+    /// # Parameters
+    ///
+    /// * `token`: The [`UserRegistrationToken`] to update
+    /// * `allowed_emails`: The new email addresses, or `None` for any
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Self::Error`] if the underlying repository fails
+    async fn set_allowed_emails(
+        &mut self,
+        token: UserRegistrationToken,
+        allowed_emails: Option<Vec<String>>,
+    ) -> Result<UserRegistrationToken, Self::Error>;
+
     /// List [`UserRegistrationToken`]s based on the provided filter
     ///
     /// Returns a list of matching [`UserRegistrationToken`]s
@@ -283,9 +323,7 @@ repository_impl!(UserRegistrationTokenRepository:
         &mut self,
         rng: &mut (dyn Rng + Send),
         clock: &dyn Clock,
-        token: String,
-        usage_limit: Option<u32>,
-        expires_at: Option<DateTime<Utc>>,
+        params: UserRegistrationTokenParams,
     ) -> Result<UserRegistrationToken, Self::Error>;
     async fn use_token(
         &mut self,
@@ -310,6 +348,11 @@ repository_impl!(UserRegistrationTokenRepository:
         &mut self,
         token: UserRegistrationToken,
         usage_limit: Option<u32>,
+    ) -> Result<UserRegistrationToken, Self::Error>;
+    async fn set_allowed_emails(
+        &mut self,
+        token: UserRegistrationToken,
+        allowed_emails: Option<Vec<String>>,
     ) -> Result<UserRegistrationToken, Self::Error>;
     async fn list(
         &mut self,

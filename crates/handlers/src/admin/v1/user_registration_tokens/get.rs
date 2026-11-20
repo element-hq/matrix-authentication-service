@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 // Copyright 2025 The Matrix.org Foundation C.I.C.
 //
@@ -5,9 +6,10 @@
 // Please see LICENSE files in the repository root for full details.
 
 use aide::{OperationIo, transform::TransformOperation};
-use axum::{Json, response::IntoResponse};
+use axum::{Json, extract::State, response::IntoResponse};
 use hyper::StatusCode;
 use mas_axum_utils::record_error;
+use mas_router::UrlBuilder;
 use ulid::Ulid;
 
 use crate::{
@@ -67,6 +69,7 @@ pub async fn handler(
     CallContext {
         mut repo, clock, ..
     }: CallContext,
+    State(url_builder): State<UrlBuilder>,
     id: UlidPathParam,
 ) -> Result<Json<SingleResponse<UserRegistrationToken>>, RouteError> {
     let token = repo
@@ -76,7 +79,7 @@ pub async fn handler(
         .ok_or(RouteError::NotFound(*id))?;
 
     Ok(Json(SingleResponse::new_canonical(
-        UserRegistrationToken::new(token, clock.now()),
+        UserRegistrationToken::new(token, clock.now(), &url_builder),
     )))
 }
 
@@ -84,6 +87,7 @@ pub async fn handler(
 mod tests {
     use hyper::{Request, StatusCode};
     use insta::assert_json_snapshot;
+    use mas_storage::user::UserRegistrationTokenParams;
     use sqlx::PgPool;
     use ulid::Ulid;
 
@@ -101,9 +105,11 @@ mod tests {
             .add(
                 &mut state.rng(),
                 &state.clock,
-                "test_token_123".to_owned(),
-                Some(5),
-                None,
+                UserRegistrationTokenParams {
+                    token: "test_token_123".to_owned(),
+                    usage_limit: Some(5),
+                    ..Default::default()
+                },
             )
             .await
             .unwrap();
@@ -127,12 +133,18 @@ mod tests {
             "attributes": {
               "token": "test_token_123",
               "valid": true,
+              "username": null,
+              "email": null,
+              "allowed_emails": null,
+              "passwordless": false,
+              "continue_url": null,
               "usage_limit": 5,
               "times_used": 0,
               "created_at": "2022-01-16T14:40:00Z",
               "last_used_at": null,
               "expires_at": null,
-              "revoked_at": null
+              "revoked_at": null,
+              "invite_url": "https://example.com/register?token=test_token_123"
             },
             "links": {
               "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"

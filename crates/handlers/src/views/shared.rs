@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -102,6 +103,10 @@ impl OptionalPostAuthAction {
             }
 
             PostAuthAction::ManageAccount { .. } => PostAuthContextInner::ManageAccount,
+
+            PostAuthAction::ContinueRegistrationToken { .. } => {
+                PostAuthContextInner::ContinueRegistrationToken
+            }
         };
 
         Ok(Some(PostAuthContext {

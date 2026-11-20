@@ -75,6 +75,7 @@ mod rate_limit;
 mod session;
 #[cfg(test)]
 mod test_utils;
+mod username_template;
 
 static METER: LazyLock<Meter> = LazyLock::new(|| {
     let scope = opentelemetry::InstrumentationScope::builder(env!("CARGO_PKG_NAME"))
@@ -399,6 +400,10 @@ where
         .route(
             mas_router::Register::route(),
             get(self::views::register::get).post(self::views::register::post),
+        )
+        .route(
+            mas_router::RegisterContinue::route(),
+            get(self::views::register::continue_url::get),
         )
         // Keeps links to the former password registration page working
         .route(

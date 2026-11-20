@@ -1,0 +1,269 @@
+// Copyright 2026 Element Creations Ltd.
+//
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-Element-Commercial
+// Please see LICENSE files in the repository root for full details.
+
+// @vitest-environment happy-dom
+
+import { act, screen } from "@testing-library/react";
+import type { Root } from "react-dom/client";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+
+/** The roots the entry point mounted, to unmount after each test */
+const roots = vi.hoisted((): Root[] => []);
+
+vi.mock("react-dom/client", async (importOriginal) => {
+  const client = await importOriginal<typeof import("react-dom/client")>();
+  return {
+    ...client,
+    createRoot: (...args: Parameters<typeof client.createRoot>): Root => {
+      const root = client.createRoot(...args);
+      roots.push(root);
+      return root;
+    },
+  };
+});
+
+// The scorer loads its dictionaries lazily, which can outlive the test file
+vi.mock("../utils/password_complexity", () => ({
+  estimatePasswordComplexity: async () => ({
+    score: 0,
+    scoreText: "",
+    improvementsText: [],
+  }),
+}));
+
+const PROVIDERS = [
+  { name: "First", brand: null, id: "01J00000000000000000000001" },
+  { name: "Second", brand: null, id: "01J00000000000000000000002" },
+];
+
+/** Mount the island on a node carrying the given data, as the page does */
+const mountRegister = async ({
+  passwordRegistration = true,
+  providers = [],
+  invite,
+  form = { errors: [], fields: {} },
+}: {
+  passwordRegistration?: boolean;
+  providers?: typeof PROVIDERS;
+  invite?: Record<string, unknown>;
+  form?: Record<string, unknown>;
+} = {}): Promise<void> => {
+  const el = document.createElement("div");
+  el.id = "register-form";
+  el.dataset.csrfToken = "csrf";
+  el.dataset.graphqlEndpoint = "/graphql";
+  el.dataset.branding = JSON.stringify({ server_name: "example.com" });
+  el.dataset.features = JSON.stringify({
+    password_registration: passwordRegistration,
+    password_registration_email_required: true,
+    minimum_password_complexity: 1,
+  });
+  el.dataset.maxDisplayNameLength = "256";
+  el.dataset.form = JSON.stringify(form);
+  el.dataset.providers = JSON.stringify(providers);
+  el.dataset.loginLink = "/login";
+  if (invite) el.dataset.invite = JSON.stringify(invite);
+  document.body.append(el);
+
+  // The entry point mounts the island when it is imported
+  vi.resetModules();
+  await import("./register");
+  await screen.findByRole("link", {
+    name: /^(Already have an account\?|Sign in with an existing account)$/,
+  });
+};
+
+const unmount = (): void => {
+  act(() => {
+    for (const root of roots.splice(0)) root.unmount();
+  });
+  document.body.innerHTML = "";
+};
+
+describe("register island", () => {
+  // The first import of the entry point is slow, so it happens outside the
+  // tests' timeout
+  beforeAll(async () => {
+    await mountRegister();
+    unmount();
+  });
+
+  afterEach(unmount);
+
+  describe("with an invalid invite", () => {
+    it.each([0, 1, 2])(
+      "says so without password registration, with %i providers",
+      async (count) => {
+        await mountRegister({
+          passwordRegistration: false,
+          providers: PROVIDERS.slice(0, count),
+          invite: { valid: false },
+        });
+
+        expect(screen.getByRole("alert")).toHaveTextContent(
+          "This invite link is invalid or has expired",
+        );
+        expect(
+          screen.queryAllByRole("button", { name: /^Continue with/ }),
+        ).toHaveLength(count);
+      },
+    );
+
+    it("says so above the password form", async () => {
+      await mountRegister({ invite: { valid: false } });
+
+      const alert = screen.getByRole("alert");
+      expect(alert).toHaveTextContent(
+        "This invite link is invalid or has expired",
+      );
+      expect(
+        alert.compareDocumentPosition(screen.getByLabelText("Username")) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    it("offers the usual sign-in link", async () => {
+      await mountRegister({ invite: { valid: false } });
+
+      expect(
+        screen.getByRole("link", { name: "Already have an account?" }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe("with an invite pinning the username and email", () => {
+    const invite = {
+      valid: true,
+      username: "alice",
+      email: "alice@example.com",
+      passwordless: true,
+      without_email: false,
+    };
+
+    it("offers to sign in with an existing account", async () => {
+      await mountRegister({ invite });
+
+      expect(
+        screen.getByRole("link", { name: "Sign in with an existing account" }),
+      ).toBeInTheDocument();
+    });
+
+    it("explains an error on the username above the form", async () => {
+      await mountRegister({
+        invite,
+        form: {
+          errors: [],
+          fields: { username: { value: "", errors: [{ kind: "exists" }] } },
+        },
+      });
+
+      const alert = screen.getByRole("alert");
+      expect(alert).toHaveTextContent(
+        "The account this invite is for can't be created.",
+      );
+      expect(
+        alert.compareDocumentPosition(
+          screen.getByRole("button", { name: "Send code" }),
+        ) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    it("explains an error on the email address above the form", async () => {
+      await mountRegister({
+        invite,
+        form: {
+          errors: [],
+          fields: {
+            email: {
+              value: "alice@example.com",
+              errors: [
+                {
+                  kind: "policy",
+                  code: "email-domain-banned",
+                  message: "Email domain is banned",
+                },
+              ],
+            },
+          },
+        },
+      });
+
+      const alert = screen.getByRole("alert");
+      expect(alert).toHaveTextContent(
+        "This invite's email address can't be used to create an account.",
+      );
+      expect(
+        alert.compareDocumentPosition(
+          screen.getByRole("button", { name: "Send code" }),
+        ) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+  });
+
+  describe("with an invite link registering without an email", () => {
+    it("asks for a display name and no email address", async () => {
+      await mountRegister({
+        invite: {
+          valid: true,
+          username: "user-{{ random }}",
+          email: null,
+          passwordless: true,
+          without_email: true,
+        },
+      });
+
+      const displayName = screen.getByLabelText("Display name");
+      expect(displayName).toBeRequired();
+      expect(displayName).toHaveAttribute("maxlength", "256");
+      expect(screen.queryByLabelText("Email address")).toBeNull();
+      expect(screen.getByRole("button", { name: "Continue" })).toBeVisible();
+    });
+  });
+
+  describe("with an invite listing the email addresses it allows", () => {
+    it("asks a link's user for an address and a code, not a display name", async () => {
+      await mountRegister({
+        invite: {
+          valid: true,
+          username: "user-{{ random }}",
+          email: null,
+          passwordless: true,
+          without_email: false,
+        },
+      });
+
+      expect(screen.getByLabelText("Email address")).toBeRequired();
+      expect(screen.getByRole("button", { name: "Send code" })).toBeVisible();
+      expect(screen.queryByLabelText("Display name")).toBeNull();
+    });
+
+    it("explains an unlisted address on the email field", async () => {
+      await mountRegister({
+        invite: {
+          valid: true,
+          username: null,
+          email: null,
+          passwordless: true,
+          without_email: false,
+        },
+        form: {
+          errors: [],
+          fields: {
+            email: {
+              value: "mallory@example.com",
+              errors: [{ kind: "mismatch" }],
+            },
+          },
+        },
+      });
+
+      const field = screen.getByLabelText("Email address").closest("div");
+      expect(field).toHaveTextContent(
+        "This invite isn't for this email address. Use the address you were invited with.",
+      );
+      expect(screen.queryByRole("alert")).toBeNull();
+    });
+  });
+});
