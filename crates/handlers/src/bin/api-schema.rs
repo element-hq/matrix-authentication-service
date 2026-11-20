@@ -14,54 +14,14 @@
 )]
 #![warn(clippy::pedantic)]
 
-use std::{io::Write, sync::Arc};
+use std::io::Write;
 
 use aide::openapi::{Server, ServerVariable};
 use indexmap::IndexMap;
 
-/// This is a dummy state, it should never be used.
-///
-/// We use it to generate the API schema, which doesn't execute any request.
-#[derive(Clone)]
-struct DummyState;
+use self::dummy_state::DummyState;
 
-macro_rules! impl_from_request_parts {
-    ($type:ty) => {
-        impl axum::extract::FromRequestParts<DummyState> for $type {
-            type Rejection = std::convert::Infallible;
-
-            fn from_request_parts(
-                _parts: &mut axum::http::request::Parts,
-                _state: &DummyState,
-            ) -> impl Future<Output = Result<Self, Self::Rejection>> + Send {
-                async { unimplemented!("This is a dummy state, it should never be used") }
-            }
-        }
-    };
-}
-
-macro_rules! impl_from_ref {
-    ($type:ty) => {
-        impl axum::extract::FromRef<DummyState> for $type {
-            fn from_ref(_input: &DummyState) -> Self {
-                unimplemented!("This is a dummy state, it should never be used")
-            }
-        }
-    };
-}
-
-impl_from_request_parts!(mas_storage::BoxRepository);
-impl_from_request_parts!(mas_data_model::BoxClock);
-impl_from_request_parts!(mas_data_model::BoxRng);
-impl_from_request_parts!(mas_handlers::BoundActivityTracker);
-impl_from_ref!(mas_router::UrlBuilder);
-impl_from_ref!(mas_templates::Templates);
-impl_from_ref!(Arc<dyn mas_matrix::HomeserverConnection>);
-impl_from_ref!(mas_keystore::Keystore);
-impl_from_ref!(mas_handlers::passwords::PasswordManager);
-impl_from_ref!(Arc<mas_policy::PolicyFactory>);
-impl_from_ref!(mas_data_model::SiteConfig);
-impl_from_ref!(mas_data_model::AppVersion);
+mod dummy_state;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (mut api, _) = mas_handlers::admin_api_router::<DummyState>();
@@ -73,6 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "base".to_owned(),
             ServerVariable {
                 default: "/".to_owned(),
+                description: Some("The base URL of the listener".to_owned()),
                 ..ServerVariable::default()
             },
         )]),

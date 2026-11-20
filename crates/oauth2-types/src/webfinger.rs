@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -8,11 +9,12 @@
 //!
 //! [Webfinger]: https://www.rfc-editor.org/rfc/rfc7033
 
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
 /// The response of the Webfinger endpoint.
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, JsonSchema)]
 pub struct WebFingerResponse {
     /// A URI that identifies the entity described by the response.
     subject: String,
@@ -46,7 +48,7 @@ impl WebFingerResponse {
 }
 
 /// A link in a Webfinger response.
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(tag = "rel")]
 pub enum WebFingerLink {
     /// An OpenID Connect issuer.

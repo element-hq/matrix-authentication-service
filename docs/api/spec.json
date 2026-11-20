@@ -10,7 +10,7 @@
       "variables": {
         "base": {
           "default": "/",
-          "description": null
+          "description": "The base URL of the listener"
         }
       }
     }
