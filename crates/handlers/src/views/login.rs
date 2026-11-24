@@ -464,7 +464,7 @@ async fn render(
 mod test {
     use hyper::{
         Request, StatusCode,
-        header::{CONTENT_TYPE, LOCATION, X_FRAME_OPTIONS},
+        header::{CONTENT_SECURITY_POLICY, CONTENT_TYPE, LOCATION, X_FRAME_OPTIONS},
     };
     use mas_data_model::{
         UpstreamOAuthProviderClaimsImports, UpstreamOAuthProviderOnBackchannelLogout,
@@ -1286,5 +1286,18 @@ mod test {
         let response = state.request(Request::get("/login").empty()).await;
         response.assert_status(StatusCode::OK);
         response.assert_header_value(X_FRAME_OPTIONS, "DENY");
+    }
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_content_security_policy(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let response = state.request(Request::get("/login").empty()).await;
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(
+            CONTENT_SECURITY_POLICY,
+            crate::csp::SERVER_RENDERED.to_str().unwrap(),
+        );
     }
 }

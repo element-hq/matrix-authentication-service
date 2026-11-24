@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 //
@@ -212,7 +213,10 @@ pub(crate) async fn get(
 
 #[cfg(test)]
 mod tests {
-    use hyper::{Request, StatusCode};
+    use hyper::{
+        Request, StatusCode,
+        header::{CONTENT_SECURITY_POLICY, X_CONTENT_TYPE_OPTIONS},
+    };
     use mas_data_model::SiteConfig;
     use oauth2_types::{oidc::ProviderMetadata, requests::GrantType};
     use sqlx::PgPool;
@@ -263,5 +267,21 @@ mod tests {
         metadata
             .validate(state.url_builder.oidc_issuer().as_str())
             .expect("Invalid metadata");
+    }
+
+    /// Responses which aren't pages get the locked-down defaults
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_default_security_headers(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let request = Request::get("/.well-known/openid-configuration").empty();
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(
+            CONTENT_SECURITY_POLICY,
+            crate::csp::LOCKED_DOWN.to_str().unwrap(),
+        );
+        response.assert_header_value(X_CONTENT_TYPE_OPTIONS, "nosniff");
     }
 }
