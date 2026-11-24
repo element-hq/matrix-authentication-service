@@ -2926,7 +2926,7 @@
           ]
         },
         "plan_management_iframe_uri": {
-          "description": "Experimental feature to show a plan management tab and iframe.\nThis value is passed through \"as is\" to the client without any\nvalidation.",
+          "description": "Experimental feature to show a plan management tab and iframe.\nThis value is passed through \"as is\" to the client without any\nvalidation. It may be a relative URI.",
           "type": [
             "string",
             "null"

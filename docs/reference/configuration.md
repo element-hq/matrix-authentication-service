@@ -1072,6 +1072,7 @@ experimental:
 
   # Experimental feature to show a plan management tab and iframe.
   # This value is passed through "as is" to the client without any validation.
+  # It may be a relative URI.
   #plan_management_iframe_uri: https://example.com/plan
 
   # Experimental feature to limit the number of application sessions per user.
