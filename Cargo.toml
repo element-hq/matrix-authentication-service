@@ -44,18 +44,14 @@ broken_intra_doc_links = "deny"
 
 # Workspace crates
 mas-axum-utils = { path = "./crates/axum-utils/", version = "=1.30.0" }
-mas-cli = { path = "./crates/cli/", version = "=1.30.0" }
 mas-config = { path = "./crates/config/", version = "=1.30.0" }
 mas-context = { path = "./crates/context/", version = "=1.30.0" }
 mas-data-model = { path = "./crates/data-model/", version = "=1.30.0" }
 mas-email = { path = "./crates/email/", version = "=1.30.0" }
-mas-graphql = { path = "./crates/graphql/", version = "=1.30.0" }
 mas-handlers = { path = "./crates/handlers/", version = "=1.30.0" }
 mas-http = { path = "./crates/http/", version = "=1.30.0" }
 mas-i18n = { path = "./crates/i18n/", version = "=1.30.0" }
-mas-i18n-scan = { path = "./crates/i18n-scan/", version = "=1.30.0" }
 mas-iana = { path = "./crates/iana/", version = "=1.30.0" }
-mas-iana-codegen = { path = "./crates/iana-codegen/", version = "=1.30.0" }
 mas-jose = { path = "./crates/jose/", version = "=1.30.0" }
 mas-keystore = { path = "./crates/keystore/", version = "=1.30.0" }
 mas-listener = { path = "./crates/listener/", version = "=1.30.0" }
