@@ -121,7 +121,7 @@ impl LoadError {
 #[non_exhaustive]
 #[derive(Debug)]
 pub enum PrivateKey {
-    Rsa(Box<rsa::RsaPrivateKey>),
+    Rsa(Box<rsa::PrivateKey>),
     EcP256(Box<elliptic_curve::SecretKey<p256::NistP256>>),
     EcP384(Box<elliptic_curve::SecretKey<p384::NistP384>>),
     EcK256(Box<elliptic_curve::SecretKey<k256::Secp256k1>>),
@@ -134,7 +134,7 @@ pub struct WrongAlgorithmError;
 
 impl PrivateKey {
     fn from_pkcs1_private_key(pkcs1_key: &pkcs1::RsaPrivateKeyRef<'_>) -> Result<Self, LoadError> {
-        // Taken from `TryFrom<pkcs8::PrivateKeyInfo<'_>> for RsaPrivateKey`
+        // Taken from `TryFrom<pkcs8::PrivateKeyInfoRef<'_>> for rsa::PrivateKey`
 
         // Multi-prime RSA keys not currently supported
         if pkcs1_key.version() != pkcs1::Version::TwoPrime {
@@ -147,7 +147,7 @@ impl PrivateKey {
         let first_prime = BoxedUint::from_be_slice_vartime(pkcs1_key.prime1.as_bytes());
         let second_prime = BoxedUint::from_be_slice_vartime(pkcs1_key.prime2.as_bytes());
         let primes = vec![first_prime, second_prime];
-        let key = rsa::RsaPrivateKey::from_components(n, e, d, primes)?;
+        let key = rsa::PrivateKey::from_components(n, e, d, primes)?;
         Ok(Self::Rsa(Box::new(key)))
     }
 
@@ -418,7 +418,7 @@ impl PrivateKey {
     ) -> Result<AsymmetricVerifyingKey, WrongAlgorithmError> {
         let key = match (self, alg) {
             (Self::Rsa(key), _) => {
-                let key: rsa::RsaPublicKey = key.to_public_key();
+                let key: rsa::PublicKey = key.to_public_key();
                 match alg {
                     JsonWebSignatureAlg::Rs256 => AsymmetricVerifyingKey::rs256(key),
                     JsonWebSignatureAlg::Rs384 => AsymmetricVerifyingKey::rs384(key),
@@ -460,7 +460,7 @@ impl PrivateKey {
     ) -> Result<AsymmetricSigningKey, WrongAlgorithmError> {
         let key = match (self, alg) {
             (Self::Rsa(key), _) => {
-                let key: rsa::RsaPrivateKey = *key.clone();
+                let key: rsa::PrivateKey = *key.clone();
                 match alg {
                     JsonWebSignatureAlg::Rs256 => AsymmetricSigningKey::rs256(key),
                     JsonWebSignatureAlg::Rs384 => AsymmetricSigningKey::rs384(key),
@@ -496,7 +496,7 @@ impl PrivateKey {
     ///
     /// Returns any error from the underlying key generator
     pub fn generate_rsa<R: CryptoRng>(mut rng: R) -> Result<Self, rsa::errors::Error> {
-        let key = rsa::RsaPrivateKey::new(&mut rng, 2048)?;
+        let key = rsa::PrivateKey::new(&mut rng, 2048)?;
         Ok(Self::Rsa(Box::new(key)))
     }
 
