@@ -88,9 +88,6 @@ version = "7.0.17"
 default-features = false
 features = ["chrono", "url", "tracing"]
 
-[workspace.dependencies.async-stream]
-version = "0.3.6"
-
 # Utility to write and implement async traits
 [workspace.dependencies.async-trait]
 version = "0.1.92"
@@ -290,16 +287,7 @@ features = [
     "tokio",
 ]
 
-# Hyper Rustls support
-[workspace.dependencies.hyper-rustls]
-version = "0.27.7"
-features = ["http1", "http2"]
-default-features = false
-
 # ICU libraries for internationalization
-[workspace.dependencies.icu_calendar]
-version = "2.2.1"
-features = ["compiled_data"]
 [workspace.dependencies.icu_datetime]
 version = "2.2.0"
 features = ["compiled_data"]
@@ -356,7 +344,7 @@ features = ["serde"]
 
 # Email sending
 [workspace.dependencies.lettre]
-version = "0.11.22"
+version = "0.11.24"
 default-features = false
 features = [
     "tokio1-rustls",
@@ -387,10 +375,6 @@ features = ["urlencode", "loader", "json", "speedups", "unstable_machinery"]
 [workspace.dependencies.minijinja-contrib]
 version = "2.24.0"
 features = ["pycompat"]
-
-# Utilities to deal with non-zero values
-[workspace.dependencies.nonzero_ext]
-version = "0.3.0"
 
 # Open Policy Agent support through WASM
 [workspace.dependencies.opa-wasm]
@@ -470,9 +454,8 @@ version = "2.9.4"
 version = "0.2.16"
 
 # PKCS#1 encoding
-# Pinned: release candidates break their API between releases
 [workspace.dependencies.pkcs1]
-version = "=0.8.0-rc.5"
+version = "0.8.0"
 features = ["std"]
 
 # PKCS#8 encoding
@@ -515,10 +498,9 @@ features = [
 ]
 
 # RSA cryptography
-# Pinned: release candidates break their API between releases
 [workspace.dependencies.rsa]
-version = "=0.10.0-rc.19"
-features = ["std", "encoding"]
+version = "0.10.0"
+features = ["std", "encoding", "pkcs1v15"]
 
 # Fast hash algorithm for HashMap
 [workspace.dependencies.rustc-hash]
@@ -648,9 +630,6 @@ version = "0.3.0"
 [workspace.dependencies.tokio]
 version = "1.54.1"
 features = ["full"]
-
-[workspace.dependencies.tokio-stream]
-version = "0.1.17"
 
 # Tokio rustls integration
 [workspace.dependencies.tokio-rustls]

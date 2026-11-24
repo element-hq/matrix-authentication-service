@@ -1,4 +1,4 @@
-// Copyright 2026 Element Creations Ltd.
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2024 The Matrix.org Foundation C.I.C.
 //
@@ -292,8 +292,7 @@ Error details: {e}
                     let flows = body
                         .get("flows")
                         .and_then(|flows| flows.as_array())
-                        .map(std::vec::Vec::as_slice)
-                        .unwrap_or_default();
+                        .map_or_default(std::vec::Vec::as_slice);
 
                     let has_compatibility_sso = flows.iter().any(|flow| {
                         flow.get("type").and_then(|t| t.as_str()) == Some("m.login.sso")

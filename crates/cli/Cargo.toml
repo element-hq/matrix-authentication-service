@@ -92,6 +92,7 @@ mas-tower.workspace = true
 syn2mas.workspace = true
 
 [dev-dependencies]
+sentry = { workspace = true, features = ["test"] }
 tempfile = "3"
 
 [build-dependencies]

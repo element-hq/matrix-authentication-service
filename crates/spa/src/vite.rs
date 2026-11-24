@@ -129,8 +129,7 @@ impl<'a> Asset<'a> {
     #[must_use]
     pub fn integrity_attr(&self) -> String {
         self.integrity
-            .map(|i| format!(r#" integrity="{i}""#))
-            .unwrap_or_default()
+            .map_or_default(|i| format!(r#" integrity="{i}""#))
     }
 }
 
