@@ -94,15 +94,6 @@ pub(crate) async fn get(
 
     let user_agent = user_agent.map(|ua| ua.to_string());
 
-    let Some(session) = maybe_session else {
-        let login = mas_router::Login::and_continue_device_code_grant(grant_id);
-        return Ok((cookie_jar, url_builder.redirect(&login)).into_response());
-    };
-
-    activity_tracker
-        .record_browser_session(&clock, &session)
-        .await;
-
     // TODO: better error handling
     let grant = repo
         .oauth2_device_code_grant()
@@ -116,6 +107,22 @@ pub(crate) async fn get(
             "Grant is expired"
         )));
     }
+
+    let Some(session) = maybe_session else {
+        let mut login = mas_router::Login::and_continue_device_code_grant(grant_id);
+
+        login = if let Some(login_hint) = grant.login_hint {
+            login.with_login_hint(login_hint)
+        } else {
+            login
+        };
+
+        return Ok((cookie_jar, url_builder.redirect(&login)).into_response());
+    };
+
+    activity_tracker
+        .record_browser_session(&clock, &session)
+        .await;
 
     let client = repo
         .oauth2_client()
