@@ -6,6 +6,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  type AnyRouter,
   createMemoryHistory,
   createRouter,
   RouterProvider,
@@ -30,13 +31,15 @@ afterAll(() => server.close());
 // Reset handlers after each test `important for test isolation`
 afterEach(() => server.resetHandlers());
 
-async function renderPage(route: string): Promise<RenderResult> {
+async function renderPage(
+  route: string,
+): Promise<RenderResult & { router: AnyRouter }> {
   // Create a new query client and a new router
   const queryClient = new QueryClient();
   const history = createMemoryHistory({ initialEntries: [route] });
   const router = createRouter({
     routeTree,
-    context: { queryClient },
+    context: { queryClient, serviceName: "example.com" },
     history,
   });
   const result = render(
@@ -62,7 +65,7 @@ async function renderPage(route: string): Promise<RenderResult> {
     { timeout: 4000 },
   );
 
-  return result;
+  return { ...result, router };
 }
 
 export { renderPage };

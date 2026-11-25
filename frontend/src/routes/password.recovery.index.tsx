@@ -19,6 +19,7 @@ import {
 import IconErrorSolid from "@vector-im/compound-design-tokens/assets/web/icons/error-solid";
 import IconLockSolid from "@vector-im/compound-design-tokens/assets/web/icons/lock-solid";
 import { Alert, Button, Form } from "@vector-im/compound-web";
+import i18n from "i18next";
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import * as v from "valibot";
@@ -102,6 +103,7 @@ export const Route = createFileRoute("/password/recovery/")({
     }
   },
 
+  staticData: { title: () => i18n.t("frontend.password_reset.title") },
   component: RecoverPassword,
 });
 

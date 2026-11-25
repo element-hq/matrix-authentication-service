@@ -236,6 +236,10 @@ pub fn site_config_from_config(
         access_token_ttl: experimental_config.access_token_ttl,
         compat_token_ttl: experimental_config.compat_token_ttl,
         server_name: matrix_config.homeserver.clone(),
+        service_name: branding_config
+            .service_name
+            .clone()
+            .unwrap_or_else(|| matrix_config.homeserver.clone()),
         policy_uri: branding_config.policy_uri.clone(),
         tos_uri: branding_config.tos_uri.clone(),
         imprint: branding_config.imprint.clone(),

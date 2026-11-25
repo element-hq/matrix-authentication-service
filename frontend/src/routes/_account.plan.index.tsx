@@ -5,6 +5,7 @@
 
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Navigate, redirect } from "@tanstack/react-router";
+import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { preload } from "react-dom";
 import { graphql } from "../gql";
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/_account/plan/")({
 
     preload(planManagementIframeUri, { as: "document" });
   },
+  staticData: { title: () => i18n.t("frontend.nav.plan") },
   component: RouteComponent,
 });
 
