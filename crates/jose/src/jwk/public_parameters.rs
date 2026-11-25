@@ -177,31 +177,31 @@ impl OkpPublicParameters {
 }
 
 mod rsa_impls {
-    use rsa::{BoxedUint, RsaPublicKey, traits::PublicKeyParts};
+    use rsa::{BoxedUint, PublicKey, traits::PublicKeyParts};
 
     use super::{JsonWebKeyPublicParameters, RsaPublicParameters};
     use crate::base64::Base64UrlNoPad;
 
-    impl From<RsaPublicKey> for JsonWebKeyPublicParameters {
-        fn from(key: RsaPublicKey) -> Self {
+    impl From<PublicKey> for JsonWebKeyPublicParameters {
+        fn from(key: PublicKey) -> Self {
             Self::from(&key)
         }
     }
 
-    impl From<&RsaPublicKey> for JsonWebKeyPublicParameters {
-        fn from(key: &RsaPublicKey) -> Self {
+    impl From<&PublicKey> for JsonWebKeyPublicParameters {
+        fn from(key: &PublicKey) -> Self {
             Self::Rsa(key.into())
         }
     }
 
-    impl From<RsaPublicKey> for RsaPublicParameters {
-        fn from(key: RsaPublicKey) -> Self {
+    impl From<PublicKey> for RsaPublicParameters {
+        fn from(key: PublicKey) -> Self {
             Self::from(&key)
         }
     }
 
-    impl From<&RsaPublicKey> for RsaPublicParameters {
-        fn from(key: &RsaPublicKey) -> Self {
+    impl From<&PublicKey> for RsaPublicParameters {
+        fn from(key: &PublicKey) -> Self {
             Self {
                 n: Base64UrlNoPad::new(key.n().to_be_bytes_trimmed_vartime().into_vec()),
                 e: Base64UrlNoPad::new(key.e().to_be_bytes_trimmed_vartime().into_vec()),
@@ -209,19 +209,19 @@ mod rsa_impls {
         }
     }
 
-    impl TryFrom<RsaPublicParameters> for RsaPublicKey {
+    impl TryFrom<RsaPublicParameters> for PublicKey {
         type Error = rsa::errors::Error;
         fn try_from(value: RsaPublicParameters) -> Result<Self, Self::Error> {
             (&value).try_into()
         }
     }
 
-    impl TryFrom<&RsaPublicParameters> for RsaPublicKey {
+    impl TryFrom<&RsaPublicParameters> for PublicKey {
         type Error = rsa::errors::Error;
         fn try_from(value: &RsaPublicParameters) -> Result<Self, Self::Error> {
             let n = BoxedUint::from_be_slice_vartime(value.n.as_bytes());
             let e = BoxedUint::from_be_slice_vartime(value.e.as_bytes());
-            let key = RsaPublicKey::new(n, e)?;
+            let key = PublicKey::new(n, e)?;
             Ok(key)
         }
     }

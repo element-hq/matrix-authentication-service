@@ -1,1 +1,3 @@
-*   @element-hq/mas-maintainers
+# MAS is effectively maintained by the "backend team" at Element,
+# which corresponds to the "synapse-core" team
+*   @element-hq/synapse-core
