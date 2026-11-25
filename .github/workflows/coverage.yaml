@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     permissions:
+      id-token: write
       contents: read
 
     steps:
@@ -43,7 +44,9 @@ jobs:
       - name: Upload to codecov.io
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
+          fail_ci_if_error: true
+          disable_search: true
           files: policies/coverage.json
           flags: policies
 
@@ -62,8 +65,6 @@ jobs:
           persist-credentials: false
 
       - uses: ./.github/actions/build-frontend
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Test
         run: pnpm --filter mas-frontend run coverage
@@ -71,8 +72,10 @@ jobs:
       - name: Upload to codecov.io
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          directory: frontend/coverage/
+          use_oidc: true
+          fail_ci_if_error: true
+          disable_search: true
+          files: frontend/coverage/lcov.info
           flags: frontend
 
   rust:
@@ -80,6 +83,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     permissions:
+      id-token: write
       contents: read
 
     env:
@@ -108,40 +112,33 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        # llvm-tools-preview installs some llvm tools, which are needed for `grcov` below.
-        # See https://github.com/rust-lang/rust/issues/85658 for stability tracking issue.
+        # `cargo-llvm-cov` needs the `llvm-profdata` and `llvm-cov` binaries from `llvm-tools`.
         run: |
           rustup toolchain install
-          rustup component add llvm-tools-preview
+          rustup component add llvm-tools
 
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@fc920bf0ec8de6ee65d409111f7ec508035751ba # v0.0.11
 
-      - name: Install grcov
+      - name: Install cargo-llvm-cov and nextest
         uses: taiki-e/install-action@5488ac5a951645ce95062214902ac4b6bc1a1037 # v2
         with:
-          tool: grcov
+          tool: cargo-llvm-cov,cargo-nextest
 
       - uses: ./.github/actions/build-frontend
       - uses: ./.github/actions/build-policies
 
-      - name: Run test suite with profiling enabled
-        run: |
-          cargo test --no-fail-fast --workspace
+      - name: Run test suite with coverage
+        run: cargo llvm-cov nextest --workspace --no-fail-fast --lcov --output-path lcov.info
         env:
-          RUSTFLAGS: "-Cinstrument-coverage --cfg tokio_unstable"
-          LLVM_PROFILE_FILE: "cargo-test-%p-%m.profraw"
           DATABASE_URL: postgresql://postgres:postgres@localhost/postgres
           SQLX_OFFLINE: "1"
-
-      - name: Build grcov report
-        run: |
-          mkdir -p target/coverage
-          grcov . --binary-path ./target/debug/deps/ -s . -t lcov --branch --ignore-not-existing --ignore '../*' --ignore "/*" -o target/coverage/tests.lcov
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: target/coverage/*.lcov
+          use_oidc: true
+          fail_ci_if_error: true
+          disable_search: true
+          files: lcov.info
           flags: unit
