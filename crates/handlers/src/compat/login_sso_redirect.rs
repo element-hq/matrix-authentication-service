@@ -100,10 +100,26 @@ pub async fn get(
 
 #[cfg(test)]
 mod tests {
-    use hyper::{Request, StatusCode};
+    use hyper::{Request, StatusCode, header::CONTENT_SECURITY_POLICY};
     use sqlx::PgPool;
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState};
+
+    /// The error page rendered for a bad request gets the server-rendered page
+    /// policy
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_error_page_content_security_policy(pool: PgPool) {
+        let state: TestState = TestState::from_pool(pool).await.unwrap();
+
+        let request = Request::get("/_matrix/client/v3/login/sso/redirect").empty();
+        let response = state.request(request).await;
+
+        response.assert_status(StatusCode::BAD_REQUEST);
+        response.assert_header_value(
+            CONTENT_SECURITY_POLICY,
+            crate::csp::SERVER_RENDERED.to_str().unwrap(),
+        );
+    }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
     async fn test_unstable_action_fallback(pool: PgPool) {

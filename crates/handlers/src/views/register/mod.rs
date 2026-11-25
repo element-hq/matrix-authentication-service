@@ -11,7 +11,7 @@ use axum::{
     response::{Html, IntoResponse, Redirect, Response},
 };
 use axum_extra::{extract::Query, typed_header::TypedHeader};
-use hyper::StatusCode;
+use hyper::{StatusCode, header::CONTENT_SECURITY_POLICY};
 use mas_axum_utils::{
     GenericError, InternalError, SessionInfoExt,
     cookies::CookieJar,
@@ -30,7 +30,7 @@ use ulid::Ulid;
 use super::shared::OptionalPostAuthAction;
 use crate::{
     BoundActivityTracker, Limiter, MetadataCache, PreferredLanguage, RequesterFingerprint,
-    captcha::Form as CaptchaForm, passwords::PasswordManager,
+    captcha::Form as CaptchaForm, csp, passwords::PasswordManager,
     upstream_oauth2::authorize::start_authorization,
 };
 
@@ -102,7 +102,18 @@ pub(crate) async fn get(
 
     let content = templates.render_register(&ctx)?;
 
-    Ok((cookie_jar, Html(content)).into_response())
+    // The page only renders the captcha along with the password form
+    let captcha = site_config
+        .captcha
+        .as_ref()
+        .filter(|_| site_config.password_registration_enabled);
+
+    Ok((
+        cookie_jar,
+        [(CONTENT_SECURITY_POLICY, csp::register(captcha))],
+        Html(content),
+    )
+        .into_response())
 }
 
 /// A localpart longer than this can never become an MXID (`@` + localpart +
@@ -251,7 +262,10 @@ pub(crate) async fn post(
 
 #[cfg(test)]
 mod tests {
-    use hyper::{Request, StatusCode, header::LOCATION};
+    use hyper::{
+        Request, StatusCode,
+        header::{CONTENT_SECURITY_POLICY, LOCATION},
+    };
     use mas_axum_utils::csrf::CsrfExt as _;
     use mas_data_model::{
         CaptchaConfig, CaptchaService, Clock, UlidExt, UpstreamOAuthProviderClaimsImports,
@@ -429,6 +443,35 @@ mod tests {
         assert_eq!(
             json_attribute(&body, "data-captcha-config")["site_key"],
             serde_json::json!("site-key")
+        );
+    }
+
+    /// The page allows the configured captcha provider's origins
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_content_security_policy(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                captcha: Some(CaptchaConfig {
+                    service: CaptchaService::CloudflareTurnstile,
+                    site_key: "site-key".to_owned(),
+                    secret_key: "secret-key".to_owned(),
+                }),
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+
+        let response = state.request(Request::get("/register").empty()).await;
+        response.assert_status(StatusCode::OK);
+        let policy = response.headers()[CONTENT_SECURITY_POLICY]
+            .to_str()
+            .unwrap();
+        assert!(
+            policy.contains("https://challenges.cloudflare.com"),
+            "policy: {policy}"
         );
     }
 

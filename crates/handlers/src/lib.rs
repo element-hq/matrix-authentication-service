@@ -33,8 +33,8 @@ use headers::HeaderName;
 use hyper::{
     StatusCode, Version,
     header::{
-        ACCEPT, ACCEPT_LANGUAGE, AUTHORIZATION, CONTENT_LANGUAGE, CONTENT_LENGTH, CONTENT_TYPE,
-        X_FRAME_OPTIONS,
+        ACCEPT, ACCEPT_LANGUAGE, AUTHORIZATION, CONTENT_LANGUAGE, CONTENT_LENGTH,
+        CONTENT_SECURITY_POLICY, CONTENT_TYPE, X_CONTENT_TYPE_OPTIONS, X_FRAME_OPTIONS,
     },
 };
 use mas_axum_utils::{InternalError, cookies::CookieJar};
@@ -70,6 +70,7 @@ mod captcha;
 #[cfg(test)]
 mod cleanup_tests;
 mod client_ip;
+mod csp;
 mod preferred_language;
 mod rate_limit;
 mod session;
@@ -292,6 +293,10 @@ where
             async move |response: axum::response::Response| {
                 Ok::<_, Infallible>(recover_error(&templates, response))
             },
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            CONTENT_SECURITY_POLICY,
+            csp::SERVER_RENDERED,
         ));
 
     // A sub-router for API-facing routes with CORS
@@ -479,6 +484,10 @@ where
             X_FRAME_OPTIONS,
             http::HeaderValue::from_static("DENY"),
         ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            CONTENT_SECURITY_POLICY,
+            csp::SERVER_RENDERED,
+        ))
 }
 
 fn recover_error(
@@ -516,5 +525,52 @@ pub async fn fallback(
 
     let res = templates.render_not_found(&ctx)?;
 
-    Ok((StatusCode::NOT_FOUND, Html(res)))
+    Ok((
+        StatusCode::NOT_FOUND,
+        [(CONTENT_SECURITY_POLICY, csp::SERVER_RENDERED)],
+        Html(res),
+    ))
+}
+
+/// Register the 404 fallback and the default security headers on a fully
+/// assembled router. Headers already set by an inner router or handler win.
+pub fn finish_router<S>(router: Router<S>) -> Router<S>
+where
+    S: Clone + Send + Sync + 'static,
+    Templates: FromRef<S>,
+    PreferredLanguage: FromRequestParts<S>,
+{
+    router
+        .fallback(fallback)
+        .layer(SetResponseHeaderLayer::if_not_present(
+            CONTENT_SECURITY_POLICY,
+            csp::LOCKED_DOWN,
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            X_CONTENT_TYPE_OPTIONS,
+            http::HeaderValue::from_static("nosniff"),
+        ))
+}
+
+#[cfg(test)]
+mod tests {
+    use hyper::{Request, StatusCode, header::CONTENT_SECURITY_POLICY};
+    use sqlx::PgPool;
+
+    use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_fallback_content_security_policy(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let response = state
+            .request(Request::get("/this-route-does-not-exist").empty())
+            .await;
+        response.assert_status(StatusCode::NOT_FOUND);
+        response.assert_header_value(
+            CONTENT_SECURITY_POLICY,
+            crate::csp::SERVER_RENDERED.to_str().unwrap(),
+        );
+    }
 }

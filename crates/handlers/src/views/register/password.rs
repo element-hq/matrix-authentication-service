@@ -8,6 +8,7 @@
 use std::str::FromStr;
 
 use axum::response::{Html, IntoResponse, Response};
+use hyper::header::CONTENT_SECURITY_POLICY;
 use lettre::Address;
 use mas_axum_utils::{
     InternalError,
@@ -33,7 +34,7 @@ use zeroize::Zeroizing;
 
 use super::{RegisterForm, cookie::UserRegistrationSessions};
 use crate::{
-    BoundActivityTracker, Limiter, RequesterFingerprint, passwords::PasswordManager,
+    BoundActivityTracker, Limiter, RequesterFingerprint, csp, passwords::PasswordManager,
     views::shared::OptionalPostAuthAction,
 };
 
@@ -241,7 +242,13 @@ pub(super) async fn register(
         )
         .await?;
 
-        return Ok((cookie_jar, Html(content)).into_response());
+        let policy = csp::register(site_config.captcha.as_ref());
+        return Ok((
+            cookie_jar,
+            [(CONTENT_SECURITY_POLICY, policy)],
+            Html(content),
+        )
+            .into_response());
     }
 
     let post_auth_action = query

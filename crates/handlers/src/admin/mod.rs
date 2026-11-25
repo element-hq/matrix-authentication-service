@@ -16,9 +16,9 @@ use axum::{
     Json, Router,
     extract::{FromRef, FromRequestParts, State},
     http::HeaderName,
-    response::Html,
+    response::{Html, IntoResponse},
 };
-use hyper::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
+use hyper::header::{ACCEPT, AUTHORIZATION, CONTENT_SECURITY_POLICY, CONTENT_TYPE};
 use indexmap::IndexMap;
 use mas_axum_utils::InternalError;
 use mas_data_model::{AppVersion, BoxRng, SiteConfig};
@@ -41,7 +41,7 @@ mod schema;
 mod v1;
 
 use self::call_context::CallContext;
-use crate::passwords::PasswordManager;
+use crate::{csp, passwords::PasswordManager};
 
 fn finish(t: TransformOpenApi) -> TransformOpenApi {
     t.title("Matrix Authentication Service admin API")
@@ -241,17 +241,47 @@ where
 async fn swagger(
     State(url_builder): State<UrlBuilder>,
     State(templates): State<Templates>,
-) -> Result<Html<String>, InternalError> {
+) -> Result<impl IntoResponse, InternalError> {
     let ctx = ApiDocContext::from_url_builder(&url_builder);
     let res = templates.render_swagger(&ctx)?;
-    Ok(Html(res))
+    Ok((
+        [(CONTENT_SECURITY_POLICY, csp::swagger(&url_builder))],
+        Html(res),
+    ))
 }
 
 async fn swagger_callback(
     State(url_builder): State<UrlBuilder>,
     State(templates): State<Templates>,
-) -> Result<Html<String>, InternalError> {
+) -> Result<impl IntoResponse, InternalError> {
     let ctx = ApiDocContext::from_url_builder(&url_builder);
     let res = templates.render_swagger_callback(&ctx)?;
-    Ok(Html(res))
+    Ok(([(CONTENT_SECURITY_POLICY, csp::SERVER_RENDERED)], Html(res)))
+}
+
+#[cfg(test)]
+mod tests {
+    use hyper::{Request, StatusCode, header::CONTENT_SECURITY_POLICY};
+    use mas_router::SimpleRoute;
+    use sqlx::PgPool;
+
+    use crate::{
+        csp,
+        test_utils::{RequestBuilderExt, ResponseExt, TestState, setup},
+    };
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_content_security_policy(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let response = state
+            .request(Request::get(mas_router::ApiDoc::PATH).empty())
+            .await;
+        response.assert_status(StatusCode::OK);
+        response.assert_header_value(
+            CONTENT_SECURITY_POLICY,
+            csp::swagger(&state.url_builder).to_str().unwrap(),
+        );
+    }
 }

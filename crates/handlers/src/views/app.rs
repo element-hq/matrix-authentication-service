@@ -10,15 +10,16 @@ use axum::{
     response::{Html, IntoResponse},
 };
 use axum_extra::extract::Query;
+use hyper::header::CONTENT_SECURITY_POLICY;
 use mas_axum_utils::{InternalError, cookies::CookieJar};
-use mas_data_model::{BoxClock, BoxRng};
+use mas_data_model::{BoxClock, BoxRng, SiteConfig};
 use mas_router::{PostAuthAction, UrlBuilder};
 use mas_storage::BoxRepository;
 use mas_templates::{AppContext, TemplateContext, Templates};
 use serde::Deserialize;
 
 use crate::{
-    BoundActivityTracker, PreferredLanguage,
+    BoundActivityTracker, PreferredLanguage, csp,
     session::{SessionOrFallback, load_session_or_fallback},
 };
 
@@ -37,6 +38,7 @@ pub async fn get(
     State(templates): State<Templates>,
     activity_tracker: BoundActivityTracker,
     State(url_builder): State<UrlBuilder>,
+    State(site_config): State<SiteConfig>,
     Query(Params {
         action,
         unstable_login_hint,
@@ -82,8 +84,17 @@ pub async fn get(
 
     let ctx = AppContext::from_url_builder(&url_builder).with_language(locale);
     let content = templates.render_app(&ctx)?;
+    let policy = csp::app(
+        site_config.plan_management_iframe_uri.as_deref(),
+        &url_builder,
+    );
 
-    Ok((cookie_jar, Html(content)).into_response())
+    Ok((
+        cookie_jar,
+        [(CONTENT_SECURITY_POLICY, policy)],
+        Html(content),
+    )
+        .into_response())
 }
 
 /// Like `get`, but allow anonymous access.
@@ -94,9 +105,61 @@ pub async fn get_anonymous(
     PreferredLanguage(locale): PreferredLanguage,
     State(templates): State<Templates>,
     State(url_builder): State<UrlBuilder>,
+    State(site_config): State<SiteConfig>,
 ) -> Result<impl IntoResponse, InternalError> {
     let ctx = AppContext::from_url_builder(&url_builder).with_language(locale);
     let content = templates.render_app(&ctx)?;
+    let policy = csp::app(
+        site_config.plan_management_iframe_uri.as_deref(),
+        &url_builder,
+    );
 
-    Ok(Html(content).into_response())
+    Ok(([(CONTENT_SECURITY_POLICY, policy)], Html(content)).into_response())
+}
+
+#[cfg(test)]
+mod tests {
+    use hyper::{Request, StatusCode, header::CONTENT_SECURITY_POLICY};
+    use mas_axum_utils::SessionInfoExt as _;
+    use sqlx::PgPool;
+
+    use crate::{
+        csp,
+        test_utils::{CookieHelper, RequestBuilderExt, ResponseExt, TestState, setup},
+    };
+
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_content_security_policy(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+        let user = repo
+            .user()
+            .add(&mut rng, &state.clock, "alice".to_owned())
+            .await
+            .unwrap();
+        let browser_session = repo
+            .browser_session()
+            .add(&mut rng, &state.clock, &user, None)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let cookies = CookieHelper::new();
+        cookies.import(state.cookie_jar().set_session(&browser_session));
+
+        let response = state
+            .request(cookies.with_cookies(Request::get("/account/").empty()))
+            .await;
+        response.assert_status(StatusCode::OK);
+
+        let expected = csp::app(
+            state.site_config.plan_management_iframe_uri.as_deref(),
+            &state.url_builder,
+        );
+        response.assert_header_value(CONTENT_SECURITY_POLICY, expected.to_str().unwrap());
+        assert!(expected.to_str().unwrap().contains("'unsafe-inline'"));
+    }
 }

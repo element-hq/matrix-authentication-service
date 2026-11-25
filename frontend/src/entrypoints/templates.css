@@ -134,6 +134,13 @@
   }
 }
 
+/* With scripting off the form never mounts, so hide its skeleton */
+@media (scripting: none) {
+  #register-form {
+    display: none;
+  }
+}
+
 .consent-client-icon {
   display: block;
   height: var(--cpd-space-16x);

@@ -354,7 +354,7 @@ pub fn build_router(
         router = Router::new().nest(&prefix, router);
     }
 
-    router = router.fallback(mas_handlers::fallback);
+    router = mas_handlers::finish_router(router);
 
     router
         .layer(axum::middleware::from_fn(log_response_middleware))
