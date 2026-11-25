@@ -11,6 +11,7 @@ from_opa := {"source_files": coverage}
 
 coverage contains obj if {
 	some file, report in input.files
+	not endswith(file, "_test.rego")
 	obj := {"name": file, "coverage": to_lines(report)}
 }
 
