@@ -3746,6 +3746,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "ulid",
+ "unicode-segmentation",
  "url",
  "wiremock",
  "zeroize",

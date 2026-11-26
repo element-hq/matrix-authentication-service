@@ -212,6 +212,13 @@ where
             ),
         )
         .api_route(
+            "/user-registration-tokens/invite-emails",
+            post_with(
+                self::user_registration_tokens::invite_emails,
+                self::user_registration_tokens::invite_emails_doc,
+            ),
+        )
+        .api_route(
             "/user-registration-tokens/{id}",
             get_with(
                 self::user_registration_tokens::get,

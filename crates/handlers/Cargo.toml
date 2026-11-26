@@ -67,6 +67,7 @@ tower-http.workspace = true
 tower.workspace = true
 tracing.workspace = true
 ulid.workspace = true
+unicode-segmentation.workspace = true
 url.workspace = true
 zeroize.workspace = true
 
