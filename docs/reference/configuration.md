@@ -1,5 +1,9 @@
 # Configuration file reference
 
+Config values not set in the file can also be [read from the environment](../setup/general.md#setting-configuration-values-using-environment-variables).
+
+The environment variable name needs to start with `MAS_` followed by the path components of the config option - e.g. `MAS_database.uri`.
+
 ## `http`
 
 Controls the web server.
