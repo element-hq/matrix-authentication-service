@@ -953,7 +953,9 @@ impl JobTracker {
                                 job.id = %context.id,
                                 job.queue.name = %context.queue_name,
                                 job.attempt = %context.attempt,
-                                "Job failed, not retrying [{context_stats}]"
+                                job.outcome = "fail",
+                                stats = %context_stats,
+                                "Job failed, not retrying"
                             );
                         }
 
@@ -967,8 +969,10 @@ impl JobTracker {
                                 job.id = %context.id,
                                 job.queue.name = %context.queue_name,
                                 job.attempt = %context.attempt,
-                                "Job failed, will retry in {}s [{context_stats}]",
-                                delay.num_seconds()
+                                job.outcome = "retry",
+                                job.retry_delay_s = delay.num_seconds(),
+                                stats = %context_stats,
+                                "Job failed, will retry"
                             );
                         }
 
@@ -981,7 +985,9 @@ impl JobTracker {
                                 job.id = %context.id,
                                 job.queue.name = %context.queue_name,
                                 job.attempt = %context.attempt,
-                                "Job failed too many times, abandonning [{context_stats}]"
+                                job.outcome = "abandon",
+                                stats = %context_stats,
+                                "Job failed too many times, abandonning"
                             );
                         }
                     }
