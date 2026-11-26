@@ -195,6 +195,8 @@ where
         .nest("/api/admin/v1", self::v1::router())
         .finish_api_with(&mut api, finish);
 
+    // Those are not listed in the API documentation
+    #[expect(clippy::disallowed_methods)]
     let router = router
         // Serve the OpenAPI spec as JSON
         .route(

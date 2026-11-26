@@ -280,6 +280,8 @@ pub fn build_router(
             mas_config::HttpResource::Health => {
                 router.merge(mas_handlers::healthcheck_router::<AppState>())
             }
+            // Listed by hand in the routes-schema binary of mas-handlers
+            #[expect(clippy::disallowed_methods)]
             mas_config::HttpResource::Prometheus => {
                 router.route_service("/metrics", crate::telemetry::prometheus_service())
             }
@@ -294,6 +296,8 @@ pub fn build_router(
             } => router.merge(mas_handlers::graphql_router::<AppState>(
                 *undocumented_oauth2_access,
             )),
+            // Listed by hand in the routes-schema binary of mas-handlers
+            #[expect(clippy::disallowed_methods)]
             mas_config::HttpResource::Assets { path } => {
                 let static_service = ServeDir::new(path)
                     .append_index_html_on_directories(false)
@@ -334,6 +338,8 @@ pub fn build_router(
                 router.merge(api_router)
             }
             // TODO: do a better handler here
+            // Listed by hand in the routes-schema binary of mas-handlers
+            #[expect(clippy::disallowed_methods)]
             mas_config::HttpResource::ConnectionInfo => router.route(
                 "/connection-info",
                 axum::routing::get(async |connection: Extension<ConnectionInfo>| {
@@ -351,7 +357,11 @@ pub fn build_router(
     // If we blindly nest the router if the prefix is Some("/"), axum will panic as
     // we're not supposed to nest the router at the root
     if !prefix.is_empty() && prefix != "/" {
-        router = Router::new().nest(&prefix, router);
+        // Nesting under the listener prefix does not change the documented
+        // paths, which are relative to it
+        #[expect(clippy::disallowed_methods)]
+        let nested = Router::new().nest(&prefix, router);
+        router = nested;
     }
 
     router = router.fallback(mas_handlers::fallback);
