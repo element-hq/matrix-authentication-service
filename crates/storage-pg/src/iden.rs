@@ -212,6 +212,7 @@ pub enum UserRegistrationTokens {
     Token,
     Username,
     Email,
+    AllowedEmails,
     Passwordless,
     ContinueUrl,
     UsageLimit,

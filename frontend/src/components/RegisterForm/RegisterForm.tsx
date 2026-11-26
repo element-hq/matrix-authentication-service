@@ -272,7 +272,7 @@ export const PasswordRegisterForm: React.FC<{
               {serverErrors("email").map((error, index) => (
                 // biome-ignore lint/suspicious/noArrayIndexKey: the server error list is static
                 <Form.ErrorMessage key={`${error.kind}-${index}`}>
-                  {/* A mismatch is an address the invite isn't for */}
+                  {/* A mismatch is an address the invite doesn't list */}
                   {error.kind === "mismatch"
                     ? t("frontend.register.email_not_invited")
                     : fieldErrorMessage(t, error)}

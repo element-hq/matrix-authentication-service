@@ -135,6 +135,7 @@ mod tests {
               "valid": true,
               "username": null,
               "email": null,
+              "allowed_emails": null,
               "passwordless": false,
               "continue_url": null,
               "usage_limit": 5,
