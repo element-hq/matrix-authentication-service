@@ -285,6 +285,18 @@ pub(crate) async fn post(
     };
     let action = post_auth_action(query.action, found_token.as_ref());
 
+    // A browser signed in since the page loaded, such as by going Back after
+    // registering, goes on instead of registering again
+    let (session_info, cookie_jar) = cookie_jar.session_info();
+    if let Some(session) = session_info.load_active_session(&mut repo).await? {
+        activity_tracker
+            .record_browser_session(&clock, &session)
+            .await;
+
+        let reply = action.go_next(&url_builder);
+        return Ok((cookie_jar, reply).into_response());
+    }
+
     // Carry the username along so we can prefill it if the user gets to pick
     // one when they come back
     if let Some(provider_id) = &form.provider {
@@ -1497,6 +1509,83 @@ mod tests {
             ))));
             assert_no_continue_url(&response);
         }
+    }
+
+    /// Sign the browser in as a new user
+    async fn sign_in(state: &TestState, cookies: &CookieHelper) {
+        use mas_axum_utils::SessionInfoExt as _;
+
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+        let bob = repo
+            .user()
+            .add(&mut rng, &state.clock, "bob".to_owned())
+            .await
+            .unwrap();
+        let session = repo
+            .browser_session()
+            .add(&mut rng, &state.clock, &bob, None)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+        cookies.import(state.cookie_jar().set_session(&session));
+    }
+
+    /// Submitting an invite's form again once signed in, as going Back after
+    /// registering does, goes on rather than registering a second account
+    /// under a fresh name from the username template
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_signed_in(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool_with_site_config(
+            pool,
+            SiteConfig {
+                password_registration_email_required: false,
+                ..test_site_config()
+            },
+        )
+        .await
+        .unwrap();
+        add_registration_token(&state, "invite", Some("user-{{ random }}"), None, false).await;
+        let cookies = CookieHelper::new();
+        sign_in(&state, &cookies).await;
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "token": "invite",
+                "password": "correcthorsebatterystaple",
+                "password_confirm": "correcthorsebatterystaple",
+                "accept_terms": "on",
+            }),
+        );
+        let response = state.request(cookies.with_cookies(request)).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/");
+    }
+
+    /// A provider button on a page loaded before signing in goes on too,
+    /// rather than starting an upstream sign-in
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_post_signed_in_with_provider(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let provider_id = provider(&state).await;
+        let cookies = CookieHelper::new();
+        sign_in(&state, &cookies).await;
+
+        let csrf_token = mint_csrf_token(&state, &cookies);
+        let request = Request::post(&*mas_router::Register::default().path_and_query()).form(
+            serde_json::json!({
+                "csrf": csrf_token,
+                "provider": provider_id.to_string(),
+            }),
+        );
+        let response = state.request(cookies.with_cookies(request)).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, "/");
+        assert!(upstream_sessions(&state, &response).is_none());
     }
 
     /// Registering from an invite goes on to the invite's continue URL,
