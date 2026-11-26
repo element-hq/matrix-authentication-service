@@ -827,6 +827,7 @@ async fn client_credentials_grant(
                 ip_address: activity_tracker.ip(),
                 user_agent: user_agent.clone(),
             },
+            now: clock.now(),
         })
         .await?;
     if !res.valid() {
