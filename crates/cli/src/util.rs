@@ -153,6 +153,7 @@ pub async fn policy_factory_from_config(
         authorization_grant: config.authorization_grant_entrypoint.clone(),
         compat_login: config.compat_login_entrypoint.clone(),
         email: config.email_entrypoint.clone(),
+        skip_consent: config.skip_consent_entrypoint.clone(),
     };
 
     let session_limit_config =
@@ -243,6 +244,8 @@ pub fn site_config_from_config(
         password_registration_enabled: password_config.enabled()
             && account_config.password_registration_enabled,
         password_registration_email_required: account_config.password_registration_email_required,
+        passwordless_registration_without_email_allowed: account_config
+            .passwordless_registration_without_email_allowed,
         password_registration_token_required: account_config.password_registration_token_required,
         registration_token_required: account_config.registration_token_required,
         email_change_allowed: account_config.email_change_allowed,

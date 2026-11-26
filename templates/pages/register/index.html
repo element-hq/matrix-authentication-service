@@ -16,21 +16,37 @@ Please see LICENSE files in the repository root for full details.
 {% endblock head %}
 
 {% block content %}
+  {% set passwordless = invite and invite.valid and invite.passwordless %}
+  {% set without_email = passwordless and invite.without_email %}
   <header class="page-heading">
     <div class="icon">
       {{ icon.user_profile_solid() }}
     </div>
 
     <div class="header">
-      <h1 class="title">{{ _("mas.register.create_account.heading") }}</h1>
+      {% if passwordless %}
+        <h1 class="title">{{ _("mas.register.create_account.passwordless_heading", server_name=branding.server_name) }}</h1>
+        {% if without_email %}
+          <p class="text">{{ _("mas.register.create_account.without_email_description") }}</p>
+        {% elif invite.email %}
+          <p class="text">
+            {{ _("mas.register.create_account.passwordless_description") }}<br>
+            <span class="text-primary">{{ invite.email }}</span>
+          </p>
+        {% endif %}
+      {% else %}
+        <h1 class="title">{{ _("mas.register.create_account.heading") }}</h1>
+      {% endif %}
     </div>
   </header>
 
   <div id="register-form"
        data-csrf-token="{{ csrf_token }}"
        {%- if captcha_config %} data-captcha-config='{{ captcha_config | tojson }}'{% endif %}
+       {%- if invite %} data-invite='{{ invite | tojson }}'{% endif %}
        data-branding='{{ branding | tojson }}'
        data-features='{{ features | tojson }}'
+       data-max-display-name-length="{{ max_display_name_length }}"
        data-form='{{ form | tojson }}'
        data-providers='{{ providers | tojson }}'
        data-login-link="{{ login_link }}"

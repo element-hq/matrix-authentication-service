@@ -3797,12 +3797,18 @@
                       "attributes": {
                         "token": "abc123def456",
                         "valid": true,
+                        "username": null,
+                        "email": null,
+                        "allowed_emails": null,
+                        "passwordless": false,
+                        "continue_url": null,
                         "usage_limit": 10,
                         "times_used": 5,
                         "created_at": "1970-01-01T00:00:00Z",
                         "last_used_at": "1970-01-01T00:00:00Z",
                         "expires_at": "1970-01-31T00:00:00Z",
-                        "revoked_at": null
+                        "revoked_at": null,
+                        "invite_url": "https://example.com/register?token=abc123def456"
                       },
                       "links": {
                         "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
@@ -3819,12 +3825,18 @@
                       "attributes": {
                         "token": "xyz789abc012",
                         "valid": false,
+                        "username": null,
+                        "email": null,
+                        "allowed_emails": null,
+                        "passwordless": false,
+                        "continue_url": null,
                         "usage_limit": null,
                         "times_used": 0,
                         "created_at": "1970-01-01T00:00:00Z",
                         "last_used_at": null,
                         "expires_at": null,
-                        "revoked_at": "1970-01-01T00:00:00Z"
+                        "revoked_at": "1970-01-01T00:00:00Z",
+                        "invite_url": "https://example.com/register?token=xyz789abc012"
                       },
                       "links": {
                         "self": "/api/admin/v1/user-registration-tokens/02081040G2081040G2081040G2"
@@ -3879,12 +3891,18 @@
                     "attributes": {
                       "token": "abc123def456",
                       "valid": true,
+                      "username": null,
+                      "email": null,
+                      "allowed_emails": null,
+                      "passwordless": false,
+                      "continue_url": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
                       "last_used_at": "1970-01-01T00:00:00Z",
                       "expires_at": "1970-01-31T00:00:00Z",
-                      "revoked_at": null
+                      "revoked_at": null,
+                      "invite_url": "https://example.com/register?token=abc123def456"
                     },
                     "links": {
                       "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
@@ -3893,6 +3911,109 @@
                   "links": {
                     "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The continue URL, an email or the username template is not valid, the registration policy refuses an email or the username, `allowed_emails` is empty or too long, or it is set with `email` or without `passwordless`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Continue URL \"app.example.com\" is not an http or https URL in visible ASCII"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A token with the same token already exists, or the username is taken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Username \"alice\" is already taken"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/user-registration-tokens/invite-emails": {
+      "post": {
+        "tags": [
+          "user-registration-token"
+        ],
+        "summary": "Email invite links for user registration tokens",
+        "description": "Emails each address a link to register with its token. The email is sent only if the token is still valid by then. MAS does not rate-limit this endpoint and does not verify the room or inviter fields, so a caller acting for users must apply its own limits.",
+        "operationId": "sendUserRegistrationTokenInviteEmails",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteEmailsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "The emails were scheduled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteEmailsResponse"
+                },
+                "example": {
+                  "scheduled": 2
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request has no invites or too many, an invalid token, or an address which is missing, invalid or not one the token allows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Registration token 00000000000000000000000000 has no email address, so the invite needs one"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "A registration token was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "Registration token ID 00000000000000000000000000 not found"
+                    }
+                  ]
                 }
               }
             }
@@ -3934,12 +4055,18 @@
                     "attributes": {
                       "token": "abc123def456",
                       "valid": true,
+                      "username": null,
+                      "email": null,
+                      "allowed_emails": null,
+                      "passwordless": false,
+                      "continue_url": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
                       "last_used_at": "1970-01-01T00:00:00Z",
                       "expires_at": "1970-01-31T00:00:00Z",
-                      "revoked_at": null
+                      "revoked_at": null,
+                      "invite_url": "https://example.com/register?token=abc123def456"
                     },
                     "links": {
                       "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
@@ -4015,12 +4142,18 @@
                     "attributes": {
                       "token": "abc123def456",
                       "valid": true,
+                      "username": null,
+                      "email": null,
+                      "allowed_emails": null,
+                      "passwordless": false,
+                      "continue_url": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
                       "last_used_at": "1970-01-01T00:00:00Z",
                       "expires_at": "1970-01-31T00:00:00Z",
-                      "revoked_at": null
+                      "revoked_at": null,
+                      "invite_url": "https://example.com/register?token=abc123def456"
                     },
                     "links": {
                       "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
@@ -4029,6 +4162,23 @@
                   "links": {
                     "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`allowed_emails` is empty, too long, or set on a token with an `email` or without `passwordless`, or an address in it is not valid or refused by the registration policy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "errors": [
+                    {
+                      "title": "The token has an `email`, so it can't have `allowed_emails`"
+                    }
+                  ]
                 }
               }
             }
@@ -4088,12 +4238,18 @@
                     "attributes": {
                       "token": "xyz789abc012",
                       "valid": false,
+                      "username": null,
+                      "email": null,
+                      "allowed_emails": null,
+                      "passwordless": false,
+                      "continue_url": null,
                       "usage_limit": null,
                       "times_used": 0,
                       "created_at": "1970-01-01T00:00:00Z",
                       "last_used_at": null,
                       "expires_at": null,
-                      "revoked_at": "1970-01-01T00:00:00Z"
+                      "revoked_at": "1970-01-01T00:00:00Z",
+                      "invite_url": "https://example.com/register?token=xyz789abc012"
                     },
                     "links": {
                       "self": "/api/admin/v1/user-registration-tokens/02081040G2081040G2081040G2"
@@ -4178,12 +4334,18 @@
                     "attributes": {
                       "token": "abc123def456",
                       "valid": true,
+                      "username": null,
+                      "email": null,
+                      "allowed_emails": null,
+                      "passwordless": false,
+                      "continue_url": null,
                       "usage_limit": 10,
                       "times_used": 5,
                       "created_at": "1970-01-01T00:00:00Z",
                       "last_used_at": "1970-01-01T00:00:00Z",
                       "expires_at": "1970-01-31T00:00:00Z",
-                      "revoked_at": null
+                      "revoked_at": null,
+                      "invite_url": "https://example.com/register?token=abc123def456"
                     },
                     "links": {
                       "self": "/api/admin/v1/user-registration-tokens/01040G2081040G2081040G2081"
@@ -7310,6 +7472,41 @@
             "description": "Whether the token is valid",
             "type": "boolean"
           },
+          "username": {
+            "description": "A username imposed on the registering user. If null, the user can\nchoose their own username. A value with `{` is a minijinja template,\nrendered with `random` when registering through the token's link. A\ntemplate token works only through that link: the registration token\nstep refuses it.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email": {
+            "description": "An email address imposed on the registering user. If null, the user\ncan choose their own email.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "allowed_emails": {
+            "description": "The email addresses the registering user must use one of. If null,\nthe user can use any.",
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "passwordless": {
+            "description": "Whether registering with this token skips the password step. The user's\nidentity is then established by verifying their email address, unless\nthe token has a username template and neither an email nor allowed\naddresses, and `account.passwordless_registration_without_email_allowed`\nis set: such a token registers with only a display name.",
+            "type": "boolean"
+          },
+          "continue_url": {
+            "description": "Where the user is sent once they have registered or signed in through\nthe token's link. If null, they go where they would without a link.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "usage_limit": {
             "description": "Maximum number of times this token can be used",
             "type": [
@@ -7353,13 +7550,20 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "invite_url": {
+            "description": "URL to share with the user to register with this token",
+            "type": "string",
+            "format": "uri"
           }
         },
         "required": [
           "token",
           "valid",
+          "passwordless",
           "times_used",
-          "created_at"
+          "created_at",
+          "invite_url"
         ]
       },
       "AddUserRegistrationTokenRequest": {
@@ -7367,7 +7571,7 @@
         "type": "object",
         "properties": {
           "token": {
-            "description": "The token string. If not provided, a random token will be generated.",
+            "description": "The token string. If not provided, a random token will be generated.\nAnyone holding the token can open its invite URL, which shows the\nusername and email address it imposes, so a token provided here must be\nas hard to guess as a generated one.",
             "type": [
               "string",
               "null"
@@ -7389,6 +7593,50 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "username": {
+            "description": "A username to impose on the registering user. If set, the user cannot\nchoose their own username. A value with `{` is a minijinja template:\nregistering through the token's `/register?token=…` link renders it\nwith `random`, 32 random lowercase letters and digits, without showing\nthe user the name. A template token works only through that link: the\nregistration token step refuses it. A template must render with a\nsample `random`, and the result pass the registration policy. A\nusername which isn't a template must pass the policy and must not be\ntaken.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "user-{{ random }}"
+          },
+          "email": {
+            "description": "An email address to impose on the registering user. If set, the user\ncannot choose their own email. It must pass the registration policy.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "allowed_emails": {
+            "description": "The email addresses the registering user must use one of, in place of\n`email`, for a `passwordless` token. If set, it must not be empty, and\neach address must pass the registration policy. Repeats of an address\nin another case are dropped.",
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "example": [
+              "alice@example.com",
+              "bob@example.com"
+            ]
+          },
+          "passwordless": {
+            "description": "Whether registering with this token skips the password step. The user's\nidentity is then established by verifying their email address, unless\nthe token has a username template and neither an email nor allowed\naddresses, and `account.passwordless_registration_without_email_allowed`\nis set: such a token registers with only a display name.",
+            "type": "boolean",
+            "default": false
+          },
+          "continue_url": {
+            "description": "Where to send the user once they have registered or signed in through\nthe token's link. It must be an http or https URL, with anything but\nvisible ASCII characters percent-encoded, and is used as given: it can\nbe a page of any client, or one that lets the user pick a client.\nWhoever holds the link can reach this URL without signing in, even\nonce the token is used, expired or revoked.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "example": "https://app.example.com/#/room/%21room%3Aexample.com"
           }
         }
       },
@@ -7406,6 +7654,88 @@
         "required": [
           "data",
           "links"
+        ]
+      },
+      "InviteEmailsRequest": {
+        "title": "JSON payload for the `POST /api/admin/v1/user-registration-tokens/invite-emails` endpoint",
+        "type": "object",
+        "properties": {
+          "invites": {
+            "description": "The tokens to email a link for. A token and address given more than\nonce, ignoring case, are emailed once.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InviteEmail"
+            },
+            "maxItems": 100
+          },
+          "room_name": {
+            "description": "The name of the room the invites are for, shown in the email. With it,\nthe email tells the recipient they are asking to join and that someone\nin the room approves the request. Without it, the email names no room.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Project X"
+          },
+          "inviter": {
+            "description": "The Matrix ID of the user sending the invites, shown in the email. It is\nleft out if it isn't a valid Matrix ID.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "@bob:example.com"
+          },
+          "inviter_name": {
+            "description": "The display name of the user sending the invites, shown in the email",
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "Bob"
+          }
+        },
+        "required": [
+          "invites"
+        ]
+      },
+      "InviteEmail": {
+        "title": "A registration token to email a link for",
+        "type": "object",
+        "properties": {
+          "registration_token_id": {
+            "description": "The ID of the registration token",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ULID"
+              }
+            ]
+          },
+          "email": {
+            "description": "The address to send the link to. Required if the token has no email\naddress, and otherwise the token's address, ignoring case. For a token\nlisting the addresses it allows, one of them, ignoring case.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email",
+            "example": "alice@example.com"
+          }
+        },
+        "required": [
+          "registration_token_id"
+        ]
+      },
+      "InviteEmailsResponse": {
+        "title": "Response to the `POST /api/admin/v1/user-registration-tokens/invite-emails` endpoint",
+        "type": "object",
+        "properties": {
+          "scheduled": {
+            "description": "How many emails were scheduled, after dropping repeated invites",
+            "type": "integer",
+            "format": "uint",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "scheduled"
         ]
       },
       "EditUserRegistrationTokenRequest": {
@@ -7428,6 +7758,21 @@
             ],
             "format": "uint32",
             "minimum": 0
+          },
+          "allowed_emails": {
+            "description": "New email addresses the registering user must use one of, replacing\nthe old ones, or null to allow any. It can't be set on a token with an\n`email` or without `passwordless`. It must not be empty, and each\naddress must pass the registration policy. Repeats of an address in\nanother case are dropped.",
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "example": [
+              "alice@example.com",
+              "bob@example.com"
+            ]
           }
         }
       },

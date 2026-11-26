@@ -10,7 +10,9 @@ use mas_data_model::{Clock, UlidExt as _, UserRegistrationToken};
 use mas_storage::{
     Page, Pagination,
     pagination::Node,
-    user::{UserRegistrationTokenFilter, UserRegistrationTokenRepository},
+    user::{
+        UserRegistrationTokenFilter, UserRegistrationTokenParams, UserRegistrationTokenRepository,
+    },
 };
 use rand::Rng;
 use sea_query::{Condition, Expr, ExprTrait, PostgresQueryBuilder, Query, enum_def};
@@ -47,6 +49,11 @@ impl<'c> PgUserRegistrationTokenRepository<'c> {
 struct UserRegistrationTokenLookup {
     user_registration_token_id: Uuid,
     token: String,
+    username: Option<String>,
+    email: Option<String>,
+    allowed_emails: Option<Vec<String>>,
+    passwordless: bool,
+    continue_url: Option<String>,
     usage_limit: Option<i32>,
     times_used: i32,
     created_at: DateTime<Utc>,
@@ -211,6 +218,11 @@ impl TryFrom<UserRegistrationTokenLookup> for UserRegistrationToken {
         Ok(UserRegistrationToken {
             id,
             token: res.token,
+            username: res.username,
+            email: res.email,
+            allowed_emails: res.allowed_emails,
+            passwordless: res.passwordless,
+            continue_url: res.continue_url,
             usage_limit,
             times_used,
             created_at: res.created_at,
@@ -248,6 +260,38 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             .expr_as(
                 Expr::col((UserRegistrationTokens::Table, UserRegistrationTokens::Token)),
                 UserRegistrationTokenLookupIden::Token,
+            )
+            .expr_as(
+                Expr::col((
+                    UserRegistrationTokens::Table,
+                    UserRegistrationTokens::Username,
+                )),
+                UserRegistrationTokenLookupIden::Username,
+            )
+            .expr_as(
+                Expr::col((UserRegistrationTokens::Table, UserRegistrationTokens::Email)),
+                UserRegistrationTokenLookupIden::Email,
+            )
+            .expr_as(
+                Expr::col((
+                    UserRegistrationTokens::Table,
+                    UserRegistrationTokens::AllowedEmails,
+                )),
+                UserRegistrationTokenLookupIden::AllowedEmails,
+            )
+            .expr_as(
+                Expr::col((
+                    UserRegistrationTokens::Table,
+                    UserRegistrationTokens::Passwordless,
+                )),
+                UserRegistrationTokenLookupIden::Passwordless,
+            )
+            .expr_as(
+                Expr::col((
+                    UserRegistrationTokens::Table,
+                    UserRegistrationTokens::ContinueUrl,
+                )),
+                UserRegistrationTokenLookupIden::ContinueUrl,
             )
             .expr_as(
                 Expr::col((
@@ -359,6 +403,11 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             r#"
                 SELECT user_registration_token_id,
                        token,
+                       username,
+                       email,
+                       allowed_emails,
+                       passwordless,
+                       continue_url,
                        usage_limit,
                        times_used,
                        created_at,
@@ -398,6 +447,11 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
             r#"
                 SELECT user_registration_token_id,
                        token,
+                       username,
+                       email,
+                       allowed_emails,
+                       passwordless,
+                       continue_url,
                        usage_limit,
                        times_used,
                        created_at,
@@ -425,17 +479,25 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
         skip_all,
         fields(
             db.query.text,
-            user_registration_token.token = %token,
+            user_registration_token.token = %params.token,
         ),
     )]
     async fn add(
         &mut self,
         rng: &mut (dyn Rng + Send),
         clock: &dyn mas_data_model::Clock,
-        token: String,
-        usage_limit: Option<u32>,
-        expires_at: Option<DateTime<Utc>>,
+        params: UserRegistrationTokenParams,
     ) -> Result<UserRegistrationToken, Self::Error> {
+        let UserRegistrationTokenParams {
+            token,
+            usage_limit,
+            expires_at,
+            username,
+            email,
+            allowed_emails,
+            passwordless,
+            continue_url,
+        } = params;
         let created_at = clock.now();
         let id = Ulid::from_datetime_with_rng(created_at, rng);
 
@@ -447,14 +509,19 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
         sqlx::query!(
             r#"
                 INSERT INTO user_registration_tokens
-                    (user_registration_token_id, token, usage_limit, created_at, expires_at)
-                VALUES ($1, $2, $3, $4, $5)
+                    (user_registration_token_id, token, usage_limit, created_at, expires_at, username, email, allowed_emails, passwordless, continue_url)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             "#,
             Uuid::from(id),
             &token,
             usage_limit_i32,
             created_at,
             expires_at,
+            username.as_deref(),
+            email.as_deref(),
+            allowed_emails.as_deref() as Option<&[String]>,
+            passwordless,
+            continue_url.as_deref(),
         )
         .traced()
         .execute(&mut *self.conn)
@@ -463,6 +530,11 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
         Ok(UserRegistrationToken {
             id,
             token,
+            username,
+            email,
+            allowed_emails,
+            passwordless,
+            continue_url,
             usage_limit,
             times_used: 0,
             created_at,
@@ -647,13 +719,50 @@ impl UserRegistrationTokenRepository for PgUserRegistrationTokenRepository<'_> {
 
         Ok(token)
     }
+
+    #[tracing::instrument(
+        name = "db.user_registration_token.set_allowed_emails",
+        skip_all,
+        fields(
+            db.query.text,
+            user_registration_token.id = %token.id,
+        ),
+        err,
+    )]
+    async fn set_allowed_emails(
+        &mut self,
+        mut token: UserRegistrationToken,
+        allowed_emails: Option<Vec<String>>,
+    ) -> Result<UserRegistrationToken, Self::Error> {
+        let res = sqlx::query!(
+            r#"
+                UPDATE user_registration_tokens
+                SET allowed_emails = $2
+                WHERE user_registration_token_id = $1
+            "#,
+            Uuid::from(token.id),
+            allowed_emails.as_deref() as Option<&[String]>,
+        )
+        .traced()
+        .execute(&mut *self.conn)
+        .await?;
+
+        DatabaseError::ensure_affected_rows(&res, 1)?;
+
+        token.allowed_emails = allowed_emails;
+
+        Ok(token)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use chrono::Duration;
     use mas_data_model::{Clock as _, clock::MockClock};
-    use mas_storage::{Pagination, user::UserRegistrationTokenFilter};
+    use mas_storage::{
+        Pagination,
+        user::{UserRegistrationTokenFilter, UserRegistrationTokenParams},
+    };
     use rand::SeedableRng;
     use rand_chacha::ChaChaRng;
     use sqlx::PgPool;
@@ -670,7 +779,14 @@ mod tests {
         // Create a token
         let token = repo
             .user_registration_token()
-            .add(&mut rng, &clock, "test_token".to_owned(), None, None)
+            .add(
+                &mut rng,
+                &clock,
+                UserRegistrationTokenParams {
+                    token: "test_token".to_owned(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
 
@@ -715,7 +831,14 @@ mod tests {
         // Create a token without expiry
         let token = repo
             .user_registration_token()
-            .add(&mut rng, &clock, "test_token_expiry".to_owned(), None, None)
+            .add(
+                &mut rng,
+                &clock,
+                UserRegistrationTokenParams {
+                    token: "test_token_expiry".to_owned(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
 
@@ -754,7 +877,14 @@ mod tests {
         // Create a token without usage limit
         let token = repo
             .user_registration_token()
-            .add(&mut rng, &clock, "test_token_limit".to_owned(), None, None)
+            .add(
+                &mut rng,
+                &clock,
+                UserRegistrationTokenParams {
+                    token: "test_token_limit".to_owned(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
 
@@ -793,6 +923,217 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_continue_url(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+
+        for continue_url in [None, Some("https://app.example.com/#/room/abc".to_owned())] {
+            let token = repo
+                .user_registration_token()
+                .add(
+                    &mut rng,
+                    &clock,
+                    UserRegistrationTokenParams {
+                        token: format!("token_{continue_url:?}"),
+                        continue_url: continue_url.clone(),
+                        ..Default::default()
+                    },
+                )
+                .await
+                .unwrap();
+            assert_eq!(token.continue_url, continue_url);
+
+            let looked_up = repo
+                .user_registration_token()
+                .lookup(token.id)
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(looked_up, token);
+
+            let found = repo
+                .user_registration_token()
+                .find_by_token(&token.token)
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(found, token);
+        }
+
+        let page = repo
+            .user_registration_token()
+            .list(
+                UserRegistrationTokenFilter::new(clock.now()),
+                Pagination::first(10),
+            )
+            .await
+            .unwrap();
+        let mut continue_urls: Vec<_> = page
+            .edges
+            .into_iter()
+            .map(|e| e.node.continue_url)
+            .collect();
+        continue_urls.sort();
+        assert_eq!(
+            continue_urls,
+            [None, Some("https://app.example.com/#/room/abc".to_owned())]
+        );
+    }
+
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_allowed_emails(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+
+        for allowed_emails in [
+            None,
+            Some(vec![
+                "alice@example.com".to_owned(),
+                "bob@example.com".to_owned(),
+            ]),
+        ] {
+            let token = repo
+                .user_registration_token()
+                .add(
+                    &mut rng,
+                    &clock,
+                    UserRegistrationTokenParams {
+                        token: format!("token_{allowed_emails:?}"),
+                        allowed_emails: allowed_emails.clone(),
+                        ..Default::default()
+                    },
+                )
+                .await
+                .unwrap();
+            assert_eq!(token.allowed_emails, allowed_emails);
+
+            let looked_up = repo
+                .user_registration_token()
+                .lookup(token.id)
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(looked_up, token);
+
+            let found = repo
+                .user_registration_token()
+                .find_by_token(&token.token)
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(found, token);
+        }
+
+        let page = repo
+            .user_registration_token()
+            .list(
+                UserRegistrationTokenFilter::new(clock.now()),
+                Pagination::first(10),
+            )
+            .await
+            .unwrap();
+        let mut allowed_emails: Vec<_> = page
+            .edges
+            .into_iter()
+            .map(|e| e.node.allowed_emails)
+            .collect();
+        allowed_emails.sort();
+        assert_eq!(
+            allowed_emails,
+            [
+                None,
+                Some(vec![
+                    "alice@example.com".to_owned(),
+                    "bob@example.com".to_owned()
+                ])
+            ]
+        );
+    }
+
+    /// A list of allowed addresses is never empty, nor beside a pinned email
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_allowed_emails_constraint(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+
+        for (email, allowed_emails) in [
+            (None, Vec::new()),
+            (
+                Some("alice@example.com".to_owned()),
+                vec!["alice@example.com".to_owned()],
+            ),
+        ] {
+            let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+            let res = repo
+                .user_registration_token()
+                .add(
+                    &mut rng,
+                    &clock,
+                    UserRegistrationTokenParams {
+                        token: "test_token".to_owned(),
+                        email,
+                        allowed_emails: Some(allowed_emails),
+                        ..Default::default()
+                    },
+                )
+                .await;
+            assert!(
+                format!("{:?}", res.unwrap_err())
+                    .contains("user_registration_tokens_allowed_emails_check")
+            );
+        }
+    }
+
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
+    async fn test_set_allowed_emails(pool: PgPool) {
+        let mut rng = ChaChaRng::seed_from_u64(42);
+        let clock = MockClock::default();
+
+        let mut repo = PgRepository::from_pool(&pool).await.unwrap().boxed();
+
+        let mut token = repo
+            .user_registration_token()
+            .add(
+                &mut rng,
+                &clock,
+                UserRegistrationTokenParams {
+                    token: "test_token".to_owned(),
+                    allowed_emails: Some(vec!["alice@example.com".to_owned()]),
+                    ..Default::default()
+                },
+            )
+            .await
+            .unwrap();
+
+        for allowed_emails in [
+            Some(vec![
+                "bob@example.com".to_owned(),
+                "carol@example.com".to_owned(),
+            ]),
+            None,
+        ] {
+            token = repo
+                .user_registration_token()
+                .set_allowed_emails(token, allowed_emails.clone())
+                .await
+                .unwrap();
+            assert_eq!(token.allowed_emails, allowed_emails);
+
+            let looked_up = repo
+                .user_registration_token()
+                .lookup(token.id)
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(looked_up, token);
+        }
+    }
+
+    #[sqlx::test(migrator = "crate::MIGRATOR")]
     async fn test_list_and_count(pool: PgPool) {
         let mut rng = ChaChaRng::seed_from_u64(42);
         let clock = MockClock::default();
@@ -803,14 +1144,28 @@ mod tests {
         // 1. A regular token
         let _token1 = repo
             .user_registration_token()
-            .add(&mut rng, &clock, "token1".to_owned(), None, None)
+            .add(
+                &mut rng,
+                &clock,
+                UserRegistrationTokenParams {
+                    token: "token1".to_owned(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
 
         // 2. A token that has been used
         let token2 = repo
             .user_registration_token()
-            .add(&mut rng, &clock, "token2".to_owned(), None, None)
+            .add(
+                &mut rng,
+                &clock,
+                UserRegistrationTokenParams {
+                    token: "token2".to_owned(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
         let token2 = repo
@@ -823,14 +1178,29 @@ mod tests {
         let past_time = clock.now() - Duration::days(1);
         let token3 = repo
             .user_registration_token()
-            .add(&mut rng, &clock, "token3".to_owned(), None, Some(past_time))
+            .add(
+                &mut rng,
+                &clock,
+                UserRegistrationTokenParams {
+                    token: "token3".to_owned(),
+                    expires_at: Some(past_time),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
 
         // 4. A token that is revoked
         let token4 = repo
             .user_registration_token()
-            .add(&mut rng, &clock, "token4".to_owned(), None, None)
+            .add(
+                &mut rng,
+                &clock,
+                UserRegistrationTokenParams {
+                    token: "token4".to_owned(),
+                    ..Default::default()
+                },
+            )
             .await
             .unwrap();
         let token4 = repo

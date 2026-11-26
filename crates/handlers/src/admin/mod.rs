@@ -24,7 +24,7 @@ use mas_axum_utils::InternalError;
 use mas_data_model::{AppVersion, BoxRng, SiteConfig};
 use mas_http::CorsLayerExt;
 use mas_matrix::HomeserverConnection;
-use mas_policy::PolicyFactory;
+use mas_policy::{Policy, PolicyFactory};
 use mas_router::{
     ApiDoc, ApiDocCallback, OAuth2AuthorizationEndpoint, OAuth2TokenEndpoint, Route, SimpleRoute,
     UrlBuilder,
@@ -167,6 +167,7 @@ where
     PasswordManager: FromRef<S>,
     BoxRng: FromRequestParts<S>,
     CallContext: FromRequestParts<S>,
+    Policy: FromRequestParts<S>,
     Templates: FromRef<S>,
     UrlBuilder: FromRef<S>,
     Arc<PolicyFactory>: FromRef<S>,

@@ -29,7 +29,23 @@ export const providerSchema = v.object({
   id: v.string(),
 });
 
+/** The invite code the page was opened with, resolved server-side */
+export const inviteSchema = v.union([
+  v.object({ valid: v.literal(false) }),
+  v.object({
+    valid: v.literal(true),
+    /** The username the code was issued for, hidden from the user */
+    username: v.nullable(v.string()),
+    /** The email address the code was issued for */
+    email: v.nullable(v.string()),
+    passwordless: v.boolean(),
+    /** Whether the code registers with a display name and no email address */
+    without_email: v.boolean(),
+  }),
+]);
+
 export type FieldState = v.InferOutput<typeof fieldStateSchema>;
+export type Invite = v.InferOutput<typeof inviteSchema>;
 export type Provider = v.InferOutput<typeof providerSchema>;
 
 /** Valid Matrix localpart: lowercase ascii, digits, and a few special chars */
