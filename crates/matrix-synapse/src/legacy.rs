@@ -44,13 +44,7 @@ impl SynapseConnection {
 
     fn builder(&self, method: Method, url: &str) -> reqwest::RequestBuilder {
         self.http_client
-            .request(
-                method,
-                self.endpoint
-                    .join(url)
-                    .map(String::from)
-                    .unwrap_or_default(),
-            )
+            .request(method, self.endpoint.join(url).map_or_default(String::from))
             .bearer_auth(&self.access_token)
     }
 

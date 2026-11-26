@@ -201,18 +201,18 @@ struct RsaOtherPrimeInfo {
 }
 
 mod rsa_impls {
-    use rsa::{BoxedUint, RsaPrivateKey};
+    use rsa::{BoxedUint, PrivateKey};
 
     use super::RsaPrivateParameters;
 
-    impl TryFrom<RsaPrivateParameters> for RsaPrivateKey {
+    impl TryFrom<RsaPrivateParameters> for PrivateKey {
         type Error = rsa::errors::Error;
         fn try_from(value: RsaPrivateParameters) -> Result<Self, Self::Error> {
             Self::try_from(&value)
         }
     }
 
-    impl TryFrom<&RsaPrivateParameters> for RsaPrivateKey {
+    impl TryFrom<&RsaPrivateParameters> for PrivateKey {
         type Error = rsa::errors::Error;
 
         fn try_from(value: &RsaPrivateParameters) -> Result<Self, Self::Error> {
@@ -226,7 +226,7 @@ mod rsa_impls {
                 .map(|i| BoxedUint::from_be_slice_vartime(i.as_bytes()))
                 .collect();
 
-            let key = RsaPrivateKey::from_components(n, e, d, primes)?;
+            let key = PrivateKey::from_components(n, e, d, primes)?;
 
             key.validate()?;
 
