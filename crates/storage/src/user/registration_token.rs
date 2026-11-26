@@ -32,6 +32,9 @@ pub struct UserRegistrationTokenParams {
 
     /// Whether registrations using this token skip the password step
     pub passwordless: bool,
+
+    /// Optional URL the user is sent to once registered or signed in
+    pub continue_url: Option<String>,
 }
 
 /// A filter to apply when listing [`UserRegistrationToken`]s
