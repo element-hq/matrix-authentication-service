@@ -8,13 +8,14 @@
 use std::str::FromStr;
 
 use aide::{NoApi, OperationIo, transform::TransformOperation};
-use axum::{Json, response::IntoResponse};
+use axum::{Json, extract::State, response::IntoResponse};
 use chrono::{DateTime, Utc};
 use hyper::StatusCode;
 use lettre::Address;
 use mas_axum_utils::record_error;
 use mas_data_model::BoxRng;
 use mas_policy::{EvaluationResult, Policy};
+use mas_router::UrlBuilder;
 use mas_storage::user::UserRegistrationTokenParams;
 use rand::distr::{Alphanumeric, SampleString};
 use schemars::JsonSchema;
@@ -89,6 +90,9 @@ impl NotAllowed {
 #[serde(rename = "AddUserRegistrationTokenRequest")]
 pub struct Request {
     /// The token string. If not provided, a random token will be generated.
+    /// Anyone holding the token can open its invite URL, which shows the
+    /// username and email address it imposes, so a token provided here must be
+    /// as hard to guess as a generated one.
     token: Option<String>,
 
     /// Maximum number of times this token can be used. If not provided, the
@@ -159,6 +163,7 @@ pub async fn handler(
     CallContext {
         mut repo, clock, ..
     }: CallContext,
+    State(url_builder): State<UrlBuilder>,
     NoApi(mut rng): NoApi<BoxRng>,
     NoApi(mut policy): NoApi<Policy>,
     Json(params): Json<Request>,
@@ -242,6 +247,7 @@ pub async fn handler(
         Json(SingleResponse::new_canonical(UserRegistrationToken::new(
             registration_token,
             clock.now(),
+            &url_builder,
         ))),
     ))
 }
@@ -286,7 +292,8 @@ mod tests {
               "created_at": "2022-01-16T14:40:00Z",
               "last_used_at": null,
               "expires_at": null,
-              "revoked_at": null
+              "revoked_at": null,
+              "invite_url": "https://example.com/register?token=test_token_123"
             },
             "links": {
               "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -297,6 +304,27 @@ mod tests {
           }
         }
         "#);
+    }
+
+    /// The token travels in the query string of the invite URL, so one with
+    /// reserved characters comes back percent-encoded
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_create_invite_url_encoding(pool: PgPool) {
+        setup();
+        let mut state = TestState::from_pool(pool).await.unwrap();
+        let token = state.token_with_scope("urn:mas:admin").await;
+
+        let request = Request::post("/api/admin/v1/user-registration-tokens")
+            .bearer(&token)
+            .json(serde_json::json!({ "token": "a token&more" }));
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::CREATED);
+        let body: serde_json::Value = response.json();
+
+        assert_eq!(
+            body["data"]["attributes"]["invite_url"],
+            "https://example.com/register?token=a+token%26more"
+        );
     }
 
     #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
@@ -331,7 +359,8 @@ mod tests {
               "created_at": "2022-01-16T14:40:00Z",
               "last_used_at": null,
               "expires_at": null,
-              "revoked_at": null
+              "revoked_at": null,
+              "invite_url": "https://example.com/register?token=42oTpLoieH5I"
             },
             "links": {
               "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0QMGC989M0XSFVF2X"
@@ -378,7 +407,8 @@ mod tests {
               "created_at": "2022-01-16T14:40:00Z",
               "last_used_at": null,
               "expires_at": null,
-              "revoked_at": null
+              "revoked_at": null,
+              "invite_url": "https://example.com/register?token=invite_alice"
             },
             "links": {
               "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
@@ -533,7 +563,8 @@ mod tests {
               "created_at": "2022-01-16T14:40:00Z",
               "last_used_at": null,
               "expires_at": null,
-              "revoked_at": null
+              "revoked_at": null,
+              "invite_url": "https://example.com/register?token=test_token_123"
             },
             "links": {
               "self": "/api/admin/v1/user-registration-tokens/01FSHN9AG0MZAA6S4AF7CTV32E"
