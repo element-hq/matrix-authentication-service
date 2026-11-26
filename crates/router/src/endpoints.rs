@@ -235,9 +235,13 @@ pub struct Login {
     #[serde(flatten)]
     post_auth_action: Option<PostAuthAction>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
     login_hint: Option<String>,
 
-    #[serde(rename = "io.element.login_method")]
+    #[serde(
+        rename = "io.element.login_method",
+        skip_serializing_if = "Option::is_none"
+    )]
     login_method: Option<LoginMethodHint>,
 }
 
@@ -309,6 +313,12 @@ impl Login {
     pub fn with_login_method(mut self, login_method: LoginMethodHint) -> Self {
         self.login_method = Some(login_method);
         self
+    }
+
+    /// Get a reference to the login method the client asked for.
+    #[must_use]
+    pub fn login_method(&self) -> Option<&LoginMethodHint> {
+        self.login_method.as_ref()
     }
 
     /// Get a reference to the login's post auth action.

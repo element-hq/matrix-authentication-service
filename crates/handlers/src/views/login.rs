@@ -21,7 +21,7 @@ use mas_axum_utils::{
 use mas_data_model::{BoxClock, BoxRng, Clock, UpstreamOAuthProvider};
 use mas_i18n::DataLocale;
 use mas_matrix::HomeserverConnection;
-use mas_router::{LoginMethodHint, UpstreamOAuth2Authorize, UrlBuilder};
+use mas_router::{LoginMethodHint, PostAuthAction, UpstreamOAuth2Authorize, UrlBuilder};
 use mas_storage::{
     BoxRepository, RepositoryAccess,
     upstream_oauth2::UpstreamOAuthProviderRepository,
@@ -72,6 +72,17 @@ pub(crate) struct LoginHints {
     login_method: Option<LoginMethodHint>,
 }
 
+impl LoginHints {
+    /// The login page to come back to, with the same action and login method.
+    fn login_route(&self, action: Option<PostAuthAction>) -> mas_router::Login {
+        let route = mas_router::Login::from(action);
+        match self.login_method.clone() {
+            Some(login_method) => route.with_login_method(login_method),
+            None => route,
+        }
+    }
+}
+
 #[tracing::instrument(name = "handlers.views.login.get", skip_all)]
 pub(crate) async fn get(
     mut rng: BoxRng,
@@ -93,7 +104,7 @@ pub(crate) async fn get(
         &mut rng,
         &templates,
         &locale,
-        query.post_auth_action.clone(),
+        hints.login_route(query.post_auth_action.clone()),
         &mut repo,
     )
     .await?
@@ -347,7 +358,7 @@ pub(crate) async fn post(
             &mut rng,
             cookie_jar,
             user,
-            query.post_auth_action.clone(),
+            hints.login_route(query.post_auth_action.clone()),
         )?;
         return Ok((cookie_jar, response).into_response());
     }
@@ -362,7 +373,7 @@ pub(crate) async fn post(
             &mut rng,
             cookie_jar,
             user,
-            query.post_auth_action.clone(),
+            hints.login_route(query.post_auth_action.clone()),
         )?;
         return Ok((cookie_jar, response).into_response());
     }
@@ -1454,6 +1465,54 @@ mod test {
         let response = state.request(request).await;
         response.assert_status(StatusCode::SEE_OTHER);
         response.assert_header_value(LOCATION, &format!("/consent/{GRANT_ID}"));
+    }
+
+    /// Signing out from the 'logged out' interstitial comes back to the login
+    /// page with the login method hint.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_logged_out_session_preserves_login_method_hint(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let user = user_with_password(&state, "john", "hunter2").await;
+        let session = login_with_session(&state, &cookies, &user).await;
+
+        let mut repo = state.repository().await.unwrap();
+        repo.browser_session()
+            .finish(&state.clock, session)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let login = mas_router::Login::and_continue_grant(GRANT_ID.parse().unwrap())
+            .with_login_method(mas_router::LoginMethodHint::Password);
+
+        let request = Request::get(&*login.path_and_query()).empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        cookies.save_cookies(&response);
+        response.assert_status(StatusCode::OK);
+        assert_interstitial_carries_grant_action(response.body(), GRANT_ID);
+        assert!(
+            response
+                .body()
+                .contains(r#"name="io.element.login_method" value="password""#),
+            "body: {}",
+            response.body()
+        );
+
+        let csrf_token = extract_csrf(response.body()).to_owned();
+        let request = Request::post("/logout").form(serde_json::json!({
+            "csrf": csrf_token,
+            "kind": "continue_authorization_grant",
+            "id": GRANT_ID,
+            "io.element.login_method": "password",
+        }));
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::SEE_OTHER);
+        response.assert_header_value(LOCATION, &login.path_and_query());
     }
 
     /// Without a continuation the post-logout redirect must be action-driven:

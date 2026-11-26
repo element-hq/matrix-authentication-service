@@ -2011,10 +2011,9 @@ impl TemplateContext for DeviceConsentContext {
 pub struct AccountInactiveContext {
     user: User,
 
-    /// The action to continue after signing out and back in from the
-    /// interstitial. Absent when there is no continuation to preserve.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    post_logout_action: Option<PostAuthAction>,
+    /// The login page parameters to restore after signing out from the
+    /// interstitial.
+    post_logout_action: Login,
 }
 
 impl AccountInactiveContext {
@@ -2023,14 +2022,14 @@ impl AccountInactiveContext {
     pub fn new(user: User) -> Self {
         Self {
             user,
-            post_logout_action: None,
+            post_logout_action: Login::default(),
         }
     }
 
-    /// Set the action to continue once the user has signed out and back in
+    /// Set the login page parameters to restore once the user has signed out
     #[must_use]
-    pub fn with_post_auth_action(mut self, action: Option<PostAuthAction>) -> Self {
-        self.post_logout_action = action;
+    pub fn with_post_logout_login(mut self, login: impl Into<Login>) -> Self {
+        self.post_logout_action = login.into();
         self
     }
 }
@@ -2054,7 +2053,7 @@ impl TemplateContext for AccountInactiveContext {
                     [
                         AccountInactiveContext::new(user.clone()),
                         AccountInactiveContext::new(user)
-                            .with_post_auth_action(Some(action.clone())),
+                            .with_post_logout_login(Some(action.clone())),
                     ]
                 })
                 .collect(),
