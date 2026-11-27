@@ -545,6 +545,11 @@ pub struct LoginContext {
     form: FormState<LoginFormField>,
     next: Option<PostAuthContext>,
     providers: Vec<UpstreamOAuthProvider>,
+
+    /// The client asked for the password method: the upstream providers and
+    /// the link to create an account are hidden, since the request is to log
+    /// in with a password and nothing else.
+    password_only: bool,
 }
 
 impl TemplateContext for LoginContext {
@@ -562,11 +567,13 @@ impl TemplateContext for LoginContext {
                 form: FormState::default(),
                 next: None,
                 providers: Vec::new(),
+                password_only: false,
             },
             LoginContext {
                 form: FormState::default(),
                 next: None,
                 providers: Vec::new(),
+                password_only: true,
             },
             LoginContext {
                 form: FormState::default()
@@ -580,12 +587,14 @@ impl TemplateContext for LoginContext {
                     ),
                 next: None,
                 providers: Vec::new(),
+                password_only: false,
             },
             LoginContext {
                 form: FormState::default()
                     .with_error_on_field(LoginFormField::Username, FieldError::Exists),
                 next: None,
                 providers: Vec::new(),
+                password_only: false,
             },
         ])
     }
@@ -607,6 +616,16 @@ impl LoginContext {
     #[must_use]
     pub fn with_upstream_providers(self, providers: Vec<UpstreamOAuthProvider>) -> Self {
         Self { providers, ..self }
+    }
+
+    /// Hide everything but the password form, see
+    /// [`LoginContext::password_only`]
+    #[must_use]
+    pub fn with_password_only(self, password_only: bool) -> Self {
+        Self {
+            password_only,
+            ..self
+        }
     }
 
     /// Add a post authentication action to the context
@@ -1992,10 +2011,9 @@ impl TemplateContext for DeviceConsentContext {
 pub struct AccountInactiveContext {
     user: User,
 
-    /// The action to continue after signing out and back in from the
-    /// interstitial. Absent when there is no continuation to preserve.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    post_logout_action: Option<PostAuthAction>,
+    /// The login page parameters to restore after signing out from the
+    /// interstitial.
+    post_logout_action: Login,
 }
 
 impl AccountInactiveContext {
@@ -2004,14 +2022,14 @@ impl AccountInactiveContext {
     pub fn new(user: User) -> Self {
         Self {
             user,
-            post_logout_action: None,
+            post_logout_action: Login::default(),
         }
     }
 
-    /// Set the action to continue once the user has signed out and back in
+    /// Set the login page parameters to restore once the user has signed out
     #[must_use]
-    pub fn with_post_auth_action(mut self, action: Option<PostAuthAction>) -> Self {
-        self.post_logout_action = action;
+    pub fn with_post_logout_login(mut self, login: impl Into<Login>) -> Self {
+        self.post_logout_action = login.into();
         self
     }
 }
@@ -2035,7 +2053,7 @@ impl TemplateContext for AccountInactiveContext {
                     [
                         AccountInactiveContext::new(user.clone()),
                         AccountInactiveContext::new(user)
-                            .with_post_auth_action(Some(action.clone())),
+                            .with_post_logout_login(Some(action.clone())),
                     ]
                 })
                 .collect(),

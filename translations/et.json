@@ -136,7 +136,7 @@
       "rate_limit_exceeded": "Sa oled lühikese aja jooksul teinud liiga palju päringuid. Palun oota paar minutit ja proovi uuesti.",
       "username_all_numeric": "Kasutajanimi ei tohi koosneda vaid numbritest",
       "username_banned": "Kasutajanimi on serverireeglite alusel keelatud",
-      "username_invalid_chars": "Kasutajanimi sisaldab keelatud märke. Kasuta väiketähti, numbreid ja märke . _ - + / =",
+      "username_invalid_chars": "Kasutajanimes on keelatud tähemärke. Palun kasuta vaid väiketähti, numbreid, sidekriipsu ja alakriipsu.",
       "username_not_allowed": "Kasutajanimi pole serveri reeglite alusel lubatud",
       "username_taken": "Selline kasutajanimi on juba olemas",
       "username_too_long": "Kasutajanimi on liiga pikk",

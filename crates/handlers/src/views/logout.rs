@@ -15,7 +15,7 @@ use mas_axum_utils::{
     csrf::{CsrfExt, ProtectedForm},
 };
 use mas_data_model::{BoxClock, Clock};
-use mas_router::{PostAuthAction, UrlBuilder};
+use mas_router::{Login, UrlBuilder};
 use mas_storage::{BoxRepository, user::BrowserSessionRepository};
 
 use crate::BoundActivityTracker;
@@ -27,7 +27,7 @@ pub(crate) async fn post(
     cookie_jar: CookieJar,
     State(url_builder): State<UrlBuilder>,
     activity_tracker: BoundActivityTracker,
-    Form(form): Form<ProtectedForm<Option<PostAuthAction>>>,
+    Form(form): Form<ProtectedForm<Login>>,
 ) -> Result<impl IntoResponse, InternalError> {
     let form = cookie_jar.verify_form(&clock, form)?;
 
@@ -56,10 +56,11 @@ pub(crate) async fn post(
     // invalid
     let cookie_jar = cookie_jar.update_session_info(&session_info.mark_session_ended(clock.now()));
 
-    let destination = if let Some(action) = form {
-        action.go_next(&url_builder)
-    } else {
-        url_builder.redirect(&mas_router::Login::default())
+    // The login method hint only lives in the login page's query string, so
+    // going through the continuation would lose it.
+    let destination = match form.post_auth_action() {
+        Some(action) if form.login_method().is_none() => action.go_next(&url_builder),
+        _ => url_builder.redirect(&form),
     };
 
     Ok((cookie_jar, destination))

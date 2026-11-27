@@ -230,9 +230,14 @@ export default defineConfig((env) => ({
     setupFiles: "./vitest.setup.ts",
     coverage: {
       provider: "v8",
-      src: ["./src/"],
-      exclude: ["**/gql/**", "**/*.d.ts", "**/*.stories.*"],
-      all: true,
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: [
+        "**/gql/**",
+        "**/*.d.ts",
+        "**/*.stories.*",
+        "**/*.gen.*",
+        "src/test-utils/**",
+      ],
       reporter: ["text", "html", "lcov"],
     },
   },

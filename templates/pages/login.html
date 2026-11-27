@@ -1,4 +1,5 @@
 {#
+Copyright 2025, 2026 Element Creations Ltd.
 Copyright 2024, 2025 New Vector Ltd.
 Copyright 2021-2024 The Matrix.org Foundation C.I.C.
 
@@ -68,11 +69,11 @@ Please see LICENSE files in the repository root for full details.
         {{ button.button(text=_("action.continue")) }}
       {% endif %}
 
-      {% if features.password_login and providers %}
+      {% if features.password_login and providers and not password_only %}
         {{ field.separator() }}
       {% endif %}
 
-      {% if providers %}
+      {% if providers and not password_only %}
         {% set params = next["params"] | default({}) | to_params(prefix="?") %}
         {% for provider in providers %}
           {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
@@ -84,7 +85,7 @@ Please see LICENSE files in the repository root for full details.
       {% endif %}
     </div>
 
-    {% if (not next or next.kind != "link_upstream") and features.password_registration %}
+    {% if (not next or next.kind != "link_upstream") and features.password_registration and not password_only %}
       <div class="flex gap-1 justify-center items-center cpd-text-body-md-regular">
         <p class="cpd-text-secondary">
           {{ _("mas.login.call_to_register") }}

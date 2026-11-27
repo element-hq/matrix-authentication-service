@@ -57,10 +57,11 @@ test:
 
 .PHONY: coverage
 coverage:
-	$(OPA) test --coverage --schema ./schema/ --ignore schema ./ | $(OPA) eval --format pretty \
+	$(OPA) test --coverage --schema ./schema/ --ignore schema --ignore coverage.json ./ | $(OPA) eval --format pretty \
+		--fail \
 		--stdin-input \
 		--data util/coveralls.rego \
-		data.coveralls.from_opa > coverage.json
+		data.util.from_opa > coverage.json
 
 .PHONY: lint
 lint:

@@ -12,7 +12,7 @@ use mas_axum_utils::{RecordAsRequester, SessionInfoExt, cookies::CookieJar, csrf
 use mas_data_model::{BrowserSession, Clock, User};
 use mas_i18n::DataLocale;
 use mas_policy::model::SessionCounts;
-use mas_router::PostAuthAction;
+use mas_router::Login;
 use mas_storage::{
     BoxRepository, RepositoryError, compat::CompatSessionFilter, oauth2::OAuth2SessionFilter,
     personal::PersonalSessionFilter,
@@ -40,8 +40,8 @@ pub enum SessionOrFallback {
 }
 
 /// Render the right account-inactive interstitial for the given user, carrying
-/// the `PostAuthAction` continuation so the sign-out/sign-in button on the page
-/// round-trips it through `POST /logout`.
+/// the login page parameters so the sign-out/sign-in button on the page
+/// round-trips them through `POST /logout`.
 ///
 /// The template is picked from the user's state: deactivated and locked users
 /// get the matching page, otherwise (a still-valid user whose session was
@@ -63,14 +63,14 @@ pub fn render_account_inactive(
     rng: impl Rng,
     cookie_jar: CookieJar,
     user: User,
-    action: Option<PostAuthAction>,
+    login: impl Into<Login>,
 ) -> Result<(CookieJar, Response), SessionLoadError> {
     let deactivated = user.deactivated_at.is_some();
     let locked = user.locked_at.is_some();
 
     let (csrf_token, cookie_jar) = cookie_jar.csrf_token(clock, rng);
     let ctx = AccountInactiveContext::new(user)
-        .with_post_auth_action(action)
+        .with_post_logout_login(login)
         .with_csrf(csrf_token.form_value())
         .with_language(*locale);
 
@@ -88,7 +88,7 @@ pub fn render_account_inactive(
 /// Load a session from the cookie jar, or fall back to an HTML error page if
 /// the account is locked, deactivated or logged out.
 ///
-/// When falling back, the given `action` is threaded into the interstitial so
+/// When falling back, the given `login` is threaded into the interstitial so
 /// the sign-out/sign-in button preserves the continuation context.
 pub async fn load_session_or_fallback(
     cookie_jar: CookieJar,
@@ -96,7 +96,7 @@ pub async fn load_session_or_fallback(
     rng: impl Rng,
     templates: &Templates,
     locale: &DataLocale,
-    action: Option<PostAuthAction>,
+    login: impl Into<Login>,
     repo: &mut BoxRepository,
 ) -> Result<SessionOrFallback, SessionLoadError> {
     let (session_info, cookie_jar) = cookie_jar.session_info();
@@ -135,7 +135,7 @@ pub async fn load_session_or_fallback(
             rng,
             cookie_jar,
             session.user,
-            action,
+            login,
         )?;
         let response = (cookie_jar, response).into_response();
         return Ok(SessionOrFallback::Fallback { response });

@@ -53,28 +53,28 @@ impl AsymmetricSigningKey {
     /// Create a new signing key with the RS256 algorithm from the given RSA
     /// private key.
     #[must_use]
-    pub fn rs256(key: rsa::RsaPrivateKey) -> Self {
+    pub fn rs256(key: rsa::PrivateKey) -> Self {
         Self::Rs256(rsa::pkcs1v15::SigningKey::new(key))
     }
 
     /// Create a new signing key with the RS384 algorithm from the given RSA
     /// private key.
     #[must_use]
-    pub fn rs384(key: rsa::RsaPrivateKey) -> Self {
+    pub fn rs384(key: rsa::PrivateKey) -> Self {
         Self::Rs384(rsa::pkcs1v15::SigningKey::new(key))
     }
 
     /// Create a new signing key with the RS512 algorithm from the given RSA
     /// private key.
     #[must_use]
-    pub fn rs512(key: rsa::RsaPrivateKey) -> Self {
+    pub fn rs512(key: rsa::PrivateKey) -> Self {
         Self::Rs512(rsa::pkcs1v15::SigningKey::new(key))
     }
 
     /// Create a new signing key with the PS256 algorithm from the given RSA
     /// private key.
     #[must_use]
-    pub fn ps256(key: rsa::RsaPrivateKey) -> Self {
+    pub fn ps256(key: rsa::PrivateKey) -> Self {
         Self::Ps256(rsa::pss::SigningKey::new_with_salt_len(
             key,
             Sha256::output_size(),
@@ -84,7 +84,7 @@ impl AsymmetricSigningKey {
     /// Create a new signing key with the PS384 algorithm from the given RSA
     /// private key.
     #[must_use]
-    pub fn ps384(key: rsa::RsaPrivateKey) -> Self {
+    pub fn ps384(key: rsa::PrivateKey) -> Self {
         Self::Ps384(rsa::pss::SigningKey::new_with_salt_len(
             key,
             Sha384::output_size(),
@@ -94,7 +94,7 @@ impl AsymmetricSigningKey {
     /// Create a new signing key with the PS512 algorithm from the given RSA
     /// private key.
     #[must_use]
-    pub fn ps512(key: rsa::RsaPrivateKey) -> Self {
+    pub fn ps512(key: rsa::PrivateKey) -> Self {
         Self::Ps512(rsa::pss::SigningKey::new_with_salt_len(
             key,
             Sha512::output_size(),
@@ -296,42 +296,42 @@ impl AsymmetricVerifyingKey {
     /// Create a new verifying key with the RS256 algorithm from the given RSA
     /// public key.
     #[must_use]
-    pub fn rs256(key: rsa::RsaPublicKey) -> Self {
+    pub fn rs256(key: rsa::PublicKey) -> Self {
         Self::Rs256(rsa::pkcs1v15::VerifyingKey::new(key))
     }
 
     /// Create a new verifying key with the RS384 algorithm from the given RSA
     /// public key.
     #[must_use]
-    pub fn rs384(key: rsa::RsaPublicKey) -> Self {
+    pub fn rs384(key: rsa::PublicKey) -> Self {
         Self::Rs384(rsa::pkcs1v15::VerifyingKey::new(key))
     }
 
     /// Create a new verifying key with the RS512 algorithm from the given RSA
     /// public key.
     #[must_use]
-    pub fn rs512(key: rsa::RsaPublicKey) -> Self {
+    pub fn rs512(key: rsa::PublicKey) -> Self {
         Self::Rs512(rsa::pkcs1v15::VerifyingKey::new(key))
     }
 
     /// Create a new verifying key with the PS256 algorithm from the given RSA
     /// public key.
     #[must_use]
-    pub fn ps256(key: rsa::RsaPublicKey) -> Self {
+    pub fn ps256(key: rsa::PublicKey) -> Self {
         Self::Ps256(rsa::pss::VerifyingKey::new(key))
     }
 
     /// Create a new verifying key with the PS384 algorithm from the given RSA
     /// public key.
     #[must_use]
-    pub fn ps384(key: rsa::RsaPublicKey) -> Self {
+    pub fn ps384(key: rsa::PublicKey) -> Self {
         Self::Ps384(rsa::pss::VerifyingKey::new(key))
     }
 
     /// Create a new verifying key with the PS512 algorithm from the given RSA
     /// public key.
     #[must_use]
-    pub fn ps512(key: rsa::RsaPublicKey) -> Self {
+    pub fn ps512(key: rsa::PublicKey) -> Self {
         Self::Ps512(rsa::pss::VerifyingKey::new(key))
     }
 
