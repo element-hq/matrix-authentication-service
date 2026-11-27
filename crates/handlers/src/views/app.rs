@@ -50,13 +50,24 @@ pub async fn get(
     mut rng: BoxRng,
     cookie_jar: CookieJar,
 ) -> Result<impl IntoResponse, InternalError> {
+    // TODO: keep the full path, not just the action
+    let mut login = mas_router::Login::and_then(PostAuthAction::manage_account(action));
+
+    if let Some(login_hint) = unstable_login_hint {
+        login = login.with_login_hint(login_hint);
+    }
+
+    if let Some(login_method) = login_method {
+        login = login.with_login_method(login_method);
+    }
+
     let (cookie_jar, maybe_session) = match load_session_or_fallback(
         cookie_jar,
         &clock,
         &mut rng,
         &templates,
         &locale,
-        Some(PostAuthAction::manage_account(action.clone())),
+        login.clone(),
         &mut repo,
     )
     .await?
@@ -69,19 +80,8 @@ pub async fn get(
         SessionOrFallback::Fallback { response } => return Ok(response),
     };
 
-    // TODO: keep the full path, not just the action
     let Some(session) = maybe_session else {
-        let mut url = mas_router::Login::and_then(PostAuthAction::manage_account(action));
-
-        if let Some(login_hint) = unstable_login_hint {
-            url = url.with_login_hint(login_hint);
-        }
-
-        if let Some(login_method) = login_method {
-            url = url.with_login_method(login_method);
-        }
-
-        return Ok((cookie_jar, url_builder.redirect(&url)).into_response());
+        return Ok((cookie_jar, url_builder.redirect(&login)).into_response());
     };
 
     activity_tracker
@@ -112,11 +112,16 @@ pub async fn get_anonymous(
 #[cfg(test)]
 mod test {
     use hyper::{Request, StatusCode, header::LOCATION};
+    use mas_axum_utils::SessionInfoExt as _;
     use mas_router::{AccountAction, LoginMethodHint, Route};
+    use mas_storage::{
+        RepositoryAccess,
+        user::{BrowserSessionRepository, UserRepository},
+    };
     use sqlx::PgPool;
 
     use crate::test_utils::{
-        RequestBuilderExt, ResponseExt, TestState, add_upstream_oauth_provider, setup,
+        CookieHelper, RequestBuilderExt, ResponseExt, TestState, add_upstream_oauth_provider, setup,
     };
 
     /// The deeplink hands the login-method hint over to the login page, next
@@ -144,6 +149,48 @@ mod test {
             )))
             .with_login_method(LoginMethodHint::UpstreamOAuth2(provider_id))
             .path_and_query(),
+        );
+    }
+
+    /// With a session finished out-of-band, the 'logged out' interstitial
+    /// carries the login-method hint in its sign-out form.
+    #[sqlx::test(migrator = "mas_storage_pg::MIGRATOR")]
+    async fn test_deeplink_logged_out_session_keeps_the_login_method_hint(pool: PgPool) {
+        setup();
+        let state = TestState::from_pool(pool).await.unwrap();
+        let cookies = CookieHelper::new();
+
+        let mut rng = state.rng();
+        let mut repo = state.repository().await.unwrap();
+        let user = repo
+            .user()
+            .add(&mut rng, &state.clock, "john".to_owned())
+            .await
+            .unwrap();
+        let session = repo
+            .browser_session()
+            .add(&mut rng, &state.clock, &user, None)
+            .await
+            .unwrap();
+        cookies.import(state.cookie_jar().set_session(&session));
+        repo.browser_session()
+            .finish(&state.clock, session)
+            .await
+            .unwrap();
+        repo.save().await.unwrap();
+
+        let request =
+            Request::get("/account/?action=org.matrix.profile&io.element.login_method=password")
+                .empty();
+        let request = cookies.with_cookies(request);
+        let response = state.request(request).await;
+        response.assert_status(StatusCode::OK);
+        assert!(
+            response
+                .body()
+                .contains(r#"name="io.element.login_method" value="password""#),
+            "body: {}",
+            response.body()
         );
     }
 }
