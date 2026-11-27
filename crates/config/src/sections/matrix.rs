@@ -116,6 +116,15 @@ pub struct MatrixConfig {
     /// The base URL of the homeserver's client API
     #[serde(default = "default_endpoint")]
     pub endpoint: Url,
+
+    /// Path to a Unix socket through which to connect to the homeserver
+    ///
+    /// When set, `endpoint` is not used to locate the homeserver. It still
+    /// determines the scheme, the `Host` header and the base path of the
+    /// requests.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(with = "Option<String>")]
+    pub socket: Option<Utf8PathBuf>,
 }
 
 impl ConfigurationSection for MatrixConfig {
@@ -150,6 +159,7 @@ impl MatrixConfig {
             homeserver: default_homeserver(),
             secret: Secret::Value(Alphanumeric.sample_string(&mut rng, 32)),
             endpoint: default_endpoint(),
+            socket: None,
         }
     }
 
@@ -159,6 +169,7 @@ impl MatrixConfig {
             homeserver: default_homeserver(),
             secret: Secret::Value("test".to_owned()),
             endpoint: default_endpoint(),
+            socket: None,
         }
     }
 }
@@ -198,6 +209,7 @@ mod tests {
                 Handle::current().block_on(async move {
                     assert_eq!(&config.homeserver, "matrix.org");
                     assert!(matches!(config.secret, Secret::File(ref p) if p == "secret"));
+                    assert_eq!(config.socket, None);
                     assert_eq!(config.secret().await.unwrap(), "m472!x53c237");
                 });
 
@@ -218,6 +230,7 @@ mod tests {
                         matrix:
                           homeserver: matrix.org
                           secret: m472!x53c237
+                          socket: /run/synapse/main.sock
                     ",
                 )?;
 
@@ -228,6 +241,10 @@ mod tests {
                 Handle::current().block_on(async move {
                     assert_eq!(&config.homeserver, "matrix.org");
                     assert!(matches!(config.secret, Secret::Value(ref v) if v == "m472!x53c237"));
+                    assert_eq!(
+                        config.socket.as_deref(),
+                        Some("/run/synapse/main.sock".into())
+                    );
                     assert_eq!(config.secret().await.unwrap(), "m472!x53c237");
                 });
 

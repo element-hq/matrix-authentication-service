@@ -12,12 +12,15 @@ In the [`matrix`](../reference/configuration.md#matrix) section of the configura
  - `homeserver`: corresponds to the `server_name` in the Synapse configuration file
  - `secret`: a shared secret the service will use to call the homeserver MAS API
  - `endpoint`: the URL to which the homeserver is accessible from the service
+ - `socket`: optionally, the path to a Unix socket through which the service connects to the homeserver, instead of the host and port in `endpoint`
 
 ```yaml
 matrix:
   kind: synapse
   homeserver: example.com
   endpoint: "http://localhost:8008"
+  # To connect through a Unix socket instead:
+  #socket: /run/synapse/main.sock
   secret: "AVeryRandomSecretPleaseUseSomethingSecure"
   # Alternatively, using a file:
   #secret_file: /path/to/secret.txt

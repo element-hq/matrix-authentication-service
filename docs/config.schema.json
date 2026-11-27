@@ -1879,6 +1879,13 @@
           "type": "string",
           "format": "uri",
           "default": "http://localhost:8008/"
+        },
+        "socket": {
+          "description": "Path to a Unix socket through which to connect to the homeserver\n\nWhen set, `endpoint` is not used to locate the homeserver. It still\ndetermines the scheme, the `Host` header and the base path of the\nrequests.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },

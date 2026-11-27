@@ -168,6 +168,12 @@ matrix:
 
   # URL to which the homeserver is accessible from the service
   endpoint: "http://localhost:8008"
+
+  # Path to a Unix socket through which to connect to the homeserver, instead
+  # of connecting over TCP to the host and port in `endpoint`.
+  # `endpoint` still determines the scheme, the `Host` header and the base
+  # path of the requests.
+  #socket: /run/synapse/main.sock
 ```
 
 ## `templates`
