@@ -1,3 +1,4 @@
+// Copyright 2026 Element Creations Ltd.
 // Copyright 2025 New Vector Ltd.
 // Copyright 2025 The Matrix.org Foundation C.I.C.
 //
@@ -106,6 +107,7 @@ mod tests {
     use chrono::Duration;
     use hyper::{Request, StatusCode};
     use mas_data_model::Clock as _;
+    use mas_storage::user::UserRegistrationTokenParams;
     use sqlx::PgPool;
 
     use crate::test_utils::{RequestBuilderExt, ResponseExt, TestState, setup};
@@ -122,9 +124,11 @@ mod tests {
             .add(
                 &mut state.rng(),
                 &state.clock,
-                "test_token_456".to_owned(),
-                Some(5),
-                None,
+                UserRegistrationTokenParams {
+                    token: "test_token_456".to_owned(),
+                    usage_limit: Some(5),
+                    ..Default::default()
+                },
             )
             .await
             .unwrap();
@@ -159,9 +163,10 @@ mod tests {
             .add(
                 &mut state.rng(),
                 &state.clock,
-                "test_token_789".to_owned(),
-                None,
-                None,
+                UserRegistrationTokenParams {
+                    token: "test_token_789".to_owned(),
+                    ..Default::default()
+                },
             )
             .await
             .unwrap();
