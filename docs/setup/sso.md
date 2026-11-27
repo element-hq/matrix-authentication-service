@@ -157,6 +157,29 @@ In such cases, the `human_name` parameter of the provider configuration is used 
 
 If there is only one upstream provider configured and the local password database is disabled ([`passwords.enabled`](../reference/configuration.md#passwords) is set to `false`), the authentication service will automatically trigger an authorization flow with this provider.
 
+## Letting clients choose the login method
+
+When multiple login methods are configured, an OAuth 2.0 client can pass an `io.element.login_method` query parameter in the authorization request to send the user straight to a specific login method:
+
+```text
+# Start the authorization flow with a specific upstream provider
+GET /authorize?client_id=…&redirect_uri=…&scope=…&state=…&io.element.login_method=upstream-oauth2:01HFRQFT5QFMJFGF01P7JAV2ME
+
+# Show only the local password form
+GET /authorize?client_id=…&redirect_uri=…&scope=…&state=…&io.element.login_method=password
+```
+
+Two values are supported:
+
+ - `password`: shows only the local password form on the login page, hiding upstream provider buttons and the registration link
+ - `upstream-oauth2:<id>`: redirects straight to the authorization flow of the upstream provider with the matching `id` in `upstream_oauth2.providers`
+
+If the browser already has an active session with the authentication service, the parameter has no effect and the request goes straight to the consent step without re-authenticating, regardless of which method was used to sign in.
+It is also ignored for registration requests (`prompt=create`).
+
+The account management deeplink (`/account/?action=…`) accepts `io.element.login_method` in the same way.
+Because there is no downstream authorization request on that path, the `params` variable in [`additional_authorization_parameters`](#forwarding-parameters-to-the-upstream-provider) is empty, so templated entries that reference it are omitted while static entries are still sent.
+
 ## Backchannel logout
 
 The service supports receiving [OpenID Connect Back-Channel Logout](https://openid.net/specs/openid-connect-backchannel-1_0.html) requests.
