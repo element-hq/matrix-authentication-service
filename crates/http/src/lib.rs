@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2022-2024 The Matrix.org Foundation C.I.C.
 //
@@ -16,7 +17,7 @@ mod reqwest;
 
 pub use self::{
     ext::{CorsLayerExt, set_propagator},
-    reqwest::{RequestBuilderExt, client as reqwest_client},
+    reqwest::{RequestBuilderExt, Transport, client as reqwest_client},
 };
 
 static METER: LazyLock<opentelemetry::metrics::Meter> = LazyLock::new(|| {
