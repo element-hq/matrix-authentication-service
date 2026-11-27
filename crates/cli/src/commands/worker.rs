@@ -1,3 +1,4 @@
+// Copyright 2025, 2026 Element Creations Ltd.
 // Copyright 2024, 2025 New Vector Ltd.
 // Copyright 2023, 2024 The Matrix.org Foundation C.I.C.
 //
@@ -67,8 +68,7 @@ impl Options {
         let mailer = mailer_from_config(&config.email, &templates).await?;
         test_mailer_in_background(&mailer, Duration::from_secs(30));
 
-        let http_client = mas_http::reqwest_client();
-        let conn = homeserver_connection_from_config(&config.matrix, http_client).await?;
+        let conn = homeserver_connection_from_config(&config.matrix).await?;
 
         drop(config);
 

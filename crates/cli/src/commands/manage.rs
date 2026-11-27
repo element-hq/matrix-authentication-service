@@ -416,9 +416,7 @@ impl Options {
                     .map_err(anyhow::Error::from_boxed)?;
                 let matrix_config =
                     MatrixConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
-                let http_client = mas_http::reqwest_client();
-                let homeserver =
-                    homeserver_connection_from_config(&matrix_config, http_client).await?;
+                let homeserver = homeserver_connection_from_config(&matrix_config).await?;
                 let mut conn = database_connection_from_config(&database_config).await?;
                 let txn = conn.begin().await?;
                 let mut repo = PgRepository::from_conn(txn);
@@ -712,7 +710,6 @@ impl Options {
                 yes,
                 ignore_password_complexity,
             } => {
-                let http_client = mas_http::reqwest_client();
                 let password_config = PasswordsConfig::extract_or_default(figment)
                     .map_err(anyhow::Error::from_boxed)?;
                 let database_config = DatabaseConfig::extract_or_default(figment)
@@ -721,8 +718,7 @@ impl Options {
                     MatrixConfig::extract(figment).map_err(anyhow::Error::from_boxed)?;
 
                 let password_manager = password_manager_from_config(&password_config).await?;
-                let homeserver =
-                    homeserver_connection_from_config(&matrix_config, http_client).await?;
+                let homeserver = homeserver_connection_from_config(&matrix_config).await?;
                 let mut conn = database_connection_from_config(&database_config).await?;
                 let txn = conn.begin().await?;
                 let mut repo = PgRepository::from_conn(txn);

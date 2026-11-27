@@ -529,11 +529,11 @@ pub async fn load_policy_factory_dynamic_data(
 }
 
 /// Create a clonable, type-erased [`HomeserverConnection`] from the
-/// configuration
+/// configuration, with its own HTTP client
 pub async fn homeserver_connection_from_config(
     config: &MatrixConfig,
-    http_client: reqwest::Client,
 ) -> anyhow::Result<Arc<dyn HomeserverConnection>> {
+    let http_client = mas_http::reqwest_client();
     Ok(match config.kind {
         HomeserverKind::Synapse | HomeserverKind::SynapseModern => {
             Arc::new(SynapseConnection::new(
