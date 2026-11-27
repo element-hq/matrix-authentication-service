@@ -8,7 +8,7 @@ use std::{collections::HashSet, time::Duration};
 
 use anyhow::{Context, bail};
 use http::{Method, StatusCode};
-use mas_http::RequestBuilderExt as _;
+use mas_http::{RequestBuilderExt as _, Transport};
 use mas_matrix::{HomeserverConnection, MatrixUser, ProvisionRequest};
 use serde::{Deserialize, Serialize};
 use tracing::debug;
@@ -24,6 +24,7 @@ pub struct SynapseConnection {
     endpoint: Url,
     access_token: String,
     http_client: reqwest::Client,
+    transport: Transport,
 }
 
 impl SynapseConnection {
@@ -32,13 +33,14 @@ impl SynapseConnection {
         homeserver: String,
         endpoint: Url,
         access_token: String,
-        http_client: reqwest::Client,
+        transport: Transport,
     ) -> Self {
         Self {
             homeserver,
             endpoint,
             access_token,
-            http_client,
+            http_client: transport.client(),
+            transport,
         }
     }
 
@@ -174,7 +176,7 @@ impl HomeserverConnection for SynapseConnection {
 
         let response = self
             .get(&format!("_synapse/admin/v2/users/{encoded_mxid}"))
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to query user from Synapse")?;
 
@@ -216,7 +218,7 @@ impl HomeserverConnection for SynapseConnection {
             .get(&format!(
                 "_synapse/admin/v1/username_available?username={localpart}"
             ))
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to query localpart availability from Synapse")?;
 
@@ -288,7 +290,7 @@ impl HomeserverConnection for SynapseConnection {
         let response = self
             .put(&format!("_synapse/admin/v2/users/{encoded_mxid}"))
             .json(&body)
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to provision user in Synapse")?;
 
@@ -328,7 +330,7 @@ impl HomeserverConnection for SynapseConnection {
                 device_id: device_id.to_owned(),
                 dehydrated: None,
             })
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to create device in Synapse")?;
 
@@ -379,7 +381,7 @@ impl HomeserverConnection for SynapseConnection {
             .json(&SynapseUpdateDeviceRequest {
                 display_name: Some(display_name),
             })
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to update device display name in Synapse")?;
 
@@ -416,7 +418,7 @@ impl HomeserverConnection for SynapseConnection {
             .delete(&format!(
                 "_synapse/admin/v2/users/{encoded_mxid}/devices/{encoded_device_id}"
             ))
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to delete device in Synapse")?;
 
@@ -454,7 +456,7 @@ impl HomeserverConnection for SynapseConnection {
 
         let response = self
             .get(&format!("_synapse/admin/v2/users/{encoded_mxid}/devices"))
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to query devices from Synapse")?;
 
@@ -487,7 +489,7 @@ impl HomeserverConnection for SynapseConnection {
                 "_synapse/admin/v2/users/{encoded_mxid}/delete_devices"
             ))
             .json(&SynapseDeleteDevicesRequest { devices: to_delete })
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to delete devices from Synapse")?;
 
@@ -530,7 +532,7 @@ impl HomeserverConnection for SynapseConnection {
             .json(&SynapseDeactivateUserRequest { erase })
             // Deactivation can take a while, so we set a longer timeout
             .timeout(Duration::from_mins(5))
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to deactivate user in Synapse")?;
 
@@ -566,7 +568,7 @@ impl HomeserverConnection for SynapseConnection {
                 deactivated: Some(false),
                 ..SynapseUser::default()
             })
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to reactivate user in Synapse")?;
 
@@ -602,7 +604,7 @@ impl HomeserverConnection for SynapseConnection {
                 "_matrix/client/v3/profile/{encoded_mxid}/displayname"
             ))
             .json(&SetDisplayNameRequest { displayname })
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to set displayname in Synapse")?;
 
@@ -650,7 +652,7 @@ impl HomeserverConnection for SynapseConnection {
                 "_synapse/admin/v1/users/{encoded_mxid}/_allow_cross_signing_replacement_without_uia"
             ))
             .json(&SynapseAllowCrossSigningResetRequest {})
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to allow cross-signing reset in Synapse")?;
 

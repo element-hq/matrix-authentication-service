@@ -173,8 +173,7 @@ impl Options {
 
         let http_client = mas_http::reqwest_client();
 
-        let homeserver_connection =
-            homeserver_connection_from_config(&config.matrix, http_client.clone()).await?;
+        let homeserver_connection = homeserver_connection_from_config(&config.matrix).await?;
 
         if !self.no_worker {
             let mailer = mailer_from_config(&config.email, &templates).await?;

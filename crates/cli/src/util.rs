@@ -528,33 +528,48 @@ pub async fn load_policy_factory_dynamic_data(
     Ok(())
 }
 
+/// Get the transport over which to connect to the homeserver
+pub fn homeserver_transport_from_config(config: &MatrixConfig) -> mas_http::Transport {
+    match &config.socket {
+        Some(socket) => mas_http::Transport::Unix(socket.clone()),
+        None => mas_http::Transport::Tcp,
+    }
+}
+
 /// Create a clonable, type-erased [`HomeserverConnection`] from the
-/// configuration
+/// configuration, with its own HTTP client
 pub async fn homeserver_connection_from_config(
     config: &MatrixConfig,
-    http_client: reqwest::Client,
 ) -> anyhow::Result<Arc<dyn HomeserverConnection>> {
+    let transport = homeserver_transport_from_config(config);
+    if let Some(socket) = &config.socket {
+        tracing::info!(
+            matrix.socket = %socket,
+            "Connecting to the homeserver through a Unix socket"
+        );
+    }
+
     Ok(match config.kind {
         HomeserverKind::Synapse | HomeserverKind::SynapseModern => {
             Arc::new(SynapseConnection::new(
                 config.homeserver.clone(),
                 config.endpoint.clone(),
                 config.secret().await?,
-                http_client,
+                transport,
             ))
         }
         HomeserverKind::SynapseLegacy => Arc::new(LegacySynapseConnection::new(
             config.homeserver.clone(),
             config.endpoint.clone(),
             config.secret().await?,
-            http_client,
+            transport,
         )),
         HomeserverKind::SynapseReadOnly => {
             let connection = SynapseConnection::new(
                 config.homeserver.clone(),
                 config.endpoint.clone(),
                 config.secret().await?,
-                http_client,
+                transport,
             );
             let readonly = ReadOnlyHomeserverConnection::new(connection);
             Arc::new(readonly)

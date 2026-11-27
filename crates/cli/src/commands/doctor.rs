@@ -13,19 +13,53 @@
 use std::process::ExitCode;
 
 use anyhow::Context;
+use camino::Utf8Path;
 use clap::Parser;
 use figment::Figment;
 use hyper::StatusCode;
 use mas_config::{ConfigurationSection, RootConfig};
-use mas_http::RequestBuilderExt;
+use mas_http::{RequestBuilderExt, Transport};
 use tracing::{error, info, info_span, warn};
 use url::{Host, Url};
+
+use crate::util::homeserver_transport_from_config;
 
 /// Base URL for the human-readable documentation
 const DOCS_BASE: &str = "https://element-hq.github.io/matrix-authentication-service";
 
 #[derive(Parser, Debug)]
 pub(super) struct Options {}
+
+/// The `matrix` section of the MAS config, as shown in the diagnostics
+#[derive(Clone, Copy)]
+struct MatrixSection<'a> {
+    homeserver: &'a Host,
+    endpoint: &'a Url,
+    socket: Option<&'a Utf8Path>,
+    secret: Option<&'a str>,
+}
+
+impl std::fmt::Display for MatrixSection<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let endpoint = format!("    endpoint: \"{}\"", self.endpoint);
+        let mut lines = vec![
+            "  matrix:".to_owned(),
+            format!("    homeserver: \"{}\"", self.homeserver),
+        ];
+        if let Some(socket) = self.socket {
+            lines.push(endpoint);
+            lines.push("    # The homeserver should be listening on this Unix socket".to_owned());
+            lines.push(format!("    socket: \"{socket}\""));
+        } else {
+            lines.push("    # The homeserver should be reachable at this URL".to_owned());
+            lines.push(endpoint);
+        }
+        if let Some(secret) = self.secret {
+            lines.push(format!("    secret: {secret:?}"));
+        }
+        f.write_str(&lines.join("\n"))
+    }
+}
 
 impl Options {
     pub async fn run(self, figment: &Figment) -> anyhow::Result<ExitCode> {
@@ -38,6 +72,8 @@ impl Options {
 
         // We'll need an HTTP client
         let http_client = mas_http::reqwest_client();
+        let hs_transport = homeserver_transport_from_config(&config.matrix);
+        let hs_http_client = hs_transport.client();
         let base_url = config.http.public_base.as_str();
         let issuer = config.http.issuer.as_ref().map(url::Url::as_str);
         let issuer = issuer.unwrap_or(base_url);
@@ -49,6 +85,12 @@ See {DOCS_BASE}/setup/homeserver.html"
         })?;
         let secret = config.matrix.secret().await?;
         let hs_api = config.matrix.endpoint;
+        let matrix_section = MatrixSection {
+            homeserver: &matrix_domain,
+            endpoint: &hs_api,
+            socket: config.matrix.socket.as_deref(),
+            secret: None,
+        };
 
         if !issuer.starts_with("https://") {
             warn!(
@@ -121,11 +163,17 @@ Error details: {e}
             }
         };
 
+        if let Some(socket) = matrix_section.socket {
+            info!(
+                r#"💡 Connecting to the homeserver through the Unix socket "{socket}", as set in `matrix.socket`."#
+            );
+        }
+
         // Now try to reach the homeserver
         let client_versions = hs_api.join("/_matrix/client/versions")?;
-        let result = http_client
+        let result = hs_http_client
             .get(client_versions.as_str())
-            .send_traced()
+            .send_traced_over(&hs_transport)
             .await;
         let can_reach_cs = match result {
             Ok(response) => {
@@ -139,10 +187,7 @@ Error details: {e}
 Make sure your homeserver is running.
 This may be due to a misconfiguration in the `matrix` section of the config.
 
-  matrix:
-    homeserver: "{matrix_domain}"
-    # The homeserver should be reachable at this URL
-    endpoint: "{hs_api}"
+{matrix_section}
 
 See {DOCS_BASE}/setup/homeserver.html
 "#
@@ -155,10 +200,7 @@ See {DOCS_BASE}/setup/homeserver.html
                     r#"❌ Can't reach the homeserver at "{client_versions}".
 This may be due to a misconfiguration in the `matrix` section of the config.
 
-  matrix:
-    homeserver: "{matrix_domain}"
-    # The homeserver should be reachable at this URL
-    endpoint: "{hs_api}"
+{matrix_section}
 
 See {DOCS_BASE}/setup/homeserver.html
 
@@ -173,10 +215,10 @@ Error details: {e}
             // Try the whoami API. If it replies with `M_UNKNOWN` this is because Synapse
             // couldn't reach MAS
             let whoami = hs_api.join("/_matrix/client/v3/account/whoami")?;
-            let result = http_client
+            let result = hs_http_client
                 .get(whoami.as_str())
                 .bearer_auth("averyinvalidtokenireallyhopethisisnotvalid")
-                .send_traced()
+                .send_traced_over(&hs_transport)
                 .await;
             match result {
                 Ok(response) => {
@@ -224,10 +266,10 @@ Error details: {e}
 
             // Try to reach an authenticated MAS API endpoint
             let mas_api = hs_api.join("/_synapse/mas/is_localpart_available")?;
-            let result = http_client
+            let result = hs_http_client
                 .get(mas_api.as_str())
                 .bearer_auth(&secret)
-                .send_traced()
+                .send_traced_over(&hs_transport)
                 .await;
             match result {
                 Ok(response) => {
@@ -256,11 +298,12 @@ It should match the `secret` set in the Synapse config.
 
 And in the MAS config:
 
-  matrix:
-    homeserver: "{matrix_domain}"
-    endpoint: "{hs_api}"
-    secret: {secret:?}
-"#
+{matrix_section}
+"#,
+                            matrix_section = MatrixSection {
+                                secret: Some(&secret),
+                                ..matrix_section
+                            },
                         );
                     }
                 }
@@ -274,11 +317,18 @@ Error details: {e}
             }
         }
 
-        let external_cs_api_endpoint = discovered_cs_api.as_ref().unwrap_or(&hs_api);
+        let (external_cs_api_endpoint, external_http_client, external_transport) =
+            match &discovered_cs_api {
+                Some(endpoint) => (endpoint, &http_client, &Transport::Tcp),
+                None => (&hs_api, &hs_http_client, &hs_transport),
+            };
         // Try to reach the legacy login API
         let compat_login = external_cs_api_endpoint.join("/_matrix/client/v3/login")?;
         let compat_login = compat_login.as_str();
-        let result = http_client.get(compat_login).send_traced().await;
+        let result = external_http_client
+            .get(compat_login)
+            .send_traced_over(external_transport)
+            .await;
         match result {
             Ok(response) => {
                 let status = response.status();

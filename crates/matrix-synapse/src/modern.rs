@@ -8,7 +8,7 @@ use std::collections::HashSet;
 
 use anyhow::Context as _;
 use http::{Method, StatusCode};
-use mas_http::RequestBuilderExt;
+use mas_http::{RequestBuilderExt, Transport};
 use mas_matrix::{HomeserverConnection, MatrixUser, ProvisionRequest};
 use serde::{Deserialize, Serialize};
 use tracing::debug;
@@ -22,6 +22,7 @@ pub struct SynapseConnection {
     endpoint: Url,
     access_token: String,
     http_client: reqwest::Client,
+    transport: Transport,
 }
 
 impl SynapseConnection {
@@ -30,13 +31,14 @@ impl SynapseConnection {
         homeserver: String,
         endpoint: Url,
         access_token: String,
-        http_client: reqwest::Client,
+        transport: Transport,
     ) -> Self {
         Self {
             homeserver,
             endpoint,
             access_token,
-            http_client,
+            http_client: transport.client(),
+            transport,
         }
     }
 
@@ -89,7 +91,7 @@ impl HomeserverConnection for SynapseConnection {
         let url = format!("_synapse/mas/query_user?localpart={encoded_localpart}");
         let response = self
             .get(&url)
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to query user from Synapse")?;
 
@@ -167,7 +169,7 @@ impl HomeserverConnection for SynapseConnection {
         let response = self
             .post("_synapse/mas/provision_user")
             .json(&body)
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to provision user in Synapse")?;
 
@@ -204,7 +206,7 @@ impl HomeserverConnection for SynapseConnection {
         let url = format!("_synapse/mas/is_localpart_available?localpart={encoded_localpart}");
         let response = self
             .get(&url)
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to check localpart availability from Synapse")?;
 
@@ -258,7 +260,7 @@ impl HomeserverConnection for SynapseConnection {
         let response = self
             .post("_synapse/mas/upsert_device")
             .json(&body)
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to create device in Synapse")?;
 
@@ -301,7 +303,7 @@ impl HomeserverConnection for SynapseConnection {
         let response = self
             .post("_synapse/mas/update_device_display_name")
             .json(&body)
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to update device display name in Synapse")?;
 
@@ -337,7 +339,7 @@ impl HomeserverConnection for SynapseConnection {
         let response = self
             .post("_synapse/mas/delete_device")
             .json(&body)
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to delete device in Synapse")?;
 
@@ -374,7 +376,7 @@ impl HomeserverConnection for SynapseConnection {
         let response = self
             .post("_synapse/mas/sync_devices")
             .json(&body)
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to sync devices in Synapse")?;
 
@@ -407,7 +409,7 @@ impl HomeserverConnection for SynapseConnection {
         let response = self
             .post("_synapse/mas/delete_user")
             .json(&body)
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to delete user in Synapse")?;
 
@@ -438,7 +440,7 @@ impl HomeserverConnection for SynapseConnection {
         let response = self
             .post("_synapse/mas/reactivate_user")
             .json(&body)
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to reactivate user in Synapse")?;
 
@@ -477,7 +479,7 @@ impl HomeserverConnection for SynapseConnection {
         let response = self
             .post("_synapse/mas/set_displayname")
             .json(&body)
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to set displayname in Synapse")?;
 
@@ -508,7 +510,7 @@ impl HomeserverConnection for SynapseConnection {
         let response = self
             .post("_synapse/mas/unset_displayname")
             .json(&body)
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to unset displayname in Synapse")?;
 
@@ -539,7 +541,7 @@ impl HomeserverConnection for SynapseConnection {
         let response = self
             .post("_synapse/mas/allow_cross_signing_reset")
             .json(&body)
-            .send_traced()
+            .send_traced_over(&self.transport)
             .await
             .context("Failed to allow cross-signing reset in Synapse")?;
 

@@ -10,6 +10,7 @@ use std::{
     time::Duration,
 };
 
+use camino::Utf8PathBuf;
 use futures_util::FutureExt as _;
 use headers::{ContentLength, HeaderMapExt as _, UserAgent};
 use http::Version;
@@ -98,13 +99,7 @@ fn otel_net_protocol_version(response: &Response) -> &'static str {
     }
 }
 
-/// Create a new [`reqwest::Client`] with sane parameters
-///
-/// # Panics
-///
-/// Panics if the client fails to build, which should never happen
-#[must_use]
-pub fn client() -> reqwest::Client {
+fn builder() -> reqwest::ClientBuilder {
     // TODO: can/should we limit in-flight requests?
     reqwest::Client::builder()
         .dns_resolver(Arc::new(TracingResolver::new()))
@@ -112,20 +107,72 @@ pub fn client() -> reqwest::Client {
         .user_agent(USER_AGENT)
         .timeout(Duration::from_mins(1))
         .connect_timeout(Duration::from_secs(30))
-        .build()
-        .expect("failed to create HTTP client")
+}
+
+/// Create a new [`reqwest::Client`] with sane parameters
+///
+/// # Panics
+///
+/// Panics if the client fails to build, which should never happen
+#[must_use]
+pub fn client() -> reqwest::Client {
+    builder().build().expect("failed to create HTTP client")
+}
+
+/// The transport over which a [`reqwest::Client`] opens its connections
+#[derive(Debug, Clone)]
+pub enum Transport {
+    /// TCP connections to the host and port of the URL of each request
+    Tcp,
+
+    /// Connections through the Unix socket at the given path
+    ///
+    /// The URL of each request still determines the scheme, the `Host` header
+    /// and the path.
+    Unix(Utf8PathBuf),
+}
+
+impl Transport {
+    /// Create a new [`reqwest::Client`] which opens its connections over this
+    /// transport
+    ///
+    /// Requests made with a [`Transport::Unix`] client must be sent with
+    /// [`RequestBuilderExt::send_traced_over`], as the client does not expose
+    /// its transport.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the client fails to build, which should never happen
+    #[must_use]
+    pub fn client(&self) -> reqwest::Client {
+        match self {
+            Self::Tcp => client(),
+            Self::Unix(path) => builder()
+                .unix_socket(path.as_std_path())
+                .build()
+                .expect("failed to create HTTP client"),
+        }
+    }
 }
 
 async fn send_traced(
     request: reqwest::RequestBuilder,
+    transport: &Transport,
 ) -> Result<reqwest::Response, reqwest::Error> {
     let start = Instant::now();
     let (client, request) = request.build_split();
     let mut request = request?;
 
     let headers = request.headers();
-    let server_address = request.url().host_str().map(ToOwned::to_owned);
-    let server_port = request.url().port_or_known_default();
+    let (network_transport, server_address, server_port) = match transport {
+        Transport::Tcp => (
+            "tcp",
+            request.url().host_str().map(ToOwned::to_owned),
+            request.url().port_or_known_default(),
+        ),
+        // The address of a Unix socket is its path, and it has no port
+        Transport::Unix(path) => ("unix", Some(path.to_string()), None),
+    };
     let scheme = request.url().scheme().to_owned();
     let user_agent = headers
         .typed_get::<UserAgent>()
@@ -145,7 +192,7 @@ async fn send_traced(
         { SERVER_PORT } = server_port,
         { HTTP_REQUEST_BODY_SIZE } = content_length,
         { HTTP_RESPONSE_BODY_SIZE } = tracing::field::Empty,
-        { NETWORK_TRANSPORT } = "tcp",
+        { NETWORK_TRANSPORT } = network_transport,
         { NETWORK_TYPE } = tracing::field::Empty,
         { NETWORK_LOCAL_ADDRESS } = tracing::field::Empty,
         { NETWORK_LOCAL_PORT } = tracing::field::Empty,
@@ -156,6 +203,10 @@ async fn send_traced(
         { USER_AGENT_ORIGINAL } = user_agent,
         "rust.error" = tracing::field::Empty,
     );
+
+    if let Transport::Unix(path) = transport {
+        span.record(NETWORK_PEER_ADDRESS, path.as_str());
+    }
 
     // Inject the span context into the request headers
     let context = span.context();
@@ -210,7 +261,7 @@ async fn send_traced(
                     span.record(NETWORK_LOCAL_PORT, local.port());
                     span.record(NETWORK_PEER_ADDRESS, peer.ip().to_string());
                     span.record(NETWORK_PEER_PORT, peer.port());
-                } else {
+                } else if matches!(transport, Transport::Tcp) {
                     tracing::warn!("No HttpInfo injected in response extensions");
                 }
 
@@ -244,10 +295,24 @@ async fn send_traced(
 pub trait RequestBuilderExt {
     /// Send the request with a tracing span, and span context propagated.
     fn send_traced(self) -> impl Future<Output = Result<reqwest::Response, reqwest::Error>> + Send;
+
+    /// Same as [`RequestBuilderExt::send_traced`], for a request made with a
+    /// client created by [`Transport::client`] on the given transport.
+    fn send_traced_over(
+        self,
+        transport: &Transport,
+    ) -> impl Future<Output = Result<reqwest::Response, reqwest::Error>> + Send;
 }
 
 impl RequestBuilderExt for reqwest::RequestBuilder {
     fn send_traced(self) -> impl Future<Output = Result<reqwest::Response, reqwest::Error>> + Send {
-        send_traced(self)
+        send_traced(self, &Transport::Tcp)
+    }
+
+    fn send_traced_over(
+        self,
+        transport: &Transport,
+    ) -> impl Future<Output = Result<reqwest::Response, reqwest::Error>> + Send {
+        send_traced(self, transport)
     }
 }
